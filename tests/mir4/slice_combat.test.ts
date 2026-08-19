@@ -135,9 +135,9 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     const meta = sim.players.get(sim.playerId);
     const p = sim.entities.get(sim.playerId)!;
     expect(wolf.dead).toBe(true);
-    expect(meta?.xp).toBe(22);
+    expect(meta?.xp).toBe(34);
     expect(p.level).toBe(1);
-    expect(meta?.counters.xpGained).toBe(22);
+    expect(meta?.counters.xpGained).toBe(34);
   });
   it('110 XP crosses the level-2 bar and recalcs from the table', () => {
     const sim = makeSliceSim(777);
@@ -154,7 +154,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
       }
       expect(wolf.dead).toBe(true);
     }
-    expect(sim.players.get(sim.playerId)?.xp).toBe(10); // 5 x 22 = 110, minus 100
+    expect(sim.players.get(sim.playerId)?.xp).toBe(70); // 5 x 34 = 170, minus 100
     expect(p.level).toBe(2);
     expect(p.maxHp).toBe(4240);
     expect(p.maxResource).toBe(610);

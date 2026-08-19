@@ -21,12 +21,14 @@ import {
   mir4ClassRangeYards,
   mir4SkillById,
 } from '../content/mir4';
+import { MIR4_MOBS } from '../content/mir4/mobs';
 import type { SimContext } from '../sim_context';
 import type { Entity, PlayerClass } from '../types';
 import { dist2d } from '../types';
 import {
   applyMir4Effect,
   mir4AoESecondaryTargets,
+  mir4AttackMultiplier,
   mir4DamageTakenAddend,
   mir4EffectKindOf,
   mir4SecondaryBps,
@@ -509,4 +511,37 @@ export function grantMir4Xp(ctx: SimContext, amount: number, meta: Mir4XpTarget)
     ctx.emit({ type: 'levelup', level: p.level, pid: p.id });
   }
   ctx.emit({ type: 'xp', amount, pid: p.id });
+}
+
+/**
+ * The mob->player attack under the mir4 profile (3.7): the mob's raw attack
+ * cut by any blind it carries, then the full bps pipeline against the
+ * PLAYER's own defenses — hit, crit, the player-target contextual lane, and
+ * the 100/(100+def) mitigation — with the magic shield's magnitude shaving
+ * what lands. Draw order: hit, then crit.
+ */
+export function mir4MobAttackPlayer(ctx: SimContext, mob: Entity, player: Entity): void {
+  if (mob.dead || player.dead) return;
+  // The classic shell materializes weapon.min = round(dmg*0.8), a variance the
+  // source spawn formula does not have: read the mir4 template's own dmg
+  // columns back, falling back to the weapon for unknown templates.
+  const template = MIR4_MOBS[mob.templateId as string];
+  const baseAttack = template
+    ? template.dmgBase + template.dmgPerLevel * (mob.level - 1)
+    : mob.weapon.min;
+  const raw = Math.max(1, Math.floor(baseAttack * mir4AttackMultiplier(mob)));
+  const resolved = mir4ResolveDamage({
+    rawDamage: raw,
+    channel: 'physical',
+    attacker: { accuracy: 0, critical: 0, criticalOutcome: 10 },
+    defender: {
+      dodge: player.mir4?.dodge ?? 0,
+      avoidCritical: player.mir4?.avoidCritical ?? 0,
+      physicalDefense: player.mir4?.physicalDefense ?? 0,
+    },
+    targetKind: 'player',
+    hitRoll: rollBps(ctx),
+    criticalRoll: rollBps(ctx),
+  });
+  ctx.dealDamage(mob, player, resolved.damage, resolved.critical, 'physical', null, 'hit', false);
 }

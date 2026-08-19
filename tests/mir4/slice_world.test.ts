@@ -51,7 +51,7 @@ describe('the mir4 slice world (Vila do Vau)', () => {
     let guard = 0;
     while (wolvesOf(sim, true).length === 0 && guard++ < 2000) sim.tick();
     expect(wolvesOf(sim, true).length).toBeGreaterThanOrEqual(1);
-    expect(sim.players.get(sim.playerId)?.xp).toBeGreaterThanOrEqual(22);
+    expect(sim.players.get(sim.playerId)?.xp).toBeGreaterThanOrEqual(34);
   });
 
   it('does not leak into classic sims once the active content is restored', () => {

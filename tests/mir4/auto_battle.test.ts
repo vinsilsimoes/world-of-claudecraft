@@ -40,7 +40,7 @@ describe('mir4 auto battle', () => {
     let guard = 0;
     while (!wolf.dead && guard++ < 1200) sim.tick();
     expect(wolf.dead).toBe(true);
-    expect(sim.players.get(sim.playerId)?.xp).toBe(22);
+    expect(sim.players.get(sim.playerId)?.xp).toBe(34);
     const p = sim.entities.get(sim.playerId)!;
     expect(p.targetId).toBe(wolf.id);
   });

@@ -590,6 +590,11 @@ export function dealDamage(
     }
   }
 
+  // The mir4 magic shield (2503) shaves what reaches health; classic sims
+  // never carry it. Applied here so EVERY incoming path benefits once.
+  if (!resolvedHpLoss && target.kind === 'player' && amount > 0 && target.mir4Shield) {
+    amount = Math.max(1, Math.floor(amount * (1 - target.mir4Shield.magnitude)));
+  }
   if (!resolvedHpLoss && target.kind === 'player' && amount > 0) {
     const meta = ctx.players.get(target.id);
     if (meta?.cls === 'hunter') breakEnduringCourserBurst(ctx, target);

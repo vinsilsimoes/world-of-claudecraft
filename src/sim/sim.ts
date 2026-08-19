@@ -320,7 +320,7 @@ import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
 import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
-import { mir4Ultimate } from './mir4/combat';
+import { mir4MobAttackPlayer, mir4Ultimate } from './mir4/combat';
 
 import type { Mir4Equipment } from './mir4/equipment';
 import { mir4EquipStarterWeapon, mir4UnequipWeapon } from './mir4/equipment';
@@ -3699,10 +3699,8 @@ export class Sim {
     return player.id;
   }
 
-  // mir4-gameplay-port combat surface: thin delegates over the mir4 system
-  // module (src/sim/mir4/combat.ts) so hosts and tests resolve them on the
-  // facade, exactly like the classic castAbility delegates. Classic profiles
-  // never call these.
+  // mir4-gameplay-port combat surface: thin delegates over src/sim/mir4/
+  // combat.ts; classic profiles never call these.
   castMir4Skill(skillId: number, pid = this.playerId, targetId?: number): Mir4CastResult {
     return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
   }
@@ -3715,7 +3713,7 @@ export class Sim {
     setMir4AutoBattleMode(this.ctx, pid, mode);
   }
 
-  /** The mir4 quest interaction verb: talk at the giver, inspect at a clue site. */
+  // The mir4 quest verb: talk at the giver, inspect at a clue site.
   mir4TalkOrInspect(pid = this.playerId): string {
     return mir4TalkOrInspect(this.ctx, pid);
   }
@@ -3724,14 +3722,13 @@ export class Sim {
     setMir4AutoQuest(this.ctx, pid, on);
   }
 
-  /** English status line for the HUD tracker poll (localized with the facet). */
+  // English status line for the HUD tracker poll.
   mir4AutoQuestStatusText(pid = this.playerId): string {
     const meta = this.players.get(pid);
     return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
   }
 
-  // IWorldMir4 facet adapters (facet-shaped names/arity; the world_api/mir4.ts
-  // interface is satisfied structurally by these plus the delegates above).
+  // IWorldMir4 facet adapters (world_api/mir4.ts structural surface).
   mir4AutoBattleActive(pid = this.playerId): boolean {
     return this.players.get(pid)?.autoBattle?.mode === 'battle';
   }
@@ -3752,7 +3749,7 @@ export class Sim {
     return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
   }
 
-  /** Slice equipment verbs (Phase 4 replaces acquisition with drops/vendors). */
+  // Slice equipment verbs (Phase 4 replaces acquisition).
   mir4EquipStarterWeapon(pid = this.playerId): string {
     return mir4EquipStarterWeapon(this.ctx, pid);
   }
@@ -3761,7 +3758,7 @@ export class Sim {
     return mir4UnequipWeapon(this.ctx, pid);
   }
 
-  /** The mir4 ultimate (gauge 100, own cooldown, authored impact offsets). */
+  // The mir4 ultimate (full gauge, own cooldown, offsets).
   mir4UltimateCast(targetId?: number, pid = this.playerId): Mir4CastResult {
     return mir4Ultimate(this.ctx, pid, targetId);
   }
@@ -8088,6 +8085,11 @@ export class Sim {
   }
 
   mobSwing(mob: Entity, target: Entity): void {
+    // mir4 (3.7): mob->player attacks ride the profile's own bps pipeline.
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE && target.kind === 'player' && target.mir4) {
+      mir4MobAttackPlayer(this.ctx, mob, target);
+      return;
+    }
     const missChance = swingMissChance(mob, target);
     const dodgeChance = target.kind === 'player' ? target.dodgeChance : 0.05;
     const { parryChance, blockChance } = warriorMeleeDefense(target, mob);

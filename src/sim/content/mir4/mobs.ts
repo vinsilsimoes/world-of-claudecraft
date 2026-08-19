@@ -64,7 +64,7 @@ function forestWolfTemplate(): MobTemplate {
     armorPerLevel: 0,
     moveSpeed: 3.5,
     aggroRadius: 0,
-    mir4XpReward: 22,
+    mir4XpReward: 34, // m01 combatXpModel normalXp (was 22: the native catalog value)
     loot: [{ copper: 2, chance: 1 }],
     scale: 1,
     color: 0x8a7a66,
