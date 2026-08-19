@@ -121,6 +121,7 @@ import {
   resetLoadProfile,
   summarizeLoadProfile,
 } from './game/load_profiler';
+import { wireMir4SlicePlaytest } from './game/mir4_slice_input';
 import {
   interfaceModeFromSetting,
   isPhoneTouchDevice,
@@ -5188,6 +5189,7 @@ async function startOffline(
     () => new Sim(offlineSimOptions({ playerClass, playerName: name, world, seedOverride })),
   );
   sim.setPlayerSkin(sim.playerId, skin);
+  wireMir4SlicePlaytest(sim);
   // Offline has no account and no character row, so the local draft IS this
   // character's authored look and the creator's toggle IS its helm choice.
   // Stamped onto the entity because that is where every consumer reads a look
