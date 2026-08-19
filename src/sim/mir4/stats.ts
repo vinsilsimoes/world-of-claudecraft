@@ -11,6 +11,7 @@ import { MIR4_ITEMS } from '../content/mir4/items';
 import { aggregateMir4PassiveBonuses } from '../content/mir4/passives';
 import type { GameProfile } from '../game_profile';
 import type { Entity, Mir4ClassKey, Mir4PlayerCombatState, PlayerClass } from '../types';
+import { mir4EquippedAttributes } from './equipment';
 
 // Column indexes into MIR4_LEVEL_ROWS tuples (see MIR4_LEVEL_COLUMNS).
 export const MIR4_LEVEL_COL = {
@@ -123,7 +124,8 @@ export function recalcMir4PlayerStats(
   e: Entity,
   cls: PlayerClass | Mir4ClassKey,
   level: number,
-  equipment?: { weapon?: number },
+  equipment?: { weapon?: number; [slot: number]: number | undefined },
+  instances?: Record<number, unknown>,
 ): void {
   const classId = mir4ClassIdForPlayerClass(cls);
   const row = mir4LevelRow(classId, level);
@@ -137,14 +139,18 @@ export function recalcMir4PlayerStats(
   e.attackPower = row[MIR4_LEVEL_COL.physicalAttack];
   e.spellPower = row[MIR4_LEVEL_COL.magicAttack];
   let accuracy = row[MIR4_LEVEL_COL.accuracy];
-  // Equipped weapon attributes: only the status ids the combat bridge maps
-  // (mir4/content/items.ts MIR4_APPLIED_STATUS_IDS) are applied.
-  const weapon = equipment?.weapon;
-  if (weapon !== undefined) {
-    for (const attr of MIR4_ITEMS[weapon]?.attributes ?? []) {
-      const [statusId, value] = attr;
-      if (statusId === 20) e.attackPower += value;
-      else if (statusId === 28) accuracy += value;
+  const defenseAdds: [number, number][] = [];
+  // Every equipped item's applied attributes (base + enhancement + layers);
+  // only the status ids the combat bridge maps are applied, the rest stay
+  // data until their consumers land (MIR4_APPLIED_STATUS_IDS).
+  const attrs = mir4EquippedAttributes(equipment, instances as never);
+  for (const [statusId, value] of attrs) {
+    if (statusId === 20) e.attackPower += value;
+    else if (statusId === 22) e.spellPower += value;
+    else if (statusId === 28) accuracy += value;
+    else if (statusId === 24 || statusId === 26) {
+      // defenses accumulate onto the mir4 bag below via physDef/magDef sums
+      defenseAdds.push([statusId, value]);
     }
   }
   e.mir4 = {
@@ -155,8 +161,12 @@ export function recalcMir4PlayerStats(
     critical: row[MIR4_LEVEL_COL.critical],
     avoidCritical: row[MIR4_LEVEL_COL.avoidCritical],
     criticalOutcome: row[MIR4_LEVEL_COL.criticalOutcome],
-    physicalDefense: row[MIR4_LEVEL_COL.physicalDefense],
-    magicDefense: row[MIR4_LEVEL_COL.magicDefense],
+    physicalDefense:
+      row[MIR4_LEVEL_COL.physicalDefense] +
+      defenseAdds.filter((a) => a[0] === 24).reduce((s, a) => s + a[1], 0),
+    magicDefense:
+      row[MIR4_LEVEL_COL.magicDefense] +
+      defenseAdds.filter((a) => a[0] === 26).reduce((s, a) => s + a[1], 0),
   };
   // Class passives land LAST, as summed basis points over the status the
   // level table + gear already produced (the source's applyToCharacterStatus
@@ -252,4 +262,9 @@ export function advanceMir4Experience(
     levelUps += 1;
   }
   return { level: currentLevel, xp: currentXp, levelUps, atLevelCap: currentLevel >= maxLevel };
+}
+
+/** The mir4 class key for addPlayer's hook (undefined for classic keys). */
+export function mir4ClassKeyArg(cls: PlayerClass | Mir4ClassKey): Mir4ClassKey | undefined {
+  return cls !== 'warrior' && isMir4ClassKey(cls) ? cls : undefined;
 }

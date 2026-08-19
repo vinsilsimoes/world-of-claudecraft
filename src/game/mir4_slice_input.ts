@@ -57,7 +57,7 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
   const sync = () => {
     battleBtn.textContent = autoBattleOn ? '⚔ Auto battle: ON' : '⚔ Auto battle: OFF';
     questBtn.textContent = autoQuestOn
-      ? `▸ ${sim.mir4AutoQuestStatusText()}`
+      ? `▸ ${sim.mir4QuestStatusText()}`
       : '▸ Quest: Primeiros Rastros (auto)';
   };
   battleBtn.addEventListener('click', () => {

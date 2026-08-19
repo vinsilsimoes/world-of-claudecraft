@@ -322,11 +322,16 @@ import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
 import { mir4MobAttackPlayer, mir4Ultimate } from './mir4/combat';
 
-import type { Mir4Equipment } from './mir4/equipment';
-import { mir4EquipStarterWeapon, mir4UnequipWeapon } from './mir4/equipment';
+import type { Mir4Equipment, Mir4EquipmentInstanceState, Mir4Materials } from './mir4/equipment';
+import {
+  mir4Enhance,
+  mir4EquipItem,
+  mir4EquipStarterWeapon,
+  mir4UnequipWeapon,
+} from './mir4/equipment';
 import type { Mir4QuestProgress } from './mir4/quest';
 import { mir4TalkOrInspect } from './mir4/quest';
-import { initMir4Player, isMir4ClassKey, mir4ShellClassFor } from './mir4/stats';
+import { initMir4Player, isMir4ClassKey, mir4ClassKeyArg, mir4ShellClassFor } from './mir4/stats';
 import { updateMir4Systems } from './mir4/systems';
 import {
   mobCombatProfile as mobCombatProfileFn,
@@ -1352,6 +1357,9 @@ export interface PlayerMeta {
   mir4SkillLevels?: Record<number, number>;
   // mir4 equipment bag (Phase 4 persists and widens the slot set).
   mir4Equipment?: Mir4Equipment;
+  // Per-item mir4 state (enhancement + rolled layers) and the material wallet.
+  mir4EquipmentInstances?: Record<number, Mir4EquipmentInstanceState>;
+  mir4Materials?: Mir4Materials;
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing
@@ -3693,72 +3701,56 @@ export class Sim {
     this.deedDirtyPids.delete(player.id);
     this.deedDirtyKeys.delete(player.id);
     if (this.cfg.gameProfile === MIR4_GAME_PROFILE) {
-      const key = isMir4ClassKey(clsParam) && clsParam !== 'warrior' ? clsParam : undefined;
-      initMir4Player(this.ctx, player.id, opts?.state, key);
+      initMir4Player(this.ctx, player.id, opts?.state, mir4ClassKeyArg(clsParam));
     }
     return player.id;
   }
 
-  // mir4-gameplay-port combat surface: thin delegates over src/sim/mir4/
-  // combat.ts; classic profiles never call these.
   castMir4Skill(skillId: number, pid = this.playerId, targetId?: number): Mir4CastResult {
     return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
   }
-
   mir4BasicAttack(targetId?: number, pid = this.playerId): Mir4CastResult {
     return mir4Combat.mir4BasicAttack(this.ctx, pid, targetId);
   }
-
   setMir4AutoBattleMode(mode: 'off' | 'battle', pid = this.playerId): void {
     setMir4AutoBattleMode(this.ctx, pid, mode);
   }
-
-  // The mir4 quest verb: talk at the giver, inspect at a clue site.
   mir4TalkOrInspect(pid = this.playerId): string {
     return mir4TalkOrInspect(this.ctx, pid);
   }
-
   setMir4AutoQuest(on: boolean, pid = this.playerId): void {
     setMir4AutoQuest(this.ctx, pid, on);
   }
-
-  // English status line for the HUD tracker poll.
-  mir4AutoQuestStatusText(pid = this.playerId): string {
-    const meta = this.players.get(pid);
-    return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
-  }
-
-  // IWorldMir4 facet adapters (world_api/mir4.ts structural surface).
+  // IWorldMir4 facet adapters (the status text feeds the HUD poll).
   mir4AutoBattleActive(pid = this.playerId): boolean {
     return this.players.get(pid)?.autoBattle?.mode === 'battle';
   }
-
   setMir4AutoBattle(on: boolean, pid = this.playerId): void {
     this.setMir4AutoBattleMode(on ? 'battle' : 'off', pid);
   }
-
   mir4AutoQuestActive(pid = this.playerId): boolean {
     return this.players.get(pid)?.mir4AutoQuest !== undefined;
   }
-
   mir4QuestStatusText(pid = this.playerId): string {
-    return this.mir4AutoQuestStatusText(pid);
+    const meta = this.players.get(pid);
+    return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
   }
-
   mir4CastSkill(skillId: number, targetId?: number, pid = this.playerId): Mir4CastResult {
     return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
   }
-
-  // Slice equipment verbs (Phase 4 replaces acquisition).
+  // mir4 equipment + ultimate verbs.
   mir4EquipStarterWeapon(pid = this.playerId): string {
     return mir4EquipStarterWeapon(this.ctx, pid);
   }
-
   mir4UnequipWeapon(pid = this.playerId): string {
     return mir4UnequipWeapon(this.ctx, pid);
   }
-
-  // The mir4 ultimate (full gauge, own cooldown, offsets).
+  mir4EquipItem(itemId: number, pid = this.playerId): string {
+    return mir4EquipItem(this.ctx, pid, itemId);
+  }
+  mir4EnhanceItem(itemId: number, pid = this.playerId): ReturnType<typeof mir4Enhance> {
+    return mir4Enhance(this.ctx, pid, itemId);
+  }
   mir4UltimateCast(targetId?: number, pid = this.playerId): Mir4CastResult {
     return mir4Ultimate(this.ctx, pid, targetId);
   }

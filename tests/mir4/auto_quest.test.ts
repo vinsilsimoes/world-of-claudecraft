@@ -73,8 +73,8 @@ describe('the mir4 auto-quest journey', () => {
   it('the status line tracks the journey for the HUD poll', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(23);
-    expect(sim.mir4AutoQuestStatusText()).toBe('Auto quest off');
+    expect(sim.mir4QuestStatusText()).toBe('Auto quest off');
     sim.setMir4AutoQuest(true);
-    expect(sim.mir4AutoQuestStatusText()).toContain('walking to Tarek');
+    expect(sim.mir4QuestStatusText()).toContain('walking to Tarek');
   });
 });
