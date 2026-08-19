@@ -112,6 +112,8 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const wolf = spawnWolf(sim);
     ticks(sim, 1);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
+    expect(wolf.hp).toBe(127); // scheduled: nothing lands before the offset
+    ticks(sim, 6); // 0.30s >= the authored 280ms offset
     expect(wolf.hp).toBe(127 - 30);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({
       ok: false,
@@ -128,7 +130,8 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     const wolf = spawnWolf(sim);
     sim.castMir4Skill(1102, sim.playerId, wolf.id); // 125 of 127
     ticks(sim, 1);
-    sim.mir4BasicAttack(wolf.id); // 30 -> dead
+    sim.mir4BasicAttack(wolf.id); // scheduled 30 -> dead
+    ticks(sim, 6); // land the impact
     const meta = sim.players.get(sim.playerId);
     const p = sim.entities.get(sim.playerId)!;
     expect(wolf.dead).toBe(true);
@@ -147,6 +150,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
       for (let hit = 0; hit < 5 && !wolf.dead; hit++) {
         ticks(sim, 14);
         sim.mir4BasicAttack(wolf.id);
+        ticks(sim, 7); // land the scheduled impact before re-checking
       }
       expect(wolf.dead).toBe(true);
     }

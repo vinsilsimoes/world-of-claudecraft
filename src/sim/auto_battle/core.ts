@@ -10,7 +10,7 @@
 // run this system (the tick phase is profile-gated in sim.ts).
 
 import { mir4SkillsForClass } from '../content/mir4';
-import { castMir4Skill, mir4BasicAttack } from '../mir4/combat';
+import { castMir4Skill, mir4BasicAttack, mir4Ultimate } from '../mir4/combat';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { DT, dist2d, RUN_SPEED } from '../types';
@@ -159,8 +159,12 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     }
     faceTowards(p, target.pos.x, target.pos.z);
 
-    // Rotation tail: first ready kit skill, else the basic filler. The cast
-    // functions re-validate every admission rule themselves.
+    // Rotation tail: the ultimate first when the gauge is full (the source's
+    // selection order), then the first ready kit skill, else the basic filler.
+    // The cast functions re-validate every admission rule themselves.
+    if ((p.mir4UltGauge ?? 0) >= 100) {
+      mir4Ultimate(ctx, p.id, target.id);
+    }
     const kit = mir4SkillsForClass((p.mir4?.classId ?? 1) as 1 | 2 | 3 | 4 | 5);
     for (const skill of kit) {
       if (skill.unlock.kind === 'level' && p.level < skill.unlock.level) continue;

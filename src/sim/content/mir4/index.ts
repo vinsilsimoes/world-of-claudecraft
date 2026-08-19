@@ -16,14 +16,18 @@ export {
   mir4LevelRow,
 } from './class_levels';
 export {
+  MIR4_CLASS_COMBAT_SPECS,
   MIR4_CLASS_IDS,
   MIR4_CLASSES,
   MIR4_TILES_TO_YARDS,
+  type Mir4BasicSpec,
+  type Mir4ClassCombatSpec,
   type Mir4ClassDef,
   type Mir4ClassId,
   type Mir4ClassKey,
   type Mir4DamageChannel,
   type Mir4RangeBand,
+  type Mir4UltimateSpec,
   mir4ClassById,
   mir4ClassByKey,
   mir4ClassRangeYards,

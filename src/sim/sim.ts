@@ -320,6 +320,7 @@ import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
 import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
+import { mir4Ultimate, updateMir4PendingImpacts } from './mir4/combat';
 import { updateMir4Effects } from './mir4/effects';
 import type { Mir4Equipment } from './mir4/equipment';
 import { mir4EquipStarterWeapon, mir4UnequipWeapon } from './mir4/equipment';
@@ -3752,6 +3753,11 @@ export class Sim {
     return mir4UnequipWeapon(this.ctx, pid);
   }
 
+  /** The mir4 ultimate (gauge 100, own cooldown, authored impact offsets). */
+  mir4UltimateCast(targetId?: number, pid = this.playerId): Mir4CastResult {
+    return mir4Ultimate(this.ctx, pid, targetId);
+  }
+
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in
   // social/chat.ts): a dummy you can target and whisper to exercise social features
   // offline. Placed a few yards from the primary player so it is visible, and marked
@@ -6510,6 +6516,8 @@ export class Sim {
     lap?.('mir4.autoQuest');
     if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4Effects(this.ctx);
     lap?.('mir4.effects');
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4PendingImpacts(this.ctx);
+    lap?.('mir4.impacts');
 
     // movement re-bucketing: queries during the next tick and the server's
     // snapshot broadcast right after this one see fresh cells

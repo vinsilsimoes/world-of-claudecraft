@@ -116,6 +116,9 @@ export function initMir4Player(
       p.resource = Math.min(Math.max(0, Math.floor(state.resource)), p.maxResource);
     }
   } else {
+    // Fresh creation: the classic creation path left the entity at the
+    // CLASSIC pool (a level-1 warrior's ~100 hp), so fill to the mir4 pool.
+    p.hp = p.maxHp;
     mir4SyncResourcePool(p);
   }
 }

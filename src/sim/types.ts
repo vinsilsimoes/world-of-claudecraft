@@ -1498,6 +1498,18 @@ export interface Mir4TargetEffects {
   controlImmuneUntil: number;
 }
 
+// A scheduled mir4 impact (basic/ultimate): the damage resolves AT the
+// authored offset (rolls drawn then, matching the source's dueAt clock).
+export interface Mir4PendingImpact {
+  dueAt: number;
+  sourceId: number;
+  targetId: number;
+  rawDamage: number;
+  channel: 'physical' | 'magic';
+  name: string | null;
+  gaugeGain: number;
+}
+
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
 // same dot-aura shape the on-hit venom/cinder affix family applies, shared by
 // arcCleave / breathCone / broodWhelp so every burn rides the one seam.
@@ -4237,6 +4249,9 @@ export interface Entity extends ClientMirroredEntityFields {
   mir4?: Mir4PlayerCombatState;
   // mir4 target-effect bag (CC/debuffs); see the Mir4TargetEffects comment.
   mir4Effects?: Mir4TargetEffects;
+  // mir4 ultimate gauge (0..100) and the pending authored-offset impacts.
+  mir4UltGauge?: number;
+  mir4PendingImpacts?: Mir4PendingImpact[];
   overheadEmoteId: OverheadEmoteId | null;
   overheadEmoteUntil: number;
   overheadEmoteSeq: number;

@@ -89,7 +89,8 @@ describe('the mir4 slice equipment', () => {
     expect(wolf.maxHp).toBe(mir4MobStats(1).maxHp);
     sim.castMir4Skill(1102, sim.playerId, wolf.id); // 125 of 127
     sim.tick();
-    sim.mir4BasicAttack(wolf.id); // lethal
+    sim.mir4BasicAttack(wolf.id); // lethal (scheduled at the 280ms offset)
+    for (let t = 0; t < 7 && !wolf.dead; t++) sim.tick();
     expect(wolf.dead).toBe(true);
     // Copper rides the corpse: looting pays the rolled band (2x[0.6..1.4] = 2).
     expect(sim.lootCorpse(wolf.id, sim.playerId)).toBe(true);

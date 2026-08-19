@@ -151,3 +151,133 @@ export const MIR4_TILES_TO_YARDS = 2;
 export function mir4ClassRangeYards(def: Mir4ClassDef): number {
   return def.rangeTiles * MIR4_TILES_TO_YARDS;
 }
+
+/**
+ * The per-class basic/ultimate/evade specs, ported verbatim from the source's
+ * sealed durable-combat invariants (createP3bB3DurableCombatSpec and the P4
+ * builders in server/mir4-durable-combat.js): coefficients, authored impact
+ * offsets, cadences, gauge gains, ultimate totals, and evade windows.
+ * Ranges stay in source px; convert at the call site (px / 16 = yards).
+ */
+export interface Mir4BasicSpec {
+  /** Channel: only the elementalist's basic is magic. */
+  channel: 'physical' | 'magic';
+  coefficient: number;
+  impactOffsetMs: readonly number[];
+  cadenceMs: number;
+  rangePx: number;
+  gaugeGainPerImpact: number;
+}
+
+export interface Mir4UltimateSpec {
+  channel: 'physical' | 'magic';
+  perImpactCoefficient: number;
+  impactOffsetMs: readonly number[];
+  cooldownMs: number;
+  rangePx: number;
+  requiredGauge: number;
+}
+
+export interface Mir4ClassCombatSpec {
+  basic: Mir4BasicSpec;
+  ultimate: Mir4UltimateSpec;
+  evade: { distancePx: number; durationMs: number; cooldownMs: number; windowMs: number };
+}
+
+export const MIR4_CLASS_COMBAT_SPECS: Record<number, Mir4ClassCombatSpec> = {
+  1: {
+    basic: {
+      channel: 'physical',
+      coefficient: 6000,
+      impactOffsetMs: [280],
+      cadenceMs: 650,
+      rangePx: 80,
+      gaugeGainPerImpact: 12,
+    },
+    ultimate: {
+      channel: 'physical',
+      perImpactCoefficient: 12000,
+      impactOffsetMs: [520, 760, 1020],
+      cooldownMs: 30000,
+      rangePx: 96,
+      requiredGauge: 100,
+    },
+    evade: { distancePx: 96, durationMs: 320, cooldownMs: 4500, windowMs: 220 },
+  },
+  2: {
+    basic: {
+      channel: 'magic',
+      coefficient: 5200,
+      impactOffsetMs: [360],
+      cadenceMs: 750,
+      rangePx: 112,
+      gaugeGainPerImpact: 10,
+    },
+    ultimate: {
+      channel: 'magic',
+      perImpactCoefficient: 10500,
+      impactOffsetMs: [460, 700, 940, 1180],
+      cooldownMs: 32000,
+      rangePx: 128,
+      requiredGauge: 100,
+    },
+    evade: { distancePx: 96, durationMs: 240, cooldownMs: 6000, windowMs: 110 },
+  },
+  3: {
+    basic: {
+      channel: 'physical',
+      coefficient: 4600,
+      impactOffsetMs: [420],
+      cadenceMs: 840,
+      rangePx: 96,
+      gaugeGainPerImpact: 9,
+    },
+    ultimate: {
+      channel: 'physical',
+      perImpactCoefficient: 9500,
+      impactOffsetMs: [440, 760, 1080],
+      cooldownMs: 36000,
+      rangePx: 118,
+      requiredGauge: 100,
+    },
+    evade: { distancePx: 88, durationMs: 220, cooldownMs: 5400, windowMs: 120 },
+  },
+  4: {
+    basic: {
+      channel: 'physical',
+      coefficient: 4300,
+      impactOffsetMs: [300],
+      cadenceMs: 700,
+      rangePx: 138,
+      gaugeGainPerImpact: 8,
+    },
+    ultimate: {
+      channel: 'physical',
+      perImpactCoefficient: 10800,
+      impactOffsetMs: [360, 640, 920],
+      cooldownMs: 34000,
+      rangePx: 154,
+      requiredGauge: 100,
+    },
+    evade: { distancePx: 104, durationMs: 180, cooldownMs: 4800, windowMs: 90 },
+  },
+  5: {
+    basic: {
+      channel: 'physical',
+      coefficient: 3900,
+      impactOffsetMs: [260],
+      cadenceMs: 760,
+      rangePx: 96,
+      gaugeGainPerImpact: 7,
+    },
+    ultimate: {
+      channel: 'physical',
+      perImpactCoefficient: 12100,
+      impactOffsetMs: [320, 650],
+      cooldownMs: 36000,
+      rangePx: 112,
+      requiredGauge: 100,
+    },
+    evade: { distancePx: 88, durationMs: 170, cooldownMs: 5200, windowMs: 80 },
+  },
+};

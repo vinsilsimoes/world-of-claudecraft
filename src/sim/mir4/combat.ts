@@ -8,11 +8,12 @@
 //
 // Basic attack policy is the source's sealed authorial baseline
 // (F:\Dev\Survival-Game server/mir4-durable-combat.js
-// createP3bB3DurableCombatSpec invariants): coefficient 6000, one impact,
-// 650 ms cadence/cooldown, 80 px source range clamped to the class band. The
-// ultimate gauge it builds (12 per impact, ultimate at 100) is Phase 3 scope.
+// createP3bB3DurableCombatSpec invariants and the per-class P4 builders):
+// coefficient, authored impact offset, cadence, gauge gain, and the ultimate
+// all come from MIR4_CLASS_COMBAT_SPECS (src/sim/content/mir4/classes.ts).
 
 import {
+  MIR4_CLASS_COMBAT_SPECS,
   MIR4_SKILL_GLOBAL_COOLDOWN_MS,
   mir4ClassById,
   mir4ClassRangeYards,
@@ -36,8 +37,6 @@ import {
 } from './math';
 import { advanceMir4Experience, mir4ClassIdForPlayerClass, recalcMir4PlayerStats } from './stats';
 
-const BASIC_ATTACK_COOLDOWN_SECONDS = 0.65;
-const BASIC_ATTACK_COEFFICIENT = 6000;
 const BASIC_ATTACK_COOLDOWN_KEY = 'mir4_basic';
 
 function mir4AttackerStats(p: Entity): Partial<Mir4CombatStats> {
@@ -233,31 +232,136 @@ export function castMir4Skill(
   return { ok: true };
 }
 
-/** The authorial basic attack: coefficient 6000, its own 650 ms cadence. */
+/**
+ * The per-class basic attack from the ported spec: coefficient, authored
+ * impact offset, cadence. The damage resolves AT the offset (rolls then), and
+ * each landed impact feeds the ultimate gauge.
+ */
 export function mir4BasicAttack(ctx: SimContext, pid: number, targetId?: number): Mir4CastResult {
   const p = ctx.entities.get(pid);
   if (!p || p.dead) return { ok: false, reason: 'no-target' };
   const target = resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
   if (!target) return { ok: false, reason: 'no-target' };
-  if (dist2d(p.pos, target.pos) > classRangeYards(p)) {
+  const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1]!;
+  const rangeYards = Math.min(classRangeYards(p), spec.basic.rangePx / 16);
+  if (dist2d(p.pos, target.pos) > rangeYards) {
     return { ok: false, reason: 'out-of-range' };
   }
   if (p.cooldowns.has(BASIC_ATTACK_COOLDOWN_KEY)) return { ok: false, reason: 'on-cooldown' };
 
-  p.cooldowns.set(BASIC_ATTACK_COOLDOWN_KEY, BASIC_ATTACK_COOLDOWN_SECONDS);
-  const damage = mir4CoefficientDamage(p.attackPower, BASIC_ATTACK_COEFFICIENT);
-  const resolved = mir4ResolveDamage({
-    rawDamage: damage,
-    channel: 'physical',
-    attacker: mir4AttackerStats(p),
-    defender: mir4DefenderStats(target),
-    hitRoll: rollBps(ctx),
-    criticalRoll: rollBps(ctx),
-  });
-  if (resolved.hit) {
-    ctx.dealDamage(p, target, resolved.damage, resolved.critical, 'physical', null, 'hit', true);
+  p.cooldowns.set(BASIC_ATTACK_COOLDOWN_KEY, spec.basic.cadenceMs / 1000);
+  const attackPower = spec.basic.channel === 'magic' ? p.spellPower : p.attackPower;
+  const damage = mir4CoefficientDamage(attackPower, spec.basic.coefficient);
+  for (const offsetMs of spec.basic.impactOffsetMs) {
+    scheduleMir4Impact(ctx, p, target, {
+      dueAt: ctx.time + offsetMs / 1000,
+      rawDamage: damage,
+      channel: spec.basic.channel,
+      name: null,
+      gaugeGain: spec.basic.gaugeGainPerImpact,
+    });
   }
   return { ok: true };
+}
+
+const ULTIMATE_COOLDOWN_KEY = 'mir4_ult';
+
+/**
+ * The ultimate: requires a full gauge (atomically spent at admission), its
+ * own cooldown, and per-impact damage at the authored offsets.
+ */
+export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): Mir4CastResult {
+  const p = ctx.entities.get(pid);
+  if (!p || p.dead) return { ok: false, reason: 'no-target' };
+  const target = resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
+  if (!target) return { ok: false, reason: 'no-target' };
+  const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1]!;
+  if ((p.mir4UltGauge ?? 0) < spec.ultimate.requiredGauge) {
+    return { ok: false, reason: 'no-mp' };
+  }
+  const rangeYards = Math.min(classRangeYards(p) * 1.5, spec.ultimate.rangePx / 16);
+  if (dist2d(p.pos, target.pos) > rangeYards) {
+    return { ok: false, reason: 'out-of-range' };
+  }
+  if (p.cooldowns.has(ULTIMATE_COOLDOWN_KEY)) return { ok: false, reason: 'on-cooldown' };
+
+  p.mir4UltGauge = 0;
+  p.cooldowns.set(ULTIMATE_COOLDOWN_KEY, spec.ultimate.cooldownMs / 1000);
+  const attackPower = spec.ultimate.channel === 'magic' ? p.spellPower : p.attackPower;
+  const damage = mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient);
+  for (const offsetMs of spec.ultimate.impactOffsetMs) {
+    scheduleMir4Impact(ctx, p, target, {
+      dueAt: ctx.time + offsetMs / 1000,
+      rawDamage: damage,
+      channel: spec.ultimate.channel,
+      name: 'Ultimate',
+      gaugeGain: 0,
+    });
+  }
+  return { ok: true };
+}
+
+function scheduleMir4Impact(
+  ctx: SimContext,
+  p: Entity,
+  target: Entity,
+  impact: {
+    dueAt: number;
+    rawDamage: number;
+    channel: 'physical' | 'magic';
+    name: string | null;
+    gaugeGain: number;
+  },
+): void {
+  if (!p.mir4PendingImpacts) p.mir4PendingImpacts = [];
+  p.mir4PendingImpacts.push({
+    dueAt: impact.dueAt,
+    sourceId: p.id,
+    targetId: target.id,
+    rawDamage: impact.rawDamage,
+    channel: impact.channel,
+    name: impact.name,
+    gaugeGain: impact.gaugeGain,
+  });
+}
+
+/** Drain the due authored-offset impacts; rolls are drawn HERE (source clock). */
+export function updateMir4PendingImpacts(ctx: SimContext): void {
+  for (const e of ctx.entities.values()) {
+    const pending = e.mir4PendingImpacts;
+    if (!pending || pending.length === 0) continue;
+    const due = pending.filter((i) => i.dueAt <= ctx.time);
+    if (due.length === 0) continue;
+    e.mir4PendingImpacts = pending.filter((i) => i.dueAt > ctx.time);
+    for (const impact of due) {
+      const source = ctx.entities.get(impact.sourceId);
+      const target = ctx.entities.get(impact.targetId);
+      if (!source || !target || target.dead || source.dead) continue;
+      const raw = Math.floor(impact.rawDamage * (1 + mir4DamageTakenAddend(target)));
+      const resolved = mir4ResolveDamage({
+        rawDamage: raw,
+        channel: impact.channel,
+        attacker: mir4AttackerStats(source),
+        defender: mir4DefenderStats(target),
+        hitRoll: rollBps(ctx),
+        criticalRoll: rollBps(ctx),
+      });
+      if (!resolved.hit) continue;
+      ctx.dealDamage(
+        source,
+        target,
+        resolved.damage,
+        resolved.critical,
+        impact.channel,
+        impact.name,
+        'hit',
+        true,
+      );
+      if (impact.gaugeGain > 0) {
+        source.mir4UltGauge = Math.min(100, (source.mir4UltGauge ?? 0) + impact.gaugeGain);
+      }
+    }
+  }
 }
 
 /** The PlayerMeta fields the XP grant reads (structural, no sim.ts cycle). */
