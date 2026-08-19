@@ -263,12 +263,15 @@ persistence (currently runtime on PlayerMeta).
 gear ranks/portal chain) with the procedural band generator
 (buildMir4ArcWorld), the 230-quest table (four groups at sealed
 cardinalities, chain wiring, exact rewards, stage-kind sequences), and
-the mounts (85) + spirits (30) catalogs. Still open for the phase: the
-arc world as the LIVE offline world (swap MIR4_SLICE_WORLD), the quest
-runtime verbs for the full stage-kind vocabulary, mob templates per
-environment (currently the wolf everywhere), portals between bands,
-mounts/spirits runtime systems, and the persistence of quest/equipment/
-material state.
+the mounts (85) + spirits (30) catalogs. **5.4 SHIPPED TOO** (commit
+85442bba2): the arc is the LIVE offline world - per-environment mob
+templates from the census (spawn formula at each map's band,
+sequence-scaled XP, census-backed resolver in the camp loop), camps
+picking each map's own families, and buildMir4ArcWorld() as the
+default (VITE_MIR4_ARC_MAPS=1 shrinks to m01). Still open: quest
+runtime verbs for the full stage-kind vocabulary, inter-band portals,
+mounts/spirits runtime systems, and quest/equipment/material
+persistence.
 
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
