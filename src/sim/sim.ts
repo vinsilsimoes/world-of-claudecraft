@@ -20,6 +20,8 @@ import type {
   ToolEffectSlotView,
 } from '../world_api';
 import { setMir4AutoBattleMode, updateMir4AutoBattle } from './auto_battle/core';
+import type { Mir4AutoQuestState } from './auto_quest/core';
+import { mir4AutoQuestStatus, setMir4AutoQuest, updateMir4AutoQuest } from './auto_quest/core';
 import * as bagsMod from './bags';
 import {
   addStacked,
@@ -1338,6 +1340,8 @@ export interface PlayerMeta {
   };
   // mir4 slice quest progress (runtime-only this slice; Phase 5 persists it).
   mir4Quests?: Record<string, Mir4QuestProgress>;
+  // mir4 auto-quest journey (src/sim/auto_quest/core.ts): runtime toggle.
+  mir4AutoQuest?: Mir4AutoQuestState;
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing
@@ -3699,6 +3703,16 @@ export class Sim {
   /** The mir4 quest interaction verb: talk at the giver, inspect at a clue site. */
   mir4TalkOrInspect(pid = this.playerId): string {
     return mir4TalkOrInspect(this.ctx, pid);
+  }
+
+  setMir4AutoQuest(on: boolean, pid = this.playerId): void {
+    setMir4AutoQuest(this.ctx, pid, on);
+  }
+
+  /** English status line for the HUD tracker poll (localized with the facet). */
+  mir4AutoQuestStatusText(pid = this.playerId): string {
+    const meta = this.players.get(pid);
+    return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
   }
 
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in
@@ -6455,6 +6469,8 @@ export class Sim {
     // the mir4 cast gates.
     if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4AutoBattle(this.ctx);
     lap?.('mir4.autoBattle');
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4AutoQuest(this.ctx);
+    lap?.('mir4.autoQuest');
 
     // movement re-bucketing: queries during the next tick and the server's
     // snapshot broadcast right after this one see fresh cells
