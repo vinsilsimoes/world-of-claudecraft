@@ -1,5 +1,5 @@
 import { browserGameProfile } from '../game_profile_runtime';
-import { MIR4_SLICE_WORLD } from '../sim/content/mir4/world';
+import { buildMir4ArcWorld } from '../sim/content/mir4/arc_world';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { mir4ShellClassFor } from '../sim/mir4/stats';
 import {
@@ -40,8 +40,16 @@ export function offlineSimOptions(opts: {
     // full-world wilderness AI from the browser's 20 Hz tick without changing
     // anything visible or interactable.
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
-    // The mir4 profile's offline world (Vila do Vau). An explicit world (the
-    // editor play-test) always wins; classic stays on the generated builtin.
-    world: opts.world ?? (profile === MIR4_GAME_PROFILE ? MIR4_SLICE_WORLD : undefined),
+    // The mir4 profile's offline world: the full 20-map arc (Phase 5.4). An
+    // explicit world (the editor play-test) always wins; classic stays on the
+    // generated builtin. Set MIR4_ARC_MAPS=1 for the m01-only slice.
+    world:
+      opts.world ?? (profile === MIR4_GAME_PROFILE ? buildMir4ArcWorld(arcMapBudget()) : undefined),
   };
+}
+
+function arcMapBudget(): number {
+  const raw = import.meta.env.VITE_MIR4_ARC_MAPS;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 20 ? parsed : 20;
 }

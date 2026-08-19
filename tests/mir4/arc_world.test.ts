@@ -76,9 +76,11 @@ describe('the arc band generator', () => {
     });
     expect(zoneAt(0, 40)?.id).toBe('mir4_m01-vila-do-vau');
     expect([...sim.entities.values()].filter((e) => e.kind === 'npc')).toHaveLength(1);
+    // The m01 camps pick the census's first two mob ids (wolf + thorn_imp),
+    // so the wolf pack is the east camp's five spawns.
     expect(
       [...sim.entities.values()].filter((e) => e.templateId === 'mir4_forest_wolf').length,
-    ).toBe(9);
+    ).toBe(5);
     // The full arc builds too: 20 zones, 20 givers, 180 camps.
     const all = buildMir4ArcWorld();
     expect(all.zones).toHaveLength(20);

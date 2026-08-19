@@ -9,6 +9,7 @@
 // the source's reciprocal portal pairs.
 
 import type { CampDef, WorldContent, ZoneDef } from '../../types';
+import { MIR4_ARC_MOB_IDS } from './arc_mob_ids';
 import { MIR4_M01_RECOMMENDED_COMBAT_POWER } from './mobs';
 import { MIR4_WORLD_ARC } from './world_arc';
 
@@ -42,14 +43,21 @@ export function mir4ArcBands(): Mir4ArcBand[] {
 }
 
 /** One map's hunting camps: two packs flanking the road north of the hub. */
-function mapCamps(mapId: string, levelMin: number, levelMax: number, rcp: number): CampDef[] {
-  void mapId;
-  const lvl = Math.max(1, levelMin);
-  void levelMax;
-  void rcp;
+function mapCamps(
+  mobIds: readonly string[],
+  levelMin: number,
+  _levelMax: number,
+  _rcp: number,
+): CampDef[] {
+  void _levelMax;
+  void _rcp;
+  // Pick this environment's first two mob ids for the flanking packs.
+  const east = `mir4_${mobIds[0] ?? 'forest_wolf'}`;
+  const west = `mir4_${mobIds[1] ?? mobIds[0] ?? 'forest_wolf'}`;
+  void levelMin;
   return [
-    { mobId: 'mir4_forest_wolf', center: { x: 70, z: 0 }, radius: 24, count: 5 },
-    { mobId: 'mir4_forest_wolf', center: { x: -70, z: 0 }, radius: 24, count: 4 },
+    { mobId: east, center: { x: 70, z: 0 }, radius: 24, count: 5 },
+    { mobId: west, center: { x: -70, z: 0 }, radius: 24, count: 4 },
   ];
 }
 
@@ -84,7 +92,7 @@ export function buildMir4ArcWorld(maps: number = MIR4_WORLD_ARC.length): WorldCo
       welcome: `${map.name} (Act ${map.act}).`,
     });
     for (const camp of mapCamps(
-      map.mapId,
+      MIR4_ARC_MOB_IDS[i] ?? ['forest_wolf'],
       map.levelMin,
       map.levelMax,
       MIR4_M01_RECOMMENDED_COMBAT_POWER,
