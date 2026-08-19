@@ -148,6 +148,57 @@ names. Plan them into each slice, do not defer them to the end.
 - **Phase 2: vertical slice** (spec below) proving the architecture end to end.
 - **Phase 3: classes and combat.** All five classes, 25 skills, passives, auto
   battle priorities, placeholder VFX/SFX, offline/online parity.
+
+### Phase 3 execution checklist (from the deep source audit)
+
+Source evidence base: server/mir4-{durable-combat,impact-execution,combat-data,
+authoritative-damage-v1,regional-skill-runtime-v1,crowd-control-policy-v1,
+auto-hunt-rotation-v1,class-passives js}, docs/mir4-browser-all-class-catalog.md.
+
+Key audit facts that shape the port:
+- Impact timing is authored offsets (dueAt = cast + offsetMs; warrior basic
+  [280], ultimates e.g. [520,760,1020]); native impactTimes are metadata-only.
+- `impactCount` on authorial policies is PRESENTATION cardinality, never a
+  damage multiplier; damage = floor(atk*(coef+(lvl-1)*levelUp)/10000) per
+  component, allocation per-impact (default) or row-total-impact-vector (3101).
+- Effect mechanics that actually multiply in the source: defense-break/burn
+  raise damageTaken (+magnitude), blind cuts the MOB's attack, slow cuts
+  movement, magic-shield 0.22 cuts actor damage taken; hard CC zeroes
+  movement/attack and grants 750ms post-expiry immunity (effectId dedup).
+  Vigor(41010)/Smite(20020) buffs are tracked-but-inert in the source: port
+  them as tracked state, NOT as damage modifiers (gap stays a gap).
+- Per-class basics: coef 6000/5200(magic)/4600/4300/3900, ranges 80-138px,
+  cadences 650-840ms; ultimate gauge gains 12/10/9/8/7 per basic impact,
+  ultimate at 100 (totals 36000/42000/28500/32400/24200, CDs 30-36s); evade
+  specs per class (distance/cd/window).
+- Rotation cascade (exact): survival<=45% HP -> aoe (nearby >= max(3,
+  minTargets)) -> debuff (effect present) -> execution (5104 <=30% target HP)
+  -> single-target -> basic-filler; CC admission re-checked per cast; warrior
+  flips setup {1102,1304,1104,1401} to payoff when the target is dazed.
+- Potions: HP 5% max (1s cd), MP 120 flat (5s cd); auto-potion thresholds
+  HP 50% / MP 35%.
+- Passives: 5 per class at levels 20/30/40/50/60, pure bps multipliers on the
+  effective status, applied after level+gear with proportional hp/mp rescale.
+- Skill level 2: only the SKILL_LEVEL_CAPS_BY_CLASS ids, behind server gates
+  (cost 3200 copper + 400 effect points + 3 tomes); dano uses levelUpCoefficient.
+- Mob side: attack cadence ~1s with authored impact offsets (native Valley Bat
+  440/740/1040ms), damage = atk * blind-mult, resolved against the PLAYER's
+  status 24/26 through the same 100/(100+def) mitagation; wolfkin/skeleton
+  pressure profiles; XP should move from our current flat 22 (native catalog)
+  to the m01 map combatXpModel (normal 34 / elite 170 / boss 680, cap 4092).
+
+Ordered slices (each independently committable):
+3.1 effect/CC engine + full warrior kit (1104/1304/1401/1501 effects, AoE
+    secondaries, delayed impacts via delayedEvents, 750ms CC immunity).
+3.2 basic/ultimate/gauge specs as data + warrior ultimate executing.
+3.3 D1 multi-class hosting decision (PlayerClass union vs templateId routing;
+    investigate classic CLASSES/guide obligations first) + creation gating.
+3.4 remaining four kits executing (incl. authorial hybrid math + tracked
+    buffs, 2503 shield, 3503 heal, 4106 stun PvE/PvP chances).
+3.5 rotation cascade per class + warrior setup/payoff + auto-potion.
+3.6 passives (data + recalc integration + rescale) + L2 evolution data/gates.
+3.7 mob attack pipeline mir4 + m01 combatXpModel + boss contextual wiring.
+3.8 offline/online parity pass + placeholder VFX event surface.
 - **Phase 4: equipment systems.** Inventory extension, refinement, enchantment,
   blessings, material wallet, transactional server validation.
 - **Phase 5: world and narrative.** Procedural zones for the m01..m20 arc, quest
