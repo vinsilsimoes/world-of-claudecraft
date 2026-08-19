@@ -33,9 +33,15 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
   window.addEventListener('keydown', (ev) => {
     if (ev.repeat) return;
     const targetId = sim.entities.get(sim.playerId)?.targetId ?? undefined;
-    if (ev.key === 'g' || ev.key === 'G') sim.castMir4Skill(1102, sim.playerId, targetId);
-    else if (ev.key === 'h' || ev.key === 'H') sim.mir4BasicAttack(sim.playerId, targetId);
-    else if (ev.key === 'b' || ev.key === 'B') {
+    if (ev.key === 'g' || ev.key === 'G') {
+      autoBattleOn = false; // a manual cast is the player taking control back
+      sim.setMir4AutoBattleMode('off');
+      sim.castMir4Skill(1102, sim.playerId, targetId);
+    } else if (ev.key === 'h' || ev.key === 'H') {
+      autoBattleOn = false;
+      sim.setMir4AutoBattleMode('off');
+      sim.mir4BasicAttack(sim.playerId, targetId);
+    } else if (ev.key === 'b' || ev.key === 'B') {
       autoBattleOn = !autoBattleOn;
       sim.setMir4AutoBattleMode(autoBattleOn ? 'battle' : 'off');
     }

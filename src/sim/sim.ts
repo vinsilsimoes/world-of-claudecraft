@@ -1326,7 +1326,12 @@ export interface PlayerMeta {
   // anchor the sim-side automation reads. Absent = never automated; classic
   // profiles never set it. Runtime state, recomputed anchor per enable, not
   // persisted.
-  autoBattle?: { mode: 'off' | 'battle'; anchorX: number; anchorZ: number };
+  autoBattle?: {
+    mode: 'off' | 'battle';
+    anchorX: number;
+    anchorZ: number;
+    acquireRadiusYards: number;
+  };
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing

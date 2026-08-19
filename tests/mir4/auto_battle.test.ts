@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MIR4_AUTO_BATTLE_ACQUIRE_YARDS } from '../../src/sim/auto_battle/core';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { Sim } from '../../src/sim/sim';
@@ -55,17 +56,17 @@ describe('mir4 auto battle', () => {
     };
     expect(run()).toEqual(run());
   });
-  it('stands guard at the anchor when no prey is in range', () => {
+  it('defaults the acquisition radius to the tripled 36yd and honors manual override', () => {
     const sim = makeSim(88);
     sim.setMir4AutoBattleMode('battle');
-    for (let i = 0; i < 40; i++) sim.tick();
     const meta = sim.players.get(sim.playerId)!;
-    const p = sim.entities.get(sim.playerId)!;
-    expect(meta.autoBattle?.mode).toBe('battle');
-    expect(p.targetId).toBeNull();
-    expect(meta.moveInput.forward).toBe(false); // already home: not walking
-    // No assertion on hp here: the surrounding classic-world mobs (the mir4
-    // zone is Phase 2 part 2) may harass a stationary player.
+    expect(meta.autoBattle?.acquireRadiusYards).toBe(36);
+    expect(MIR4_AUTO_BATTLE_ACQUIRE_YARDS).toBe(36);
+    // Any human movement input takes control back and switches it off.
+    meta.moveInput.forward = true;
+    sim.tick();
+    expect(meta.autoBattle?.mode).toBe('off');
+    meta.moveInput.forward = false;
   });
   it('turns off cleanly and stops acting', () => {
     const sim = makeSim(99);

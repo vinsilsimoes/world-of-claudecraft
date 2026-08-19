@@ -15,8 +15,12 @@ import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { dist2d, RUN_SPEED } from '../types';
 
-/** Target acquisition radius from the ANCHOR (source: anchor, not player). */
-export const MIR4_AUTO_BATTLE_ACQUIRE_YARDS = 12;
+/**
+ * Default target-acquisition radius from the ANCHOR (source: anchor, not
+ * player). Tripled from the source's 12yd per product direction; a future UI
+ * setting lets each player tune their own radius on the state field below.
+ */
+export const MIR4_AUTO_BATTLE_ACQUIRE_YARDS = 36;
 /** How close to the anchor the bot must stand before it stops walking home. */
 export const MIR4_AUTO_BATTLE_ANCHOR_TOLERANCE_YARDS = 2;
 
@@ -24,17 +28,27 @@ export interface Mir4AutoBattleState {
   mode: 'off' | 'battle';
   anchorX: number;
   anchorZ: number;
+  acquireRadiusYards: number;
 }
 
-export function setMir4AutoBattleMode(ctx: SimContext, pid: number, mode: 'off' | 'battle'): void {
+export function setMir4AutoBattleMode(
+  ctx: SimContext,
+  pid: number,
+  mode: 'off' | 'battle',
+  acquireRadiusYards = MIR4_AUTO_BATTLE_ACQUIRE_YARDS,
+): void {
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return;
   if (mode === 'battle') {
-    meta.autoBattle = { mode, anchorX: p.pos.x, anchorZ: p.pos.z };
+    meta.autoBattle = {
+      mode,
+      anchorX: p.pos.x,
+      anchorZ: p.pos.z,
+      acquireRadiusYards,
+    };
   } else if (meta.autoBattle) {
     meta.autoBattle.mode = 'off';
-    meta.moveInput.forward = false;
   }
 }
 
@@ -55,7 +69,7 @@ function acquireTarget(ctx: SimContext, p: Entity, st: Mir4AutoBattleState): Ent
     if (e.kind !== 'mob' || e.dead) continue;
     const d = dist2d({ x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos'], e.pos);
     const fromPlayer = dist2d(p.pos, e.pos);
-    if (d > MIR4_AUTO_BATTLE_ACQUIRE_YARDS || fromPlayer >= bestD) continue;
+    if (d > st.acquireRadiusYards || fromPlayer >= bestD) continue;
     best = e;
     bestD = fromPlayer;
   }
@@ -70,11 +84,28 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
 
+    // Manual override: any player-driven movement input takes control back and
+    // switches the automation off (the source project's manual-input rule for
+    // its journeys). Bot locomotion uses moveToward, never moveInput, so only
+    // a human hand sets these flags.
+    const inp = meta.moveInput;
+    if (
+      inp.forward ||
+      inp.back ||
+      inp.strafeLeft ||
+      inp.strafeRight ||
+      inp.turnLeft ||
+      inp.turnRight
+    ) {
+      st.mode = 'off';
+      continue;
+    }
+
     let target = livingMobAt(ctx, p.targetId);
     if (
       target &&
       dist2d({ x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos'], target.pos) >
-        MIR4_AUTO_BATTLE_ACQUIRE_YARDS
+        st.acquireRadiusYards
     ) {
       target = null; // outside the anchor: drop it, exactly like the source
     }
