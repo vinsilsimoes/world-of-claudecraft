@@ -281,6 +281,7 @@ import {
 } from './list_read_guard';
 import { type LiveSharedIp, sharedIpsFromLiveSessions } from './live_shared_ips';
 import { EMPTY_ACCOUNT_COSMETICS, reconcileWornMechChromaForJoin } from './mech_chroma_reconcile';
+import { handleMir4Command } from './mir4_commands';
 import {
   applyMobScanTick,
   createMobScanTickStats,
@@ -6728,6 +6729,9 @@ export class GameServer {
       session.lastMailWireTick = -MAIL_WIRE_INTERVAL_TICKS;
     }
     switch (command) {
+      case 'mir4':
+        if (typeof msg.m === 'string') handleMir4Command(sim, msg, pid);
+        break;
       case 'castSlot':
         if (typeof msg.slot === 'number') sim.castAbilityBySlot(msg.slot | 0, pid);
         break;

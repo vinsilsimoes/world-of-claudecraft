@@ -83,6 +83,7 @@ import type { IWorldInventory } from './world_api/inventory';
 import type { IWorldLoot } from './world_api/loot';
 import type { IWorldMail } from './world_api/mail';
 import type { IWorldMarket } from './world_api/market';
+import type { IWorldMir4 } from './world_api/mir4';
 import type { IWorldMounts } from './world_api/mounts';
 import type { IWorldParty } from './world_api/party';
 import type { IWorldPet } from './world_api/pet';
@@ -314,7 +315,8 @@ export interface IWorld
     IWorldActionBar,
     IWorldDeeds,
     IWorldReliquary,
-    IWorldMounts {}
+    IWorldMounts,
+    IWorldMir4 {}
 
 // ---------------------------------------------------------------------------
 // Command schema (W0b): the shared wire-token vocabulary.
@@ -615,6 +617,11 @@ export const COMMAND_NAMES = [
   // payload, the sim resolves the previous enemy in the same ordered list Tab
   // walks forward. Appended because wire tokens are never reordered.
   'tabPrev',
+  // The mir4-gameplay-port profile surface: ONE command carrying a sub-action
+  // envelope (m: 'auto' | 'quest' | 'cast' | 'basic' | 'equip' | 'unequip'),
+  // dispatched through server/mir4_commands.ts. The envelope keeps the wire
+  // universe append-only while the profile's verb set grows.
+  'mir4',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -697,7 +704,8 @@ export type WorldFacet =
   | 'IWorldActionBar'
   | 'IWorldDeeds'
   | 'IWorldReliquary'
-  | 'IWorldMounts';
+  | 'IWorldMounts'
+  | 'IWorldMir4';
 
 export const COMMAND_FACETS = {
   // IWorldCombat: ability casts, auto-attack, spirit release.
@@ -936,4 +944,6 @@ export const COMMAND_FACETS = {
   // IWorldActionBar: the debounced action-bar layout upload. takeActionBarLayoutRestore
   // is a login-time read (no send, untagged).
   save_hotbar_layout: 'IWorldActionBar',
+  // IWorldMir4: the mir4 profile surface rides the single 'mir4' envelope.
+  mir4: 'IWorldMir4',
 } as const satisfies Partial<Record<ClientCommand, WorldFacet>>;

@@ -102,6 +102,6 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
     if (ev.repeat) return;
     const targetId = sim.entities.get(sim.playerId)?.targetId ?? undefined;
     if (ev.key === 'g' || ev.key === 'G') sim.castMir4Skill(1102, sim.playerId, targetId);
-    else if (ev.key === 'h' || ev.key === 'H') sim.mir4BasicAttack(sim.playerId, targetId);
+    else if (ev.key === 'h' || ev.key === 'H') sim.mir4BasicAttack(targetId);
   });
 }

@@ -63,6 +63,7 @@ import type { IWorldInventory } from '../src/world_api/inventory';
 import type { IWorldLoot } from '../src/world_api/loot';
 import type { IWorldMail } from '../src/world_api/mail';
 import type { IWorldMarket } from '../src/world_api/market';
+import type { IWorldMir4 } from '../src/world_api/mir4';
 import type { IWorldMounts } from '../src/world_api/mounts';
 import type { IWorldParty } from '../src/world_api/party';
 import type { IWorldPet } from '../src/world_api/pet';
@@ -445,6 +446,18 @@ export const IWORLD_MEMBERS = [
   // IWorldActionBar: per-character action-bar layout persistence + login restore.
   { name: 'saveActionBarLayout', kind: 'method' },
   { name: 'takeActionBarLayoutRestore', kind: 'method' },
+  // IWorldMir4: the mir4-gameplay-port profile surface (auto battle, the
+  // auto-quest journey, manual casts, slice equipment verbs). Reads are
+  // optimistic on ClientWorld until the snapshot echo arm.
+  { name: 'mir4AutoBattleActive', kind: 'method' },
+  { name: 'setMir4AutoBattle', kind: 'method' },
+  { name: 'mir4AutoQuestActive', kind: 'method' },
+  { name: 'setMir4AutoQuest', kind: 'method' },
+  { name: 'mir4QuestStatusText', kind: 'method' },
+  { name: 'mir4CastSkill', kind: 'method' },
+  { name: 'mir4BasicAttack', kind: 'method' },
+  { name: 'mir4EquipStarterWeapon', kind: 'method' },
+  { name: 'mir4UnequipWeapon', kind: 'method' },
 ] as const satisfies readonly IWorldMember[];
 
 const DATA_MEMBERS = IWORLD_MEMBERS.filter((m) => m.kind === 'data');
@@ -606,9 +619,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(323);
+    expect(IWORLD_MEMBERS.length).toBe(332);
     expect(DATA_MEMBERS.length).toBe(86);
-    expect(METHOD_MEMBERS.length).toBe(237);
+    expect(METHOD_MEMBERS.length).toBe(246);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -806,6 +819,13 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'mir4AutoBattleActive',
+      'mir4AutoQuestActive',
+      'mir4BasicAttack',
+      'mir4CastSkill',
+      'mir4EquipStarterWeapon',
+      'mir4QuestStatusText',
+      'mir4UnequipWeapon',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -887,6 +907,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setHelmHidden',
       'setItemLocked',
       'setMarker',
+      'setMir4AutoBattle',
+      'setMir4AutoQuest',
       'setPartyLootMaster',
       'setPetAutoSpecial',
       'setPetAutoTaunt',
@@ -1170,6 +1192,13 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'mir4AutoBattleActive',
+      'mir4AutoQuestActive',
+      'mir4BasicAttack',
+      'mir4CastSkill',
+      'mir4EquipStarterWeapon',
+      'mir4QuestStatusText',
+      'mir4UnequipWeapon',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1231,6 +1260,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setHelmHidden',
       'setItemLocked',
       'setMarker',
+      'setMir4AutoBattle',
+      'setMir4AutoQuest',
       'setPartyLootMaster',
       'setPetAutoSpecial',
       'setPetAutoTaunt',
@@ -1816,6 +1847,19 @@ type _ExhaustActionBar = AssertNever<
   Exclude<keyof IWorldActionBar, (typeof FACET_ACTION_BAR)[number]>
 >;
 
+const FACET_MIR4 = [
+  'mir4AutoBattleActive',
+  'mir4AutoQuestActive',
+  'mir4BasicAttack',
+  'mir4CastSkill',
+  'mir4EquipStarterWeapon',
+  'mir4QuestStatusText',
+  'setMir4AutoBattle',
+  'setMir4AutoQuest',
+  'mir4UnequipWeapon',
+] as const satisfies readonly (keyof IWorldMir4)[];
+type _ExhaustMir4 = AssertNever<Exclude<keyof IWorldMir4, (typeof FACET_MIR4)[number]>>;
+
 // The facet partition, keyed by facet for legible failure messages.
 const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
   entityRoster: FACET_ENTITY_ROSTER,
@@ -1851,13 +1895,14 @@ const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
   deeds: FACET_DEEDS,
   reliquary: FACET_RELIQUARY,
   actionBar: FACET_ACTION_BAR,
+  mir4: FACET_MIR4,
 };
 
 describe('W1: aggregate IWorld member set equals the disjoint union of the facets', () => {
   it('pins the facet count', () => {
     // +1 battleground facet (Thornhollow Fields) on the release line; +1
     // Reliquary facet on this branch: 33 total.
-    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(33);
+    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(34);
   });
 
   it('each facet array is non-empty and internally duplicate-free', () => {
@@ -1867,7 +1912,7 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     }
   });
 
-  it('the 28 facet arrays are pairwise disjoint (no member filed in two facets)', () => {
+  it('the facet arrays are pairwise disjoint (no member filed in two facets)', () => {
     const entries = Object.entries(FACET_MEMBER_ARRAYS);
     const overlaps: string[] = [];
     for (let i = 0; i < entries.length; i++) {
@@ -1885,8 +1930,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(323);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(323);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(332);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(332);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

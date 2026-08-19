@@ -105,20 +105,20 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
       ok: false,
       reason: 'on-cooldown',
     });
-    expect(sim.mir4BasicAttack(sim.playerId, near.id)).toEqual({ ok: true });
+    expect(sim.mir4BasicAttack(near.id)).toEqual({ ok: true });
   });
   it('the basic attack deals floor(PA * 6000 / 10000) = 30 on its own cadence', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
     ticks(sim, 1);
-    expect(sim.mir4BasicAttack(sim.playerId, wolf.id)).toEqual({ ok: true });
+    expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
     expect(wolf.hp).toBe(127 - 30);
-    expect(sim.mir4BasicAttack(sim.playerId, wolf.id)).toEqual({
+    expect(sim.mir4BasicAttack(wolf.id)).toEqual({
       ok: false,
       reason: 'on-cooldown',
     });
     ticks(sim, 14); // 0.7s: past the 0.65s cadence (13 exact ticks leave a 0 floor)
-    expect(sim.mir4BasicAttack(sim.playerId, wolf.id)).toEqual({ ok: true });
+    expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
   });
 });
 
@@ -128,7 +128,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     const wolf = spawnWolf(sim);
     sim.castMir4Skill(1102, sim.playerId, wolf.id); // 125 of 127
     ticks(sim, 1);
-    sim.mir4BasicAttack(sim.playerId, wolf.id); // 30 -> dead
+    sim.mir4BasicAttack(wolf.id); // 30 -> dead
     const meta = sim.players.get(sim.playerId);
     const p = sim.entities.get(sim.playerId)!;
     expect(wolf.dead).toBe(true);
@@ -146,7 +146,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
       // passive-until-attacked and never closes the distance on its own.
       for (let hit = 0; hit < 5 && !wolf.dead; hit++) {
         ticks(sim, 14);
-        sim.mir4BasicAttack(sim.playerId, wolf.id);
+        sim.mir4BasicAttack(wolf.id);
       }
       expect(wolf.dead).toBe(true);
     }
@@ -163,7 +163,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
       const wolf = spawnWolf(sim);
       sim.castMir4Skill(1102, sim.playerId, wolf.id);
       ticks(sim, 13);
-      sim.mir4BasicAttack(sim.playerId, wolf.id);
+      sim.mir4BasicAttack(wolf.id);
       return [
         wolf.dead,
         sim.entities.get(sim.playerId)!.resource,
@@ -180,7 +180,7 @@ describe('the mir4 slice: persistence round-trip', () => {
     const wolf = spawnWolf(sim);
     sim.castMir4Skill(1102, sim.playerId, wolf.id);
     ticks(sim, 1);
-    sim.mir4BasicAttack(sim.playerId, wolf.id);
+    sim.mir4BasicAttack(wolf.id);
     const state = sim.serializeCharacter(sim.playerId);
     if (!state) throw new Error('serialize failed');
     expect(state.gameProfile).toBe('mir4-gameplay-port');

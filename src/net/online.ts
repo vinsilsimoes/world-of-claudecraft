@@ -43,6 +43,7 @@ import { DEEDS_RECENT_CAP, freshDeedStats } from '../sim/deeds';
 import { LEADERBOARD_PAGE_SIZE } from '../sim/leaderboard_page';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MarketQuery } from '../sim/market_query';
+import type { Mir4CastResult } from '../sim/mir4/combat';
 import { normalizeMoveFacing, sanitizeMoveInput } from '../sim/move_input';
 import { isPersistentEngineAura } from '../sim/persistent_aura';
 import { isPrimaryOwnedPetEntity } from '../sim/pet/pet_selection';
@@ -4025,6 +4026,45 @@ export class ClientWorld implements IWorld {
   // stale override falls back to current-target-else-self server-side.
   castAbilityOn(abilityId: string, targetId: number): void {
     this.cmd({ cmd: 'cast', ability: abilityId, target: targetId });
+  }
+
+  // IWorldMir4: the mir4 profile surface. Verbs ride the single 'mir4'
+  // envelope (server/mir4_commands.ts re-validates everything through the
+  // sim's admission gates); reads are optimistic mirrors until the snapshot
+  // echo arm lands with the HUD domain.
+  private mir4Mirror = { autoBattle: false, autoQuest: false };
+  mir4AutoBattleActive(): boolean {
+    return this.mir4Mirror.autoBattle;
+  }
+  setMir4AutoBattle(on: boolean): void {
+    this.mir4Mirror.autoBattle = on;
+    this.cmd({ cmd: 'mir4', m: 'auto', on });
+  }
+  mir4AutoQuestActive(): boolean {
+    return this.mir4Mirror.autoQuest;
+  }
+  setMir4AutoQuest(on: boolean): void {
+    this.mir4Mirror.autoQuest = on;
+    this.cmd({ cmd: 'mir4', m: 'quest', on });
+  }
+  mir4QuestStatusText(): string {
+    return 'Auto quest off';
+  }
+  mir4CastSkill(skillId: number, targetId?: number): Mir4CastResult {
+    this.cmd({ cmd: 'mir4', m: 'cast', skill: skillId, target: targetId });
+    return { ok: true };
+  }
+  mir4BasicAttack(targetId?: number): Mir4CastResult {
+    this.cmd({ cmd: 'mir4', m: 'basic', target: targetId });
+    return { ok: true };
+  }
+  mir4EquipStarterWeapon(): string {
+    this.cmd({ cmd: 'mir4', m: 'equip' });
+    return 'Starter weapon equipped.';
+  }
+  mir4UnequipWeapon(): string {
+    this.cmd({ cmd: 'mir4', m: 'unequip' });
+    return 'Weapon unequipped.';
   }
   releaseEmpoweredAbility(abilityId: string): void {
     this.cmd({ cmd: 'releaseEmpowered', ability: abilityId });

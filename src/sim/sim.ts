@@ -3697,7 +3697,7 @@ export class Sim {
     return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
   }
 
-  mir4BasicAttack(pid = this.playerId, targetId?: number): Mir4CastResult {
+  mir4BasicAttack(targetId?: number, pid = this.playerId): Mir4CastResult {
     return mir4Combat.mir4BasicAttack(this.ctx, pid, targetId);
   }
 
@@ -3718,6 +3718,28 @@ export class Sim {
   mir4AutoQuestStatusText(pid = this.playerId): string {
     const meta = this.players.get(pid);
     return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
+  }
+
+  // IWorldMir4 facet adapters (facet-shaped names/arity; the world_api/mir4.ts
+  // interface is satisfied structurally by these plus the delegates above).
+  mir4AutoBattleActive(pid = this.playerId): boolean {
+    return this.players.get(pid)?.autoBattle?.mode === 'battle';
+  }
+
+  setMir4AutoBattle(on: boolean, pid = this.playerId): void {
+    this.setMir4AutoBattleMode(on ? 'battle' : 'off', pid);
+  }
+
+  mir4AutoQuestActive(pid = this.playerId): boolean {
+    return this.players.get(pid)?.mir4AutoQuest !== undefined;
+  }
+
+  mir4QuestStatusText(pid = this.playerId): string {
+    return this.mir4AutoQuestStatusText(pid);
+  }
+
+  mir4CastSkill(skillId: number, targetId?: number, pid = this.playerId): Mir4CastResult {
+    return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
   }
 
   /** Slice equipment verbs (Phase 4 replaces acquisition with drops/vendors). */
