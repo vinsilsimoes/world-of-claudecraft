@@ -29,10 +29,15 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
     );
     sim.addEntity(wolf);
   }
+  let autoBattleOn = false;
   window.addEventListener('keydown', (ev) => {
     if (ev.repeat) return;
     const targetId = sim.entities.get(sim.playerId)?.targetId ?? undefined;
     if (ev.key === 'g' || ev.key === 'G') sim.castMir4Skill(1102, sim.playerId, targetId);
     else if (ev.key === 'h' || ev.key === 'H') sim.mir4BasicAttack(sim.playerId, targetId);
+    else if (ev.key === 'b' || ev.key === 'B') {
+      autoBattleOn = !autoBattleOn;
+      sim.setMir4AutoBattleMode(autoBattleOn ? 'battle' : 'off');
+    }
   });
 }
