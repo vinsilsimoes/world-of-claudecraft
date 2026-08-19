@@ -1468,6 +1468,36 @@ export interface Mir4PlayerCombatState {
   magicDefense: number;
 }
 
+// mir4-gameplay-port target-effect state (CC/debuffs on any entity, usually a
+// mob): the ported crowd-control bag. Hard control also mirrors into a classic
+// 'stun'/'slow' aura so the shared mob AI and render react unchanged; the bag
+// owns the mir4 semantics (effectId dedup, magnitudes, the 750ms post-expiry
+// control immunity). Runtime-only; decayed per tick by src/sim/mir4/effects.ts.
+export type Mir4EffectKind =
+  | 'stun'
+  | 'knockdown'
+  | 'dazed'
+  | 'root'
+  | 'freeze'
+  | 'slow'
+  | 'blind'
+  | 'defense-break'
+  | 'burn';
+
+export interface Mir4ActiveEffect {
+  effectId: string;
+  kind: Mir4EffectKind;
+  remaining: number;
+  duration: number;
+  magnitude: number;
+  sourceId: number;
+}
+
+export interface Mir4TargetEffects {
+  active: Mir4ActiveEffect[];
+  controlImmuneUntil: number;
+}
+
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
 // same dot-aura shape the on-hit venom/cinder affix family applies, shared by
 // arcCleave / breathCone / broodWhelp so every burn rides the one seam.
@@ -4205,6 +4235,8 @@ export interface Entity extends ClientMirroredEntityFields {
   // src/sim/mir4/stats.ts recalcMir4PlayerStats (recomputed from level on
   // load, never persisted); classic entities never carry it.
   mir4?: Mir4PlayerCombatState;
+  // mir4 target-effect bag (CC/debuffs); see the Mir4TargetEffects comment.
+  mir4Effects?: Mir4TargetEffects;
   overheadEmoteId: OverheadEmoteId | null;
   overheadEmoteUntil: number;
   overheadEmoteSeq: number;

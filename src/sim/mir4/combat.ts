@@ -22,6 +22,13 @@ import type { SimContext } from '../sim_context';
 import type { Entity, PlayerClass } from '../types';
 import { dist2d } from '../types';
 import {
+  applyMir4Effect,
+  mir4AoESecondaryTargets,
+  mir4DamageTakenAddend,
+  mir4EffectKindOf,
+  mir4SecondaryBps,
+} from './effects';
+import {
   type Mir4CombatStats,
   mir4CoefficientDamage,
   mir4ResolveDamage,
@@ -130,6 +137,7 @@ export function castMir4Skill(
   const channel = 'physical';
   const skillLevel = 1; // source: level 2 sits behind Phase 3 evolution gates
   let anyImpactLanded = false;
+  let totalRawDamage = 0;
   for (const component of skill.damage?.components ?? []) {
     const coefficient = component.coefficient + (skillLevel - 1) * component.levelUpCoefficient;
     const coefficientDamage = mir4CoefficientDamage(p.attackPower, coefficient);
@@ -138,9 +146,13 @@ export function castMir4Skill(
       skill.damage?.allocationMode === 'row-total-impact-vector'
         ? Math.floor(coefficientDamage / impactCount)
         : coefficientDamage;
+    totalRawDamage += perImpact * impactCount;
     for (let impact = 0; impact < impactCount; impact++) {
+      // The source applies the target's damage-taken addend (defense-break +
+      // burn magnitudes) to the raw damage BEFORE the resolve pipeline.
+      const rawWithTaken = Math.floor(perImpact * (1 + mir4DamageTakenAddend(target)));
       const resolved = mir4ResolveDamage({
-        rawDamage: perImpact,
+        rawDamage: rawWithTaken,
         channel,
         attacker: mir4AttackerStats(p),
         defender: mir4DefenderStats(target),
@@ -164,27 +176,59 @@ export function castMir4Skill(
     if (target.dead) break;
   }
 
-  // Effect landings ride the shared aura machinery (stun via the classic kind).
+  // The AoE secondaries: up to maxSecondaryTargets other mobs inside the
+  // effect radius each take the contract's secondary bps of the cast's total
+  // raw damage (soft-capped by target selection, so the full base lands).
+  const area = skill.effect?.areaRadiusPx;
+  if (area !== undefined && totalRawDamage > 0) {
+    const maxTargets = skill.effect?.maxSecondaryTargets ?? 0;
+    const bps = skill.effect?.secondaryDamageBasisPoints ?? 0;
+    if (maxTargets > 0 && bps > 0) {
+      const secondaries = mir4AoESecondaryTargets(ctx, target, area / 16, maxTargets);
+      const perSecondary = Math.floor(
+        (totalRawDamage * mir4SecondaryBps(bps, maxTargets, secondaries.length)) / 10_000,
+      );
+      for (const secondary of secondaries) {
+        if (secondary.dead) continue;
+        const resolved = mir4ResolveDamage({
+          rawDamage: Math.floor(perSecondary * (1 + mir4DamageTakenAddend(secondary))),
+          channel,
+          attacker: mir4AttackerStats(p),
+          defender: mir4DefenderStats(secondary),
+          hitRoll: rollBps(ctx),
+          criticalRoll: rollBps(ctx),
+        });
+        if (resolved.hit) {
+          ctx.dealDamage(
+            p,
+            secondary,
+            resolved.damage,
+            resolved.critical,
+            channel,
+            skill.displayName,
+            'hit',
+            true,
+          );
+        }
+      }
+    }
+  }
+
+  // Effect landing through the mir4 engine (dedup + 750ms immunity tail +
+  // the classic stun/slow aura mirror). Stun chances (4106-style) join in 3.4.
   const effect = skill.effect;
-  const stunSeconds = (effect?.durationMs ?? 0) / 1000;
-  if (
-    anyImpactLanded &&
-    effect &&
-    !target.dead &&
-    stunSeconds > 0 &&
-    effect.effect === 'stun' &&
-    !target.ccImmune
-  ) {
-    ctx.applyAura(target, {
-      id: `mir4_${skillId}_stun`,
-      name: skill.displayName,
-      kind: 'stun',
-      remaining: stunSeconds,
-      duration: stunSeconds,
-      value: 0,
-      sourceId: p.id,
-      school: channel,
-    });
+  if (anyImpactLanded && effect && !target.dead) {
+    const kind = mir4EffectKindOf(effect.effect);
+    if (kind) {
+      applyMir4Effect(ctx, target, {
+        effectId: `mir4_${skillId}_${effect.effect}`,
+        kind,
+        durationSeconds: (effect.durationMs ?? 0) / 1000,
+        magnitude: effect.magnitude ?? 0,
+        name: skill.displayName,
+        sourceId: p.id,
+      });
+    }
   }
   return { ok: true };
 }

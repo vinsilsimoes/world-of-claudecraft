@@ -320,6 +320,7 @@ import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
 import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
+import { updateMir4Effects } from './mir4/effects';
 import type { Mir4Equipment } from './mir4/equipment';
 import { mir4EquipStarterWeapon, mir4UnequipWeapon } from './mir4/equipment';
 import type { Mir4QuestProgress } from './mir4/quest';
@@ -6507,6 +6508,8 @@ export class Sim {
     lap?.('mir4.autoBattle');
     if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4AutoQuest(this.ctx);
     lap?.('mir4.autoQuest');
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4Effects(this.ctx);
+    lap?.('mir4.effects');
 
     // movement re-bucketing: queries during the next tick and the server's
     // snapshot broadcast right after this one see fresh cells
