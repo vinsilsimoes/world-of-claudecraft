@@ -1,0 +1,41 @@
+// Barrel for the mir4-gameplay-port content datasets. Public surface only:
+// the class roster + level table, the skill catalog + authorial policies, and
+// the tile conversion. Pure data plus pure accessors; inert until the profile
+// wiring (Phase 2+) consumes it. Never spread into ../data.ts classic tables.
+
+export {
+  MIR4_AUTHORIAL_SKILL_POLICIES,
+  type Mir4AuthorialDamagePolicy,
+  type Mir4AuthorialSkillPolicy,
+} from './authorial_policies';
+export {
+  MIR4_LEVEL_COLUMNS,
+  MIR4_LEVEL_ROWS,
+  MIR4_MAX_LEVEL,
+  type Mir4LevelRow,
+  mir4LevelRow,
+} from './class_levels';
+export {
+  MIR4_CLASS_IDS,
+  MIR4_CLASSES,
+  MIR4_TILES_TO_YARDS,
+  type Mir4ClassDef,
+  type Mir4ClassId,
+  type Mir4ClassKey,
+  type Mir4DamageChannel,
+  type Mir4RangeBand,
+  mir4ClassById,
+  mir4ClassByKey,
+  mir4ClassRangeYards,
+} from './classes';
+export {
+  MIR4_SKILL_GLOBAL_COOLDOWN_MS,
+  MIR4_SKILLS,
+  type Mir4SkillDamage,
+  type Mir4SkillDamageComponent,
+  type Mir4SkillDef,
+  type Mir4SkillEffect,
+  type Mir4SkillProvenance,
+  mir4SkillById,
+  mir4SkillsForClass,
+} from './skills';
