@@ -1,8 +1,9 @@
 // The mir4 auto battle core (Phase 2 slice tail): server-sim-side automation
 // that owns target acquisition, pursuit, the rotation tail (a ready kit skill,
 // else the basic filler), and anchor return, per the source project's
-// admission model (the sim decides; the client only toggles). Locomotion rides
-// the shared player motion kernel through meta.moveInput + facing, and every
+// admission model (the sim decides; the client only toggles). Locomotion uses
+// the shared moveToward entry (mob/pet path) so the client's per-frame
+// moveInput writes can never clobber the pursuit, and every
 // offensive action reuses castMir4Skill/mir4BasicAttack's own gates (mp,
 // cooldown, GCD, range, target life), so automation can never bypass an
 // admission rule. Draws rng only through those casts. Classic profiles never
@@ -12,7 +13,7 @@ import { mir4SkillsForClass } from '../content/mir4';
 import { castMir4Skill, mir4BasicAttack } from '../mir4/combat';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
-import { dist2d } from '../types';
+import { dist2d, RUN_SPEED } from '../types';
 
 /** Target acquisition radius from the ANCHOR (source: anchor, not player). */
 export const MIR4_AUTO_BATTLE_ACQUIRE_YARDS = 12;
@@ -83,24 +84,22 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     }
 
     if (!target) {
-      // No prey: walk home and stand guard.
-      const home = dist2d(p.pos, { x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos']);
+      // No prey: walk home and stand guard. moveToward (the shared mob/pet
+      // movement entry) instead of meta.moveInput: the browser client
+      // overwrites moveInput from the keyboard every frame, which would
+      // clobber an input-driven pursuit between ticks.
+      const home = dist2d(p.pos, { x: st.anchorX, y: p.pos.y, z: st.anchorZ } as Entity['pos']);
       if (home > MIR4_AUTO_BATTLE_ANCHOR_TOLERANCE_YARDS) {
-        faceTowards(p, st.anchorX, st.anchorZ);
-        meta.moveInput.forward = true;
-      } else {
-        meta.moveInput.forward = false;
+        ctx.moveToward(p, { x: st.anchorX, y: p.pos.y, z: st.anchorZ }, RUN_SPEED);
       }
       continue;
     }
 
     const rangeYards = 4; // warrior band; per-class bands arrive with Phase 3 kits
     if (dist2d(p.pos, target.pos) > rangeYards) {
-      faceTowards(p, target.pos.x, target.pos.z);
-      meta.moveInput.forward = true;
+      ctx.moveToward(p, target.pos, RUN_SPEED);
       continue;
     }
-    meta.moveInput.forward = false;
     faceTowards(p, target.pos.x, target.pos.z);
 
     // Rotation tail: first ready kit skill, else the basic filler. The cast
