@@ -15,6 +15,8 @@ export interface Mir4EquipmentItemDef {
   /** Source equip slot 1..8 (1 weapon, 2-4 accessories, 5 armor, 6-8 protection). */
   equipSlot: number;
   catalogRank: number;
+  tier: number;
+  grade: number;
   requiredLevel: number;
   maxEnhancementLevel: number;
   enhanceable: boolean;
@@ -26,6 +28,8 @@ export interface Mir4EquipmentItemDef {
 
 export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
   {
+    tier: 1,
+    grade: 1,
     itemId: 991010101,
     key: 'aeq-s1-c1-r1',
     name: 'Espada Gasta',
@@ -44,6 +48,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991010102,
     key: 'aeq-s1-c1-r2',
     name: 'Machado do Bastião',
@@ -62,6 +68,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 309,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991010103,
     key: 'aeq-s1-c1-r3',
     name: 'Maça do Juramento',
@@ -81,6 +89,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 533,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991010104,
     key: 'aeq-s1-c1-r4',
     name: 'Espadão Rubro',
@@ -100,6 +110,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 834,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991010105,
     key: 'aeq-s1-c1-r5',
     name: 'Martelo do Colosso',
@@ -119,6 +131,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1235,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991010106,
     key: 'aeq-s1-c1-r6',
     name: 'Lâmina do Rei',
@@ -138,6 +152,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1745,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991010201,
     key: 'aeq-s1-c2-r1',
     name: 'Cajado de Cinza',
@@ -156,6 +172,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991010202,
     key: 'aeq-s1-c2-r2',
     name: 'Vara Prismática',
@@ -174,6 +192,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 309,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991010203,
     key: 'aeq-s1-c2-r3',
     name: 'Orbe das Brasas',
@@ -193,6 +213,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 533,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991010204,
     key: 'aeq-s1-c2-r4',
     name: 'Grimório da Tormenta',
@@ -212,6 +234,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 834,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991010205,
     key: 'aeq-s1-c2-r5',
     name: 'Pluma do Éter',
@@ -231,6 +255,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1235,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991010206,
     key: 'aeq-s1-c2-r6',
     name: 'Núcleo Astral',
@@ -250,6 +276,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1745,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991010301,
     key: 'aeq-s1-c3-r1',
     name: 'Adaga de Junco',
@@ -269,6 +297,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991010302,
     key: 'aeq-s1-c3-r2',
     name: 'Chicote do Selo',
@@ -288,6 +318,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 309,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991010303,
     key: 'aeq-s1-c3-r3',
     name: 'Bumerangue do Equilíbrio',
@@ -308,6 +340,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 533,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991010304,
     key: 'aeq-s1-c3-r4',
     name: 'Lâmina dos Cinco Fluxos',
@@ -328,6 +362,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 834,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991010305,
     key: 'aeq-s1-c3-r5',
     name: 'Espadas do Lótus',
@@ -348,6 +384,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1235,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991010306,
     key: 'aeq-s1-c3-r6',
     name: 'Pedra Celestial',
@@ -368,6 +406,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1745,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991010401,
     key: 'aeq-s1-c4-r1',
     name: 'Arco de Caça',
@@ -386,6 +426,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991010402,
     key: 'aeq-s1-c4-r2',
     name: 'Besta da Vigília',
@@ -404,6 +446,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 309,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991010403,
     key: 'aeq-s1-c4-r3',
     name: 'Flecha do Falcão',
@@ -423,6 +467,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 533,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991010404,
     key: 'aeq-s1-c4-r4',
     name: 'Arco do Horizonte',
@@ -442,6 +488,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 834,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991010405,
     key: 'aeq-s1-c4-r5',
     name: 'Arco da Estrela',
@@ -461,6 +509,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1235,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991010406,
     key: 'aeq-s1-c4-r6',
     name: 'Flecha da Lua',
@@ -480,6 +530,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1745,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991010501,
     key: 'aeq-s1-c5-r1',
     name: 'Lança de Ferro',
@@ -499,6 +551,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991010502,
     key: 'aeq-s1-c5-r2',
     name: 'Alabarda da Guarda',
@@ -518,6 +572,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 309,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991010503,
     key: 'aeq-s1-c5-r3',
     name: 'Lança da Vanguarda',
@@ -538,6 +594,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 533,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991010504,
     key: 'aeq-s1-c5-r4',
     name: 'Pique do Dragão',
@@ -558,6 +616,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 834,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991010505,
     key: 'aeq-s1-c5-r5',
     name: 'Machado do Firmamento',
@@ -578,6 +638,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1235,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991010506,
     key: 'aeq-s1-c5-r6',
     name: 'Alabarda Imperial',
@@ -598,6 +660,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 1745,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991020101,
     key: 'aeq-s2-c1-r1',
     name: 'Pingente de Ferro',
@@ -617,6 +681,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 60,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991020102,
     key: 'aeq-s2-c1-r2',
     name: 'Colar Rubro',
@@ -636,6 +702,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 102,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991020103,
     key: 'aeq-s2-c1-r3',
     name: 'Medalhão do Baluarte',
@@ -655,6 +723,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 168,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991020104,
     key: 'aeq-s2-c1-r4',
     name: 'Relicário Leonino',
@@ -674,6 +744,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 264,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991020105,
     key: 'aeq-s2-c1-r5',
     name: 'Amuleto do Colosso',
@@ -693,6 +765,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 389,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991020106,
     key: 'aeq-s2-c1-r6',
     name: 'Insígnia do Rei',
@@ -712,6 +786,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 549,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991020201,
     key: 'aeq-s2-c2-r1',
     name: 'Pingente de Cinza',
@@ -731,6 +807,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 60,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991020202,
     key: 'aeq-s2-c2-r2',
     name: 'Colar das Brasas',
@@ -750,6 +828,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 102,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991020203,
     key: 'aeq-s2-c2-r3',
     name: 'Medalhão do Prisma',
@@ -769,6 +849,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 168,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991020204,
     key: 'aeq-s2-c2-r4',
     name: 'Relicário da Tormenta',
@@ -788,6 +870,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 264,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991020205,
     key: 'aeq-s2-c2-r5',
     name: 'Amuleto do Éter',
@@ -807,6 +891,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 389,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991020206,
     key: 'aeq-s2-c2-r6',
     name: 'Insígnia Astral',
@@ -826,6 +912,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 549,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991020301,
     key: 'aeq-s2-c3-r1',
     name: 'Pingente de Junco',
@@ -846,6 +934,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 60,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991020302,
     key: 'aeq-s2-c3-r2',
     name: 'Colar do Selo',
@@ -866,6 +956,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 102,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991020303,
     key: 'aeq-s2-c3-r3',
     name: 'Medalhão do Equilíbrio',
@@ -886,6 +978,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 168,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991020304,
     key: 'aeq-s2-c3-r4',
     name: 'Relicário dos Cinco Fluxos',
@@ -906,6 +1000,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 264,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991020305,
     key: 'aeq-s2-c3-r5',
     name: 'Amuleto do Lótus',
@@ -926,6 +1022,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 389,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991020306,
     key: 'aeq-s2-c3-r6',
     name: 'Insígnia Celestial',
@@ -946,6 +1044,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 549,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991020401,
     key: 'aeq-s2-c4-r1',
     name: 'Pingente de Caça',
@@ -965,6 +1065,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 60,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991020402,
     key: 'aeq-s2-c4-r2',
     name: 'Colar da Vigília',
@@ -984,6 +1086,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 102,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991020403,
     key: 'aeq-s2-c4-r3',
     name: 'Medalhão do Falcão',
@@ -1003,6 +1107,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 168,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991020404,
     key: 'aeq-s2-c4-r4',
     name: 'Relicário do Horizonte',
@@ -1022,6 +1128,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 264,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991020405,
     key: 'aeq-s2-c4-r5',
     name: 'Amuleto da Estrela',
@@ -1041,6 +1149,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 389,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991020406,
     key: 'aeq-s2-c4-r6',
     name: 'Insígnia da Lua',
@@ -1060,6 +1170,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 549,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991020501,
     key: 'aeq-s2-c5-r1',
     name: 'Pingente de Ferro',
@@ -1080,6 +1192,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 60,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991020502,
     key: 'aeq-s2-c5-r2',
     name: 'Colar da Guarda',
@@ -1100,6 +1214,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 102,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991020503,
     key: 'aeq-s2-c5-r3',
     name: 'Medalhão da Vanguarda',
@@ -1120,6 +1236,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 168,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991020504,
     key: 'aeq-s2-c5-r4',
     name: 'Relicário do Dragão',
@@ -1140,6 +1258,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 264,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991020505,
     key: 'aeq-s2-c5-r5',
     name: 'Amuleto do Firmamento',
@@ -1160,6 +1280,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 389,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991020506,
     key: 'aeq-s2-c5-r6',
     name: 'Insígnia Imperial',
@@ -1180,6 +1302,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 549,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991030101,
     key: 'aeq-s3-c1-r1',
     name: 'Anel de Ferro',
@@ -1199,6 +1323,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 47,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991030102,
     key: 'aeq-s3-c1-r2',
     name: 'Sinete Rubro',
@@ -1218,6 +1344,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 81,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991030103,
     key: 'aeq-s3-c1-r3',
     name: 'Aliança do Baluarte',
@@ -1237,6 +1365,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 132,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991030104,
     key: 'aeq-s3-c1-r4',
     name: 'Aro Leonino',
@@ -1256,6 +1386,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 200,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991030105,
     key: 'aeq-s3-c1-r5',
     name: 'Selo do Colosso',
@@ -1275,6 +1407,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 297,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991030106,
     key: 'aeq-s3-c1-r6',
     name: 'Círculo do Rei',
@@ -1294,6 +1428,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 415,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991030201,
     key: 'aeq-s3-c2-r1',
     name: 'Anel de Cinza',
@@ -1313,6 +1449,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 47,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991030202,
     key: 'aeq-s3-c2-r2',
     name: 'Sinete das Brasas',
@@ -1332,6 +1470,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 81,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991030203,
     key: 'aeq-s3-c2-r3',
     name: 'Aliança do Prisma',
@@ -1351,6 +1491,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 132,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991030204,
     key: 'aeq-s3-c2-r4',
     name: 'Aro da Tormenta',
@@ -1370,6 +1512,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 200,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991030205,
     key: 'aeq-s3-c2-r5',
     name: 'Selo do Éter',
@@ -1389,6 +1533,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 297,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991030206,
     key: 'aeq-s3-c2-r6',
     name: 'Círculo Astral',
@@ -1408,6 +1554,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 415,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991030301,
     key: 'aeq-s3-c3-r1',
     name: 'Anel de Junco',
@@ -1428,6 +1576,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 47,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991030302,
     key: 'aeq-s3-c3-r2',
     name: 'Sinete do Selo',
@@ -1448,6 +1598,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 81,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991030303,
     key: 'aeq-s3-c3-r3',
     name: 'Aliança do Equilíbrio',
@@ -1468,6 +1620,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 132,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991030304,
     key: 'aeq-s3-c3-r4',
     name: 'Aro dos Cinco Fluxos',
@@ -1488,6 +1642,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 200,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991030305,
     key: 'aeq-s3-c3-r5',
     name: 'Selo do Lótus',
@@ -1508,6 +1664,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 297,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991030306,
     key: 'aeq-s3-c3-r6',
     name: 'Círculo Celestial',
@@ -1528,6 +1686,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 415,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991030401,
     key: 'aeq-s3-c4-r1',
     name: 'Anel de Caça',
@@ -1547,6 +1707,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 47,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991030402,
     key: 'aeq-s3-c4-r2',
     name: 'Sinete da Vigília',
@@ -1566,6 +1728,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 81,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991030403,
     key: 'aeq-s3-c4-r3',
     name: 'Aliança do Falcão',
@@ -1585,6 +1749,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 132,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991030404,
     key: 'aeq-s3-c4-r4',
     name: 'Aro do Horizonte',
@@ -1604,6 +1770,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 200,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991030405,
     key: 'aeq-s3-c4-r5',
     name: 'Selo da Estrela',
@@ -1623,6 +1791,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 297,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991030406,
     key: 'aeq-s3-c4-r6',
     name: 'Círculo da Lua',
@@ -1642,6 +1812,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 415,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991030501,
     key: 'aeq-s3-c5-r1',
     name: 'Anel de Ferro',
@@ -1662,6 +1834,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 47,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991030502,
     key: 'aeq-s3-c5-r2',
     name: 'Sinete da Guarda',
@@ -1682,6 +1856,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 81,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991030503,
     key: 'aeq-s3-c5-r3',
     name: 'Aliança da Vanguarda',
@@ -1702,6 +1878,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 132,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991030504,
     key: 'aeq-s3-c5-r4',
     name: 'Aro do Dragão',
@@ -1722,6 +1900,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 200,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991030505,
     key: 'aeq-s3-c5-r5',
     name: 'Selo do Firmamento',
@@ -1742,6 +1922,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 297,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991030506,
     key: 'aeq-s3-c5-r6',
     name: 'Círculo Imperial',
@@ -1762,6 +1944,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 415,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991040101,
     key: 'aeq-s4-c1-r1',
     name: 'Talismã de Ferro',
@@ -1782,6 +1966,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 44,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991040102,
     key: 'aeq-s4-c1-r2',
     name: 'Ídolo Rubro',
@@ -1802,6 +1988,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 71,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991040103,
     key: 'aeq-s4-c1-r3',
     name: 'Emblema do Baluarte',
@@ -1822,6 +2010,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991040104,
     key: 'aeq-s4-c1-r4',
     name: 'Runa Leonino',
@@ -1842,6 +2032,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 180,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991040105,
     key: 'aeq-s4-c1-r5',
     name: 'Totem do Colosso',
@@ -1862,6 +2054,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 267,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991040106,
     key: 'aeq-s4-c1-r6',
     name: 'Símbolo do Rei',
@@ -1882,6 +2076,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 379,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991040201,
     key: 'aeq-s4-c2-r1',
     name: 'Talismã de Cinza',
@@ -1902,6 +2098,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 44,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991040202,
     key: 'aeq-s4-c2-r2',
     name: 'Ídolo das Brasas',
@@ -1922,6 +2120,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 71,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991040203,
     key: 'aeq-s4-c2-r3',
     name: 'Emblema do Prisma',
@@ -1942,6 +2142,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991040204,
     key: 'aeq-s4-c2-r4',
     name: 'Runa da Tormenta',
@@ -1962,6 +2164,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 180,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991040205,
     key: 'aeq-s4-c2-r5',
     name: 'Totem do Éter',
@@ -1982,6 +2186,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 267,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991040206,
     key: 'aeq-s4-c2-r6',
     name: 'Símbolo Astral',
@@ -2002,6 +2208,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 379,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991040301,
     key: 'aeq-s4-c3-r1',
     name: 'Talismã de Junco',
@@ -2022,6 +2230,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 40,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991040302,
     key: 'aeq-s4-c3-r2',
     name: 'Ídolo do Selo',
@@ -2042,6 +2252,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 71,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991040303,
     key: 'aeq-s4-c3-r3',
     name: 'Emblema do Equilíbrio',
@@ -2062,6 +2274,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991040304,
     key: 'aeq-s4-c3-r4',
     name: 'Runa dos Cinco Fluxos',
@@ -2082,6 +2296,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 184,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991040305,
     key: 'aeq-s4-c3-r5',
     name: 'Totem do Lótus',
@@ -2102,6 +2318,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 271,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991040306,
     key: 'aeq-s4-c3-r6',
     name: 'Símbolo Celestial',
@@ -2122,6 +2340,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 383,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991040401,
     key: 'aeq-s4-c4-r1',
     name: 'Talismã de Caça',
@@ -2142,6 +2362,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 44,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991040402,
     key: 'aeq-s4-c4-r2',
     name: 'Ídolo da Vigília',
@@ -2162,6 +2384,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 71,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991040403,
     key: 'aeq-s4-c4-r3',
     name: 'Emblema do Falcão',
@@ -2182,6 +2406,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991040404,
     key: 'aeq-s4-c4-r4',
     name: 'Runa do Horizonte',
@@ -2202,6 +2428,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 180,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991040405,
     key: 'aeq-s4-c4-r5',
     name: 'Totem da Estrela',
@@ -2222,6 +2450,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 267,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991040406,
     key: 'aeq-s4-c4-r6',
     name: 'Símbolo da Lua',
@@ -2242,6 +2472,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 379,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991040501,
     key: 'aeq-s4-c5-r1',
     name: 'Talismã de Ferro',
@@ -2262,6 +2494,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 40,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991040502,
     key: 'aeq-s4-c5-r2',
     name: 'Ídolo da Guarda',
@@ -2282,6 +2516,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 71,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991040503,
     key: 'aeq-s4-c5-r3',
     name: 'Emblema da Vanguarda',
@@ -2302,6 +2538,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991040504,
     key: 'aeq-s4-c5-r4',
     name: 'Runa do Dragão',
@@ -2322,6 +2560,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 184,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991040505,
     key: 'aeq-s4-c5-r5',
     name: 'Totem do Firmamento',
@@ -2342,6 +2582,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 271,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991040506,
     key: 'aeq-s4-c5-r6',
     name: 'Símbolo Imperial',
@@ -2362,6 +2604,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 383,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991050101,
     key: 'aeq-s5-c1-r1',
     name: 'Armadura de Ferro',
@@ -2381,6 +2625,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 105,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991050102,
     key: 'aeq-s5-c1-r2',
     name: 'Couraça Rubro',
@@ -2400,6 +2646,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 178,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991050103,
     key: 'aeq-s5-c1-r3',
     name: 'Veste do Baluarte',
@@ -2419,6 +2667,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 295,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991050104,
     key: 'aeq-s5-c1-r4',
     name: 'Cota Leonino',
@@ -2438,6 +2688,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 456,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991050105,
     key: 'aeq-s5-c1-r5',
     name: 'Manto do Colosso',
@@ -2457,6 +2709,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 678,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991050106,
     key: 'aeq-s5-c1-r6',
     name: 'Égide do Rei',
@@ -2476,6 +2730,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 968,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991050201,
     key: 'aeq-s5-c2-r1',
     name: 'Armadura de Cinza',
@@ -2495,6 +2751,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 105,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991050202,
     key: 'aeq-s5-c2-r2',
     name: 'Couraça das Brasas',
@@ -2514,6 +2772,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 178,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991050203,
     key: 'aeq-s5-c2-r3',
     name: 'Veste do Prisma',
@@ -2533,6 +2793,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 295,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991050204,
     key: 'aeq-s5-c2-r4',
     name: 'Cota da Tormenta',
@@ -2552,6 +2814,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 456,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991050205,
     key: 'aeq-s5-c2-r5',
     name: 'Manto do Éter',
@@ -2571,6 +2835,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 678,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991050206,
     key: 'aeq-s5-c2-r6',
     name: 'Égide Astral',
@@ -2590,6 +2856,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 968,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991050301,
     key: 'aeq-s5-c3-r1',
     name: 'Armadura de Junco',
@@ -2609,6 +2877,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 109,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991050302,
     key: 'aeq-s5-c3-r2',
     name: 'Couraça do Selo',
@@ -2628,6 +2898,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991050303,
     key: 'aeq-s5-c3-r3',
     name: 'Veste do Equilíbrio',
@@ -2647,6 +2919,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 303,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991050304,
     key: 'aeq-s5-c3-r4',
     name: 'Cota dos Cinco Fluxos',
@@ -2666,6 +2940,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 468,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991050305,
     key: 'aeq-s5-c3-r5',
     name: 'Manto do Lótus',
@@ -2685,6 +2961,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 694,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991050306,
     key: 'aeq-s5-c3-r6',
     name: 'Égide Celestial',
@@ -2704,6 +2982,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 992,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991050401,
     key: 'aeq-s5-c4-r1',
     name: 'Armadura de Caça',
@@ -2723,6 +3003,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 105,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991050402,
     key: 'aeq-s5-c4-r2',
     name: 'Couraça da Vigília',
@@ -2742,6 +3024,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 178,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991050403,
     key: 'aeq-s5-c4-r3',
     name: 'Veste do Falcão',
@@ -2761,6 +3045,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 295,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991050404,
     key: 'aeq-s5-c4-r4',
     name: 'Cota do Horizonte',
@@ -2780,6 +3066,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 456,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991050405,
     key: 'aeq-s5-c4-r5',
     name: 'Manto da Estrela',
@@ -2799,6 +3087,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 678,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991050406,
     key: 'aeq-s5-c4-r6',
     name: 'Égide da Lua',
@@ -2818,6 +3108,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 968,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991050501,
     key: 'aeq-s5-c5-r1',
     name: 'Armadura de Ferro',
@@ -2837,6 +3129,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 109,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991050502,
     key: 'aeq-s5-c5-r2',
     name: 'Couraça da Guarda',
@@ -2856,6 +3150,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 186,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991050503,
     key: 'aeq-s5-c5-r3',
     name: 'Veste da Vanguarda',
@@ -2875,6 +3171,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 303,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991050504,
     key: 'aeq-s5-c5-r4',
     name: 'Cota do Dragão',
@@ -2894,6 +3192,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 468,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991050505,
     key: 'aeq-s5-c5-r5',
     name: 'Manto do Firmamento',
@@ -2913,6 +3213,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 694,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991050506,
     key: 'aeq-s5-c5-r6',
     name: 'Égide Imperial',
@@ -2932,6 +3234,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 992,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991060101,
     key: 'aeq-s6-c1-r1',
     name: 'Elmo de Ferro',
@@ -2952,6 +3256,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 72,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991060102,
     key: 'aeq-s6-c1-r2',
     name: 'Capuz Rubro',
@@ -2972,6 +3278,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991060103,
     key: 'aeq-s6-c1-r3',
     name: 'Diadema do Baluarte',
@@ -2992,6 +3300,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 199,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991060104,
     key: 'aeq-s6-c1-r4',
     name: 'Coroa Leonino',
@@ -3012,6 +3322,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 300,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991060105,
     key: 'aeq-s6-c1-r5',
     name: 'Máscara do Colosso',
@@ -3032,6 +3344,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 447,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991060106,
     key: 'aeq-s6-c1-r6',
     name: 'Auréola do Rei',
@@ -3052,6 +3366,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 639,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991060201,
     key: 'aeq-s6-c2-r1',
     name: 'Elmo de Cinza',
@@ -3072,6 +3388,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 72,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991060202,
     key: 'aeq-s6-c2-r2',
     name: 'Capuz das Brasas',
@@ -3092,6 +3410,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991060203,
     key: 'aeq-s6-c2-r3',
     name: 'Diadema do Prisma',
@@ -3112,6 +3432,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 199,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991060204,
     key: 'aeq-s6-c2-r4',
     name: 'Coroa da Tormenta',
@@ -3132,6 +3454,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 300,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991060205,
     key: 'aeq-s6-c2-r5',
     name: 'Máscara do Éter',
@@ -3152,6 +3476,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 447,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991060206,
     key: 'aeq-s6-c2-r6',
     name: 'Auréola Astral',
@@ -3172,6 +3498,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 639,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991060301,
     key: 'aeq-s6-c3-r1',
     name: 'Elmo de Junco',
@@ -3192,6 +3520,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 72,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991060302,
     key: 'aeq-s6-c3-r2',
     name: 'Capuz do Selo',
@@ -3212,6 +3542,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991060303,
     key: 'aeq-s6-c3-r3',
     name: 'Diadema do Equilíbrio',
@@ -3232,6 +3564,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 199,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991060304,
     key: 'aeq-s6-c3-r4',
     name: 'Coroa dos Cinco Fluxos',
@@ -3252,6 +3586,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 312,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991060305,
     key: 'aeq-s6-c3-r5',
     name: 'Máscara do Lótus',
@@ -3272,6 +3608,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 455,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991060306,
     key: 'aeq-s6-c3-r6',
     name: 'Auréola Celestial',
@@ -3292,6 +3630,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 655,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991060401,
     key: 'aeq-s6-c4-r1',
     name: 'Elmo de Caça',
@@ -3312,6 +3652,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 72,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991060402,
     key: 'aeq-s6-c4-r2',
     name: 'Capuz da Vigília',
@@ -3332,6 +3674,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991060403,
     key: 'aeq-s6-c4-r3',
     name: 'Diadema do Falcão',
@@ -3352,6 +3696,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 199,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991060404,
     key: 'aeq-s6-c4-r4',
     name: 'Coroa do Horizonte',
@@ -3372,6 +3718,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 300,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991060405,
     key: 'aeq-s6-c4-r5',
     name: 'Máscara da Estrela',
@@ -3392,6 +3740,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 447,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991060406,
     key: 'aeq-s6-c4-r6',
     name: 'Auréola da Lua',
@@ -3412,6 +3762,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 639,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991060501,
     key: 'aeq-s6-c5-r1',
     name: 'Elmo de Ferro',
@@ -3432,6 +3784,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 72,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991060502,
     key: 'aeq-s6-c5-r2',
     name: 'Capuz da Guarda',
@@ -3452,6 +3806,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 119,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991060503,
     key: 'aeq-s6-c5-r3',
     name: 'Diadema da Vanguarda',
@@ -3472,6 +3828,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 199,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991060504,
     key: 'aeq-s6-c5-r4',
     name: 'Coroa do Dragão',
@@ -3492,6 +3850,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 312,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991060505,
     key: 'aeq-s6-c5-r5',
     name: 'Máscara do Firmamento',
@@ -3512,6 +3872,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 455,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991060506,
     key: 'aeq-s6-c5-r6',
     name: 'Auréola Imperial',
@@ -3532,6 +3894,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 655,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991070101,
     key: 'aeq-s7-c1-r1',
     name: 'Luvas de Ferro',
@@ -3552,6 +3916,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 55,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991070102,
     key: 'aeq-s7-c1-r2',
     name: 'Manoplas Rubro',
@@ -3572,6 +3938,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 95,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991070103,
     key: 'aeq-s7-c1-r3',
     name: 'Braçadeiras do Baluarte',
@@ -3592,6 +3960,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 158,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991070104,
     key: 'aeq-s7-c1-r4',
     name: 'Punhos Leonino',
@@ -3612,6 +3982,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 248,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991070105,
     key: 'aeq-s7-c1-r5',
     name: 'Garras do Colosso',
@@ -3632,6 +4004,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 359,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991070106,
     key: 'aeq-s7-c1-r6',
     name: 'Guanteletes do Rei',
@@ -3652,6 +4026,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 513,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991070201,
     key: 'aeq-s7-c2-r1',
     name: 'Luvas de Cinza',
@@ -3672,6 +4048,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 55,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991070202,
     key: 'aeq-s7-c2-r2',
     name: 'Manoplas das Brasas',
@@ -3692,6 +4070,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 95,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991070203,
     key: 'aeq-s7-c2-r3',
     name: 'Braçadeiras do Prisma',
@@ -3712,6 +4092,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 158,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991070204,
     key: 'aeq-s7-c2-r4',
     name: 'Punhos da Tormenta',
@@ -3732,6 +4114,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 248,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991070205,
     key: 'aeq-s7-c2-r5',
     name: 'Garras do Éter',
@@ -3752,6 +4136,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 359,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991070206,
     key: 'aeq-s7-c2-r6',
     name: 'Guanteletes Astral',
@@ -3772,6 +4158,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 513,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991070301,
     key: 'aeq-s7-c3-r1',
     name: 'Luvas de Junco',
@@ -3792,6 +4180,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 59,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991070302,
     key: 'aeq-s7-c3-r2',
     name: 'Manoplas do Selo',
@@ -3812,6 +4202,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 99,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991070303,
     key: 'aeq-s7-c3-r3',
     name: 'Braçadeiras do Equilíbrio',
@@ -3832,6 +4224,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 166,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991070304,
     key: 'aeq-s7-c3-r4',
     name: 'Punhos dos Cinco Fluxos',
@@ -3852,6 +4246,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 252,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991070305,
     key: 'aeq-s7-c3-r5',
     name: 'Garras do Lótus',
@@ -3872,6 +4268,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 367,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991070306,
     key: 'aeq-s7-c3-r6',
     name: 'Guanteletes Celestial',
@@ -3892,6 +4290,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 525,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991070401,
     key: 'aeq-s7-c4-r1',
     name: 'Luvas de Caça',
@@ -3912,6 +4312,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 55,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991070402,
     key: 'aeq-s7-c4-r2',
     name: 'Manoplas da Vigília',
@@ -3932,6 +4334,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 95,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991070403,
     key: 'aeq-s7-c4-r3',
     name: 'Braçadeiras do Falcão',
@@ -3952,6 +4356,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 158,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991070404,
     key: 'aeq-s7-c4-r4',
     name: 'Punhos do Horizonte',
@@ -3972,6 +4378,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 248,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991070405,
     key: 'aeq-s7-c4-r5',
     name: 'Garras da Estrela',
@@ -3992,6 +4400,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 359,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991070406,
     key: 'aeq-s7-c4-r6',
     name: 'Guanteletes da Lua',
@@ -4012,6 +4422,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 513,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991070501,
     key: 'aeq-s7-c5-r1',
     name: 'Luvas de Ferro',
@@ -4032,6 +4444,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 59,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991070502,
     key: 'aeq-s7-c5-r2',
     name: 'Manoplas da Guarda',
@@ -4052,6 +4466,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 99,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991070503,
     key: 'aeq-s7-c5-r3',
     name: 'Braçadeiras da Vanguarda',
@@ -4072,6 +4488,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 166,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991070504,
     key: 'aeq-s7-c5-r4',
     name: 'Punhos do Dragão',
@@ -4092,6 +4510,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 252,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991070505,
     key: 'aeq-s7-c5-r5',
     name: 'Garras do Firmamento',
@@ -4112,6 +4532,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 367,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991070506,
     key: 'aeq-s7-c5-r6',
     name: 'Guanteletes Imperial',
@@ -4132,6 +4554,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 525,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991080101,
     key: 'aeq-s8-c1-r1',
     name: 'Botas de Ferro',
@@ -4152,6 +4576,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 56,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991080102,
     key: 'aeq-s8-c1-r2',
     name: 'Grevas Rubro',
@@ -4172,6 +4598,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 92,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991080103,
     key: 'aeq-s8-c1-r3',
     name: 'Passos do Baluarte',
@@ -4192,6 +4620,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 152,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991080104,
     key: 'aeq-s8-c1-r4',
     name: 'Sandálias Leonino',
@@ -4212,6 +4642,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 236,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991080105,
     key: 'aeq-s8-c1-r5',
     name: 'Coturnos do Colosso',
@@ -4232,6 +4664,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 348,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991080106,
     key: 'aeq-s8-c1-r6',
     name: 'Caminhantes do Rei',
@@ -4252,6 +4686,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 492,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991080201,
     key: 'aeq-s8-c2-r1',
     name: 'Botas de Cinza',
@@ -4272,6 +4708,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 56,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991080202,
     key: 'aeq-s8-c2-r2',
     name: 'Grevas das Brasas',
@@ -4292,6 +4730,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 92,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991080203,
     key: 'aeq-s8-c2-r3',
     name: 'Passos do Prisma',
@@ -4312,6 +4752,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 152,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991080204,
     key: 'aeq-s8-c2-r4',
     name: 'Sandálias da Tormenta',
@@ -4332,6 +4774,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 236,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991080205,
     key: 'aeq-s8-c2-r5',
     name: 'Coturnos do Éter',
@@ -4352,6 +4796,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 348,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991080206,
     key: 'aeq-s8-c2-r6',
     name: 'Caminhantes Astral',
@@ -4372,6 +4818,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 492,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991080301,
     key: 'aeq-s8-c3-r1',
     name: 'Botas de Junco',
@@ -4392,6 +4840,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 52,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991080302,
     key: 'aeq-s8-c3-r2',
     name: 'Grevas do Selo',
@@ -4412,6 +4862,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 92,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991080303,
     key: 'aeq-s8-c3-r3',
     name: 'Passos do Equilíbrio',
@@ -4432,6 +4884,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 152,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991080304,
     key: 'aeq-s8-c3-r4',
     name: 'Sandálias dos Cinco Fluxos',
@@ -4452,6 +4906,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 240,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991080305,
     key: 'aeq-s8-c3-r5',
     name: 'Coturnos do Lótus',
@@ -4472,6 +4928,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 356,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991080306,
     key: 'aeq-s8-c3-r6',
     name: 'Caminhantes Celestial',
@@ -4492,6 +4950,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 500,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991080401,
     key: 'aeq-s8-c4-r1',
     name: 'Botas de Caça',
@@ -4512,6 +4972,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 56,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991080402,
     key: 'aeq-s8-c4-r2',
     name: 'Grevas da Vigília',
@@ -4532,6 +4994,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 92,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991080403,
     key: 'aeq-s8-c4-r3',
     name: 'Passos do Falcão',
@@ -4552,6 +5016,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 152,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991080404,
     key: 'aeq-s8-c4-r4',
     name: 'Sandálias do Horizonte',
@@ -4572,6 +5038,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 236,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991080405,
     key: 'aeq-s8-c4-r5',
     name: 'Coturnos da Estrela',
@@ -4592,6 +5060,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 348,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991080406,
     key: 'aeq-s8-c4-r6',
     name: 'Caminhantes da Lua',
@@ -4612,6 +5082,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 492,
   },
   {
+    tier: 1,
+    grade: 1,
     itemId: 991080501,
     key: 'aeq-s8-c5-r1',
     name: 'Botas de Ferro',
@@ -4632,6 +5104,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 52,
   },
   {
+    tier: 1,
+    grade: 2,
     itemId: 991080502,
     key: 'aeq-s8-c5-r2',
     name: 'Grevas da Guarda',
@@ -4652,6 +5126,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 92,
   },
   {
+    tier: 2,
+    grade: 1,
     itemId: 991080503,
     key: 'aeq-s8-c5-r3',
     name: 'Passos da Vanguarda',
@@ -4672,6 +5148,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 152,
   },
   {
+    tier: 2,
+    grade: 2,
     itemId: 991080504,
     key: 'aeq-s8-c5-r4',
     name: 'Sandálias do Dragão',
@@ -4692,6 +5170,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 240,
   },
   {
+    tier: 3,
+    grade: 1,
     itemId: 991080505,
     key: 'aeq-s8-c5-r5',
     name: 'Coturnos do Firmamento',
@@ -4712,6 +5192,8 @@ export const MIR4_EQUIPMENT_CATALOG: readonly Mir4EquipmentItemDef[] = [
     balanceBudget: 356,
   },
   {
+    tier: 4,
+    grade: 2,
     itemId: 991080506,
     key: 'aeq-s8-c5-r6',
     name: 'Caminhantes Imperial',
