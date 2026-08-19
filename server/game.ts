@@ -36,6 +36,7 @@ import {
 import { devTierIndexForMergedPrs } from '../src/sim/dev_tier';
 import { parseRelayCommand } from '../src/sim/discord_relay';
 import { specialRoleChatTag } from '../src/sim/discord_roles';
+import type { GameProfile } from '../src/sim/game_profile';
 import {
   GUILD_CREATION_FEE_COPPER,
   type GuildBankOpDelta,
@@ -322,7 +323,7 @@ import { PartyFrameProjectionCache } from './party_frame_projection';
 import { applyBoostKitToPlayer, pbeBoostEnabled } from './pbe_boost';
 import { recordFtueDeath, recordFtueQuest, recordLevelUp } from './progress_events';
 import { nextRaidResetMs, resetDayKey } from './raid_reset';
-import { REALM, REALM_PUBLIC_ORIGIN, REALM_RESET_TIME_ZONE } from './realm';
+import { GAME_PROFILE, REALM, REALM_PUBLIC_ORIGIN, REALM_RESET_TIME_ZONE } from './realm';
 import { createRealmReadoutMemo, realmReadoutJson, realmReadoutObject } from './realm_readout_memo';
 import { RiftAssetCoordinator, riftAssetConfigFromEnv } from './rift_assets';
 import { refusedRiftForgeCommand } from './rift_forge_gate';
@@ -2085,7 +2086,10 @@ export class GameServer {
   private readonly riftUpgrader: RiftUpgradeCoordinator;
   private readonly riftAssets: RiftAssetCoordinator;
 
-  constructor(generalChatQuotaMaxInFlight = GENERAL_CHAT_QUOTA_MAX_IN_FLIGHT) {
+  constructor(
+    generalChatQuotaMaxInFlight = GENERAL_CHAT_QUOTA_MAX_IN_FLIGHT,
+    gameProfile: GameProfile = GAME_PROFILE,
+  ) {
     this.generalChatQuota = new GeneralChatQuotaCoordinator({
       consume: consumeGeneralChatQuota,
       maxInFlight: generalChatQuotaMaxInFlight,
@@ -2095,6 +2099,7 @@ export class GameServer {
     this.sim = new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
+      gameProfile,
       noPlayer: true,
       devCommands: process.env.ALLOW_DEV_COMMANDS === '1',
       // Thunzharr is up as soon as the realm boots; subsequent rises keep the
@@ -4031,6 +4036,7 @@ export class GameServer {
       name,
       cls,
       realm: REALM,
+      gameProfile: this.sim.cfg.gameProfile,
       // Staff advert for admin-gated client surfaces (the /dev Spawns tab).
       // Every gated command is re-checked server-side, so a forged true is inert.
       admin: session.isAdmin,
@@ -4194,6 +4200,7 @@ export class GameServer {
       name: session.name,
       cls,
       realm: REALM,
+      gameProfile: this.sim.cfg.gameProfile,
       admin: session.isAdmin,
       softWords: this.chatFilter.softWords(),
       chatMutedUntil: session.chatMutedUntil ?? null,

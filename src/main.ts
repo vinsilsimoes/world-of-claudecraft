@@ -136,6 +136,7 @@ import { diagonalMovementVisualFacing } from './game/movement_visual';
 import { music } from './game/music';
 import { tryNearbyInteraction } from './game/nearby_interaction';
 import { isOfflineModeAvailable } from './game/offline_mode_gate';
+import { offlineSimOptions } from './game/offline_sim_options';
 import { padReelItemId } from './game/pad_reel';
 import { createPerfMonitor } from './game/perf';
 import { initPerfNudge } from './game/perf_nudge';
@@ -333,13 +334,11 @@ import {
   DT,
   dist2d,
   MELEE_RANGE,
-  PLAYER_INTEREST_DROP_RADIUS,
   type PlayerClass,
   RUN_SPEED,
   type WorldContent,
 } from './sim/types';
 import { zoneBiomeAt } from './sim/world';
-import { WORLD_SEED } from './sim/world_seed';
 import { startSitePresence } from './site_presence';
 import {
   accountPortalModel,
@@ -5186,23 +5185,7 @@ async function startOffline(
   if (world) setActiveWorldContent(world);
   const sim = loadSpan(
     'sim-build',
-    () =>
-      new Sim({
-        seed: seedOverride ?? WORLD_SEED,
-        playerClass,
-        playerName: name,
-        devCommands: import.meta.env.DEV,
-        // The offline world runs the ranked rift portal scheduler like the live
-        // server (custom editor play-test maps keep it off: their zones differ).
-        riftPortals: world === undefined,
-        valeCupShowcase: true, // idle Sowfield auto-runs a bot exhibition to watch/bet on
-        // Match the live server's proven-safe idle-AI interest throttle. Ordinary
-        // entity rigs are gone by 96 yd and mob aggro caps at 20 yd, so this removes
-        // full-world wilderness AI from the browser's 20 Hz tick without changing
-        // anything visible or interactable.
-        idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
-        world,
-      }),
+    () => new Sim(offlineSimOptions({ playerClass, playerName: name, world, seedOverride })),
   );
   sim.setPlayerSkin(sim.playerId, skin);
   // Offline has no account and no character row, so the local draft IS this

@@ -3,6 +3,7 @@ import {
   MAX_INPUT_LINE_LENGTH,
   parseTalentResetRequest,
   validateAction,
+  validateGameProfile,
   validatePlayerClass,
   validatePlayerLevel,
 } from '../headless/protocol';
@@ -41,6 +42,14 @@ describe('headless environment protocol validation', () => {
     expect(validatePlayerClass(null)).toBeNull();
     expect(validatePlayerClass(0)).toBeNull();
     expect(validatePlayerClass('Warrior')).toBeNull(); // case-sensitive
+  });
+
+  it('accepts the two game profiles, defaults only when absent, and rejects unknown values', () => {
+    expect(validateGameProfile(undefined)).toBe('woc-classic');
+    expect(validateGameProfile('woc-classic')).toBe('woc-classic');
+    expect(validateGameProfile('mir4-gameplay-port')).toBe('mir4-gameplay-port');
+    expect(validateGameProfile('mir4')).toBeNull();
+    expect(validateGameProfile(1)).toBeNull();
   });
 
   it('accepts only safe playable starting levels', () => {

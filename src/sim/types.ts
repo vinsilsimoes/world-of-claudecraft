@@ -3,6 +3,7 @@
 import type { ChatSenderFlair, StreamerLinks } from './account_flair';
 import type { MountKey } from './content/mounts';
 import type { GatheringProfessionId, ToolEffectId } from './content/professions';
+import type { GameProfile } from './game_profile';
 import type { LockSession, LootTier, PickAction, StepResult, VisibleCell } from './lockpick';
 import type { HarvestYield } from './professions/harvest_yields';
 import type { RespawnWindow } from './respawn_policy';
@@ -6820,6 +6821,10 @@ export interface WorldContent {
 export interface SimConfig {
   seed: number;
   playerClass: PlayerClass;
+  // Runtime/content identity. Defaults to woc-classic at the Sim boundary so
+  // existing tests and tools remain compatible until they opt into the MIR4
+  // port. Hosts resolve external configuration through requireGameProfile.
+  gameProfile?: GameProfile;
   // Global base mob respawn delay (seconds). LEAVE IT UNSET for a normal world:
   // open-world trash then respawns on the per-zone level-band tier
   // (src/sim/respawn_policy.ts), and only mobs outside every zone rect (instanced

@@ -1,3 +1,4 @@
+import { type GameProfile, parseGameProfile } from '../src/game_profile';
 import type { TalentAllocation } from '../src/sim/content/talents';
 import { NUM_ACTIONS } from '../src/sim/obs';
 import { parseTalentAllocation } from '../src/sim/talent_allocation_input';
@@ -13,6 +14,10 @@ export function validateAction(value: unknown): number | null {
 
 export function validatePlayerClass(value: unknown): PlayerClass | null {
   return (ALL_CLASSES as string[]).includes(value as string) ? (value as PlayerClass) : null;
+}
+
+export function validateGameProfile(value: unknown): GameProfile | null {
+  return parseGameProfile(value);
 }
 
 export function validatePlayerLevel(value: unknown): number | null {

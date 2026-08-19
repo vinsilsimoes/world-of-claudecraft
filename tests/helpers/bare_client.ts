@@ -7,6 +7,7 @@
 // hand-rolling either fixture again.
 
 import type { ClientSession, GameServer } from '../../server/game';
+import { DEFAULT_GAME_PROFILE } from '../../src/game_profile';
 import { ClientWorld } from '../../src/net/online';
 import { emptyAllocation } from '../../src/sim/content/talents';
 import { ALL_RECIPES } from '../../src/sim/data';
@@ -47,7 +48,7 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
 
   // biome-ignore lint/suspicious/noExplicitAny: the sanctioned bareClient idiom (tests/CLAUDE.md)
   const c: any = Object.create(ClientWorld.prototype);
-  c.cfg = { seed: 20061, playerClass };
+  c.cfg = { seed: 20061, playerClass, gameProfile: DEFAULT_GAME_PROFILE };
   c.entities = new Map();
   c.playerId = pid;
   c.ownPlayerId = pid;

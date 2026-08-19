@@ -262,6 +262,13 @@ import * as escortMod from './escort';
 import { initEscorts as initEscortsImpl, updateEscorts as updateEscortsImpl } from './escort';
 import { fleeSpeed } from './flee_speed';
 import { formatMoney } from './format_money';
+import {
+  DEFAULT_GAME_PROFILE,
+  type GameProfile,
+  gameProfileForCharacterState,
+  gameProfileStateMatches,
+  MIR4_GAME_PROFILE,
+} from './game_profile';
 import type { GuildBankState, GuildMembership } from './guild_bank';
 import * as guildBankMod from './guild_bank';
 import * as interaction from './interaction';
@@ -1677,6 +1684,11 @@ export interface AwayStatus {
 // are optional so characters saved before the Ashen Coliseum existed load
 // cleanly (addPlayer falls back to the unranked defaults).
 export interface CharacterState {
+  // Persisted profile identity. Classic rows omit it for byte-level backward
+  // compatibility; an absent marker resolves only to woc-classic. Other
+  // profiles stamp their exact closed-vocabulary id and reject a cross-profile
+  // load before any gameplay state is restored.
+  gameProfile?: GameProfile;
   // Production content migration revision. Revision 1 is the v0.26 all-class
   // Talents V2 migration; revision 2 is the v0.29 Hunter redesign repick.
   // Absent means a pre-v0.26 character JSONB save.
@@ -2283,6 +2295,7 @@ export class Sim {
     this.cfg = {
       seed: cfg.seed,
       playerClass: cfg.playerClass,
+      gameProfile: cfg.gameProfile ?? DEFAULT_GAME_PROFILE,
       // Deliberately NOT defaulted: the respawn policy (respawn_policy.ts) has to
       // tell "the host pinned a global base" apart from "use the zone tier".
       respawnSeconds: cfg.respawnSeconds,
@@ -2854,6 +2867,12 @@ export class Sim {
       appearance?: Record<string, unknown> | null;
     },
   ): number {
+    if (opts?.state && !gameProfileStateMatches(this.cfg.gameProfile, opts.state)) {
+      const actual = gameProfileForCharacterState(opts.state);
+      throw new Error(
+        `character game profile ${actual ?? 'unknown'} does not match ${this.cfg.gameProfile}`,
+      );
+    }
     const savedState = opts?.state
       ? sanitizeRemovedZone1Content(migrateCharacterTalentsV2(cls, opts.state)).state
       : undefined;
@@ -4045,6 +4064,7 @@ export class Sim {
     // still drains only on the tick path.
     const foldedProficiency = foldPendingGatherGrants(meta);
     const state: CharacterState = {
+      ...(this.cfg.gameProfile === MIR4_GAME_PROFILE ? { gameProfile: this.cfg.gameProfile } : {}),
       contentRevision: CURRENT_CHARACTER_CONTENT_REVISION,
       level: restore ? restore.level : e.level,
       xp: restore ? restore.xp : meta.xp,

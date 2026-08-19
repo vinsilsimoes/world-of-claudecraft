@@ -12,6 +12,7 @@
 // Run `node dist-env/env_server.cjs --bench` for a throughput benchmark.
 
 import * as readline from 'node:readline';
+import { GAME_PROFILES, type GameProfile } from '../src/game_profile';
 import type { TalentAllocation } from '../src/sim/content/talents';
 import { ACTIONS, applyAction, encodeObs, NUM_ACTIONS, obsSize } from '../src/sim/obs';
 import { type RewardCounters, Sim } from '../src/sim/sim';
@@ -20,6 +21,7 @@ import {
   MAX_INPUT_LINE_LENGTH,
   parseTalentResetRequest,
   validateAction,
+  validateGameProfile,
   validatePlayerClass,
 } from './protocol';
 import { ownedPetDamageForReward } from './reward_credit';
@@ -73,6 +75,7 @@ class Env {
   sim: Sim | null = null;
   config: EnvConfig = DEFAULT_CONFIG;
   playerClass: PlayerClass = 'warrior';
+  gameProfile: GameProfile = 'woc-classic';
   stepCount = 0;
   prev: RewardCounters | null = null;
 
@@ -82,6 +85,7 @@ class Env {
     cfg: Partial<EnvConfig> & { rewards?: Partial<EnvConfig['rewards']> },
     playerLevel = 1,
     talents?: TalentAllocation,
+    gameProfile: GameProfile = 'woc-classic',
   ): object {
     this.config = {
       ...DEFAULT_CONFIG,
@@ -89,9 +93,11 @@ class Env {
       rewards: { ...DEFAULT_CONFIG.rewards, ...(cfg.rewards ?? {}) },
     };
     this.playerClass = playerClass;
+    this.gameProfile = gameProfile;
     this.sim = new Sim({
       seed,
       playerClass,
+      gameProfile,
       respawnSeconds: this.config.respawnSeconds,
       autoEquip: true,
       idleMobTickRadius: 80,
@@ -151,6 +157,7 @@ class Env {
       quests_done: sim.counters.questsCompleted,
       copper: sim.copper,
       step: this.stepCount,
+      game_profile: sim.cfg.gameProfile,
     };
   }
 }
@@ -204,6 +211,7 @@ function serve(): void {
             num_actions: NUM_ACTIONS,
             actions: ACTIONS,
             max_level: MAX_LEVEL,
+            game_profiles: GAME_PROFILES,
           });
           break;
         case 'reset':
@@ -211,6 +219,11 @@ function serve(): void {
             const playerClass = validatePlayerClass(msg.player_class ?? 'warrior');
             if (playerClass === null) {
               send({ error: `invalid player_class: expected one of ${ALL_CLASSES.join(', ')}` });
+              break;
+            }
+            const gameProfile = validateGameProfile(msg.game_profile);
+            if (gameProfile === null) {
+              send({ error: `invalid game_profile: expected one of ${GAME_PROFILES.join(', ')}` });
               break;
             }
             const reset = parseTalentResetRequest(msg);
@@ -225,6 +238,7 @@ function serve(): void {
                 msg.config ?? {},
                 reset.playerLevel,
                 reset.talents,
+                gameProfile,
               ),
             );
           }

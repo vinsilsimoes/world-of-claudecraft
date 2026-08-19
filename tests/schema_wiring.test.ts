@@ -16,9 +16,29 @@ const h = vi.hoisted(() => {
     rateLimitsExists: true,
     invalidMetricsIndexExists: false,
     failOpenIndexCreate: false,
+    gameProfileGuard: null as {
+      game_profile: unknown;
+      save_namespace: unknown;
+    } | null,
   };
   const query = vi.fn((sql: string) => {
     calls.push(String(sql));
+    if (String(sql).includes('FROM game_profile_guard')) {
+      return Promise.resolve({
+        rows: state.gameProfileGuard ? [{ ...state.gameProfileGuard }] : [],
+        rowCount: state.gameProfileGuard ? 1 : 0,
+      });
+    }
+    if (String(sql).includes('has_legacy_state')) {
+      return Promise.resolve({ rows: [{ has_legacy_state: false }], rowCount: 1 });
+    }
+    if (String(sql).includes('INSERT INTO game_profile_guard')) {
+      state.gameProfileGuard ??= {
+        game_profile: 'woc-classic',
+        save_namespace: 'woc-classic-v1',
+      };
+      return Promise.resolve({ rows: [], rowCount: 1 });
+    }
     // A test flips this flag to simulate an interrupted concurrent index
     // build, exercising the post-commit loop's unlock-in-finally guarantee.
     if (
@@ -87,6 +107,7 @@ describe('ensureSchema wires every schema module at boot', () => {
     h.state.rateLimitsExists = true;
     h.state.invalidMetricsIndexExists = false;
     h.state.failOpenIndexCreate = false;
+    h.state.gameProfileGuard = null;
     h.clientConfigs.length = 0;
   });
 

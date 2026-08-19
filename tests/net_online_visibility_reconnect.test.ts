@@ -160,7 +160,7 @@ describe('ClientWorld visibilitychange reconnect (mobile background/foreground)'
         reconnectAttempts: number;
       };
       const first = StubWebSocket.instances[0];
-      wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42 }));
+      wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42, gameProfile: 'woc-classic' }));
 
       first.bufferedAmount = INPUT_SEND_BACKPRESSURE_LIMIT_BYTES + 1;
       world.moveInput.jump = true;
@@ -174,7 +174,7 @@ describe('ClientWorld visibilitychange reconnect (mobile background/foreground)'
       expect(wire.reconnectAttempts).toBe(1);
       harness.fire(harness.timers[0].id);
       const second = StubWebSocket.instances[1];
-      wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42 }));
+      wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42, gameProfile: 'woc-classic' }));
 
       expect(world.flushInput(2_000)).toBe(true);
       const input = JSON.parse(second.sent.at(-1) ?? '{}') as {
@@ -568,7 +568,7 @@ describe('ClientWorld reconnect error-frame tolerance (auth timeout)', () => {
       // The post-reconnect hello restores the full tolerance budget for the
       // next drop; without this reset the counter climbs across a session's
       // lifetime and wrongly ends it after 20 cumulative auth timeouts.
-      w.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42 }));
+      w.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42, gameProfile: 'woc-classic' }));
       expect(w.timeoutRejections).toBe(0);
       world.close();
     });
@@ -600,7 +600,7 @@ describe('ClientWorld reconnect error-frame tolerance (auth timeout)', () => {
     });
   });
 
-  it('fails closed when an auth-world-7 client reaches an auth-world-6 server', () => {
+  it('fails closed when an auth-world-8 client reaches an auth-world-7 server', () => {
     withDomStubs((_doc, harness) => {
       const world = new ClientWorld('t', 1, PROBE_CLASS, 'http://localhost');
       const w = world as unknown as WorldProbe;
@@ -614,13 +614,13 @@ describe('ClientWorld reconnect error-frame tolerance (auth timeout)', () => {
       expect(socket.sent).toHaveLength(1);
       expect(JSON.parse(socket.sent[0])).toEqual(
         expect.objectContaining({
-          t: 'auth-world-7',
+          t: 'auth-world-8',
           token: 't',
           character: 1,
         }),
       );
 
-      // An auth-world-6 server rejects this unknown future epoch before admission.
+      // An auth-world-7 server rejects this unknown future epoch before admission.
       w.onMessage(
         JSON.stringify({
           t: 'error',
@@ -663,7 +663,7 @@ describe('ClientWorld reconnect error-frame tolerance (auth timeout)', () => {
       world.onDisconnect = (reason) => {
         reasons.push(reason);
       };
-      w.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42 }));
+      w.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 42, gameProfile: 'woc-classic' }));
 
       w.onMessage(JSON.stringify({ t: 'error', error: 'authentication required' }));
 

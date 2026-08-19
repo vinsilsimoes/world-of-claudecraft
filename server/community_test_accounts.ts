@@ -15,6 +15,7 @@ import { type CharacterState, Sim } from '../src/sim/sim';
 import { ALL_CLASSES, ALL_EQUIP_SLOTS, MAX_LEVEL, type PlayerClass } from '../src/sim/types';
 import { validCharName } from './auth';
 import { applyBoostKitToPlayer } from './pbe_boost';
+import { GAME_PROFILE } from './realm';
 
 const TEMPLATE_SEED = 20061;
 const NAME_TOKEN_LENGTH = 8;
@@ -43,7 +44,12 @@ function cloneState(state: CharacterState): CharacterState {
 
 function templateStates(): ReadonlyMap<PlayerClass, CharacterState> {
   if (cachedTemplates) return cachedTemplates;
-  const sim = new Sim({ seed: TEMPLATE_SEED, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: TEMPLATE_SEED,
+    playerClass: 'warrior',
+    gameProfile: GAME_PROFILE,
+    noPlayer: true,
+  });
   const templates = new Map<PlayerClass, CharacterState>();
   for (const cls of ALL_CLASSES) {
     const pid = sim.addPlayer(cls, `${cls}template`);

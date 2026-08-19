@@ -740,7 +740,13 @@ describe('ClientWorld: reconnect re-push of session preferences (#2723 review)',
       client.lastSnapAt = 0;
 
       (client as any).onMessage(
-        JSON.stringify({ t: 'hello', pid: 1, seed: 1, realm: 'Claudemoon' }),
+        JSON.stringify({
+          t: 'hello',
+          pid: 1,
+          seed: 1,
+          realm: 'Claudemoon',
+          gameProfile: 'woc-classic',
+        }),
       );
 
       expect(
@@ -761,7 +767,13 @@ describe('ClientWorld: reconnect re-push of session preferences (#2723 review)',
       client.reconnectAttempts = 0;
 
       (client as any).onMessage(
-        JSON.stringify({ t: 'hello', pid: 1, seed: 1, realm: 'Claudemoon' }),
+        JSON.stringify({
+          t: 'hello',
+          pid: 1,
+          seed: 1,
+          realm: 'Claudemoon',
+          gameProfile: 'woc-classic',
+        }),
       );
 
       expect(sent).toEqual([]);

@@ -13,7 +13,6 @@ import {
   paginateGuildLeaderboard,
   paginateLeaderboard,
 } from '../src/sim/leaderboard_page';
-import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { virtualLevel } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
@@ -257,6 +256,7 @@ import {
   moderationErrorBody,
   readBody,
 } from './http_util';
+import { initialCharacterState as buildInitialCharacterState } from './initial_character_state';
 import { configureInternalRuntime, handleInternalApi } from './internal';
 import { isConnectionRefused } from './ip_block';
 import { pruneExpiredBlockedIps } from './ip_block_db';
@@ -326,7 +326,13 @@ import {
   wocBalanceRateLimited,
 } from './ratelimit';
 import { createPgRateLimitStore } from './ratelimit_db';
-import { isPublicCorsPath, publicOriginFromRequest, REALM, REALM_DIRECTORY } from './realm';
+import {
+  GAME_PROFILE,
+  isPublicCorsPath,
+  publicOriginFromRequest,
+  REALM,
+  REALM_DIRECTORY,
+} from './realm';
 import { configureReliquaryRuntime } from './reliquary';
 import { reliquaryRarityCounts } from './reliquary_rarity_db';
 import { resolveReportTarget } from './report_target';
@@ -484,11 +490,7 @@ function initialCharacterState(
   name: string,
   skin: number,
 ): import('../src/sim/sim').CharacterState {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: cls, playerName: name });
-  sim.setPlayerSkin(sim.playerId, skin);
-  const character = sim.serializeCharacter(sim.playerId);
-  if (!character) throw new Error('failed to serialize initial character');
-  return character;
+  return buildInitialCharacterState(cls, name, skin, GAME_PROFILE);
 }
 
 // ---------------------------------------------------------------------------

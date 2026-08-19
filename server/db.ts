@@ -5,6 +5,7 @@ import {
   EMPTY_ACCOUNT_FLAIR,
   normalizeAccountFlair,
 } from '../src/sim/account_flair';
+import { DEFAULT_GAME_PROFILE, gameProfileSaveNamespace } from '../src/sim/game_profile';
 import { LEADERBOARD_MAX } from '../src/sim/leaderboard_page';
 import { sanitizeRemovedZone1Content } from '../src/sim/removed_zone1_content';
 import type { CharacterState, MailSave, MarketSave } from '../src/sim/sim';
@@ -36,6 +37,7 @@ import type { RankedDeedsAccount } from './deeds_board';
 import { DISCORD_SCHEMA } from './discord_db';
 import { enqueueLinkChange } from './discord_link_changes';
 import { bustDiscordStatus } from './discord_status_cache';
+import { assertCharacterStateGameProfile, ensureGameProfilePersistence } from './game_profile_db';
 import {
   GENERAL_CHAT_QUOTA_DB_POOL_MAX_CLIENTS,
   GENERAL_CHAT_QUOTA_LISTENER_CONNECTIONS,
@@ -69,12 +71,14 @@ import {
 } from './player_metrics_db';
 import { PROGRESS_EVENTS_SCHEMA } from './progress_events_db';
 import { RATELIMIT_PRUNE_SQL, RATELIMIT_SCHEMA } from './ratelimit_db';
-import { REALM, REALM_DIRECTORY } from './realm';
+import { GAME_PROFILE, REALM, REALM_DIRECTORY } from './realm';
 import { chooseArchiveName } from './reclaim_name';
 import { SEEKER_ENTITLEMENT_SCHEMA } from './seeker_entitlement_db';
 import { SOCIAL_SCHEMA } from './social_db';
 import { UNSTUCK_SCHEMA } from './unstuck_db';
 import { USER_ASSETS_SCHEMA } from './user_assets_db';
+
+const PERSISTENCE_GAME_PROFILE = GAME_PROFILE ?? DEFAULT_GAME_PROFILE;
 
 // The realm-market key helpers and the backfill marker key live in
 // server/market_backfill.ts (a *_db-style module with no db.ts dependency, so
@@ -1253,6 +1257,7 @@ export async function ensureSchema(): Promise<void> {
     // have set server-side (SET LOCAL reverts at COMMIT).
     await client.query('SET LOCAL statement_timeout = 0');
     await client.query('SELECT pg_advisory_xact_lock($1)', [SCHEMA_ADVISORY_LOCK_KEY]);
+    await ensureGameProfilePersistence(client, PERSISTENCE_GAME_PROFILE);
     await client.query(SCHEMA);
     // Local-recovery reports reference accounts/characters, so their additive
     // schema runs after the core tables under the same boot advisory lock.
@@ -1708,6 +1713,11 @@ export async function createAccount(
     if (!account) throw new Error('account insert returned no row');
 
     for (const character of buildCommunityTestCharacters(account.id)) {
+      assertCharacterStateGameProfile(
+        character.state,
+        PERSISTENCE_GAME_PROFILE,
+        'community test character state',
+      );
       let inserted = false;
       for (let attempt = 0; attempt < GENERATED_NAME_ATTEMPTS; attempt++) {
         const name = generatedTestCharacterName(account.id, character.cls, attempt);
@@ -2445,6 +2455,8 @@ export async function exportAccountData(
   );
   return {
     exportedAt: new Date().toISOString(),
+    gameProfile: PERSISTENCE_GAME_PROFILE,
+    saveNamespace: gameProfileSaveNamespace(PERSISTENCE_GAME_PROFILE),
     account: {
       id: acct.id,
       username: acct.username,
@@ -3186,6 +3198,7 @@ export async function createCharacterCapped(
   // Null = created without the creator (legacy rig).
   appearance: Record<string, unknown> | null = null,
 ): Promise<CharacterRow | null> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character creation state');
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -3431,6 +3444,7 @@ export async function saveCharacterState(
   state: CharacterState,
   leaseNonce?: string,
 ): Promise<boolean> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character save');
   const cleanState = sanitizeRemovedZone1Content(state).state;
   // A character save should wait out a slow database rather than lose state, so
   // run it on the raised heavy allowance; still bounded so a leave / shutdown
@@ -3466,6 +3480,7 @@ export async function saveCharacterAndMarketState(
   // Out-parameter, same contract as saveCharacterAndGuildBankState's.
   results?: GuildBankWriteResult[],
 ): Promise<boolean> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character market save');
   // Gate the escrow flush on the boot backfill just like saveMarketState:
   // this writes the realm-market row, so it must not run before ensureSchema
   // has confirmed the marker and opened the gate. Checked before any pool work.
@@ -3650,6 +3665,7 @@ export async function saveCharacterAndGuildBankState(
   // signal and every call site (and every test double) reads it as one.
   results?: GuildBankWriteResult[],
 ): Promise<boolean> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character guild bank save');
   const cleanState = sanitizeRemovedZone1Content(state).state;
   const client = await pool.connect();
   try {

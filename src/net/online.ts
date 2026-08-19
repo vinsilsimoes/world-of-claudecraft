@@ -3,6 +3,8 @@
 import { App } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { apiUrl, DESKTOP_API_ORIGIN, NATIVE_API_ORIGIN, NATIVE_APP } from '../client_origin';
+import { type GameProfile, gameProfilesMatch } from '../game_profile';
+import { browserGameProfile } from '../game_profile_runtime';
 import { normalizeOrigin, runtimeWebSocketUrl } from '../runtime';
 import {
   hasStreamerLink,
@@ -293,11 +295,13 @@ export function buildWebSocketAuthMessage(
   token: string,
   characterId: number,
   clientSeed = '',
+  gameProfile: GameProfile = 'woc-classic',
 ): {
   t: typeof ONLINE_WORLD_AUTH_TYPE;
   token: string;
   character: number;
   clientSeed: string;
+  gameProfile: GameProfile;
   timerWire: typeof STABLE_TIMER_WIRE_VERSION;
   petSpecialWire: typeof PET_SPECIAL_WIRE_VERSION;
 } {
@@ -306,6 +310,7 @@ export function buildWebSocketAuthMessage(
     token,
     character: characterId,
     clientSeed,
+    gameProfile,
     timerWire: STABLE_TIMER_WIRE_VERSION,
     petSpecialWire: PET_SPECIAL_WIRE_VERSION,
   };
@@ -1519,7 +1524,7 @@ export class ClientWorld implements IWorld {
   // `player` getter lives below the ctor (it reads `entities`/`playerId`). `known`
   // is IWorldCombat-owned but rides here as a self-wire mirror field with the rest
   // of the roster data. ---
-  cfg: { seed: number; playerClass: PlayerClass };
+  cfg: { seed: number; playerClass: PlayerClass; gameProfile?: GameProfile };
   entities = new Map<number, Entity>();
   playerId = -1;
   private ownPlayerId = -1;
@@ -1984,7 +1989,14 @@ export class ClientWorld implements IWorld {
   private spectateFacingPending = false;
   private pendingSpectateFacing: number | null = null;
 
-  constructor(token: string, characterId: number, cls: PlayerClass, base = '', clientSeed = '') {
+  constructor(
+    token: string,
+    characterId: number,
+    cls: PlayerClass,
+    base = '',
+    clientSeed = '',
+    gameProfile: GameProfile = browserGameProfile(),
+  ) {
     this.characterId = characterId;
     this.token = token;
     this.base = normalizeOrigin(base) || NATIVE_API_ORIGIN || DESKTOP_API_ORIGIN;
@@ -1992,7 +2004,7 @@ export class ClientWorld implements IWorld {
     this.ownPlayerClass = cls;
     // Placeholder until the server's hello supplies the authoritative seed;
     // seeded from the shipped constant so the two can never silently diverge.
-    this.cfg = { seed: WORLD_SEED, playerClass: cls };
+    this.cfg = { seed: WORLD_SEED, playerClass: cls, gameProfile };
     this.openSocket();
     // unconditional input stream beat; constants + gate shared with the
     // cadence-model matrix via input_send_cadence.ts (R13)
@@ -2107,7 +2119,14 @@ export class ClientWorld implements IWorld {
     this.ws = new WebSocket(wsUrl);
     this.ws.onopen = () => {
       this.ws.send(
-        JSON.stringify(buildWebSocketAuthMessage(this.token, this.characterId, this.clientSeed)),
+        JSON.stringify(
+          buildWebSocketAuthMessage(
+            this.token,
+            this.characterId,
+            this.clientSeed,
+            this.cfg.gameProfile ?? 'woc-classic',
+          ),
+        ),
       );
     };
     this.ws.onmessage = (ev) => this.onMessage(String(ev.data));
@@ -2473,6 +2492,11 @@ export class ClientWorld implements IWorld {
       return;
     }
     if (msg.t === 'hello') {
+      if (!gameProfilesMatch(this.cfg.gameProfile ?? 'woc-classic', msg.gameProfile)) {
+        this.endSession();
+        this.onDisconnect?.(ONLINE_WORLD_INCOMPATIBLE_MESSAGE);
+        return;
+      }
       this.playerId = msg.pid;
       this.ownPlayerId = msg.pid;
       this.cfg.seed = msg.seed;
