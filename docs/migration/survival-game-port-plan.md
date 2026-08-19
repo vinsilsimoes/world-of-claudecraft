@@ -157,6 +157,20 @@ names. Plan them into each slice, do not defer them to the end.
 
 ## Phase 2 vertical slice spec
 
+**Status (part 1 + auto battle, shipped):** the combat core runs in the real
+Sim (`src/sim/mir4/combat.ts`, `stats.ts`; commits `402d3569b`..`200ac4f56`)
+with pinned tests under `tests/mir4/`, plus the sim-side auto battle
+(`src/sim/auto_battle/core.ts`: 36yd anchor acquisition, `moveToward`
+pursuit, rotation tail, anchor return, manual-input suspend/resume with
+re-anchor). A TEMPORARY browser bridge (`src/game/mir4_slice_input.ts`,
+keys G/H/B, profile-gated) exercises it offline. Still open for part 2:
+the Vila do Vau procedural zone behind a profile-gated world bootstrap
+(mir4 camps need the ctor camp loop to resolve `MIR4_MOBS`; the
+`MOBS[templateId]` unguarded-read sweep), quest M01-Q01, loot + one
+equippable feeding `recalcMir4PlayerStats`, the `IWorld` auto-battle
+facet + `ClientWorld` mirror + parity pin + WS command (replacing the
+bridge and exposing the radius setting), and mir4 MP regen.
+
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
 1. Character creation with source level-1 stats (4000 HP, 600 MP, PA 50) and the
