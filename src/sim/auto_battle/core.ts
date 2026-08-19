@@ -13,7 +13,7 @@ import { mir4SkillsForClass } from '../content/mir4';
 import { castMir4Skill, mir4BasicAttack } from '../mir4/combat';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
-import { dist2d, RUN_SPEED } from '../types';
+import { DT, dist2d, RUN_SPEED } from '../types';
 
 /**
  * Default target-acquisition radius from the ANCHOR (source: anchor, not
@@ -23,6 +23,9 @@ import { dist2d, RUN_SPEED } from '../types';
 export const MIR4_AUTO_BATTLE_ACQUIRE_YARDS = 36;
 /** How close to the anchor the bot must stand before it stops walking home. */
 export const MIR4_AUTO_BATTLE_ANCHOR_TOLERANCE_YARDS = 2;
+/** Source passive MP regen (fraction of max pool per second). */
+export const MIR4_MP_REGEN_COMBAT = 0.0025;
+export const MIR4_MP_REGEN_REST = 0.005;
 
 export interface Mir4AutoBattleState {
   mode: 'off' | 'battle';
@@ -79,8 +82,23 @@ function acquireTarget(ctx: SimContext, p: Entity, st: Mir4AutoBattleState): Ent
   return best;
 }
 
+/**
+ * MP upkeep at the source project's passive-regeneration rates
+ * (mir4-passive-regeneration-v1): 0.25%/s in combat, 0.50%/s resting, of the
+ * max pool. Runs for every living mana player under the mir4 profile.
+ */
+export function updateMir4ResourceRegen(ctx: SimContext): void {
+  for (const meta of ctx.players.values()) {
+    const p = ctx.entities.get(meta.entityId);
+    if (!p || p.dead || p.resourceType !== 'mana') continue;
+    const rate = p.inCombat ? MIR4_MP_REGEN_COMBAT : MIR4_MP_REGEN_REST;
+    p.resource = Math.min(p.maxResource, p.resource + rate * DT * p.maxResource);
+  }
+}
+
 /** The per-tick phase: one decision per automated player, in roster order. */
 export function updateMir4AutoBattle(ctx: SimContext): void {
+  updateMir4ResourceRegen(ctx);
   for (const meta of ctx.players.values()) {
     const st = meta.autoBattle;
     if (!st || st.mode !== 'battle') continue;
