@@ -169,13 +169,15 @@ the Vila do Vau procedural zone behind a profile-gated world bootstrap
 `MOBS[templateId]` unguarded-read sweep), quest M01-Q01, loot + one
 equippable feeding `recalcMir4PlayerStats`, and MP regen are DONE
 (commits `00c2b50ff`..`b58680670`, plus the auto-quest journey and the
-temporary HUD panel). Remaining for part 2: the `IWorld` mir4 facet +
-`ClientWorld` mirror + parity pin + WS commands (replacing the bridge
-and exposing the radius setting). Procedure notes: the command universe
-is governed (`COMMAND_NAMES` append-only, `WorldFacet` tags,
-tests/command_schema + world_api_parity + schema_wiring), and
-server/game.ts sits 5 lines under its monolith ceiling, so the WS
-dispatch must ride a small `server/mir4_commands.ts` delegate.
+temporary HUD panel). The `IWorldMir4` facet is DONE too (commit
+`3e5431f10`): Sim adapters + ClientWorld mirror over the single
+'mir4' WS envelope, dispatched via server/mir4_commands.ts (game.ts
+stayed under its ceiling), with the parity pin, facet partition, and
+command-schema counts extended deliberately. PHASE 2 IS COMPLETE.
+Still open follow-ups: replace the temporary playtest bridge with the
+real `src/ui/hud/mir4/` domain (i18n keys + keybinds + radius
+setting), snapshot-echo the client reads, and persist mir4 quest and
+equipment state (currently runtime-only) with the Phase 4/5 ports.
 
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
