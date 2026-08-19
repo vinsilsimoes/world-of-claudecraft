@@ -10,7 +10,9 @@
 // run this system (the tick phase is profile-gated in sim.ts).
 
 import { mir4SkillsForClass } from '../content/mir4';
-import { castMir4Skill, mir4BasicAttack, mir4Ultimate } from '../mir4/combat';
+import { castMir4Skill, mir4BasicAttack, mir4Ultimate, mir4UsePotion } from '../mir4/combat';
+import { mir4HardControlled } from '../mir4/effects';
+import { mir4SkillManaCost } from '../mir4/math';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { DT, dist2d, RUN_SPEED } from '../types';
@@ -159,19 +161,117 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     }
     faceTowards(p, target.pos.x, target.pos.z);
 
-    // Rotation tail: the ultimate first when the gauge is full (the source's
-    // selection order), then the first ready kit skill, else the basic filler.
-    // The cast functions re-validate every admission rule themselves.
+    // Auto-potion (source defaults): HP first at <=50%, then MP at <=35%.
+    if (p.hp / p.maxHp <= 0.5) {
+      if (mir4UsePotion(ctx, p.id, 'hp')) continue;
+    } else if (p.maxResource > 0 && p.resource / p.maxResource <= 0.35) {
+      if (mir4UsePotion(ctx, p.id, 'mp')) continue;
+    }
+
+    // The ultimate first when the gauge is full (the source's selection
+    // order), then the rotation cascade, else the basic filler.
     if ((p.mir4UltGauge ?? 0) >= 100) {
       mir4Ultimate(ctx, p.id, target.id);
     }
-    const kit = mir4SkillsForClass((p.mir4?.classId ?? 1) as 1 | 2 | 3 | 4 | 5);
-    for (const skill of kit) {
-      if (skill.unlock.kind === 'level' && p.level < skill.unlock.level) continue;
-      if (!skill.requiresTarget) continue;
-      const result = castMir4Skill(ctx, p.id, skill.skillId, target.id);
-      if (result.ok || result.reason === 'on-gcd') break;
+    const pick = pickRotationSkill(ctx, p, target, st);
+    if (pick) {
+      const result = castMir4Skill(ctx, p.id, pick.skillId, target.id);
+      if (result.ok || result.reason === 'on-gcd') {
+        if (result.ok) continue; // cast committed; basic filler not needed
+      }
     }
     mir4BasicAttack(ctx, p.id, target.id);
   }
+}
+
+/**
+ * The source's rotation cascade (mir4-auto-hunt-rotation-v1):
+ * survival-utility (HP<=45%) -> aoe (nearby >= max(3, minTargets)) -> debuff
+ * (effect still missing on the target) -> execution (target HP <= threshold)
+ * -> single-target. Warrior adds the client's setup/payoff ordering: against
+ * a hard-controlled target the payoff skills come first.
+ */
+function pickRotationSkill(
+  ctx: SimContext,
+  p: Entity,
+  target: Entity,
+  st: Mir4AutoBattleState,
+): { skillId: number } | null {
+  const kit = mir4SkillsForClass((p.mir4?.classId ?? 1) as 1 | 2 | 3 | 4 | 5).filter(
+    (s) => s.requiresTarget && (s.unlock.kind !== 'level' || p.level >= s.unlock.level),
+  );
+  const hpPercent = (p.hp / p.maxHp) * 100;
+  const targetHpPercent = (target.hp / target.maxHp) * 100;
+  let nearby = 0;
+  for (const e of ctx.entities.values()) {
+    if (e.kind !== 'mob' || e.dead) continue;
+    if (
+      dist2d({ x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos'], e.pos) <=
+      st.acquireRadiusYards
+    ) {
+      nearby++;
+    }
+  }
+  const controlled = mir4HardControlled(target);
+  const order = orderKit(kit, p.mir4?.classId ?? 1, controlled);
+
+  const wants = (roles: readonly string[], role: string) => roles.includes(role);
+  for (const phase of [
+    'survival-utility',
+    'aoe',
+    'debuff',
+    'execution',
+    'single-target',
+  ] as const) {
+    for (const skill of order) {
+      // Availability admission (the source checks it per candidate): a skill
+      // on cooldown or short of MP is never recommended, or the cascade would
+      // stall on its top pick forever.
+      if (p.cooldowns.has(String(skill.skillId))) continue;
+      const cost = mir4SkillManaCost(
+        p.mir4?.manaCostStat ?? 0,
+        skill.skillCost,
+        skill.skillCostType,
+      );
+      if (p.resource < cost) continue;
+      const roles = skill.roles;
+      if (phase === 'survival-utility' && !(wants(roles, phase) && hpPercent <= 45)) continue;
+      if (phase === 'aoe' && !(wants(roles, phase) && nearby >= Math.max(3, skill.minTargets ?? 3)))
+        continue;
+      if (phase === 'debuff' && !(wants(roles, phase) && (skill.effect?.effect ?? '') !== ''))
+        continue;
+      if (phase === 'execution' && !(wants(roles, phase) && targetHpPercent <= 30)) {
+        continue;
+      }
+      if (phase === 'single-target' && !wants(roles, phase)) continue;
+      // CC admission: a skill whose effect is already active on the target
+      // is skipped (the engine would refuse it anyway).
+      const effectName = skill.effect?.effect;
+      if (
+        effectName &&
+        target.mir4Effects?.active.some((f) => f.effectId === `mir4_${skill.skillId}_${effectName}`)
+      ) {
+        continue;
+      }
+      return { skillId: skill.skillId };
+    }
+  }
+  return null;
+}
+
+/** Warrior setup/payoff flip; every other class keeps catalog order. */
+function orderKit<T extends { skillId: number }>(
+  kit: readonly T[],
+  classId: number,
+  targetControlled: boolean,
+): T[] {
+  if (classId !== 1) return [...kit];
+  const rank = targetControlled
+    ? { 1104: 0, 1401: 1, 1102: 2, 1304: 3 } // payoff: burst the controlled target
+    : { 1102: 0, 1304: 1, 1104: 2, 1401: 3 }; // setup: control first
+  return [...kit].sort(
+    (a, b) =>
+      (rank[a.skillId as 1102 | 1104 | 1304 | 1401] ?? 9) -
+      (rank[b.skillId as 1102 | 1104 | 1304 | 1401] ?? 9),
+  );
 }

@@ -343,6 +343,36 @@ export function mir4BasicAttack(ctx: SimContext, pid: number, targetId?: number)
   return { ok: true };
 }
 
+// Potions (the source's mir4_hp_potion / mir4_mp_potion): HP restores 5% of
+// max on a 1s group cooldown, MP restores a flat 120 on a 5s group cooldown.
+// The slice has no consumable inventory yet, so counts are unlimited and only
+// the cooldowns gate use; the Phase 4 inventory port carries the stacks.
+export const MIR4_HP_POTION_HEAL_BPS = 500;
+export const MIR4_MP_POTION_RESTORE = 120;
+const HP_POTION_COOLDOWN_KEY = 'mir4_potion_hp';
+const MP_POTION_COOLDOWN_KEY = 'mir4_potion_mp';
+
+export function mir4UsePotion(
+  ctx: { entities: Map<number, Entity> },
+  pid: number,
+  kind: 'hp' | 'mp',
+): boolean {
+  const p = ctx.entities.get(pid);
+  if (!p || p.dead) return false;
+  if (kind === 'hp') {
+    if (p.hp >= p.maxHp) return false; // RESOURCE_FULL: nothing to restore
+    if (p.cooldowns.has(HP_POTION_COOLDOWN_KEY)) return false;
+    p.cooldowns.set(HP_POTION_COOLDOWN_KEY, 1);
+    p.hp = Math.min(p.maxHp, p.hp + Math.floor((p.maxHp * MIR4_HP_POTION_HEAL_BPS) / 10_000));
+    return true;
+  }
+  if (p.resource >= p.maxResource) return false;
+  if (p.cooldowns.has(MP_POTION_COOLDOWN_KEY)) return false;
+  p.cooldowns.set(MP_POTION_COOLDOWN_KEY, 5);
+  p.resource = Math.min(p.maxResource, p.resource + MIR4_MP_POTION_RESTORE);
+  return true;
+}
+
 const ULTIMATE_COOLDOWN_KEY = 'mir4_ult';
 
 /**
