@@ -37,7 +37,7 @@ describe('the mir4 slice world (Vila do Vau)', () => {
     expect(p.pos.z).toBeLessThan(-4); // the southern hub, not world center
     expect(wolvesOf(sim).length).toBe(9); // 5 + 4 from the two camps
     const npcs = [...sim.entities.values()].filter(
-      (e) => e.kind === 'npc' && e.templateId === 'mir4_guardia_vau',
+      (e) => e.kind === 'npc' && e.templateId === 'mir4_tarek_duas_pontes',
     );
     expect(npcs).toHaveLength(1);
     expect(zoneAt(14, 6)?.id).toBe(MIR4_VILA_DO_VAU_ZONE_ID);

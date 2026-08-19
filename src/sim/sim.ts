@@ -318,6 +318,8 @@ import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
 import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
+import type { Mir4QuestProgress } from './mir4/quest';
+import { mir4TalkOrInspect } from './mir4/quest';
 import { initMir4Player } from './mir4/stats';
 import {
   mobCombatProfile as mobCombatProfileFn,
@@ -1334,6 +1336,8 @@ export interface PlayerMeta {
     acquireRadiusYards: number;
     suspended: boolean;
   };
+  // mir4 slice quest progress (runtime-only this slice; Phase 5 persists it).
+  mir4Quests?: Record<string, Mir4QuestProgress>;
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing
@@ -3690,6 +3694,11 @@ export class Sim {
 
   setMir4AutoBattleMode(mode: 'off' | 'battle', pid = this.playerId): void {
     setMir4AutoBattleMode(this.ctx, pid, mode);
+  }
+
+  /** The mir4 quest interaction verb: talk at the giver, inspect at a clue site. */
+  mir4TalkOrInspect(pid = this.playerId): string {
+    return mir4TalkOrInspect(this.ctx, pid);
   }
 
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in

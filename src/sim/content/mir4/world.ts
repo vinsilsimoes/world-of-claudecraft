@@ -42,15 +42,15 @@ export const MIR4_SLICE_WORLD: WorldContent = {
     { mobId: 'mir4_forest_wolf', center: { x: -18, z: 2 }, radius: 8, count: 4 },
   ],
   npcs: {
-    mir4_guardia_vau: {
-      id: 'mir4_guardia_vau',
-      name: 'Guardiã do Vau',
-      title: 'Guardiã do Vau',
+    mir4_tarek_duas_pontes: {
+      id: 'mir4_tarek_duas_pontes',
+      name: 'Tarek Duas-Pontes',
+      title: 'Tarek Duas-Pontes',
       pos: { x: 1.5, z: -10 },
       facing: 0,
       color: 0x4f7f9f,
       questIds: [],
-      greeting: 'Os lobos se aproximaram do vau. Cuidado nas clareiras.',
+      greeting: 'Os lobos contornam a água que sangra luz negra. Veja você mesmo nas clareiras.',
     },
   },
   groundObjects: [],

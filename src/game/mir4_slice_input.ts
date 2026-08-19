@@ -28,6 +28,28 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
     else if (ev.key === 'b' || ev.key === 'B') {
       autoBattleOn = !autoBattleOn;
       sim.setMir4AutoBattleMode(autoBattleOn ? 'battle' : 'off');
+    } else if (ev.key === 't' || ev.key === 'T') {
+      // Quest verb: talk at Tarek, inspect at a clue site. Toasted through a
+      // bridge-local banner (Sim.error is private; the real surface is the
+      // Phase 2 IWorld facet).
+      const msg = sim.mir4TalkOrInspect();
+      console.log('[mir4]', msg);
+      let banner = document.getElementById('mir4-slice-toast');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'mir4-slice-toast';
+        banner.style.cssText =
+          'position:fixed;top:12%;left:50%;transform:translateX(-50%);z-index:9999;' +
+          'background:rgba(0,0,0,.7);color:#eee;padding:6px 14px;border-radius:6px;' +
+          'font:14px sans-serif;pointer-events:none';
+        document.body.appendChild(banner);
+      }
+      banner.textContent = msg;
+      banner.style.opacity = '1';
+      window.setTimeout(() => {
+        banner!.style.opacity = '0';
+        banner!.style.transition = 'opacity .6s';
+      }, 1800);
     }
   });
 }
