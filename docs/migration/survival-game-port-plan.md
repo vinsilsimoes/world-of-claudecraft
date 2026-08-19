@@ -230,6 +230,20 @@ real `src/ui/hud/mir4/` domain (i18n keys + keybinds + radius
 setting), snapshot-echo the client reads, and persist mir4 quest and
 equipment state (currently runtime-only) with the Phase 4/5 ports.
 
+**PHASE 3 IS COMPLETE** (commits 36be26ec7..ddb4484d9): the effect/CC
+engine with the 750ms immunity tail and AoE cleave; per-class
+basic/ultimate/gauge specs on the authored impact clock; decision D1
+(the four mir4-only keys host on the warrior shell, identity on
+Entity.mir4.classId, PlayerClass/CLASSES untouched); all four kits
+executing (magic channels, authorial hybrid math, 2503 shield, 3503
+heal, 4106 stun chance); the rotation cascade with warrior
+setup/payoff and auto-potion; the 25 passives as summed bps in the
+recalc's last step plus fail-closed skill level 2; the mob->player bps
+pipeline with blind/shield and m01 map-model XP (34); and the
+placeholder VFX spellfx hook with the WS dispatch pinned against the
+real Sim. Open follow-ups carried into 4/5: evolution cost economy,
+per-map XP caps, authored VFX matrix, real HUD domain.
+
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
 1. Character creation with source level-1 stats (4000 HP, 600 MP, PA 50) and the
