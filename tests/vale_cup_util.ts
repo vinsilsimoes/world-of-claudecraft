@@ -5,7 +5,7 @@
 import { expect } from 'vitest';
 import { BUILTIN_WORLD } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { SimConfig, SimEvent, WorldContent } from '../src/sim/types';
+import type { PlayerClass, SimConfig, SimEvent, WorldContent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 
 // Vale Cup tests need the real terrain, pitch and instance-plane geometry, but
@@ -41,13 +41,7 @@ export function teleport(sim: Sim, pid: number, x: number, z: number) {
   (sim as any).rebucket(e);
 }
 
-export function addAt(
-  sim: Sim,
-  cls: Parameters<Sim['addPlayer']>[0],
-  name: string,
-  x = 0,
-  z = -40,
-) {
+export function addAt(sim: Sim, cls: PlayerClass, name: string, x = 0, z = -40) {
   const pid = sim.addPlayer(cls, name);
   teleport(sim, pid, x, z);
   return pid;

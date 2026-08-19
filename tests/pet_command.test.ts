@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import type { Entity, SimEvent } from '../src/sim/types';
+import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
 
 function makeWorld() {
   return new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true });
 }
 
-function makeClassWorld(cls: Parameters<Sim['addPlayer']>[0]) {
+function makeClassWorld(cls: PlayerClass) {
   return new Sim({ seed: 42, playerClass: cls, noPlayer: true });
 }
 

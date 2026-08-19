@@ -19,9 +19,9 @@ import type {
   PlayerProfessionsView,
   ToolEffectSlotView,
 } from '../world_api';
-import { setMir4AutoBattleMode, updateMir4AutoBattle } from './auto_battle/core';
+import { setMir4AutoBattleMode } from './auto_battle/core';
 import type { Mir4AutoQuestState } from './auto_quest/core';
-import { mir4AutoQuestStatus, setMir4AutoQuest, updateMir4AutoQuest } from './auto_quest/core';
+import { mir4AutoQuestStatus, setMir4AutoQuest } from './auto_quest/core';
 import * as bagsMod from './bags';
 import {
   addStacked,
@@ -320,13 +320,14 @@ import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
 import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
-import { mir4Ultimate, updateMir4PendingImpacts } from './mir4/combat';
-import { updateMir4Effects } from './mir4/effects';
+import { mir4Ultimate } from './mir4/combat';
+
 import type { Mir4Equipment } from './mir4/equipment';
 import { mir4EquipStarterWeapon, mir4UnequipWeapon } from './mir4/equipment';
 import type { Mir4QuestProgress } from './mir4/quest';
 import { mir4TalkOrInspect } from './mir4/quest';
-import { initMir4Player } from './mir4/stats';
+import { initMir4Player, isMir4ClassKey, mir4ShellClassFor } from './mir4/stats';
+import { updateMir4Systems } from './mir4/systems';
 import {
   mobCombatProfile as mobCombatProfileFn,
   mobEffectiveMeleeRange as mobEffectiveMeleeRangeImpl,
@@ -580,6 +581,7 @@ import {
   CURRENT_CHARACTER_CONTENT_REVISION,
   migrateCharacterTalentsV2,
 } from './talent_save_migration';
+import type { Mir4ClassKey } from './types';
 import * as unstuckMod from './unstuck';
 import {
   rollWorldBossLoot as rollWorldBossLootImpl,
@@ -2024,8 +2026,10 @@ export class Sim {
   readonly petSpecialCommandsSupported = true;
   // `world` stays optional (a custom map for play-test, else undefined for the
   // built-in world); everything else is defaulted to a concrete value below.
-  cfg: Required<Omit<SimConfig, 'noPlayer' | 'world' | 'perfLap' | 'respawnSeconds'>> &
-    Pick<SimConfig, 'world' | 'perfLap' | 'respawnSeconds'>;
+  cfg: Required<
+    Omit<SimConfig, 'noPlayer' | 'world' | 'perfLap' | 'respawnSeconds' | 'playerClassMir4'>
+  > &
+    Pick<SimConfig, 'world' | 'perfLap' | 'respawnSeconds' | 'playerClassMir4'>;
   /**
    * The authored world this simulation owns. The active registry is a host/render
    * seam and may be swapped by an editor after construction; gameplay services,
@@ -2326,6 +2330,7 @@ export class Sim {
     this.cfg = {
       seed: cfg.seed,
       playerClass: cfg.playerClass,
+      playerClassMir4: cfg.playerClassMir4,
       gameProfile: cfg.gameProfile ?? DEFAULT_GAME_PROFILE,
       // Deliberately NOT defaulted: the respawn policy (respawn_policy.ts) has to
       // tell "the host pinned a global base" apart from "use the zone tier".
@@ -2742,7 +2747,8 @@ export class Sim {
     if (cfg.noPlayer && this.devCommands) this.spawnHealerPracticeDummy();
 
     if (!cfg.noPlayer) {
-      this.addPlayer(this.cfg.playerClass, this.cfg.playerName, { autoEquip: this.cfg.autoEquip });
+      const rosterKey = this.cfg.playerClassMir4 ?? this.cfg.playerClass;
+      this.addPlayer(rosterKey, this.cfg.playerName, { autoEquip: this.cfg.autoEquip });
     }
 
     // Escort quest NPCs (src/sim/escort.ts). Last on purpose: the spawns draw
@@ -2880,7 +2886,7 @@ export class Sim {
   // -------------------------------------------------------------------------
 
   addPlayer(
-    cls: PlayerClass,
+    clsParam: PlayerClass | Mir4ClassKey,
     name: string,
     opts?: {
       autoEquip?: boolean;
@@ -2900,6 +2906,9 @@ export class Sim {
       appearance?: Record<string, unknown> | null;
     },
   ): number {
+    // D1 (port plan): a mir4-only class key rides the WARRIOR shell through
+    // the classic derivations; the identity reaches the init hook.
+    const cls = mir4ShellClassFor(clsParam, this.cfg.gameProfile);
     if (opts?.state && !gameProfileStateMatches(this.cfg.gameProfile, opts.state)) {
       const actual = gameProfileForCharacterState(opts.state);
       throw new Error(
@@ -3686,7 +3695,8 @@ export class Sim {
     this.deedDirtyPids.delete(player.id);
     this.deedDirtyKeys.delete(player.id);
     if (this.cfg.gameProfile === MIR4_GAME_PROFILE) {
-      initMir4Player(this.ctx, player.id, opts?.state);
+      const key = isMir4ClassKey(clsParam) && clsParam !== 'warrior' ? clsParam : undefined;
+      initMir4Player(this.ctx, player.id, opts?.state, key);
     }
     return player.id;
   }
@@ -6507,17 +6517,11 @@ export class Sim {
     deedsMod.updateDeeds(this.ctx);
     lap?.('deeds');
 
-    // mir4 auto battle (profile-gated appended phase; classic sims skip it, so
-    // the classic draw order is untouched). Offensive draws happen only through
-    // the mir4 cast gates.
-    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4AutoBattle(this.ctx);
-    lap?.('mir4.autoBattle');
-    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4AutoQuest(this.ctx);
-    lap?.('mir4.autoQuest');
-    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4Effects(this.ctx);
-    lap?.('mir4.effects');
-    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4PendingImpacts(this.ctx);
-    lap?.('mir4.impacts');
+    // mir4 systems (profile-gated appended phase; classic sims skip it, so the
+    // classic draw order is untouched). The fixed sub-order lives in
+    // src/sim/mir4/systems.ts.
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4Systems(this.ctx);
+    lap?.('mir4.systems');
 
     // movement re-bucketing: queries during the next tick and the server's
     // snapshot broadcast right after this one see fresh cells

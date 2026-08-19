@@ -15,7 +15,7 @@ const CASTER_WEAPON_CLASSES: PlayerClass[] = [
   'druid',
 ];
 
-function equip(cls: Parameters<Sim['addPlayer']>[0], itemId: string) {
+function equip(cls: PlayerClass, itemId: string) {
   const sim = new Sim({ seed: 42, playerClass: cls, noPlayer: true, autoEquip: false });
   const pid = sim.addPlayer(cls, `${cls}-${itemId}`);
   // Max level so the per-quality level gate (item_level_req.ts) never fires:

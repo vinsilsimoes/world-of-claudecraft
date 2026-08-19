@@ -8,7 +8,8 @@
 
 import { mir4LevelRow } from '../content/mir4';
 import { MIR4_ITEMS } from '../content/mir4/items';
-import type { Entity, Mir4PlayerCombatState, PlayerClass } from '../types';
+import type { GameProfile } from '../game_profile';
+import type { Entity, Mir4ClassKey, Mir4PlayerCombatState, PlayerClass } from '../types';
 
 // Column indexes into MIR4_LEVEL_ROWS tuples (see MIR4_LEVEL_COLUMNS).
 export const MIR4_LEVEL_COL = {
@@ -28,13 +29,59 @@ export const MIR4_LEVEL_COL = {
 } as const;
 
 /**
- * PlayerClass -> mir4 classId. The slice runs warrior (1); the other four
- * unlock in Phase 3 when creation grows their kits, so mapping them here
- * before their combat exists would let a half-wired class into the world.
+ * The full PlayerClass-or-Mir4ClassKey -> classId mapping. The slice runs all
+ * five classes: the four mir4-only keys ride the warrior shell through the
+ * classic derivations (see sim.ts addPlayer, "D1"), with the true identity
+ * carried on Entity.mir4.classId.
  */
-export function mir4ClassIdForPlayerClass(cls: PlayerClass): number {
-  if (cls === 'warrior') return 1;
-  throw new Error(`mir4-gameplay-port does not host the classic class '${cls}' yet (Phase 3)`);
+export function mir4ClassIdForPlayerClass(cls: PlayerClass | Mir4ClassKey): number {
+  switch (cls) {
+    case 'warrior':
+      return 1;
+    case 'elementalist':
+      return 2;
+    case 'taoist':
+      return 3;
+    case 'arbalist':
+      return 4;
+    case 'lancer':
+      return 5;
+    default:
+      throw new Error(`mir4-gameplay-port does not host the classic class '${cls}'`);
+  }
+}
+
+/** The five mir4 roster keys hosts may offer under the profile. */
+export const MIR4_PLAYER_CLASS_KEYS: readonly Mir4ClassKey[] = [
+  'warrior',
+  'elementalist',
+  'taoist',
+  'arbalist',
+  'lancer',
+];
+
+export function isMir4ClassKey(cls: string): cls is Mir4ClassKey {
+  return (MIR4_PLAYER_CLASS_KEYS as readonly string[]).includes(cls);
+}
+
+/**
+ * The classic shell for an incoming class key: mir4-only keys ride the warrior
+ * shell (talents/recalc/render placeholders); classic classes pass through.
+ * A mir4-only key under the CLASSIC profile fails closed.
+ */
+export function mir4ShellClassFor(
+  cls: PlayerClass | Mir4ClassKey,
+  profile: GameProfile,
+): PlayerClass {
+  if (isPlayerClassKey(cls)) return cls;
+  if (profile !== 'mir4-gameplay-port') {
+    throw new Error(`mir4 class '${cls}' is not hostable under the ${profile} profile`);
+  }
+  return 'warrior';
+}
+
+function isPlayerClassKey(cls: string): cls is PlayerClass {
+  return !isMir4ClassKey(cls) || cls === 'warrior';
 }
 
 /**
@@ -44,7 +91,7 @@ export function mir4ClassIdForPlayerClass(cls: PlayerClass): number {
  */
 export function recalcMir4PlayerStats(
   e: Entity,
-  cls: PlayerClass,
+  cls: PlayerClass | Mir4ClassKey,
   level: number,
   equipment?: { weapon?: number },
 ): void {
@@ -103,11 +150,14 @@ export function initMir4Player(
   },
   pid: number,
   state?: { hp?: number; resource?: number } | null,
+  classKey?: Mir4ClassKey,
 ): void {
   const p = ctx.entities.get(pid);
   if (!p) return;
   const meta = ctx.players?.get(pid);
-  recalcMir4PlayerStats(p, p.templateId as PlayerClass, p.level, meta?.mir4Equipment);
+  // The explicit key wins (mir4-only classes ride the warrior shell in
+  // templateId, so it cannot be recovered from the entity alone).
+  recalcMir4PlayerStats(p, classKey ?? (p.templateId as PlayerClass), p.level, meta?.mir4Equipment);
   if (state && (state.hp !== undefined || state.resource !== undefined)) {
     if (state.hp !== undefined) {
       p.hp = Math.min(Math.max(1, Math.floor(state.hp)), p.maxHp);

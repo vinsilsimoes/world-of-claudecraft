@@ -1,7 +1,9 @@
 import { browserGameProfile } from '../game_profile_runtime';
 import { MIR4_SLICE_WORLD } from '../sim/content/mir4/world';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { mir4ShellClassFor } from '../sim/mir4/stats';
 import {
+  type Mir4ClassKey,
   PLAYER_INTEREST_DROP_RADIUS,
   type PlayerClass,
   type SimConfig,
@@ -12,16 +14,21 @@ import { WORLD_SEED } from '../sim/world_seed';
 // The offline browser world's Sim options, extracted from main.ts's startOffline
 // so the bootstrap stays thin (main.ts is a firewall, not a home). The client is
 // the host boundary that resolves the build-time game profile for the Sim.
+// A mir4 roster key (D1 in the port plan) arrives as playerClassMir4 while
+// playerClass carries the warrior shell every classic derivation reads.
 export function offlineSimOptions(opts: {
-  playerClass: PlayerClass;
+  playerClass: PlayerClass | Mir4ClassKey;
   playerName: string;
   world?: WorldContent;
   seedOverride?: number;
 }): SimConfig {
+  const profile = browserGameProfile();
+  const shell = mir4ShellClassFor(opts.playerClass, profile);
   return {
     seed: opts.seedOverride ?? WORLD_SEED,
-    playerClass: opts.playerClass,
-    gameProfile: browserGameProfile(),
+    playerClass: shell,
+    playerClassMir4: shell === opts.playerClass ? undefined : (opts.playerClass as Mir4ClassKey),
+    gameProfile: profile,
     playerName: opts.playerName,
     devCommands: import.meta.env.DEV,
     // The offline world runs the ranked rift portal scheduler like the live
@@ -35,7 +42,6 @@ export function offlineSimOptions(opts: {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     // The mir4 profile's offline world (Vila do Vau). An explicit world (the
     // editor play-test) always wins; classic stays on the generated builtin.
-    world:
-      opts.world ?? (browserGameProfile() === MIR4_GAME_PROFILE ? MIR4_SLICE_WORLD : undefined),
+    world: opts.world ?? (profile === MIR4_GAME_PROFILE ? MIR4_SLICE_WORLD : undefined),
   };
 }

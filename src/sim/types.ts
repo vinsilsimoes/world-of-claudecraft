@@ -204,6 +204,14 @@ export type PlayerClass =
   | 'warlock'
   | 'druid';
 
+// The mir4-gameplay-port class keys (the profile's five-class roster). These
+// ride `SimConfig.playerClass`/`addPlayer` ALONGSIDE the classic union: a
+// mir4-only key means the classic derivations (talents, recalc, render rig)
+// use the warrior SHELL while the mir4 identity lives on Entity.mir4.classId
+// (src/sim/mir4/stats.ts owns the mapping). The classic union and tables stay
+// untouched, so no classic content obligations fire.
+export type Mir4ClassKey = 'warrior' | 'elementalist' | 'taoist' | 'arbalist' | 'lancer';
+
 // Sanguine Aura's class-level melee recipient filter. It excludes the pure
 // casters and Hunter, whose primary attack loop is ranged.
 export const MELEE_CLASSES: ReadonlySet<PlayerClass> = new Set([
@@ -6892,6 +6900,10 @@ export interface WorldContent {
 export interface SimConfig {
   seed: number;
   playerClass: PlayerClass;
+  // D1 (port plan): under the mir4 profile the TRUE roster key when it differs
+  // from the shell (playerClass carries the warrior shell for every classic
+  // derivation; Entity.mir4.classId carries the identity).
+  playerClassMir4?: Mir4ClassKey;
   // Runtime/content identity. Defaults to woc-classic at the Sim boundary so
   // existing tests and tools remain compatible until they opt into the MIR4
   // port. Hosts resolve external configuration through requireGameProfile.
