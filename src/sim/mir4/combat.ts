@@ -294,6 +294,13 @@ export function castMir4Skill(
       const heal = Math.floor((p.maxHp * (bps ?? 0)) / 10_000);
       p.hp = Math.min(p.maxHp, p.hp + heal);
     }
+    ctx.emit({
+      type: 'spellfx',
+      sourceId: p.id,
+      targetId: p.id,
+      school: `mir4/${skill.effect.effect}`,
+      fx: 'selfCast',
+    });
     return { ok: true };
   }
 
@@ -321,6 +328,19 @@ export function castMir4Skill(
       }
     }
   }
+  // Placeholder VFX hook (3.8): every admitted cast emits a spellfx the
+  // renderer can key off while the authored VFX matrix port is pending. The
+  // effect kind rides the school field (mir4/<kind>); draws no rng.
+  ctx.emit({
+    type: 'spellfx',
+    sourceId: p.id,
+    targetId: target?.id ?? p.id,
+    school: `mir4/${skill.effect?.effect ?? 'hit'}`,
+    fx:
+      skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse'
+        ? 'selfCast'
+        : 'flourish',
+  });
   return { ok: true };
 }
 
