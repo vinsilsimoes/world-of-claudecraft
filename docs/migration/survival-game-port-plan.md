@@ -258,6 +258,18 @@ for Phase 5: the four native ITEM_MAKE recipes (useId materials), the
 shared inventory surface with drops, and equipment/quest/material
 persistence (currently runtime on PlayerMeta).
 
+**PHASE 5 DATA LAYER SHIPPED** (commits e837f2dd6..1c3892e91): the
+20-map arc table (sequence/act/level bands/biome mapping/city cadence/
+gear ranks/portal chain) with the procedural band generator
+(buildMir4ArcWorld), the 230-quest table (four groups at sealed
+cardinalities, chain wiring, exact rewards, stage-kind sequences), and
+the mounts (85) + spirits (30) catalogs. Still open for the phase: the
+arc world as the LIVE offline world (swap MIR4_SLICE_WORLD), the quest
+runtime verbs for the full stage-kind vocabulary, mob templates per
+environment (currently the wolf everywhere), portals between bands,
+mounts/spirits runtime systems, and the persistence of quest/equipment/
+material state.
+
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
 1. Character creation with source level-1 stats (4000 HP, 600 MP, PA 50) and the
