@@ -4,15 +4,14 @@
 // the mir4-gameplay-port profile; inert under woc-classic. Delete when the
 // facet replaces it.
 //
-// What it does: spawns three Vila do Vau wolves next to the player (passive
-// until attacked, mir4 XP) and binds two keys:
+// What it does: binds two keys (the mir4 world's camps and NPC now come from
+// src/sim/content/mir4/world.ts, selected at the offline boundary):
 //   G -> cast skill 1102 (Golpe de Vacuo) at the current target
 //   H -> the authorial basic attack at the current target
+//   B -> toggle the sim-side auto battle
 // Click a wolf to target it first (the classic targeting path sets
 // player.targetId, which the bridge reads).
 
-import { MIR4_MOBS } from '../sim/content/mir4/mobs';
-import { createMob } from '../sim/entity';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import type { Sim } from '../sim/sim';
 
@@ -20,15 +19,6 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
   if (sim.cfg.gameProfile !== MIR4_GAME_PROFILE) return;
   const player = sim.entities.get(sim.playerId);
   if (!player) return;
-  for (let i = 0; i < 3; i++) {
-    const wolf = createMob(
-      sim.nextId++,
-      MIR4_MOBS.mir4_forest_wolf,
-      1,
-      sim.groundPos(player.pos.x + 2.5, player.pos.z + (i - 1) * 2.5),
-    );
-    sim.addEntity(wolf);
-  }
   let autoBattleOn = false;
   window.addEventListener('keydown', (ev) => {
     if (ev.repeat) return;

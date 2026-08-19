@@ -146,6 +146,7 @@ import { ensureWarriorStance } from './combat/warrior_stances';
 // the PlayerMeta interface + the power-up catalog the fiestaMatchInfo accessor reads.
 import { type AugmentSpecial, type AugmentTier, POWERUPS_BY_ID } from './content/augments';
 import { applyTalentMods } from './content/classes';
+import { MIR4_MOBS } from './content/mir4/mobs';
 import { DEFAULT_MOUNT, type MountKey } from './content/mounts';
 import { GATHERING_PROFESSION_IDS, type GatheringProfessionId } from './content/professions';
 import { PTR_DEV_VENDOR_DEF } from './content/ptr_dev_vendor';
@@ -2413,7 +2414,9 @@ export class Sim {
 
     // Mobs from camps
     for (const camp of worldContent.camps) {
-      const template = MOBS[camp.mobId];
+      // The mir4 profile's world supplies its own camp templates; resolve the
+      // classic table first so classic behavior is byte-identical.
+      const template = MOBS[camp.mobId] ?? MIR4_MOBS[camp.mobId];
       // Aquatic/flagged swimmers may wade in the shallows; everyone else
       // still spawns on dry land even though combat movement can enter water.
       const minHeight = this.mobCanSpawnInWater(template) ? waterLevel() - 0.5 : waterLevel() + 0.4;

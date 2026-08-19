@@ -1,4 +1,6 @@
 import { browserGameProfile } from '../game_profile_runtime';
+import { MIR4_SLICE_WORLD } from '../sim/content/mir4/world';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import {
   PLAYER_INTEREST_DROP_RADIUS,
   type PlayerClass,
@@ -31,6 +33,9 @@ export function offlineSimOptions(opts: {
     // full-world wilderness AI from the browser's 20 Hz tick without changing
     // anything visible or interactable.
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
-    world: opts.world,
+    // The mir4 profile's offline world (Vila do Vau). An explicit world (the
+    // editor play-test) always wins; classic stays on the generated builtin.
+    world:
+      opts.world ?? (browserGameProfile() === MIR4_GAME_PROFILE ? MIR4_SLICE_WORLD : undefined),
   };
 }
