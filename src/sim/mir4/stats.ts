@@ -8,6 +8,7 @@
 
 import { mir4LevelRow } from '../content/mir4';
 import { MIR4_ITEMS } from '../content/mir4/items';
+import { aggregateMir4PassiveBonuses } from '../content/mir4/passives';
 import type { GameProfile } from '../game_profile';
 import type { Entity, Mir4ClassKey, Mir4PlayerCombatState, PlayerClass } from '../types';
 
@@ -84,6 +85,35 @@ function isPlayerClassKey(cls: string): cls is PlayerClass {
   return !isMir4ClassKey(cls) || cls === 'warrior';
 }
 
+/** The roster key for a classId (1..5); the mirror of the key->id mapping. */
+export function mir4ClassKeyForId(classId: number): Mir4ClassKey {
+  switch (classId) {
+    case 1:
+      return 'warrior';
+    case 2:
+      return 'elementalist';
+    case 3:
+      return 'taoist';
+    case 4:
+      return 'arbalist';
+    case 5:
+      return 'lancer';
+    default:
+      throw new Error(`unknown mir4 classId ${classId}`);
+  }
+}
+
+/**
+ * The class a later recalc should derive from: the entity's OWN mir4 identity
+ * when it has one (mir4-only classes ride the warrior shell in templateId, so
+ * the templateId alone would resolve the wrong table), else the explicit key,
+ * else the templateId.
+ */
+export function mir4RecalcClassOf(p: Entity, classKey?: Mir4ClassKey): PlayerClass | Mir4ClassKey {
+  if (p.mir4) return mir4ClassKeyForId(p.mir4.classId);
+  return classKey ?? (p.templateId as PlayerClass);
+}
+
 /**
  * Recompute every mir4-derived Entity field from (classId, level, gear). The
  * equipment's applied attributes land on top of the level-table base so a
@@ -128,6 +158,24 @@ export function recalcMir4PlayerStats(
     physicalDefense: row[MIR4_LEVEL_COL.physicalDefense],
     magicDefense: row[MIR4_LEVEL_COL.magicDefense],
   };
+  // Class passives land LAST, as summed basis points over the status the
+  // level table + gear already produced (the source's applyToCharacterStatus
+  // order: level -> equipment -> passives). A level crossing an unlock
+  // threshold therefore raises the pool in the same recalc.
+  const boosts = aggregateMir4PassiveBonuses(classId as 1 | 2 | 3 | 4 | 5, level);
+  const boost = (statusId: number, current: number): number => {
+    const bps = boosts.get(statusId) ?? 0;
+    return bps > 0 ? current + Math.floor((current * bps) / 10_000) : current;
+  };
+  e.maxHp = boost(1, e.maxHp);
+  e.hp = Math.min(e.hp, e.maxHp);
+  e.maxResource = boost(6, e.maxResource);
+  e.attackPower = boost(20, e.attackPower);
+  e.spellPower = boost(22, e.spellPower);
+  e.mir4.accuracy = boost(28, e.mir4.accuracy);
+  e.mir4.dodge = boost(29, e.mir4.dodge);
+  e.mir4.physicalDefense = boost(24, e.mir4.physicalDefense);
+  e.mir4.magicDefense = boost(26, e.mir4.magicDefense);
 }
 
 /** The MP pool mirror on the Entity resource fields (call after recalc + restore). */
@@ -157,7 +205,7 @@ export function initMir4Player(
   const meta = ctx.players?.get(pid);
   // The explicit key wins (mir4-only classes ride the warrior shell in
   // templateId, so it cannot be recovered from the entity alone).
-  recalcMir4PlayerStats(p, classKey ?? (p.templateId as PlayerClass), p.level, meta?.mir4Equipment);
+  recalcMir4PlayerStats(p, mir4RecalcClassOf(p, classKey), p.level, meta?.mir4Equipment);
   if (state && (state.hp !== undefined || state.resource !== undefined)) {
     if (state.hp !== undefined) {
       p.hp = Math.min(Math.max(1, Math.floor(state.hp)), p.maxHp);

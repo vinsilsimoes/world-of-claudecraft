@@ -33,7 +33,15 @@ export {
   mir4ClassRangeYards,
 } from './classes';
 export {
+  aggregateMir4PassiveBonuses,
+  MIR4_CLASS_PASSIVES,
+  MIR4_PASSIVE_UNLOCK_LEVELS,
+  type Mir4PassiveBonus,
+  type Mir4PassiveDef,
+} from './passives';
+export {
   MIR4_SKILL_GLOBAL_COOLDOWN_MS,
+  MIR4_SKILL_LEVEL_CAPS,
   MIR4_SKILLS,
   type Mir4SkillDamage,
   type Mir4SkillDamageComponent,

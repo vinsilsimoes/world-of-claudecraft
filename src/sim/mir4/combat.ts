@@ -16,6 +16,7 @@ import {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
   MIR4_SKILL_GLOBAL_COOLDOWN_MS,
+  MIR4_SKILL_LEVEL_CAPS,
   mir4ClassById,
   mir4ClassRangeYards,
   mir4SkillById,
@@ -37,7 +38,12 @@ import {
   mir4SkillManaCost,
   mir4StunChanceBps,
 } from './math';
-import { advanceMir4Experience, mir4ClassIdForPlayerClass, recalcMir4PlayerStats } from './stats';
+import {
+  advanceMir4Experience,
+  mir4ClassIdForPlayerClass,
+  mir4RecalcClassOf,
+  recalcMir4PlayerStats,
+} from './stats';
 
 const BASIC_ATTACK_COOLDOWN_KEY = 'mir4_basic';
 
@@ -152,7 +158,12 @@ export function castMir4Skill(
   p.gcdRemaining = Math.max(p.gcdRemaining, MIR4_SKILL_GLOBAL_COOLDOWN_MS / 1000);
 
   const channel = 'physical';
-  const skillLevel = 1; // source: level 2 sits behind Phase 3 evolution gates
+  // Skill level from the persisted per-skill state, fail-closed against the
+  // frozen caps: an id without a cap entry (or past it) always resolves to 1.
+  const meta = ctx.players.get(pid);
+  const rawLevel = meta?.mir4SkillLevels?.[skillId] ?? 1;
+  const cap = MIR4_SKILL_LEVEL_CAPS[classId ?? 0]?.[skillId] ?? 1;
+  const skillLevel = Math.min(Math.max(1, Math.floor(rawLevel)), cap);
   let anyImpactLanded = false;
   let totalRawDamage = 0;
 
@@ -494,7 +505,7 @@ export function grantMir4Xp(ctx: SimContext, amount: number, meta: Mir4XpTarget)
   meta.xp = result.xp;
   if (result.levelUps > 0) {
     p.level = result.level;
-    recalcMir4PlayerStats(p, p.templateId as PlayerClass, result.level, meta.mir4Equipment);
+    recalcMir4PlayerStats(p, mir4RecalcClassOf(p), result.level, meta.mir4Equipment);
     ctx.emit({ type: 'levelup', level: p.level, pid: p.id });
   }
   ctx.emit({ type: 'xp', amount, pid: p.id });

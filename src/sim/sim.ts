@@ -1334,9 +1334,8 @@ export interface PlayerMeta {
   pbeBoostKit?: number;
   moveInput: MoveInput;
   // mir4-gameplay-port auto battle (src/sim/auto_battle/core.ts): the toggle +
-  // anchor the sim-side automation reads. Absent = never automated; classic
-  // profiles never set it. Runtime state, recomputed anchor per enable, not
-  // persisted.
+  // anchor the automation reads; absent = never automated, classic profiles
+  // never set it. Runtime state, anchor re-stamped per enable.
   autoBattle?: {
     mode: 'off' | 'battle';
     anchorX: number;
@@ -1344,12 +1343,14 @@ export interface PlayerMeta {
     acquireRadiusYards: number;
     suspended: boolean;
   };
-  // mir4 slice quest progress (runtime-only this slice; Phase 5 persists it).
+  // mir4 slice quest progress (Phase 5 persists it).
   mir4Quests?: Record<string, Mir4QuestProgress>;
   // mir4 auto-quest journey (src/sim/auto_quest/core.ts): runtime toggle.
   mir4AutoQuest?: Mir4AutoQuestState;
-  // mir4 equipment bag (src/sim/mir4/equipment.ts; runtime this slice,
-  // Phase 4 persists and widens it to the full slot set).
+  // mir4 skill levels (1..2), fail-closed by MIR4_SKILL_LEVEL_CAPS; the
+  // evolution COST economy is Phase 4 (no verb grants level 2 yet).
+  mir4SkillLevels?: Record<number, number>;
+  // mir4 equipment bag (Phase 4 persists and widens the slot set).
   mir4Equipment?: Mir4Equipment;
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
@@ -2892,12 +2893,9 @@ export class Sim {
       autoEquip?: boolean;
       state?: CharacterState;
       characterId?: number;
-      // Server-stamped bank bonus slots, recomputed from account facts at every
-      // join (email/Discord/wallet/referrals). Overrides the persisted value so
-      // unlinking lowers capacity at the next login; a shrink below the used slot
-      // count leaves the bank over-capacity in the tolerated bags.ts sense (new
-      // deposits refuse, nothing is destroyed). Never passed offline (bonusSlots
-      // stays the sanitized save value, [] breakdown).
+      // Server-stamped bank bonus slots, recomputed from account facts at
+      // every join (email/Discord/wallet/referrals); overrides the persisted
+      // value so unlinking lowers capacity at the next login.
       bankBonus?: { bonusSlots: number; sources: BankBonusSource[] };
       // The character's authored modular look (characters.appearance column,
       // normalized at write; NOT part of CharacterState, so serializeCharacter

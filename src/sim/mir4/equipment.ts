@@ -8,7 +8,7 @@
 import { MIR4_ITEMS } from '../content/mir4/items';
 import type { SimContext } from '../sim_context';
 import type { Entity, PlayerClass } from '../types';
-import { recalcMir4PlayerStats } from './stats';
+import { mir4RecalcClassOf, recalcMir4PlayerStats } from './stats';
 
 /** The mir4 equipment bag on PlayerMeta (runtime this slice; Phase 4 persists). */
 export interface Mir4Equipment {
@@ -20,7 +20,7 @@ function recalcFor(ctx: SimContext, pid: number): Entity | null {
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return null;
-  recalcMir4PlayerStats(p, p.templateId as PlayerClass, p.level, meta.mir4Equipment);
+  recalcMir4PlayerStats(p, mir4RecalcClassOf(p), p.level, meta.mir4Equipment);
   return p;
 }
 

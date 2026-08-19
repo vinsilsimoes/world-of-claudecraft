@@ -72,6 +72,21 @@ export interface Mir4SkillDef {
 /** Shared skill GCD (mir4-combat-data SKILL_GLOBAL_COOLDOWN_MS). */
 export const MIR4_SKILL_GLOBAL_COOLDOWN_MS = 1000;
 
+/**
+ * The frozen source skill-level caps (SKILL_LEVEL_CAPS_BY_CLASS): which deck
+ * skills may PERSIST level 2. Executing level 2 additionally sits behind the
+ * evolution gates (the source's server feature flags); the port carries the
+ * state on PlayerMeta.mir4SkillLevels and fail-closes anything beyond these
+ * caps. Damage at level 2 uses coefficient + (level-1)*levelUpCoefficient.
+ */
+export const MIR4_SKILL_LEVEL_CAPS: Readonly<Record<number, Readonly<Record<number, 2>>>> = {
+  1: { 1102: 2, 1104: 2, 1304: 2, 1401: 2 },
+  2: { 2101: 2, 2111: 2, 2501: 2, 2301: 2 },
+  3: { 3101: 2 },
+  4: { 4101: 2, 4106: 2, 4102: 2, 4103: 2 },
+  5: { 5101: 2, 5301: 2 },
+};
+
 export const MIR4_SKILLS: readonly Mir4SkillDef[] = [
   {
     skillId: 1102,
