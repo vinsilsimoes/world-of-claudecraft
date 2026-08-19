@@ -314,6 +314,9 @@ import { type MailSave, PostOffice } from './mail/post_office';
 import { Market, type MarketListing, type MarketSave } from './market';
 import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
+import type { Mir4CastResult } from './mir4/combat';
+import * as mir4Combat from './mir4/combat';
+import { initMir4Player } from './mir4/stats';
 import {
   mobCombatProfile as mobCombatProfileFn,
   mobEffectiveMeleeRange as mobEffectiveMeleeRangeImpl,
@@ -3652,7 +3655,22 @@ export class Sim {
     deedsMod.evaluateDeedsFor(this.ctx, meta, player, true);
     this.deedDirtyPids.delete(player.id);
     this.deedDirtyKeys.delete(player.id);
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) {
+      initMir4Player(this.ctx, player.id, opts?.state);
+    }
     return player.id;
+  }
+
+  // mir4-gameplay-port combat surface: thin delegates over the mir4 system
+  // module (src/sim/mir4/combat.ts) so hosts and tests resolve them on the
+  // facade, exactly like the classic castAbility delegates. Classic profiles
+  // never call these.
+  castMir4Skill(skillId: number, pid = this.playerId, targetId?: number): Mir4CastResult {
+    return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
+  }
+
+  mir4BasicAttack(pid = this.playerId, targetId?: number): Mir4CastResult {
+    return mir4Combat.mir4BasicAttack(this.ctx, pid, targetId);
   }
 
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in
@@ -5099,6 +5117,9 @@ export class Sim {
     const host: SimContextHost = {
       get rng() {
         return sim.rng;
+      },
+      get gameProfile() {
+        return sim.cfg.gameProfile;
       },
       get riftCollisionToken() {
         return sim.riftCollisionToken;

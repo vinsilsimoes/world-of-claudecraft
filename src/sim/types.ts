@@ -1453,6 +1453,21 @@ export type MobFamily =
 export type PetMode = 'passive' | 'defensive' | 'aggressive';
 export type PetRole = 'melee_tank' | 'ranged_dps';
 
+// mir4-gameplay-port profile: the per-entity combat-stat bag the ported bps
+// formulas consume (accuracy/dodge/critical/... have no classic Entity field).
+// Written by src/sim/mir4/stats.ts; see the Entity.mir4 field comment.
+export interface Mir4PlayerCombatState {
+  classId: number;
+  manaCostStat: number;
+  accuracy: number;
+  dodge: number;
+  critical: number;
+  avoidCritical: number;
+  criticalOutcome: number;
+  physicalDefense: number;
+  magicDefense: number;
+}
+
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
 // same dot-aura shape the on-hit venom/cinder affix family applies, shared by
 // arcCleave / breathCone / broodWhelp so every burn rides the one seam.
@@ -1509,6 +1524,10 @@ export interface MobTemplate {
   // Kill-XP multiplier (default 1). 0 marks a puzzle-object mob (e.g. the 1 HP
   // spider egg-sac) that must not pay full kill XP for a single hit.
   xpMult?: number;
+  // mir4-gameplay-port profile: flat kill XP replacing the classic level
+  // formula (source evidence: the native L1 field-mob catalog value). Inert
+  // under woc-classic.
+  mir4XpReward?: number;
   // Quest-gated destructible: when set, the mob is only damageable by a player who
   // has this quest active (state 'active' or 'ready'). Used for quest-exclusive
   // objects like Broodmother eggs so non-questers cannot grief the clutch.
@@ -4181,6 +4200,11 @@ export interface Entity extends ClientMirroredEntityFields {
   resource: number;
   maxResource: number;
   resourceType: ResourceType | null;
+  // mir4-gameplay-port per-entity combat state: the level-table columns the
+  // bps formulas read that have no classic Entity counterpart. Derived ONLY by
+  // src/sim/mir4/stats.ts recalcMir4PlayerStats (recomputed from level on
+  // load, never persisted); classic entities never carry it.
+  mir4?: Mir4PlayerCombatState;
   overheadEmoteId: OverheadEmoteId | null;
   overheadEmoteUntil: number;
   overheadEmoteSeq: number;

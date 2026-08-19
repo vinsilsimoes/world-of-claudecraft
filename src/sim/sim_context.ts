@@ -17,6 +17,7 @@ import type { LetterDef } from './content/letters';
 import type { TalentModifiers } from './content/talents';
 import type { DeedRuntime } from './deeds';
 import type { DelayedEvent, GroundAoE } from './entity_roster';
+import type { GameProfile } from './game_profile';
 import type { GuildBankState } from './guild_bank';
 import type { PendingLootRoll } from './loot/loot_roll';
 import type { MarketListing } from './market';
@@ -87,6 +88,10 @@ export interface SimContextPrimitives {
   readonly rng: Rng;
   readonly time: number;
   readonly tickCount: number;
+  // The sim's game profile: the one switch classic system modules read to
+  // route profile-scoped funnels (mir4 XP/damage). Live getter onto Sim.cfg;
+  // append-only like every seam member.
+  readonly gameProfile: GameProfile;
   readonly entities: Map<number, Entity>;
   // Live player roster (keyed by entity id). Stays a Sim field; exposed here so the
   // moved party machine (A1) resolves member names/metas through the seam.
@@ -1114,6 +1119,9 @@ export function createSimContext(host: SimContextHost): SimContext {
   return {
     get rng() {
       return host.rng;
+    },
+    get gameProfile() {
+      return host.gameProfile;
     },
     get time() {
       return host.time;

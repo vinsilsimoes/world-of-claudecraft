@@ -263,6 +263,7 @@ function makeFakeHost() {
   const entities = new Map<number, Entity>();
   const clock = { time: 0, tick: 0 };
   const host: SimContextHost = {
+    gameProfile: 'woc-classic',
     riftCollisionToken: 1,
     naturalRiftPortals: [],
     riftEvents: [],

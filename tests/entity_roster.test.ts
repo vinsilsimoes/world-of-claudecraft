@@ -58,6 +58,7 @@ function makeCtx() {
   const clearEntityMarker = vi.fn();
   const pulseGroundAoE = vi.fn();
   const host: SimContextHost = {
+    gameProfile: 'woc-classic',
     riftCollisionToken: 1,
     naturalRiftPortals: [],
     riftEvents: [],
