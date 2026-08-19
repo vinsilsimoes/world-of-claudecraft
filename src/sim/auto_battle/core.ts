@@ -29,6 +29,8 @@ export interface Mir4AutoBattleState {
   anchorX: number;
   anchorZ: number;
   acquireRadiusYards: number;
+  /** Manual intervention pauses the bot; it resumes (re-anchored) when the player's hands leave the keys. */
+  suspended: boolean;
 }
 
 export function setMir4AutoBattleMode(
@@ -46,6 +48,7 @@ export function setMir4AutoBattleMode(
       anchorX: p.pos.x,
       anchorZ: p.pos.z,
       acquireRadiusYards,
+      suspended: false,
     };
   } else if (meta.autoBattle) {
     meta.autoBattle.mode = 'off';
@@ -84,10 +87,10 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
 
-    // Manual override: any player-driven movement input takes control back and
-    // switches the automation off (the source project's manual-input rule for
-    // its journeys). Bot locomotion uses moveToward, never moveInput, so only
-    // a human hand sets these flags.
+    // Manual override: any player-driven movement input suspends the bot (the
+    // player is steering). The moment the hands leave the keys it RESUMES,
+    // re-anchored where the player stands. Bot locomotion uses moveToward,
+    // never moveInput, so only a human hand sets these flags.
     const inp = meta.moveInput;
     if (
       inp.forward ||
@@ -97,8 +100,13 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       inp.turnLeft ||
       inp.turnRight
     ) {
-      st.mode = 'off';
+      st.suspended = true;
       continue;
+    }
+    if (st.suspended) {
+      st.suspended = false;
+      st.anchorX = p.pos.x;
+      st.anchorZ = p.pos.z;
     }
 
     let target = livingMobAt(ctx, p.targetId);

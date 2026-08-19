@@ -1331,6 +1331,7 @@ export interface PlayerMeta {
     anchorX: number;
     anchorZ: number;
     acquireRadiusYards: number;
+    suspended: boolean;
   };
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a

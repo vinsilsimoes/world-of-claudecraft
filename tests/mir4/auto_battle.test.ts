@@ -62,11 +62,18 @@ describe('mir4 auto battle', () => {
     const meta = sim.players.get(sim.playerId)!;
     expect(meta.autoBattle?.acquireRadiusYards).toBe(36);
     expect(MIR4_AUTO_BATTLE_ACQUIRE_YARDS).toBe(36);
-    // Any human movement input takes control back and switches it off.
+    // Human movement input suspends the bot without switching it off...
     meta.moveInput.forward = true;
     sim.tick();
-    expect(meta.autoBattle?.mode).toBe('off');
+    expect(meta.autoBattle?.mode).toBe('battle');
+    expect(meta.autoBattle?.suspended).toBe(true);
+    // ...and releasing the keys resumes it, re-anchored where the player stands.
+    const p = sim.entities.get(sim.playerId)!;
+    p.pos.x += 5;
     meta.moveInput.forward = false;
+    sim.tick();
+    expect(meta.autoBattle?.suspended).toBe(false);
+    expect(meta.autoBattle?.anchorX).toBe(p.pos.x);
   });
   it('turns off cleanly and stops acting', () => {
     const sim = makeSim(99);
