@@ -320,6 +320,8 @@ import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
 import type { Mir4CastResult } from './mir4/combat';
 import * as mir4Combat from './mir4/combat';
+import type { Mir4Equipment } from './mir4/equipment';
+import { mir4EquipStarterWeapon, mir4UnequipWeapon } from './mir4/equipment';
 import type { Mir4QuestProgress } from './mir4/quest';
 import { mir4TalkOrInspect } from './mir4/quest';
 import { initMir4Player } from './mir4/stats';
@@ -1342,6 +1344,9 @@ export interface PlayerMeta {
   mir4Quests?: Record<string, Mir4QuestProgress>;
   // mir4 auto-quest journey (src/sim/auto_quest/core.ts): runtime toggle.
   mir4AutoQuest?: Mir4AutoQuestState;
+  // mir4 equipment bag (src/sim/mir4/equipment.ts; runtime this slice,
+  // Phase 4 persists and widens it to the full slot set).
+  mir4Equipment?: Mir4Equipment;
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing
@@ -3713,6 +3718,15 @@ export class Sim {
   mir4AutoQuestStatusText(pid = this.playerId): string {
     const meta = this.players.get(pid);
     return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
+  }
+
+  /** Slice equipment verbs (Phase 4 replaces acquisition with drops/vendors). */
+  mir4EquipStarterWeapon(pid = this.playerId): string {
+    return mir4EquipStarterWeapon(this.ctx, pid);
+  }
+
+  mir4UnequipWeapon(pid = this.playerId): string {
+    return mir4UnequipWeapon(this.ctx, pid);
   }
 
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in

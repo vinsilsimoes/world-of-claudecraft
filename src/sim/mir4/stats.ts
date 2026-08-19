@@ -7,6 +7,7 @@
 // computed (src/sim/CLAUDE.md); classic characters never reach this module.
 
 import { mir4LevelRow } from '../content/mir4';
+import { MIR4_ITEMS } from '../content/mir4/items';
 import type { Entity, Mir4PlayerCombatState, PlayerClass } from '../types';
 
 // Column indexes into MIR4_LEVEL_ROWS tuples (see MIR4_LEVEL_COLUMNS).
@@ -36,8 +37,17 @@ export function mir4ClassIdForPlayerClass(cls: PlayerClass): number {
   throw new Error(`mir4-gameplay-port does not host the classic class '${cls}' yet (Phase 3)`);
 }
 
-/** Recompute every mir4-derived Entity field from (classId, level). */
-export function recalcMir4PlayerStats(e: Entity, cls: PlayerClass, level: number): void {
+/**
+ * Recompute every mir4-derived Entity field from (classId, level, gear). The
+ * equipment's applied attributes land on top of the level-table base so a
+ * level-up or restore can never desync them.
+ */
+export function recalcMir4PlayerStats(
+  e: Entity,
+  cls: PlayerClass,
+  level: number,
+  equipment?: { weapon?: number },
+): void {
   const classId = mir4ClassIdForPlayerClass(cls);
   const row = mir4LevelRow(classId, level);
   if (!row) throw new Error(`mir4 level row missing for class ${classId} level ${level}`);
@@ -49,10 +59,21 @@ export function recalcMir4PlayerStats(e: Entity, cls: PlayerClass, level: number
   // module's coefficient math reads it); spellPower mirrors magicAttack.
   e.attackPower = row[MIR4_LEVEL_COL.physicalAttack];
   e.spellPower = row[MIR4_LEVEL_COL.magicAttack];
+  let accuracy = row[MIR4_LEVEL_COL.accuracy];
+  // Equipped weapon attributes: only the status ids the combat bridge maps
+  // (mir4/content/items.ts MIR4_APPLIED_STATUS_IDS) are applied.
+  const weapon = equipment?.weapon;
+  if (weapon !== undefined) {
+    for (const attr of MIR4_ITEMS[weapon]?.attributes ?? []) {
+      const [statusId, value] = attr;
+      if (statusId === 20) e.attackPower += value;
+      else if (statusId === 28) accuracy += value;
+    }
+  }
   e.mir4 = {
     classId,
     manaCostStat: row[MIR4_LEVEL_COL.manaCost],
-    accuracy: row[MIR4_LEVEL_COL.accuracy],
+    accuracy,
     dodge: row[MIR4_LEVEL_COL.dodge],
     critical: row[MIR4_LEVEL_COL.critical],
     avoidCritical: row[MIR4_LEVEL_COL.avoidCritical],
@@ -76,13 +97,17 @@ export function mir4SyncResourcePool(e: Entity): void {
  * values are re-applied here AFTER the mir4 recalc.
  */
 export function initMir4Player(
-  ctx: { entities: Map<number, Entity> },
+  ctx: {
+    entities: Map<number, Entity>;
+    players?: Map<number, { mir4Equipment?: { weapon?: number } }>;
+  },
   pid: number,
   state?: { hp?: number; resource?: number } | null,
 ): void {
   const p = ctx.entities.get(pid);
   if (!p) return;
-  recalcMir4PlayerStats(p, p.templateId as PlayerClass, p.level);
+  const meta = ctx.players?.get(pid);
+  recalcMir4PlayerStats(p, p.templateId as PlayerClass, p.level, meta?.mir4Equipment);
   if (state && (state.hp !== undefined || state.resource !== undefined)) {
     if (state.hp !== undefined) {
       p.hp = Math.min(Math.max(1, Math.floor(state.hp)), p.maxHp);

@@ -70,9 +70,26 @@ export function wireMir4SlicePlaytest(sim: Sim): void {
     sim.setMir4AutoQuest(autoQuestOn);
     if (!autoQuestOn) questBtn.textContent = '▸ Quest: Primeiros Rastros (auto)';
   });
-  panel.append(battleBtn, questBtn);
+
+  const weaponBtn = document.createElement('button');
+  weaponBtn.type = 'button';
+  weaponBtn.style.cssText = BUTTON_CSS;
+  const syncWeapon = () => {
+    const equipped = !!sim.players.get(sim.playerId)?.mir4Equipment?.weapon;
+    weaponBtn.textContent = equipped
+      ? '🗡 Arma inicial: equipada (clique para remover)'
+      : '🗡 Equipar arma inicial (+75 ataque)';
+  };
+  weaponBtn.addEventListener('click', () => {
+    const equipped = !!sim.players.get(sim.playerId)?.mir4Equipment?.weapon;
+    if (equipped) sim.mir4UnequipWeapon();
+    else sim.mir4EquipStarterWeapon();
+    syncWeapon();
+  });
+  panel.append(battleBtn, questBtn, weaponBtn);
   document.body.appendChild(panel);
   sync();
+  syncWeapon();
   window.setInterval(() => {
     if (autoQuestOn) sync();
     if (autoQuestOn && !sim.players.get(sim.playerId)?.mir4AutoQuest) {

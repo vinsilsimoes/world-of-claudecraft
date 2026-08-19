@@ -221,6 +221,7 @@ interface Mir4XpTarget {
   entityId: number;
   xp: number;
   counters: { xpGained: number };
+  mir4Equipment?: { weapon?: number };
 }
 
 /**
@@ -236,7 +237,7 @@ export function grantMir4Xp(ctx: SimContext, amount: number, meta: Mir4XpTarget)
   meta.xp = result.xp;
   if (result.levelUps > 0) {
     p.level = result.level;
-    recalcMir4PlayerStats(p, p.templateId as PlayerClass, result.level);
+    recalcMir4PlayerStats(p, p.templateId as PlayerClass, result.level, meta.mir4Equipment);
     ctx.emit({ type: 'levelup', level: p.level, pid: p.id });
   }
   ctx.emit({ type: 'xp', amount, pid: p.id });
