@@ -4260,6 +4260,9 @@ export interface Entity extends ClientMirroredEntityFields {
   // mir4 ultimate gauge (0..100) and the pending authored-offset impacts.
   mir4UltGauge?: number;
   mir4PendingImpacts?: Mir4PendingImpact[];
+  // mir4 magic-shield self utility (2503): the 0.22 magnitude cuts incoming
+  // damage; runtime-only, decayed with the effects phase.
+  mir4Shield?: { remaining: number; magnitude: number };
   overheadEmoteId: OverheadEmoteId | null;
   overheadEmoteUntil: number;
   overheadEmoteSeq: number;

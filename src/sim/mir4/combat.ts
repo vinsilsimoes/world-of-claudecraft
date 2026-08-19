@@ -13,6 +13,7 @@
 // all come from MIR4_CLASS_COMBAT_SPECS (src/sim/content/mir4/classes.ts).
 
 import {
+  MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
   MIR4_SKILL_GLOBAL_COOLDOWN_MS,
   mir4ClassById,
@@ -34,6 +35,7 @@ import {
   mir4CoefficientDamage,
   mir4ResolveDamage,
   mir4SkillManaCost,
+  mir4StunChanceBps,
 } from './math';
 import { advanceMir4Experience, mir4ClassIdForPlayerClass, recalcMir4PlayerStats } from './stats';
 
@@ -93,7 +95,8 @@ export interface Mir4CastResult {
     | 'out-of-range'
     | 'no-mp'
     | 'on-cooldown'
-    | 'on-gcd';
+    | 'on-gcd'
+    | 'utility-not-ready';
 }
 
 /**
@@ -116,10 +119,25 @@ export function castMir4Skill(
   if (skill.unlock.kind === 'level' && p.level < skill.unlock.level) {
     return { ok: false, reason: 'not-unlocked' };
   }
-  const target = resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
-  if (!target) return { ok: false, reason: 'no-target' };
+  // Self utilities (2503 shield, 3503 heal) need no target; everything else
+  // does. The utility readiness rules mirror the source's applyActorUtility:
+  // a shield refuses while one is up, a heal refuses at full health.
+  const isSelfUtility =
+    skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
+  const target = isSelfUtility
+    ? null
+    : resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
+  if (!isSelfUtility && !target) return { ok: false, reason: 'no-target' };
+  if (isSelfUtility) {
+    if (skill.effect?.effect === 'magic-shield' && (p.mir4Shield?.remaining ?? 0) > 0) {
+      return { ok: false, reason: 'utility-not-ready' };
+    }
+    if (skill.effect?.effect === 'heal-pulse' && p.hp >= p.maxHp) {
+      return { ok: false, reason: 'utility-not-ready' };
+    }
+  }
   const rangeYards = classRangeYards(p);
-  if (dist2d(p.pos, target.pos) > rangeYards) {
+  if (target && dist2d(p.pos, target.pos) > rangeYards) {
     return { ok: false, reason: 'out-of-range' };
   }
   if (p.cooldowns.has(String(skillId))) return { ok: false, reason: 'on-cooldown' };
@@ -137,9 +155,44 @@ export function castMir4Skill(
   const skillLevel = 1; // source: level 2 sits behind Phase 3 evolution gates
   let anyImpactLanded = false;
   let totalRawDamage = 0;
+
+  // Authorial skills (the 7 source rebuilds) resolve through their policy:
+  // hybrid sums the channels, impactCount is presentation-only cardinality.
+  const policy = MIR4_AUTHORIAL_SKILL_POLICIES[skillId];
+  if (policy) {
+    const phys = Math.floor((p.attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
+    const magic = Math.floor((p.spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
+    totalRawDamage = Math.max(1, phys + magic);
+    const resolved = mir4ResolveDamage({
+      rawDamage: Math.floor(totalRawDamage * (1 + mir4DamageTakenAddend(target!))),
+      channel: 'physical',
+      attacker: mir4AttackerStats(p),
+      defender: mir4DefenderStats(target!),
+      hitRoll: rollBps(ctx),
+      criticalRoll: rollBps(ctx),
+    });
+    if (resolved.hit) {
+      anyImpactLanded = true;
+      ctx.dealDamage(
+        p,
+        target!,
+        resolved.damage,
+        resolved.critical,
+        'physical',
+        skill.displayName,
+        'hit',
+        true,
+      );
+    }
+  }
+
   for (const component of skill.damage?.components ?? []) {
     const coefficient = component.coefficient + (skillLevel - 1) * component.levelUpCoefficient;
-    const coefficientDamage = mir4CoefficientDamage(p.attackPower, coefficient);
+    // damageType 2 rides the magic channel (spellPower); 1 the physical one.
+    const magic = component.damageType === 2;
+    const attackPower = magic ? p.spellPower : p.attackPower;
+    const componentChannel = magic ? 'magic' : 'physical';
+    const coefficientDamage = mir4CoefficientDamage(attackPower, coefficient);
     const impactCount = Math.max(1, component.impactCount);
     const perImpact =
       skill.damage?.allocationMode === 'row-total-impact-vector'
@@ -149,12 +202,12 @@ export function castMir4Skill(
     for (let impact = 0; impact < impactCount; impact++) {
       // The source applies the target's damage-taken addend (defense-break +
       // burn magnitudes) to the raw damage BEFORE the resolve pipeline.
-      const rawWithTaken = Math.floor(perImpact * (1 + mir4DamageTakenAddend(target)));
+      const rawWithTaken = Math.floor(perImpact * (1 + mir4DamageTakenAddend(target!)));
       const resolved = mir4ResolveDamage({
         rawDamage: rawWithTaken,
-        channel,
+        channel: componentChannel,
         attacker: mir4AttackerStats(p),
-        defender: mir4DefenderStats(target),
+        defender: mir4DefenderStats(target!),
         hitRoll: rollBps(ctx),
         criticalRoll: rollBps(ctx),
       });
@@ -162,24 +215,24 @@ export function castMir4Skill(
       anyImpactLanded = true;
       ctx.dealDamage(
         p,
-        target,
+        target!,
         resolved.damage,
         resolved.critical,
-        channel,
+        componentChannel,
         skill.displayName,
         'hit',
         true, // no rage: mir4 has no rage economy
       );
-      if (target.dead) break;
+      if (target!.dead) break;
     }
-    if (target.dead) break;
+    if (target!.dead) break;
   }
 
   // The AoE secondaries: up to maxSecondaryTargets other mobs inside the
   // effect radius each take the contract's secondary bps of the cast's total
   // raw damage (soft-capped by target selection, so the full base lands).
   const area = skill.effect?.areaRadiusPx;
-  if (area !== undefined && totalRawDamage > 0) {
+  if (area !== undefined && totalRawDamage > 0 && target) {
     const maxTargets = skill.effect?.maxSecondaryTargets ?? 0;
     const bps = skill.effect?.secondaryDamageBasisPoints ?? 0;
     if (maxTargets > 0 && bps > 0) {
@@ -191,7 +244,7 @@ export function castMir4Skill(
         if (secondary.dead) continue;
         const resolved = mir4ResolveDamage({
           rawDamage: Math.floor(perSecondary * (1 + mir4DamageTakenAddend(secondary))),
-          channel,
+          channel: 'physical',
           attacker: mir4AttackerStats(p),
           defender: mir4DefenderStats(secondary),
           hitRoll: rollBps(ctx),
@@ -203,7 +256,7 @@ export function castMir4Skill(
             secondary,
             resolved.damage,
             resolved.critical,
-            channel,
+            'physical',
             skill.displayName,
             'hit',
             true,
@@ -213,20 +266,46 @@ export function castMir4Skill(
     }
   }
 
-  // Effect landing through the mir4 engine (dedup + 750ms immunity tail +
-  // the classic stun/slow aura mirror). Stun chances (4106-style) join in 3.4.
+  // Self utilities land on the caster: the magic shield rides Entity.mir4Shield
+  // (consumed by the mob->player pipeline in 3.7), the heal pays immediately.
+  if (isSelfUtility && skill.effect) {
+    if (skill.effect.effect === 'magic-shield') {
+      p.mir4Shield = {
+        remaining: (skill.effect.durationMs ?? 0) / 1000,
+        magnitude: skill.effect.magnitude ?? 0,
+      };
+    } else if (skill.effect.effect === 'heal-pulse') {
+      // The bps lives in the verbatim long tail (types-as-data), so the read
+      // is asserted here, where the utility contract defines it.
+      const bps = skill.effect.healMaxHpBasisPoints as number | undefined;
+      const heal = Math.floor((p.maxHp * (bps ?? 0)) / 10_000);
+      p.hp = Math.min(p.maxHp, p.hp + heal);
+    }
+    return { ok: true };
+  }
+
+  // Effect landing through the mir4 engine (dedup + 750ms immunity tail + the
+  // classic stun/slow aura mirror). 4106-style stuns roll their PvE chance
+  // (base + stunSuccess - stunResistance; mob resistance is 0 until 3.7).
   const effect = skill.effect;
-  if (anyImpactLanded && effect && !target.dead) {
+  if (anyImpactLanded && effect && target && !target.dead) {
     const kind = mir4EffectKindOf(effect.effect);
     if (kind) {
-      applyMir4Effect(ctx, target, {
-        effectId: `mir4_${skillId}_${effect.effect}`,
-        kind,
-        durationSeconds: (effect.durationMs ?? 0) / 1000,
-        magnitude: effect.magnitude ?? 0,
-        name: skill.displayName,
-        sourceId: p.id,
-      });
+      let lands = true;
+      if (kind === 'stun' && effect.pveChanceBasisPoints !== undefined) {
+        const chance = mir4StunChanceBps(effect.pveChanceBasisPoints, 0, 0);
+        lands = rollBps(ctx) < chance;
+      }
+      if (lands) {
+        applyMir4Effect(ctx, target, {
+          effectId: `mir4_${skillId}_${effect.effect}`,
+          kind,
+          durationSeconds: (effect.durationMs ?? 0) / 1000,
+          magnitude: effect.magnitude ?? 0,
+          name: skill.displayName,
+          sourceId: p.id,
+        });
+      }
     }
   }
   return { ok: true };

@@ -121,6 +121,10 @@ export function applyMir4Effect(
 /** Per-tick decay of every carried mir4 effect (one field check per entity). */
 export function updateMir4Effects(ctx: SimContext): void {
   for (const e of ctx.entities.values()) {
+    if (e.mir4Shield) {
+      e.mir4Shield.remaining -= DT;
+      if (e.mir4Shield.remaining <= 0) e.mir4Shield = undefined;
+    }
     const bag = e.mir4Effects;
     if (!bag || bag.active.length === 0) continue;
     let changed = false;
