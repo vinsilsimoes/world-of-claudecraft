@@ -1,0 +1,955 @@
+// Generated from the source project server/mir4-mount-summon-v1.js.
+// DO NOT HAND-EDIT VALUES. Stats are the authoritative equipmentEffect /
+// GRADE_STATS blocks verbatim; visuals stay reference-only placeholders.
+// Names are PT-BR source copy; the English i18n source lands with the HUD.
+
+export interface Mir4MountDef {
+  id: string;
+  name: string;
+  grade: number;
+  gradeKey: string;
+  stats: { moveSpeedBps: number; physicalDefense: number; magicDefense: number };
+}
+
+export const MIR4_MOUNTS_CATALOG: readonly Mir4MountDef[] = [
+  {
+    id: 'meadow-courser',
+    name: 'Corcel da Campina',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'moss-boar',
+    name: 'Javali Musgoso',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'brook-stag',
+    name: 'Cervo do Arroio',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'gray-wolf',
+    name: 'Lobo Cinzento',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'dun-packhorse',
+    name: 'Cavalo Baio de Carga',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'birch-doe',
+    name: 'Corça da Bétula',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'red-maned-pony',
+    name: 'Pônei de Crina Rubra',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'lowland-elk',
+    name: 'Alce das Baixadas',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'field-lynx',
+    name: 'Lince do Campo',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'tawny-mastiff',
+    name: 'Mastim Fulvo',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'dune-jackal',
+    name: 'Chacal das Dunas',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'reed-puma',
+    name: 'Puma dos Juncos',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'clay-ox',
+    name: 'Boi de Argila',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'valley-buffalo',
+    name: 'Búfalo do Vale',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'shaggy-yak',
+    name: 'Iaque Lanoso',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'creek-lizard',
+    name: 'Lagarto do Riacho',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'shellback-tortoise',
+    name: 'Jabuti Casco-Pedra',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'plains-ostrich',
+    name: 'Avestruz da Planície',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'dusk-emu',
+    name: 'Ema do Crepúsculo',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'copper-ant-carrier',
+    name: 'Cargueiro Formiga de Cobre',
+    grade: 1,
+    gradeKey: 'common',
+    stats: {
+      moveSpeedBps: 400,
+      physicalDefense: 4,
+      magicDefense: 4,
+    },
+  },
+  {
+    id: 'mist-moose',
+    name: 'Alce da Bruma',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'leaf-panther',
+    name: 'Pantera de Folha',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'turf-rhino',
+    name: 'Rinoceronte de Turfa',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'valley-monitor',
+    name: 'Lagarto do Vale',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'granite-ibex',
+    name: 'Íbex de Granito',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'silver-dapple-mare',
+    name: 'Égua Malhada de Prata',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'marsh-stag',
+    name: 'Cervo do Brejo',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'snow-mane-lion',
+    name: 'Leão de Juba Nevada',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'ember-fox',
+    name: 'Raposa de Brasa',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'striped-hyena',
+    name: 'Hiena Listrada',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'iron-tusk-boar',
+    name: 'Javali Presa-de-Ferro',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'cedar-bear',
+    name: 'Urso do Cedro',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'swamp-hippo',
+    name: 'Hipopótamo do Pântano',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'thorn-iguana',
+    name: 'Iguana Espinhosa',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'dryland-crocodile',
+    name: 'Crocodilo da Terra Seca',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'horned-cassowary',
+    name: 'Casuar de Chifre',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'bronze-raptor',
+    name: 'Corredor de Bronze',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'amber-scarab',
+    name: 'Escaravelho de Âmbar',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'dune-scorpion',
+    name: 'Escorpião das Dunas',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'root-golem',
+    name: 'Golem de Raiz',
+    grade: 2,
+    gradeKey: 'uncommon',
+    stats: {
+      moveSpeedBps: 650,
+      physicalDefense: 9,
+      magicDefense: 9,
+    },
+  },
+  {
+    id: 'amber-bear',
+    name: 'Urso de Âmbar',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'sunset-tiger',
+    name: 'Tigre do Poente',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'root-drake',
+    name: 'Draco de Raiz',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'hill-griffin',
+    name: 'Grifo das Colinas',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'obsidian-zebra',
+    name: 'Zebra de Obsidiana',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'stormhorn-ram',
+    name: 'Carneiro Chifre-Trovão',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'dusk-elk',
+    name: 'Alce do Ocaso',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'frost-warg',
+    name: 'Warg da Geada',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'basalt-rhino',
+    name: 'Rinoceronte de Basalto',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'tundra-mammoth',
+    name: 'Mamute da Tundra',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'crystal-ankylosaur',
+    name: 'Anquilossauro de Cristal',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'ember-salamander',
+    name: 'Salamandra de Brasa',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'thunder-komodo',
+    name: 'Komodo Trovejante',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'moon-crocodile',
+    name: 'Crocodilo Lunar',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'razorbeak-strider',
+    name: 'Corredor Bico-Lâmina',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'plume-raptor',
+    name: 'Raptor de Plumas',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'glass-mantis',
+    name: 'Louva-a-Deus de Vidro',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'thunder-beetle',
+    name: 'Besouro do Trovão',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'iron-sentinel',
+    name: 'Sentinela de Ferro',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'mossstone-colossus',
+    name: 'Colosso de Pedra Musgosa',
+    grade: 3,
+    gradeKey: 'rare',
+    stats: {
+      moveSpeedBps: 950,
+      physicalDefense: 18,
+      magicDefense: 18,
+    },
+  },
+  {
+    id: 'eclipse-lion',
+    name: 'Leão do Eclipse',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'crimson-wyvern',
+    name: 'Wyvern Rubra',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'astral-stag',
+    name: 'Cervo Astral',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'jade-basilisk',
+    name: 'Basilisco de Jade',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'solar-wolf',
+    name: 'Lobo Solar',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'forest-chimera',
+    name: 'Quimera do Bosque',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'tempest-courser',
+    name: 'Corcel Tempestuoso',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'thorn-elephant',
+    name: 'Elefante de Espinhos',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'void-spider',
+    name: 'Aranha do Vazio',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'rune-golem',
+    name: 'Golem Rúnico',
+    grade: 4,
+    gradeKey: 'epic',
+    stats: {
+      moveSpeedBps: 1300,
+      physicalDefense: 36,
+      magicDefense: 36,
+    },
+  },
+  {
+    id: 'dawn-phoenix',
+    name: 'Fênix da Alvorada',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'imperial-griffin',
+    name: 'Grifo Imperial',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'stone-leviathan',
+    name: 'Leviatã de Pedra',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'void-unicorn',
+    name: 'Unicórnio do Vazio',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'golden-manticore',
+    name: 'Manticora Dourada',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'imperial-tiger',
+    name: 'Tigre Imperial',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'dawn-mammoth',
+    name: 'Mamute da Aurora',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'magma-drake',
+    name: 'Draco de Magma',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'crown-scorpion',
+    name: 'Escorpião da Coroa',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'sunforged-colossus',
+    name: 'Colosso Forjado ao Sol',
+    grade: 5,
+    gradeKey: 'legendary',
+    stats: {
+      moveSpeedBps: 1750,
+      physicalDefense: 72,
+      magicDefense: 72,
+    },
+  },
+  {
+    id: 'ground-dragon',
+    name: 'Dragão Terrestre',
+    grade: 6,
+    gradeKey: 'mythical',
+    stats: {
+      moveSpeedBps: 2300,
+      physicalDefense: 140,
+      magicDefense: 140,
+    },
+  },
+  {
+    id: 'eternal-phoenix',
+    name: 'Fênix Eterna',
+    grade: 6,
+    gradeKey: 'mythical',
+    stats: {
+      moveSpeedBps: 2300,
+      physicalDefense: 140,
+      magicDefense: 140,
+    },
+  },
+  {
+    id: 'celestial-kirin',
+    name: 'Kirín Celestial',
+    grade: 6,
+    gradeKey: 'mythical',
+    stats: {
+      moveSpeedBps: 2300,
+      physicalDefense: 140,
+      magicDefense: 140,
+    },
+  },
+  {
+    id: 'firmament-behemoth',
+    name: 'Leão do Firmamento',
+    grade: 6,
+    gradeKey: 'mythical',
+    stats: {
+      moveSpeedBps: 2300,
+      physicalDefense: 140,
+      magicDefense: 140,
+    },
+  },
+  {
+    id: 'time-hydra',
+    name: 'Hidra do Tempo',
+    grade: 6,
+    gradeKey: 'mythical',
+    stats: {
+      moveSpeedBps: 2300,
+      physicalDefense: 140,
+      magicDefense: 140,
+    },
+  },
+];
+
+const BY_ID = new Map(MIR4_MOUNTS_CATALOG.map((m) => [m.id, m]));
+export function mir4MountById(id: string): Mir4MountDef | null {
+  return BY_ID.get(id) ?? null;
+}
