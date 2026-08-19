@@ -167,9 +167,15 @@ keys G/H/B, profile-gated) exercises it offline. Still open for part 2:
 the Vila do Vau procedural zone behind a profile-gated world bootstrap
 (mir4 camps need the ctor camp loop to resolve `MIR4_MOBS`; the
 `MOBS[templateId]` unguarded-read sweep), quest M01-Q01, loot + one
-equippable feeding `recalcMir4PlayerStats`, the `IWorld` auto-battle
-facet + `ClientWorld` mirror + parity pin + WS command (replacing the
-bridge and exposing the radius setting), and mir4 MP regen.
+equippable feeding `recalcMir4PlayerStats`, and MP regen are DONE
+(commits `00c2b50ff`..`b58680670`, plus the auto-quest journey and the
+temporary HUD panel). Remaining for part 2: the `IWorld` mir4 facet +
+`ClientWorld` mirror + parity pin + WS commands (replacing the bridge
+and exposing the radius setting). Procedure notes: the command universe
+is governed (`COMMAND_NAMES` append-only, `WorldFacet` tags,
+tests/command_schema + world_api_parity + schema_wiring), and
+server/game.ts sits 5 lines under its monolith ceiling, so the WS
+dispatch must ride a small `server/mir4_commands.ts` delegate.
 
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
