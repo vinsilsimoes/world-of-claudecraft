@@ -244,6 +244,20 @@ placeholder VFX spellfx hook with the WS dispatch pinned against the
 real Sim. Open follow-ups carried into 4/5: evolution cost economy,
 per-map XP caps, authored VFX matrix, real HUD domain.
 
+**PHASE 4 IS COMPLETE** (commits 1abf64d83..7449bf576): the generated
+240-item catalog (8 slots x 5 classes x 6 ranks, verbatim base pairs +
+tier/grade), the 8-slot equipment bag with class/level validation and
+per-item instance state, the enhancement path on the sealed table
+(destruction of unwarded failures above +5, Amparo Solar ward, per-slot
+multipliers, the 0..61% cumulative ladder) feeding the one recalc
+funnel; the enchantment (Selo Lunar, 2 affixes) and blessing (Lágrima
+da Aurora, 3 at 0.7x) layers with roll -> preview -> resolve by rollId,
+slot-weighted pools and the level-band+tier+grade value scale; and the
+atomic material crafting (solar-scroll, lunar-seal). Open follow-ups
+for Phase 5: the four native ITEM_MAKE recipes (useId materials), the
+shared inventory surface with drops, and equipment/quest/material
+persistence (currently runtime on PlayerMeta).
+
 Class `warrior` only, profile `mir4-gameplay-port`, one procedural zone:
 
 1. Character creation with source level-1 stats (4000 HP, 600 MP, PA 50) and the
