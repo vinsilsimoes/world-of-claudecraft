@@ -19,6 +19,7 @@ import type {
   PlayerProfessionsView,
   ToolEffectSlotView,
 } from '../world_api';
+import { setMir4AutoBattleMode, updateMir4AutoBattle } from './auto_battle/core';
 import * as bagsMod from './bags';
 import {
   addStacked,
@@ -1321,6 +1322,11 @@ export interface PlayerMeta {
   // any character whose stamp is below the current BOOST_KIT_VERSION.
   pbeBoostKit?: number;
   moveInput: MoveInput;
+  // mir4-gameplay-port auto battle (src/sim/auto_battle/core.ts): the toggle +
+  // anchor the sim-side automation reads. Absent = never automated; classic
+  // profiles never set it. Runtime state, recomputed anchor per enable, not
+  // persisted.
+  autoBattle?: { mode: 'off' | 'battle'; anchorX: number; anchorZ: number };
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing
@@ -3671,6 +3677,10 @@ export class Sim {
 
   mir4BasicAttack(pid = this.playerId, targetId?: number): Mir4CastResult {
     return mir4Combat.mir4BasicAttack(this.ctx, pid, targetId);
+  }
+
+  setMir4AutoBattleMode(mode: 'off' | 'battle', pid = this.playerId): void {
+    setMir4AutoBattleMode(this.ctx, pid, mode);
   }
 
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in
@@ -6421,6 +6431,12 @@ export class Sim {
     // position cannot fork the draw order (the Vale Cup tail precedent).
     deedsMod.updateDeeds(this.ctx);
     lap?.('deeds');
+
+    // mir4 auto battle (profile-gated appended phase; classic sims skip it, so
+    // the classic draw order is untouched). Offensive draws happen only through
+    // the mir4 cast gates.
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) updateMir4AutoBattle(this.ctx);
+    lap?.('mir4.autoBattle');
 
     // movement re-bucketing: queries during the next tick and the server's
     // snapshot broadcast right after this one see fresh cells
