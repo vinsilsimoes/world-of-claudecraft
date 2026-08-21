@@ -25,9 +25,10 @@ const VERIFY_DB = `wocc_mir4_save_v2_verify_${process.pid}`;
 const VERIFY_REALM = 'Mir4SaveVerify';
 const PRODUCTION_APP = 'wocc_mir4_save_verify_production';
 // pg_stat_activity.query is truncated to track_activity_query_size. Match the
-// opening CTE, not the final UPDATE, so the lock probe works with PostgreSQL's
-// default 1 KiB activity-query budget.
-const FENCED_SAVE_QUERY_PREFIX = 'WITH locked_character AS MATERIALIZED';
+// save-only second CTE, not the shared opening character-lock CTE or the final
+// UPDATE, so the probe cannot mistake a queued lease takeover for the save and
+// still works with PostgreSQL's default 1 KiB activity-query budget.
+const FENCED_SAVE_QUERY_PREFIX = 'lock_time AS MATERIALIZED';
 const AUTOSAVE_CYCLE_SIZE = 1_000;
 const AUTOSAVE_CYCLE_CONCURRENCY = 4;
 const AUTOSAVE_CYCLE_BUDGET_MS = 30_000;
