@@ -919,6 +919,8 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
     expect(smokeBrowser).toContain("'--no-sandbox'");
     expect(smokeBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(smokeBrowser).toContain('{ timeout: 15000, polling: 100 }');
+    expect(smokeBrowser).not.toContain('setTimeout(r, 3000)');
     expect(mir4FeatureBrowser).toContain("'--no-sandbox'");
     expect(mir4FeatureBrowser).toContain("'--disable-setuid-sandbox'");
     expect(mpBrowser).toContain('protocolTimeout: 180000');

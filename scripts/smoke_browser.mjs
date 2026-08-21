@@ -77,7 +77,8 @@ if (state0.profile !== scenario.profile) {
   failures.push(`PROFILE: expected ${scenario.profile}, received ${String(state0.profile)}`);
 }
 
-// run forward for 3 seconds
+// Hold real keyboard input until the simulation crosses the movement proof
+// threshold. The wall-clock duration varies under shared CI runner load.
 await page.evaluate(() => document.activeElement?.blur());
 await page.click('#game-canvas');
 for (let attempt = 0; attempt < 3; attempt++) {
@@ -92,8 +93,20 @@ await page.waitForFunction(() => !window.__game.input.debugState().suspendMoveme
 await page.evaluate(() => document.activeElement?.blur());
 await page.click('#game-canvas');
 await page.keyboard.down(scenario.movementKey);
-await new Promise((r) => setTimeout(r, 3000));
-await page.keyboard.up(scenario.movementKey);
+try {
+  await page
+    .waitForFunction(
+      ({ x, z }) => {
+        const player = window.__game.sim.player;
+        return Math.hypot(player.pos.x - x, player.pos.z - z) > 10;
+      },
+      { timeout: 15000, polling: 100 },
+      { x: state0.x, z: state0.z },
+    )
+    .catch(() => undefined);
+} finally {
+  await page.keyboard.up(scenario.movementKey);
+}
 await page.screenshot({ path: 'tmp/03_ran_forward.png' });
 const state1 = await page.evaluate(() => {
   const p = window.__game.sim.player;
