@@ -268,21 +268,21 @@ merely that a dataset or unit-tested sim function exists.
 | Slice | Dataset | Sim | Host | Persisted/online | Existing UI | E2E | Status |
 |---|---:|---:|---:|---:|---:|---:|---|
 | Profile/world/roster | yes | yes | yes | yes | yes | yes | active; PostgreSQL 16 and two-browser release proof passed |
-| M01 combat + five kits | yes | yes | yes | yes | yes | partial | active |
-| L2 skill evolution | yes | yes | yes | yes | existing Spellbook + Deeds | partial | active; first upgrade resources are earnable through achievements plus campaign copper |
-| M01 quest/auto journey | yes | yes | yes | yes | tracker + log | partial | active |
-| Equipment/refine/enchant/bless/craft | yes | yes | yes | yes | yes | partial | active |
+| M01 combat + five kits | yes | yes | yes | yes | yes | yes | active; all five classes boot through the existing entry shell with MIR4-only actions and the shared WoC action bar |
+| L2 skill evolution | yes | yes | yes | yes | existing Spellbook + Deeds | yes | active; browser proof upgrades skill 1102 and spends the three authoritative resources |
+| M01 quest/auto journey | yes | yes | yes | yes | tracker + log | yes | active; smoke proof accepts M01-Q01 and activates auto journey through the existing tracker |
+| Equipment/refine/enchant/bless/craft | yes | yes | yes | yes | yes | yes | active; existing Crafting window drives every authoritative operation |
 | m01..m20 procedural world/mobs/travel | yes | yes | yes | n/a | zone map + atlas + portals | yes | active; full-campaign four-tier browser and live-Sim portal traversal pass |
-| 230-quest arc | yes | yes | yes | yes | tracker + Quest Log + Crafting | partial | active; isolated short-dungeon room wired, E2E pending |
-| Native mount adaptation | yes | yes | yes | yes | Bags + Character + native Mount runtime | partial | active |
-| Spirits | yes | yes | yes | yes | Bags + Character | partial | active |
+| 230-quest arc | yes | yes | yes | yes | tracker + Quest Log + Crafting | yes | active; exhaustive sim coverage plus real M04 short-dungeon browser completion |
+| Native mount adaptation | yes | yes | yes | yes | Bags + Character + native Mount runtime | yes | active; ticket redemption and equip use the existing Bags and native runtime model |
+| Spirits | yes | yes | yes | yes | Bags + Character | yes | active; ticket redemption and equip pass through the existing Bags window |
 
-Current implementation estimate: **93%**. This is the normalized maturity-layer
-score for the ledger above (`yes`/`n/a` = 1, `partial` = 0.5), rounded to the
-nearest whole percent. It measures implemented migration scope, not release
-readiness. The PostgreSQL-backed multiplayer/load proof and staged PR gate now
-pass; the remaining percentage is the partial E2E coverage called out per slice,
-not missing external infrastructure.
+Current implementation estimate: **100%**. Every migration slice in the ledger
+has reached its required dataset, simulation, host, persistence/online, existing-
+UI and E2E maturity layers. This percentage measures implementation of the
+agreed migration roadmap only. It does not by itself declare production release
+readiness or waive operational migration, device-performance, moderation,
+content-quality, rollout and live-observability gates.
 
 The profile host now resolves and activates the same `buildMir4ArcWorld()` for
 offline, headless and server execution. Native class keys cross creation, DB,
@@ -722,6 +722,22 @@ typecheck and all builds, the PostgreSQL 16 proof, eight balanced PR test shards
 and both long-simulation lanes. Release-only jobs were correctly skipped for the
 ordinary feature PR. The measured shard timings from that green run are checked
 into `scripts/ci_shard_weights.generated.json` for subsequent CI balancing.
+
+The final E2E closure is recorded by CI run 32486719723. It passed changed-file
+lint, security/i18n/typecheck/build checks, browser regressions, all eight PR
+test shards, both long-simulation lanes and the complete PostgreSQL 16 proof.
+The database job persisted four maximum projections at 86,975 bytes each with
+145,808 diagnostic WAL bytes in 19.61 ms, then renewed all 1,000 leases and
+saved all 1,000 sessions at concurrency four in 1,894.46 ms (p50 7.16 ms,
+p95 10.28 ms, p99 14.28 ms, max 17.7 ms). Its live product proofs completed
+32/32 WebSocket assertions, 10/10 two-client Chromium assertions, the existing
+MIR4 smoke path with 10.2 units of real keyboard movement and no page errors,
+and 44/44 existing-UI feature assertions across all five classes. The latter
+drives Spellbook evolution, refinement, enchantment, blessing, crafting,
+Mount/Spirit redemption and equip, Character presentation, M04 isolated
+short-dungeon combat and campaign return without adding a parallel MIR4 UI or
+copying any 2D asset. Artifact `mir4-external-proof-32486719723` retains the
+server/Vite logs and browser screenshots for 14 days.
 
 ### Historical Phase 2 seed, superseded by the execution ledger
 
