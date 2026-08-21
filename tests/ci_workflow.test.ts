@@ -908,6 +908,8 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toContain('browserEffects: 3');
     expect(mpBrowser).toContain("document.querySelector('#mobile-preflight-continue')?.click();");
     expect(mpBrowser).toContain('ENTRY DIAGNOSTICS');
+    expect(mpBrowser).toMatch(/loginAndEnter\(pageA, `duo_\$\{uniq\}`/);
+    expect(mpBrowser).toMatch(/loginAndEnter\(pageB, `duob_\$\{uniq\}`/);
     expect(mpBrowser).toContain("'#btn-auth-toggle'");
     expect(mpBrowser).toContain("'#login-panel'");
     expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");

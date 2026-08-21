@@ -1,4 +1,4 @@
-// Two-browser multiplayer E2E: register an account, create two characters,
+// Two-browser multiplayer E2E: register two accounts, create two characters,
 // log both into the world via the real UI, verify they see each other, chat,
 // and screenshot both perspectives.
 
@@ -220,8 +220,21 @@ async function loginAndEnter(page, username, password, charName, cls, fresh) {
   );
   step('entering world...');
   try {
+    await page.waitForFunction(
+      () =>
+        window.__game?.world?.entities?.size >= 1 ||
+        document.querySelector('#disconnect-overlay') !== null,
+      {
+        timeout: 120000,
+        polling: 500,
+      },
+    );
+    const disconnect = await page.evaluate(
+      () => document.querySelector('#disconnect-overlay')?.textContent?.trim() ?? null,
+    );
+    if (disconnect) throw new Error(`world entry rejected: ${disconnect}`);
     await page.waitForFunction(() => window.__game?.world?.entities?.size >= 1, {
-      timeout: 120000,
+      timeout: 10000,
       polling: 500,
     });
   } catch (error) {
@@ -261,8 +274,8 @@ const pageB = await browserB.newPage();
 
 console.log('logging in A...');
 await loginAndEnter(pageA, `duo_${uniq}`, 'hunter22', NAME_A, SCENARIO.primary.classKey, true);
-console.log('logging in B (same account, second character)...');
-await loginAndEnter(pageB, `duo_${uniq}`, 'hunter22', NAME_B, SCENARIO.secondary.classKey, false);
+console.log('logging in B (independent multiplayer account)...');
+await loginAndEnter(pageB, `duob_${uniq}`, 'hunter22', NAME_B, SCENARIO.secondary.classKey, true);
 
 await new Promise((r) => setTimeout(r, 1500));
 
