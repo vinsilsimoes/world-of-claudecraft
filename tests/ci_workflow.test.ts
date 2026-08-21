@@ -901,6 +901,10 @@ describe('CI workflow parity', () => {
     expect(mir4Postgres).toContain('node scripts/mp_browser.mjs');
     expect(mpBrowser).toContain("'--no-sandbox'");
     expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(mpBrowser).toContain("'#btn-auth-toggle'");
+    expect(mpBrowser).toContain("'#realm-list .realm-row'");
+    expect(mpBrowser).toContain('#charcreate-panel .mini-class[data-class=');
+    expect(mpBrowser).not.toContain("'#btn-register'");
     expect(mir4Postgres).toContain('node dist-server/server.cjs');
     expect(mir4Postgres).toContain(
       'export BROWSER_PATH="$(node -e \'process.stdout.write(require("playwright").chromium.executablePath())\')"',

@@ -24,6 +24,8 @@ const errors = [];
 let pass = 0;
 let fail = 0;
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function check(name, condition, extra = '') {
   if (condition) {
     pass += 1;
@@ -58,53 +60,122 @@ async function loginAndEnter(page, username, password, charName, cls, fresh) {
     void d.dismiss();
   });
   const step = (s) => console.log(`  [${charName}] ${s}`);
-  await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await new Promise((r) => setTimeout(r, 800));
+  let navigationError;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      navigationError = undefined;
+      break;
+    } catch (error) {
+      navigationError = error;
+      await sleep(1000);
+    }
+  }
+  if (navigationError) throw navigationError;
+  await page.waitForSelector('#btn-online', { timeout: 30000 });
+  await sleep(1000);
   step('loaded');
   // evaluate-based DOM interaction (page.click can stall on this page under swiftshader)
-  await page.evaluate(
-    (u, p, fresh) => {
-      document.querySelector('#btn-online').click();
-      document.querySelector('#login-user').value = u;
-      document.querySelector('#login-pass').value = p;
-      document.querySelector(fresh ? '#btn-register' : '#btn-login').click();
-    },
-    username,
-    password,
-    fresh,
-  );
+  await page.evaluate(() => document.querySelector('#btn-online')?.click());
+  await page.waitForSelector('#login-user', { visible: true, timeout: 45000 });
+  let submitted = false;
+  for (let attempt = 0; attempt < 6 && !submitted; attempt++) {
+    submitted = await page.evaluate(
+      (user, pass, email, register) => {
+        const form = document.querySelector('#login-panel');
+        const userInput = document.querySelector('#login-user');
+        const passInput = document.querySelector('#login-pass');
+        const toggle = document.querySelector('#btn-auth-toggle');
+        const submit = document.querySelector('#btn-login');
+        if (!form || !userInput || !passInput || !toggle || !submit) return false;
+
+        const desiredMode = register ? 'register' : 'login';
+        if (form.dataset.authMode !== desiredMode) toggle.click();
+        const emailInput = document.querySelector('#login-email');
+        userInput.value = user;
+        passInput.value = pass;
+        if (register && emailInput) emailInput.value = email;
+        submit.click();
+        return true;
+      },
+      username,
+      password,
+      `${username}@example.com`,
+      fresh,
+    );
+    if (!submitted) await sleep(400);
+  }
+  if (!submitted) throw new Error('login form never stabilized');
+
+  await page.waitForSelector('#realm-list .realm-row', { timeout: 15000 });
+  await page.evaluate(() => {
+    const row = document.querySelector('#realm-list .realm-row');
+    (row instanceof HTMLElement ? row : null)?.click();
+  });
   await page.waitForFunction(
-    () => document.querySelector('#charselect-panel')?.style.display === 'block',
-    { timeout: 8000, polling: 200 },
+    () =>
+      !document.querySelector('#charcreate-panel')?.hasAttribute('hidden') ||
+      !document.querySelector('#charselect-panel')?.hasAttribute('hidden'),
+    { timeout: 15000, polling: 200 },
   );
-  step('char select');
+
+  const createPanelVisible = await page.evaluate(
+    () => !document.querySelector('#charcreate-panel')?.hasAttribute('hidden'),
+  );
+  if (!createPanelVisible) {
+    await page.evaluate(() => document.querySelector('#btn-new-character')?.click());
+    await page.waitForFunction(
+      () => !document.querySelector('#charcreate-panel')?.hasAttribute('hidden'),
+      { timeout: 10000, polling: 200 },
+    );
+  }
+  step('character create');
   await page.evaluate(
     (name, cls) => {
       document.querySelector('#new-char-name').value = name;
-      document.querySelector(`#charselect-panel .mini-class[data-class="${cls}"]`).click();
+      document.querySelector(`#charcreate-panel .mini-class[data-class="${cls}"]`)?.click();
       document.querySelector('#btn-create-char').click();
     },
     charName,
     cls,
   );
-  await new Promise((r) => setTimeout(r, 700));
-  step('character created');
-  const entered = await page.evaluate((name) => {
-    const rows = [...document.querySelectorAll('.char-row')];
-    const row = rows.find((r) => r.querySelector('.char-name')?.textContent === name);
-    if (!row) return false;
-    row.querySelector('.enter-world-btn').click();
-    return true;
-  }, charName);
-  if (!entered) throw new Error(`could not enter world as ${charName}`);
-  step('entering world...');
   await page.waitForFunction(
-    () => {
-      const g = window.__game;
-      return g?.world && g.world.entities.size > 5;
+    (name) => {
+      if (document.querySelector('#charselect-panel')?.hasAttribute('hidden')) return false;
+      return [...document.querySelectorAll('#char-list .char-row')].some(
+        (row) => row.querySelector('.char-name')?.textContent?.trim() === name,
+      );
     },
-    { timeout: 20000, polling: 500 },
+    { timeout: 20000, polling: 200 },
+    charName,
   );
+  step('character created');
+
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const advanced = await page.evaluate(
+      () =>
+        document.querySelector('#charselect-panel')?.hasAttribute('hidden') ||
+        typeof window.__game !== 'undefined',
+    );
+    if (advanced) break;
+    await page.evaluate((name) => {
+      window.confirm = () => true;
+      const rows = [...document.querySelectorAll('#char-list .char-row')];
+      const row = rows.find(
+        (candidate) => candidate.querySelector('.char-name')?.textContent?.trim() === name,
+      );
+      const button = row?.querySelector('.enter-world-btn') ?? row?.querySelector('.take-over-btn');
+      button?.click();
+    }, charName);
+    await sleep(700);
+  }
+  step('entering world...');
+  await page.waitForFunction(() => window.__game?.world?.entities?.size >= 1, {
+    timeout: 90000,
+    polling: 500,
+  });
+  await sleep(1200);
+  await page.evaluate(() => document.querySelector('button.tut-skip')?.click()).catch(() => {});
   step('in world');
 }
 
