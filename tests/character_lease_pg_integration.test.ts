@@ -48,6 +48,8 @@ describeDb('character leases (REAL PostgreSQL 16)', () => {
   let db: typeof import('../server/db');
   let sequence = 0;
   let databaseCreated = false;
+  let cleaningUp = false;
+  const inspectorErrors: unknown[] = [];
 
   async function makeCharacter(): Promise<{ accountId: number; characterId: number }> {
     sequence += 1;
@@ -131,6 +133,9 @@ describeDb('character leases (REAL PostgreSQL 16)', () => {
       connectionString: verifyUrl(ADMIN_URL as string, 'wocc_lease_verify_inspector'),
       max: 8,
     });
+    inspector.on('error', (error: Error & { code?: string }) => {
+      if (!(cleaningUp && error.code === '57P01')) inspectorErrors.push(error);
+    });
     const version = await inspector.query(
       "SELECT current_setting('server_version_num')::int AS num",
     );
@@ -140,6 +145,7 @@ describeDb('character leases (REAL PostgreSQL 16)', () => {
   }, 120_000);
 
   afterAll(async () => {
+    cleaningUp = true;
     const errors: unknown[] = [];
     try {
       await inspector?.end();
@@ -171,6 +177,8 @@ describeDb('character leases (REAL PostgreSQL 16)', () => {
         errors.push(error);
       }
     }
+    await new Promise((resolve) => setImmediate(resolve));
+    errors.push(...inspectorErrors);
     if (errors.length > 0) throw new AggregateError(errors, 'character lease cleanup failed');
   }, 30_000);
 

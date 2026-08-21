@@ -74,6 +74,8 @@ describeDb('MIR4 save v2 migration (REAL PostgreSQL 16)', () => {
   let db: typeof import('../server/db');
   let sequence = 0;
   let databaseCreated = false;
+  let cleaningUp = false;
+  const inspectorErrors: unknown[] = [];
 
   async function makeCharacter(
     classId = 'warrior',
@@ -199,6 +201,9 @@ describeDb('MIR4 save v2 migration (REAL PostgreSQL 16)', () => {
       connectionString: verifyUrl(ADMIN_URL as string, 'wocc_mir4_save_verify_inspector'),
       max: 10,
     });
+    inspector.on('error', (error: Error & { code?: string }) => {
+      if (!(cleaningUp && error.code === '57P01')) inspectorErrors.push(error);
+    });
     const version = await inspector.query(
       "SELECT current_setting('server_version_num')::int AS num",
     );
@@ -218,6 +223,7 @@ describeDb('MIR4 save v2 migration (REAL PostgreSQL 16)', () => {
   });
 
   afterAll(async () => {
+    cleaningUp = true;
     const errors: unknown[] = [];
     try {
       await inspector?.end();
@@ -249,6 +255,8 @@ describeDb('MIR4 save v2 migration (REAL PostgreSQL 16)', () => {
         errors.push(error);
       }
     }
+    await new Promise((resolve) => setImmediate(resolve));
+    errors.push(...inspectorErrors);
     if (errors.length > 0) throw new AggregateError(errors, 'MIR4 PostgreSQL cleanup failed');
   }, 30_000);
 
