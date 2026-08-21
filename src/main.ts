@@ -365,11 +365,6 @@ import {
 } from './ui/auth_utils';
 import { BreathBar } from './ui/breath_bar';
 import { assembleBugReportMeta } from './ui/bug_report';
-import {
-  cameraPromptOpen,
-  dismissCameraPrompt,
-  maybeShowFirstRunCameraPrompt,
-} from './ui/camera_prompt';
 import { deleteCharButtonHtml } from './ui/char_delete_button';
 import { loadCharselectNews } from './ui/charselect_news';
 import { CharselectRedesignEditor } from './ui/charselect_redesign';
@@ -1883,16 +1878,14 @@ async function startGame(
   const chatDismiss = document.getElementById('chat-dismiss');
   chatDismiss?.addEventListener('click', () => chatInput.blur());
 
-  // One keyboard/gamepad action gate for every blocking client surface. The
-  // camera prompt lives outside Hud, so it reports its open state explicitly, and
-  // chat reports both its presence and its focus (only the latter blocks; see
+  // One keyboard/gamepad action gate for every blocking client surface. Chat
+  // reports both its presence and its focus (only the latter blocks; see
   // gameplay_input_gate.ts).
   const gameplayInputBlocked = () =>
     isGameplayInputBlocked({
       graphicsRebuildPaused,
       modalOpen: hud.isModalOpen(),
       promptModalOpen: hud.promptModalOpen(),
-      cameraPromptOpen: cameraPromptOpen(),
       chatComposerVisible: chatInput.style.display === 'block',
       chatComposerFocused: document.activeElement === chatInput,
     });
@@ -2027,7 +2020,7 @@ async function startGame(
   perf.setInputDebugProvider(() => ({
     ...input.debugState(),
     canUseGameKeys: !gameplayInputBlocked(),
-    modalOpen: hud.isModalOpen() || cameraPromptOpen(),
+    modalOpen: hud.isModalOpen(),
     chatOpen: chatInput.style.display === 'block',
     gameInputReady,
   }));
@@ -2181,7 +2174,6 @@ async function startGame(
   const canUseGameKeysNow = () => !gameplayInputBlocked();
   function dispatchGamepadAction(id: string): void {
     if (id === 'escape') {
-      if (dismissCameraPrompt()) return;
       if (hud.cancelGroundAim()) return;
       if (!hud.closeAll()) hud.toggleOptionsMenu();
       return;
@@ -2332,7 +2324,6 @@ async function startGame(
     isPointerMode: () =>
       shouldUseGamepadPointerMode(
         hud.isWindowOpen(),
-        cameraPromptOpen(),
         document.getElementById('race-start-btn')?.style.display === 'block',
       ),
     getPlayerHealth: () => (world.player.dead ? 0 : world.player.hp),
@@ -4312,7 +4303,7 @@ async function startGame(
     }
 
     // Freeze movement while the game menu is up, during the first-spawn intro,
-    // the camera prompt, and through the race countdown. The sim independently
+    // and through the race countdown. The sim independently
     // enforces the same countdown lock, so online latency cannot move the
     // authoritative rider.
     const raceMovementLocked = world.mountRaceView()?.phase === 'countdown';
@@ -4323,11 +4314,7 @@ async function startGame(
     }
     raceMovementWasLocked = raceMovementLocked;
     input.setSuspendMovement(
-      !gameInputReady ||
-        hud.isModalOpen() ||
-        cameraPromptOpen() ||
-        intro !== null ||
-        raceMovementLocked,
+      !gameInputReady || hud.isModalOpen() || intro !== null || raceMovementLocked,
     );
     const playerDead = world.player.dead;
     if (shouldClearAutorunOnDeath(playerWasDead, playerDead)) {
@@ -5088,13 +5075,6 @@ async function startGame(
           // 4 GB-class tight profile still skips the secondary contexts
           // entirely and keeps their documented lazy first-open path.
           if (!GFX.tightMemory) hud.startPostEntryPreviewPrewarm();
-          // First-run camera-mode prompt (issue #1727): show once per browser on a
-          // mouse-driven interface, after any spawn cinematic has finished. Applies
-          // the choice through the same applySetting path as the Key Bindings toggle.
-          maybeShowFirstRunCameraPrompt({
-            applyMouseCamera: (enabled) => applySetting('mouseCamera', enabled),
-            isBlocked: () => intro !== null,
-          });
           (
             window as Window &
               typeof globalThis & {

@@ -132,14 +132,12 @@ interface NumericChoiceBinding {
   set(key: NumericSettingKey, value: number): void;
 }
 
-// The seven GameSettings the Key Bindings panel renders alongside the
+// The six GameSettings the Key Bindings panel renders alongside the
 // rebindable keys (the settingToggleKeybind + clickMoveMouseButtonRow calls in
 // renderKeybinds below). Its Reset to Defaults must restore these too, not just
-// the key-code map: without this list, a player's custom mouse-camera,
-// click-to-move (and its mouse button), attack-move, left-handed-touch, or
-// profanity-filter choice silently survived a "reset everything" click.
+// the key-code map. Mouse Camera is the sole camera scheme and is intentionally
+// absent from this adjustable list.
 const KEYBIND_PANEL_SETTING_KEYS: (keyof GameSettings)[] = [
-  'mouseCamera',
   'lockCursorOnRotate',
   'clickToMove',
   'clickToMoveButton',
@@ -1955,7 +1953,6 @@ export class OptionsWindow {
     // sub-views (graphics/audio/interface) keep the default 420px width.
     el.classList.add('kb-wide');
     el.innerHTML = this.panelTitle(t('hud.options.keyBindings'));
-    this.settingToggleKeybind(el, t('hud.options.mouseCamera'), 'mouseCamera');
     this.settingToggleKeybind(
       el,
       t('hudChrome.options.lockCursorOnRotate'),

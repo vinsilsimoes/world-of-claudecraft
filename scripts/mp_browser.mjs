@@ -294,13 +294,13 @@ check('B sees A through the real client', bSees.includes(NAME_A), JSON.stringify
 if (IS_MIR4) {
   const uiState = await pageA.evaluate(() => {
     const game = window.__game;
-    const attackLabel = document.querySelector(
-      '#actionbar .action-btn[data-hotbar-slot="0"] .icon-label',
-    )?.textContent;
+    const attackAria = document
+      .querySelector('#actionbar .action-btn[data-hotbar-slot="0"]')
+      ?.getAttribute('aria-label');
     const talents = document.querySelector('#mm-talents');
     return {
       classId: game.world.mir4PlayerState()?.classId ?? null,
-      attackLabel,
+      attackAria,
       talentsHidden: talents ? getComputedStyle(talents).display === 'none' : false,
     };
   });
@@ -309,7 +309,7 @@ if (IS_MIR4) {
     uiState.classId === SCENARIO.primary.mir4ClassId,
     JSON.stringify(uiState),
   );
-  check('existing action bar presents Auto Battle', uiState.attackLabel === 'Auto Battle');
+  check('existing action bar presents Auto Battle', uiState.attackAria?.includes('Auto Battle'));
   check('classic Talents launcher is hidden', uiState.talentsHidden);
 
   await pageA.evaluate(() => {

@@ -4,8 +4,7 @@
 
 export function shouldUseGamepadPointerMode(
   windowOpen: boolean,
-  cameraPromptOpen: boolean,
   raceControlVisible: boolean,
 ): boolean {
-  return windowOpen || cameraPromptOpen || raceControlVisible;
+  return windowOpen || raceControlVisible;
 }

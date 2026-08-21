@@ -13,7 +13,6 @@ const NOTHING_OPEN: GameplayInputSurfaces = {
   graphicsRebuildPaused: false,
   modalOpen: false,
   promptModalOpen: false,
-  cameraPromptOpen: false,
   chatComposerVisible: false,
   chatComposerFocused: false,
 };
@@ -26,7 +25,6 @@ describe('gameplay input gate', () => {
   it('blocks on each modal surface independently', () => {
     expect(isGameplayInputBlocked({ ...NOTHING_OPEN, modalOpen: true })).toBe(true);
     expect(isGameplayInputBlocked({ ...NOTHING_OPEN, promptModalOpen: true })).toBe(true);
-    expect(isGameplayInputBlocked({ ...NOTHING_OPEN, cameraPromptOpen: true })).toBe(true);
   });
 
   it('blocks while the renderer is being rebuilt', () => {
@@ -71,7 +69,6 @@ describe('gameplay input gate', () => {
         graphicsRebuildPaused: true,
         modalOpen: true,
         promptModalOpen: true,
-        cameraPromptOpen: true,
         chatComposerVisible: true,
         chatComposerFocused: true,
       }),

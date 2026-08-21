@@ -116,7 +116,7 @@ describe('Settings', () => {
     expect(s.get('clickToMoveButton')).toBe(0);
     expect(s.get('cameraFov')).toBe(SETTING_RANGES.cameraFov.def);
     expect(s.get('cameraFov')).toBe(60); // unchanged from the shipped look by default
-    expect(s.get('mouseCamera')).toBe(false);
+    expect(s.get('mouseCamera')).toBe(true);
     // walk-by autoloot is opt-in: auto-grabbing loot by walking past can feel jarring.
     expect(s.get('walkByAutoloot')).toBe(false);
     // both unit frames ship at their stock size; the scale sliders are opt-in tuning.
@@ -213,11 +213,14 @@ describe('Settings', () => {
     expect(b.get('displayMode')).toBe(0);
   });
 
-  it('persists boolean settings across instances', () => {
-    const a = new Settings();
-    a.set('mouseCamera', true);
-    const b = new Settings();
-    expect(b.get('mouseCamera')).toBe(true);
+  it('forces Mouse Camera on for legacy storage and every public write path', () => {
+    localStorage.setItem('woc_settings', JSON.stringify({ mouseCamera: false }));
+
+    const settings = new Settings();
+    expect(settings.get('mouseCamera')).toBe(true);
+    expect(settings.set('mouseCamera', false)).toBe(true);
+    expect(settings.patch({ mouseCamera: false }).mouseCamera).toBe(true);
+    expect(new Settings().get('mouseCamera')).toBe(true);
   });
 
   it('defaults left-handed touch off and persists it across instances', () => {
@@ -349,7 +352,7 @@ describe('Settings', () => {
     s.set('effectsQuality', 0);
     s.set('shadowQuality', 0);
     s.set('fullscreen', 0);
-    s.set('mouseCamera', true);
+    s.set('mouseCamera', false);
     s.set('mobileCameraJoystick', true);
     s.reset();
     expect(s.get('cameraSpeed')).toBe(SETTING_RANGES.cameraSpeed.def);
@@ -361,7 +364,7 @@ describe('Settings', () => {
     expect(s.get('shadowQuality')).toBe(SETTING_RANGES.shadowQuality.def);
     expect(s.get('fullscreen')).toBe(SETTING_RANGES.fullscreen.def);
     expect(s.get('clickToMoveButton')).toBe(SETTING_RANGES.clickToMoveButton.def);
-    expect(s.get('mouseCamera')).toBe(false);
+    expect(s.get('mouseCamera')).toBe(true);
     expect(s.get('mobileCameraJoystick')).toBe(false);
   });
 

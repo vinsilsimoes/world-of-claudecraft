@@ -1,7 +1,5 @@
-// Default (Mouse Camera off): classic-MMO-style (WASD + A/D keyboard turn, Q/E strafe,
-// left-drag orbits, right-drag mouselooks, both buttons run forward).
-// Optional Mouse Camera (on): OSRS-style (WASD is camera-relative, A/D strafe,
-// mouse drag rotates the orbit, no keyboard turn).
+// Mouse Camera is the product's sole desktop scheme: WASD is camera-relative,
+// A/D strafe, mouse drag rotates the orbit, and keyboard turning is disabled.
 // Shared: space jump, wheel zoom, Tab target, rebindable action bar, R autorun.
 
 import { sanitizeMoveFacing, sanitizeMoveInput } from '../sim/move_input';
