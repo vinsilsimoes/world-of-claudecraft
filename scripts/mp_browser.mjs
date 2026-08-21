@@ -36,19 +36,22 @@ function check(name, condition, extra = '') {
   }
 }
 
-const browser = await puppeteer.launch({
-  executablePath: EDGE,
-  headless: 'new',
-  protocolTimeout: 60000,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--window-size=1280,760',
-    '--use-angle=swiftshader',
-    '--enable-unsafe-swiftshader',
-  ],
-  defaultViewport: { width: 1280, height: 760 },
-});
+async function launchBrowser(label) {
+  return puppeteer.launch({
+    executablePath: EDGE,
+    headless: 'new',
+    protocolTimeout: 180000,
+    userDataDir: `tmp/mp-browser-${label}-${uniq}`,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--window-size=1280,760',
+      '--use-angle=swiftshader',
+      '--enable-unsafe-swiftshader',
+    ],
+    defaultViewport: { width: 1280, height: 760 },
+  });
+}
 
 async function loginAndEnter(page, username, password, charName, cls, fresh) {
   page.on('pageerror', (e) => errors.push(`[${charName}] ${e.message}`));
@@ -187,8 +190,13 @@ async function loginAndEnter(page, username, password, charName, cls, fresh) {
   step('in world');
 }
 
-const pageA = await browser.newPage();
-const pageB = await browser.newPage();
+// A live 3D page can starve a sibling page when both share one headless
+// SwiftShader process. Separate processes keep each client's render loop and
+// Puppeteer protocol responsive while both remain on the same game server.
+const browserA = await launchBrowser('a');
+const browserB = await launchBrowser('b');
+const pageA = await browserA.newPage();
+const pageB = await browserB.newPage();
 
 console.log('logging in A...');
 await loginAndEnter(pageA, `duo_${uniq}`, 'hunter22', NAME_A, SCENARIO.primary.classKey, true);
@@ -316,6 +324,6 @@ await new Promise((r) => setTimeout(r, 800));
 await pageB.screenshot({ path: `tmp/mp_view_${GAME_PROFILE}_B.png` });
 
 check('no page errors', errors.length === 0, errors.slice(0, 10).join('\n'));
-await browser.close();
+await Promise.all([browserA.close(), browserB.close()]);
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exitCode = fail > 0 ? 1 : 0;

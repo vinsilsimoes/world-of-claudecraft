@@ -901,6 +901,9 @@ describe('CI workflow parity', () => {
     expect(mir4Postgres).toContain('node scripts/mp_browser.mjs');
     expect(mpBrowser).toContain("'--no-sandbox'");
     expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(mpBrowser).toContain('protocolTimeout: 180000');
+    expect(mpBrowser).toContain("const browserA = await launchBrowser('a');");
+    expect(mpBrowser).toContain("const browserB = await launchBrowser('b');");
     expect(mpBrowser).toContain("'#btn-auth-toggle'");
     expect(mpBrowser).toContain("'#login-panel'");
     expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");
