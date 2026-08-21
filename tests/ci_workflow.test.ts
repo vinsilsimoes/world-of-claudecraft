@@ -904,6 +904,10 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toContain('protocolTimeout: 180000');
     expect(mpBrowser).toContain("const browserA = await launchBrowser('a');");
     expect(mpBrowser).toContain("const browserB = await launchBrowser('b');");
+    expect(mpBrowser).toContain('graphicsPreset: 1');
+    expect(mpBrowser).toContain('browserEffects: 3');
+    expect(mpBrowser).toContain("document.querySelector('#mobile-preflight-continue')?.click();");
+    expect(mpBrowser).toContain('ENTRY DIAGNOSTICS');
     expect(mpBrowser).toContain("'#btn-auth-toggle'");
     expect(mpBrowser).toContain("'#login-panel'");
     expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");
@@ -915,7 +919,11 @@ describe('CI workflow parity', () => {
       'export BROWSER_PATH="$(node -e \'process.stdout.write(require("playwright").chromium.executablePath())\')"',
     );
     expect(mir4Postgres).toContain('trap \'kill "$server_pid" || true; cat mir4-server.log\' EXIT');
-    expect(mir4Postgres.match(/\n {6}- name: /g)).toHaveLength(10);
+    expect(mir4Postgres).toContain('uses: actions/upload-artifact@v4');
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: pins literal GitHub Actions syntax.
+    expect(mir4Postgres).toContain('name: mir4-external-proof-${{ github.run_id }}');
+    expect(mir4Postgres).toContain('retention-days: 14');
+    expect(mir4Postgres.match(/\n {6}- name: /g)).toHaveLength(11);
 
     // Aggregator only if branch protection cannot accept skipped checks. This
     // packet does not invent one without evidence (OPEN item 5: skipped release

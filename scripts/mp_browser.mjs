@@ -63,6 +63,27 @@ async function loginAndEnter(page, username, password, charName, cls, fresh) {
     void d.dismiss();
   });
   const step = (s) => console.log(`  [${charName}] ${s}`);
+  await page.evaluateOnNewDocument(() => {
+    try {
+      const key = 'woc_settings';
+      const current = JSON.parse(localStorage.getItem(key) ?? '{}') ?? {};
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          ...current,
+          graphicsPreset: 1,
+          graphicsDefaultApplied: true,
+          browserEffects: 3,
+          fullscreen: 0,
+          reduceMotion: true,
+          weather: false,
+        }),
+      );
+    } catch {
+      // A denied storage write is diagnosable below; it must not invent a
+      // separate boot path from the one real players use.
+    }
+  });
   let navigationError;
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
@@ -162,29 +183,69 @@ async function loginAndEnter(page, username, password, charName, cls, fresh) {
   );
   step('character created');
 
-  for (let attempt = 0; attempt < 30; attempt++) {
-    const advanced = await page.evaluate(
-      () =>
-        document.querySelector('#charselect-panel')?.hasAttribute('hidden') ||
-        typeof window.__game !== 'undefined',
+  const entryAction = await page.evaluate((name) => {
+    window.confirm = () => true;
+    const rows = [...document.querySelectorAll('#char-list .char-row')];
+    const row = rows.find(
+      (candidate) => candidate.querySelector('.char-name')?.textContent?.trim() === name,
     );
-    if (advanced) break;
-    await page.evaluate((name) => {
-      window.confirm = () => true;
-      const rows = [...document.querySelectorAll('#char-list .char-row')];
-      const row = rows.find(
-        (candidate) => candidate.querySelector('.char-name')?.textContent?.trim() === name,
-      );
-      const button = row?.querySelector('.enter-world-btn') ?? row?.querySelector('.take-over-btn');
-      button?.click();
-    }, charName);
-    await sleep(700);
+    if (!(row instanceof HTMLElement)) return 'missing-row';
+    row.click();
+    const shared = document.querySelector('#btn-charselect-enter');
+    const button =
+      shared instanceof HTMLButtonElement && !shared.disabled
+        ? shared
+        : (row.querySelector('.enter-world-btn') ?? row.querySelector('.take-over-btn'));
+    if (!(button instanceof HTMLButtonElement)) return 'missing-button';
+    button.click();
+    return button.id || button.className;
+  }, charName);
+  if (entryAction === 'missing-row' || entryAction === 'missing-button') {
+    throw new Error(`${charName} could not start entry: ${entryAction}`);
   }
+
+  await page.waitForFunction(
+    () => {
+      const preflight = document.querySelector('#mobile-preflight');
+      if (preflight?.classList.contains('visible')) {
+        document.querySelector('#mobile-preflight-continue')?.click();
+      }
+      return (
+        document.querySelector('#start-screen')?.style.display === 'none' ||
+        document.querySelector('#disconnect-overlay') !== null ||
+        typeof window.__game !== 'undefined'
+      );
+    },
+    { timeout: 30000, polling: 250 },
+  );
   step('entering world...');
-  await page.waitForFunction(() => window.__game?.world?.entities?.size >= 1, {
-    timeout: 90000,
-    polling: 500,
-  });
+  try {
+    await page.waitForFunction(() => window.__game?.world?.entities?.size >= 1, {
+      timeout: 120000,
+      polling: 500,
+    });
+  } catch (error) {
+    const diagnostics = await page
+      .evaluate(() => ({
+        url: location.href,
+        startPanel: document.body.dataset.startPanel ?? null,
+        startDisplay: document.querySelector('#start-screen')?.style.display ?? null,
+        loadingVisible: document.querySelector('#loading-screen')?.classList.contains('visible'),
+        loadingStatus: document.querySelector('#ls-status')?.textContent?.trim() ?? null,
+        disconnect: document.querySelector('#disconnect-overlay')?.textContent?.trim() ?? null,
+        charselectError: document.querySelector('#charselect-error')?.textContent?.trim() ?? null,
+        hasGame: typeof window.__game !== 'undefined',
+      }))
+      .catch((diagnosticError) => ({ diagnosticError: String(diagnosticError) }));
+    console.error(`ENTRY DIAGNOSTICS ${charName}: ${JSON.stringify(diagnostics)}`);
+    console.error(
+      `PAGE ERRORS ${charName}: ${JSON.stringify(errors.filter((x) => x.includes(charName)))}`,
+    );
+    await page
+      .screenshot({ path: `tmp/mp_failure_${GAME_PROFILE}_${charName}.png` })
+      .catch(() => {});
+    throw error;
+  }
   await sleep(1200);
   await page.evaluate(() => document.querySelector('button.tut-skip')?.click()).catch(() => {});
   step('in world');

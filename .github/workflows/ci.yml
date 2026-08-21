@@ -368,6 +368,17 @@ jobs:
           node scripts/mp_integration.mjs
           node scripts/mp_browser.mjs
 
+      - name: Upload MIR4 external proof evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mir4-external-proof-${{ github.run_id }}
+          path: |
+            mir4-server.log
+            tmp/mp_*.png
+          if-no-files-found: warn
+          retention-days: 14
+
   # Biome formatter + linter, adopted as a forward ratchet: only files actually
   # changed by this push/PR are checked (`--changed`), so the large existing tree
   # is never retroactively reformatted, while every new diff must pass format+lint.
