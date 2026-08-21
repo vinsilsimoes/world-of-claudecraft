@@ -8,6 +8,8 @@ import {
 } from '../server/community_test_accounts';
 import { BOOST_KIT_VERSION, bisKit, bisKitForRole, CLASS_ROLES } from '../server/pbe_boost';
 import { bagCapacity } from '../src/sim/bags';
+import { MIR4_MAX_LEVEL } from '../src/sim/content/mir4';
+import { mir4EquipmentItem } from '../src/sim/content/mir4/equipment_catalog';
 import { WARFARE_ITEMS } from '../src/sim/content/pvp_honor';
 import { ITEMS } from '../src/sim/data';
 import { canEquipItem } from '../src/sim/equipment_rules';
@@ -39,6 +41,48 @@ describe('generated community character names', () => {
 });
 
 describe('community test character templates', () => {
+  it('builds all five native MIR4 classes at the profile cap with a complete class-valid kit', () => {
+    const characters = buildCommunityTestCharacters(42, 'mir4-gameplay-port');
+    expect(characters.map((character) => character.cls)).toEqual([
+      'warrior',
+      'elementalist',
+      'taoist',
+      'arbalist',
+      'lancer',
+    ]);
+    for (const character of characters) {
+      expect(character.state.gameProfile).toBe('mir4-gameplay-port');
+      expect(character.state.level).toBe(MIR4_MAX_LEVEL);
+      expect(Object.keys(character.state.mir4Equipment ?? {}).sort()).toEqual([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+      ]);
+      for (const [slot, itemId] of Object.entries(character.state.mir4Equipment ?? {})) {
+        const item = mir4EquipmentItem(Number(itemId));
+        expect(item?.equipSlot).toBe(Number(slot));
+        expect(item?.classId).toBe(
+          ['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer'].indexOf(character.cls) + 1,
+        );
+      }
+      const reloaded = new Sim({
+        seed: 20061,
+        playerClass: 'warrior',
+        gameProfile: 'mir4-gameplay-port',
+        noPlayer: true,
+      });
+      const pid = reloaded.addPlayer(character.cls, character.name, { state: character.state });
+      expect(reloaded.entities.get(pid)?.mir4?.classId).toBe(
+        ['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer'].indexOf(character.cls) + 1,
+      );
+    }
+  });
+
   it('builds one fully playable level-20 character for every class', () => {
     const characters = buildCommunityTestCharacters(42);
     expect(characters.map((character) => character.cls)).toEqual(ALL_CLASSES);

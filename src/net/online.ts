@@ -1,5 +1,4 @@
 // Online play: REST auth client + WebSocket world mirror.
-
 import { App } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { apiUrl, DESKTOP_API_ORIGIN, NATIVE_API_ORIGIN, NATIVE_APP } from '../client_origin';
@@ -40,10 +39,11 @@ import {
 } from '../sim/data';
 import { deadTargetSelectable } from '../sim/dead_target';
 import { DEEDS_RECENT_CAP, freshDeedStats } from '../sim/deeds';
+import { activateWorldForGameProfile } from '../sim/game_profile_world';
 import { LEADERBOARD_PAGE_SIZE } from '../sim/leaderboard_page';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MarketQuery } from '../sim/market_query';
-import type { Mir4CastResult } from '../sim/mir4/combat';
+import { mir4ShellClassFor } from '../sim/mir4/stats';
 import { normalizeMoveFacing, sanitizeMoveInput } from '../sim/move_input';
 import { isPersistentEngineAura } from '../sim/persistent_aura';
 import { isPrimaryOwnedPetEntity } from '../sim/pet/pet_selection';
@@ -82,6 +82,7 @@ import {
   type MasterLootPrompt,
   type MasterLootThreshold,
   type MoveInput,
+  type PlayableClass,
   type PlayerClass,
   type QuestProgress,
   type QuestState,
@@ -93,6 +94,7 @@ import {
   type VcBracket,
   type VcNationId,
   type WeaponSkinType,
+  type WorldContent,
 } from '../sim/types';
 import type { VendorBuyOptions } from '../sim/vendor_buy_stack';
 import { WORLD_SEED } from '../sim/world_seed';
@@ -175,8 +177,13 @@ import {
   type CivicServicePlacementsReader,
   createCivicServicePlacementsReader,
 } from './civic_service_placements';
+import {
+  applyEntityPresentationDynamic,
+  applyEntityPresentationIdentity,
+} from './entity_presentation_wire';
 import { decodeGuildBankLogFrame, GUILD_BANK_LOG_TTL_MS } from './guild_bank_log_wire';
 import { INPUT_SEND_TIMER_INTERVAL_MS, inputFlushGateOpen } from './input_send_cadence';
+import { Mir4ClientWorldBase, type Mir4CommandPayload } from './mir4_client_facet';
 import { createNativeAttestationProof } from './native_attestation';
 import { createNetPipelineStats, type NetPipelineStats } from './net_pipeline_stats';
 import { optimisticQuestState } from './quest_state_optimistic';
@@ -195,7 +202,6 @@ import {
 // individual fields as they are consumed; this alias keeps the decoder local.
 // biome-ignore lint/suspicious/noExplicitAny: legacy wire JSON is intentionally loose at the boundary.
 type LooseJson = any;
-
 type InputSendMode = 'periodic' | 'changed' | 'forced-neutral';
 
 interface PendingTransientInput {
@@ -203,7 +209,6 @@ interface PendingTransientInput {
   turnLeft: boolean;
   turnRight: boolean;
 }
-
 interface ClientWireAura {
   id: string;
   name: string;
@@ -233,7 +238,7 @@ interface ClientWireAura {
 export interface CharacterSummary {
   id: number;
   name: string;
-  class: PlayerClass;
+  class: PlayableClass;
   level: number;
   skin: number;
   online: boolean;
@@ -830,7 +835,7 @@ export class Api {
 
   async createCharacter(
     name: string,
-    cls: PlayerClass,
+    cls: PlayableClass,
     skin = 0,
     // The authored modular look, fixed to THIS character at create (its own
     // server column). Optional: absent creates a legacy-rig character. Typed
@@ -1520,12 +1525,17 @@ function blankEntity(id: number): Entity {
   };
 }
 
-export class ClientWorld implements IWorld {
+export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
   // --- IWorldEntityRoster: roster + player reads, mirrored from snapshots. The
   // `player` getter lives below the ctor (it reads `entities`/`playerId`). `known`
   // is IWorldCombat-owned but rides here as a self-wire mirror field with the rest
   // of the roster data. ---
-  cfg: { seed: number; playerClass: PlayerClass; gameProfile?: GameProfile };
+  cfg: {
+    seed: number;
+    playerClass: PlayerClass;
+    gameProfile?: GameProfile;
+    world?: WorldContent;
+  };
   entities = new Map<number, Entity>();
   playerId = -1;
   private ownPlayerId = -1;
@@ -1993,19 +2003,25 @@ export class ClientWorld implements IWorld {
   constructor(
     token: string,
     characterId: number,
-    cls: PlayerClass,
+    cls: PlayableClass,
     base = '',
     clientSeed = '',
     gameProfile: GameProfile = browserGameProfile(),
   ) {
+    super();
+    // Client rendering, terrain, collision and maps all resolve through the
+    // process-wide active content registry. Select it before the socket can
+    // deliver authoritative positions for a different profile world.
+    const world = activateWorldForGameProfile(gameProfile);
     this.characterId = characterId;
     this.token = token;
     this.base = normalizeOrigin(base) || NATIVE_API_ORIGIN || DESKTOP_API_ORIGIN;
     this.clientSeed = clientSeed;
-    this.ownPlayerClass = cls;
+    const shellClass = mir4ShellClassFor(cls, gameProfile);
+    this.ownPlayerClass = shellClass;
     // Placeholder until the server's hello supplies the authoritative seed;
     // seeded from the shipped constant so the two can never silently diverge.
-    this.cfg = { seed: WORLD_SEED, playerClass: cls, gameProfile };
+    this.cfg = { seed: WORLD_SEED, playerClass: shellClass, gameProfile, world };
     this.openSocket();
     // unconditional input stream beat; constants + gate shared with the
     // cadence-model matrix via input_send_cadence.ts (R13)
@@ -3003,6 +3019,7 @@ export class ClientWorld implements IWorld {
         e.templateId = w.tid;
         e.name = w.nm;
         e.level = w.lv;
+        applyEntityPresentationIdentity(e, w);
         e.skin = w.sk ?? 0;
         e.mountKey = w.mnt ?? ''; // active rideable mount ('' dismounted); feeds speed + render
         e.mainhandItemId = w.mh ?? null; // equipped mainhand → held weapon model (render-only)
@@ -3162,6 +3179,7 @@ export class ClientWorld implements IWorld {
         e.maxResource = w.mres;
       }
       e.rangedPower = w.rp ?? 0;
+      applyEntityPresentationDynamic(e, w);
       // Absent means zero (omit-when-default wire convention): without this a
       // paladin whose charges expired would keep stale orbiting seals forever.
       if (e.kind === 'player' && e.templateId === 'paladin') {
@@ -3371,6 +3389,9 @@ export class ClientWorld implements IWorld {
       e.resourceType = s.rtype;
       // delta fields: the server omits them while unchanged, so only the
       // snapshots that carry them rebuild the local structures
+      if (s.mir4 !== undefined) {
+        this.applyMir4Snapshot(s.mir4, e);
+      }
       // corpse position while a ghost (null once resurrected). Delta-guarded: kept
       // unchanged when the server omits it; drives the corpse marker + resurrect button.
       if (s.corpse !== undefined) e.corpsePos = s.corpse ?? null;
@@ -3689,9 +3710,11 @@ export class ClientWorld implements IWorld {
       // shared resolver (identical to the Sim's swap); otherwise the normal
       // class/level/talent derivation below applies.
       if (s.sport !== undefined) this.sportRole = s.sport ? (s.sport.role ?? null) : null;
+      const mir4Known = this.mir4ActionAbilities(this.cfg.gameProfile, e.level);
       this.known = this.sportRole
         ? resolveSportKit(this.sportRole)
-        : abilitiesKnownAt(this.cfg.playerClass, e.level, talentMods, this.questsDone);
+        : (mir4Known ??
+          abilitiesKnownAt(this.cfg.playerClass, e.level, talentMods, this.questsDone));
       // --- IWorldParty: party roster + raid markers, delta-omitted self-decode
       // (keep the prior value when absent; `marks: null` clears on disband). ---
       if (s.party !== undefined) this.partyInfo = s.party;
@@ -4027,44 +4050,12 @@ export class ClientWorld implements IWorld {
   castAbilityOn(abilityId: string, targetId: number): void {
     this.cmd({ cmd: 'cast', ability: abilityId, target: targetId });
   }
-
-  // IWorldMir4: the mir4 profile surface. Verbs ride the single 'mir4'
-  // envelope (server/mir4_commands.ts re-validates everything through the
-  // sim's admission gates); reads are optimistic mirrors until the snapshot
-  // echo arm lands with the HUD domain.
-  private mir4Mirror = { autoBattle: false, autoQuest: false };
-  mir4AutoBattleActive(): boolean {
-    return this.mir4Mirror.autoBattle;
+  // IWorldMir4 commands are encoded by the sibling-owned prototype facet.
+  protected sendMir4Command(payload: Mir4CommandPayload): void {
+    this.cmd(payload);
   }
-  setMir4AutoBattle(on: boolean): void {
-    this.mir4Mirror.autoBattle = on;
-    this.cmd({ cmd: 'mir4', m: 'auto', on });
-  }
-  mir4AutoQuestActive(): boolean {
-    return this.mir4Mirror.autoQuest;
-  }
-  setMir4AutoQuest(on: boolean): void {
-    this.mir4Mirror.autoQuest = on;
-    this.cmd({ cmd: 'mir4', m: 'quest', on });
-  }
-  mir4QuestStatusText(): string {
-    return 'Auto quest off';
-  }
-  mir4CastSkill(skillId: number, targetId?: number): Mir4CastResult {
-    this.cmd({ cmd: 'mir4', m: 'cast', skill: skillId, target: targetId });
-    return { ok: true };
-  }
-  mir4BasicAttack(targetId?: number): Mir4CastResult {
-    this.cmd({ cmd: 'mir4', m: 'basic', target: targetId });
-    return { ok: true };
-  }
-  mir4EquipStarterWeapon(): string {
-    this.cmd({ cmd: 'mir4', m: 'equip' });
-    return 'Starter weapon equipped.';
-  }
-  mir4UnequipWeapon(): string {
-    this.cmd({ cmd: 'mir4', m: 'unequip' });
-    return 'Weapon unequipped.';
+  protected sendMir4CommandWithOutcome(payload: Mir4CommandPayload): Promise<boolean> {
+    return this.cmdWithOutcome(payload);
   }
   releaseEmpoweredAbility(abilityId: string): void {
     this.cmd({ cmd: 'releaseEmpowered', ability: abilityId });
@@ -4095,7 +4086,6 @@ export class ClientWorld implements IWorld {
   respondToResurrection(accept: boolean): void {
     this.cmd({ cmd: 'resurrect_respond', accept });
   }
-
   // The single write path for the LOCAL player's mirrored targetId from server
   // state. Two snapshot sites assign it (the wireEntity `tgt` decode in
   // applyWire and the precise `target` self-decode, same server-side value per

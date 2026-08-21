@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { ENCHANTS } from '../src/sim/content/enchants';
 import { ITEMS } from '../src/sim/data';
+import { publicInstanceView } from '../src/sim/item_instance_transfer';
 import type { InvSlot, ItemDef, ItemSlot } from '../src/sim/types';
 import {
   ENCHANT_PRESERVED_TRAITS,
@@ -592,29 +593,22 @@ describe('enchant_apply_view: preservedReplaceTraits (#2421)', () => {
     expect(preservedReplaceTraits(victim, false)).toEqual(['signer', 'masterwork', 'bond']);
   });
 
-  // The premise the wireTrimmed arm rests on, pinned against the SERVER so it
+  // The premise the wireTrimmed arm rests on, pinned against the shared public projection so it
   // cannot rot silently: the moment the eqi allowlist grows a bind field, the
   // worn arm is free to state the bond and this test says so.
   it('pins the eqi allowlist the worn trim mirrors', () => {
-    const wire = readFileSync(fileURLToPath(new URL('../server/game.ts', import.meta.url)), 'utf8');
-    const block = wire.match(
-      /for \(const \[slot, inst\] of Object\.entries\(e\.equippedInstances\)\)[\s\S]*?\n {4}\}/,
-    );
-    expect(block, 'the eqi projection loop moved').not.toBeNull();
-    // Comments stripped first: a "boundTo is deliberately absent" note inside
-    // the loop must not read as a widening, and a commented-out assignment must
-    // not read as coverage either.
-    const body = (block?.[0] ?? '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-    const projected = [...body.matchAll(/pub\.(\w+) = inst\.\w+/g)].map((m) => m[1]);
-    // Exactly the cosmetic inspect fields, and NOTHING that carries bind state.
-    expect(projected.sort()).toEqual(['enchant', 'rolled', 'signer']);
-    // Syntax-independent backstop: the extractor above only sees dot-notation
-    // assignment, so a widening written as pub['boundTo'] = inst.boundTo or an
-    // Object.assign spread would slip past it. Pin the FIELD NAMES out of the
-    // loop body entirely, which no assignment shape can dodge.
-    for (const field of ['boundTo', 'bindOnTrade', 'charges']) {
-      expect(body, `${field} must not ride the public eqi wire`).not.toContain(field);
-    }
+    const projected = publicInstanceView({
+      signer: 'Tester',
+      enchant: 'enchant_chest_stamina',
+      rolled: { masterwork: true, stats: { sta: 4 } },
+      boundTo: 7,
+      bindOnTrade: true,
+      charges: { some_effect: 2 },
+    });
+    expect(Object.keys(projected).sort()).toEqual(['enchant', 'rolled', 'signer']);
+    expect(projected).not.toHaveProperty('boundTo');
+    expect(projected).not.toHaveProperty('bindOnTrade');
+    expect(projected).not.toHaveProperty('charges');
   });
 
   // The SAME trim has a SECOND consumer: wornTooltipInstance

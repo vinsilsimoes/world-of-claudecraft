@@ -1,30 +1,179 @@
-// The mir4 slice item registry: the warrior's starter weapon, ported
-// verbatim from the source character-core starterItems (itemId 200201000).
-// Attributes are [statusId, value] pairs exactly as the source ships them;
-// status 44 is not yet mapped by the combat bridge (kept in data until
-// identified, applied never). The full 240-item equipment catalog is the
-// Phase 4 port; ids here are the NATIVE source ids, never reused.
+// Source-backed logical starter equipment. Only ids, class/slot rules and
+// attributes cross the migration boundary; presentation is resolved through
+// World of ClaudeCraft's native equipment registry in native_equipment_visuals.ts.
 
-export interface Mir4ItemDef {
-  id: number;
-  /** PT-BR source-facing name; English i18n source lands with the UI facet. */
-  name: string;
-  slot: 'weapon';
-  attributes: readonly (readonly [number, number])[];
+import type { Mir4ClassId } from './classes';
+import { type Mir4EquipmentItemDef, mir4EquipmentItem } from './equipment_catalog';
+
+const STARTER_ARMOR_ATTRIBUTES = [
+  [24, 12],
+  [26, 12],
+  [42, 10],
+  [32, 10],
+] as const;
+
+function starterItem(
+  itemId: number,
+  key: string,
+  name: string,
+  classId: Mir4ClassId,
+  equipSlot: 1 | 5,
+  baseAttributes: readonly (readonly [number, number])[],
+  balanceBudget: number,
+): Mir4EquipmentItemDef {
+  return Object.freeze({
+    itemId,
+    key,
+    name,
+    classId,
+    equipSlot,
+    catalogRank: 1,
+    tier: 1,
+    grade: 1,
+    requiredLevel: 1,
+    maxEnhancementLevel: 12,
+    enhanceable: true,
+    enchantable: false,
+    blessable: false,
+    baseAttributes,
+    balanceBudget,
+  });
 }
 
-export const MIR4_ITEMS: Record<number, Mir4ItemDef> = {
-  200201000: {
-    id: 200201000,
-    name: 'Arma Inicial do Guerreiro',
-    slot: 'weapon',
-    attributes: [
+/** Exact CLASS_CREATE starter ids and ITEM_ATTRIBUTE pairs for all five classes. */
+export const MIR4_ITEMS: Readonly<Record<number, Mir4EquipmentItemDef>> = Object.freeze({
+  200201000: starterItem(
+    200201000,
+    'starter-weapon-warrior',
+    'Arma Inicial do Guerreiro',
+    1,
+    1,
+    [
       [20, 75],
       [28, 5],
       [44, 10],
     ],
-  },
-};
+    470,
+  ),
+  301201000: starterItem(
+    301201000,
+    'starter-armor-warrior',
+    'Armadura Inicial do Guerreiro',
+    1,
+    5,
+    STARTER_ARMOR_ATTRIBUTES,
+    92,
+  ),
+  200202000: starterItem(
+    200202000,
+    'starter-weapon-elementalist',
+    'Arma Inicial do Elementalista',
+    2,
+    1,
+    [
+      [22, 75],
+      [28, 5],
+      [44, 10],
+    ],
+    470,
+  ),
+  301202000: starterItem(
+    301202000,
+    'starter-armor-elementalist',
+    'Armadura Inicial do Elementalista',
+    2,
+    5,
+    STARTER_ARMOR_ATTRIBUTES,
+    92,
+  ),
+  200203000: starterItem(
+    200203000,
+    'starter-weapon-taoist',
+    'Arma Inicial do Taoista',
+    3,
+    1,
+    [
+      [20, 75],
+      [22, 75],
+      [28, 5],
+      [44, 10],
+    ],
+    470,
+  ),
+  301203000: starterItem(
+    301203000,
+    'starter-armor-taoist',
+    'Armadura Inicial do Taoista',
+    3,
+    5,
+    STARTER_ARMOR_ATTRIBUTES,
+    92,
+  ),
+  200204000: starterItem(
+    200204000,
+    'starter-weapon-arbalist',
+    'Arma Inicial do Arbalista',
+    4,
+    1,
+    [
+      [20, 75],
+      [28, 5],
+      [44, 10],
+    ],
+    470,
+  ),
+  301204000: starterItem(
+    301204000,
+    'starter-armor-arbalist',
+    'Armadura Inicial do Arbalista',
+    4,
+    5,
+    STARTER_ARMOR_ATTRIBUTES,
+    92,
+  ),
+  200205000: starterItem(
+    200205000,
+    'starter-weapon-lancer',
+    'Arma Inicial do Lanceiro',
+    5,
+    1,
+    [
+      [20, 75],
+      [22, 75],
+      [28, 5],
+      [44, 10],
+    ],
+    470,
+  ),
+  301205000: starterItem(
+    301205000,
+    'starter-armor-lancer',
+    'Armadura Inicial do Lanceiro',
+    5,
+    5,
+    STARTER_ARMOR_ATTRIBUTES,
+    92,
+  ),
+});
 
-/** Status ids the combat bridge applies (mir4/math.ts MIR4_STATUS_IDS). */
-export const MIR4_APPLIED_STATUS_IDS = new Set([20, 28]);
+export interface Mir4StarterLoadout {
+  readonly weapon: number;
+  readonly armorTop: number;
+}
+
+export const MIR4_STARTER_LOADOUT_BY_CLASS: Readonly<Record<Mir4ClassId, Mir4StarterLoadout>> =
+  Object.freeze({
+    1: Object.freeze({ weapon: 200201000, armorTop: 301201000 }),
+    2: Object.freeze({ weapon: 200202000, armorTop: 301202000 }),
+    3: Object.freeze({ weapon: 200203000, armorTop: 301203000 }),
+    4: Object.freeze({ weapon: 200204000, armorTop: 301204000 }),
+    5: Object.freeze({ weapon: 200205000, armorTop: 301205000 }),
+  });
+
+/** Resolve exact starter equipment before the separate 240-item progression catalogue. */
+export function mir4EquipmentDefinition(itemId: number): Mir4EquipmentItemDef | null {
+  return MIR4_ITEMS[itemId] ?? mir4EquipmentItem(itemId);
+}
+
+/** Status ids present on exact starter equipment and consumed by runtime derivation. */
+export const MIR4_APPLIED_STATUS_IDS = new Set([20, 22, 24, 26, 28, 32, 42, 44]);

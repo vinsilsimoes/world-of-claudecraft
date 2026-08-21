@@ -251,13 +251,13 @@ describe('createWsAuth: authenticateWebSocket reject paths', () => {
     expectNoAdmissionWork(fixture);
   });
 
-  it('2c. rejects an auth-world-7 client on the auth-world-8 server before all admission work', async () => {
+  it('2c. rejects an auth-world-8 client on the auth-world-9 server before all admission work', async () => {
     const fixture = setup();
     const { ws, deps, req } = fixture;
 
     await createWsAuth(deps).authenticateWebSocket(
       asWs(ws),
-      JSON.stringify({ t: 'auth-world-7', token: 'tok', character: 7 }),
+      JSON.stringify({ t: 'auth-world-8', token: 'tok', character: 7 }),
       req,
     );
 
@@ -268,7 +268,7 @@ describe('createWsAuth: authenticateWebSocket reject paths', () => {
     expectNoAdmissionWork(fixture);
   });
 
-  it.each(['auth-world', 'auth-world-9', 'auth-world-next', 'auth-world-01', 'auth-world-1.0'])(
+  it.each(['auth-world', 'auth-world-10', 'auth-world-next', 'auth-world-01', 'auth-world-1.0'])(
     '2d. rejects the non-current world auth discriminator %s before all admission work',
     async (authType) => {
       const fixture = setup();
@@ -329,6 +329,7 @@ describe('createWsAuth: authenticateWebSocket reject paths', () => {
     fixture.game.sim.cfg.gameProfile = 'mir4-gameplay-port';
     fixture.deps.getCharacter = vi.fn(async () =>
       baseChar({
+        class: 'elementalist',
         state: { gameProfile: 'mir4-gameplay-port' } as CharacterRow['state'],
       }),
     );
@@ -341,6 +342,30 @@ describe('createWsAuth: authenticateWebSocket reject paths', () => {
 
     expect(fixture.game.join).toHaveBeenCalledTimes(1);
     expect(fixture.ws.send).not.toHaveBeenCalled();
+  });
+
+  it('2g2. rejects a class outside the server profile before lease or join work', async () => {
+    const fixture = setup();
+    fixture.game.sim.cfg.gameProfile = 'mir4-gameplay-port';
+    fixture.deps.getCharacter = vi.fn(async () =>
+      baseChar({
+        class: 'paladin',
+        state: { gameProfile: 'mir4-gameplay-port' } as CharacterRow['state'],
+      }),
+    );
+
+    await createWsAuth(fixture.deps).authenticateWebSocket(
+      asWs(fixture.ws),
+      authRaw({ gameProfile: 'mir4-gameplay-port' }),
+      fixture.req,
+    );
+
+    expectSendThenClose(
+      fixture.ws,
+      errorFrame('Game and server versions are incompatible. Reload or update, then try again.'),
+    );
+    expect(fixture.deps.acquireCharacterLease).not.toHaveBeenCalled();
+    expect(fixture.game.join).not.toHaveBeenCalled();
   });
 
   it('2h. rejects a character save from another profile before lease or join work', async () => {
@@ -383,6 +408,29 @@ describe('createWsAuth: authenticateWebSocket reject paths', () => {
       ...fixture.deps,
       getCharacter,
     }).authenticateWebSocket(asWs(fixture.ws), authRaw(), fixture.req);
+
+    expect(fixture.deps.acquireCharacterLease).toHaveBeenCalledTimes(1);
+    expect(fixture.deps.releaseCharacterLease).toHaveBeenCalledTimes(1);
+    expectSendThenClose(
+      fixture.ws,
+      errorFrame('Game and server versions are incompatible. Reload or update, then try again.'),
+    );
+    expect(fixture.game.join).not.toHaveBeenCalled();
+  });
+
+  it('2i2. releases a lease when the post-acquire reload changes to an invalid class', async () => {
+    const fixture = setup();
+    const getCharacter = vi
+      .fn()
+      .mockResolvedValueOnce(baseChar())
+      .mockResolvedValueOnce(baseChar({ class: 'elementalist' }));
+    fixture.deps.getCharacter = getCharacter;
+
+    await createWsAuth(fixture.deps).authenticateWebSocket(
+      asWs(fixture.ws),
+      authRaw(),
+      fixture.req,
+    );
 
     expect(fixture.deps.acquireCharacterLease).toHaveBeenCalledTimes(1);
     expect(fixture.deps.releaseCharacterLease).toHaveBeenCalledTimes(1);

@@ -42,6 +42,12 @@ describe('spellbook_window: WCAG chrome (rows + toggles + focus-return)', () => 
     expect(code).toContain('known && isAbilityActionBarEligible(def)');
   });
 
+  it('reuses the same rows for the MIR4 profile instead of exposing the classic Warrior kit', () => {
+    expect(code).toContain('world.cfg.gameProfile === MIR4_GAME_PROFILE');
+    expect(code).toContain('world.known.map((ability) => ability.def.id)');
+    expect(code).toContain('ABILITIES[row.abilityId] ?? known?.def');
+  });
+
   it('keeps the reset-bar button gated on the form-bars flag', () => {
     expect(code).toContain('const resetBtnHtml = view.hasFormBars');
     expect(code).toContain('data-reset-bar');
@@ -67,7 +73,9 @@ describe('spellbook_window: the pinned Attack row', () => {
   it('renders the Attack row first, from the pure view attackOnBar state', () => {
     expect(code).toContain('this.appendAttackRow(list, view.attackOnBar)');
     expect(code.indexOf('this.appendAttackRow(list')).toBeLessThan(
-      code.indexOf('for (const row of view.rows) this.appendRow(list, row)'),
+      code.indexOf(
+        'for (const row of view.rows) this.appendRow(list, row, mir4State, world.copper)',
+      ),
     );
     // The Attack state reaches the view through the latch takeControlChange() fills at
     // the top of render(), not a second deps.attackOnBar() read (#2519).
@@ -75,9 +83,11 @@ describe('spellbook_window: the pinned Attack row', () => {
     expect(code).toContain('const attackOnBar = this.deps.attackOnBar()');
   });
 
-  it('reuses the existing Attack name/tooltip keys (no new player strings)', () => {
-    expect(code).toContain("t('abilityUi.actionBar.attackName')");
-    expect(code).toContain("t('abilityUi.actionBar.attackTooltip')");
+  it('adapts the same row copy for classic Attack and MIR4 Auto Battle', () => {
+    expect(code).toContain("'abilityUi.actionBar.attackName'");
+    expect(code).toContain("'abilityUi.actionBar.attackTooltip'");
+    expect(code).toContain("'abilityUi.actionBar.autoBattleName'");
+    expect(code).toContain("'abilityUi.actionBar.autoBattleTooltip'");
     expect(code).toContain("iconDataUrl('ability', 'attack')");
   });
 

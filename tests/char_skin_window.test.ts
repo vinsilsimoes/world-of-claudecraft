@@ -6,7 +6,11 @@ vi.mock('../src/render/characters/assets', () => ({
 }));
 
 import { MECH_CHROMAS, SKIN_COUNTS } from '../src/sim/content/skins';
-import { type CharSkinPainterHost, paintCharSkinPicker } from '../src/ui/char_skin_window';
+import {
+  type CharSkinPainterHost,
+  paintActiveCharacterPreview,
+  paintCharSkinPicker,
+} from '../src/ui/char_skin_window';
 
 function makeHost(overrides?: {
   playerClass?: string;
@@ -151,5 +155,22 @@ describe('char_skin_window: paintCharSkinPicker (extracted from hud.ts)', () => 
     await Promise.resolve();
     await Promise.resolve();
     expect(host.mountCharPreview).toHaveBeenCalled();
+  });
+
+  it('mounts the active native preview with the MIR4 visual-hand override', () => {
+    const host = makeHost({ skinCatalog: 'class', skin: 0 });
+    const container = document.getElementById('char-model-preview');
+    paintActiveCharacterPreview(host, container, { mainhand: 'native_visual_sword' });
+    expect(host.mountCharPreview).toHaveBeenCalledWith(
+      container,
+      'mage',
+      0,
+      'player_mage',
+      {
+        mainhand: 'native_visual_sword',
+      },
+      undefined,
+      undefined,
+    );
   });
 });

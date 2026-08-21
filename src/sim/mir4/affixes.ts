@@ -7,9 +7,16 @@
 // penetration pair), and the pool weights by slot exactly as shipped.
 
 import type { Mir4EquipmentItemDef } from '../content/mir4/equipment_catalog';
-import { mir4EquipmentItem } from '../content/mir4/equipment_catalog';
+import { mir4EquipmentDefinition } from '../content/mir4/items';
 import type { SimContext } from '../sim_context';
-import type { Mir4EquipmentInstanceState } from './equipment';
+import { creditMir4ArcTutorialReceipt } from './arc_receipts';
+import {
+  MIR4_EMPTY_MATERIALS,
+  type Mir4EquipmentInstanceState,
+  mir4OwnsEquipmentItem,
+} from './equipment';
+import { mir4RecalcClassOf, recalcMir4PlayerStats } from './stats';
+import { markMir4WireDirty } from './wire_revision';
 
 /** The source's AFFIX table: key -> statusId/unit/min/max. */
 export interface Mir4AffixDef {
@@ -193,38 +200,33 @@ export function mir4RollLayer(
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return { ok: false, code: 'unknown-item' };
-  const def = mir4EquipmentItem(itemId);
+  const def = mir4EquipmentDefinition(itemId);
   if (!def) return { ok: false, code: 'unknown-item' };
+  if (!mir4OwnsEquipmentItem(meta, itemId)) return { ok: false, code: 'unknown-item' };
   const enchantable = layer === 'enchantment' ? def.enchantable : def.blessable;
   if (!enchantable) return { ok: false, code: 'not-enchantable' };
   let inst: Mir4EquipmentInstanceState | undefined = meta.mir4EquipmentInstances?.[itemId];
   if (!inst) {
     inst = { itemId, enhancement: 0 };
     meta.mir4EquipmentInstances = { ...meta.mir4EquipmentInstances, [itemId]: inst };
+    markMir4WireDirty(meta);
   }
   if (inst.destroyed) return { ok: false, code: 'unknown-item' };
   if (inst.pendingRoll) return { ok: false, code: 'preview-pending' };
-  const wallet = (meta.mir4Materials ??= {
-    sunStone: 0,
-    moonStone: 0,
-    solarScroll: 0,
-    lunarSeal: 0,
-    dawnTear: 0,
-    solarWard: 0,
-  });
+  const wallet = meta.mir4Materials ?? { ...MIR4_EMPTY_MATERIALS };
   const material = layer === 'blessing' ? 'dawnTear' : 'lunarSeal';
   if (wallet[material] < 1) return { ok: false, code: 'no-materials' };
+  meta.mir4Materials = wallet;
   wallet[material] -= 1;
+  markMir4WireDirty(meta);
   const count = layer === 'blessing' ? 3 : 2;
   const multiplier = layer === 'blessing' ? 0.7 : 1;
   const affixes = rollAffixes(ctx, def.classId, def, p.level, count, multiplier);
   const rollId = `roll-${ctx.tickCount}-${itemId}-${layer}`;
-  inst.pendingRoll = { layer, affixes: affixes.map((a) => [a.statusId ?? 0, a.value] as const) };
-  // Keep the richer shape for the UI on the instance's verbatim tail.
-  (inst as Mir4EquipmentInstanceState & { pendingAffixes?: unknown }).pendingAffixes = {
+  inst.pendingRoll = {
     rollId,
     layer,
-    affixes,
+    affixes: affixes.map((a) => [a.statusId ?? 0, a.value] as const),
   };
   return { ok: true, rollId, affixes };
 }
@@ -241,10 +243,11 @@ export function mir4ResolveLayer(
   const meta = ctx.players.get(pid);
   if (!meta) return { ok: false, code: 'unknown-item' };
   const inst = meta.mir4EquipmentInstances?.[itemId];
-  const tail = inst as
-    | (Mir4EquipmentInstanceState & { pendingAffixes?: { rollId?: string } })
-    | undefined;
-  if (!inst || !inst.pendingRoll || tail?.pendingAffixes?.rollId !== rollId) {
+  if (
+    !inst?.pendingRoll ||
+    inst.pendingRoll.rollId !== rollId ||
+    inst.pendingRoll.layer !== layer
+  ) {
     return { ok: false, code: 'preview-stale' };
   }
   if (accept) {
@@ -252,8 +255,24 @@ export function mir4ResolveLayer(
       ...inst.affixes,
       [layer]: inst.pendingRoll.affixes.map((a) => [...a] as [number, number]),
     };
+    if (Object.values(meta.mir4Equipment ?? {}).includes(itemId)) {
+      const player = ctx.entities.get(pid);
+      if (player)
+        recalcMir4PlayerStats(
+          player,
+          mir4RecalcClassOf(player),
+          player.level,
+          meta.mir4Equipment,
+          meta.mir4EquipmentInstances,
+          meta.mir4Spirits,
+          meta.mir4Mounts,
+        );
+    }
   }
   inst.pendingRoll = undefined;
-  delete tail?.pendingAffixes;
+  markMir4WireDirty(meta);
+  creditMir4ArcTutorialReceipt(meta, {
+    kind: layer === 'enchantment' ? 'resolve-enchantment' : 'resolve-blessing',
+  });
   return { ok: true, accepted: accept };
 }

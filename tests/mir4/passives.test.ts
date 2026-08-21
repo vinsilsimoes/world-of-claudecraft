@@ -14,7 +14,7 @@ import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 // the frozen caps fail-closing anything beyond them).
 
 function makeClassSim(cls: Mir4ClassKey, seed = 111): Sim {
-  return new Sim({
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerClassMir4: cls,
@@ -23,6 +23,9 @@ function makeClassSim(cls: Mir4ClassKey, seed = 111): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: MIR4_SLICE_WORLD,
   });
+  sim.mir4UnequipSlot(1);
+  sim.mir4UnequipSlot(5);
+  return sim;
 }
 
 function setLevel(sim: Sim, level: number): void {
@@ -104,7 +107,7 @@ describe('skill level 2', () => {
     const wolf = spawnWolf(sim);
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
-    expect(hp - wolf.hp).toBe(318); // vs 315 at level 1: the levelUp coefficients
+    expect(hp - wolf.hp).toBe(318); // vs 312 at level 1: the levelUp coefficients
   });
   it('the caps fail-close: 1102 at a hand-set 5 still resolves 2', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);

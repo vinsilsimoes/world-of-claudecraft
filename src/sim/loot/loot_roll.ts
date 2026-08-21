@@ -31,6 +31,7 @@
 
 import { HEROIC_BOSS_LOOT } from '../content/heroic_loot';
 import { heroicVariantId } from '../content/heroic_variants';
+import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
 import { MIR4_MOBS } from '../content/mir4/mobs';
 import { ITEMS, MOBS, QUESTS } from '../data';
 import { formatMoney } from '../format_money';
@@ -208,7 +209,11 @@ export function rollLoot(
 ): void {
   // Classic first, then the mir4 profile registry (mir4 mob ids only exist in
   // mir4 worlds, so classic resolution and behavior are unchanged).
-  const template = MOBS[mob.templateId] ?? MIR4_MOBS[mob.templateId];
+  const template =
+    MOBS[mob.templateId] ??
+    MIR4_MOBS[mob.templateId] ??
+    ctx.mir4RuntimeMobTemplates.get(mob.templateId) ??
+    mir4ArcMobTemplate(mob.templateId);
   if (!template) return;
   let copper = 0;
   const items: LootSlot[] = [];

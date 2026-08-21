@@ -779,7 +779,389 @@ export const en_XA: EnTranslations = {
     "questTracker": {
       "count": "[({count})]",
       "collapseHint": "[Çóļļáþšé ɋúéšţ ţŕáçķéŕ]",
-      "expandHint": "[Éẋþáñð ɋúéšţ ţŕáçķéŕ]"
+      "expandHint": "[Éẋþáñð ɋúéšţ ţŕáçķéŕ]",
+      "mir4": {
+        "firstTraces": "[Ƒíŕšţ Ţŕáçéš]",
+        "reachTarek": "[Ŕéáçĥ Ţáŕéķ]",
+        "inspectClues": "[Íñšþéçţ çļúéš]",
+        "returnToTarek": "[Ŕéţúŕñ ţó Ţáŕéķ]",
+        "pausedSuffix": "[(áúţó ĵóúŕñéý þáúšéð ƀý ɱáñúáļ çóñţŕóļ)]",
+        "startAutoJourney": "[Šţáŕţ áúţó ĵóúŕñéý]",
+        "stopAutoJourney": "[Šţóþ áúţó ĵóúŕñéý]"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "[Ɱéáðóŵ Çóúŕšéŕ]",
+          "moss-boar": "[Ɱóšš Ɓóáŕ]",
+          "brook-stag": "[Ɓŕóóķ Šţáĝ]",
+          "gray-wolf": "[Ĝŕáý Ŵóļƒ]",
+          "dun-packhorse": "[Ðúñ Þáçķĥóŕšé]",
+          "birch-doe": "[Ɓíŕçĥ Ðóé]",
+          "red-maned-pony": "[Ŕéð Ɱáñéð Þóñý]",
+          "lowland-elk": "[Ļóŵļáñð Éļķ]",
+          "field-lynx": "[Ƒíéļð Ļýñẋ]",
+          "tawny-mastiff": "[Ţáŵñý Ɱášţíƒƒ]",
+          "dune-jackal": "[Ðúñé Ĵáçķáļ]",
+          "reed-puma": "[Ŕééð Þúɱá]",
+          "clay-ox": "[Çļáý Óẋ]",
+          "valley-buffalo": "[Ʋáļļéý Ɓúƒƒáļó]",
+          "shaggy-yak": "[Šĥáĝĝý Ýáķ]",
+          "creek-lizard": "[Çŕééķ Ļížáŕð]",
+          "shellback-tortoise": "[Šţóñé-Šĥéļļ Ţóŕţóíšé]",
+          "plains-ostrich": "[Þļáíñš Óšţŕíçĥ]",
+          "dusk-emu": "[Ðúšķ Ŕĥéá]",
+          "copper-ant-carrier": "[Çóþþéŕ Áñţ Çáŕŕíéŕ]",
+          "mist-moose": "[Ɱíšţ Ɱóóšé]",
+          "leaf-panther": "[Ļéáƒ Þáñţĥéŕ]",
+          "turf-rhino": "[Ţúŕƒ Ŕĥíñó]",
+          "valley-monitor": "[Ʋáļļéý Ɱóñíţóŕ]",
+          "granite-ibex": "[Ĝŕáñíţé Íƀéẋ]",
+          "silver-dapple-mare": "[Šíļʋéŕ Ðáþþļé Ɱáŕé]",
+          "marsh-stag": "[Ɱáŕšĥ Šţáĝ]",
+          "snow-mane-lion": "[Šñóŵ-Ɱáñéð Ļíóñ]",
+          "ember-fox": "[Éɱƀéŕ Ƒóẋ]",
+          "striped-hyena": "[Šţŕíþéð Ĥýéñá]",
+          "iron-tusk-boar": "[Íŕóñ Ţúšķ Ɓóáŕ]",
+          "cedar-bear": "[Çéðáŕ Ɓéáŕ]",
+          "swamp-hippo": "[Šŵáɱþ Ĥíþþó]",
+          "thorn-iguana": "[Ţĥóŕñ Íĝúáñá]",
+          "dryland-crocodile": "[Ðŕýļáñð Çŕóçóðíļé]",
+          "horned-cassowary": "[Ĥóŕñéð Çáššóŵáŕý]",
+          "bronze-raptor": "[Ɓŕóñžé Ŕáþţóŕ]",
+          "amber-scarab": "[Áɱƀéŕ Šçáŕáƀ]",
+          "dune-scorpion": "[Ðúñé Šçóŕþíóñ]",
+          "root-golem": "[Ŕóóţ Ĝóļéɱ]",
+          "amber-bear": "[Áɱƀéŕ Ɓéáŕ]",
+          "sunset-tiger": "[Šúñšéţ Ţíĝéŕ]",
+          "root-drake": "[Ŕóóţ Ðŕáķé]",
+          "hill-griffin": "[Ĥíļļ Ĝŕíƒƒíñ]",
+          "obsidian-zebra": "[Óƀšíðíáñ Žéƀŕá]",
+          "stormhorn-ram": "[Šţóŕɱ-Ĥóŕñ Ŕáɱ]",
+          "dusk-elk": "[Ðúšķ Éļķ]",
+          "frost-warg": "[Ƒŕóšţ Ŵáŕĝ]",
+          "basalt-rhino": "[Ɓášáļţ Ŕĥíñó]",
+          "tundra-mammoth": "[Ţúñðŕá Ɱáɱɱóţĥ]",
+          "crystal-ankylosaur": "[Çŕýšţáļ Áñķýļóšáúŕ]",
+          "ember-salamander": "[Éɱƀéŕ Šáļáɱáñðéŕ]",
+          "thunder-komodo": "[Ţĥúñðéŕ Ķóɱóðó]",
+          "moon-crocodile": "[Ɱóóñ Çŕóçóðíļé]",
+          "razorbeak-strider": "[Ŕážóŕ-Ɓéáķéð Šţŕíðéŕ]",
+          "plume-raptor": "[Þļúɱé Ŕáþţóŕ]",
+          "glass-mantis": "[Ĝļášš Ɱáñţíš]",
+          "thunder-beetle": "[Ţĥúñðéŕ Ɓééţļé]",
+          "iron-sentinel": "[Íŕóñ Šéñţíñéļ]",
+          "mossstone-colossus": "[Ɱóšš-Šţóñé Çóļóššúš]",
+          "eclipse-lion": "[Éçļíþšé Ļíóñ]",
+          "crimson-wyvern": "[Çŕíɱšóñ Ŵýʋéŕñ]",
+          "astral-stag": "[Ášţŕáļ Šţáĝ]",
+          "jade-basilisk": "[Ĵáðé Ɓášíļíšķ]",
+          "solar-wolf": "[Šóļáŕ Ŵóļƒ]",
+          "forest-chimera": "[Ƒóŕéšţ Çĥíɱéŕá]",
+          "tempest-courser": "[Ţéɱþéšţ Çóúŕšéŕ]",
+          "thorn-elephant": "[Ţĥóŕñ Éļéþĥáñţ]",
+          "void-spider": "[Ʋóíð Šþíðéŕ]",
+          "rune-golem": "[Ŕúñé Ĝóļéɱ]",
+          "dawn-phoenix": "[Ðáŵñ Þĥóéñíẋ]",
+          "imperial-griffin": "[Íɱþéŕíáļ Ĝŕíƒƒíñ]",
+          "stone-leviathan": "[Šţóñé Ļéʋíáţĥáñ]",
+          "void-unicorn": "[Ʋóíð Úñíçóŕñ]",
+          "golden-manticore": "[Ĝóļðéñ Ɱáñţíçóŕé]",
+          "imperial-tiger": "[Íɱþéŕíáļ Ţíĝéŕ]",
+          "dawn-mammoth": "[Ðáŵñ Ɱáɱɱóţĥ]",
+          "magma-drake": "[Ɱáĝɱá Ðŕáķé]",
+          "crown-scorpion": "[Çŕóŵñ Šçóŕþíóñ]",
+          "sunforged-colossus": "[Šúñƒóŕĝéð Çóļóššúš]",
+          "ground-dragon": "[Ĝŕóúñð Ðŕáĝóñ]",
+          "eternal-phoenix": "[Éţéŕñáļ Þĥóéñíẋ]",
+          "celestial-kirin": "[Çéļéšţíáļ Ķíŕíñ]",
+          "firmament-behemoth": "[Ƒíŕɱáɱéñţ Ļíóñ]",
+          "time-hydra": "[Ţíɱé Ĥýðŕá]"
+        },
+        "spirits": {
+          "spirit-common-01": "[Ɱéáðóŵ Šþáŕķ]",
+          "spirit-common-02": "[Ɓŕóóķ Ɓŕééžé]",
+          "spirit-common-03": "[Ŵáţçĥƒúļ Ļéáƒ]",
+          "spirit-common-04": "[Šţóñé Éçĥó]",
+          "spirit-uncommon-01": "[Ðáŵñ Ĝļóŵ]",
+          "spirit-uncommon-02": "[Ɱíšţ Ñýɱþĥ]",
+          "spirit-uncommon-03": "[Ɱóšš Ĝúáŕðíáñ]",
+          "spirit-uncommon-04": "[Ʋáļļéý Šáļáɱáñðéŕ]",
+          "spirit-rare-01": "[Áɱƀéŕ Ƒóẋ]",
+          "spirit-rare-02": "[Šúñšéţ Óŵļ]",
+          "spirit-rare-03": "[Ŕóóţ Ðŕáķé]",
+          "spirit-rare-04": "[Ĥíļļš Óŕáçļé]",
+          "spirit-epic-01": "[Éçļíþšé Áʋáţáŕ]",
+          "spirit-epic-02": "[Çŕíɱšóñ Íƒŕíţ]",
+          "spirit-epic-03": "[Ášţŕáļ Šţáĝ]",
+          "spirit-epic-04": "[Ĵáðé Šéñţíñéļ]",
+          "spirit-epic-05": "[Šóļáŕ Ŵóļƒ]",
+          "spirit-epic-06": "[Éţĥéŕéáļ Çĥíɱéŕá]",
+          "spirit-legendary-01": "[Éáŕţĥ Ţíţáñ]",
+          "spirit-legendary-02": "[Ðáŵñ Þĥóéñíẋ]",
+          "spirit-legendary-03": "[Íɱþéŕíáļ Áŕçĥóñ]",
+          "spirit-legendary-04": "[Çŕýšţáļ Ļéʋíáţĥáñ]",
+          "spirit-legendary-05": "[Ʋóíð Úñíçóŕñ]",
+          "spirit-legendary-06": "[Ĝóļðéñ Ɱáñţíçóŕé]",
+          "spirit-mythical-01": "[Þŕíɱóŕðíáļ Šóúļ]",
+          "spirit-mythical-02": "[Éţéŕñáļ Þĥóéñíẋ]",
+          "spirit-mythical-03": "[Çéļéšţíáļ Ķíŕíñ]",
+          "spirit-mythical-04": "[Ƒíŕɱáɱéñţ Ɓéĥéɱóţĥ]",
+          "spirit-mythical-05": "[Áƀýššáļ Šéŕáþĥ]",
+          "spirit-mythical-06": "[Ţíɱé Ĥýðŕá]"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "[Ŵáñðéŕíñĝ Šþáŕķ]",
+          "spirit-skill-1-02": "[Ðúšķ Íñšţíñçţ]",
+          "spirit-skill-1-03": "[Ʋíţáļ Ðéŵ]",
+          "spirit-skill-1-04": "[Ɱáñá Ɓŕéáţĥ]",
+          "spirit-skill-2-01": "[Ŕíšíñĝ Ƒļáŕé]",
+          "spirit-skill-2-02": "[Ɱíšţ Ƒáñĝ]",
+          "spirit-skill-2-03": "[Ŕéšţóŕíñĝ Šáþ]",
+          "spirit-skill-2-04": "[Áŕçáñé Þúļšé]",
+          "spirit-skill-3-01": "[Áɱƀéŕ Ŕúþţúŕé]",
+          "spirit-skill-3-02": "[Šúñšéţ Ĵúðĝɱéñţ]",
+          "spirit-skill-3-03": "[Ʋíţáļ Ɓóñð]",
+          "spirit-skill-3-04": "[Ŕóóţ Šþŕíñĝ]",
+          "spirit-skill-4-01": "[Éçļíþšé Ŕáý]",
+          "spirit-skill-4-02": "[Çŕíɱšóñ Ƒúŕý]",
+          "spirit-skill-4-03": "[Ášţŕáļ Ĝŕáçé]",
+          "spirit-skill-4-04": "[Ĵáðé Óŕƀ]",
+          "spirit-skill-4-05": "[Šóļáŕ Çúţ]",
+          "spirit-skill-4-06": "[Éţĥéŕéáļ Ƒóçúš]",
+          "spirit-skill-5-01": "[Ţéçţóñíç Íɱþáçţ]",
+          "spirit-skill-5-02": "[Ŕéƀóŕñ Ƒļáɱé]",
+          "spirit-skill-5-03": "[Íɱþéŕíáļ Ʋéŕðíçţ]",
+          "spirit-skill-5-04": "[Çŕýšţáļ Ţíðé]",
+          "spirit-skill-5-05": "[Ʋóíð Ŕíƒţ]",
+          "spirit-skill-5-06": "[Ĝóļðéñ Çŕóŵñ]",
+          "spirit-skill-6-01": "[Ĝéñéšíš]",
+          "spirit-skill-6-02": "[Éţéŕñáļ Ŕéţúŕñ]",
+          "spirit-skill-6-03": "[Çéļéšţíáļ Ɱáñðáţé]",
+          "spirit-skill-6-04": "[Ŵéíĝĥţ óƒ ţĥé Ƒíŕɱáɱéñţ]",
+          "spirit-skill-6-05": "[Áƀýššáļ Šþíŕáļ]",
+          "spirit-skill-6-06": "[Áƀšóļúţé Ɱóɱéñţ]"
+        }
+      },
+      "ultimateGauge": "[Úļţíɱáţé ĝáúĝé]",
+      "ultimateGaugeStatus": "[Úļţíɱáţé ĝáúĝé: {value} óƒ {max}]",
+      "ultimateReadyAnnouncement": "[Úļţíɱáţé ŕéáðý.]",
+      "achievements": {
+        "title": "[Áçĥíéʋéɱéñţš]",
+        "close": "[Çļóšé áçĥíéʋéɱéñţš]",
+        "summary": "[{claimed}/{total} ŕéŵáŕðš çļáíɱéð]",
+        "balances": "[Çóþþéŕ {copper} · Ðáŕķšţééļ {darksteel} · ÉÞ {effectPoints} · Šķíļļ Ţóɱéš {skillTomes}]",
+        "levelTitle": "[Ļéʋéļ {level}]",
+        "levelDescription": "[Ŕéáçĥ ļéʋéļ {level}.]",
+        "progressAria": "[Ļéʋéļ þŕóĝŕéšš: {current}/{target}]",
+        "progressText": "[{current}/{target}]",
+        "rewardCopper": "[{amount} çóþþéŕ]",
+        "rewardDarksteel": "[{amount} Ðáŕķšţééļ]",
+        "rewardEffectPoints": "[{amount} Éƒƒéçţ Þóíñţš]",
+        "rewardSkillTomes": "[{amount} Šķíļļ Ţóɱéš]",
+        "rewards": "[Ŕéŵáŕðš: {rewards}]",
+        "claim": "[Çļáíɱ]",
+        "claimed": "[Çļáíɱéð]",
+        "locked": "[Ŕéáçĥ ļéʋéļ {level}]",
+        "previousGrade": "[Çļáíɱ ţĥé þŕéʋíóúš ĝŕáðé ƒíŕšţ]",
+        "claimAria": "[Çļáíɱ ţĥé ļéʋéļ {level} áçĥíéʋéɱéñţ ŕéŵáŕð]"
+      },
+      "questLog": {
+        "narrative": "[Íñʋéšţíĝáţé ţĥé ţĥŕéé çļúé šíţéš áŕóúñð ţĥé ƒóŕð, ţĥéñ ŕéţúŕñ ţó Ţáŕéķ Ţŵó Ɓŕíðĝéš.]",
+        "giverName": "[Ţáŕéķ Ţŵó Ɓŕíðĝéš]",
+        "emptyHint": "[Ƒíñð Ţáŕéķ Ţŵó Ɓŕíðĝéš íñ ţĥé Ɱ01 šéţţļéɱéñţ, óŕ šţáŕţ áúţó ĵóúŕñéý.]",
+        "completedHint": "[Ƒíŕšţ Ţŕáçéš íš çóɱþļéţé. Ţĥé ŕéɱáíñíñĝ çáɱþáíĝñ ɋúéšţš áŕé ñóţ áçţíʋé ýéţ.]"
+      },
+      "campaign": {
+        "questTitle": "[Çáɱþáíĝñ {id}]",
+        "narrative": "[Çóɱþļéţé ţĥé çúŕŕéñţ çáɱþáíĝñ óƀĵéçţíʋéš ƒóŕ {id}.]",
+        "contact": "[Çáɱþáíĝñ çóñţáçţ]",
+        "objective": {
+          "returnToContact": "[Ŕéţúŕñ ţó ţĥé çáɱþáíĝñ çóñţáçţ]",
+          "talk": "[Šþéáķ ŵíţĥ ţĥé çáɱþáíĝñ çóñţáçţ]",
+          "deliver": "[Ðéļíʋéŕ ţĥé ŕéɋúéšţéð íţéɱš]",
+          "travel": "[Ţŕáʋéļ ţó ţĥé ɱáŕķéð óƀĵéçţíʋé]",
+          "inspect": "[Íñšþéçţ ţĥé ɱáŕķéð éʋíðéñçé]",
+          "gather": "[Ĝáţĥéŕ ţĥé ŕéɋúéšţéð ŕéšóúŕçéš]",
+          "defend": "[Ðéƒéñð ţĥé ɱáŕķéð óƀĵéçţíʋé]",
+          "combat": "[Ðéƒéáţ ţĥé ɱáŕķéð éñéɱíéš]",
+          "escort": "[Éšçóŕţ ţĥé ɱáŕķéð áļļý]",
+          "escortSupplies": "[Éšçóŕţ ţĥé šúþþļý ĝŕóúþ]",
+          "dungeon": "[Çļéáŕ ţĥé çáɱþáíĝñ ðúñĝéóñ]",
+          "craft": "[Çŕáƒţ ţĥé ŕéɋúéšţéð šúþþļíéš]",
+          "tutorial": "[Çóɱþļéţé ţĥé šýšţéɱ ļéššóñ]",
+          "interact": "[Íñţéŕáçţ ŵíţĥ ţĥé ɱáŕķéð óƀĵéçţíʋé]",
+          "complete": "[Çóɱþļéţé ţĥé çúŕŕéñţ óƀĵéçţíʋé]"
+        }
+      },
+      "characterTitle": "[Çĥáŕáçţéŕ]",
+      "awaitingState": "[Ŵáíţíñĝ ƒóŕ áúţĥóŕíţáţíʋé çĥáŕáçţéŕ ðáţá...]",
+      "combatPowerLine": "[Çóɱƀáţ Þóŵéŕ {value}]",
+      "equipmentVisualShell": "[Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ áþþéáŕáñçé ŵíţĥ ⱮÍŔ4 çóɱƀáţ áţţŕíƀúţéš]",
+      "equipmentTierGrade": "[Ţíéŕ {tier}, Ĝŕáðé {grade}]",
+      "equipmentRequiredLevel": "[Ŕéɋúíŕéš ļéʋéļ {level}]",
+      "unequipHint": "[Çļíçķ ţĥé Ẋ óŕ ŕíĝĥţ-çļíçķ ţó úñéɋúíþ.]",
+      "unequipAria": "[Úñéɋúíþ {item}]",
+      "equipHint": "[Çļíçķ ţó éɋúíþ.]",
+      "equipAria": "[Éɋúíþ {item}]",
+      "inventoryEquipment": "[Éɋúíþɱéñţ]",
+      "inventoryRuntimeItems": "[Ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ Íţéɱš]",
+      "inventoryCollectionTickets": "[Çóļļéçţíóñ Ţíçķéţš]",
+      "inventoryMaterials": "[Ŕéƒíñéɱéñţ Ɱáţéŕíáļš]",
+      "noUnequippedEquipment": "[Ñó úñéɋúíþþéð éɋúíþɱéñţ.]",
+      "materialCount": "[Óŵñéð: {count}]",
+      "mountTicketDawn": "[Ðáŵñ Ɱóúñţ Ţíçķéţ]",
+      "mountTicketTwilight": "[Ţŵíļíĝĥţ Ɱóúñţ Ţíçķéţ]",
+      "mountTicketDawnDescription": "[Šúɱɱóñš óñé Ɱóúñţ: 79% Çóɱɱóñ, 20% Úñçóɱɱóñ, óŕ 1% Ŕáŕé. Ţĥé ţíçķéţ íš çóñšúɱéð óñ á ʋáļíð šúɱɱóñ. Ţĥé ðíšþļáýéð ɱóðéļ íš á ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ ʋíšúáļ šĥéļļ; ţĥé ļíšţéð ⱮÍŔ4 šţáţš áŕé áúţĥóŕíţáţíʋé.]",
+      "mountTicketTwilightDescription": "[Šúɱɱóñš óñé Ɱóúñţ: 99% Ŕáŕé óŕ 1% Éþíç. Éþíç ŕéšúļţš ŵáíţ ƒóŕ çóñƒíŕɱáţíóñ ƀéƒóŕé ƀéçóɱíñĝ óŵñéð. Ţĥé ðíšþļáýéð ɱóðéļ íš á ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ ʋíšúáļ šĥéļļ.]",
+      "redeemMountTicket": "[Úšé {ticket}]",
+      "inventoryMounts": "[Ɱóúñţš]",
+      "inventoryPendingMounts": "[Ɱóúñţš Áŵáíţíñĝ Çóñƒíŕɱáţíóñ]",
+      "mountGrade": "[Ĝŕáðé {grade}]",
+      "mountOwned": "[Óŵñéð: {count}]",
+      "mountEquipped": "[Éɋúíþþéð]",
+      "mountEquipHint": "[Çļíçķ ţó éɋúíþ ţĥíš Ɱóúñţ áñð šúɱɱóñ íţš ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ ʋíšúáļ šĥéļļ.]",
+      "mountUnequipHint": "[Çļíçķ ţó úñéɋúíþ ţĥíš Ɱóúñţ áñð ðíšɱóúñţ.]",
+      "mountConfirmHint": "[Çļíçķ ţó çóñƒíŕɱ ţĥíš Ɱóúñţ áñð áðð íţ ţó ýóúŕ çóļļéçţíóñ.]",
+      "mountConfirmAria": "[Çóñƒíŕɱ {mount}]",
+      "mountEffectShell": "[Ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ ɱóðéļ ŵíţĥ ⱮÍŔ4 Ɱóúñţ šţáţš]",
+      "mountMoveSpeed": "[Ɱóʋéɱéñţ Šþééð: +{amount}%]",
+      "mountDefenses": "[Þĥýšíçáļ Ðéƒéñšé: +{physical} · Ɱáĝíç Ðéƒéñšé: +{magic}]",
+      "equippedMountLine": "[Ɱóúñţ: {mount} (Ĝŕáðé {grade})]",
+      "noEquippedMount": "[Ɱóúñţ: ñóñé éɋúíþþéð]",
+      "inventoryMountCombination": "[Ɱóúñţ Çóɱƀíñáţíóñ]",
+      "combineMountsAria": "[Çóɱƀíñé ƒóúŕ Ĝŕáðé {grade} Ɱóúñţš]",
+      "combineMountsHint": "[Çóñšúɱéš ƒóúŕ óŵñéð Ɱóúñţš óƒ ţĥíš ĝŕáðé. Ţĥéŕé íš á 20% çĥáñçé ţó ŕéçéíʋé óñé ŕáñðóɱ Ɱóúñţ óƒ ţĥé ñéẋţ ĝŕáðé. Óñ ƒáíļúŕé, ýóú ŕéçéíʋé óñé ŕáñðóɱ Ɱóúñţ óƒ ţĥé šáɱé ĝŕáðé. Éþíç óŕ ĥíĝĥéŕ ŕéŵáŕðš áŵáíţ çóñƒíŕɱáţíóñ.]",
+      "inventorySpirits": "[Šþíŕíţš]",
+      "inventoryPendingSpirits": "[Šþíŕíţš Áŵáíţíñĝ Çóñƒíŕɱáţíóñ]",
+      "spiritTicketDawn": "[Ðáŵñ Šþíŕíţ Ţíçķéţ]",
+      "spiritTicketSunset": "[Šúñšéţ Šþíŕíţ Ţíçķéţ]",
+      "spiritTicketDawnDescription": "[Šúɱɱóñš óñé Šþíŕíţ: 79% Çóɱɱóñ, 20% Úñçóɱɱóñ, óŕ 1% Ŕáŕé. Ţĥé ţíçķéţ íš çóñšúɱéð óñ á ʋáļíð šúɱɱóñ. Ţĥé íçóñ íš ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ þŕéšéñţáţíóñ; óñļý ţĥé ļíšţéð ⱮÍŔ4 éƒƒéçţš áþþļý.]",
+      "spiritTicketSunsetDescription": "[Šúɱɱóñš óñé Šþíŕíţ: 94.5% Úñçóɱɱóñ, 5% Ŕáŕé, óŕ 0.5% Éþíç. Éþíç ŕéšúļţš ŵáíţ ƒóŕ çóñƒíŕɱáţíóñ ƀéƒóŕé ƀéçóɱíñĝ óŵñéð. Ţĥé ţíçķéţ íš çóñšúɱéð óñ á ʋáļíð šúɱɱóñ.]",
+      "redeemSpiritTicket": "[Šúɱɱóñ ŵíţĥ {ticket}]",
+      "spiritGrade": "[Ĝŕáðé {grade}]",
+      "spiritOwned": "[Óŵñéð: {count}]",
+      "spiritEquipped": "[Éɋúíþþéð]",
+      "spiritEquipHint": "[Çļíçķ ţó éɋúíþ ţĥíš Šþíŕíţ. Íţš áţţŕíƀúţéš áñð çóļļéçţíóñ ƀóñúšéš áŕé áþþļíéð ţó ýóúŕ ⱮÍŔ4 šţáţš.]",
+      "spiritUnequipHint": "[Çļíçķ ţó úñéɋúíþ ţĥíš Šþíŕíţ.]",
+      "spiritConfirmHint": "[Çļíçķ ţó çóñƒíŕɱ ţĥíš Šþíŕíţ áñð áðð íţ ţó ýóúŕ çóļļéçţíóñ.]",
+      "spiritConfirmAria": "[Çóñƒíŕɱ {spirit}]",
+      "spiritEffectShell": "[Ñáţíʋé Ŵóŕļð óƒ ÇļáúðéÇŕáƒţ þŕéšéñţáţíóñ ŵíţĥ ⱮÍŔ4 Šþíŕíţ éƒƒéçţš]",
+      "equippedSpiritLine": "[Šþíŕíţ: {spirit} (Ĝŕáðé {grade})]",
+      "noEquippedSpirit": "[Šþíŕíţ: ñóñé éɋúíþþéð]",
+      "inventorySpiritCombination": "[Šþíŕíţ Çóɱƀíñáţíóñ]",
+      "combineSpiritsAria": "[Çóɱƀíñé ƒóúŕ Ĝŕáðé {grade} Šþíŕíţš]",
+      "combineSpiritsHint": "[Çóñšúɱéš ƒóúŕ óŵñéð Šþíŕíţš óƒ ţĥíš ĝŕáðé. Ţĥéŕé íš á 20% çĥáñçé ţó ŕéçéíʋé óñé ŕáñðóɱ Šþíŕíţ óƒ ţĥé ñéẋţ ĝŕáðé. Óñ ƒáíļúŕé, ýóú ŕéçéíʋé óñé ŕáñðóɱ Šþíŕíţ óƒ ţĥé šáɱé ĝŕáðé. Éþíç óŕ ĥíĝĥéŕ ŕéŵáŕðš áŵáíţ çóñƒíŕɱáţíóñ.]",
+      "spiritSkillChanceCooldown": "[{chance}% çĥáñçé · {cooldown}š çóóļðóŵñ]",
+      "spiritSkillBonusDamage": "[Íñçŕéášéš ţĥé ţŕíĝĝéŕíñĝ ĥíţ'š ŕáŵ ðáɱáĝé ƀý {amount}%.]",
+      "spiritSkillExecute": "[Ŵĥíļé ţĥé ţáŕĝéţ íš áţ óŕ ƀéļóŵ {threshold}% Ĥéáļţĥ, íñçŕéášéš ţĥé ţŕíĝĝéŕíñĝ ĥíţ'š ŕáŵ ðáɱáĝé ƀý {amount}%.]",
+      "spiritSkillLifeSiphon": "[Ŕéšţóŕéš {amount}% óƒ ɱáẋíɱúɱ Ĥéáļţĥ.]",
+      "spiritSkillManaSurge": "[Ŕéšţóŕéš {amount}% óƒ ɱáẋíɱúɱ Ɱáñá.]",
+      "spiritSkillArmorRend": "[Áððš {amount}% Ðéƒéñšé Þéñéţŕáţíóñ ţó ţĥé ţŕíĝĝéŕíñĝ ĥíţ.]",
+      "spiritSkillCriticalFocus": "[Ƒóŕçéš ţĥé ţŕíĝĝéŕíñĝ ĥíţ ţó ƀé çŕíţíçáļ.]",
+      "equipmentSlots": {
+        "weapon": "[Ŵéáþóñ]",
+        "necklace": "[Ñéçķļáçé]",
+        "ring": "[Ŕíñĝ]",
+        "talisman": "[Ţáļíšɱáñ]",
+        "chest": "[Çĥéšţ]",
+        "helmet": "[Ĥéļɱéţ]",
+        "gloves": "[Ĝļóʋéš]",
+        "boots": "[Ɓóóţš]"
+      },
+      "stats": {
+        "combatPower": "[Çóɱƀáţ Þóŵéŕ]",
+        "maxHp": "[Ɱáẋíɱúɱ Ĥéáļţĥ]",
+        "maxMana": "[Ɱáẋíɱúɱ Ɱáñá]",
+        "physicalAttack": "[Þĥýšíçáļ Áţţáçķ]",
+        "magicAttack": "[Ɱáĝíç Áţţáçķ]",
+        "physicalDefense": "[Þĥýšíçáļ Ðéƒéñšé]",
+        "magicDefense": "[Ɱáĝíç Ðéƒéñšé]",
+        "accuracy": "[Áççúŕáçý]",
+        "dodge": "[Ðóðĝé]",
+        "critical": "[Çŕíţíçáļ]",
+        "avoidCritical": "[Çŕíţíçáļ Éʋášíóñ]",
+        "criticalOutcome": "[Çŕíţíçáļ Ðáɱáĝé]",
+        "bossDamage": "[Ɓóšš Ðáɱáĝé]",
+        "skillDamage": "[Šķíļļ Ðáɱáĝé]",
+        "penetration": "[Ðéƒéñšé Þéñéţŕáţíóñ]",
+        "unknown": "[Çóɱƀáţ Áţţŕíƀúţé]"
+      },
+      "materials": {
+        "sunStone": "[Šúñ Šţóñé]",
+        "moonStone": "[Ɱóóñ Šţóñé]",
+        "solarScroll": "[Šóļáŕ Šçŕóļļ]",
+        "lunarSeal": "[Ļúñáŕ Šéáļ]",
+        "dawnTear": "[Ðáŵñ Ţéáŕ]",
+        "solarWard": "[Šóļáŕ Ŵáŕð]"
+      },
+      "maps": {
+        "portal": "[{zone} Þóŕţáļ]",
+        "actWelcome": "[{zone} (Áçţ {act}).]",
+        "m01": "[Ƒóŕð Ʋíļļáĝé]",
+        "m02": "[Ŕééð Ţŕáíļ]",
+        "m03": "[Ʋáļé Ĝŕóʋé]",
+        "m04": "[Ĥíļļšíðé Ŕúíñš]",
+        "m05": "[Ŕíƒţ Çļéáŕíñĝ]",
+        "m06": "[Çáñðļé-Šţóñé Çŕýþţš]",
+        "m07": "[Óššúáŕý Ĝáļļéŕíéš]",
+        "m08": "[Ɱíšţšţóñé Ƒóŕţŕéšš]",
+        "m09": "[Ļáñţéŕñ Ɱáŕšĥ]",
+        "m10": "[Ɓóĝ Ķíñĝ'š Ƒéñ]",
+        "m11": "[Ļééçĥ Ɱáñĝŕóʋé]",
+        "m12": "[Ŕééð Ĥáŕƀóŕ]",
+        "m13": "[Ĝļášš Ðúñéš]",
+        "m14": "[Áķĥéţ Ñéçŕóþóļíš]",
+        "m15": "[Çíñðéŕíţé Çáļðéŕá]",
+        "m16": "[Šĥáţţéŕéð Šúñ Ƒóŕĝé]",
+        "m17": "[Ĥóŵļíñĝ Ţúñðŕá]",
+        "m18": "[Ĵáŕļ'š Þášš]",
+        "m19": "[Ñíĝĥţ Ʋéíļ]",
+        "m20": "[Éçļíþšé Ɓášţíļļé]"
+      },
+      "progression": {
+        "title": "[Éɋúíþɱéñţ Ŵóŕķšĥóþ]",
+        "refinement": "[Ŕéƒíñéɱéñţ]",
+        "enchantment": "[Éñçĥáñţɱéñţ]",
+        "blessing": "[Ɓļéššíñĝ]",
+        "crafting": "[Çŕáƒţíñĝ]",
+        "ownedEquipment": "[Óŵñéð Éɋúíþɱéñţ]",
+        "noEquipment": "[Ñó éɋúíþɱéñţ íš áʋáíļáƀļé ƒóŕ ţĥíš óþéŕáţíóñ.]",
+        "equipped": "[Éɋúíþþéð]",
+        "enhancementLevel": "[Éñĥáñçéɱéñţ +{level} óƒ +{max}]",
+        "successChance": "[Šúççéšš çĥáñçé: {chance}%]",
+        "safeFailure": "[Ƒáíļúŕé ķééþš ţĥé éɋúíþɱéñţ.]",
+        "destructiveFailure": "[Ƒáíļúŕé ðéšţŕóýš ţĥé éɋúíþɱéñţ áƀóʋé +5.]",
+        "wardProtection": "[Á Šóļáŕ Ŵáŕð ŵíļļ ƀé çóñšúɱéð ţó þŕéʋéñţ ðéšţŕúçţíóñ.]",
+        "noWardProtection": "[Ñó Šóļáŕ Ŵáŕð íš áʋáíļáƀļé.]",
+        "enhanceCost": "[Çóšţ: 1 Šóļáŕ Šçŕóļļ]",
+        "enhance": "[Éñĥáñçé]",
+        "maxEnhancement": "[Ɱáẋíɱúɱ éñĥáñçéɱéñţ ŕéáçĥéð]",
+        "currentEffects": "[Çúŕŕéñţ Éƒƒéçţš]",
+        "noCurrentEffects": "[Ñó éƒƒéçţš áþþļíéð.]",
+        "rollCostEnchantment": "[Çóšţ: 1 Ļúñáŕ Šéáļ]",
+        "rollCostBlessing": "[Çóšţ: 1 Ðáŵñ Ţéáŕ]",
+        "roll": "[Ŕóļļ Þŕéʋíéŵ]",
+        "pendingOtherLayer": "[Ŕéšóļʋé ţĥé þéñðíñĝ {layer} þŕéʋíéŵ ƒíŕšţ.]",
+        "preview": "[Þéñðíñĝ Þŕéʋíéŵ]",
+        "acceptPreview": "[Áþþļý Þŕéʋíéŵ]",
+        "keepCurrent": "[Ķééþ Çúŕŕéñţ]",
+        "inactiveEffect": "[Þóŕţéð éƒƒéçţ (ñóţ áçţíʋé íñ çóɱƀáţ ýéţ)]",
+        "materialRecipes": "[Ɱáţéŕíáļ Ŕéçíþéš]",
+        "campaignProfession": "[Çáɱþáíĝñ Þŕóƒéššíóñ Óŕðéŕ]",
+        "campaignProfessionProgress": "[Þŕóĝŕéšš: {current}/{goal}]",
+        "campaignProfessionMaterials": "[Éļíĝíƀļé ɱáţéŕíáļš: {held}/{needed}]",
+        "campaignProfessionHint": "[Çóɱþļéţé ţĥíš óŕðéŕ áţ íţš çáɱþáíĝñ çŕáƒţíñĝ áñçĥóŕ. Ţĥé šéŕʋéŕ çóñšúɱéš óñļý áúţĥóŕíţáţíʋé ŕéĝíóñáļ ɱáţéŕíáļš.]",
+        "campaignCraft": "[Çŕáƒţ Çóɱþóñéñţ]",
+        "campaignRefine": "[Ŕéƒíñé Çóɱþóñéñţ]",
+        "campaignSalvage": "[Šáļʋáĝé Ĝéáŕ]",
+        "creates": "[Çŕéáţéš {count} {material}]",
+        "materialCost": "[{held}/{needed} {material}]",
+        "copperCost": "[{amount} çóþþéŕ]",
+        "create": "[Çŕéáţé]",
+        "requestSent": "[Ţĥé šéŕʋéŕ íš ʋáļíðáţíñĝ ţĥé éɋúíþɱéñţ óþéŕáţíóñ.]"
+      }
     },
     "interfaceTabs": {
       "general": "[Ĝéñéŕáļ]",
@@ -2479,7 +2861,10 @@ export const en_XA: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "[Áðð {name} ţó áçţíóñ ƀáŕ]",
-      "removeFromBarAria": "[Ŕéɱóʋé {name} ƒŕóɱ áçţíóñ ƀáŕ]"
+      "removeFromBarAria": "[Ŕéɱóʋé {name} ƒŕóɱ áçţíóñ ƀáŕ]",
+      "upgradeRank": "[Ŕáñķ {rank}]",
+      "maxRank": "[Ɱáẋ ŕáñķ]",
+      "evolutionCost": "[{copper} · ÉÞ {effectPoints} · Ţóɱé {skillTomes}]"
     },
     "nameplate": {
       "mobLevel": "[{level}]",
@@ -2809,7 +3194,8 @@ export const en_XA: EnTranslations = {
       "tip": "[Šáļé þŕóçééðš óŕ ŕéţúŕñéð íţéɱš áŕé ŵáíţíñĝ ƒóŕ ýóú áţ ţĥé Ɱéŕçĥáñţ.]"
     },
     "noticeboard": {
-      "empty": "[Ñóţĥíñĝ šééɱš þóšţéð.]"
+      "empty": "[Ñóţĥíñĝ šééɱš þóšţéð.]",
+      "contract": "[Çóñţŕáçţ áçţíʋé: {title}]"
     },
     "bank": {
       "title": "[Ɓáñķ]",
@@ -7029,6 +7415,10 @@ export const en_XA: EnTranslations = {
   },
   "classes": {
     "warrior": "[Ŵáŕŕíóŕ]",
+    "elementalist": "[Éļéɱéñţáļíšţ]",
+    "taoist": "[Ţáóíšţ]",
+    "arbalist": "[Áŕƀáļíšţ]",
+    "lancer": "[Ļáñçéŕ]",
     "paladin": "[Þáļáðíñ]",
     "hunter": "[Ĥúñţéŕ]",
     "rogue": "[Ŕóĝúé]",
@@ -7038,6 +7428,10 @@ export const en_XA: EnTranslations = {
     "warlock": "[Ŵáŕļóçķ]",
     "druid": "[Ðŕúíð]",
     "warriorAria": "[Ŵáŕŕíóŕ çļášš]",
+    "elementalistAria": "[Éļéɱéñţáļíšţ çļášš]",
+    "taoistAria": "[Ţáóíšţ çļášš]",
+    "arbalistAria": "[Áŕƀáļíšţ çļášš]",
+    "lancerAria": "[Ļáñçéŕ çļášš]",
     "paladinAria": "[Þáļáðíñ çļášš]",
     "hunterAria": "[Ĥúñţéŕ çļášš]",
     "rogueAria": "[Ŕóĝúé çļášš]",
@@ -7961,6 +8355,31 @@ export const en_XA: EnTranslations = {
       "warlock": "[Ŵáŕļóçķš šúɱɱóñ ðéɱóñš, áþþļý çúŕšéš áñð ðáɱáĝé-óʋéŕ-ţíɱé ɱáĝíç, áñð ļééçĥ ļíƒé ƒŕóɱ éñéɱíéš ţó éñðúŕé.]",
       "druid": "[Ðŕúíðš çĥáññéļ ñáţúŕé, ĥéáļíñĝ ŵóúñðš, éñţáñĝļíñĝ ƒóéš, áñð šĥíƒţíñĝ íñţó áñíɱáļ ƒóŕɱš ƒóŕ ðéƒéñšé óŕ ðáɱáĝé.]"
     },
+    "mir4": {
+      "labels": {
+        "damage": "[Ðáɱáĝé]",
+        "combatRange": "[Çóɱƀáţ Ŕáñĝé]",
+        "startingSkills": "[Šţáŕţíñĝ Šķíļļš]"
+      },
+      "damage": {
+        "physical": "[Þĥýšíçáļ]",
+        "magic": "[Ɱáĝíç]"
+      },
+      "range": {
+        "melee": "[Ɱéļéé]",
+        "medium": "[Ɱéðíúɱ ŕáñĝé]",
+        "long": "[Ļóñĝ ŕáñĝé]",
+        "extended": "[Éẋţéñðéð ɱéļéé]"
+      },
+      "weapons": {
+        "heavySword": "[Ĥéáʋý Šŵóŕð]",
+        "largeStaff": "[Ļáŕĝé Šţáƒƒ]",
+        "shortStaff": "[Šĥóŕţ Šţáƒƒ]",
+        "arbalest": "[Áŕƀáļéšţ]",
+        "spear": "[Šþéáŕ]"
+      },
+      "aria": "[Çļášš ðéţáíļš ƒóŕ {className}: {damage} ðáɱáĝé, {range} ŕáñĝé, ŵéáþóñ {weapon}, {skills} šţáŕţíñĝ šķíļļš.]"
+    },
     "aria": "[Çļášš ðéţáíļš ƒóŕ {className}: ŕóļé {role}. Šţáŕţíñĝ šţáţš: Šţŕéñĝţĥ {str}, Áĝíļíţý {agi}, Šţáɱíñá {sta}, Íñţéļļéçţ {int}, Šþíŕíţ {spi}.]",
     "statBarAria": "[{stat}: {value} óúţ óƒ 25]"
   },
@@ -8719,6 +9138,8 @@ export const en_XA: EnTranslations = {
     "actionBar": {
       "attackName": "[Áţţáçķ]",
       "attackTooltip": "[Ţóĝĝļé áúţó-áţţáçķ óñ ýóúŕ ţáŕĝéţ. Ŕíĝĥţ-çļíçķíñĝ áñ éñéɱý áļšó áţţáçķš.]",
+      "autoBattleName": "[Áúţó Ɓáţţļé]",
+      "autoBattleTooltip": "[Ţóĝĝļé áúţóɱáţíç ţáŕĝéţ áçɋúíšíţíóñ, ɱóʋéɱéñţ, áñð šķíļļ ŕóţáţíóñ áŕóúñð ýóúŕ çúŕŕéñţ þóšíţíóñ.]",
       "attackRemoveHint": "[Ŕíĝĥţ-çļíçķ ţó ŕéɱóʋé íţ ƒŕóɱ ţĥé ƀáŕ áñð ƒŕéé ţĥé šļóţ.]",
       "emptySlot": "[Éɱþţý šļóţ]",
       "slotAria": "[Áçţíóñ šļóţ {slot}: {ability}]",
@@ -9165,6 +9586,226 @@ export const en_XA: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "[Ʋóíð Šţŕíķé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Šţúñš ţĥé ţáŕĝéţ ƒóŕ 0.9 šéç.]"
+      },
+      "mir4_skill_1104": {
+        "name": "[Ļáçéŕáţíñĝ Šţŕíķé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Ķñóçķš ţĥé ţáŕĝéţ ðóŵñ ƒóŕ 1.2 šéç.]"
+      },
+      "mir4_skill_1304": {
+        "name": "[Ţáçķļé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Íñçŕéášéš ðáɱáĝé ţáķéñ ƀý 12% ƒóŕ 4.5 šéç.]"
+      },
+      "mir4_skill_1401": {
+        "name": "[Ĝŕóúñð Šɱášĥ]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 7 ýáŕðš ţáķé 70% ðáɱáĝé. Ķñóçķš ţĥé ţáŕĝéţ ðóŵñ ƒóŕ 0.8 šéç.]"
+      },
+      "mir4_skill_1501": {
+        "name": "[Ĝáļé Šţŕíķé]",
+        "description": "[Áƒƒéçţš áñ éñéɱý. Šļóŵš ţĥé ţáŕĝéţ ƀý 35% ƒóŕ 3.2 šéç.]"
+      },
+      "mir4_skill_2101": {
+        "name": "[Þŕíšɱáţíç Ɓéáɱ]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 6.5 ýáŕðš ţáķé 65% ðáɱáĝé. Ƒŕééžéš ţĥé ţáŕĝéţ ƒóŕ 1.4 šéç.]"
+      },
+      "mir4_skill_2111": {
+        "name": "[Éɱƀéŕ Šþéáŕ]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Íñçŕéášéš ðáɱáĝé ţáķéñ ƀý 8% ƒóŕ 4.5 šéç.]"
+      },
+      "mir4_skill_2301": {
+        "name": "[Šɱíţé Šéáļ]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Ŕéðúçéš ţĥé ţáŕĝéţ'š ðáɱáĝé ƀý 50% ƒóŕ 4 šéç.]"
+      },
+      "mir4_skill_2501": {
+        "name": "[Éʋóķéð Çóŕé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 4 óţĥéŕ éñéɱíéš ŵíţĥíñ 8 ýáŕðš ţáķé 60% ðáɱáĝé. Ƒŕééžéš ţĥé ţáŕĝéţ ƒóŕ 1.8 šéç.]"
+      },
+      "mir4_skill_2503": {
+        "name": "[Ɱáĝíç Šĥíéļð]",
+        "description": "[Ŕéðúçéš ðáɱáĝé ţáķéñ ƀý 22% ƒóŕ 10 šéç.]"
+      },
+      "mir4_skill_3101": {
+        "name": "[Šéáļ Šéɋúéñçé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 6.5 ýáŕðš ţáķé 65% ðáɱáĝé. Íñçŕéášéš ðáɱáĝé ţáķéñ ƀý 10% ƒóŕ 4 šéç.]"
+      },
+      "mir4_skill_3104": {
+        "name": "[Ţóţéɱ 1010]",
+        "description": "[Áƒƒéçţš áñ éñéɱý. Šţúñš ţĥé ţáŕĝéţ ƒóŕ 1.4 šéç.]"
+      },
+      "mir4_skill_3301": {
+        "name": "[Ţóţéɱ Šéáļ ÍÍ]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 7.25 ýáŕðš ţáķé 60% ðáɱáĝé. Šļóŵš ţĥé ţáŕĝéţ ƀý 35% ƒóŕ 4.2 šéç.]"
+      },
+      "mir4_skill_3503": {
+        "name": "[Ĵáðé Ļóţúš]",
+        "description": "[Ŕéšţóŕéš 18% óƒ ɱáẋíɱúɱ ĥéáļţĥ.]"
+      },
+      "mir4_skill_3506": {
+        "name": "[Ţóţéɱ Šéáļ Í]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 7 ýáŕðš ţáķé 60% ðáɱáĝé. Ŕóóţš ţĥé ţáŕĝéţ ƒóŕ 1.6 šéç.]"
+      },
+      "mir4_skill_4101": {
+        "name": "[Ɓúŕšţ 4101]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 7 ýáŕðš ţáķé 65% ðáɱáĝé. Ŕéðúçéš ţĥé ţáŕĝéţ'š ðáɱáĝé ƀý 45% ƒóŕ 3.5 šéç.]"
+      },
+      "mir4_skill_4102": {
+        "name": "[Šéɋúéñçé 4102]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 6.625 ýáŕðš ţáķé 65% ðáɱáĝé. Šļóŵš ţĥé ţáŕĝéţ ƀý 30% ƒóŕ 3.5 šéç.]"
+      },
+      "mir4_skill_4103": {
+        "name": "[Ţŵíñ Éçĥó]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 4 óţĥéŕ éñéɱíéš ŵíţĥíñ 7.5 ýáŕðš ţáķé 55% ðáɱáĝé. Ŕéðúçéš ţĥé ţáŕĝéţ'š ðáɱáĝé ƀý 60% ƒóŕ 5 šéç.]"
+      },
+      "mir4_skill_4106": {
+        "name": "[Çĥáŕĝé 4106]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Šţúñš ţĥé ţáŕĝéţ ƒóŕ 2 šéç.]"
+      },
+      "mir4_skill_4107": {
+        "name": "[Ƒļáŕé Áŕŕóŵ]",
+        "description": "[Áƒƒéçţš áñ éñéɱý. Ŕéðúçéš ţĥé ţáŕĝéţ'š ðáɱáĝé ƀý 45% ƒóŕ 3.2 šéç.]"
+      },
+      "mir4_skill_5101": {
+        "name": "[Ţĥŕúšţ 5101]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Ķñóçķš ţĥé ţáŕĝéţ ðóŵñ ƒóŕ 1 šéç.]"
+      },
+      "mir4_skill_5104": {
+        "name": "[Šŵééþ 5104]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Íñçŕéášéš ðáɱáĝé ţáķéñ ƀý 14% ƒóŕ 4.5 šéç.]"
+      },
+      "mir4_skill_5201": {
+        "name": "[Šţŕíķé 5201]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 7 ýáŕðš ţáķé 65% ðáɱáĝé. Šţúñš ţĥé ţáŕĝéţ ƒóŕ 1.1 šéç.]"
+      },
+      "mir4_skill_5301": {
+        "name": "[Çĥáíñ 5301]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé ţó áñ éñéɱý. Úþ ţó 3 óţĥéŕ éñéɱíéš ŵíţĥíñ 7.25 ýáŕðš ţáķé 70% ðáɱáĝé. Šţúñš ţĥé ţáŕĝéţ ƒóŕ 0.9 šéç.]"
+      },
+      "mir4_skill_5401": {
+        "name": "[Ŕáĝíñĝ Šţóŕɱ]",
+        "description": "[Áƒƒéçţš áñ éñéɱý. Ķñóçķš ţĥé ţáŕĝéţ ðóŵñ ƒóŕ 1 šéç.]"
+      },
+      "mir4_ultimate_1": {
+        "name": "[Úļţíɱáţé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé óʋéŕ 3 íɱþáçţš. Ŕéɋúíŕéš á ƒúļļ Úļţíɱáţé ĝáúĝé.]"
+      },
+      "mir4_ultimate_2": {
+        "name": "[Úļţíɱáţé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé óʋéŕ 4 íɱþáçţš. Ŕéɋúíŕéš á ƒúļļ Úļţíɱáţé ĝáúĝé.]"
+      },
+      "mir4_ultimate_3": {
+        "name": "[Úļţíɱáţé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé óʋéŕ 3 íɱþáçţš. Ŕéɋúíŕéš á ƒúļļ Úļţíɱáţé ĝáúĝé.]"
+      },
+      "mir4_ultimate_4": {
+        "name": "[Úļţíɱáţé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé óʋéŕ 3 íɱþáçţš. Ŕéɋúíŕéš á ƒúļļ Úļţíɱáţé ĝáúĝé.]"
+      },
+      "mir4_ultimate_5": {
+        "name": "[Úļţíɱáţé]",
+        "description": "[Ðéáļš {damage} ðáɱáĝé óʋéŕ 2 íɱþáçţš. Ŕéɋúíŕéš á ƒúļļ Úļţíɱáţé ĝáúĝé.]"
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "[Ĥéáʋý Áŕɱóŕ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 8%.]"
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "[Ŵéáþóñ Ðíšçíþļíñé]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ áţţáçķ ƀý 6%.]"
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "[Íŕóñ Šķíñ]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ ðéƒéñšé ƀý 8% áñð ɱáĝíç ðéƒéñšé ƀý 6%.]"
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "[Ƒíĝĥţíñĝ Šþíŕíţ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 4% áñð þĥýšíçáļ áţţáçķ ƀý 4%.]"
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "[Íñðóɱíţáƀļé Ŵíļļ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 5%, þĥýšíçáļ ðéƒéñšé ƀý 5%, áñð ɱáĝíç ðéƒéñšé ƀý 5%.]"
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "[Ɱáñá Ŵéļļ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ɱáñá ƀý 10%.]"
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "[Áŕçáñé Áçúɱéñ]",
+        "description": "[Íñçŕéášéš ɱáĝíç áţţáçķ ƀý 7%.]"
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "[Éļéɱéñţáļ Þŕóţéçţíóñ]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ ðéƒéñšé ƀý 6% áñð ɱáĝíç ðéƒéñšé ƀý 6%.]"
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "[Çĥáññéļíñĝ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ɱáñá ƀý 5% áñð ɱáĝíç áţţáçķ ƀý 4%.]"
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "[Áŕçáñé Ášçéñšíóñ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ɱáñá ƀý 5%, ɱáĝíç áţţáçķ ƀý 6%, þĥýšíçáļ ðéƒéñšé ƀý 3%, áñð ɱáĝíç ðéƒéñšé ƀý 3%.]"
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "[Šþíŕíţúáļ Ʋéššéļ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 4% áñð ɱáẋíɱúɱ ɱáñá ƀý 7%.]"
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "[Ţŵíñ Þáţĥš]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ áţţáçķ ƀý 4% áñð ɱáĝíç áţţáçķ ƀý 4%.]"
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "[Šáçŕéð Ĝúáŕð]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ ðéƒéñšé ƀý 6% áñð ɱáĝíç ðéƒéñšé ƀý 6%.]"
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "[Šéŕéñé Ɱíñð]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 4% áñð ɱáẋíɱúɱ ɱáñá ƀý 5%.]"
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "[Çéļéšţíáļ Ĥáŕɱóñý]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 4%, ɱáẋíɱúɱ ɱáñá ƀý 4%, þĥýšíçáļ áţţáçķ ƀý 4%, ɱáĝíç áţţáçķ ƀý 4%, þĥýšíçáļ ðéƒéñšé ƀý 4%, áñð ɱáĝíç ðéƒéñšé ƀý 4%.]"
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "[Éáĝļé Éýé]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ áţţáçķ ƀý 3% áñð áççúŕáçý ƀý 5%.]"
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "[Ɓáļļíšţíç Ɱášţéŕý]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ áţţáçķ ƀý 7%.]"
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "[Ñáţúŕé'š Ĝúáŕð]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 5%, þĥýšíçáļ ðéƒéñšé ƀý 5%, áñð ɱáĝíç ðéƒéñšé ƀý 5%.]"
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "[Ĥúñţéŕ'š Íñšţíñçţ]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ áţţáçķ ƀý 5% áñð ðóðĝé ƀý 5%.]"
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "[Þéŕƒéçţ Šĥóţ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 3%, þĥýšíçáļ áţţáçķ ƀý 6%, áñð áççúŕáçý ƀý 5%.]"
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "[Ŵáŕ Çóñðíţíóñíñĝ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 5%, þĥýšíçáļ áţţáçķ ƀý 3%, áñð ɱáĝíç áţţáçķ ƀý 3%.]"
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "[Šþéáŕ Ɱášţéŕý]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ áţţáçķ ƀý 5% áñð ɱáĝíç áţţáçķ ƀý 5%.]"
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "[Ʋáñĝúáŕð Áŕɱóŕ]",
+        "description": "[Íñçŕéášéš þĥýšíçáļ ðéƒéñšé ƀý 6% áñð ɱáĝíç ðéƒéñšé ƀý 6%.]"
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "[Ɓáţţļé Ŕĥýţĥɱ]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ɱáñá ƀý 4%, þĥýšíçáļ áţţáçķ ƀý 4%, áñð ɱáĝíç áţţáçķ ƀý 4%.]"
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "[Ðŕáĝóñ'š Ʋáñĝúáŕð]",
+        "description": "[Íñçŕéášéš ɱáẋíɱúɱ ĥéáļţĥ ƀý 4%, þĥýšíçáļ áţţáçķ ƀý 5%, ɱáĝíç áţţáçķ ƀý 5%, þĥýšíçáļ ðéƒéñšé ƀý 5%, áñð ɱáĝíç ðéƒéñšé ƀý 5%.]"
+      },
       "sport_kick": {
         "name": "[Ķíçķ]",
         "description": "[Ķñóçķ ţĥé ƀáļļ áļóñĝ ţĥé ĝŕóúñð ţóŵáŕð ţĥé áíɱ þóíñţ.]"
@@ -16870,6 +17511,11 @@ export const en_XA: EnTranslations = {
         "name": "[Ĝŕáʋéŵýŕɱ Šáñçţúɱ]",
         "enterText": "[Ţĥé áíŕ ĝóéš çóļð. Šóɱéţĥíñĝ ʋášţ ƀŕéáţĥéš ƀéļóŵ...]",
         "leaveText": "[Ýóú šţáĝĝéŕ ƀáçķ íñţó ţĥé ɱóúñţáíñ ŵíñð.]"
+      },
+      "campaign_trial_room": {
+        "name": "[Çáɱþáíĝñ Ţŕíáļ]",
+        "enterText": "[Ýóú éñţéŕ ţĥé çáɱþáíĝñ ţŕíáļ.]",
+        "leaveText": "[Ýóú ļéáʋé ţĥé çáɱþáíĝñ ţŕíáļ.]"
       },
       "nythraxis_crypt": {
         "name": "[Áƀáñðóñéð Çŕýþţ]",

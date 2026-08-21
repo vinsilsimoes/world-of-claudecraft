@@ -24,6 +24,7 @@ import {
 import { MobileActionRingPainter } from '../src/ui/hud/action_bar/mobile_action_ring_painter';
 import { setLanguage } from '../src/ui/i18n';
 import { makeWriterFacet } from '../src/ui/painter_host';
+import { createProfileActionBarDeps } from '../src/ui/profile_feature_gate';
 
 vi.mock('../src/render/characters', () => ({ CharacterPreview: class {} }));
 vi.mock('../src/render/characters/assets', () => ({ preloadMechAssets: vi.fn() }));
@@ -67,6 +68,7 @@ interface ProductionDesktopHudHarness extends SportHudHarness {
   };
   actionBarView: ActionBarView;
   actionBarPainter: ActionBarPainter;
+  profileActionBarDeps: ActionBarDeps;
   attachTooltip(element: HTMLElement, html: () => string): void;
   buildActionBar(): void;
 }
@@ -109,6 +111,7 @@ function productionDesktopHud(shoot: ActionBarAbility): {
     isAttackSlotFixed: () => true,
     isAssignableAction: () => true,
   };
+  hud.profileActionBarDeps = createProfileActionBarDeps(() => undefined);
   hud.attachTooltip = (element, html) => tooltips.set(element, html);
   hud.buildActionBar();
   return { hud, tooltips };

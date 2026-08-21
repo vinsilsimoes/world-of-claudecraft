@@ -423,7 +423,7 @@ export class NameplatePainter {
     if (entity.kind === 'npc' || (!entity.hostile && entity.questIds.length > 0)) {
       state.name =
         entity.kind === 'npc'
-          ? npcDisplayName(entity.templateId)
+          ? npcDisplayName(entity)
           : tEntity({ kind: 'mob', id: entity.templateId, field: 'name' });
       state.nameColor = FRIENDLY;
       const questMarker = this.questMarker(entity);
@@ -433,13 +433,15 @@ export class NameplatePainter {
     }
 
     const template = MOBS[entity.templateId];
-    const elite = !!template?.elite;
-    const boss = !!template?.boss;
+    const elite = entity.mobElite ?? !!template?.elite;
+    const boss = entity.mobBoss ?? !!template?.boss;
     state.friendlyPet = isFriendlyPet(entity, this.world.entities, this.isHostilePlayer);
     const mobName =
       entity.ownerId !== null
         ? (localizeSimAuraName(entity.name) ?? entity.name)
-        : mobDisplayName(entity.templateId);
+        : template
+          ? mobDisplayName(entity.templateId)
+          : entity.name;
     state.name = entity.dead ? t('worldContent.corpseName', { name: mobName }) : mobName;
     state.nameColor = '#fff';
     state.level = entity.dead

@@ -258,6 +258,18 @@ describe('actionBarView: the four slot kinds classify correctly', () => {
     expect(s[3].itemId).toBeNull();
   });
 
+  it('reuses the fixed attack slot with a profile-aware Auto Battle accessible name', () => {
+    const deps = fakeDeps();
+    deps.attackName = () => 'Auto Battle';
+    const view = createActionBarView(descriptor(slot(0, { attack: true })), deps);
+
+    expect(view.tick(world()).slots[0]).toMatchObject({
+      ariaLabel: expect.stringContaining('ability=Auto Battle'),
+      ariaPressed: 'false',
+    });
+    expect(view.tick(world({ autoAttack: true })).slots[0].ariaPressed).toBe('true');
+  });
+
   it('slot 0 stops being Attack when isAttack() is false, rendering its assigned action', () => {
     // The removable Attack button: with "Show Attack Button" off, the HUD makes
     // slot 0's isAttack() return false and actionForSlot(0) resolve the assigned
@@ -270,6 +282,7 @@ describe('actionBarView: the four slot kinds classify correctly', () => {
     expect(s[0].kind).toBe('ability');
     expect(s[0].iconKey).toBe(`${ABILITY_ICON_PREFIX}frostbolt`);
     expect(s[0].abilityId).toBe('frostbolt');
+    expect(s[0].ariaPressed).toBeNull();
   });
 
   it('slot 0 honors the live isAttack() accessor across ticks (toggle on/off)', () => {

@@ -14,7 +14,7 @@ import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 // kit, and the classic tables/roster untouched.
 
 function makeClassSim(cls: Mir4ClassKey, seed = 81): Sim {
-  return new Sim({
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerClassMir4: cls,
@@ -23,6 +23,9 @@ function makeClassSim(cls: Mir4ClassKey, seed = 81): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: MIR4_SLICE_WORLD,
   });
+  sim.mir4UnequipSlot(1);
+  sim.mir4UnequipSlot(5);
+  return sim;
 }
 
 function spawnWolf(sim: Sim): Entity {
@@ -92,4 +95,32 @@ describe('D1: hosting the mir4 roster', () => {
     expect(cp.mir4).toBeUndefined();
     expect(cp.resourceType).toBe('mana');
   });
+});
+
+describe('MIR4 resurrection profile', () => {
+  it.each(['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer'] as const)(
+    'preserves the %s class pools when the shared revive funnel raises the player',
+    (cls) => {
+      const sim = makeClassSim(cls);
+      const player = sim.player;
+      const maxHp = player.maxHp;
+      const maxResource = player.maxResource;
+
+      player.dead = true;
+      player.hp = 0;
+      player.resource = 0;
+      sim.releaseSpirit();
+
+      expect(player.maxHp).toBe(maxHp);
+      expect(player.maxResource).toBe(maxResource);
+
+      sim.revivePlayerAt(player.id, player.pos, 0.5);
+
+      expect(player.dead).toBe(false);
+      expect(player.maxHp).toBe(maxHp);
+      expect(player.maxResource).toBe(maxResource);
+      expect(player.hp).toBe(Math.max(1, Math.round(maxHp * 0.5)));
+      expect(player.resource).toBe(Math.round(maxResource * 0.5));
+    },
+  );
 });

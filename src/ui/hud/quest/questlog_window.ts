@@ -17,14 +17,22 @@
 // map, the fallback is a CSS token, so there is no literal hex/px in TS).
 
 import { ITEMS, NPCS } from '../../../sim/data';
+import { MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import type { IWorld } from '../../../world_api';
 import { markDialogRoot } from '../../dialog_root';
 import { itemDisplayName, tEntity } from '../../entity_i18n';
 import { esc } from '../../esc';
 import { formatNumber, t } from '../../i18n';
 import { QUALITY_COLOR } from '../../icons';
+import {
+  mir4QuestNarrative,
+  mir4QuestObjectiveLabel,
+  mir4QuestTitle,
+  mir4QuestTurnInName,
+} from '../../mir4_quest_i18n';
 import type { PainterHostPresentation } from '../../painter_host';
 import { svgIcon } from '../../ui_icons';
+import { buildMir4QuestLogView } from './mir4_questlog_view';
 import { buildQuestLogView, type QuestDetailModel } from './questlog_view';
 
 // The reward-name color comes from the shared QUALITY_COLOR map; this token covers
@@ -115,6 +123,10 @@ export class QuestLogWindow {
   render(): void {
     const el = this.deps.root();
     const world = this.deps.world();
+    if (world.cfg?.gameProfile === MIR4_GAME_PROFILE) {
+      this.renderMir4(el, world);
+      return;
+    }
     const quests = [...world.questLog.values()];
     const view = buildQuestLogView({
       quests,
@@ -174,6 +186,99 @@ export class QuestLogWindow {
       .root()
       .querySelector('[data-close]')
       ?.addEventListener('click', () => this.close());
+    this.deps.focusFirstInteractive(el);
+  }
+
+  private renderMir4(el: HTMLElement, world: IWorld): void {
+    const view = buildMir4QuestLogView(world.mir4PlayerState());
+    const item = view.item;
+    this.selected = item?.questId ?? null;
+    markDialogRoot(el, { labelledBy: 'quest-log-title' });
+    el.innerHTML = `<div class="panel-title"><span id="quest-log-title">${esc(t('questUi.log.title'))} <span class="quest-muted">${esc(
+      t('questUi.log.summary', {
+        active: this.questNumber(view.summary.active),
+        completed: this.questNumber(view.summary.completed),
+      }),
+    )}</span></span><button type="button" class="x-btn" data-close aria-label="${esc(t('questUi.log.close'))}">${svgIcon('close')}</button></div>`;
+    const cols = document.createElement('div');
+    cols.className = 'ql-cols';
+    const list = document.createElement('div');
+    list.className = 'ql-list';
+    const detail = document.createElement('div');
+    detail.className = 'ql-detail';
+    cols.append(list, detail);
+    el.appendChild(cols);
+
+    if (view.empty || !item) {
+      list.innerHTML = `<div class="ql-empty">${esc(t('questUi.log.emptyTitle'))}</div>`;
+      detail.innerHTML = `<div class="ql-detail-body"><div class="qd-text">${esc(
+        t(
+          view.summary.completed > 0
+            ? 'hudChrome.mir4.questLog.completedHint'
+            : 'hudChrome.mir4.questLog.emptyHint',
+        ),
+      )}</div></div>`;
+    } else {
+      const title = mir4QuestTitle(item.questId);
+      const status = item.ready ? t('questUi.log.readyStatus') : t('questUi.log.activeStatus');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ql-item sel';
+      button.setAttribute('aria-pressed', 'true');
+      button.setAttribute(
+        'aria-label',
+        t('questUi.log.selectedQuestAria', { name: title, status }),
+      );
+      button.innerHTML = `${esc(title)}${item.ready ? ` <span class="quest-complete">(${esc(t('questUi.log.readyStatus'))})</span>` : ''}`;
+      list.appendChild(button);
+
+      const objectiveLabel = mir4QuestObjectiveLabel({
+        questId: item.questId,
+        kind: item.objective.kind,
+        stageKind: item.objective.stageKind,
+        ready: item.ready,
+      });
+      const paused = item.autoJourneySuspended
+        ? ` ${t('hudChrome.questTracker.mir4.pausedSuffix')}`
+        : '';
+      const body = document.createElement('div');
+      body.className = 'ql-detail-body';
+      body.innerHTML = `<div class="qd-sub ql-detail-title">${esc(title)}</div><div class="qd-obj${item.ready ? ' done' : ''}">${esc(
+        this.questProgressText(
+          `${objectiveLabel}${paused}`,
+          item.objective.current,
+          item.objective.total,
+        ),
+      )}</div><div class="qd-text ql-detail-text">${esc(mir4QuestNarrative(item.questId))}</div><div class="qd-sub">${esc(t('questUi.detail.rewards'))}</div><div class="qd-obj">${esc(
+        t('questUi.detail.xpReward', { xp: this.questNumber(item.xpReward) }),
+      )} &nbsp; ${this.deps.moneyHtml(item.copperReward)}</div><div class="qd-obj quest-return">${esc(
+        t('questUi.log.returnTo', {
+          name: mir4QuestTurnInName(item.questId),
+        }),
+      )}</div>`;
+      detail.appendChild(body);
+      const actions = document.createElement('div');
+      actions.className = 'ql-detail-actions';
+      if (item.autoJourneyAvailable) {
+        const journey = document.createElement('button');
+        journey.className = 'btn';
+        journey.type = 'button';
+        journey.setAttribute('aria-pressed', item.autoJourneyActive ? 'true' : 'false');
+        journey.textContent = t(
+          item.autoJourneyActive
+            ? 'hudChrome.questTracker.mir4.stopAutoJourney'
+            : 'hudChrome.questTracker.mir4.startAutoJourney',
+        );
+        journey.addEventListener('click', () => {
+          world.setMir4AutoQuest(!world.mir4AutoQuestActive());
+          this.render();
+        });
+        actions.appendChild(journey);
+      }
+      detail.appendChild(actions);
+    }
+
+    el.querySelector('[data-close]')?.addEventListener('click', () => this.close());
     this.deps.focusFirstInteractive(el);
   }
 

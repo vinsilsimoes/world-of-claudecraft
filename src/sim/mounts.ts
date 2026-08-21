@@ -29,6 +29,8 @@
 import { MOUNT_KEYS, type MountKey, mountDef, TRAINING_MOUNT_KEY } from './content/mounts';
 import { ITEMS } from './data';
 import { recalcPlayerStats } from './entity';
+import { MIR4_GAME_PROFILE } from './game_profile';
+import { mir4RecalcClassOf, recalcMir4PlayerStats } from './mir4/stats';
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
 import { bgInMatch } from './social/battleground';
@@ -117,6 +119,18 @@ export function bagOwnedMounts(inventory: readonly { itemId: string }[]): MountK
 // Recompute the player's derived stats after a mount state change (aura strips,
 // mount/dismount): this is the same path an equip change takes.
 function recalcFor(ctx: SimContext, e: Entity, meta: PlayerMeta): void {
+  if (ctx.gameProfile === MIR4_GAME_PROFILE && e.mir4) {
+    recalcMir4PlayerStats(
+      e,
+      mir4RecalcClassOf(e),
+      e.level,
+      meta.mir4Equipment,
+      meta.mir4EquipmentInstances,
+      meta.mir4Spirits,
+      meta.mir4Mounts,
+    );
+    return;
+  }
   recalcPlayerStats(e, meta.cls, meta.equipment, ctx.playerMods(meta), meta.equipmentInstance);
 }
 

@@ -49,6 +49,11 @@ fixing a red gate.
 `npm run gate:fast` is a **high-signal subset** for agent and day-to-day loops. It is
 **not** the merge contract and does **not** replace `npm run gate`.
 
+On Windows, the runner transports the potentially large Vitest argument list through
+a versioned temporary JSON manifest. This avoids the platform command-line limit
+without narrowing the selected test set; the manifest is deleted after the child
+process exits.
+
 It runs, in order:
 
 1. Malware gate (`security:gate`, typically a few seconds)
@@ -140,6 +145,22 @@ locally; the pre-merge bar itself is the selective gate (next section). Piping a
 run can hide its exit status, and unconstrained full-suite parallelism can make healthy
 heavy sim tests flake. Day-loop iteration may use `npm run gate:fast`; a green fast path
 alone is never enough to claim done.
+
+The MIR4 persistence and online release proof is intentionally real-engine
+rather than a mock inside the full suite. CI's required `MIR4 PostgreSQL 16
+proof` job starts a disposable PostgreSQL 16 service and runs
+`tests/character_lease_pg_integration.test.ts` plus
+`tests/mir4_save_v2_pg_integration.test.ts` with
+`WOC_REQUIRE_PG_INTEGRATION=1`. Locally those files remain opt-in through
+`TEST_DATABASE_URL`; without it they skip, while setting the require flag without
+the URL fails at module load. The job covers migration fencing, both
+save/takeover lock orders, expiry during a wait, JSONB size, diagnostic WAL and
+the 1,000-session/concurrency-four autosave-cycle budget, including its lease
+heartbeat. It then builds the MIR4 client/server against that same disposable
+database and runs `scripts/mp_integration.mjs` and `scripts/mp_browser.mjs`, so
+the required check also proves the native roster, authoritative owner snapshot,
+reconnect, mutual visibility, movement, chat and existing-HUD profile gates over
+the real HTTP/WebSocket/browser stack.
 
 ### Selective gate (`gate:select`)
 

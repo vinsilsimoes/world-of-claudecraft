@@ -44,7 +44,6 @@ import {
 import { resolveActionReplacement } from '../sim/combat/action_replacement';
 import { resolveColdsightAbilityForSpec } from '../sim/combat/hunter_coldsight';
 import { resolveHunterSharedAbilityForTalents } from '../sim/combat/hunter_shared';
-import { isNecromancyUndead } from '../sim/combat/necromancy';
 import { warriorParryChance } from '../sim/combat/warrior_hit_table';
 import { DEED_ORDER, DEEDS } from '../sim/content/deeds';
 import { HEROIC_MARK_ITEM_ID } from '../sim/content/dungeon_difficulty';
@@ -68,6 +67,7 @@ import {
   DUNGEON_LIST,
   DUNGEON_X_THRESHOLD,
   dungeonAt,
+  getActiveWorldContent,
   ITEM_SETS,
   ITEMS,
   MOBS,
@@ -82,6 +82,7 @@ import {
 } from '../sim/data';
 import { specialRoleColor } from '../sim/discord_roles';
 import { canEquipItem, isUniqueEquipped, weaponHand } from '../sim/equipment_rules';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { isItemLevelEligible, itemLevel, itemScore } from '../sim/item_level';
 import { requiredLevelFor } from '../sim/item_level_req';
 import type { Ante, PickAction } from '../sim/lockpick';
@@ -184,7 +185,11 @@ import { CardDuelWindow } from './card_duel_window';
 import { CastBarPainter, type CastBarPaintInput } from './cast_bar_painter';
 import { charBagsPaired } from './char_bags_pairing_core';
 import { charSheetRefreshSig } from './char_sheet_sig_core';
-import { type CharSkinPainterHost, paintCharSkinPicker } from './char_skin_window';
+import {
+  type CharSkinPainterHost,
+  paintActiveCharacterPreview,
+  paintCharSkinPicker,
+} from './char_skin_window';
 import { archetypeTitleText, CharWindow, craftNameText } from './char_window';
 import { activeCharacterAppearancePreview } from './character_appearance';
 import { chatBubbleStyle } from './chat_bubble_style';
@@ -221,8 +226,9 @@ import {
 import { buildCommissionOrderBoardModel } from './commission_order_view';
 import { renderCommissionOrderWindow } from './commission_order_window';
 import { type CardinalId, compassView } from './compass';
+import { continentMapSummaryText, wireContinentMapInteraction } from './continent_map_interaction';
 import { ContinentMapPainter } from './continent_map_painter';
-import { type ContinentZoneRegion, continentZoneAt } from './continent_map_view';
+import type { ContinentZoneRegion } from './continent_map_view';
 import { cookingCatchHintKey } from './cooking_catch_hint_view';
 import { formatMinimapCoords } from './coords';
 import {
@@ -293,7 +299,9 @@ import {
   tEntity,
   zoneDisplayName,
   zonePoiLabel,
+  zoneWelcomeText,
 } from './entity_i18n';
+import { entityDisplayName, entityMobFamily, entityTargetRank } from './entity_presentation_view';
 import { ERROR_LOG_CHAN, ERROR_LOG_COLOR, shouldMirrorErrorToast } from './error_toast_log';
 import { esc } from './esc';
 import { blockFctAmountText } from './fct_core';
@@ -553,6 +561,13 @@ import {
   nextMinimapZoom,
 } from './minimap_zoom';
 import {
+  type Mir4PreviewArmorLoadout,
+  type Mir4PreviewEquipmentOverride,
+  resolveMir4PreviewHands,
+} from './mir4_character_view';
+import { paintMir4ProgressionWindow } from './mir4_progression_window_adapter';
+import { mir4NoticeboardMessage } from './mir4_quest_i18n';
+import {
   type IdleBarkCandidate,
   isIdleBarkCandidate,
   MOB_IDLE_CHECK_INTERVAL_MS,
@@ -628,6 +643,13 @@ import { buildProfessionTutorialModel } from './profession_tutorial_view';
 import { renderProfessionTutorial } from './profession_tutorial_window';
 import { ProfessionsWindow } from './professions_window';
 import {
+  applyProfileFeatureGate,
+  createProfileActionBarDeps,
+  mir4UltimateGaugePresentation,
+  profileAttackName,
+  profileAttackSummary,
+} from './profile_feature_gate';
+import {
   QUEST_ITEM_TOOLTIP_COLOR,
   type QuestItemTooltipModel,
   questItemTooltipModel,
@@ -666,7 +688,7 @@ import { curatorRankNameKey, ReliquaryWindow } from './reliquary_window';
 import { restView } from './rest_indicator';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
 import { localizeServerText } from './server_i18n';
-import { localizeSimAuraName, localizeSimText } from './sim_i18n';
+import { localizeSimText } from './sim_i18n';
 import { openSimpleMenu } from './simple_context_menu';
 import {
   advanceSkillLevelObservation,
@@ -707,7 +729,7 @@ import { targetAuraSourceName } from './target_auras_view';
 import { TargetAurasWindow } from './target_auras_window';
 import { targetOfTargetId } from './target_of_target';
 import { targetPortraitSourceId, targetPortraitUrl } from './target_portrait_view';
-import { targetRankView, targetUsesEliteFrame } from './target_rank_view';
+import { targetUsesEliteFrame } from './target_rank_view';
 import type { PresetId, ThemeKnob, ThemeState } from './theme';
 import { toolEffectNameKey } from './tool_effect_name';
 import { toolEffectTooltipLines } from './tool_effect_tooltip';
@@ -1589,7 +1611,7 @@ export class Hud {
   private hotClassCache = new Map<HTMLElement, Map<string, string>>();
   // Multi-slot cache for the action-bar setAttr writer: the action-bar
   // aria-label is a per-frame attribute write, keyed per (element, attr name).
-  private hotAttrCache = new Map<HTMLElement, Map<string, string>>();
+  private hotAttrCache = new Map<HTMLElement, Map<string, string | null>>();
   private hotDomWrites = 0;
   private hotDomSkippedWrites = 0;
   private subzoneTimer: number | undefined;
@@ -2011,6 +2033,7 @@ export class Hud {
     private readonly features: HudFeatures = { dailyRewardsEnabled: true },
   ) {
     hydrateCrestImageFallbacks(document);
+    applyProfileFeatureGate(document, this.sim.cfg.gameProfile);
     this.mapMarkerTooltipContent = new MapMarkerTooltipContent(this.sim);
     this.mapMarkerInteraction = new MapMarkerInteractionController({
       names: {
@@ -2183,6 +2206,7 @@ export class Hud {
       },
       questTitle,
       objectiveLabel: questObjectiveLabel,
+      openQuest: (questId) => this.questlogWindow.openWithQuest(questId),
       click: () => audio.click(),
     });
     this.questDialog = new QuestDialogController({
@@ -2662,7 +2686,7 @@ export class Hud {
       if ((e.target as HTMLElement).closest('.qt-header')) this.toggleQuestTrackerCollapsed();
       // A quest row jumps to that quest's detail in the quest log window.
       const row = (e.target as HTMLElement).closest<HTMLElement>('.qt-title');
-      if (row?.dataset.quest) this.questlogWindow.openWithQuest(row.dataset.quest);
+      if (row?.dataset.quest) this.questTracker.activateQuest(row.dataset.quest);
     });
     // Keyboard activation: handle Enter/Space here and stop the event before it
     // bubbles to the window-level game keybinds (Enter is bound to Open Chat,
@@ -2685,7 +2709,7 @@ export class Hud {
       if (row?.dataset.quest) {
         e.preventDefault();
         e.stopPropagation();
-        this.questlogWindow.openWithQuest(row.dataset.quest);
+        this.questTracker.activateQuest(row.dataset.quest);
       }
     });
     // Collapse/expand the deed tracker from its header (the quest tracker
@@ -2889,54 +2913,20 @@ export class Hud {
     // Right-click (or the level-toggle button) zooms out to the overview; a mouse
     // hover highlights the zone under the cursor and shows its name + level band;
     // a left-click / tap on a region opens that zone's detail map.
-    const canvasPoint = (clientX: number, clientY: number): { cx: number; cy: number } => {
-      const rect = mapCanvas.getBoundingClientRect();
-      return {
-        cx: ((clientX - rect.left) * mapCanvas.width) / rect.width,
-        cy: ((clientY - rect.top) * mapCanvas.height) / rect.height,
-      };
-    };
-    let continentTipShown = false;
-    const hideContinentTip = (): void => {
-      if (!continentTipShown) return;
-      continentTipShown = false;
-      this.hideTooltip();
-    };
-    mapCanvas.addEventListener('contextmenu', (ev) => {
-      ev.preventDefault(); // suppress the browser menu; right-click changes level
-      this.toggleMapLevel();
-    });
-    mapCanvas.addEventListener('click', (ev) => {
-      if (this.mapLevel !== 'continent') return;
-      const { cx, cy } = canvasPoint(ev.clientX, ev.clientY);
-      const zoneId = continentZoneAt(this.continentRegions, cx, cy);
-      if (zoneId) {
-        hideContinentTip();
-        this.openZoneFromContinent(zoneId);
-      }
-    });
-    mapCanvas.addEventListener('pointermove', (ev) => {
-      if (this.mapLevel !== 'continent' || ev.pointerType !== 'mouse') return;
-      const { cx, cy } = canvasPoint(ev.clientX, ev.clientY);
-      const zoneId = continentZoneAt(this.continentRegions, cx, cy);
-      if (zoneId !== this.mapHoverZone) {
-        this.mapHoverZone = zoneId; // repaint the highlight (+ cursor via updateMapWindow)
-        this.updateMapWindow();
-      }
-      if (zoneId) {
-        this.paintTooltipAt(this.continentZoneTooltipHtml(zoneId), ev.clientX, ev.clientY);
-        continentTipShown = true;
-      } else {
-        hideContinentTip();
-      }
-    });
-    mapCanvas.addEventListener('pointerleave', (ev) => {
-      if (ev.pointerType !== 'mouse') return;
-      hideContinentTip();
-      if (this.mapLevel === 'continent' && this.mapHoverZone !== null) {
-        this.mapHoverZone = null;
-        this.updateMapWindow();
-      }
+    wireContinentMapInteraction({
+      canvas: mapCanvas,
+      isContinent: () => this.mapLevel === 'continent',
+      regions: () => this.continentRegions,
+      hoverZone: () => this.mapHoverZone,
+      setHoverZone: (zoneId) => {
+        this.mapHoverZone = zoneId;
+      },
+      repaint: () => this.updateMapWindow(),
+      toggleLevel: () => this.toggleMapLevel(),
+      openZone: (zoneId) => this.openZoneFromContinent(zoneId),
+      hideTooltip: () => this.hideTooltip(),
+      paintTooltip: (zoneId, clientX, clientY) =>
+        this.paintTooltipAt(this.continentZoneTooltipHtml(zoneId), clientX, clientY),
     });
     $('#map-level-toggle').addEventListener('click', () => this.toggleMapLevel());
 
@@ -4067,6 +4057,10 @@ export class Hud {
           ? t('hudChrome.paladin.devotionAscensionCharges', { value, max, charges })
           : t('hudChrome.paladin.devotionValue', { value, max }),
     t('hudChrome.paladin.ascensionLastAnnouncement'),
+    mir4UltimateGaugePresentation(),
+  );
+  private readonly profileActionBarDeps = createProfileActionBarDeps(
+    () => this.sim.cfg.gameProfile,
   );
   private readonly paladinDevotionPainter = new PaladinDevotionPainter(
     this.writerFacet,
@@ -5039,7 +5033,8 @@ export class Hud {
       this.dragUnequipSlot = null;
       $('#bags').classList.remove('drop-target');
     },
-    renderPreview: () => this.renderCharPreview(),
+    renderPreview: (equipmentOverride, visualClass, wornOverride) =>
+      this.renderCharPreview(equipmentOverride, visualClass, wornOverride),
     renderSkinPicker: () => this.renderCharSkinPicker(),
     openPlayerCard: () => {
       void this.playerCard.open();
@@ -5365,8 +5360,7 @@ export class Hud {
   private drawNonPlayerPortrait(canvas: HTMLCanvasElement, entity: Entity): void {
     const isMobEntity = entity.kind === 'mob';
     const sourceId = targetPortraitSourceId(entity.templateId, isMobEntity);
-    const template = MOBS[entity.templateId] ?? (sourceId ? MOBS[sourceId] : undefined);
-    const crestId = crestIdForEntity(entity.kind, template?.family);
+    const crestId = crestIdForEntity(entity.kind, entityMobFamily(entity, sourceId ?? undefined));
     const faceUrl = targetPortraitUrl(entity.templateId, isMobEntity);
     if (faceUrl) {
       this.portraits.drawHeadshot(canvas, faceUrl, () => {
@@ -5487,6 +5481,7 @@ export class Hud {
           spellPower: p.spellPower,
           rangedPower: p.rangedPower,
           attackPower: p.attackPower,
+          mir4SkillDamageBps: p.mir4?.skillDamageBps,
         };
         return abilityDisplayDescription(res, abilityEffectText(res, scaling), scaling, a);
       },
@@ -5783,24 +5778,24 @@ export class Hud {
     const key = `mob:${entity.id}:${entity.level}:${entity.hostile ? 1 : 0}:${this.sim.player.level}:${questKey}`;
     if (key === this.lastHoverTooltipId) return;
     this.lastHoverTooltipId = key;
-    const template = MOBS[entity.templateId];
-    if (!template) {
+    const family = entityMobFamily(entity);
+    if (!family) {
       this.hideTooltip();
       return;
     }
     const diff = entity.level - this.sim.player.level;
     const friendlyPet = isFriendlyPet(entity, this.sim.entities, (p) => pvpOpponents.has(p.id));
     const familyLabel =
-      template.family === 'demon'
+      family === 'demon'
         ? t('hudChrome.mobTooltip.familyDemon')
-        : t(`guide.family.${template.family}.name` as TranslationKey);
+        : t(`guide.family.${family}.name` as TranslationKey);
     const model: MobTooltipModel = {
-      name: mobDisplayName(entity.templateId),
+      name: entityDisplayName(entity),
       level: entity.level,
       familyLabel,
       color: mobTooltipConColor(diff, entity.dead, friendlyPet),
       hostile: entity.hostile,
-      rank: targetRankView(template),
+      rank: entityTargetRank(entity),
       quests: mobQuests.map((q) => ({
         title: questTitle(q.questId),
         progress: this.questProgressText(
@@ -6522,6 +6517,7 @@ export class Hud {
       spellPower: p.spellPower,
       rangedPower: p.rangedPower,
       attackPower: p.attackPower,
+      mir4SkillDamageBps: p.mir4?.skillDamageBps,
     };
     const damageText = abilityEffectText(res, scaling);
     let html = `<div class="tt-title">${esc(abilityDisplayName(a))}</div>`;
@@ -7268,7 +7264,7 @@ export class Hud {
         if (slot === 0 && this.attackSlotIsAttack()) {
           const sportFirst = this.firstSportAbility();
           if (sportFirst) return this.abilityTooltip(sportFirst);
-          return `<div class="tt-title">${esc(t('abilityUi.actionBar.attackName'))}</div><div class="tt-sub">${esc(t('abilityUi.actionBar.attackTooltip'))}</div><div class="tt-sub">${esc(t('abilityUi.actionBar.attackRemoveHint'))}</div>`;
+          return `<div class="tt-title">${esc(profileAttackName(this.sim.cfg.gameProfile))}</div><div class="tt-sub">${esc(profileAttackSummary(this.sim.cfg.gameProfile))}</div><div class="tt-sub">${esc(t('abilityUi.actionBar.attackRemoveHint'))}</div>`;
         }
         const known = this.abilityForSlot(slot);
         const clearHint = `<div class="tt-sub">${esc(t('abilityUi.actionBar.clearHint'))}</div>`;
@@ -7510,13 +7506,7 @@ export class Hud {
           };
         }),
       },
-      {
-        t,
-        abilityName: abilityDisplayName,
-        itemName: itemDisplayName,
-        slotLabel: (i) => formatAbilityNumber(i + 1),
-        formatCount: (n) => formatNumber(n, { maximumFractionDigits: 0 }),
-      },
+      this.profileActionBarDeps,
     );
     this.actionBarPainter = new ActionBarPainter(
       this.writerFacet,
@@ -7675,13 +7665,7 @@ export class Hud {
           })),
         ],
       },
-      {
-        t,
-        abilityName: abilityDisplayName,
-        itemName: itemDisplayName,
-        slotLabel: (i) => formatAbilityNumber(i + 1),
-        formatCount: (n) => formatNumber(n, { maximumFractionDigits: 0 }),
-      },
+      this.profileActionBarDeps,
     );
     this.mobileActionRingPainter = new MobileActionRingPainter(
       this.writerFacet,
@@ -8978,6 +8962,11 @@ export class Hud {
       // checks on the slow band; the server re-validates the gate on every
       // craft regardless.
       if (
+        this.sim.cfg.gameProfile === MIR4_GAME_PROFILE &&
+        $('#crafting-window').style.display === 'flex'
+      )
+        this.renderCrafting();
+      if (
         $('#crafting-window').style.display === 'flex' &&
         stationTypesSignature(
           inRangeStationTypes(sim.stationPlacements, sim.player.pos, sim.activeMobileStationCraft),
@@ -8990,7 +8979,6 @@ export class Hud {
       // window can never sit disabled on reagents the player is holding.
       this.refreshOpenCraftingIfReagentsChanged();
     }
-
     // player frame: the first instance of the unit_frame family. Build a
     // player-shaped descriptor and paint it. The absorb overlay + the resource-type
     // class fold into the painter's elided writers (no more raw updateAbsorb /
@@ -9065,7 +9053,9 @@ export class Hud {
       this.setDisplay(this.comboRowEl, 'none');
       this.writerFacet.setAttr(this.comboRowEl, 'aria-hidden', 'true');
     }
-    this.paladinDevotionPainter.paint(this.paladinDevotionView.tick(p));
+    this.paladinDevotionPainter.paint(
+      this.paladinDevotionView.tick(p, this.sim.cfg.gameProfile === MIR4_GAME_PROFILE),
+    );
 
     // buff bar / debuff bar: the keyed-pool aura painter, driven by the auras_view core
     // every frame (the elided writers make a no-op frame free). Buffs and debuffs render to
@@ -9089,8 +9079,7 @@ export class Hud {
     // target instance. (Targeting a world object hides the frame, like no target.)
     const target = p.targetId !== null ? sim.entities.get(p.targetId) : null;
     if (target && target.kind !== 'object') {
-      const targetTemplate = MOBS[target.templateId];
-      const targetRank = targetRankView(targetTemplate);
+      const targetRank = entityTargetRank(target);
       // The portrait gate fires inside paint(); hand it the subject to redraw.
       this.targetPortraitSubject = target;
       // The target is a NON-SELF frame; on low throttle its HP/level/
@@ -10992,7 +10981,7 @@ export class Hud {
       });
       this.continentRegions = result.regions;
       canvas.style.cursor = this.mapHoverZone ? 'pointer' : 'default';
-      this.setText(summaryEl, t('hudChrome.continentMap.summary'));
+      this.setText(summaryEl, continentMapSummaryText(this.continentRegions, this.mapHoverZone));
       this.setText(
         markerSummaryEl,
         this.mapMarkerInteraction.semantics.updateSimple(t('hudChrome.continentMap.title'), S),
@@ -11026,10 +11015,12 @@ export class Hud {
     // border-straddling can't thrash the cached terrain regen.
     const dungeon = dungeonAt(p.pos.x);
     const zone: ZoneDef = this.mapZoneOverride
-      ? (ZONES.find((z) => z.id === this.mapZoneOverride) ?? zoneAt(p.pos.x, p.pos.z))
+      ? (getActiveWorldContent().zones.find((z) => z.id === this.mapZoneOverride) ??
+        zoneAt(p.pos.x, p.pos.z))
       : dungeon
         ? zoneAt(dungeon.doorPos.x, dungeon.doorPos.z)
-        : (ZONES.find((z) => z.id === this.lastZoneId) ?? zoneAt(p.pos.x, p.pos.z));
+        : (getActiveWorldContent().zones.find((z) => z.id === this.lastZoneId) ??
+          zoneAt(p.pos.x, p.pos.z));
     // Crossing a zone while the map is open starts that zone at its full frame;
     // a pan target from the previous zone must never leak into the new one.
     // shouldResetMapPanOnZoneCross (map_show_on_map_core.ts) is what keeps a
@@ -12582,7 +12573,7 @@ export class Hud {
           // the durable/live-announced log line into the shared transient
           // banner instead of making a successful interaction look inert.
           {
-            const message = t('hudChrome.noticeboard.empty');
+            const message = mir4NoticeboardMessage(ev.contractQuestId);
             this.showBanner(message);
             this.log(message, '#c8b98f');
           }
@@ -14417,7 +14408,7 @@ export class Hud {
 
   private logZoneWelcome(zone: ZoneDef): void {
     if (zone.welcomeQuestId && this.sim.questState(zone.welcomeQuestId) !== 'available') return;
-    this.log(zoneWelcome(zone.id), '#ffd100');
+    this.log(zoneWelcomeText(zone.id), '#ffd100');
   }
 
   private chatLogFrom(
@@ -16138,8 +16129,19 @@ export class Hud {
       castRemaining: session.remainingSec,
     });
   }
-
   private renderCrafting(focusReturnRecipeId = ''): void {
+    if (
+      paintMir4ProgressionWindow({
+        ...this.presentationBag,
+        root: $('#crafting-window'),
+        world: this.sim,
+        close: () => this.closeCrafting(),
+        hideTooltip: () => this.hideTooltip(),
+        afterMutation: () => this.renderCrafting(),
+        announce: (text) => this.announceCraftCast(text),
+      })
+    )
+      return;
     // Station range for station-bound rows: the same pure in-range
     // set the sim's station_required deny composes (physical stations plus
     // the own active mobile station), computed once per repaint, so the row
@@ -16963,39 +16965,18 @@ export class Hud {
     document.body.classList.toggle('char-bags-paired', paired);
   }
 
-  private renderCharPreview(): void {
-    const container = $('#char-model-preview') as HTMLElement | null;
-    if (!container) return;
-    const preview = activeCharacterAppearancePreview(
-      this.sim.cfg.playerClass,
-      this.sim.player.skin ?? 0,
-      this.sim.player.skinCatalog ?? 'class',
+  private renderCharPreview(
+    equipmentOverride?: Mir4PreviewEquipmentOverride,
+    visualClass?: PlayerClass,
+    wornOverride?: Mir4PreviewArmorLoadout,
+  ): void {
+    paintActiveCharacterPreview(
+      this.skinHost(),
+      $('#char-model-preview') as HTMLElement | null,
+      equipmentOverride,
+      visualClass,
+      wornOverride,
     );
-    if (preview.visualKey !== 'player_mech') {
-      this.mountCharPreview(container, this.sim.cfg.playerClass, preview.skin, preview.visualKey);
-      return;
-    }
-    if (!this.mechAssetsPromise) this.mechAssetsPromise = preloadMechAssets();
-    const mechAssets = this.mechAssetsPromise;
-    void mechAssets
-      .then(() => {
-        const charWindow = $('#char-window') as HTMLElement | null;
-        if (charWindow?.style.display !== 'block') return;
-        const currentPreview = activeCharacterAppearancePreview(
-          this.sim.cfg.playerClass,
-          this.sim.player.skin ?? 0,
-          this.sim.player.skinCatalog ?? 'class',
-        );
-        if (currentPreview.visualKey === 'player_mech') {
-          this.mountCharPreview(
-            container,
-            this.sim.cfg.playerClass,
-            currentPreview.skin,
-            currentPreview.visualKey,
-          );
-        }
-      })
-      .catch((err) => console.error('failed to load mech cosmetic preview:', err));
   }
 
   /** Mount the shared character turntable into `container`. The single
@@ -17060,25 +17041,33 @@ export class Hud {
     cls: PlayerClass,
     skin: number,
     previewKey?: string,
+    equipmentOverride?: Mir4PreviewEquipmentOverride,
+    visualClass?: PlayerClass,
+    wornOverride?: Mir4PreviewArmorLoadout,
   ): void {
-    const mainhand = this.sim.equipment.mainhand ?? null;
+    const { mainhand, offhand } = resolveMir4PreviewHands(this.sim.equipment, equipmentOverride);
     // The sheet shows the body the WORLD draws, read through the same look
     // seam the portrait uses: the player's own face, hair and kit, including
     // the helmet-visibility choice. A Combat Mech is a whole replacement body
     // and wins over the authored look, matching createCharacterVisual's own
     // precedence in-world (composing over it hid a purchased cosmetic).
-    const look = previewKey === 'player_mech' ? null : modularLookFor(this.sim.player);
+    const activeClass = visualClass ?? cls;
+    // MIR4-only classes must not reuse the shell's stale fixed rig; Combat Mech
+    // remains the intentional whole-body replacement.
+    const activePreviewKey = previewKey === 'player_mech' || !visualClass ? previewKey : undefined;
+    const baseLook = activePreviewKey === 'player_mech' ? null : modularLookFor(this.sim.player);
+    const look = baseLook && wornOverride ? { ...baseLook, worn: wornOverride } : baseLook;
     this.mountSharedPreview(container, {
-      cls,
+      cls: activeClass,
       skin,
-      previewKey,
+      previewKey: activePreviewKey,
       look,
       mainhand,
-      offhand: this.sim.equipment.offhand ?? null,
+      offhand,
       // The paperdoll wears the same Armory skin the world renders: resolved
       // through the one shared rule (class + equipped mainhand + loadout).
       weaponSkinId: resolveActiveWeaponSkin(
-        cls,
+        activeClass,
         mainhand,
         this.sim.accountCosmetics.weaponSkinLoadout,
         this.sim.player.skinCatalog ?? 'class',
@@ -17143,8 +17132,24 @@ export class Hud {
         if (!this.mechAssetsPromise) this.mechAssetsPromise = preloadMechAssets();
         return this.mechAssetsPromise;
       },
-      mountCharPreview: (container, cls, skin, previewKey) =>
-        this.mountCharPreview(container, cls, skin, previewKey),
+      mountCharPreview: (
+        container,
+        cls,
+        skin,
+        previewKey,
+        equipmentOverride,
+        visualClass,
+        wornOverride,
+      ) =>
+        this.mountCharPreview(
+          container,
+          cls,
+          skin,
+          previewKey,
+          equipmentOverride,
+          visualClass,
+          wornOverride,
+        ),
       attachTooltip: (el, html) => this.attachTooltip(el, html),
       renderBags: () => this.renderBags(),
       renderCharIfOpen: () => {
@@ -19221,10 +19226,6 @@ function questTitleFromSource(name: string): string {
   return quest ? questTitle(quest.id) : name;
 }
 
-function zoneWelcome(zoneId: string): string {
-  return tEntity({ kind: 'zone', id: zoneId, field: 'welcome' });
-}
-
 function dungeonText(dungeonId: string, field: 'enterText' | 'leaveText'): string {
   return tEntity({ kind: 'dungeon', id: dungeonId, field });
 }
@@ -19236,15 +19237,6 @@ function delveText(delveId: string, field: 'enterText' | 'leaveText'): string {
 function dungeonDisplayNameFromSource(name: string): string {
   const dungeon = DUNGEON_LIST.find((candidate) => candidate.name === name);
   return dungeon ? dungeonDisplayName(dungeon.id) : name;
-}
-
-function entityDisplayName(entity: Entity): string {
-  if (entity.kind === 'mob')
-    return entity.ownerId !== null && !isNecromancyUndead(entity)
-      ? (localizeSimAuraName(entity.name) ?? entity.name)
-      : mobDisplayName(entity.templateId);
-  if (entity.kind === 'npc') return npcDisplayName(entity.templateId);
-  return entity.name;
 }
 
 function delveDisplayName(delveId: string): string {

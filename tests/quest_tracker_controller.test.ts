@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { QUESTS } from '../src/sim/data';
+import type { Mir4QuestTrackerEntry } from '../src/sim/mir4/quest_tracker';
 import type { QuestProgress } from '../src/sim/types';
 import { QuestTrackerController } from '../src/ui/hud/quest/quest_tracker_controller';
 import type { IWorld } from '../src/world_api';
@@ -14,11 +15,16 @@ function progress(questId: string, state: QuestProgress['state'] = 'active'): Qu
   };
 }
 
-function harness(entries: QuestProgress[] = []) {
+function harness(
+  entries: QuestProgress[] = [],
+  gameProfile: 'woc-classic' | 'mir4-gameplay-port' = 'woc-classic',
+  mir4Entries: Mir4QuestTrackerEntry[] = [],
+) {
   const questLog = new Map(entries.map((entry) => [entry.questId, entry]));
   let html = '';
   let writes = 0;
   let collapsed = false;
+  let autoQuestActive = false;
   const header = {
     classList: { contains: (value: string) => value === 'qt-header' },
     focus: vi.fn(),
@@ -45,10 +51,23 @@ function harness(entries: QuestProgress[] = []) {
   const controller = new QuestTrackerController({
     element,
     document,
-    world: () => ({ questLog }) as Pick<IWorld, 'questLog'>,
+    world: () =>
+      ({
+        questLog,
+        cfg: { seed: 1, playerClass: 'warrior', gameProfile },
+        mir4QuestTrackerEntries: () => mir4Entries,
+        mir4AutoQuestActive: () => autoQuestActive,
+        setMir4AutoQuest: (on: boolean) => {
+          autoQuestActive = on;
+        },
+      }) as Pick<
+        IWorld,
+        'cfg' | 'mir4AutoQuestActive' | 'mir4QuestTrackerEntries' | 'questLog' | 'setMir4AutoQuest'
+      >,
     settings,
     questTitle: (questId) => `title:${questId}`,
     objectiveLabel: (questId, index) => `objective:${questId}:${index}`,
+    openQuest: vi.fn(),
     click,
   });
   return {
@@ -143,5 +162,30 @@ describe('QuestTrackerController', () => {
     expect(test.html()).toContain('aria-expanded="false"');
     expect(test.html()).not.toContain('title:q_wolves');
     expect(test.header.focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('adapts authoritative MIR4 progress into the same tracker without a classic detail link', () => {
+    const test = harness([], 'mir4-gameplay-port', [
+      {
+        id: 'mir4_m01_q01',
+        complete: false,
+        autoJourneyActive: false,
+        autoJourneySuspended: false,
+        objective: { kind: 'inspect-clues', current: 2, total: 3 },
+      },
+    ]);
+
+    test.controller.update();
+
+    expect(test.html()).toContain('First Traces');
+    expect(test.html()).toContain('Inspect clues: 2/3');
+    expect(test.html()).toContain('data-quest="mir4_m01_q01"');
+    expect(test.html()).toContain('role="button"');
+    expect(test.html()).toContain('aria-pressed="false"');
+    expect(test.html()).toContain('Start auto journey');
+
+    test.controller.activateQuest('mir4_m01_q01');
+
+    expect(test.click).toHaveBeenCalledTimes(1);
   });
 });

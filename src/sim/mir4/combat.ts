@@ -21,10 +21,12 @@ import {
   mir4ClassRangeYards,
   mir4SkillById,
 } from '../content/mir4';
+import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
 import { MIR4_MOBS } from '../content/mir4/mobs';
 import type { SimContext } from '../sim_context';
 import type { Entity, PlayerClass } from '../types';
 import { dist2d } from '../types';
+import { refreshMir4KnownAbilities } from './action_abilities';
 import {
   applyMir4Effect,
   mir4AoESecondaryTargets,
@@ -35,11 +37,15 @@ import {
 } from './effects';
 import {
   type Mir4CombatStats,
+  type Mir4TargetKind,
   mir4CoefficientDamage,
   mir4ResolveDamage,
+  mir4SkillDamageAfterBoost,
   mir4SkillManaCost,
   mir4StunChanceBps,
 } from './math';
+import { mir4NativeVfxCue } from './native_vfx';
+import { resolveMir4PlayerDamageWithSpirit } from './spirit_combat';
 import {
   advanceMir4Experience,
   mir4ClassIdForPlayerClass,
@@ -55,18 +61,34 @@ function mir4AttackerStats(p: Entity): Partial<Mir4CombatStats> {
     accuracy: s?.accuracy ?? 0,
     critical: s?.critical ?? 0,
     criticalOutcome: s?.criticalOutcome ?? 10,
-    penetrationBps: 0,
+    penetrationBps: s?.penetrationBps ?? 0,
+    bossDamageBps: s?.bossDamageBps ?? 0,
   };
 }
 
-function mir4DefenderStats(target: Entity): Partial<Mir4CombatStats> {
+function mir4MobTemplateFor(ctx: SimContext, target: Entity) {
+  return (
+    MIR4_MOBS[target.templateId as string] ??
+    ctx.mir4RuntimeMobTemplates.get(target.templateId) ??
+    mir4ArcMobTemplate(target.templateId)
+  );
+}
+
+function mir4TargetKind(target: Entity): Mir4TargetKind {
+  if (target.kind === 'player') return 'player';
+  return target.mobBoss ? 'boss' : 'monster';
+}
+
+function mir4DefenderStats(ctx: SimContext, target: Entity): Partial<Mir4CombatStats> {
   const s = target.mir4;
+  const template = target.mobBoss ? mir4MobTemplateFor(ctx, target) : undefined;
   return {
     dodge: s?.dodge ?? 0,
     avoidCritical: s?.avoidCritical ?? 0,
     physicalDefense: s?.physicalDefense ?? 0,
     magicDefense: s?.magicDefense ?? 0,
     penetrationDefenseBps: 0,
+    bossDamageReductionBps: template?.mir4BossDamageReductionBps ?? 0,
   };
 }
 
@@ -168,6 +190,7 @@ export function castMir4Skill(
   const skillLevel = Math.min(Math.max(1, Math.floor(rawLevel)), cap);
   let anyImpactLanded = false;
   let totalRawDamage = 0;
+  let spiritProcAttempted = false;
 
   // Authorial skills (the 7 source rebuilds) resolve through their policy:
   // hybrid sums the channels, impactCount is presentation-only cardinality.
@@ -175,15 +198,21 @@ export function castMir4Skill(
   if (policy) {
     const phys = Math.floor((p.attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
     const magic = Math.floor((p.spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
-    totalRawDamage = Math.max(1, phys + magic);
-    const resolved = mir4ResolveDamage({
+    totalRawDamage = mir4SkillDamageAfterBoost(Math.max(1, phys + magic), p.mir4?.skillDamageBps);
+    const hitRoll = rollBps(ctx);
+    const criticalRoll = rollBps(ctx);
+    const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, p, target!, {
       rawDamage: Math.floor(totalRawDamage * (1 + mir4DamageTakenAddend(target!))),
       channel: 'physical',
       attacker: mir4AttackerStats(p),
-      defender: mir4DefenderStats(target!),
-      hitRoll: rollBps(ctx),
-      criticalRoll: rollBps(ctx),
+      defender: mir4DefenderStats(ctx, target!),
+      targetKind: mir4TargetKind(target!),
+      hitRoll,
+      criticalRoll,
+      allowSpiritProc: !spiritProcAttempted,
     });
+    const resolved = spiritDamage.resolved;
+    spiritProcAttempted ||= spiritDamage.attempted;
     if (resolved.hit) {
       anyImpactLanded = true;
       ctx.dealDamage(
@@ -205,7 +234,10 @@ export function castMir4Skill(
     const magic = component.damageType === 2;
     const attackPower = magic ? p.spellPower : p.attackPower;
     const componentChannel = magic ? 'magic' : 'physical';
-    const coefficientDamage = mir4CoefficientDamage(attackPower, coefficient);
+    const coefficientDamage = mir4SkillDamageAfterBoost(
+      mir4CoefficientDamage(attackPower, coefficient),
+      p.mir4?.skillDamageBps,
+    );
     const impactCount = Math.max(1, component.impactCount);
     const perImpact =
       skill.damage?.allocationMode === 'row-total-impact-vector'
@@ -216,14 +248,20 @@ export function castMir4Skill(
       // The source applies the target's damage-taken addend (defense-break +
       // burn magnitudes) to the raw damage BEFORE the resolve pipeline.
       const rawWithTaken = Math.floor(perImpact * (1 + mir4DamageTakenAddend(target!)));
-      const resolved = mir4ResolveDamage({
+      const hitRoll = rollBps(ctx);
+      const criticalRoll = rollBps(ctx);
+      const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, p, target!, {
         rawDamage: rawWithTaken,
         channel: componentChannel,
         attacker: mir4AttackerStats(p),
-        defender: mir4DefenderStats(target!),
-        hitRoll: rollBps(ctx),
-        criticalRoll: rollBps(ctx),
+        defender: mir4DefenderStats(ctx, target!),
+        targetKind: mir4TargetKind(target!),
+        hitRoll,
+        criticalRoll,
+        allowSpiritProc: !spiritProcAttempted,
       });
+      const resolved = spiritDamage.resolved;
+      spiritProcAttempted ||= spiritDamage.attempted;
       if (!resolved.hit) continue;
       anyImpactLanded = true;
       ctx.dealDamage(
@@ -259,7 +297,8 @@ export function castMir4Skill(
           rawDamage: Math.floor(perSecondary * (1 + mir4DamageTakenAddend(secondary))),
           channel: 'physical',
           attacker: mir4AttackerStats(p),
-          defender: mir4DefenderStats(secondary),
+          defender: mir4DefenderStats(ctx, secondary),
+          targetKind: mir4TargetKind(secondary),
           hitRoll: rollBps(ctx),
           criticalRoll: rollBps(ctx),
         });
@@ -294,12 +333,14 @@ export function castMir4Skill(
       const heal = Math.floor((p.maxHp * (bps ?? 0)) / 10_000);
       p.hp = Math.min(p.maxHp, p.hp + heal);
     }
+    const cue = mir4NativeVfxCue(skill);
     ctx.emit({
       type: 'spellfx',
       sourceId: p.id,
       targetId: p.id,
-      school: `mir4/${skill.effect.effect}`,
-      fx: 'selfCast',
+      school: cue.school,
+      fx: cue.fx,
+      ability: cue.ability,
     });
     return { ok: true };
   }
@@ -308,7 +349,8 @@ export function castMir4Skill(
   // classic stun/slow aura mirror). 4106-style stuns roll their PvE chance
   // (base + stunSuccess - stunResistance; mob resistance is 0 until 3.7).
   const effect = skill.effect;
-  if (anyImpactLanded && effect && target && !target.dead) {
+  const controlOnlySkill = skill.damage === null && policy === undefined;
+  if ((anyImpactLanded || controlOnlySkill) && effect && target && !target.dead) {
     const kind = mir4EffectKindOf(effect.effect);
     if (kind) {
       let lands = true;
@@ -328,18 +370,17 @@ export function castMir4Skill(
       }
     }
   }
-  // Placeholder VFX hook (3.8): every admitted cast emits a spellfx the
-  // renderer can key off while the authored VFX matrix port is pending. The
-  // effect kind rides the school field (mir4/<kind>); draws no rng.
+  // Presentation remains entirely target-native: alias the logical skill to an
+  // existing WoC cue so the current particles, animation and spatial audio
+  // pipeline can render it without importing a source-project asset.
+  const cue = mir4NativeVfxCue(skill);
   ctx.emit({
     type: 'spellfx',
     sourceId: p.id,
     targetId: target?.id ?? p.id,
-    school: `mir4/${skill.effect?.effect ?? 'hit'}`,
-    fx:
-      skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse'
-        ? 'selfCast'
-        : 'flourish',
+    school: cue.school,
+    fx: cue.fx,
+    ability: cue.ability,
   });
   return { ok: true };
 }
@@ -364,13 +405,14 @@ export function mir4BasicAttack(ctx: SimContext, pid: number, targetId?: number)
   p.cooldowns.set(BASIC_ATTACK_COOLDOWN_KEY, spec.basic.cadenceMs / 1000);
   const attackPower = spec.basic.channel === 'magic' ? p.spellPower : p.attackPower;
   const damage = mir4CoefficientDamage(attackPower, spec.basic.coefficient);
-  for (const offsetMs of spec.basic.impactOffsetMs) {
+  for (const [index, offsetMs] of spec.basic.impactOffsetMs.entries()) {
     scheduleMir4Impact(ctx, p, target, {
       dueAt: ctx.time + offsetMs / 1000,
       rawDamage: damage,
       channel: spec.basic.channel,
       name: null,
       gaugeGain: spec.basic.gaugeGainPerImpact,
+      spiritProcEligible: index === 0,
     });
   }
   return { ok: true };
@@ -430,14 +472,18 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
   p.mir4UltGauge = 0;
   p.cooldowns.set(ULTIMATE_COOLDOWN_KEY, spec.ultimate.cooldownMs / 1000);
   const attackPower = spec.ultimate.channel === 'magic' ? p.spellPower : p.attackPower;
-  const damage = mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient);
-  for (const offsetMs of spec.ultimate.impactOffsetMs) {
+  const damage = mir4SkillDamageAfterBoost(
+    mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient),
+    p.mir4?.skillDamageBps,
+  );
+  for (const [index, offsetMs] of spec.ultimate.impactOffsetMs.entries()) {
     scheduleMir4Impact(ctx, p, target, {
       dueAt: ctx.time + offsetMs / 1000,
       rawDamage: damage,
       channel: spec.ultimate.channel,
       name: 'Ultimate',
       gaugeGain: 0,
+      spiritProcEligible: index === 0,
     });
   }
   return { ok: true };
@@ -453,6 +499,7 @@ function scheduleMir4Impact(
     channel: 'physical' | 'magic';
     name: string | null;
     gaugeGain: number;
+    spiritProcEligible: boolean;
   },
 ): void {
   if (!p.mir4PendingImpacts) p.mir4PendingImpacts = [];
@@ -464,6 +511,7 @@ function scheduleMir4Impact(
     channel: impact.channel,
     name: impact.name,
     gaugeGain: impact.gaugeGain,
+    spiritProcEligible: impact.spiritProcEligible,
   });
 }
 
@@ -480,14 +528,19 @@ export function updateMir4PendingImpacts(ctx: SimContext): void {
       const target = ctx.entities.get(impact.targetId);
       if (!source || !target || target.dead || source.dead) continue;
       const raw = Math.floor(impact.rawDamage * (1 + mir4DamageTakenAddend(target)));
-      const resolved = mir4ResolveDamage({
+      const hitRoll = rollBps(ctx);
+      const criticalRoll = rollBps(ctx);
+      const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, source, target, {
         rawDamage: raw,
         channel: impact.channel,
         attacker: mir4AttackerStats(source),
-        defender: mir4DefenderStats(target),
-        hitRoll: rollBps(ctx),
-        criticalRoll: rollBps(ctx),
+        defender: mir4DefenderStats(ctx, target),
+        targetKind: mir4TargetKind(target),
+        hitRoll,
+        criticalRoll,
+        allowSpiritProc: impact.spiritProcEligible === true,
       });
+      const resolved = spiritDamage.resolved;
       if (!resolved.hit) continue;
       ctx.dealDamage(
         source,
@@ -510,8 +563,13 @@ export function updateMir4PendingImpacts(ctx: SimContext): void {
 interface Mir4XpTarget {
   entityId: number;
   xp: number;
-  counters: { xpGained: number };
+  counters: { xpGained: number; levelUps: number };
+  known: import('../sim').ResolvedAbility[];
+  mir4SkillLevels?: Record<number, number>;
   mir4Equipment?: { weapon?: number };
+  mir4EquipmentInstances?: Record<number, unknown>;
+  mir4Mounts?: import('./mounts').Mir4MountState;
+  mir4Spirits?: import('./spirits').Mir4SpiritState;
 }
 
 /**
@@ -527,7 +585,17 @@ export function grantMir4Xp(ctx: SimContext, amount: number, meta: Mir4XpTarget)
   meta.xp = result.xp;
   if (result.levelUps > 0) {
     p.level = result.level;
-    recalcMir4PlayerStats(p, mir4RecalcClassOf(p), result.level, meta.mir4Equipment);
+    recalcMir4PlayerStats(
+      p,
+      mir4RecalcClassOf(p),
+      result.level,
+      meta.mir4Equipment,
+      meta.mir4EquipmentInstances,
+      meta.mir4Spirits,
+      meta.mir4Mounts,
+    );
+    refreshMir4KnownAbilities(p, meta);
+    meta.counters.levelUps += result.levelUps;
     ctx.emit({ type: 'levelup', level: p.level, pid: p.id });
   }
   ctx.emit({ type: 'xp', amount, pid: p.id });
@@ -545,7 +613,7 @@ export function mir4MobAttackPlayer(ctx: SimContext, mob: Entity, player: Entity
   // The classic shell materializes weapon.min = round(dmg*0.8), a variance the
   // source spawn formula does not have: read the mir4 template's own dmg
   // columns back, falling back to the weapon for unknown templates.
-  const template = MIR4_MOBS[mob.templateId as string];
+  const template = mir4MobTemplateFor(ctx, mob);
   const baseAttack = template
     ? template.dmgBase + template.dmgPerLevel * (mob.level - 1)
     : mob.weapon.min;

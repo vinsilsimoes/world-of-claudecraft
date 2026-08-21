@@ -36,7 +36,7 @@ export function isTransferLockedInstance(instance: ItemInstancePayload | undefin
 
 /** The public display projection of a payload, for wire surfaces other players
  *  see (market browse rows, letter attachment chips). The allowlist is the eqi
- *  wire's (server/game.ts identityFields): signer, enchant, rolled, and nothing
+ *  wire's (server/entity_presentation_wire.ts): signer, enchant, rolled, and nothing
  *  else, so boundTo / bindOnTrade / charges are excluded BY CONSTRUCTION, as is
  *  any future non-cosmetic field. Deep-copies the mutable rolled maps so a
  *  projection never aliases the live escrowed payload. */

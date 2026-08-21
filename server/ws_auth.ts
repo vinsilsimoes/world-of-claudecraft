@@ -16,6 +16,7 @@ import type { EventEmitter } from 'node:events';
 import type * as http from 'node:http';
 import type { WebSocket, WebSocketServer } from 'ws';
 import { gameProfileStateMatches, gameProfilesMatch } from '../src/sim/game_profile';
+import { isClassForGameProfile } from '../src/sim/game_profile_roster';
 import {
   type BankBonusSource,
   ONLINE_WORLD_AUTH_TYPE,
@@ -305,7 +306,10 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
         rejectHandshake(ws, WS_AUTH_ERROR.noSuchCharacter);
         return;
       }
-      if (!gameProfileStateMatches(game.sim.cfg.gameProfile, character.state)) {
+      if (
+        !gameProfileStateMatches(game.sim.cfg.gameProfile, character.state) ||
+        !isClassForGameProfile(character.class, game.sim.cfg.gameProfile)
+      ) {
         rejectHandshake(ws, WS_AUTH_ERROR.incompatibleWorldLayout);
         return;
       }
@@ -464,7 +468,10 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
                 rejectHandshake(ws, WS_AUTH_ERROR.noSuchCharacter);
                 return;
               }
-              if (!gameProfileStateMatches(game.sim.cfg.gameProfile, refreshedCharacter.state)) {
+              if (
+                !gameProfileStateMatches(game.sim.cfg.gameProfile, refreshedCharacter.state) ||
+                !isClassForGameProfile(refreshedCharacter.class, game.sim.cfg.gameProfile)
+              ) {
                 await releaseCharacterLease(character.id, leaseNonce).catch((err) =>
                   console.error('lease release failed:', err),
                 );

@@ -19,9 +19,6 @@ import type {
   PlayerProfessionsView,
   ToolEffectSlotView,
 } from '../world_api';
-import { setMir4AutoBattleMode } from './auto_battle/core';
-import type { Mir4AutoQuestState } from './auto_quest/core';
-import { mir4AutoQuestStatus, setMir4AutoQuest } from './auto_quest/core';
 import * as bagsMod from './bags';
 import {
   addStacked,
@@ -149,6 +146,7 @@ import { ensureWarriorStance } from './combat/warrior_stances';
 import { type AugmentSpecial, type AugmentTier, POWERUPS_BY_ID } from './content/augments';
 import { applyTalentMods } from './content/classes';
 import { mir4ArcMobTemplate } from './content/mir4/arc_mobs';
+import { MIR4_MAX_LEVEL } from './content/mir4/class_levels';
 import { MIR4_MOBS } from './content/mir4/mobs';
 import { DEFAULT_MOUNT, type MountKey } from './content/mounts';
 import { GATHERING_PROFESSION_IDS, type GatheringProfessionId } from './content/professions';
@@ -319,20 +317,24 @@ import { type MailSave, PostOffice } from './mail/post_office';
 import { Market, type MarketListing, type MarketSave } from './market';
 import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
-import type { Mir4CastResult } from './mir4/combat';
-import * as mir4Combat from './mir4/combat';
-import { mir4MobAttackPlayer, mir4Ultimate } from './mir4/combat';
-
-import type { Mir4Equipment, Mir4EquipmentInstanceState, Mir4Materials } from './mir4/equipment';
+import { mir4HandleArcNpcTalk } from './mir4/arc_quest_runtime';
 import {
-  mir4Enhance,
-  mir4EquipItem,
-  mir4EquipStarterWeapon,
-  mir4UnequipWeapon,
-} from './mir4/equipment';
-import type { Mir4QuestProgress } from './mir4/quest';
-import { mir4TalkOrInspect } from './mir4/quest';
-import { initMir4Player, isMir4ClassKey, mir4ClassKeyArg, mir4ShellClassFor } from './mir4/stats';
+  type Mir4ArcDungeonRun,
+  type Mir4ArcEncounterRun,
+  type Mir4ArcEscortRun,
+  type Mir4ArcRuntimeTemplateMap,
+  mir4ArcRuntimeViews,
+} from './mir4/arc_runtime_state';
+import { mir4MobAttackPlayer } from './mir4/combat';
+import type { Mir4PersistedPlayerState, Mir4PersistenceMeta } from './mir4/persistence';
+import {
+  recalcMir4ProfilePlayerStats,
+  restoreMir4ProfilePlayer,
+  serializeMir4ProfilePlayer,
+  setMir4ProfilePlayerLevel,
+} from './mir4/profile_player';
+import { type Mir4SimFacade, mir4SimFacade } from './mir4/sim_facade';
+import { mir4ShellClassFor } from './mir4/stats';
 import { updateMir4Systems } from './mir4/systems';
 import {
   mobCombatProfile as mobCombatProfileFn,
@@ -629,6 +631,8 @@ import {
   updateInstances as updateInstancesImpl,
 } from './instances/dungeons';
 import { buyHeroicVendorItem as buyHeroicVendorItemImpl } from './instances/heroic_vendor';
+import { scriptedInstanceReturnAt } from './instances/scripted_return';
+import { newDungeonInstanceSlot } from './instances/slot';
 import { updatePortalTriggers } from './portals';
 import * as questCommands from './quests/quest_commands';
 import {
@@ -1198,6 +1202,11 @@ export interface InstanceSlot {
   // when they actually entered this run: a door-camper or a member parked in
   // town takes the lockout without turning roster membership into mailed income.
   enteredBy: Set<number>;
+  // Scripted rooms can be entered from changing campaign anchors rather than
+  // one static DungeonDef door. The per-player return point makes every exit,
+  // displacement and autosave resolve back to the authoritative outdoor spot.
+  // Empty for ordinary dungeons; session-only and cleared with the claim.
+  scriptedReturnPositions: Map<number, { x: number; z: number; facing: number }>;
   // Recently-exited-mid-combat memory (issue #2653): a player who left this claim
   // while a mob was actively fighting them has their dropped threat snapshotted
   // here for a short window. Re-entering before it lapses resumes the fight
@@ -1274,7 +1283,7 @@ export type JoinableChannel = (typeof JOINABLE_CHANNELS)[number];
 
 // Per-player progression and bags. The entity holds combat state; this holds
 // everything that belongs to the character sheet.
-export interface PlayerMeta {
+export interface PlayerMeta extends Mir4PersistenceMeta {
   entityId: number;
   // Stable database character id when running on the server. Offline/sim-only
   // callers fall back to entityId for systems that need a rename-proof owner key.
@@ -1339,28 +1348,9 @@ export interface PlayerMeta {
   // any character whose stamp is below the current BOOST_KIT_VERSION.
   pbeBoostKit?: number;
   moveInput: MoveInput;
-  // mir4-gameplay-port auto battle (src/sim/auto_battle/core.ts): the toggle +
-  // anchor the automation reads; absent = never automated, classic profiles
-  // never set it. Runtime state, anchor re-stamped per enable.
-  autoBattle?: {
-    mode: 'off' | 'battle';
-    anchorX: number;
-    anchorZ: number;
-    acquireRadiusYards: number;
-    suspended: boolean;
-  };
-  // mir4 slice quest progress (Phase 5 persists it).
-  mir4Quests?: Record<string, Mir4QuestProgress>;
-  // mir4 auto-quest journey (src/sim/auto_quest/core.ts): runtime toggle.
-  mir4AutoQuest?: Mir4AutoQuestState;
-  // mir4 skill levels (1..2), fail-closed by MIR4_SKILL_LEVEL_CAPS; the
-  // evolution COST economy is Phase 4 (no verb grants level 2 yet).
-  mir4SkillLevels?: Record<number, number>;
-  // mir4 equipment bag (Phase 4 persists and widens the slot set).
-  mir4Equipment?: Mir4Equipment;
-  // Per-item mir4 state (enhancement + rolled layers) and the material wallet.
-  mir4EquipmentInstances?: Record<number, Mir4EquipmentInstanceState>;
-  mir4Materials?: Mir4Materials;
+  // Runtime deadline for the MIR4 Spirit special. Saves store only the bounded
+  // remaining duration so a relog cannot clear it and no sim-clock leaks across sessions.
+  mir4SpiritSkillReadyAt?: number;
   // Monotonic counter bumped when a bulky, rarely-changing wire field (the
   // inventory, and the collection-quest progress derived from it) mutates, so a
   // host can cheaply tell whether that state needs re-sending without diffing
@@ -1726,7 +1716,7 @@ export interface AwayStatus {
 // Persistable character state (stored as JSONB server-side). The arena fields
 // are optional so characters saved before the Ashen Coliseum existed load
 // cleanly (addPlayer falls back to the unranked defaults).
-export interface CharacterState {
+export interface CharacterState extends Mir4PersistedPlayerState {
   // Persisted profile identity. Classic rows omit it for byte-level backward
   // compatibility; an absent marker resolves only to woc-classic. Other
   // profiles stamp their exact closed-vocabulary id and reject a cross-profile
@@ -2032,6 +2022,37 @@ const OFFLINE_GUILD_BANK_LOG: import('../world_api').GuildBankLogView = Object.f
 // isShamanShock/ignoresDamagePushback) live in combat/casting_lifecycle.ts (C4a).
 
 export class Sim {
+  declare castMir4Skill: Mir4SimFacade['castMir4Skill'];
+  declare mir4BasicAttack: Mir4SimFacade['mir4BasicAttack'];
+  declare setMir4AutoBattleMode: Mir4SimFacade['setMir4AutoBattleMode'];
+  declare mir4TalkOrInspect: Mir4SimFacade['mir4TalkOrInspect'];
+  declare setMir4AutoQuest: Mir4SimFacade['setMir4AutoQuest'];
+  declare mir4AutoBattleActive: Mir4SimFacade['mir4AutoBattleActive'];
+  declare mir4PlayerState: Mir4SimFacade['mir4PlayerState'];
+  declare setMir4AutoBattle: Mir4SimFacade['setMir4AutoBattle'];
+  declare mir4AutoQuestActive: Mir4SimFacade['mir4AutoQuestActive'];
+  declare mir4QuestStatusText: Mir4SimFacade['mir4QuestStatusText'];
+  declare mir4QuestTrackerEntries: Mir4SimFacade['mir4QuestTrackerEntries'];
+  declare mir4CastSkill: Mir4SimFacade['mir4CastSkill'];
+  declare mir4UpgradeSkill: Mir4SimFacade['mir4UpgradeSkill'];
+  declare mir4ClaimAchievement: Mir4SimFacade['mir4ClaimAchievement'];
+  declare mir4EquipStarterWeapon: Mir4SimFacade['mir4EquipStarterWeapon'];
+  declare mir4UnequipWeapon: Mir4SimFacade['mir4UnequipWeapon'];
+  declare mir4EquipItem: Mir4SimFacade['mir4EquipItem'];
+  declare mir4UnequipSlot: Mir4SimFacade['mir4UnequipSlot'];
+  declare mir4EnhanceItem: Mir4SimFacade['mir4EnhanceItem'];
+  declare mir4RollItemLayer: Mir4SimFacade['mir4RollItemLayer'];
+  declare mir4ResolveItemLayer: Mir4SimFacade['mir4ResolveItemLayer'];
+  declare mir4CraftMaterial: Mir4SimFacade['mir4CraftMaterial'];
+  declare mir4RedeemTicket: Mir4SimFacade['mir4RedeemTicket'];
+  declare mir4ConfirmMount: Mir4SimFacade['mir4ConfirmMount'];
+  declare mir4EquipMount: Mir4SimFacade['mir4EquipMount'];
+  declare mir4CombineMounts: Mir4SimFacade['mir4CombineMounts'];
+  declare mir4ConfirmSpirit: Mir4SimFacade['mir4ConfirmSpirit'];
+  declare mir4EquipSpirit: Mir4SimFacade['mir4EquipSpirit'];
+  declare mir4CombineSpirits: Mir4SimFacade['mir4CombineSpirits'];
+  declare mir4CampaignProfession: Mir4SimFacade['mir4CampaignProfession'];
+  declare mir4UltimateCast: Mir4SimFacade['mir4UltimateCast'];
   // Offline/local Sim always has the implementation bundled with its HUD.
   readonly petSpecialCommandsSupported = true;
   // `world` stays optional (a custom map for play-test, else undefined for the
@@ -2087,6 +2108,10 @@ export class Sim {
   // reach it through the seam.
   private targeting!: Targeting;
   players = new Map<number, PlayerMeta>(); // keyed by entity id
+  readonly mir4ArcEscortRuns = new Map<string, Mir4ArcEscortRun>();
+  readonly mir4ArcDungeonRuns = new Map<string, Mir4ArcDungeonRun>();
+  readonly mir4ArcEncounterRuns = new Map<string, Mir4ArcEncounterRun>();
+  readonly mir4RuntimeMobTemplates: Mir4ArcRuntimeTemplateMap = new Map();
   // Live ctx view (SimContext.masteryResetNoticeCounter): how many players
   // carry a pending mastery-reset notice, so the 20 Hz mail-phase sweep can
   // skip its player walk entirely on the ~always tick where nobody does.
@@ -2555,21 +2580,7 @@ export class Sim {
     for (const dungeon of DUNGEON_LIST) {
       if (dungeon.overworldDoor === false) {
         for (let i = 0; i < INSTANCE_SLOT_COUNT; i++) {
-          this.instances.push({
-            dungeonId: dungeon.id,
-            difficulty: 'normal',
-            slot: i,
-            partyKey: null,
-            mobIds: [],
-            objectIds: [],
-            exitId: null,
-            bossExitId: null,
-            emptyFor: 0,
-            resetAvailableAt: 0,
-            clearedBy: new Set(),
-            enteredBy: new Set(),
-            combatExitMemory: new Map(),
-          });
+          this.instances.push(newDungeonInstanceSlot(dungeon.id, i));
         }
         continue;
       }
@@ -2586,21 +2597,7 @@ export class Sim {
       door.lootable = true; // interactable
       this.addEntity(door);
       for (let i = 0; i < INSTANCE_SLOT_COUNT; i++) {
-        this.instances.push({
-          dungeonId: dungeon.id,
-          difficulty: 'normal',
-          slot: i,
-          partyKey: null,
-          mobIds: [],
-          objectIds: [],
-          exitId: null,
-          bossExitId: null,
-          emptyFor: 0,
-          resetAvailableAt: 0,
-          clearedBy: new Set(),
-          enteredBy: new Set(),
-          combatExitMemory: new Map(),
-        });
+        this.instances.push(newDungeonInstanceSlot(dungeon.id, i));
       }
     }
 
@@ -3146,7 +3143,8 @@ export class Sim {
 
     if (savedState) {
       const s = savedState;
-      player.level = Math.max(1, Math.min(MAX_LEVEL, s.level));
+      const levelCap = this.cfg.gameProfile === MIR4_GAME_PROFILE ? MIR4_MAX_LEVEL : MAX_LEVEL;
+      player.level = Math.max(1, Math.min(levelCap, s.level));
       player.facing = s.facing;
       player.prevFacing = s.facing;
       meta.xp = s.xp;
@@ -3702,59 +3700,8 @@ export class Sim {
     deedsMod.evaluateDeedsFor(this.ctx, meta, player, true);
     this.deedDirtyPids.delete(player.id);
     this.deedDirtyKeys.delete(player.id);
-    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) {
-      initMir4Player(this.ctx, player.id, opts?.state, mir4ClassKeyArg(clsParam));
-    }
+    restoreMir4ProfilePlayer(this.cfg.gameProfile, this.ctx, meta, player.id, savedState, clsParam);
     return player.id;
-  }
-
-  castMir4Skill(skillId: number, pid = this.playerId, targetId?: number): Mir4CastResult {
-    return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
-  }
-  mir4BasicAttack(targetId?: number, pid = this.playerId): Mir4CastResult {
-    return mir4Combat.mir4BasicAttack(this.ctx, pid, targetId);
-  }
-  setMir4AutoBattleMode(mode: 'off' | 'battle', pid = this.playerId): void {
-    setMir4AutoBattleMode(this.ctx, pid, mode);
-  }
-  mir4TalkOrInspect(pid = this.playerId): string {
-    return mir4TalkOrInspect(this.ctx, pid);
-  }
-  setMir4AutoQuest(on: boolean, pid = this.playerId): void {
-    setMir4AutoQuest(this.ctx, pid, on);
-  }
-  // IWorldMir4 facet adapters (the status text feeds the HUD poll).
-  mir4AutoBattleActive(pid = this.playerId): boolean {
-    return this.players.get(pid)?.autoBattle?.mode === 'battle';
-  }
-  setMir4AutoBattle(on: boolean, pid = this.playerId): void {
-    this.setMir4AutoBattleMode(on ? 'battle' : 'off', pid);
-  }
-  mir4AutoQuestActive(pid = this.playerId): boolean {
-    return this.players.get(pid)?.mir4AutoQuest !== undefined;
-  }
-  mir4QuestStatusText(pid = this.playerId): string {
-    const meta = this.players.get(pid);
-    return meta ? mir4AutoQuestStatus(meta) : 'Auto quest off';
-  }
-  mir4CastSkill(skillId: number, targetId?: number, pid = this.playerId): Mir4CastResult {
-    return mir4Combat.castMir4Skill(this.ctx, pid, skillId, targetId);
-  }
-  // mir4 equipment + ultimate verbs.
-  mir4EquipStarterWeapon(pid = this.playerId): string {
-    return mir4EquipStarterWeapon(this.ctx, pid);
-  }
-  mir4UnequipWeapon(pid = this.playerId): string {
-    return mir4UnequipWeapon(this.ctx, pid);
-  }
-  mir4EquipItem(itemId: number, pid = this.playerId): string {
-    return mir4EquipItem(this.ctx, pid, itemId);
-  }
-  mir4EnhanceItem(itemId: number, pid = this.playerId): ReturnType<typeof mir4Enhance> {
-    return mir4Enhance(this.ctx, pid, itemId);
-  }
-  mir4UltimateCast(targetId?: number, pid = this.playerId): Mir4CastResult {
-    return mir4Ultimate(this.ctx, pid, targetId);
   }
 
   // Spawn a stationary test player ("/dev bot <name>", gated by devCommands in
@@ -4158,7 +4105,9 @@ export class Sim {
     // mid-pitch position (a mid-match save or desertion must not strand the
     // character on the Sowfield). The stowed pet persists via serializePet's
     // delvePetStash fallback; known/sportRole are session-derived, not saved.
-    const cupReturn = valeCupMod.vcupReturnFor(this.ctx, pid);
+    const cupReturn =
+      valeCupMod.vcupReturnFor(this.ctx, pid) ??
+      scriptedInstanceReturnAt(this.instances, e.pos, pid);
     // One fold serves both persisted proficiency keys below: the live counters
     // plus any still-queued grants (foldPendingGatherGrants), so a leave-time
     // save landing between the tick that queued a grant and the tick that
@@ -4167,6 +4116,7 @@ export class Sim {
     const foldedProficiency = foldPendingGatherGrants(meta);
     const state: CharacterState = {
       ...(this.cfg.gameProfile === MIR4_GAME_PROFILE ? { gameProfile: this.cfg.gameProfile } : {}),
+      ...serializeMir4ProfilePlayer(this.cfg.gameProfile, meta, e, this.time),
       contentRevision: CURRENT_CHARACTER_CONTENT_REVISION,
       level: restore ? restore.level : e.level,
       xp: restore ? restore.xp : meta.xp,
@@ -4954,16 +4904,13 @@ export class Sim {
       pageSize,
     });
   }
-
   async spinDailyReward(): Promise<DailyRewardSpinResult> {
     const status = await this.dailyRewards();
     return { ...status, awardedPoints: 0, outcomeKey: '' };
   }
-
   dailyRewardHistory(): Promise<DailyRewardHistory> {
     return Promise.resolve({ payouts: [] });
   }
-
   get known(): ResolvedAbility[] {
     return this.primary.known;
   }
@@ -5088,11 +5035,9 @@ export class Sim {
   get activeLoadout(): number {
     return this.primary.activeLoadout;
   }
-
   meta(pid: number): PlayerMeta | null {
     return this.players.get(pid) ?? null;
   }
-
   private resolve(pid?: number): { meta: PlayerMeta; e: Entity } | null {
     const id = pid ?? this.primaryId;
     const meta = this.players.get(id);
@@ -5100,14 +5045,12 @@ export class Sim {
     if (!meta || !e) return null;
     return { meta, e };
   }
-
   playerGcdFor(cls: PlayerClass): number {
     return cls === 'rogue' ? 1.0 : GCD; // rogue GCD is 1.0 sec
   }
   get playerGcd(): number {
     return this.playerGcdFor(this.primary.cls);
   }
-
   groundPos(x: number, z: number): Vec3 {
     // The floor, not the terrain: on the battleground field an authored deck
     // (a flag podium, a stair landing) IS the ground a flag or a body rests on.
@@ -5220,6 +5163,7 @@ export class Sim {
       get players() {
         return sim.players;
       },
+      ...mir4ArcRuntimeViews(sim),
       get stationPlacements() {
         return sim.stationPlacements;
       },
@@ -6036,6 +5980,7 @@ export class Sim {
   setPlayerLevel(level: number, pid?: number): void {
     const r = this.resolve(pid);
     if (!r) return;
+    if (setMir4ProfilePlayerLevel(this.cfg.gameProfile, r.e, r.meta, level)) return;
     r.e.level = Math.max(1, Math.min(MAX_LEVEL, level));
     // Keep lifetimeXp consistent with the level so post-cap progression starts
     // from a sane baseline (virtualLevel never falls below the real level). Only
@@ -6090,27 +6035,32 @@ export class Sim {
   // Commit a whole staged allocation in one shot (the UI's "Apply"). Rejects any
   // allocation that fails server-side validation with a reason event (FR-4.5).
   applyTalents(alloc: TalentAllocation, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return this.markTalentDeeds(applyTalentAllocation(this.ctx, alloc, pid), pid);
   }
 
   // Spend a single point into a node (incremental API; the UI mostly stages then
   // applies). Validated identically by building + checking a candidate alloc.
   spendTalent(nodeId: string, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return this.markTalentDeeds(spendTalentPoint(this.ctx, nodeId, pid), pid);
   }
 
   // Choose / change specialization. Switching specs drops the previous spec
   // tree's points (they belonged to that tree); the class tree is untouched.
   setSpec(specId: string | null, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return this.markTalentDeeds(setTalentSpec(this.ctx, specId, pid), pid);
   }
 
   selectTalentRow(level: TalentRowLevel, optionId: string | null, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return this.markTalentDeeds(selectTalentRowImpl(this.ctx, level, optionId, pid), pid);
   }
 
   // Free respec (out of combat): wipe all talent points. Spec is retained.
   respec(pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return this.markTalentDeeds(respecTalents(this.ctx, pid), pid);
   }
 
@@ -6124,6 +6074,7 @@ export class Sim {
     allocOrCapture?: TalentAllocation | boolean,
     captureMaybe = false,
   ): number {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return -1;
     // BOTH overloaded positions, because the two caller families disagree on every
     // slot after `bar`. An IWorld caller passes (alloc?, captureGear?); a
     // sim/server/RL caller passes (pid, alloc?, captureGear?). So position 3 is
@@ -6148,10 +6099,12 @@ export class Sim {
   // Apply a saved loadout's talents (out of combat). The action bar is restored
   // client-side from the loadout's stored slot map. Re-validated server-side.
   switchLoadout(index: number, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return this.markTalentDeeds(switchTalentLoadout(this.ctx, index, pid), pid);
   }
 
   deleteLoadout(index: number, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     // Deleting the active loadout auto-applies the next one (talents.ts), which
     // can newly satisfy a talent deed, so mark on success like switchLoadout.
     return this.markTalentDeeds(deleteTalentLoadout(this.ctx, index, pid), pid);
@@ -7183,7 +7136,7 @@ export class Sim {
     }
     applyGreaterInvisibilityAftereffect(this.ctx, e, removed);
     if (auraAffectsStats(removed)) {
-      recalcPlayerStats(e, meta.cls, meta.equipment, this.playerMods(meta), meta.equipmentInstance);
+      this.recalcPlayer(e);
     }
   }
 
@@ -7378,15 +7331,7 @@ export class Sim {
     const source = this.entities.get(aura.sourceId);
     this.refreshMobLeashFromAction(source ?? null, target);
     if (target.kind === 'player') {
-      const meta = this.players.get(target.id);
-      if (meta)
-        recalcPlayerStats(
-          target,
-          meta.cls,
-          meta.equipment,
-          this.playerMods(meta),
-          meta.equipmentInstance,
-        );
+      this.recalcPlayer(target);
     }
   }
 
@@ -8189,8 +8134,15 @@ export class Sim {
   // module never reaches into the Sim players map directly.
   private recalcPlayer(target: Entity): void {
     const meta = this.players.get(target.id);
-    if (meta)
-      recalcPlayerStats(target, meta.cls, meta.equipment, meta.talentMods, meta.equipmentInstance);
+    if (!meta) return;
+    if (recalcMir4ProfilePlayerStats(this.cfg.gameProfile, target, meta)) return;
+    recalcPlayerStats(
+      target,
+      meta.cls,
+      meta.equipment,
+      this.playerMods(meta),
+      meta.equipmentInstance,
+    );
   }
 
   private updateRangedPetAttack(
@@ -9251,6 +9203,7 @@ export class Sim {
     targetSlot?: EquipSlot,
     slotIndex?: number,
   ): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     // The disenchantItem shape (see it for the reasoning): position 2 carries the
     // target for an IWorld caller and pid for a sim/server caller.
     const pid = typeof pidOrTarget === 'number' ? pidOrTarget : undefined;
@@ -9276,6 +9229,7 @@ export class Sim {
     pidOrTarget?: number | { slotIndex: number },
     slotIndex?: number,
   ): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     // The aimed equip arm, and the one the UI actually drives (char_window drag
     // to a paperdoll slot), so a gear loadout reaches equip through HERE rather
     // than through the unaimed equipItem.
@@ -9285,6 +9239,7 @@ export class Sim {
   }
 
   unequipItem(slot: EquipSlot, pid?: number): boolean {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return false;
     return items.unequipItem(this.ctx, slot, pid);
   }
 
@@ -10041,6 +9996,7 @@ export class Sim {
       this.error(meta.entityId, "You can't do that while dead.");
       return;
     }
+    if (mir4HandleArcNpcTalk(this.ctx, npc.templateId, meta.entityId)) return;
     // Book of Deeds: chronicler talks feed their visited mark; talking to any
     // other NPC resets the Saul consecutive-talk counter.
     deedsMod.onNpcTalkedForDeeds(this.ctx, meta, npc.templateId);
@@ -10662,15 +10618,7 @@ export class Sim {
       if (a.kind.startsWith('buff') || a.kind.startsWith('form')) statsDirty = true;
     }
     if (statsDirty && target.kind === 'player') {
-      const meta = this.players.get(target.id);
-      if (meta)
-        recalcPlayerStats(
-          target,
-          meta.cls,
-          meta.equipment,
-          this.playerMods(meta),
-          meta.equipmentInstance,
-        );
+      this.recalcPlayer(target);
     }
   }
 
@@ -11007,6 +10955,7 @@ export class Sim {
   // -------------------------------------------------------------------------
 
   private updateValeCup(): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.updateValeCup(this.ctx);
     valeCupBotsMod.updateValeCupBots(this);
   }
@@ -11018,39 +10967,47 @@ export class Sim {
     enterAsGuild = false,
     pid?: number,
   ): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.vcupQueueJoin(this.ctx, bracket, nation, role, enterAsGuild, pid);
   }
 
   vcupQueueLeave(pid?: number): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.vcupQueueLeave(this.ctx, pid);
   }
 
   vcupSetRole(role: SportRole, pid?: number): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.vcupSetRole(this.ctx, role, pid);
   }
 
   vcupReady(pid?: number): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.vcupReady(this.ctx, pid);
   }
 
   vcupBet(side: 'A' | 'B', amount: number, pid?: number): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.vcupPlaceBet(this.ctx, pid ?? this.primaryId, side, amount);
   }
 
   // Private practice bout vs bots on an instanced pitch copy (parallel to the
   // real match). Runs identically offline and on the server (via vcup_practice).
   vcupPracticeStart(bracket: VcBracket, pid?: number): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupBotsMod.startValeCupPractice(this, bracket, pid);
   }
 
   /** The live cup match this pid is seated in, if any (server helpers). */
   vcupMatchOf(pid: number): valeCupMod.VcMatch | null {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return null;
     return valeCupMod.vcupMatchOf(this.ctx, pid);
   }
 
   /** Idempotent desertion resolution; the server calls it BEFORE the leave
    *  save so the counted loss reaches the persisted standing. */
   vcupResolveDesertion(pid: number): void {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return;
     valeCupMod.vcupResolveDesertion(this.ctx, pid);
   }
 
@@ -11058,6 +11015,7 @@ export class Sim {
     pid: number,
     shared?: import('../world_api/vale_cup').VcSharedCupInfo,
   ): import('../world_api/vale_cup').CupInfo | null {
+    if (this.cfg.gameProfile === MIR4_GAME_PROFILE) return null;
     return valeCupMod.cupInfoFor(this.ctx, pid, shared);
   }
 
@@ -12652,3 +12610,5 @@ export class Sim {
 // with market.ts and loot/loot_roll.ts). Re-exported here so existing importers
 // (e.g. tests/gold_command.test.ts) that import it from './sim' keep working.
 export { formatMoney };
+
+Object.assign(Sim.prototype, mir4SimFacade);

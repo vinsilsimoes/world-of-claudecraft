@@ -7,11 +7,12 @@
 // computed (src/sim/CLAUDE.md); classic characters never reach this module.
 
 import { mir4LevelRow } from '../content/mir4';
-import { MIR4_ITEMS } from '../content/mir4/items';
-import { aggregateMir4PassiveBonuses } from '../content/mir4/passives';
 import type { GameProfile } from '../game_profile';
 import type { Entity, Mir4ClassKey, Mir4PlayerCombatState, PlayerClass } from '../types';
-import { mir4EquippedAttributes } from './equipment';
+import { deriveMir4PlayerStats } from './derived_stats';
+import type { Mir4MountState } from './mounts';
+import { mir4NativeEquipmentPresentation } from './native_equipment_visuals';
+import type { Mir4SpiritState } from './spirits';
 
 // Column indexes into MIR4_LEVEL_ROWS tuples (see MIR4_LEVEL_COLUMNS).
 export const MIR4_LEVEL_COL = {
@@ -126,66 +127,49 @@ export function recalcMir4PlayerStats(
   level: number,
   equipment?: { weapon?: number; [slot: number]: number | undefined },
   instances?: Record<number, unknown>,
+  spirits?: Mir4SpiritState,
+  mounts?: Mir4MountState,
 ): void {
   const classId = mir4ClassIdForPlayerClass(cls);
-  const row = mir4LevelRow(classId, level);
-  if (!row) throw new Error(`mir4 level row missing for class ${classId} level ${level}`);
-  e.maxHp = row[MIR4_LEVEL_COL.maxHp];
+  const stats = deriveMir4PlayerStats(
+    classId as 1 | 2 | 3 | 4 | 5,
+    level,
+    equipment,
+    instances as never,
+    spirits,
+    mounts,
+  );
+  e.maxHp = stats.maxHp;
   e.hp = Math.min(e.hp <= 0 ? e.maxHp : e.hp, e.maxHp);
   e.resourceType = 'mana';
-  e.maxResource = row[MIR4_LEVEL_COL.maxMana];
+  e.maxResource = stats.maxMana;
   // The classic AP field carries the mir4 physicalAttack stat (the combat
   // module's coefficient math reads it); spellPower mirrors magicAttack.
-  e.attackPower = row[MIR4_LEVEL_COL.physicalAttack];
-  e.spellPower = row[MIR4_LEVEL_COL.magicAttack];
-  let accuracy = row[MIR4_LEVEL_COL.accuracy];
-  const defenseAdds: [number, number][] = [];
-  // Every equipped item's applied attributes (base + enhancement + layers);
-  // only the status ids the combat bridge maps are applied, the rest stay
-  // data until their consumers land (MIR4_APPLIED_STATUS_IDS).
-  const attrs = mir4EquippedAttributes(equipment, instances as never);
-  for (const [statusId, value] of attrs) {
-    if (statusId === 20) e.attackPower += value;
-    else if (statusId === 22) e.spellPower += value;
-    else if (statusId === 28) accuracy += value;
-    else if (statusId === 24 || statusId === 26) {
-      // defenses accumulate onto the mir4 bag below via physDef/magDef sums
-      defenseAdds.push([statusId, value]);
-    }
-  }
+  e.attackPower = stats.physicalAttack;
+  e.spellPower = stats.magicAttack;
   e.mir4 = {
     classId,
-    manaCostStat: row[MIR4_LEVEL_COL.manaCost],
-    accuracy,
-    dodge: row[MIR4_LEVEL_COL.dodge],
-    critical: row[MIR4_LEVEL_COL.critical],
-    avoidCritical: row[MIR4_LEVEL_COL.avoidCritical],
-    criticalOutcome: row[MIR4_LEVEL_COL.criticalOutcome],
-    physicalDefense:
-      row[MIR4_LEVEL_COL.physicalDefense] +
-      defenseAdds.filter((a) => a[0] === 24).reduce((s, a) => s + a[1], 0),
-    magicDefense:
-      row[MIR4_LEVEL_COL.magicDefense] +
-      defenseAdds.filter((a) => a[0] === 26).reduce((s, a) => s + a[1], 0),
+    manaCostStat: stats.manaCost,
+    accuracy: stats.accuracy,
+    dodge: stats.dodge,
+    critical: stats.critical,
+    avoidCritical: stats.avoidCritical,
+    criticalOutcome: stats.criticalOutcome,
+    bossDamageBps: stats.bossDamageBps,
+    skillDamageBps: stats.skillDamageBps,
+    physicalDefense: stats.physicalDefense,
+    magicDefense: stats.magicDefense,
+    penetrationBps: stats.penetrationBps,
+    mountMoveSpeedBps: stats.mountMoveSpeedBps,
   };
-  // Class passives land LAST, as summed basis points over the status the
-  // level table + gear already produced (the source's applyToCharacterStatus
-  // order: level -> equipment -> passives). A level crossing an unlock
-  // threshold therefore raises the pool in the same recalc.
-  const boosts = aggregateMir4PassiveBonuses(classId as 1 | 2 | 3 | 4 | 5, level);
-  const boost = (statusId: number, current: number): number => {
-    const bps = boosts.get(statusId) ?? 0;
-    return bps > 0 ? current + Math.floor((current * bps) / 10_000) : current;
-  };
-  e.maxHp = boost(1, e.maxHp);
-  e.hp = Math.min(e.hp, e.maxHp);
-  e.maxResource = boost(6, e.maxResource);
-  e.attackPower = boost(20, e.attackPower);
-  e.spellPower = boost(22, e.spellPower);
-  e.mir4.accuracy = boost(28, e.mir4.accuracy);
-  e.mir4.dodge = boost(29, e.mir4.dodge);
-  e.mir4.physicalDefense = boost(24, e.mir4.physicalDefense);
-  e.mir4.magicDefense = boost(26, e.mir4.magicDefense);
+  const presentation = mir4NativeEquipmentPresentation(classId, equipment);
+  e.mir4VisualClassId = presentation.classId;
+  e.mir4VisualArmorMask = presentation.armorMask;
+  e.mainhandItemId = presentation.mainhandItemId;
+  e.offhandItemId = presentation.offhandItemId;
+  // MIR4 logical gear owns the visible weapon shell. A classic account-level
+  // weapon skin must not replace it or imply a stat-bearing classic item.
+  e.weaponSkinId = null;
 }
 
 /** The MP pool mirror on the Entity resource fields (call after recalc + restore). */
@@ -204,7 +188,15 @@ export function mir4SyncResourcePool(e: Entity): void {
 export function initMir4Player(
   ctx: {
     entities: Map<number, Entity>;
-    players?: Map<number, { mir4Equipment?: { weapon?: number } }>;
+    players?: Map<
+      number,
+      {
+        mir4Equipment?: { weapon?: number };
+        mir4EquipmentInstances?: Record<number, unknown>;
+        mir4Spirits?: Mir4SpiritState;
+        mir4Mounts?: Mir4MountState;
+      }
+    >;
   },
   pid: number,
   state?: { hp?: number; resource?: number } | null,
@@ -215,7 +207,15 @@ export function initMir4Player(
   const meta = ctx.players?.get(pid);
   // The explicit key wins (mir4-only classes ride the warrior shell in
   // templateId, so it cannot be recovered from the entity alone).
-  recalcMir4PlayerStats(p, mir4RecalcClassOf(p, classKey), p.level, meta?.mir4Equipment);
+  recalcMir4PlayerStats(
+    p,
+    mir4RecalcClassOf(p, classKey),
+    p.level,
+    meta?.mir4Equipment,
+    meta?.mir4EquipmentInstances,
+    meta?.mir4Spirits,
+    meta?.mir4Mounts,
+  );
   if (state && (state.hp !== undefined || state.resource !== undefined)) {
     if (state.hp !== undefined) {
       p.hp = Math.min(Math.max(1, Math.floor(state.hp)), p.maxHp);

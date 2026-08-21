@@ -10,6 +10,7 @@
 import { audio } from '../game/audio';
 import { DEED_ORDER, DEEDS } from '../sim/content/deeds';
 import { DEEDS_RECENT_CAP } from '../sim/deeds';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import type { DeedsRarity, IWorld } from '../world_api';
 import { deedDesc, deedName, deedTitleText } from './deed_i18n';
 import {
@@ -39,6 +40,8 @@ import {
   t,
 } from './i18n';
 import { iconDataUrl } from './icons';
+import { mir4AchievementsRefreshSig } from './mir4_achievements_view';
+import { paintMir4AchievementsWindow } from './mir4_achievements_window_adapter';
 import type { PainterHostPresentation } from './painter_host';
 import { svgIcon } from './ui_icons';
 
@@ -176,8 +179,10 @@ export class DeedsWindow {
     this.openerFocus = this.deps.captureFocus();
     this.opened = true;
     this.lastSig = '';
-    this.fetchRarity();
-    this.fetchRecent();
+    if (!this.isMir4Profile()) {
+      this.fetchRarity();
+      this.fetchRecent();
+    }
     this.render();
     this.deps.root().style.display = 'flex';
     // A jump-to-deed open already put the reading position on the landed card
@@ -306,6 +311,12 @@ export class DeedsWindow {
    *  deedsRefreshSig dimensions, every one unit-pinned). */
   private currentSig(): string {
     const world = this.deps.world();
+    if (world.cfg?.gameProfile === MIR4_GAME_PROFILE) {
+      const state = world.mir4PlayerState();
+      return state === null
+        ? 'mir4|awaiting'
+        : `mir4|${mir4AchievementsRefreshSig(world.player.level, world.copper, state)}`;
+    }
     return deedsRefreshSig({
       renown: world.renown,
       earnedCount: world.deedsEarned.size,
@@ -337,6 +348,24 @@ export class DeedsWindow {
   render(): void {
     const el = this.deps.root();
     if (!this.opened) return;
+    if (this.isMir4Profile()) {
+      this.deps.hideTooltip();
+      paintMir4AchievementsWindow({
+        root: el,
+        world: this.deps.world(),
+        close: () => {
+          this.close();
+          audio.click();
+        },
+        afterMutation: () => {
+          // Keep the pressed control disabled until the offline mutation or
+          // online authoritative snapshot changes the compact signature.
+          this.lastSig = '';
+        },
+      });
+      this.lastSig = this.currentSig();
+      return;
+    }
     this.pruneWatchedIfStale();
     const active = document.activeElement as HTMLElement | null;
     const hadFocus = el.contains(active);
@@ -397,6 +426,10 @@ export class DeedsWindow {
     // be rebuilt within 500ms, wiping the spotlight and, under
     // prefers-reduced-motion, the static ring that is the only landing cue.
     this.lastSig = this.currentSig();
+  }
+
+  private isMir4Profile(): boolean {
+    return this.deps.world().cfg?.gameProfile === MIR4_GAME_PROFILE;
   }
 
   /** Spotlight a deed card after paint: flash class always; focus and scroll

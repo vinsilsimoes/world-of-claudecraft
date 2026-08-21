@@ -10,6 +10,7 @@
 // getComputedStyle and are covered by the no-magic-values source guard instead.
 
 import { describe, expect, it } from 'vitest';
+import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
 import {
   BUILTIN_WORLD,
   CAMPS,
@@ -622,6 +623,27 @@ describe('buildOverworldMapModel (pure draw model)', () => {
     expect(
       STABLE_MAP_NAVIGATION_LANDMARKS.filter((landmark) => landmark.kind === 'world-passage'),
     ).toHaveLength(PORTALS.length * 2);
+  });
+
+  it('projects the MIR4 portal for the committed arc zone through the existing map model', () => {
+    const world = makeOverworldWorld('client') as unknown as IWorld & {
+      cfg: IWorld['cfg'];
+      player: IWorld['player'];
+    };
+    world.cfg = { ...world.cfg, gameProfile: 'mir4-gameplay-port' };
+    world.player.pos = { ...world.player.pos, x: 0, z: 190 };
+    const zone = buildMir4ArcWorld(2).zones[0]!;
+    const model = buildOverworldMapModel({
+      ...input(world, 1, [], emptyZoneProps()),
+      zone,
+    });
+    expect(model.navigation).toEqual([
+      expect.objectContaining({
+        kind: 'world-passage',
+        portalId: 'mir4_m01-vila-do-vau_to_m02-trilha-dos-juncos',
+        destinationZoneId: 'mir4_m02-trilha-dos-juncos',
+      }),
+    ]);
   });
 
   it('shows only live Rift portal entities within the inclusive 80-yard disclosure range', () => {

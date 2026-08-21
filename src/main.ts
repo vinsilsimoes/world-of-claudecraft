@@ -121,7 +121,6 @@ import {
   resetLoadProfile,
   summarizeLoadProfile,
 } from './game/load_profiler';
-import { wireMir4SlicePlaytest } from './game/mir4_slice_input';
 import {
   interfaceModeFromSetting,
   isPhoneTouchDevice,
@@ -137,7 +136,7 @@ import { diagonalMovementVisualFacing } from './game/movement_visual';
 import { music } from './game/music';
 import { tryNearbyInteraction } from './game/nearby_interaction';
 import { isOfflineModeAvailable } from './game/offline_mode_gate';
-import { offlineSimOptions } from './game/offline_sim_options';
+import { offlineSimOptions, sanitizeOfflineName } from './game/offline_sim_options';
 import { padReelItemId } from './game/pad_reel';
 import { createPerfMonitor } from './game/perf';
 import { initPerfNudge } from './game/perf_nudge';
@@ -277,6 +276,7 @@ import {
   armorSetSourceFor,
   charselectLook,
   inWorldLookFor,
+  mir4InWorldLookFor,
 } from './render/characters/player_look_core';
 import {
   onPortraitsReady,
@@ -320,7 +320,6 @@ import {
   MOBS,
   QUESTS,
   questRewardItem,
-  setActiveWorldContent,
   ZONES,
 } from './sim/data';
 import { canEquipItem } from './sim/equipment_rules';
@@ -335,6 +334,7 @@ import {
   DT,
   dist2d,
   MELEE_RANGE,
+  type PlayableClass,
   type PlayerClass,
   RUN_SPEED,
   type WorldContent,
@@ -395,7 +395,7 @@ import {
 } from './ui/discord_status';
 import { renderDiscordWidget } from './ui/discord_widget';
 import { finderLootItemIds } from './ui/dungeon_finder_view';
-import { classDisplayName, tEntity } from './ui/entity_i18n';
+import { tEntity } from './ui/entity_i18n';
 import { showEntryGuardBanner } from './ui/entry_guard_banner';
 import { refreshEpicLinkStatus, wireEpicLink } from './ui/epic_link';
 import { FocusManager, type FocusTrapHandle } from './ui/focus_manager';
@@ -456,6 +456,13 @@ import { PerfOverlay } from './ui/perf_overlay';
 import { type PerfOverlayConfig, PerfOverlayConfigStore } from './ui/perf_overlay_config';
 import { buildPerfOverlayView, FrameMeter } from './ui/perf_overlay_model';
 import { hydratePortraits, portraitChipHtml } from './ui/portrait_chip';
+import {
+  entryShellClass,
+  installProfileClassChips,
+  isActiveMir4Class,
+  profileClassDisplayName,
+  renderMir4ClassDetails,
+} from './ui/profile_class_shell';
 import { hideReconnectOverlay, showReconnectOverlay } from './ui/reconnect_overlay';
 import { createSpectateBadge } from './ui/spectate_badge';
 import { refreshStartSkinPickerPortraits } from './ui/start_skin_picker_portraits';
@@ -1495,7 +1502,7 @@ async function startGame(
     // (static data on every host; the why lives in characters/npc_looks.ts).
     setModularLookProvider((e) =>
       e.kind === 'player'
-        ? inWorldLookFor(e, armorSetForEntity(e.id === world.playerId))
+        ? (mir4InWorldLookFor(e) ?? inWorldLookFor(e, armorSetForEntity(e.id === world.playerId)))
         : npcLookFor(e.templateId, e.kind),
     );
     // No helmet re-assert here on purpose. The preference is per CHARACTER
@@ -5155,23 +5162,8 @@ async function startGame(
   fadeOutHomepageMusic();
 }
 
-// ---------------------------------------------------------------------------
-// Offline flow
-// ---------------------------------------------------------------------------
-
-// Offline names go straight into innerHTML paths (quest $N text, char window
-// title), so enforce the server's character-name rule client-side too:
-// strip anything outside [A-Za-z' -], then require /^[A-Za-z][A-Za-z' -]{1,15}$/.
-function sanitizeOfflineName(raw: string): string {
-  const stripped = raw
-    .replace(/[^A-Za-z' -]/g, '')
-    .replace(/^[^A-Za-z]+/, '')
-    .slice(0, 16);
-  return /^[A-Za-z][A-Za-z' -]{1,15}$/.test(stripped) ? stripped : 'Adventurer';
-}
-
 async function startOffline(
-  playerClass: PlayerClass,
+  playerClass: PlayableClass,
   name: string,
   skin = 0,
   world?: WorldContent,
@@ -5181,15 +5173,11 @@ async function startOffline(
   resetLoadProfile();
   loadPhaseStart('entry');
   enterLoadingState(t('loading.world'));
-  // Editor play-test: route terrain + props at the custom world too (the renderer
-  // reaches it by module global), in addition to the Sim reading cfg.world.
-  if (world) setActiveWorldContent(world);
   const sim = loadSpan(
     'sim-build',
     () => new Sim(offlineSimOptions({ playerClass, playerName: name, world, seedOverride })),
   );
   sim.setPlayerSkin(sim.playerId, skin);
-  wireMir4SlicePlaytest(sim);
   // Offline has no account and no character row, so the local draft IS this
   // character's authored look and the creator's toggle IS its helm choice.
   // Stamped onto the entity because that is where every consumer reads a look
@@ -5247,7 +5235,9 @@ async function startOffline(
       'fen_reaver_glaive',
       'tidereaver_gaff',
     ];
-    const usable = TEST_WEAPONS.filter((id) => ITEMS[id] && canEquipItem(playerClass, ITEMS[id]));
+    const usable = TEST_WEAPONS.filter(
+      (id) => ITEMS[id] && canEquipItem(entryShellClass(playerClass), ITEMS[id]),
+    );
     for (const id of usable) sim.addItem(id, 1, sim.playerId);
     if (usable[0]) sim.equipItem(usable[0], sim.playerId);
   }
@@ -5370,7 +5360,7 @@ function decorateClassChips(): void {
     .querySelectorAll<HTMLElement>('#charcreate-panel .mini-class, #offline-select .mini-class')
     .forEach((li) => {
       if (li.querySelector('.mini-class-portrait')) return;
-      const cls = li.dataset.class as PlayerClass;
+      const cls = entryShellClass(li.dataset.class as PlayableClass);
       const key = li.dataset.i18n;
       const label = document.createElement('span');
       label.className = 'mini-class-label';
@@ -5663,8 +5653,8 @@ function updatePreviewContainer(panelId: string): void {
       showCharselectCharacter(charselectSelected);
     } else {
       const row = document.querySelector('#char-list .char-row.sel') as HTMLElement | null;
-      const cls = (row?.dataset.class as PlayerClass) ?? 'warrior';
-      previewClassBody(cls);
+      const cls = (row?.dataset.class as PlayableClass) ?? 'warrior';
+      previewClassBody(entryShellClass(cls));
       characterPreview.setSkin(Number(row?.dataset.skin ?? 0) || 0);
     }
     syncPreviewAfterPanelLayout();
@@ -5677,10 +5667,11 @@ function updatePreviewContainer(panelId: string): void {
       : '#offline-select .mini-class.sel';
   const selEl = document.querySelector(selSelector) as HTMLElement | null;
   if (selEl) {
-    const cls = selEl.dataset.class as PlayerClass;
-    previewClassBody(cls);
-    if (panelId === '#charcreate-panel') refreshOnlineSkins(cls);
-    else refreshOfflineSkins(cls);
+    const cls = selEl.dataset.class as PlayableClass;
+    const shellClass = entryShellClass(cls);
+    previewClassBody(shellClass);
+    if (panelId === '#charcreate-panel') refreshOnlineSkins(shellClass);
+    else refreshOfflineSkins(shellClass);
   }
 
   syncPreviewAfterPanelLayout();
@@ -5694,7 +5685,7 @@ function syncPreviewAfterPanelLayout(): void {
   });
 }
 
-const currentlyRenderedClass: Record<string, PlayerClass | null> = {
+const currentlyRenderedClass: Record<string, PlayableClass | null> = {
   'offline-class-details': null,
   'charcreate-class-details': null,
 };
@@ -6732,7 +6723,9 @@ async function refreshCharacters(): Promise<void> {
       row.setAttribute('aria-selected', 'false');
       row.dataset.class = c.class;
       row.dataset.skin = String(c.skin ?? 0);
-      const className = classDisplayName(c.class);
+      const shellClass = entryShellClass(c.class);
+      const rosterLook = { ...c, class: shellClass };
+      const className = profileClassDisplayName(c.class);
       // Online characters explain themselves on their own hint line (below the
       // class) instead of the terse "(in world)" suffix, so the reason for the
       // Take Over button is unmissable.
@@ -6749,17 +6742,17 @@ async function refreshCharacters(): Promise<void> {
       // (or the mech cosmetic), matching the 3D stage and the world.
       const chipHtml = () =>
         portraitChipHtml({
-          cls: c.class,
+          cls: shellClass,
           skin: c.skin ?? 0,
           name: c.name,
           variant: 'sm',
-          look: charselectLook(c),
+          look: charselectLook(rosterLook),
           catalog: c.skinCatalog ?? 'class',
         });
       // A composed chip cannot hydrate from data attributes, so a row built
       // before the portrait renderer is ready re-renders its own chip once the
       // assets land (the crest placeholder shows until then).
-      if (charselectLook(c) && !portraitsReady()) {
+      if (charselectLook(rosterLook) && !portraitsReady()) {
         onPortraitsReady(() => {
           const chip = row.querySelector('.portrait-chip[data-portrait-composed]');
           if (!chip?.isConnected) return;
@@ -6860,7 +6853,7 @@ async function refreshCharacters(): Promise<void> {
         // Select the row first so the stage, name, and Enter World button all
         // agree on which character is being redesigned.
         selectRow();
-        redesignEditor.open(c, opener);
+        redesignEditor.open({ ...c, class: entryShellClass(c.class) }, opener);
       });
       // Double-click a row to jump straight into the world (classic-select
       // muscle memory). It routes through the shared desktop Enter World button
@@ -7116,7 +7109,8 @@ const activeClassDetailsTimeouts: Record<string, number | null> = {};
  *  with a unit test. */
 function showCharselectCharacter(c: CharacterSummary): void {
   if (!characterPreview) return;
-  const look = charselectLook(c);
+  const shellClass = entryShellClass(c.class);
+  const look = charselectLook({ ...c, class: shellClass });
   if (!look) {
     characterPreview.setAppearance(charselectAppearance(c));
     return;
@@ -7127,7 +7121,7 @@ function showCharselectCharacter(c: CharacterSummary): void {
   characterPreview.setModular(
     look.app,
     look.worn,
-    c.class,
+    shellClass,
     c.mainhandItemId ?? null,
     c.offhandItemId ?? null,
   );
@@ -7165,7 +7159,7 @@ function charselectAppearance(c: CharacterSummary): PreviewAppearance {
   // up on the next selection change.
   ensureCharacterUrl(weaponSkinModelUrl(c.weaponSkinId ?? null));
   return {
-    cls: c.class,
+    cls: entryShellClass(c.class),
     skin: c.skin ?? 0,
     skinCatalog: c.skinCatalog ?? 'class',
     mainhandItemId: c.mainhandItemId ?? null,
@@ -7176,11 +7170,12 @@ function charselectAppearance(c: CharacterSummary): PreviewAppearance {
 
 function renderClassDetails(
   panelId: string,
-  className: PlayerClass,
+  className: PlayableClass,
   preview?: PreviewAppearance,
 ): void {
   const panel = document.getElementById(panelId);
   if (!panel) return;
+  const shellClass = entryShellClass(className);
 
   // Drive the 3D preview BEFORE the panel-redundancy early-return: two characters
   // of the same class can still differ in gear, skin, or cosmetic body, so the
@@ -7189,17 +7184,22 @@ function renderClassDetails(
   // offline pickers pass none and rebuild the class body only when the class changes.
   if (characterPreview) {
     if (preview) characterPreview.setAppearance(preview);
-    else if (currentlyRenderedClass[panelId] !== className) previewClassBody(className);
+    else if (currentlyRenderedClass[panelId] !== className) previewClassBody(shellClass);
   }
 
   // Show the part/colour pickers for a composed body, hide them for a fixed
   // class rig. Runs BEFORE the redundancy return so the first render of a
   // panel mounts them (the class has not "changed" at that point).
-  if (!preview) syncAppearanceUi(panelId, className);
+  if (!preview) syncAppearanceUi(panelId, shellClass);
 
   // Redundant render check (class details panel content only)
   if (currentlyRenderedClass[panelId] === className) return;
   currentlyRenderedClass[panelId] = className;
+
+  if (isActiveMir4Class(className)) {
+    renderMir4ClassDetails(panel, className);
+    return;
+  }
 
   // Clear any active transitions for this panel to prevent stacked out-of-order renders
   if (
@@ -7210,13 +7210,13 @@ function renderClassDetails(
     activeClassDetailsTimeouts[panelId] = null;
   }
 
-  const classDef = CLASSES[className];
-  const details = CLASS_DETAILS[className];
+  const classDef = CLASSES[shellClass];
+  const details = CLASS_DETAILS[shellClass];
   if (!classDef || !details) return;
 
   const existingContent = panel.querySelector('.class-details-content');
   const existingName = panel.querySelector('.class-details-name')?.textContent;
-  const classLabel = classDisplayName(className);
+  const classLabel = profileClassDisplayName(className);
   const roleLabel = t(details.roleKey);
   const armorLabel = t(details.armorKey);
   const weaponsLabel = t(details.weaponsKey);
@@ -7287,7 +7287,7 @@ function renderClassDetails(
     })
     .join('');
 
-  const spells = SIGNATURE_ABILITIES[className];
+  const spells = SIGNATURE_ABILITIES[shellClass];
   const spellsHtml = spells
     .map((spellId) => {
       const a = ABILITIES[spellId];
@@ -7383,7 +7383,7 @@ function renderClassDetails(
             <span class="class-details-role role-${details.roleType}">${escapeHtml(roleLabel)}</span>
           </div>
         </div>
-        <p class="class-details-lore">${escapeHtml(classDisplayDescription(className))}</p>
+        <p class="class-details-lore">${escapeHtml(classDisplayDescription(shellClass))}</p>
         <div class="class-details-grid">
           <div class="class-details-stats-col">
             <h4 class="details-section-title">${escapeHtml(t('classDetails.sections.startingStats'))}</h4>
@@ -7613,7 +7613,7 @@ function refreshLocalizedDynamicShell(): void {
     const sel = document.querySelector('#charcreate-panel .mini-class.sel') as HTMLElement | null;
     if (sel) {
       currentlyRenderedClass['charcreate-class-details'] = null;
-      renderClassDetails('charcreate-class-details', sel.dataset.class as PlayerClass);
+      renderClassDetails('charcreate-class-details', sel.dataset.class as PlayableClass);
     }
     return;
   }
@@ -7622,7 +7622,7 @@ function refreshLocalizedDynamicShell(): void {
   ) as HTMLElement | null;
   if (activePanel === 'offline-select' && offlineSelected) {
     currentlyRenderedClass['offline-class-details'] = null;
-    renderClassDetails('offline-class-details', offlineSelected.dataset.class as PlayerClass);
+    renderClassDetails('offline-class-details', offlineSelected.dataset.class as PlayableClass);
   }
 }
 
@@ -9698,7 +9698,7 @@ function wireStartScreens(): void {
     show('#login-panel');
   };
 
-  const handleOfflineStart = (cls: PlayerClass) => {
+  const handleOfflineStart = (cls: PlayableClass) => {
     const rawName = offlineNameInput.value.trim();
     if (!rawName) {
       offlineError.textContent = t('errors.characterNameRequired');
@@ -9917,13 +9917,15 @@ function wireStartScreens(): void {
     btnPlay.addEventListener('click', handleOnlineSelect);
   }
 
+  installProfileClassChips();
+
   if (btnStartOffline) {
     btnStartOffline.addEventListener('click', () => {
       const selCard = document.querySelector(
         '#offline-select .mini-class.sel',
       ) as HTMLElement | null;
       if (selCard) {
-        handleOfflineStart(selCard.dataset.class as PlayerClass);
+        handleOfflineStart(selCard.dataset.class as PlayableClass);
       } else {
         offlineError.textContent = t('errors.selectClass');
       }
@@ -9948,10 +9950,10 @@ function wireStartScreens(): void {
       card.classList.add('sel');
       card.setAttribute('aria-pressed', 'true');
 
-      const cls = (card as HTMLElement).dataset.class as PlayerClass;
+      const cls = (card as HTMLElement).dataset.class as PlayableClass;
       renderClassDetails('offline-class-details', cls);
       btnStartOffline.removeAttribute('disabled');
-      refreshOfflineSkins(cls);
+      refreshOfflineSkins(entryShellClass(cls));
     };
     card.addEventListener('click', handleClassSelect);
     card.addEventListener('keydown', (e) =>
@@ -9968,7 +9970,7 @@ function wireStartScreens(): void {
         window.clearTimeout(hoverTimeouts['offline-class-details']);
         hoverTimeouts['offline-class-details'] = null;
       }
-      const cls = (card as HTMLElement).dataset.class as PlayerClass;
+      const cls = (card as HTMLElement).dataset.class as PlayableClass;
       renderClassDetails('offline-class-details', cls);
     });
 
@@ -9981,7 +9983,7 @@ function wireStartScreens(): void {
       if (hoverTimeouts['offline-class-details'] !== null) {
         window.clearTimeout(hoverTimeouts['offline-class-details']);
       }
-      const cls = (card as HTMLElement).dataset.class as PlayerClass;
+      const cls = (card as HTMLElement).dataset.class as PlayableClass;
       hoverTimeouts['offline-class-details'] = window.setTimeout(() => {
         renderClassDetails('offline-class-details', cls);
         hoverTimeouts['offline-class-details'] = null;
@@ -10002,7 +10004,7 @@ function wireStartScreens(): void {
           '#offline-select .mini-class.sel',
         ) as HTMLElement | null;
         if (selCard) {
-          const cls = selCard.dataset.class as PlayerClass;
+          const cls = selCard.dataset.class as PlayableClass;
           renderClassDetails('offline-class-details', cls);
         }
         revertTimeouts['offline-class-details'] = null;
@@ -10023,7 +10025,7 @@ function wireStartScreens(): void {
           '#offline-select .mini-class.sel',
         ) as HTMLElement | null;
         if (selCard) {
-          const cls = selCard.dataset.class as PlayerClass;
+          const cls = selCard.dataset.class as PlayableClass;
           renderClassDetails('offline-class-details', cls);
         }
         revertTimeouts['offline-class-details'] = null;
@@ -10405,9 +10407,9 @@ function wireStartScreens(): void {
       el.classList.add('sel');
       el.setAttribute('aria-pressed', 'true');
 
-      const cls = (el as HTMLElement).dataset.class as PlayerClass;
+      const cls = (el as HTMLElement).dataset.class as PlayableClass;
       renderClassDetails('charcreate-class-details', cls);
-      refreshOnlineSkins(cls);
+      refreshOnlineSkins(entryShellClass(cls));
     };
     el.addEventListener('click', handleMiniClassSelect);
     el.addEventListener('keydown', (e) =>
@@ -10428,7 +10430,7 @@ function wireStartScreens(): void {
         r.classList.remove('sel');
         r.setAttribute('aria-selected', 'false');
       });
-      const cls = (el as HTMLElement).dataset.class as PlayerClass;
+      const cls = (el as HTMLElement).dataset.class as PlayableClass;
       renderClassDetails('charcreate-class-details', cls);
     });
 
@@ -10441,7 +10443,7 @@ function wireStartScreens(): void {
       if (hoverTimeouts['charcreate-class-details'] !== null) {
         window.clearTimeout(hoverTimeouts['charcreate-class-details']);
       }
-      const cls = (el as HTMLElement).dataset.class as PlayerClass;
+      const cls = (el as HTMLElement).dataset.class as PlayableClass;
       hoverTimeouts['charcreate-class-details'] = window.setTimeout(() => {
         renderClassDetails('charcreate-class-details', cls);
         hoverTimeouts['charcreate-class-details'] = null;
@@ -10462,12 +10464,12 @@ function wireStartScreens(): void {
           '#charcreate-panel .mini-class.sel',
         ) as HTMLElement | null;
         if (selEl) {
-          const cls = selEl.dataset.class as PlayerClass;
+          const cls = selEl.dataset.class as PlayableClass;
           renderClassDetails('charcreate-class-details', cls);
         } else {
           const selChar = document.querySelector('#char-list .char-row.sel') as HTMLElement | null;
           if (selChar) {
-            const cls = selChar.dataset.class as PlayerClass;
+            const cls = selChar.dataset.class as PlayableClass;
             renderClassDetails('charcreate-class-details', cls);
           }
         }
@@ -10489,12 +10491,12 @@ function wireStartScreens(): void {
           '#charcreate-panel .mini-class.sel',
         ) as HTMLElement | null;
         if (selEl) {
-          const cls = selEl.dataset.class as PlayerClass;
+          const cls = selEl.dataset.class as PlayableClass;
           renderClassDetails('charcreate-class-details', cls);
         } else {
           const selChar = document.querySelector('#char-list .char-row.sel') as HTMLElement | null;
           if (selChar) {
-            const cls = selChar.dataset.class as PlayerClass;
+            const cls = selChar.dataset.class as PlayableClass;
             renderClassDetails('charcreate-class-details', cls);
           }
         }
@@ -10571,7 +10573,7 @@ function wireStartScreens(): void {
     try {
       await api.createCharacter(
         name,
-        clsEl.dataset.class as PlayerClass,
+        clsEl.dataset.class as PlayableClass,
         selectedSkin('#online-skin-row', onlineSkin),
         // The look designed on this panel becomes THIS character's stored
         // appearance (its own DB column). The localStorage draft stays what
@@ -11378,8 +11380,8 @@ function wireStartScreens(): void {
               ? '#offline-select .mini-class.sel'
               : '#charcreate-panel .mini-class.sel';
           const selEl = document.querySelector(selSelector) as HTMLElement | null;
-          const cls = selEl ? (selEl.dataset.class as PlayerClass) : 'warrior';
-          previewClassBody(cls);
+          const cls = selEl ? (selEl.dataset.class as PlayableClass) : 'warrior';
+          previewClassBody(entryShellClass(cls));
         }
       }
     })

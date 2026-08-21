@@ -448,15 +448,33 @@ export const IWORLD_MEMBERS = [
   { name: 'takeActionBarLayoutRestore', kind: 'method' },
   // IWorldMir4: the mir4-gameplay-port profile surface (auto battle, the
   // auto-quest journey, manual casts, slice equipment verbs). Reads are
-  // optimistic on ClientWorld until the snapshot echo arm.
+  // authoritative on both hosts through the self snapshot.
+  { name: 'mir4PlayerState', kind: 'method' },
   { name: 'mir4AutoBattleActive', kind: 'method' },
   { name: 'setMir4AutoBattle', kind: 'method' },
   { name: 'mir4AutoQuestActive', kind: 'method' },
   { name: 'setMir4AutoQuest', kind: 'method' },
   { name: 'mir4QuestStatusText', kind: 'method' },
+  { name: 'mir4QuestTrackerEntries', kind: 'method' },
   { name: 'mir4CastSkill', kind: 'method' },
+  { name: 'mir4UpgradeSkill', kind: 'method' },
+  { name: 'mir4ClaimAchievement', kind: 'method' },
   { name: 'mir4BasicAttack', kind: 'method' },
   { name: 'mir4EquipStarterWeapon', kind: 'method' },
+  { name: 'mir4EquipItem', kind: 'method' },
+  { name: 'mir4UnequipSlot', kind: 'method' },
+  { name: 'mir4EnhanceItem', kind: 'method' },
+  { name: 'mir4RollItemLayer', kind: 'method' },
+  { name: 'mir4ResolveItemLayer', kind: 'method' },
+  { name: 'mir4CraftMaterial', kind: 'method' },
+  { name: 'mir4RedeemTicket', kind: 'method' },
+  { name: 'mir4ConfirmMount', kind: 'method' },
+  { name: 'mir4EquipMount', kind: 'method' },
+  { name: 'mir4CombineMounts', kind: 'method' },
+  { name: 'mir4ConfirmSpirit', kind: 'method' },
+  { name: 'mir4EquipSpirit', kind: 'method' },
+  { name: 'mir4CombineSpirits', kind: 'method' },
+  { name: 'mir4CampaignProfession', kind: 'method' },
   { name: 'mir4UnequipWeapon', kind: 'method' },
 ] as const satisfies readonly IWorldMember[];
 
@@ -619,9 +637,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(332);
+    expect(IWORLD_MEMBERS.length).toBe(350);
     expect(DATA_MEMBERS.length).toBe(86);
-    expect(METHOD_MEMBERS.length).toBe(246);
+    expect(METHOD_MEMBERS.length).toBe(264);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -822,10 +840,28 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4AutoBattleActive',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
+      'mir4CampaignProfession',
       'mir4CastSkill',
+      'mir4ClaimAchievement',
+      'mir4CombineMounts',
+      'mir4CombineSpirits',
+      'mir4ConfirmMount',
+      'mir4ConfirmSpirit',
+      'mir4CraftMaterial',
+      'mir4EnhanceItem',
+      'mir4EquipItem',
+      'mir4EquipMount',
+      'mir4EquipSpirit',
       'mir4EquipStarterWeapon',
+      'mir4PlayerState',
       'mir4QuestStatusText',
+      'mir4QuestTrackerEntries',
+      'mir4RedeemTicket',
+      'mir4ResolveItemLayer',
+      'mir4RollItemLayer',
+      'mir4UnequipSlot',
       'mir4UnequipWeapon',
+      'mir4UpgradeSkill',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1195,10 +1231,28 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4AutoBattleActive',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
+      'mir4CampaignProfession',
       'mir4CastSkill',
+      'mir4ClaimAchievement',
+      'mir4CombineMounts',
+      'mir4CombineSpirits',
+      'mir4ConfirmMount',
+      'mir4ConfirmSpirit',
+      'mir4CraftMaterial',
+      'mir4EnhanceItem',
+      'mir4EquipItem',
+      'mir4EquipMount',
+      'mir4EquipSpirit',
       'mir4EquipStarterWeapon',
+      'mir4PlayerState',
       'mir4QuestStatusText',
+      'mir4QuestTrackerEntries',
+      'mir4RedeemTicket',
+      'mir4ResolveItemLayer',
+      'mir4RollItemLayer',
+      'mir4UnequipSlot',
       'mir4UnequipWeapon',
+      'mir4UpgradeSkill',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1851,12 +1905,30 @@ const FACET_MIR4 = [
   'mir4AutoBattleActive',
   'mir4AutoQuestActive',
   'mir4BasicAttack',
+  'mir4CampaignProfession',
   'mir4CastSkill',
+  'mir4ClaimAchievement',
+  'mir4UpgradeSkill',
+  'mir4CombineMounts',
+  'mir4CombineSpirits',
+  'mir4ConfirmMount',
+  'mir4ConfirmSpirit',
+  'mir4CraftMaterial',
+  'mir4EnhanceItem',
+  'mir4EquipItem',
+  'mir4EquipMount',
+  'mir4EquipSpirit',
   'mir4EquipStarterWeapon',
+  'mir4PlayerState',
   'mir4QuestStatusText',
+  'mir4QuestTrackerEntries',
+  'mir4RedeemTicket',
+  'mir4ResolveItemLayer',
+  'mir4RollItemLayer',
   'setMir4AutoBattle',
   'setMir4AutoQuest',
   'mir4UnequipWeapon',
+  'mir4UnequipSlot',
 ] as const satisfies readonly (keyof IWorldMir4)[];
 type _ExhaustMir4 = AssertNever<Exclude<keyof IWorldMir4, (typeof FACET_MIR4)[number]>>;
 
@@ -1930,8 +2002,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(332);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(332);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(350);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(350);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

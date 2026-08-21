@@ -15,6 +15,38 @@ export interface WorldRect {
   maxZ: number;
 }
 
+/** Minimal zone footprint needed to derive a chunk-aligned injected-world grid. */
+export interface ZoneWorldRect {
+  xMin?: number;
+  xMax?: number;
+  zMin: number;
+  zMax: number;
+}
+
+/**
+ * Bounds an injected zone set on the chunk lattice. The built-in world keeps
+ * its historical constants in its callers; this helper is for WorldContent
+ * whose topology is data-driven and may extend beyond the classic atlas.
+ */
+export function chunkAlignedWorldRect(
+  zones: readonly ZoneWorldRect[],
+  chunkSize: number,
+  fallbackMinX: number,
+  fallbackMaxX: number,
+): WorldRect | null {
+  if (zones.length === 0 || !(chunkSize > 0)) return null;
+  const minX = Math.min(...zones.map((zone) => zone.xMin ?? fallbackMinX));
+  const maxX = Math.max(...zones.map((zone) => zone.xMax ?? fallbackMaxX));
+  const minZ = Math.min(...zones.map((zone) => zone.zMin));
+  const maxZ = Math.max(...zones.map((zone) => zone.zMax));
+  return {
+    minX: Math.floor(minX / chunkSize) * chunkSize,
+    maxX: Math.ceil(maxX / chunkSize) * chunkSize,
+    minZ: Math.floor(minZ / chunkSize) * chunkSize,
+    maxZ: Math.ceil(maxZ / chunkSize) * chunkSize,
+  };
+}
+
 /** Axis-aligned XZ distance from a point to a rect. 0 when the point is inside. */
 export function rectDistance(x: number, z: number, rect: WorldRect): number {
   const dx = Math.max(rect.minX - x, 0, x - rect.maxX);

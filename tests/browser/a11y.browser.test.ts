@@ -8,7 +8,8 @@
 //
 // Canvas/3D surfaces stay OUT of scope: the arena host carries a label + honest
 // summary and is axed as a host window; the map window is a canvas painter covered by its
-// static-HTML host aria (#map-canvas role=img, #map-summary) + tests/client_shell.test.ts, not
+// static-HTML host aria (#map-canvas role=img, keyboard focus, #map-summary) +
+// tests/client_shell.test.ts, not
 // by this painter-mount harness; their pixels get no faked per-marker aria.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';

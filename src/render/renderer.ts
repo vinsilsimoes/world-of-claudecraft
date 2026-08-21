@@ -150,15 +150,10 @@ import {
   shouldTriggerWaterImpact,
   waterContactFrameMode,
 } from './characters/anim_state';
-import { logAssetMissOnce } from './characters/asset_miss_log';
 import {
   characterResidencySources,
-  mechAssetsReady,
   mountAssetsReady,
-  preloadMechAssets,
   preloadMountAssets,
-  preloadTrainingDummyAssets,
-  trainingDummyAssetsReady,
 } from './characters/assets';
 import {
   activeCharacterFormVisual,
@@ -169,6 +164,7 @@ import {
   requestedCharacterForm,
   resolvedCharacterForm,
 } from './characters/form_visual_selection_core';
+import { deferLazyMobTemplatePrewarm, pendingLazyCharacterAssets } from './characters/lazy_assets';
 import { skinCount, visualKeyFor } from './characters/manifest';
 import { modularLookChanged } from './characters/player_look_core';
 import {
@@ -4008,7 +4004,7 @@ export class Renderer {
     const forwardX = this.cameraLookAt.x - cameraX;
     const forwardZ = this.cameraLookAt.z - cameraZ;
     this.visibleZonePrepareQueue = zonesWithinStreamingHorizon(
-      ZONES,
+      this.sim.cfg.world?.zones ?? ZONES,
       cameraX,
       cameraZ,
       horizon,
@@ -4022,14 +4018,14 @@ export class Renderer {
   private evictFarZoneIfConstrained(currentZoneId: string, playerX: number, playerZ: number): void {
     if (!GFX.constrainedMemory) return;
     const zoneId = zonesEligibleForEviction(
-      ZONES,
+      this.sim.cfg.world?.zones ?? ZONES,
       this.preparedZones,
       currentZoneId,
       playerX,
       playerZ,
     )[0];
     if (!zoneId) return;
-    const zone = ZONES.find((z) => z.id === zoneId);
+    const zone = (this.sim.cfg.world?.zones ?? ZONES).find((z) => z.id === zoneId);
     if (!zone) return;
     this.terrainView.unloadZone(zone);
     this.waterView.unloadZone(zone.id);
@@ -5258,7 +5254,7 @@ export class Renderer {
   }
 
   private templateIdsInZone(zone: ZoneDef, kind: 'mob' | 'npc'): string[] {
-    return zonePrewarmTemplateIds(zone.id, kind, this.sim.entities.values());
+    return zonePrewarmTemplateIds(zone.id, kind, this.sim.entities.values(), this.sim.cfg.world);
   }
 
   private buildEntityPrewarmGroup(zone: ZoneDef): {
@@ -5281,22 +5277,22 @@ export class Renderer {
       if (!template) return;
       for (let i = 0; i < copies; i++) {
         const entity = this.prewarmEntity('mob', template.id, template.color, template.scale);
+        if (deferLazyMobTemplatePrewarm(templateId, visualKeyFor(entity))) return;
         const visual = createCharacterVisual(entity);
         // Assets unavailable: skip the seed so a later zone preparation can retry it.
-        if (!visual) continue;
+        if (!visual) return;
         const poolKey = this.visualPoolKeyFor(entity);
         if (poolKey) pooled.push({ key: poolKey, visual });
         visual.root.visible = true;
         place(visual.root);
       }
+      this.prewarmedMobTemplates.add(templateId);
     };
-    // Warm only templates that can appear in this zone. The per-template set
-    // persists across transitions, so shared families are paid once per session.
+    // Warm only templates that can appear here. The set persists across transitions.
     for (const templateId of this.templateIdsInZone(zone, 'mob')) {
       if (this.prewarmedMobTemplates.has(templateId)) continue;
       const copies = PREWARM_MOB_COMMON_IDS.has(templateId) ? PREWARM_MOB_POOL_COPIES : 1;
       build(templateId, copies);
-      this.prewarmedMobTemplates.add(templateId);
     }
     return { group, pooled };
   }
@@ -8792,25 +8788,12 @@ export class Renderer {
       // budget slot every frame, and clearing it when the fetch RESOLVES
       // keeps pop-in at the next frame after readiness (only a rejected
       // fetch waits out the full cooldown).
-      if (visualKey === 'player_mech' && !mechAssetsReady()) {
-        void preloadMechAssets()
-          .then(() => this.viewCreateRetry.markSucceeded(e.id, 'view'))
-          .catch((err) =>
-            logAssetMissOnce('preload:player_mech', 'Failed to preload live mech cosmetic:', err),
-          );
-        this.viewCreateRetry.markFailed(e.id, 'view', performance.now());
-        return;
-      }
-      if (visualKey === 'mob_training_dummy' && !trainingDummyAssetsReady()) {
-        void preloadTrainingDummyAssets()
-          .then(() => this.viewCreateRetry.markSucceeded(e.id, 'view'))
-          .catch((err) =>
-            logAssetMissOnce(
-              'preload:mob_training_dummy',
-              'Failed to preload the Training Dummy:',
-              err,
-            ),
-          );
+      const pendingAssets = pendingLazyCharacterAssets(visualKey);
+      if (pendingAssets) {
+        void pendingAssets.then(
+          () => this.viewCreateRetry.markSucceeded(e.id, 'view'),
+          () => undefined,
+        );
         this.viewCreateRetry.markFailed(e.id, 'view', performance.now());
         return;
       }
@@ -9173,14 +9156,14 @@ export class Renderer {
     if (nextKey === v.visualKey) return;
     const retrySlot = `base:${nextKey}`;
     if (!this.viewCreateRetry.canAttempt(e.id, retrySlot, performance.now())) return;
-    if (nextKey === 'player_mech' && !mechAssetsReady()) {
+    const pendingAssets = pendingLazyCharacterAssets(nextKey);
+    if (pendingAssets) {
       // in-flight cooldown; cleared on fetch resolution so the swap lands the
       // next frame after readiness (see the createView gates)
-      void preloadMechAssets()
-        .then(() => this.viewCreateRetry.markSucceeded(e.id, retrySlot))
-        .catch((err) =>
-          logAssetMissOnce('preload:player_mech', 'Failed to preload live mech cosmetic:', err),
-        );
+      void pendingAssets.then(
+        () => this.viewCreateRetry.markSucceeded(e.id, retrySlot),
+        () => undefined,
+      );
       this.viewCreateRetry.markFailed(e.id, retrySlot, performance.now());
       return;
     }
@@ -13147,10 +13130,10 @@ export class Renderer {
     });
     setRenderCategory(this.farTerrainView.group, 'terrain');
     this.scene.add(this.farTerrainView.group);
-    // A full editor rebuild replaces the zone cache along with the geometry.
-    // Re-run the same preparation path for every resident zone so the renderer
-    // cannot mistake an empty replacement view for an already-ready region.
-    const residentZones = ZONES.filter((zone) => this.preparedZones.has(zone.id));
+    // A full editor rebuild replaces the zone cache with the geometry. Re-run the same
+    // preparation path so an empty replacement view cannot be mistaken for a ready region.
+    const worldZones = this.sim.cfg.world?.zones ?? ZONES;
+    const residentZones = worldZones.filter((zone) => this.preparedZones.has(zone.id));
     this.preparedZones.clear();
     for (const zone of residentZones) {
       void this.prepareZoneAt(zone.hub.x, zone.hub.z);
@@ -13205,7 +13188,7 @@ export class Renderer {
     this.scene.add(this.waterView.group);
     freezeStaticSubtreeMatrices(this.waterView.group);
     this.waterView.setWavesEnabled(this.waterRipplesEnabled);
-    for (const zone of ZONES) {
+    for (const zone of this.sim.cfg.world?.zones ?? ZONES) {
       if (!this.preparedZones.has(zone.id)) continue;
       void this.waterView.ensureZone(zone).then((meshes) => {
         for (const mesh of meshes) freezeStaticMatrices(mesh);

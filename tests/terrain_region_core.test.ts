@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  chunkAlignedWorldRect,
   chunkIntersectsRegion,
   normalTexelBounds,
   owningRectIndex,
@@ -26,6 +27,36 @@ import { terrainHeight, WATER_LEVEL, waterLevel } from '../src/sim/world';
 // (no GL): the Three-side consumers are thin loops over these.
 
 const SEED = 1234;
+
+describe('chunkAlignedWorldRect (injected world grid)', () => {
+  it('covers every zone on the chunk lattice, including a partial final row', () => {
+    expect(
+      chunkAlignedWorldRect(
+        [
+          { xMin: -120, xMax: 120, zMin: 0, zMax: 200 },
+          { xMin: -120, xMax: 120, zMin: 3800, zMax: 4000 },
+        ],
+        60,
+        -180,
+        180,
+      ),
+    ).toEqual({ minX: -120, maxX: 120, minZ: 0, maxZ: 4020 });
+  });
+
+  it('uses strip fallbacks for zones without explicit horizontal bounds', () => {
+    expect(chunkAlignedWorldRect([{ zMin: -5, zMax: 75 }], 60, -180, 180)).toEqual({
+      minX: -180,
+      maxX: 180,
+      minZ: -60,
+      maxZ: 120,
+    });
+  });
+
+  it('rejects an empty zone list or invalid chunk size', () => {
+    expect(chunkAlignedWorldRect([], 60, -180, 180)).toBeNull();
+    expect(chunkAlignedWorldRect([{ zMin: 0, zMax: 1 }], 0, -180, 180)).toBeNull();
+  });
+});
 
 describe('chunkIntersectsRegion (terrain partial rebuild selection)', () => {
   // The live layout: regular 60u chunks, far-field 2x2 super-chunks of 120u.

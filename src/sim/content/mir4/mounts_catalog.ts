@@ -1,7 +1,7 @@
-// Generated from the source project server/mir4-mount-summon-v1.js.
-// DO NOT HAND-EDIT VALUES. Stats are the authoritative equipmentEffect /
-// GRADE_STATS blocks verbatim; visuals stay reference-only placeholders.
-// Names are PT-BR source copy; the English i18n source lands with the HUD.
+// Generated behavioral content: the authoritative equipmentEffect / GRADE_STATS
+// values and logical names are preserved, while every rendered model, reins item,
+// icon and animation comes exclusively from the native WoC 3D runtime.
+// DO NOT HAND-EDIT VALUES. English presentation copy lives in the HUD i18n source.
 
 export interface Mir4MountDef {
   id: string;

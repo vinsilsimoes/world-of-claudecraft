@@ -6,7 +6,9 @@
 // surface (their materials are useIds we do not host yet).
 
 import type { SimContext } from '../sim_context';
+import { creditMir4ArcTutorialReceipt } from './arc_receipts';
 import type { Mir4Materials } from './equipment';
+import { markMir4WireDirty } from './wire_revision';
 
 export interface Mir4CraftRecipe {
   recipeId: string;
@@ -47,14 +49,14 @@ export function mir4Craft(ctx: SimContext, pid: number, recipeId: string): Mir4C
   if (!meta) return { ok: false, code: 'unknown-recipe' };
   const recipe = MIR4_CRAFT_RECIPES[recipeId];
   if (!recipe) return { ok: false, code: 'unknown-recipe' };
-  const wallet = (meta.mir4Materials ??= {
+  const wallet = meta.mir4Materials ?? {
     sunStone: 0,
     moonStone: 0,
     solarScroll: 0,
     lunarSeal: 0,
     dawnTear: 0,
     solarWard: 0,
-  });
+  };
   for (const [key, needed] of Object.entries(recipe.materials)) {
     if (wallet[key as keyof Mir4Materials] < (needed ?? 0)) {
       return { ok: false, code: 'no-materials' };
@@ -64,7 +66,10 @@ export function mir4Craft(ctx: SimContext, pid: number, recipeId: string): Mir4C
   for (const [key, needed] of Object.entries(recipe.materials)) {
     wallet[key as keyof Mir4Materials] -= needed ?? 0;
   }
+  meta.mir4Materials = wallet;
   meta.copper -= recipe.copperCost;
   wallet[recipe.output] += recipe.outputCount;
+  markMir4WireDirty(meta);
+  creditMir4ArcTutorialReceipt(meta, { kind: 'craft-item' });
   return { ok: true, output: recipe.output, count: recipe.outputCount };
 }

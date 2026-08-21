@@ -12,12 +12,12 @@ function errorTexts(events: SimEvent[]): string[] {
 }
 
 describe('/dungeons command', () => {
-  it('lists every dungeon with its door zone and suggested party size', () => {
+  it('lists every player-facing dungeon with its door zone and suggested party size', () => {
     const sim = makeWorld();
     const a = sim.addPlayer('warrior', 'Aleph');
     sim.tick();
 
-    const parts = DUNGEON_LIST.map(
+    const parts = DUNGEON_LIST.filter((dungeon) => !dungeon.internalOnly).map(
       (d) => `${d.name} (${zoneAt(d.doorPos.x, d.doorPos.z).name}, ${d.suggestedPlayers} players)`,
     );
     const expected = `Dungeons (${parts.length}): ${parts.join(', ')}.`;

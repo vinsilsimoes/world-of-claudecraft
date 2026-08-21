@@ -36,6 +36,7 @@ export const MIR4_STATUS_IDS = Object.freeze({
   critical: 30,
   avoidCritical: 31,
   criticalOutcome: 32,
+  skillDamage: 44,
   pvpDamage: 38,
   bossDamage: 41,
   bossDamageReduction: 43,
@@ -258,7 +259,10 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
       : input.forceCritical === false
         ? MIR4_BASIS_POINTS - 1
         : integer(input.criticalRoll ?? 0, 0, 0, MIR4_BASIS_POINTS - 1);
-  const critical = hit && criticalChance > 0 && criticalRoll < criticalChance;
+  const critical =
+    hit &&
+    (input.forceCritical === true ||
+      (input.forceCritical !== false && criticalChance > 0 && criticalRoll < criticalChance));
   const criticalMultiplier = mir4CriticalMultiplierBps(attacker.criticalOutcome);
   const criticalDamage = critical
     ? Math.max(1, Math.floor((rawDamage * criticalMultiplier) / MIR4_BASIS_POINTS))
@@ -315,6 +319,15 @@ export function mir4CoefficientDamage(attackPower: number, coefficient: number):
     1,
     Math.floor((Math.max(1, integer(attackPower)) * Math.max(0, integer(coefficient))) / 10_000),
   );
+}
+
+/** Apply STATUS 44 AddSkillDamage (0..10,000 bps) to a skill's raw damage. */
+export function mir4SkillDamageAfterBoost(rawDamage: number, skillDamageBps = 0): number {
+  const raw = integer(rawDamage);
+  if (raw <= 0) return 0;
+  const boost = integer(skillDamageBps, 0, 0, MIR4_BASIS_POINTS);
+  const scaled = (BigInt(raw) * BigInt(MIR4_BASIS_POINTS + boost)) / BigInt(MIR4_BASIS_POINTS);
+  return scaled > BigInt(Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : Number(scaled);
 }
 
 /** Effective stun chance in bps: clamp(base + success - resistance, 0, 10000). */

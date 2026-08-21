@@ -1,6 +1,5 @@
 import { browserGameProfile } from '../game_profile_runtime';
-import { buildMir4ArcWorld } from '../sim/content/mir4/arc_world';
-import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { activateWorldForGameProfile } from '../sim/game_profile_world';
 import { mir4ShellClassFor } from '../sim/mir4/stats';
 import {
   type Mir4ClassKey,
@@ -10,6 +9,16 @@ import {
   type WorldContent,
 } from '../sim/types';
 import { WORLD_SEED } from '../sim/world_seed';
+
+// Offline names reach innerHTML-backed player-name surfaces. Keep the server's
+// character-name grammar at this client-only boundary too.
+export function sanitizeOfflineName(raw: string): string {
+  const stripped = raw
+    .replace(/[^A-Za-z' -]/g, '')
+    .replace(/^[^A-Za-z]+/, '')
+    .slice(0, 16);
+  return /^[A-Za-z][A-Za-z' -]{1,15}$/.test(stripped) ? stripped : 'Adventurer';
+}
 
 // The offline browser world's Sim options, extracted from main.ts's startOffline
 // so the bootstrap stays thin (main.ts is a firewall, not a home). The client is
@@ -43,8 +52,10 @@ export function offlineSimOptions(opts: {
     // The mir4 profile's offline world: the full 20-map arc (Phase 5.4). An
     // explicit world (the editor play-test) always wins; classic stays on the
     // generated builtin. Set MIR4_ARC_MAPS=1 for the m01-only slice.
-    world:
-      opts.world ?? (profile === MIR4_GAME_PROFILE ? buildMir4ArcWorld(arcMapBudget()) : undefined),
+    world: activateWorldForGameProfile(profile, {
+      explicitWorld: opts.world,
+      mir4MapCount: arcMapBudget(),
+    }),
   };
 }
 

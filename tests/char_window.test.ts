@@ -298,6 +298,11 @@ describe('char_window: profession art placements', () => {
 });
 
 describe('char_window: paperdoll core + HUD-owned preview boundary', () => {
+  it('delegates the MIR4 profile to the shared-window equipment adapter', () => {
+    expect(painter).toContain("from './mir4_equipment_window_adapter'");
+    expect(painter).toContain('paintMir4CharacterWindow({');
+  });
+
   it('registers every computed character-stat label used while opening the window', () => {
     for (const stat of [
       'str',

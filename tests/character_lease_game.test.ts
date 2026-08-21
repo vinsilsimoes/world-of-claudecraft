@@ -12,6 +12,8 @@ vi.mock('../server/db', () => ({
   saveMailState: vi.fn(async () => {}),
   loadMarketState: vi.fn(async () => null),
   loadMailState: vi.fn(async () => null),
+  loadAccountFlair: vi.fn(async () => ({ ai: false, streamer: false, links: {} })),
+  saveRiftState: vi.fn(async () => {}),
   openPlaySession: vi.fn(async () => 1),
   touchCharacterLogin: vi.fn(async () => {}),
   closePlaySession: vi.fn(async () => {}),
@@ -24,7 +26,7 @@ vi.mock('../server/db', () => ({
   insertBankLedgerRow: vi.fn(async () => {}),
   acquireCharacterLease: vi.fn(async () => true),
   releaseCharacterLease: vi.fn(async () => {}),
-  heartbeatCharacterLeases: vi.fn(async () => {}),
+  heartbeatCharacterLeases: vi.fn(async () => 0),
   releaseAllCharacterLeases: vi.fn(async () => {}),
 }));
 
@@ -311,5 +313,22 @@ describe('character load lease, GameServer wiring', () => {
     // The timer reset means the next sub-interval tick does not heartbeat again.
     flush(1);
     expect(vi.mocked(heartbeatCharacterLeases)).toHaveBeenCalledTimes(1);
+  });
+
+  it('renews leases before starting the character autosave wave', async () => {
+    let releaseHeartbeat!: (count: number) => void;
+    vi.mocked(heartbeatCharacterLeases).mockImplementationOnce(
+      () => new Promise((resolve) => (releaseHeartbeat = resolve)),
+    );
+    const server = new GameServer();
+    join(server, 100, 7, 'Ordered', 'nonce-ordered');
+    const flush = (dt: number): void => (server as any).flushPeriodicSaves(dt);
+
+    flush(1000);
+    await Promise.resolve();
+    expect(vi.mocked(saveCharacterState)).not.toHaveBeenCalled();
+
+    releaseHeartbeat(1);
+    await vi.waitFor(() => expect(vi.mocked(saveCharacterState)).toHaveBeenCalledTimes(1));
   });
 });

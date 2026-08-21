@@ -21,6 +21,12 @@ import type { GameProfile } from './game_profile';
 import type { GuildBankState } from './guild_bank';
 import type { PendingLootRoll } from './loot/loot_roll';
 import type { MarketListing } from './market';
+import type {
+  Mir4ArcDungeonRun,
+  Mir4ArcEncounterRun,
+  Mir4ArcEscortRun,
+  Mir4ArcRuntimeTemplateMap,
+} from './mir4/arc_runtime_state';
 import type { MobScanCounters } from './mob/scan_counters';
 import type { CommissionOrder } from './professions/commission_order';
 import type { PendingProjectile } from './projectile_travel';
@@ -96,6 +102,13 @@ export interface SimContextPrimitives {
   // Live player roster (keyed by entity id). Stays a Sim field; exposed here so the
   // moved party machine (A1) resolves member names/metas through the seam.
   readonly players: Map<number, PlayerMeta>;
+  // MIR4 campaign encounter ownership and dynamic mob templates. These are
+  // session-only Sim-owned maps, never module globals, so two realms or tests
+  // in one process remain isolated.
+  readonly mir4ArcEscortRuns: Map<string, Mir4ArcEscortRun>;
+  readonly mir4ArcDungeonRuns: Map<string, Mir4ArcDungeonRun>;
+  readonly mir4ArcEncounterRuns: Map<string, Mir4ArcEncounterRun>;
+  readonly mir4RuntimeMobTemplates: Mir4ArcRuntimeTemplateMap;
   /** Static crafting stations owned by this Sim's authored world bundle. */
   readonly stationPlacements: readonly StationDef[];
   // The local / RL player id (single-player + renderer contexts). Reassigned on the
@@ -1136,6 +1149,18 @@ export function createSimContext(host: SimContextHost): SimContext {
     },
     get players() {
       return host.players;
+    },
+    get mir4ArcEscortRuns() {
+      return host.mir4ArcEscortRuns;
+    },
+    get mir4ArcDungeonRuns() {
+      return host.mir4ArcDungeonRuns;
+    },
+    get mir4ArcEncounterRuns() {
+      return host.mir4ArcEncounterRuns;
+    },
+    get mir4RuntimeMobTemplates() {
+      return host.mir4RuntimeMobTemplates;
     },
     get masteryResetNoticeCounter() {
       return host.masteryResetNoticeCounter;

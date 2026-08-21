@@ -1,136 +1,203 @@
-// The mir4 arc quest runtime (Phase 5.5): drives the 120-quest main chain
-// through the arc world with generic stage executors for the common
-// vocabulary. Each stage kind maps to a verb the auto-quest journey and
-// manual play both ride: talk at the giver, travel to the zone, hunt N mobs
-// of the zone's census, resolve the guardian, discover the waypoint, and the
-// lore-resolution turn-in. The exact per-stage targets (counts, clue sites)
-// stay in the source's compiled runtime as design reference; the executors
-// here implement the KIND semantics at the arc's procedural geometry.
+// Authoritative evidence reducer for the 230-contract MIR4 campaign. It never
+// accepts a client command directly: server-owned systems submit evidence
+// after validating talk proximity, map position, kills, receipts, timers or
+// interactions. Unknown stage kinds fail closed and no stage auto-completes.
 
 import { MIR4_ARC_MOB_IDS } from '../content/mir4/arc_mob_ids';
-import { MIR4_QUESTS_MAIN, mir4ArcQuest } from '../content/mir4/quests_arc';
+import { mir4ArcBands } from '../content/mir4/arc_world';
+import {
+  MIR4_QUESTS_ARC,
+  MIR4_QUESTS_MAIN,
+  type Mir4ArcQuestStage,
+  mir4ArcQuest,
+} from '../content/mir4/quests_arc';
 import { MIR4_WORLD_ARC_BY_MAP } from '../content/mir4/world_arc';
 import type { SimContext } from '../sim_context';
-
-import { dist2d } from '../types';
+import { MIR4_ARC_COMBAT_STAGE_KINDS } from './arc_stage_kinds';
 
 export interface Mir4ArcQuestProgress {
   questId: string;
   stageIndex: number;
-  kills: number;
+  stageProgress: number;
   state: 'active' | 'ready' | 'done';
+  /** Session-only cadence stamp for timed evidence; persistence drops it. */
+  lastEvidenceAt?: number;
+  /** Deterministic subset selected from a repeatable objective pool. */
+  selectedStageIndexes?: number[];
+  completedDay?: string;
 }
 
-/** The stage kinds this runtime executes; others no-op their stage. */
-const EXECUTABLE = new Set([
-  'talk',
-  'travel',
-  'inspect-clues',
-  'system-tutorial',
-  'reconstruct-evidence',
-  'collect-quest-wallet',
-  'lore-resolution',
-  'guardian-resolution',
-  'activate-sequence',
-  'defend-anchor',
-  'selective-hunt',
-  'discover-waypoint',
-  'survive-zone',
-  'escort-entity',
-]);
+export type Mir4ArcQuestEvidence =
+  | { kind: 'talk'; target: string }
+  | { kind: 'travel'; target: string }
+  | { kind: 'kill'; target: string; amount?: number }
+  | { kind: 'stage'; stageKind: string; target?: string; amount?: number };
 
-/** The first main quest whose chain entry has no prerequisite done yet. */
+export type Mir4ArcQuestEvidenceResult = 'advanced' | 'ready' | 'progress' | 'blocked';
+
+const MIR4_ARC_QUEST_ORDER = new Map(
+  MIR4_QUESTS_ARC.map((quest, index) => [quest.questId, index] as const),
+);
+
+/** Canonical campaign order, independent of JSON/object insertion order. */
+export function mir4OrderedArcProgress(
+  quests: Readonly<Record<string, Mir4ArcQuestProgress>> | undefined,
+): Mir4ArcQuestProgress[] {
+  return Object.values(quests ?? {}).sort((left, right) => {
+    const leftIndex = MIR4_ARC_QUEST_ORDER.get(left.questId) ?? Number.MAX_SAFE_INTEGER;
+    const rightIndex = MIR4_ARC_QUEST_ORDER.get(right.questId) ?? Number.MAX_SAFE_INTEGER;
+    return leftIndex - rightIndex || left.questId.localeCompare(right.questId);
+  });
+}
+
 export function mir4NextMainQuest(done: ReadonlySet<string>): string | null {
-  for (const q of MIR4_QUESTS_MAIN) {
-    if (done.has(q.questId)) continue;
-    return q.questId;
-  }
+  for (const quest of MIR4_QUESTS_MAIN) if (!done.has(quest.questId)) return quest.questId;
   return null;
 }
 
-/** The zone band's center for a map id (the quest's mapId -> band geometry). */
-export function mir4QuestZoneCenter(
-  ctx: SimContext,
-  questId: string,
-): { x: number; z: number } | null {
+export function mir4QuestZoneCenter(questId: string): { x: number; z: number } | null {
   const quest = mir4ArcQuest(questId);
-  if (!quest) return null;
-  // Find any entity whose zone contains the target: fall back to the map's
-  // hub by scanning zones for the mapId prefix.
-  const prefix = `mir4_${quest.mapId}`;
-  for (const e of ctx.entities.values()) {
-    if (e.kind !== 'player') continue;
-    void e;
-  }
-  // The arc world's zones are keyed mir4_<mapId>; the player walks there.
-  // For the runtime, the target is the map's band center: derived from the
-  // arc table's sequence.
-  const map = MIR4_WORLD_ARC_BY_MAP.get(quest.mapId);
-  if (!map) return null;
-  return { x: 0, z: map.sequence * 200 - 160 };
+  const map = quest ? MIR4_WORLD_ARC_BY_MAP.get(quest.mapId) : undefined;
+  const band = map ? mir4ArcBands()[map.sequence - 1] : undefined;
+  return band ? { ...band.hub } : null;
 }
 
-/** Advance one stage of a quest: returns the next stage kind or done. */
-export function mir4AdvanceQuestStage(
-  ctx: SimContext,
-  pid: number,
-  progress: Mir4ArcQuestProgress,
-): 'advanced' | 'ready' | 'done' | 'blocked' {
+export function mir4QuestCurrentStage(
+  progress: Readonly<Mir4ArcQuestProgress>,
+): Mir4ArcQuestStage | null {
+  if (progress.state !== 'active') return null;
   const quest = mir4ArcQuest(progress.questId);
-  if (!quest) return 'blocked';
-  const stages = quest.stageKinds;
-  if (progress.stageIndex >= stages.length) {
-    progress.state = 'done';
-    return 'done';
+  const authoredIndex = progress.selectedStageIndexes?.[progress.stageIndex] ?? progress.stageIndex;
+  return quest?.stages[authoredIndex] ?? null;
+}
+
+export function mir4ArcStageGoal(stage: Mir4ArcQuestStage): number {
+  return Math.max(
+    1,
+    Math.floor(stage.goal ?? stage.waves ?? stage.checkpoints ?? stage.seconds ?? 1),
+  );
+}
+
+function targetMatches(stage: Mir4ArcQuestStage, target: string): boolean {
+  if (Array.isArray(stage.target)) return stage.target.includes(target);
+  return stage.target === undefined || stage.target === target;
+}
+
+function mobTargetMatches(stage: Mir4ArcQuestStage, templateId: string, questId: string): boolean {
+  const candidates = [
+    ...(Array.isArray(stage.target) ? stage.target : stage.target ? [stage.target] : []),
+    ...(stage.sources ?? []),
+    ...(stage.guardian ? [stage.guardian] : []),
+  ];
+  if (candidates.length === 0) {
+    return templateId.startsWith(`mir4_quest_${questId.toLowerCase()}_`);
   }
-  const kind = stages[progress.stageIndex];
-  if (!EXECUTABLE.has(kind)) {
-    // Unknown kinds skip: the chain still flows (the kind's target data is
-    // design reference; the semantics land with their dedicated verb).
-    progress.stageIndex += 1;
-    return progress.stageIndex >= stages.length ? 'ready' : 'advanced';
+  const normalizedTemplate = templateId.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  return candidates.some((candidate) => {
+    const normalizedCandidate = candidate.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    return (
+      templateId === candidate ||
+      templateId === `mir4_${candidate}` ||
+      templateId.endsWith(`_${candidate}`) ||
+      normalizedTemplate.endsWith(`_${normalizedCandidate}`)
+    );
+  });
+}
+
+function evidenceAmount(evidence: Mir4ArcQuestEvidence): number {
+  if (evidence.kind === 'kill' || evidence.kind === 'stage') {
+    return Math.max(1, Math.floor(evidence.amount ?? 1));
   }
-  // talk/lore-resolution need the giver nearby; travel needs the zone; hunts
-  // need kills. The auto-quest journey supplies the locomotion; this verb
-  // just validates and advances.
+  return 1;
+}
+
+function evidenceMatches(
+  stage: Mir4ArcQuestStage,
+  evidence: Mir4ArcQuestEvidence,
+  questId: string,
+): boolean {
+  if (stage.kind === 'talk' || stage.kind === 'deliver') {
+    return evidence.kind === 'talk' && targetMatches(stage, evidence.target);
+  }
+  if (stage.kind === 'travel') {
+    return evidence.kind === 'travel' && targetMatches(stage, evidence.target);
+  }
+  if (MIR4_ARC_COMBAT_STAGE_KINDS.has(stage.kind)) {
+    return evidence.kind === 'kill' && mobTargetMatches(stage, evidence.target, questId);
+  }
+  return (
+    evidence.kind === 'stage' &&
+    evidence.stageKind === stage.kind &&
+    targetMatches(stage, evidence.target ?? '')
+  );
+}
+
+export function mir4ApplyQuestEvidence(
+  progress: Mir4ArcQuestProgress,
+  evidence: Mir4ArcQuestEvidence,
+): Mir4ArcQuestEvidenceResult {
+  const quest = mir4ArcQuest(progress.questId);
+  const stage = progress.state === 'active' ? mir4QuestCurrentStage(progress) : null;
+  if (
+    !quest ||
+    !stage ||
+    progress.state !== 'active' ||
+    !evidenceMatches(stage, evidence, progress.questId)
+  ) {
+    return 'blocked';
+  }
+  const goal = mir4ArcStageGoal(stage);
+  progress.stageProgress = Math.min(goal, progress.stageProgress + evidenceAmount(evidence));
+  if (progress.stageProgress < goal) return 'progress';
   progress.stageIndex += 1;
-  if (progress.stageIndex >= stages.length) {
+  progress.stageProgress = 0;
+  progress.lastEvidenceAt = undefined;
+  const stageCount = progress.selectedStageIndexes?.length ?? quest.stages.length;
+  if (progress.stageIndex >= stageCount) {
     progress.state = 'ready';
     return 'ready';
   }
-  void ctx;
-  void pid;
   return 'advanced';
 }
 
-/** Credit a kill toward a hunt stage (3 kills per hunt stage, the source's
- *  common goal for selective-hunt/guardian-resolution stages). */
-export function mir4CreditQuestKill(progress: Mir4ArcQuestProgress, templateId: string): void {
-  const quest = mir4ArcQuest(progress.questId);
-  if (!quest || progress.state !== 'active') return;
-  const stages = quest.stageKinds;
-  const kind = stages[progress.stageIndex];
-  if (
-    kind !== 'selective-hunt' &&
-    kind !== 'guardian-resolution' &&
-    kind !== 'collect-quest-wallet'
-  ) {
-    return;
+/** Apply accepted evidence and mirror its real objective delta into the shared
+ * reward counters used by offline, server, and headless hosts. */
+export function mir4ApplyPlayerQuestEvidence(
+  meta: { counters: { questProgress: number } },
+  progress: Mir4ArcQuestProgress,
+  evidence: Mir4ArcQuestEvidence,
+): Mir4ArcQuestEvidenceResult {
+  const stage = mir4QuestCurrentStage(progress);
+  const before = progress.stageProgress;
+  const goal = stage ? mir4ArcStageGoal(stage) : before;
+  const result = mir4ApplyQuestEvidence(progress, evidence);
+  if (result !== 'blocked') {
+    meta.counters.questProgress += Math.max(
+      0,
+      Math.min(goal, before + evidenceAmount(evidence)) - before,
+    );
   }
-  void templateId;
-  progress.kills += 1;
-  if (progress.kills >= 3) {
-    progress.kills = 0;
-    progress.stageIndex += 1;
-    if (progress.stageIndex >= stages.length) progress.state = 'ready';
-  }
+  return result;
 }
 
-/** The census mob ids for the quest's map (hunt stage targets). */
+export function mir4AdvanceQuestStage(
+  _ctx: SimContext,
+  _pid: number,
+  progress: Mir4ArcQuestProgress,
+  evidence?: Mir4ArcQuestEvidence,
+): 'advanced' | 'ready' | 'progress' | 'blocked' {
+  return evidence ? mir4ApplyQuestEvidence(progress, evidence) : 'blocked';
+}
+
+export function mir4CreditQuestKill(
+  progress: Mir4ArcQuestProgress,
+  templateId: string,
+): 'advanced' | 'ready' | 'progress' | 'blocked' {
+  return mir4ApplyQuestEvidence(progress, { kind: 'kill', target: templateId });
+}
+
 export function mir4QuestHuntTargets(questId: string): readonly string[] {
   const quest = mir4ArcQuest(questId);
-  if (!quest) return [];
-  const map = MIR4_WORLD_ARC_BY_MAP.get(quest.mapId);
-  if (!map) return [];
-  return MIR4_ARC_MOB_IDS[map.sequence - 1] ?? [];
+  const map = quest ? MIR4_WORLD_ARC_BY_MAP.get(quest.mapId) : undefined;
+  return map ? (MIR4_ARC_MOB_IDS[map.sequence - 1] ?? []) : [];
 }

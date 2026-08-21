@@ -23,7 +23,14 @@ import {
 } from '../src/sim/content/talents';
 import { ITEMS, zoneAt } from '../src/sim/data';
 import { completionCounts } from '../src/sim/deeds_completion';
-import { characterDerivedStats } from '../src/sim/entity';
+import { characterDerivedStats, createPlayer } from '../src/sim/entity';
+import {
+  DEFAULT_GAME_PROFILE,
+  type GameProfile,
+  gameProfileForCharacterState,
+  MIR4_GAME_PROFILE,
+} from '../src/sim/game_profile';
+import { mir4ShellClassFor, recalcMir4PlayerStats } from '../src/sim/mir4/stats';
 import { bagOwnedMounts } from '../src/sim/mounts';
 import {
   catalogCharacterCompletion,
@@ -34,7 +41,7 @@ import {
   restoreReliquaryRecent,
 } from '../src/sim/reliquary';
 import type { CharacterState } from '../src/sim/sim';
-import type { PlayerClass } from '../src/sim/types';
+import type { PlayableClass, PlayerClass } from '../src/sim/types';
 import { virtualLevel, xpToReachLevel } from '../src/sim/types';
 import type { CharacterRow } from './db';
 
@@ -76,6 +83,20 @@ export interface SheetStats {
   armor: number;
   pvpOffense: number;
   pvpDefense: number;
+}
+export interface SheetMir4Stats {
+  classId: number;
+  physicalAttack: number;
+  magicAttack: number;
+  physicalDefense: number;
+  magicDefense: number;
+  accuracy: number;
+  dodge: number;
+  critical: number;
+  avoidCritical: number;
+  criticalOutcome: number;
+  bossDamageBps: number;
+  skillDamageBps: number;
 }
 export interface SheetVitals {
   hp: number;
@@ -341,7 +362,8 @@ export function sheetReliquaryFromState(state: CharacterState): SheetReliquary {
 export interface CharacterSheet {
   name: string;
   realm: string;
-  class: PlayerClass;
+  gameProfile: GameProfile;
+  class: PlayableClass;
   classLabel: string;
   spec: string | null;
   level: number;
@@ -362,12 +384,13 @@ export interface CharacterSheet {
   updatedAt: string;
   // owner-only fields (absent on the public variant)
   stats?: SheetStats;
+  mir4Stats?: SheetMir4Stats;
   vitals?: SheetVitals;
   gold?: MoneySplit;
   pos?: { x: number; z: number };
 }
 
-const CLASS_LABELS: Record<PlayerClass, string> = {
+const CLASS_LABELS: Record<PlayableClass, string> = {
   warrior: 'Warrior',
   paladin: 'Paladin',
   hunter: 'Hunter',
@@ -377,6 +400,10 @@ const CLASS_LABELS: Record<PlayerClass, string> = {
   mage: 'Mage',
   warlock: 'Warlock',
   druid: 'Druid',
+  elementalist: 'Elementalist',
+  taoist: 'Taoist',
+  arbalist: 'Arbalist',
+  lancer: 'Lancer',
 };
 
 export function splitCopper(copper: number): MoneySplit {
@@ -440,8 +467,11 @@ function arenaBrackets(state: CharacterState): Record<string, SheetArenaBracket>
 
 export function characterSheet(input: CharacterSheetInput): CharacterSheet {
   const { row, visibility, realm, origin, guild, rank } = input;
-  const cls = row.class as PlayerClass;
+  const cls = row.class as PlayableClass;
   const state: CharacterState = row.state ?? ({} as CharacterState);
+  const gameProfile = gameProfileForCharacterState(state) ?? DEFAULT_GAME_PROFILE;
+  const isMir4 = gameProfile === MIR4_GAME_PROFILE;
+  const shellClass = mir4ShellClassFor(cls, gameProfile);
   const level = row.level ?? state.level ?? 1;
   const skin = Math.max(0, Math.min(7, Math.floor(state.skin ?? 0)));
   const lifetimeXp = state.lifetimeXp ?? xpToReachLevel(level);
@@ -449,17 +479,20 @@ export function characterSheet(input: CharacterSheetInput): CharacterSheet {
   const zPos = state.pos?.z ?? 0;
 
   const base = origin.replace(/\/+$/, '');
-  const avatarUrl = `${base}/avatar/${cls}/${skin}.png`;
+  // Until each MIR4 class has a target-native 3D portrait, use the existing
+  // target Warrior shell. Never fall back to or copy a source-game 2D asset.
+  const avatarUrl = `${base}/avatar/${shellClass}/${skin}.png`;
   const profileUrl = `${base}/c/${encodeURIComponent(row.name)}`;
 
   const sheet: CharacterSheet = {
     name: row.name,
     realm,
+    gameProfile,
     class: cls,
     classLabel: CLASS_LABELS[cls] ?? cls,
-    spec: specLabel(cls, normalizeAllocation(cls, state, level)),
+    spec: isMir4 ? null : specLabel(shellClass, normalizeAllocation(shellClass, state, level)),
     level,
-    virtualLevel: virtualLevel(lifetimeXp),
+    virtualLevel: isMir4 ? level : virtualLevel(lifetimeXp),
     prestigeRank: state.prestigeRank ?? 0,
     skin,
     avatarUrl,
@@ -511,11 +544,52 @@ export function characterSheet(input: CharacterSheetInput): CharacterSheet {
   };
 
   if (visibility === 'owner') {
+    if (isMir4) {
+      const entity = createPlayer(0, shellClass, { x: 0, y: 0, z: 0 }, row.name);
+      entity.level = level;
+      recalcMir4PlayerStats(
+        entity,
+        cls,
+        level,
+        state.mir4Equipment,
+        state.mir4EquipmentInstances,
+        state.mir4Spirits,
+        state.mir4Mounts,
+      );
+      const mir4 = entity.mir4;
+      if (!mir4) throw new Error(`missing MIR4 derived stats for ${cls}`);
+      sheet.mir4Stats = {
+        classId: mir4.classId,
+        physicalAttack: entity.attackPower,
+        magicAttack: entity.spellPower,
+        physicalDefense: mir4.physicalDefense,
+        magicDefense: mir4.magicDefense,
+        accuracy: mir4.accuracy,
+        dodge: mir4.dodge,
+        critical: mir4.critical,
+        avoidCritical: mir4.avoidCritical,
+        criticalOutcome: mir4.criticalOutcome,
+        bossDamageBps: mir4.bossDamageBps,
+        skillDamageBps: mir4.skillDamageBps,
+      };
+      sheet.vitals = {
+        hp: state.hp ?? entity.maxHp,
+        maxHp: entity.maxHp,
+        resource: {
+          type: entity.resourceType ?? 'mana',
+          value: state.resource ?? 0,
+          max: entity.maxResource,
+        },
+      };
+      sheet.gold = splitCopper(copper);
+      sheet.pos = { x: state.pos?.x ?? 0, z: zPos };
+      return sheet;
+    }
     const derived = characterDerivedStats(
-      cls,
+      shellClass,
       level,
       state.equipment ?? {},
-      talentMods(cls, state, level),
+      talentMods(shellClass, state, level),
       state.equipmentInstance ?? state.equipmentInstances ?? {},
     );
     sheet.stats = { ...derived.stats };

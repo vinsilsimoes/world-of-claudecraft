@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -277,7 +277,13 @@ describe('CI workflow parity', () => {
     ]) {
       expect(jobSource(job).split(SPARSE_CONE), job).toHaveLength(2);
     }
-    for (const job of ['pr-checks', 'browser-gate', 'release-checks', 'release-version-gate']) {
+    for (const job of [
+      'pr-checks',
+      'mir4-postgres',
+      'browser-gate',
+      'release-checks',
+      'release-version-gate',
+    ]) {
       expect(jobSource(job).includes(SPARSE_CONE), job).toBe(false);
     }
     expect(workflow.split(SPARSE_CONE)).toHaveLength(6);
@@ -317,11 +323,15 @@ describe('CI workflow parity', () => {
     ];
     const referenced = new Set<string>();
     {
-      const ls = spawnSync('git', ['ls-files', '-z'], {
-        cwd: fileURLToPath(repoRootUrl),
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-      });
+      const ls = spawnSync(
+        'git',
+        ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+        {
+          cwd: fileURLToPath(repoRootUrl),
+          encoding: 'utf8',
+          maxBuffer: 64 * 1024 * 1024,
+        },
+      );
       expect(ls.status).toBe(0);
       const corpus = ls.stdout
         .split('\0')
@@ -330,8 +340,10 @@ describe('CI workflow parity', () => {
             file.length > 0 &&
             file !== SELF &&
             !file.startsWith('docs/screenshots/') &&
+            existsSync(join(fileURLToPath(repoRootUrl), file)) &&
             REFERENCE_EXTENSIONS.some((ext) => file.endsWith(ext)),
-        );
+        )
+        .sort();
       // Vacuity floor near the real count (about 6,600 tracked
       // reference-carrying files on 2026-08-14): an emptied enumeration
       // cannot green the coupling by scanning nothing.
@@ -351,7 +363,7 @@ describe('CI workflow parity', () => {
     expect([...referenced].sort()).toEqual([...coneDirs].sort());
   });
 
-  it('performs no hand-rolled directory reads (the corpus is the git index)', () => {
+  it('performs no hand-rolled directory reads (the corpus is the git worktree inventory)', () => {
     expectScansOnlyThroughSharedWalkers(import.meta.url, []);
   });
 
@@ -871,6 +883,28 @@ describe('CI workflow parity', () => {
     const browserIf = browserGate.match(/^\s{4}if: .+$/gm) ?? [];
     expect(browserIf).toEqual(["    if: needs.changes.outputs.code != 'false'"]);
 
+    const mir4Postgres = jobSource('mir4-postgres');
+    expect(mir4Postgres).toMatch(/^\s{4}needs: changes\s*$/m);
+    expect(mir4Postgres.match(/^\s{4}if: .+$/gm) ?? []).toEqual([
+      "    if: needs.changes.outputs.code != 'false' || (github.event_name == 'pull_request' && github.base_ref == 'main' && startsWith(github.head_ref, 'release/'))",
+    ]);
+    expect(mir4Postgres).toContain('image: postgres:16');
+    expect(mir4Postgres).toContain("WOC_REQUIRE_PG_INTEGRATION: '1'");
+    expect(mir4Postgres).toContain(
+      'run: pnpm exec vitest run tests/character_lease_pg_integration.test.ts tests/mir4_save_v2_pg_integration.test.ts --maxWorkers=1',
+    );
+    expect(mir4Postgres).toContain('run: npx playwright install --with-deps chromium');
+    expect(mir4Postgres).toContain('VITE_GAME_PROFILE: mir4-gameplay-port');
+    expect(mir4Postgres).toContain('GAME_PROFILE: mir4-gameplay-port');
+    expect(mir4Postgres).toContain('node scripts/mp_integration.mjs');
+    expect(mir4Postgres).toContain('node scripts/mp_browser.mjs');
+    expect(mir4Postgres).toContain('node dist-server/server.cjs');
+    expect(mir4Postgres).toContain(
+      'export BROWSER_PATH="$(node -e \'process.stdout.write(require("playwright").chromium.executablePath())\')"',
+    );
+    expect(mir4Postgres).toContain('trap \'kill "$server_pid" || true; cat mir4-server.log\' EXIT');
+    expect(mir4Postgres.match(/\n {6}- name: /g)).toHaveLength(10);
+
     // Aggregator only if branch protection cannot accept skipped checks. This
     // packet does not invent one without evidence (OPEN item 5: skipped release
     // jobs already show as skipping on ordinary PRs without blocking merge).
@@ -1000,6 +1034,7 @@ describe('CI workflow parity', () => {
       'PR long sims A',
       'PR long sims B',
       'PR checks',
+      'MIR4 PostgreSQL 16 proof',
       'Lint (changed files)',
       'Browser tests',
     ] as const;
@@ -1028,6 +1063,7 @@ describe('CI workflow parity', () => {
       '`PR long sims A`',
       '`PR long sims B`',
       '`PR checks`',
+      '`MIR4 PostgreSQL 16 proof`',
       '`Lint (changed files)`',
       '`Browser tests`',
     ] as const;
@@ -1105,6 +1141,11 @@ describe('CI workflow parity', () => {
       // moved for their own workloads, deliberately without dragging these.
       ['pr-checks', 20],
       ['release-checks', 20],
+      // The real PG16 proof carries a 30-second in-test save-wave budget, then
+      // reuses the built profile for WebSocket/browser multiplayer. Its setup
+      // is the union of pr-checks and browser-gate; 20 leaves both margins
+      // without weakening that inner acceptance threshold.
+      ['mir4-postgres', 20],
       // release-version-gate and release-i18n are both unsharded jobs whose
       // own work is fast (one small version-surface check; five test files,
       // "seconds long" by the release-i18n job comment): toolchain setup
@@ -1180,6 +1221,7 @@ describe('CI workflow parity', () => {
       'pr-long-sims-a',
       'pr-long-sims-b',
       'pr-checks',
+      'mir4-postgres',
       'lint',
       'browser-gate',
     ];

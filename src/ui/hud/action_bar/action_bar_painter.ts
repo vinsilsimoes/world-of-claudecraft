@@ -28,6 +28,7 @@ import type { ActionBarState } from './action_bar_view';
 const ARIA_LABEL_ATTR = 'aria-label';
 const ARIA_DESCRIPTION_ATTR = 'aria-description';
 const ARIA_DISABLED_ATTR = 'aria-disabled';
+const ARIA_PRESSED_ATTR = 'aria-pressed';
 const BACKGROUND_IMAGE_PROP = 'background-image';
 const HEIGHT_PROP = 'height';
 // Drives the radial cooldown sweep: a CSS custom property the `.cd-overlay`
@@ -122,6 +123,7 @@ export class ActionBarPainter {
       this.writers.setAttr(el.btn, ARIA_LABEL_ATTR, s.ariaLabel);
       this.writers.setAttr(el.btn, ARIA_DESCRIPTION_ATTR, s.ariaDescription);
       this.writers.setAttr(el.btn, ARIA_DISABLED_ATTR, s.usable ? 'false' : 'true');
+      this.writers.setAttr(el.btn, ARIA_PRESSED_ATTR, s.ariaPressed);
       this.writers.setText(el.keybindEl, s.keybindLabel);
     }
   }

@@ -63,7 +63,9 @@ const MONOLITHS: MonolithRow[] = [
     // count: any further growth reds again.
     // Re-pinned to the moved-base v0.39 wrapper merge output. The combined tree
     // lands below both branch ceilings, so keep the exact merged count.
-    ceiling: 19387,
+    // Lowered after moving entity presentation and active character-preview
+    // orchestration behind their existing UI seams.
+    ceiling: 19374,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -123,12 +125,15 @@ const MONOLITHS: MonolithRow[] = [
     // resolved count.
     // PR #3468 changes the shadow-depth prewarm material contract, but this
     // wrapper's combined renderer remains at the same resolved count.
-    ceiling: 13744,
+    // Lowered after extracting lazy character-asset policy into
+    // src/render/characters/lazy_assets.ts.
+    ceiling: 13730,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
     file: 'src/sim/sim.ts',
-    ceiling: 12660,
+    // Lowered after moving profile-specific commands into mir4/sim_facade.ts.
+    ceiling: 12628,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -138,12 +143,12 @@ const MONOLITHS: MonolithRow[] = [
   },
   {
     file: 'server/game.ts',
-    ceiling: 10900,
+    ceiling: 10897,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
     file: 'src/net/online.ts',
-    ceiling: 5950,
+    ceiling: 5920,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {

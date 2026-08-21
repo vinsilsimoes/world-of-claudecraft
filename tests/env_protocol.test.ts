@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_INPUT_LINE_LENGTH,
+  maxLevelForGameProfile,
   parseTalentResetRequest,
   validateAction,
   validateGameProfile,
@@ -9,9 +10,11 @@ import {
 } from '../headless/protocol';
 import { gainDoom } from '../src/sim/combat/affliction';
 import { addSoulFragments } from '../src/sim/combat/necromancy';
-import { CLASSES, MOBS } from '../src/sim/data';
+import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
+import { CLASSES, MOBS, QUEST_ORDER } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
-import { ACTIONS, encodeObs, NUM_ACTIONS, obsSize } from '../src/sim/obs';
+import { upgradeMir4Skill } from '../src/sim/mir4/skill_evolution';
+import { ACTIONS, applyAction, encodeObs, NUM_ACTIONS, obsSize } from '../src/sim/obs';
 import { grantDevotion } from '../src/sim/paladin_devotion';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
@@ -28,13 +31,18 @@ describe('headless environment protocol validation', () => {
     expect(validateAction(Number.NaN)).toBeNull();
   });
 
-  it('accepts every declared player class and rejects anything else', () => {
+  it('accepts only the roster declared by the selected game profile', () => {
     // all 9 classes are valid env inputs, not just warrior/mage
     for (const cls of ALL_CLASSES) {
-      expect(validatePlayerClass(cls)).toBe(cls);
+      expect(validatePlayerClass(cls, 'woc-classic')).toBe(cls);
     }
     expect(ALL_CLASSES.length).toBe(9);
-    expect(validatePlayerClass('warlock')).toBe('warlock');
+    expect(validatePlayerClass('warlock', 'woc-classic')).toBe('warlock');
+    for (const cls of ['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer']) {
+      expect(validatePlayerClass(cls, 'mir4-gameplay-port')).toBe(cls);
+    }
+    expect(validatePlayerClass('paladin', 'mir4-gameplay-port')).toBeNull();
+    expect(validatePlayerClass('elementalist', 'woc-classic')).toBeNull();
     expect(validatePlayerClass('necromancer')).toBeNull();
     expect(validatePlayerClass('')).toBeNull();
     expect(validatePlayerClass(' warrior')).toBeNull(); // no trimming
@@ -58,6 +66,10 @@ describe('headless environment protocol validation', () => {
     for (const value of [0, 21, 1.5, Number.NaN, Number.POSITIVE_INFINITY, '5', null]) {
       expect(validatePlayerLevel(value)).toBeNull();
     }
+    expect(validatePlayerLevel(250, 'mir4-gameplay-port')).toBe(250);
+    expect(validatePlayerLevel(251, 'mir4-gameplay-port')).toBeNull();
+    expect(maxLevelForGameProfile('woc-classic')).toBe(20);
+    expect(maxLevelForGameProfile('mir4-gameplay-port')).toBe(250);
   });
 
   it('parses one strict canonical talent allocation for a reset', () => {
@@ -72,6 +84,16 @@ describe('headless environment protocol validation', () => {
       talents: canonical.talents,
     });
     expect(parseTalentResetRequest({})).toEqual({ ok: true, playerLevel: 1 });
+    expect(
+      parseTalentResetRequest({ player_level: 250 }, 'mir4-gameplay-port', 'elementalist'),
+    ).toEqual({ ok: true, playerLevel: 250 });
+    expect(
+      parseTalentResetRequest(
+        { player_level: 1, talents: canonical.talents },
+        'mir4-gameplay-port',
+        'elementalist',
+      ),
+    ).toEqual({ ok: false, error: 'talents are unavailable for mir4-gameplay-port' });
   });
 
   it('rejects malformed levels and every legacy or dual-model talent reset shape', () => {
@@ -112,6 +134,92 @@ describe('headless environment protocol validation', () => {
     expect(sizes).toEqual(new Set([obsSize()]));
   });
 
+  it('projects MIR4 cooldowns, level cap, XP and campaign progress into the stable observation shape', () => {
+    const world = buildMir4ArcWorld();
+    const sim = new Sim({
+      seed: 19,
+      playerClass: 'warrior',
+      playerClassMir4: 'warrior',
+      playerName: 'Headless MIR4',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+    });
+    sim.setPlayerLevel(250);
+    const slot = sim.known.findIndex((ability) => ability.cooldownId === '1102');
+    expect(slot).toBeGreaterThanOrEqual(0);
+    sim.player.cooldowns.set('1102', 5);
+    const meta = sim.players.get(sim.playerId);
+    expect(meta).toBeDefined();
+    if (!meta) throw new Error('missing headless MIR4 player metadata');
+    meta.mir4ArcQuests = {
+      'M01-Q01': {
+        questId: 'M01-Q01',
+        stageIndex: 2,
+        stageProgress: 1,
+        state: 'active',
+      },
+    };
+
+    const obs = encodeObs(sim);
+    const readyIndex = 16 + slot * 2;
+    const questStart = obsSize() - 7 - QUEST_ORDER.length * 2;
+    expect(obs).toHaveLength(obsSize());
+    expect(obs[2]).toBe(1);
+    expect(obs[3]).toBe(1);
+    expect(obs[readyIndex]).toBe(0);
+    expect(obs[readyIndex + 1]).toBeGreaterThan(0);
+    expect(obs[questStart]).toBe(0.33);
+    expect(obs[questStart + 1]).toBeGreaterThan(0);
+
+    sim.player.pos.z = 2420;
+    const earlyLateGame = encodeObs(sim)[5];
+    sim.player.pos.z = 3000;
+    const midLateGame = encodeObs(sim)[5];
+    sim.player.pos.z = 3999;
+    const finalMap = encodeObs(sim)[5];
+    expect(earlyLateGame).toBeLessThan(midLateGame);
+    expect(midLateGame).toBeLessThan(finalMap);
+    expect(finalMap).toBeLessThanOrEqual(1);
+  });
+
+  it('claims and observes MIR4 achievements and the port progression bonus through stable RL actions', () => {
+    const sim = new Sim({
+      seed: 23,
+      playerClass: 'warrior',
+      playerClassMir4: 'warrior',
+      gameProfile: 'mir4-gameplay-port',
+      world: buildMir4ArcWorld(),
+    });
+    sim.setPlayerLevel(10);
+    const meta = sim.players.get(sim.playerId);
+    expect(meta).toBeDefined();
+    if (!meta) throw new Error('missing headless MIR4 player metadata');
+    meta.copper = 900;
+    const claimGrade1 = ACTIONS.indexOf('claim_achievement_20101');
+    const claimGrade2 = ACTIONS.indexOf('claim_achievement_20102');
+    expect(claimGrade1).toBeGreaterThanOrEqual(0);
+    expect(claimGrade2).toBeGreaterThan(claimGrade1);
+
+    applyAction(sim, claimGrade2);
+    expect(sim.players.get(sim.playerId)?.mir4AchievementClears).toBeUndefined();
+
+    applyAction(sim, claimGrade1);
+    applyAction(sim, claimGrade1);
+    applyAction(sim, claimGrade2);
+    expect(meta.mir4AchievementClears).toEqual({ 201: 2 });
+    expect(meta.copper).toBe(3_200);
+    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000 });
+    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 3 });
+
+    const claimedObs = encodeObs(sim);
+    const achievementObs = claimedObs.slice(-7, -4);
+    expect(achievementObs).toEqual([1, 1, 1]);
+    expect(claimedObs.at(-1)).toBe(1);
+
+    expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1102, 1).ok).toBe(true);
+    expect(encodeObs(sim).at(-1)).toBe(0);
+  });
+
   it('sizes the action space to the largest class kit so every class is castable', () => {
     // The action space is a module constant with no class input, so num_actions is
     // identical for every player_class. Its ability slots are sized to the largest
@@ -123,8 +231,9 @@ describe('headless environment protocol validation', () => {
     for (const cls of ALL_CLASSES) {
       expect(CLASSES[cls].abilities.length).toBeLessThanOrEqual(abilitySlots);
     }
-    // 13 fixed actions (10 move/target + interact/stop/eat_drink) plus the ability slots
-    expect(NUM_ACTIONS).toBe(13 + abilitySlots);
+    // 15 fixed actions (10 move/target + interact/stop/eat_drink + 2 MIR4 claims)
+    // plus the ability slots.
+    expect(NUM_ACTIONS).toBe(15 + abilitySlots);
   });
 
   it('observes Devotion, Ascension, and the real Divine Ascension readiness gate', () => {
@@ -136,18 +245,18 @@ describe('headless environment protocol validation', () => {
     const readyIndex = 16 + slot * 2;
 
     expect(encodeObs(sim)[readyIndex]).toBe(0);
-    expect(encodeObs(sim).slice(-3)).toEqual([0, 0, 0]);
+    expect(encodeObs(sim).slice(-4, -1)).toEqual([0, 0, 0]);
 
     grantDevotion(sim.player, 20);
     expect(encodeObs(sim)[readyIndex]).toBe(1);
-    expect(encodeObs(sim).slice(-3)).toEqual([1, 0, 0]);
+    expect(encodeObs(sim).slice(-4, -1)).toEqual([1, 0, 0]);
 
     sim.castAbility('divine_ascension');
     expect(encodeObs(sim)[readyIndex]).toBe(0);
-    expect(encodeObs(sim).slice(-3)).toEqual([0, 1, 1]);
+    expect(encodeObs(sim).slice(-4, -1)).toEqual([0, 1, 1]);
 
     const warrior = new Sim({ seed: 18, playerClass: 'warrior', autoEquip: true });
-    expect(encodeObs(warrior).slice(-3)).toEqual([0, 0, 0]);
+    expect(encodeObs(warrior).slice(-4, -1)).toEqual([0, 0, 0]);
   });
 
   it('marks a Necromancy spender ready only when enough Soul Fragments exist', () => {

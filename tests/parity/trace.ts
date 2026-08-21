@@ -170,6 +170,9 @@ export const ENTITY_EXCLUDE: ReadonlySet<string> = new Set([
   'color',
   'skin', // appearance
   'skinCatalog',
+  'mobFamily', // immutable render/wire mirror of the spawn template; never read by sim gameplay
+  'mobElite', // immutable nameplate rank mirror; the template remains the gameplay authority
+  'mobBoss', // immutable nameplate rank mirror; the template remains the gameplay authority
   'potionCdRemaining', // derived display copy of potionCooldownUntil (the pinned authority)
   'firebottleCdRemaining', // derived display copy of PlayerMeta.firebottleReadyAt (the authority)
   'mainhandItemId', // render-only; "the sim never reads it for gameplay"

@@ -23,6 +23,7 @@ export const DUNGEON_DOORS: ReadonlyArray<{ x: number; z: number }> = (() => {
   const seen = new Set<string>();
   const doors: { x: number; z: number }[] = [];
   for (const d of Object.values(DUNGEONS)) {
+    if (d.overworldDoor === false) continue;
     const door = d.doorPos;
     if (!door) continue;
     const key = `${door.x},${door.z}`;

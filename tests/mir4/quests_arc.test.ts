@@ -44,6 +44,21 @@ describe('the quest arc table', () => {
       'lore-resolution',
       'talk',
     ]);
+    expect(q?.stages[2]).toMatchObject({
+      kind: 'inspect-clues',
+      target: 'clues-m01-z01',
+      goal: 3,
+    });
+    expect(q?.purpose).toContain('pegadas dos lobos');
+    expect(q?.dialogue).toHaveLength(3);
+    expect(q?.rewards).toMatchObject({
+      xp: '1432',
+      copper: '200',
+      materials: [
+        { itemId: 'material-pele-jovem', quantity: 2 },
+        { itemId: 'material-fibra-de-espinho', quantity: 2 },
+      ],
+    });
   });
   it('the main chain wires every map: 120 quests across 20 chains', () => {
     const chains = new Set(MIR4_QUESTS_MAIN.map((q) => q.chainId));
@@ -77,6 +92,7 @@ describe('the quest arc table', () => {
     ]) {
       expect(kinds.has(kind)).toBe(true);
     }
+    expect(kinds.size).toBe(35);
   });
 });
 

@@ -23,6 +23,9 @@ interface ShellSlot {
   // Infinity = held open by a live aura (refreshed by stamp each frame)
   dur: number;
   stamp: number;
+  // Local-player barriers are actionable combat state. A full remote pool may
+  // yield one non-priority slot to them, but remote shells never evict one.
+  priority: boolean;
   active: boolean;
 }
 
@@ -74,35 +77,57 @@ export class BuffShells {
       mesh.renderOrder = 6;
       mesh.userData.renderCategory = 'vfx';
       scene.add(mesh);
-      this.slots.push({ mesh, mat, entityId: -1, age: 0, dur: 0, stamp: 0, active: false });
+      this.slots.push({
+        mesh,
+        mat,
+        entityId: -1,
+        age: 0,
+        dur: 0,
+        stamp: 0,
+        priority: false,
+        active: false,
+      });
     }
     proto.dispose();
   }
 
   // Timed shell (buff shellDur): plays once and fades out on its own.
   flash(entityId: number, colorHex: number, dur: number): void {
+    const existing = this.slots.find((s) => s.active && s.entityId === entityId);
     const slot =
-      this.slots.find((s) => s.active && s.entityId === entityId) ??
-      this.slots.find((s) => !s.active) ??
-      this.slots[0];
+      existing ?? this.slots.find((s) => !s.active) ?? this.slots.find((s) => !s.priority);
+    if (!slot) return;
+    const keepPriority = existing?.priority === true;
     slot.active = true;
     slot.entityId = entityId;
     slot.age = 0;
     slot.dur = dur;
+    slot.priority = keepPriority;
     (slot.mat.uniforms.uColor.value as THREE.Color).setHex(colorHex);
     slot.mesh.visible = true;
   }
 
   // Held shell (barrier auras): refreshed every frame while the aura lives;
   // hold() marks it seen, endFrame() releases the ones that stopped arriving.
-  hold(entityId: number, colorHex: number, frame: number): void {
+  hold(entityId: number, colorHex: number, frame: number, priority = false): void {
     let slot = this.slots.find((s) => s.active && s.entityId === entityId);
     if (!slot) {
       slot = this.slots.find((s) => !s.active);
+      if (!slot && priority) {
+        // Prefer the stalest remote shell. Array order is the deterministic
+        // tiebreak when every candidate was refreshed in the same frame.
+        for (const candidate of this.slots) {
+          if (candidate.priority) continue;
+          if (!slot || candidate.stamp < slot.stamp) slot = candidate;
+        }
+      }
       if (!slot) return;
       slot.active = true;
       slot.entityId = entityId;
       slot.age = 0;
+      slot.priority = priority;
+    } else if (priority) {
+      slot.priority = true;
     }
     slot.dur = Number.POSITIVE_INFINITY;
     slot.stamp = frame;

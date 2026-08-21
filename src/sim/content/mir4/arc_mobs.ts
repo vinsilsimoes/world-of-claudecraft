@@ -65,7 +65,7 @@ export function mir4ArcNormalXp(sequence: number): number {
  * from the source census, stats from the spawn formula at the band's levels.
  */
 export function buildMir4ArcMobs(
-  environment: string,
+  _environment: string,
   mobIds: readonly string[],
   levelMin: number,
   levelMax: number,
@@ -119,10 +119,29 @@ const TEMPLATE_CACHE = new Map<string, MobTemplate>();
 export function mir4ArcMobTemplate(templateId: string): MobTemplate | undefined {
   const cached = TEMPLATE_CACHE.get(templateId);
   if (cached) return cached;
+  const mapIndex = MIR4_WORLD_ARC.findIndex((map) => templateId.startsWith(`mir4_${map.mapId}_`));
+  if (mapIndex >= 0) {
+    const map = MIR4_WORLD_ARC[mapIndex];
+    if (!map) return undefined;
+    const mobId = templateId.slice(`mir4_${map.mapId}_`.length);
+    if (!MIR4_ARC_MOB_IDS[mapIndex]?.includes(mobId)) return undefined;
+    const base = buildMir4ArcMobs(
+      map.environment,
+      [mobId],
+      map.levelMin,
+      map.levelMax,
+      map.sequence,
+    )[`mir4_${mobId}`];
+    if (!base) return undefined;
+    const template = { ...base, id: templateId };
+    TEMPLATE_CACHE.set(templateId, template);
+    return template;
+  }
   const mobId = templateId.startsWith('mir4_') ? templateId.slice(5) : templateId;
   for (let i = 0; i < MIR4_ARC_MOB_IDS.length; i++) {
-    if (!MIR4_ARC_MOB_IDS[i]!.includes(mobId)) continue;
-    const map = MIR4_WORLD_ARC[i]!;
+    if (!MIR4_ARC_MOB_IDS[i]?.includes(mobId)) continue;
+    const map = MIR4_WORLD_ARC[i];
+    if (!map) continue;
     const built = buildMir4ArcMobs(
       map.environment,
       [mobId],

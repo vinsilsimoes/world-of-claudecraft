@@ -1615,6 +1615,29 @@
   .spell-hotbar-toggle {
     display: none;
   }
+  .spell-evolution {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+    max-width: 104px;
+  }
+  .spell-evolution-cost {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    line-height: 1.15;
+    text-align: center;
+  }
+  .spell-upgrade-btn {
+    min-height: 28px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .spell-upgrade-btn:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
+  }
   .panel-title-actions {
     display: flex;
     align-items: center;
@@ -6438,6 +6461,14 @@
   #bags .bag-filter-bar {
     flex: none;
   }
+  #bags .mir4-bag-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
   #bags .bag-grid {
     flex: 1 1 auto;
     min-height: 0;
@@ -6445,6 +6476,13 @@
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+  }
+  #bags .mir4-bag-scroll > .bag-grid {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    touch-action: auto;
+    overscroll-behavior: auto;
   }
   #bags .money {
     flex: none;
@@ -13267,6 +13305,10 @@
     outline: 1px solid #000;
     border-radius: 4px;
     touch-action: none;
+  }
+  #map-canvas:focus-visible {
+    outline: 3px solid var(--color-border-focus);
+    outline-offset: 2px;
   }
   /* ---------- options / game menu (Esc) ---------- */
   #options-menu {

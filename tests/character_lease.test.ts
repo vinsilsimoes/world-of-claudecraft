@@ -22,6 +22,7 @@ import {
   PROCESS_LEASE_HOLDER,
   releaseAllCharacterLeases,
   releaseCharacterLease,
+  saveCharacterAndGuildBankState,
   saveCharacterAndMarketState,
   saveCharacterState,
 } from '../server/db';
@@ -63,6 +64,13 @@ describe('acquireCharacterLease', () => {
     expect(ok).toBe(true);
 
     const sql = firstSql();
+    expect(sql).toContain('WITH locked_character AS MATERIALIZED');
+    expect(sql).toContain('FROM characters');
+    expect(sql).toContain('account_id = $5 AND realm = $2');
+    expect(sql).toContain('FOR KEY SHARE');
+    expect(sql.indexOf('FROM characters')).toBeLessThan(
+      sql.indexOf('INSERT INTO character_leases'),
+    );
     expect(sql).toContain(
       'INSERT INTO character_leases (character_id, realm, holder, nonce, account_id, acquired_at, heartbeat_at, expires_at)',
     );
@@ -75,9 +83,11 @@ describe('acquireCharacterLease', () => {
     // a stranded lease). A live lease that is none of those matches no arm, so the
     // upsert touches nothing and rowCount stays 0.
     expect(sql).toContain(
-      'WHERE character_leases.expires_at < now() OR character_leases.holder = EXCLUDED.holder OR character_leases.account_id = EXCLUDED.account_id',
+      'WHERE character_leases.expires_at < clock_timestamp() OR character_leases.holder = EXCLUDED.holder OR character_leases.account_id = EXCLUDED.account_id',
     );
     expect(sql).toContain('make_interval(secs => $6)');
+    expect(sql).toContain('expires_at = clock_timestamp() + make_interval(secs => $6)');
+    expect(sql).not.toContain('expires_at = EXCLUDED.expires_at');
     // Params: character id, this process realm, the default holder, the nonce, the account id, the 90s TTL.
     expect(firstParams()).toEqual([42, REALM, PROCESS_LEASE_HOLDER, 'nonce-1', 100, 90]);
   });
@@ -120,14 +130,19 @@ describe('releaseCharacterLease', () => {
 });
 
 describe('heartbeatCharacterLeases', () => {
-  it('extends every lease held by this process in one statement', async () => {
+  it('extends every unlocked lease held by this process in one statement', async () => {
     await heartbeatCharacterLeases();
     const sql = firstSql();
+    expect(sql).toContain('WITH renewable AS MATERIALIZED');
     expect(sql).toContain('UPDATE character_leases');
     expect(sql).toContain('make_interval(secs => $2)');
     expect(sql).toContain('WHERE holder = $1');
+    expect(sql).toContain('expires_at >= now()');
+    expect(sql).toContain('FOR UPDATE SKIP LOCKED');
+    expect(sql).toContain('FROM renewable');
     // A lease already reclaimed by another holder is not matched, so this can
-    // never steal one back.
+    // never steal one back. A row currently being renewed by its own save is
+    // skipped instead of holding every other heartbeat behind it.
     expect(firstParams()).toEqual([PROCESS_LEASE_HOLDER, 90]);
   });
 
@@ -191,12 +206,16 @@ describe('shutdown wiring (source pin)', () => {
 // saveCharacterAndMarketState directly). The character UPDATE reports the given
 // rowCount; every other statement (BEGIN / SET LOCAL / world_state / COMMIT /
 // ROLLBACK) resolves harmlessly. rowCount drives the lease-fence boolean.
-function checkedOutClient(updateRowCount: number | undefined) {
-  const query = vi.fn(async (sql: string, _values?: unknown[]) =>
-    /UPDATE characters/i.test(String(sql))
-      ? ({ rows: [], rowCount: updateRowCount } as any)
-      : ({ rows: [], rowCount: 0 } as any),
-  );
+function checkedOutClient(updateRowCount: number | undefined, finalRenewRowCount = 1) {
+  const query = vi.fn(async (sql: string, _values?: unknown[]) => {
+    if (/UPDATE characters/i.test(String(sql))) {
+      return { rows: [], rowCount: updateRowCount } as any;
+    }
+    if (/^\s*UPDATE character_leases\s+SET/i.test(String(sql))) {
+      return { rows: [], rowCount: finalRenewRowCount } as any;
+    }
+    return { rows: [], rowCount: 0 } as any;
+  });
   const release = vi.fn();
   return { query, release };
 }
@@ -246,11 +265,30 @@ describe('saveCharacterState lease fence', () => {
     expect(updates).toHaveLength(1);
     expect(updates[0]).toContain('EXISTS');
     expect(updates[0]).toContain('character_leases');
+    expect(updates[0]).toContain('WITH locked_character AS MATERIALIZED');
+    expect(updates[0]).toContain('expires_at >= clock_timestamp()');
+    expect(updates[0]).toContain('AS MATERIALIZED');
+    expect(updates[0]).toContain('FOR UPDATE OF lease');
+    expect(updates[0].indexOf('FROM characters')).toBeLessThan(
+      updates[0].indexOf('FROM character_leases'),
+    );
     // No standalone SELECT statement (the EXISTS subquery rides inside the UPDATE).
     expect(stmts.some((s) => /^\s*SELECT/i.test(s))).toBe(false);
     // holder + nonce are bound into that one fenced statement.
     const updateCall = client.query.mock.calls.find((c) => /UPDATE characters/i.test(String(c[0])));
-    expect(updateCall?.[1]).toEqual([42, 7, expect.any(String), PROCESS_LEASE_HOLDER, 'nonce-1']);
+    expect(updateCall?.[1]).toEqual([
+      42,
+      7,
+      expect.any(String),
+      PROCESS_LEASE_HOLDER,
+      'nonce-1',
+      90,
+    ]);
+    expect(updates[0]).toContain('UPDATE character_leases AS lease');
+    expect(updates[0]).toContain('SET heartbeat_at = clock_timestamp()');
+    expect(updates[0]).toContain('make_interval(secs => $6)');
+    expect(updates[0].match(/lease\.expires_at >= clock_timestamp\(\)/g)).toHaveLength(2);
+    expect(updates[0].match(/lease\.holder = \$4 AND lease\.nonce = \$5/g)).toHaveLength(2);
     // The write runs on the checked-out client, never the bare pool.
     expect(dbMock.query).not.toHaveBeenCalled();
   });
@@ -299,8 +337,35 @@ describe('saveCharacterAndMarketState lease fence', () => {
     const stmts = client.query.mock.calls.map((c) => String(c[0]));
     // Both escrow halves (Market + Ravenpost mail), then COMMIT, no ROLLBACK.
     expect(stmts.filter((s) => /world_state/i.test(s))).toHaveLength(2);
+    const finalRenew = stmts.findIndex((s) => /^\s*UPDATE character_leases\s+SET/i.test(s));
+    const lastEscrow = stmts.reduce((last, s, i) => (/world_state/i.test(s) ? i : last), -1);
+    const commit = stmts.findIndex((s) => /^COMMIT/.test(s));
+    expect(finalRenew).toBeGreaterThan(lastEscrow);
+    expect(finalRenew).toBeLessThan(commit);
+    expect(stmts[finalRenew]).toContain('clock_timestamp()');
+    expect(client.query.mock.calls[finalRenew]?.[1]).toEqual([
+      42,
+      PROCESS_LEASE_HOLDER,
+      'nonce-1',
+      90,
+    ]);
     expect(stmts.some((s) => /^COMMIT/.test(s))).toBe(true);
     expect(stmts.some((s) => /ROLLBACK/.test(s))).toBe(false);
+  });
+
+  it('rolls back every escrow half when the final exact-lease renewal misses', async () => {
+    const client = checkedOutClient(1, 0);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    expect(await saveCharacterAndMarketState(42, 7, STATE, MARKET, MAIL, 'nonce-final-miss')).toBe(
+      false,
+    );
+
+    const stmts = client.query.mock.calls.map((c) => String(c[0]));
+    expect(stmts.filter((s) => /world_state/i.test(s))).toHaveLength(2);
+    expect(stmts.some((s) => /^\s*UPDATE character_leases\s+SET/i.test(s))).toBe(true);
+    expect(stmts.some((s) => /^ROLLBACK/.test(s))).toBe(true);
+    expect(stmts.some((s) => /^COMMIT/.test(s))).toBe(false);
   });
 
   it('a fenced-out character UPDATE (rowCount 0) rolls back, writes neither escrow, and resolves false', async () => {
@@ -330,10 +395,53 @@ describe('saveCharacterAndMarketState lease fence', () => {
 
     const charCall = client.query.mock.calls.find((c) => /UPDATE characters/i.test(String(c[0])));
     expect(String(charCall?.[0])).toContain('EXISTS');
-    expect(charCall?.[1]).toEqual([42, 7, expect.any(String), PROCESS_LEASE_HOLDER, 'stale-nonce']);
+    expect(charCall?.[1]).toEqual([
+      42,
+      7,
+      expect.any(String),
+      PROCESS_LEASE_HOLDER,
+      'stale-nonce',
+      90,
+    ]);
     // No further writes after the miss: no escrow upsert, no COMMIT.
     const stmts = client.query.mock.calls.map((c) => String(c[0]));
     expect(stmts.some((s) => /world_state/i.test(s))).toBe(false);
+    expect(stmts.some((s) => /^COMMIT/.test(s))).toBe(false);
+  });
+});
+
+describe('saveCharacterAndGuildBankState final lease renewal', () => {
+  beforeEach(() => {
+    dbMock.connect.mockReset();
+  });
+
+  it('refreshes the exact lease after book writes and immediately before COMMIT', async () => {
+    const client = checkedOutClient(1);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    expect(await saveCharacterAndGuildBankState(42, 7, STATE, [], 'nonce-guild-final')).toBe(true);
+
+    const stmts = client.query.mock.calls.map((c) => String(c[0]));
+    const finalRenew = stmts.findIndex((s) => /^\s*UPDATE character_leases\s+SET/i.test(s));
+    const commit = stmts.findIndex((s) => /^COMMIT/.test(s));
+    expect(finalRenew).toBeGreaterThan(stmts.findIndex((s) => /UPDATE characters/i.test(s)));
+    expect(finalRenew).toBeLessThan(commit);
+    expect(client.query.mock.calls[finalRenew]?.[1]).toEqual([
+      42,
+      PROCESS_LEASE_HOLDER,
+      'nonce-guild-final',
+      90,
+    ]);
+  });
+
+  it('rolls the character write back when the final lease renewal misses', async () => {
+    const client = checkedOutClient(1, 0);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    expect(await saveCharacterAndGuildBankState(42, 7, STATE, [], 'nonce-guild-miss')).toBe(false);
+
+    const stmts = client.query.mock.calls.map((c) => String(c[0]));
+    expect(stmts.some((s) => /^ROLLBACK/.test(s))).toBe(true);
     expect(stmts.some((s) => /^COMMIT/.test(s))).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ import { setActiveWorldContent } from '../../src/sim/data';
 import {
   type Mir4ArcQuestProgress,
   mir4AdvanceQuestStage,
+  mir4ApplyQuestEvidence,
   mir4CreditQuestKill,
   mir4NextMainQuest,
   mir4QuestHuntTargets,
@@ -45,38 +46,72 @@ describe('the arc quest chain', () => {
     expect(doneAll.size).toBe(120);
     expect(mir4NextMainQuest(doneAll)).toBeNull();
   });
-  it('advances through stages to ready, hunting kills on hunt stages', () => {
+  it('fails closed without validated evidence and advances M01-Q01 one exact objective at a time', () => {
     setActiveWorldContent(buildMir4ArcWorld(2));
     const sim = makeSim();
     const progress: Mir4ArcQuestProgress = {
       questId: 'M01-Q01',
       stageIndex: 0,
-      kills: 0,
+      stageProgress: 0,
       state: 'active',
     };
-    // M01-Q01: talk>travel>inspect-clues>system-tutorial>reconstruct-evidence>lore-resolution>talk
-    let result: string = 'advanced';
-    let guard = 0;
-    while (guard++ < 30) {
-      result = mir4AdvanceQuestStage(sim.ctx, sim.playerId, progress);
-      if (result === 'ready' || result === 'done' || result === 'blocked') break;
+    expect(mir4AdvanceQuestStage(sim.ctx, sim.playerId, progress)).toBe('blocked');
+    expect(mir4ApplyQuestEvidence(progress, { kind: 'talk', target: 'wrong-npc' })).toBe('blocked');
+    expect(
+      mir4AdvanceQuestStage(sim.ctx, sim.playerId, progress, {
+        kind: 'talk',
+        target: 'tarek-duas-pontes',
+      }),
+    ).toBe('advanced');
+    expect(mir4ApplyQuestEvidence(progress, { kind: 'travel', target: 'm01-z01' })).toBe(
+      'advanced',
+    );
+    expect(
+      mir4ApplyQuestEvidence(progress, {
+        kind: 'stage',
+        stageKind: 'inspect-clues',
+        target: 'clues-m01-z01',
+      }),
+    ).toBe('progress');
+    expect(
+      mir4ApplyQuestEvidence(progress, {
+        kind: 'stage',
+        stageKind: 'inspect-clues',
+        target: 'clues-m01-z01',
+        amount: 2,
+      }),
+    ).toBe('advanced');
+    for (const [stageKind, target] of [
+      ['system-tutorial', 'M01-Q01'],
+      ['reconstruct-evidence', 'evidence-m01-z01'],
+      ['lore-resolution', 'lore-m01-z01'],
+    ] as const) {
+      expect(mir4ApplyQuestEvidence(progress, { kind: 'stage', stageKind, target })).toBe(
+        'advanced',
+      );
     }
-    expect(result).toBe('ready');
+    expect(mir4ApplyQuestEvidence(progress, { kind: 'talk', target: 'tarek-duas-pontes' })).toBe(
+      'ready',
+    );
     expect(progress.state).toBe('ready');
     expect(progress.stageIndex).toBe(7);
-    // A hunt quest credits kills: use M02-Q02 (escort-entity>guardian-resolution).
+  });
+
+  it('credits only the authored target and exact goal for selective hunts', () => {
     const hunt: Mir4ArcQuestProgress = {
-      questId: 'M02-Q02',
+      questId: 'M03-Q04',
       stageIndex: 3,
-      kills: 0,
+      stageProgress: 0,
       state: 'active',
     };
-    // Stage 3 is guardian-resolution: 3 kills advance it.
-    mir4CreditQuestKill(hunt, 'mir4_forest_wolf');
-    mir4CreditQuestKill(hunt, 'mir4_thorn_imp');
-    expect(hunt.stageIndex).toBe(3); // not yet
-    mir4CreditQuestKill(hunt, 'mir4_thorn_imp');
-    expect(hunt.stageIndex).toBe(4); // advanced past the hunt
+    expect(mir4CreditQuestKill(hunt, 'mir4_forest_wolf')).toBe('blocked');
+    for (let kill = 1; kill <= 4; kill++) {
+      expect(mir4CreditQuestKill(hunt, 'mir4_m03-bosque-do-vale_owlbear_cub')).toBe(
+        kill === 4 ? 'advanced' : 'progress',
+      );
+    }
+    expect(hunt.stageIndex).toBe(4);
+    expect(hunt.stageProgress).toBe(0);
   });
   it('the hunt targets come from the quest map census', () => {
     expect(mir4QuestHuntTargets('M01-Q01')).toContain('forest_wolf');

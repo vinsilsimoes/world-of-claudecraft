@@ -25,6 +25,7 @@
 
 import { ESCORTS, MOBS, QUESTS } from './data';
 import { createMob } from './entity';
+import { isActiveMir4ArcEscortee } from './mir4/arc_escorts';
 import { emitMobYell } from './mob/yells';
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
@@ -103,6 +104,7 @@ export function initEscorts(ctx: SimContext): void {
 // True while this entity is an escortee with a live run (the heal-target arm
 // in Sim.isFriendlyTo). The map is a handful of defs, so the walk is cheap.
 export function isActiveEscortee(ctx: SimContext, e: Entity): boolean {
+  if (isActiveMir4ArcEscortee(ctx, e)) return true;
   for (const state of ctx.escortRuns.values()) {
     if (state.npcId === e.id && state.run !== null) return true;
   }

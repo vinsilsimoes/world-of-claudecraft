@@ -147,12 +147,43 @@ function clientStub() {
 }
 
 describe('deleteCharacter', () => {
+  function deleteClient(hasActive: unknown, rowCount = 1, characterRows: unknown[] = [{ id: 42 }]) {
+    const client = clientStub();
+    client.query.mockImplementation(async (sql: string) => {
+      if (/SELECT id[\s\S]*FROM characters[\s\S]*FOR UPDATE/i.test(sql)) {
+        return { rows: characterRows, rowCount: characterRows.length } as any;
+      }
+      if (/SELECT expires_at[\s\S]*FROM character_leases/i.test(sql)) {
+        const rows = hasActive === null ? [] : [{ active: hasActive }];
+        return { rows, rowCount: rows.length } as any;
+      }
+      if (/DELETE FROM characters/i.test(sql)) {
+        return { rows: [], rowCount } as any;
+      }
+      return { rows: [], rowCount: 0 } as any;
+    });
+    return client;
+  }
+
   it('scopes the delete to the current realm so cross-realm characters are safe', async () => {
-    dbMock.query.mockResolvedValueOnce({ rowCount: 1 } as any);
+    const client = deleteClient(false);
+    dbMock.connect.mockResolvedValueOnce(client as any);
 
     await deleteCharacter(7, 42);
 
-    const [sql, params] = dbMock.query.mock.calls[0];
+    const calls = client.query.mock.calls;
+    const characterIndex = calls.findIndex(([sql]) =>
+      /SELECT id[\s\S]*FROM characters[\s\S]*FOR UPDATE/i.test(sql),
+    );
+    const leaseIndex = calls.findIndex(([sql]) =>
+      /SELECT expires_at[\s\S]*FROM character_leases[\s\S]*FOR UPDATE/i.test(sql),
+    );
+    const deleteIndex = calls.findIndex(([sql]) => /DELETE FROM characters/i.test(sql));
+    expect(characterIndex).toBeGreaterThan(-1);
+    expect(leaseIndex).toBeGreaterThan(characterIndex);
+    expect(deleteIndex).toBeGreaterThan(leaseIndex);
+    expect(calls.some(([sql]) => /LOCK TABLE/i.test(sql))).toBe(false);
+    const [sql, params] = calls[deleteIndex];
     expect(sql).toMatch(/realm/i);
     expect(params).toContain(REALM);
     // id + account + realm: the same three predicates getCharacter/renameCharacter use
@@ -161,21 +192,84 @@ describe('deleteCharacter', () => {
   });
 
   it('reports whether a row was actually deleted', async () => {
-    dbMock.query.mockResolvedValueOnce({ rowCount: 0 } as any);
+    dbMock.connect.mockResolvedValueOnce(deleteClient(false, 0) as any);
     expect(await deleteCharacter(7, 42)).toBe(false);
     expect(dbMock.bustGuildList).not.toHaveBeenCalled();
 
-    dbMock.query.mockResolvedValueOnce({ rowCount: 1 } as any);
+    dbMock.connect.mockResolvedValueOnce(deleteClient(false, 1) as any);
     expect(await deleteCharacter(7, 42)).toBe(true);
     expect(dbMock.bustGuildList).toHaveBeenCalledOnce();
   });
 
+  it('refuses an active cross-process lease without touching the character row', async () => {
+    const client = deleteClient(true);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    expect(await deleteCharacter(7, 42)).toBe(false);
+
+    expect(client.query.mock.calls.some(([sql]) => /DELETE FROM characters/i.test(sql))).toBe(
+      false,
+    );
+    expect(client.query.mock.calls.at(-1)?.[0]).toBe('COMMIT');
+    expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+  });
+
+  it('allows deletion with no lease row after locking the character gap', async () => {
+    const client = deleteClient(null);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    expect(await deleteCharacter(7, 42)).toBe(true);
+
+    const calls = client.query.mock.calls.map(([sql]) => String(sql));
+    expect(calls.findIndex((sql) => /FROM characters[\s\S]*FOR UPDATE/i.test(sql))).toBeLessThan(
+      calls.findIndex((sql) => /FROM character_leases[\s\S]*FOR UPDATE/i.test(sql)),
+    );
+    expect(calls.some((sql) => /DELETE FROM characters/i.test(sql))).toBe(true);
+  });
+
+  it('returns false before probing leases when ownership or realm did not match', async () => {
+    const client = deleteClient(null, 1, []);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    expect(await deleteCharacter(7, 42)).toBe(false);
+
+    expect(client.query.mock.calls.some(([sql]) => /FROM character_leases/i.test(sql))).toBe(false);
+    expect(client.query.mock.calls.some(([sql]) => /DELETE FROM characters/i.test(sql))).toBe(
+      false,
+    );
+  });
+
+  it('fails closed when the active-lease projection is malformed', async () => {
+    const client = deleteClient(undefined);
+    dbMock.connect.mockResolvedValueOnce(client as any);
+
+    await expect(deleteCharacter(7, 42)).rejects.toThrow('malformed active-lease result');
+
+    expect(client.query.mock.calls.some(([sql]) => /DELETE FROM characters/i.test(sql))).toBe(
+      false,
+    );
+    expect(client.query.mock.calls.map(([sql]) => sql)).toContain('ROLLBACK');
+    expect(client.query.mock.calls.map(([sql]) => sql)).not.toContain('COMMIT');
+    expect(client.release).toHaveBeenCalledOnce();
+  });
+
   it('does not invalidate the guild directory when the delete fails', async () => {
-    dbMock.query.mockRejectedValueOnce(new Error('delete failed'));
+    const client = deleteClient(false);
+    client.query.mockImplementation(async (sql: string) => {
+      if (/SELECT id[\s\S]*FROM characters/i.test(sql))
+        return { rows: [{ id: 42 }], rowCount: 1 } as any;
+      if (/FROM character_leases/i.test(sql))
+        return { rows: [{ active: false }], rowCount: 1 } as any;
+      if (/DELETE FROM characters/i.test(sql)) throw new Error('delete failed');
+      return { rows: [], rowCount: 0 } as any;
+    });
+    dbMock.connect.mockResolvedValueOnce(client as any);
 
     await expect(deleteCharacter(7, 42)).rejects.toThrow('delete failed');
 
     expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+    expect(client.query.mock.calls.map(([sql]) => sql)).toContain('ROLLBACK');
+    expect(client.release).toHaveBeenCalledOnce();
   });
 });
 
@@ -891,11 +985,29 @@ describe('character roster feed enqueues', () => {
   });
 
   it('enqueues for a delete that matched a row, never for one that matched none', async () => {
-    dbMock.query.mockResolvedValueOnce({ rowCount: 0 } as any);
+    const miss = clientStub();
+    miss.query.mockImplementation(async (sql: string) => {
+      if (/SELECT id[\s\S]*FROM characters/i.test(sql))
+        return { rows: [{ id: 42 }], rowCount: 1 } as any;
+      if (/FROM character_leases/i.test(sql))
+        return { rows: [{ active: false }], rowCount: 1 } as any;
+      if (/DELETE FROM characters/i.test(sql)) return { rows: [], rowCount: 0 } as any;
+      return { rows: [], rowCount: 0 } as any;
+    });
+    dbMock.connect.mockResolvedValueOnce(miss as any);
     expect(await deleteCharacter(7, 42)).toBe(false);
     expect(drainLinkChanges()).toEqual([]);
 
-    dbMock.query.mockResolvedValueOnce({ rowCount: 1 } as any);
+    const hit = clientStub();
+    hit.query.mockImplementation(async (sql: string) => {
+      if (/SELECT id[\s\S]*FROM characters/i.test(sql))
+        return { rows: [{ id: 42 }], rowCount: 1 } as any;
+      if (/FROM character_leases/i.test(sql))
+        return { rows: [{ active: false }], rowCount: 1 } as any;
+      if (/DELETE FROM characters/i.test(sql)) return { rows: [], rowCount: 1 } as any;
+      return { rows: [], rowCount: 0 } as any;
+    });
+    dbMock.connect.mockResolvedValueOnce(hit as any);
     expect(await deleteCharacter(7, 42)).toBe(true);
     expect(drainLinkChanges()).toEqual([{ accountId: 7, kinds: ['flex'] }]);
   });

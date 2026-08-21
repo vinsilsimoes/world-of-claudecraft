@@ -9,6 +9,9 @@
 // emit the flavor line in the same arcane #b9f the dungeon transitions use.
 
 import { DUNGEON_X_THRESHOLD, PORTALS } from './data';
+import { MIR4_GAME_PROFILE } from './game_profile';
+import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
+import { MIR4_ARC_PORTALS } from './mir4/travel';
 import { cancelProfessionSessionOnDisplacement } from './professions/session_teardown';
 import type { SimContext } from './sim_context';
 import type { Entity, PortalSide } from './types';
@@ -40,12 +43,17 @@ function teleport(ctx: SimContext, p: Entity, to: PortalSide, text: string): voi
   p.onGround = true;
   p.fallStartY = p.pos.y;
   ctx.emit({ type: 'log', text, color: '#b9f', pid: p.id });
+  const meta = ctx.players.get(p.id);
+  if (ctx.gameProfile === MIR4_GAME_PROFILE && meta) {
+    creditMir4ArcTutorialReceipt(meta, { kind: 'portal-travel' });
+  }
 }
 
 export function updatePortalTriggers(ctx: SimContext, p: Entity): void {
   if (p.kind !== 'player') return;
   if (p.pos.x > DUNGEON_X_THRESHOLD) return; // instances have their own exits
-  for (const portal of PORTALS) {
+  const portals = ctx.gameProfile === MIR4_GAME_PROFILE ? MIR4_ARC_PORTALS : PORTALS;
+  for (const portal of portals) {
     const radius = portal.radius > 0 ? portal.radius : PORTAL_TRIGGER_RADIUS;
     if (dist2dTo(p, portal.a) < radius) {
       teleport(ctx, p, portal.b, portal.enterText);

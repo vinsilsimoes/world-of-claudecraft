@@ -68,6 +68,7 @@ for (const zone of ZONES) {
 
 const dungeons = {};
 for (const [id, def] of Object.entries(DUNGEONS)) {
+  if (def.internalOnly) continue;
   const spawnTemplates = new Set();
   for (const spawn of def.spawns ?? []) {
     const template = spawn.template ?? spawn.templateId ?? spawn.mob ?? null;

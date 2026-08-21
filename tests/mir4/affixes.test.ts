@@ -3,6 +3,7 @@ import { mir4EquipmentItem } from '../../src/sim/content/mir4/equipment_catalog'
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { mir4ResolveLayer, mir4RollLayer } from '../../src/sim/mir4/affixes';
+import { deriveMir4PlayerStats } from '../../src/sim/mir4/derived_stats';
 import { MIR4_EMPTY_MATERIALS, mir4ItemAttributes } from '../../src/sim/mir4/equipment';
 import { Sim } from '../../src/sim/sim';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
@@ -12,7 +13,7 @@ import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 // resolve flow and the source's pool weighting and value scaling.
 
 function makeSim(seed = 151): Sim {
-  return new Sim({
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerName: 'Aldric',
@@ -20,6 +21,8 @@ function makeSim(seed = 151): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: MIR4_SLICE_WORLD,
   });
+  sim.players.get(sim.playerId)!.mir4ArcRewards = { items: { '991010101': 1 } };
+  return sim;
 }
 
 afterAll(() => {
@@ -27,10 +30,27 @@ afterAll(() => {
 });
 
 describe('the enchantment layer', () => {
+  it('does not materialize a preview for equipment the character does not own', () => {
+    const sim = makeSim(150);
+    const meta = sim.players.get(sim.playerId)!;
+    const starterInstances = structuredClone(meta.mir4EquipmentInstances);
+    meta.mir4ArcRewards = undefined;
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, lunarSeal: 1 };
+
+    expect(mir4RollLayer(sim.ctx, sim.playerId, 991010101, 'enchantment')).toEqual({
+      ok: false,
+      code: 'unknown-item',
+    });
+    expect(meta.mir4EquipmentInstances).toEqual(starterInstances);
+    expect(meta.mir4EquipmentInstances?.[991010101]).toBeUndefined();
+    expect(meta.mir4Materials.lunarSeal).toBe(1);
+  });
+
   it('rolls 2 unique affixes for 1 Selo Lunar, pending until resolved', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim();
     const meta = sim.players.get(sim.playerId)!;
+    sim.mir4EquipItem(991010101);
     meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, lunarSeal: 1 };
     const roll = mir4RollLayer(sim.ctx, sim.playerId, 991010101, 'enchantment');
     expect(roll.ok).toBe(true);
@@ -59,6 +79,15 @@ describe('the enchantment layer', () => {
     // The accepted affixes land in the applied attributes.
     const attrs = mir4ItemAttributes(mir4EquipmentItem(991010101)!, inst);
     expect(attrs.length).toBe(2 + 2); // 2 base + 2 layer
+    const expected = deriveMir4PlayerStats(
+      1,
+      sim.player.level,
+      meta.mir4Equipment,
+      meta.mir4EquipmentInstances,
+    );
+    expect(sim.player.attackPower).toBe(expected.physicalAttack);
+    expect(sim.player.mir4?.accuracy).toBe(expected.accuracy);
+    expect(sim.player.mir4?.critical).toBe(expected.critical);
   });
   it('no material means no roll; refusing leaves the layer empty', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -89,6 +118,9 @@ describe('the enchantment layer', () => {
     if (!roll.ok) return;
     expect(
       mir4ResolveLayer(sim.ctx, sim.playerId, 991010101, 'enchantment', 'wrong-id', true),
+    ).toEqual({ ok: false, code: 'preview-stale' });
+    expect(
+      mir4ResolveLayer(sim.ctx, sim.playerId, 991010101, 'blessing', roll.rollId, true),
     ).toEqual({ ok: false, code: 'preview-stale' });
   });
 });

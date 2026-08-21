@@ -23,6 +23,7 @@
 // `src/sim`-pure: no DOM/Three/render/ui/game/net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
+import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
 import { mir4KillXpReward } from '../content/mir4/mobs';
 import { computeTalentModifiers } from '../content/talents';
 import { ABILITIES, DELVES, GROUP_XP_BONUS, ITEMS, MOBS } from '../data';
@@ -32,6 +33,7 @@ import { DAMAGE_IDLE_DESPAWN_MOB_IDS, DAMAGE_IDLE_DESPAWN_SECONDS } from '../ent
 import { weaponHand } from '../equipment_rules';
 import { MIR4_GAME_PROFILE } from '../game_profile';
 import { lockNormalDungeonResetOnBossKill, spawnBossExitPortal } from '../instances/dungeons';
+import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
 import { grantMir4Xp } from '../mir4/combat';
 import { spawnWidowHatchlingOnEggDeath } from '../mob/egg_hatchling';
 import { grantAbilityDevotion } from '../paladin_devotion';
@@ -1730,10 +1732,14 @@ export function handleDeath(
         // catalog instead of the classic level curve.
         const xpGain =
           ctx.gameProfile === MIR4_GAME_PROFILE
-            ? mir4KillXpReward(e.templateId)
+            ? mir4KillXpReward(e.templateId) ||
+              (ctx.mir4RuntimeMobTemplates.get(e.templateId)?.mir4XpReward ??
+                mir4ArcMobTemplate(e.templateId)?.mir4XpReward ??
+                0)
             : Math.round((mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length);
         if (xpGain > 0) grantXp(ctx, xpGain, member, { fromKill: true });
         ctx.onMobKilledForQuests(e, member);
+        mir4CreditArcQuestKills(ctx, member, e.templateId);
       }
       // A destroyed Broodmother egg may hatch a widow that swarms the killer.
       if (e.templateId === 'spider_egg' && killer) spawnWidowHatchlingOnEggDeath(ctx, e, killer);
@@ -1777,7 +1783,10 @@ export function grantXp(
 ): void {
   // The mir4 profile advances through the ported level table (BigInt-safe
   // reqExp) instead of the classic XP_TABLE loop; see src/sim/mir4/combat.ts.
-  if (ctx.gameProfile === MIR4_GAME_PROFILE) return grantMir4Xp(ctx, amount, meta);
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    grantMir4Xp(ctx, amount, meta);
+    return;
+  }
   const p = ctx.entities.get(meta.entityId);
   if (!p || amount <= 0) return;
   // Rested XP bonus: the classic-era rule only doubles KILL xp (not quests), and

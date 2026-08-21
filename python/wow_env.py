@@ -84,7 +84,7 @@ class WoWClassicEnv(gym.Env):
             text=True,
             bufsize=1,
         )
-        meta = self._request({"cmd": "info"})
+        meta = self._request({"cmd": "info", "game_profile": self.game_profile})
         self._obs_size = int(meta["obs_size"])
         self.action_names: list[str] = list(meta["actions"])
         self.observation_space = spaces.Box(-2.0, 2.0, shape=(self._obs_size,), dtype=np.float32)

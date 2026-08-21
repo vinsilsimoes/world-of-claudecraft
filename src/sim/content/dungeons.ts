@@ -973,6 +973,27 @@ export const DUNGEON_DEFS: Record<string, DungeonDef> = {
     enterText: 'You step into the warm, flower-scented halls of Dawnhold Castle.',
     leaveText: 'You slip back out onto the sunlit garden lawn.',
   },
+  campaign_trial_room: {
+    id: 'campaign_trial_room',
+    name: 'Campaign Trial',
+    // Generic engine room for profile-authored campaign encounters. It uses
+    // the existing Sanctum kit and static instance machinery; no source-game
+    // geometry, models, textures, audio, or UI are involved. Index 10 is the
+    // next free overflow band after the two walk-in castles.
+    index: 10,
+    internalOnly: true,
+    overworldDoor: false,
+    // Scripted claims carry their real outdoor return point on InstanceSlot.
+    // This fallback is only for corrupt/stale state that has lost its claim.
+    doorPos: { x: 0, z: 0 },
+    entry: { x: 0, z: -2 },
+    exitOffset: { x: 0, z: -6 },
+    spawns: [],
+    interior: 'sanctum',
+    suggestedPlayers: 1,
+    enterText: 'You enter the campaign trial.',
+    leaveText: 'You leave the campaign trial.',
+  },
   nythraxis_boss_arena: {
     id: 'nythraxis_boss_arena',
     name: 'Nythraxis Raid Arena',

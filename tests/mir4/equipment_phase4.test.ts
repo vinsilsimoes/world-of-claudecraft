@@ -17,8 +17,8 @@ import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 // Phase 4.1: the generated 240-item catalog, the full-slot equipment bag, and
 // the enhancement (+15) with the exact source table, destruction, and ward.
 
-function makeSim(seed = 141): Sim {
-  return new Sim({
+function makeSim(seed = 141, ownsEquipment = true): Sim {
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerName: 'Aldric',
@@ -26,6 +26,10 @@ function makeSim(seed = 141): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: MIR4_SLICE_WORLD,
   });
+  if (ownsEquipment) {
+    sim.players.get(sim.playerId)!.mir4ArcRewards = { items: { '991010101': 1 } };
+  }
+  return sim;
 }
 
 afterAll(() => {
@@ -53,6 +57,23 @@ describe('the equipment catalog', () => {
 });
 
 describe('equipping catalog items', () => {
+  it('does not materialize or equip a catalog item the character does not own', () => {
+    const sim = makeSim(140, false);
+    sim.player.level = 250;
+    const meta = sim.players.get(sim.playerId)!;
+
+    expect(mir4EquipItem(sim.ctx, sim.playerId, 991010106)).toBe('Unknown item.');
+    expect(mir4Enhance(sim.ctx, sim.playerId, 991010106)).toEqual({
+      ok: false,
+      code: 'unknown-item',
+    });
+    expect(meta.mir4Equipment).toEqual({ 1: 200201000, 5: 301201000 });
+    expect(meta.mir4EquipmentInstances).toEqual({
+      200201000: { itemId: 200201000, enhancement: 0 },
+      301201000: { itemId: 301201000, enhancement: 0 },
+    });
+  });
+
   it('validates class and level, then feeds the recalc', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim();
@@ -60,10 +81,31 @@ describe('equipping catalog items', () => {
     const taoist = mir4EquipmentItem(991010101)!;
     void taoist;
     // The warrior's rank-1 weapon: PA 18 + Acerto 2 on top of the table.
-    const paBefore = p.attackPower;
+    expect(p.attackPower).toBe(125);
     expect(sim.mir4EquipItem(991010101)).toBe('Espada Gasta equipped.');
-    expect(p.attackPower).toBe(paBefore + 18);
-    expect(p.mir4?.accuracy).toBe(0 + 2);
+    expect(p.attackPower).toBe(50 + 18);
+    expect(p.mir4?.accuracy).toBe(2);
+  });
+
+  it('does not resurrect a destroyed reward item or credit its tutorial receipt', () => {
+    const sim = makeSim(145);
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4EquipmentInstances = {
+      991010101: { itemId: 991010101, enhancement: 5, destroyed: true },
+    };
+    meta.mir4ArcQuests = {
+      'M01-Q03': {
+        questId: 'M01-Q03',
+        state: 'active',
+        stageIndex: 3,
+        stageProgress: 0,
+      },
+    };
+
+    expect(mir4EquipItem(sim.ctx, sim.playerId, 991010101)).toBe('Unknown item.');
+    expect(meta.mir4Equipment?.weapon).toBeUndefined();
+    expect(meta.mir4EquipmentInstances[991010101]?.destroyed).toBe(true);
+    expect(meta.mir4ArcQuests['M01-Q03']?.stageIndex).toBe(3);
   });
 });
 

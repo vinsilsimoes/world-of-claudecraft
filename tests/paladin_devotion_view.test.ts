@@ -63,4 +63,30 @@ describe('paladin Devotion HUD view', () => {
     expect(view.tick(warrior).visible).toBe(false);
     assertAllocationStable(() => view.tick(warrior));
   });
+
+  it('reuses the same meter for the MIR4 Ultimate gauge', () => {
+    const view = createPaladinDevotionView(String, () => '', '', {
+      label: 'Ultimate gauge',
+      formatStatus: (value, max) => `${value}/${max}`,
+      readyAnnouncement: 'Ultimate ready',
+    });
+    const player = {
+      templateId: 'warrior',
+      paladinDevotion: undefined,
+      mir4UltGauge: 100,
+    };
+
+    expect(view.tick(player, true)).toMatchObject({
+      visible: true,
+      maxValue: 100,
+      value: 100,
+      fillFrac: 1,
+      ready: true,
+      ascended: false,
+      label: '100 / 100',
+      ariaValueText: '100/100',
+      ariaLabel: 'Ultimate gauge',
+      announcement: 'Ultimate ready',
+    });
+  });
 });

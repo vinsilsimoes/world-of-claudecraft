@@ -13,6 +13,7 @@ import { mir4SkillsForClass } from '../content/mir4';
 import { castMir4Skill, mir4BasicAttack, mir4Ultimate, mir4UsePotion } from '../mir4/combat';
 import { mir4HardControlled } from '../mir4/effects';
 import { mir4SkillManaCost } from '../mir4/math';
+import { markMir4WireDirty } from '../mir4/wire_revision';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { DT, dist2d, RUN_SPEED } from '../types';
@@ -47,6 +48,7 @@ export function setMir4AutoBattleMode(
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return;
+  p.autoAttack = mode === 'battle';
   if (mode === 'battle') {
     meta.autoBattle = {
       mode,
@@ -55,8 +57,11 @@ export function setMir4AutoBattleMode(
       acquireRadiusYards,
       suspended: false,
     };
+    markMir4WireDirty(meta);
   } else if (meta.autoBattle) {
+    if (meta.autoBattle.mode === 'off') return;
     meta.autoBattle.mode = 'off';
+    markMir4WireDirty(meta);
   }
 }
 
@@ -103,7 +108,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
   updateMir4ResourceRegen(ctx);
   for (const meta of ctx.players.values()) {
     const st = meta.autoBattle;
-    if (!st || st.mode !== 'battle') continue;
+    if (st?.mode !== 'battle') continue;
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
 
@@ -120,13 +125,17 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       inp.turnLeft ||
       inp.turnRight
     ) {
-      st.suspended = true;
+      if (!st.suspended) {
+        st.suspended = true;
+        markMir4WireDirty(meta);
+      }
       continue;
     }
     if (st.suspended) {
       st.suspended = false;
       st.anchorX = p.pos.x;
       st.anchorZ = p.pos.z;
+      markMir4WireDirty(meta);
     }
 
     let target = livingMobAt(ctx, p.targetId);

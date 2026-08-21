@@ -9,6 +9,9 @@ import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { dist2d, INTERACT_RANGE } from '../types';
 import { grantMir4Xp } from './combat';
+import { markMir4WireDirty } from './wire_revision';
+
+export { mir4QuestTrackerEntries } from './quest_tracker';
 
 const SITE_INSPECT_YARDS = 5;
 
@@ -55,7 +58,9 @@ export function mir4TalkOrInspect(ctx: SimContext, pid: number): string {
         dist2d(p.pos, { x: site.x, y: p.pos.y, z: site.z } as Entity['pos']) <= SITE_INSPECT_YARDS
       ) {
         prog.inspected.push(i);
+        meta.counters.questProgress += 1;
         if (prog.inspected.length >= quest.sites.length) prog.state = 'ready';
+        markMir4WireDirty(meta);
         return prog.state === 'ready'
           ? `${quest.name}: all clues found. Return to the giver.`
           : `${quest.name}: clue ${prog.inspected.length} of ${quest.sites.length}.`;
@@ -67,12 +72,15 @@ export function mir4TalkOrInspect(ctx: SimContext, pid: number): string {
   if (giver && dist2d(p.pos, giver.pos) <= INTERACT_RANGE + 2) {
     if (!prog) {
       meta.mir4Quests = { ...meta.mir4Quests, [quest.id]: { state: 'active', inspected: [] } };
+      markMir4WireDirty(meta);
       return `${quest.name} accepted.`;
     }
     if (prog.state === 'ready') {
       prog.state = 'done';
+      meta.counters.questsCompleted += 1;
       meta.copper += quest.copperReward;
       grantMir4Xp(ctx, quest.xpReward, meta);
+      markMir4WireDirty(meta);
       return `${quest.name} complete.`;
     }
     if (prog.state === 'active') {

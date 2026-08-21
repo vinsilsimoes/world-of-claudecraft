@@ -328,6 +328,31 @@ export const shellStrings = {
         druid:
           'Druids channel nature, healing wounds, entangling foes, and shifting into animal forms for defense or damage.',
       },
+      mir4: {
+        labels: {
+          damage: 'Damage',
+          combatRange: 'Combat Range',
+          startingSkills: 'Starting Skills',
+        },
+        damage: {
+          physical: 'Physical',
+          magic: 'Magic',
+        },
+        range: {
+          melee: 'Melee',
+          medium: 'Medium range',
+          long: 'Long range',
+          extended: 'Extended melee',
+        },
+        weapons: {
+          heavySword: 'Heavy Sword',
+          largeStaff: 'Large Staff',
+          shortStaff: 'Short Staff',
+          arbalest: 'Arbalest',
+          spear: 'Spear',
+        },
+        aria: 'Class details for {className}: {damage} damage, {range} range, weapon {weapon}, {skills} starting skills.',
+      },
       aria: 'Class details for {className}: role {role}. Starting stats: Strength {str}, Agility {agi}, Stamina {sta}, Intellect {int}, Spirit {spi}.',
       statBarAria: '{stat}: {value} out of 25',
     },

@@ -571,6 +571,7 @@ const DUNGEON_IDS = [
   'hollow_crypt',
   'sunken_bastion',
   'gravewyrm_sanctum',
+  'campaign_trial_room',
   'nythraxis_crypt',
   'nythraxis_boss_arena',
   'wildheart_basin',

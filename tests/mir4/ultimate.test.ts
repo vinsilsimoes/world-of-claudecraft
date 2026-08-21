@@ -73,7 +73,7 @@ describe('the impact clock and gauge (runtime)', () => {
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
     expect(wolf.hp).toBe(wolf.maxHp); // nothing yet: the impact is scheduled
     for (let i = 0; i < 6; i++) sim.tick(); // 0.30s >= 0.28s
-    expect(wolf.hp).toBe(wolf.maxHp - 30); // floor(50*6000/10000)
+    expect(wolf.hp).toBe(wolf.maxHp - 75); // floor(125*6000/10000), starter weapon included
     expect(sim.entities.get(sim.playerId)!.mir4UltGauge).toBe(12);
   });
   it('the gauge caps at 100', () => {
@@ -101,11 +101,11 @@ describe('the impact clock and gauge (runtime)', () => {
     }
     expect(p.mir4UltGauge).toBe(100);
   });
-  it('the ultimate spends the gauge atomically and lands 60 x 3 = 180', () => {
+  it('the ultimate spends the gauge atomically and lands 150 x 3 = 450', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(73);
     const p = sim.entities.get(sim.playerId)!;
-    // A fat test wolf so the 180 total never clamps at the kill.
+    // A fat test wolf so the 450 total never clamps at the kill.
     const base = MIR4_MOBS.mir4_forest_wolf;
     const big = { ...base, id: 'test_big_wolf', hpBase: 600, hpPerLevel: 0 };
     const p0 = sim.entities.get(sim.playerId)!;
@@ -119,6 +119,6 @@ describe('the impact clock and gauge (runtime)', () => {
     expect(p.cooldowns.has('mir4_ult')).toBe(true);
     expect(wolf.hp).toBe(wolf.maxHp); // scheduled, not instant
     for (let i = 0; i < 21; i++) sim.tick(); // past the last 1020ms offset
-    expect(wolf.maxHp - wolf.hp).toBe(180); // floor(50*12000/10000) x 3
+    expect(wolf.maxHp - wolf.hp).toBe(450); // floor(125*12000/10000) x 3
   });
 });

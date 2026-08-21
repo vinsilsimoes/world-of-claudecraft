@@ -9,12 +9,13 @@
 import {
   MIR4_EQUIPMENT_CATALOG,
   type Mir4EquipmentItemDef,
-  mir4EquipmentItem,
 } from '../content/mir4/equipment_catalog';
-import { MIR4_ITEMS } from '../content/mir4/items';
+import { MIR4_STARTER_LOADOUT_BY_CLASS, mir4EquipmentDefinition } from '../content/mir4/items';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
+import { creditMir4ArcTutorialReceipt } from './arc_receipts';
 import { mir4RecalcClassOf, recalcMir4PlayerStats } from './stats';
+import { markMir4WireDirty } from './wire_revision';
 
 /** The full slot bag: source equip slots 1..8 keyed by number. */
 export interface Mir4Equipment {
@@ -28,6 +29,7 @@ export interface Mir4EquipmentInstanceState {
   enhancement: number;
   /** Pending enchantment/blessing roll awaiting resolve (one at a time). */
   pendingRoll?: {
+    rollId: string;
     layer: 'enchantment' | 'blessing';
     affixes: readonly (readonly [number, number])[];
   };
@@ -109,6 +111,8 @@ function recalcFor(ctx: SimContext, pid: number): Entity | null {
     p.level,
     meta.mir4Equipment,
     meta.mir4EquipmentInstances,
+    meta.mir4Spirits,
+    meta.mir4Mounts,
   );
   return p;
 }
@@ -121,23 +125,65 @@ function instanceFor(
   if (!inst) {
     inst = { itemId, enhancement: 0 };
     meta.mir4EquipmentInstances = { ...meta.mir4EquipmentInstances, [itemId]: inst };
+    markMir4WireDirty(meta);
   }
   return inst;
 }
 
+export function mir4OwnsEquipmentItem(
+  meta: {
+    mir4EquipmentInstances?: Record<number, Mir4EquipmentInstanceState>;
+    mir4ArcRewards?: { items?: Record<string, number> };
+  },
+  itemId: number,
+): boolean {
+  const instance = meta.mir4EquipmentInstances?.[itemId];
+  if (instance) return !instance.destroyed;
+  return (meta.mir4ArcRewards?.items?.[String(itemId)] ?? 0) > 0;
+}
+
 export function mir4EquipStarterWeapon(ctx: SimContext, pid: number): string {
   const meta = ctx.players.get(pid);
-  if (!meta) return 'You cannot do that right now.';
-  if (meta.mir4Equipment?.weapon === 200201000) return 'Already equipped.';
-  meta.mir4Equipment = { ...meta.mir4Equipment, weapon: 200201000 };
+  const p = ctx.entities.get(pid);
+  const classId = p?.mir4?.classId as keyof typeof MIR4_STARTER_LOADOUT_BY_CLASS | undefined;
+  const itemId = classId === undefined ? undefined : MIR4_STARTER_LOADOUT_BY_CLASS[classId]?.weapon;
+  if (!meta || !p || itemId === undefined) return 'You cannot do that right now.';
+  if (!mir4OwnsEquipmentItem(meta, itemId)) return 'Unknown item.';
+  if (meta.mir4Equipment?.[1] === itemId) return 'Already equipped.';
+  meta.mir4Equipment = { ...meta.mir4Equipment, 1: itemId };
+  markMir4WireDirty(meta);
   recalcFor(ctx, pid);
   return 'Starter weapon equipped.';
 }
 
+/** Seed the exact source CLASS_CREATE weapon and armor into a fresh character. */
+export function mir4GrantStarterEquipment(ctx: SimContext, pid: number): boolean {
+  const meta = ctx.players.get(pid);
+  const p = ctx.entities.get(pid);
+  const classId = p?.mir4?.classId as keyof typeof MIR4_STARTER_LOADOUT_BY_CLASS | undefined;
+  const loadout = classId === undefined ? undefined : MIR4_STARTER_LOADOUT_BY_CLASS[classId];
+  if (!meta || !p || !loadout) return false;
+  meta.mir4Equipment = {
+    ...meta.mir4Equipment,
+    1: loadout.weapon,
+    5: loadout.armorTop,
+  };
+  instanceFor(meta, loadout.weapon);
+  instanceFor(meta, loadout.armorTop);
+  markMir4WireDirty(meta);
+  recalcFor(ctx, pid);
+  return true;
+}
+
 export function mir4UnequipWeapon(ctx: SimContext, pid: number): string {
   const meta = ctx.players.get(pid);
-  if (!meta?.mir4Equipment?.weapon) return 'Nothing equipped.';
-  delete meta.mir4Equipment.weapon;
+  const equipment = meta?.mir4Equipment;
+  if (!equipment || (equipment.weapon === undefined && equipment[1] === undefined)) {
+    return 'Nothing equipped.';
+  }
+  delete equipment.weapon;
+  delete equipment[1];
+  markMir4WireDirty(meta);
   recalcFor(ctx, pid);
   return 'Weapon unequipped.';
 }
@@ -147,13 +193,16 @@ export function mir4EquipItem(ctx: SimContext, pid: number, itemId: number): str
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return 'You cannot do that right now.';
-  const def = mir4EquipmentItem(itemId);
+  const def = mir4EquipmentDefinition(itemId);
   if (!def) return 'Unknown item.';
+  if (!mir4OwnsEquipmentItem(meta, itemId)) return 'Unknown item.';
   if (def.classId !== p.mir4?.classId) return 'Your class cannot use this.';
   if (p.level < def.requiredLevel) return 'Your level is too low.';
   meta.mir4Equipment = { ...meta.mir4Equipment, [def.equipSlot]: itemId };
   instanceFor(meta, itemId);
+  markMir4WireDirty(meta);
   recalcFor(ctx, pid);
+  creditMir4ArcTutorialReceipt(meta, { kind: 'equip-item' });
   return `${def.name} equipped.`;
 }
 
@@ -161,6 +210,7 @@ export function mir4UnequipSlot(ctx: SimContext, pid: number, equipSlot: number)
   const meta = ctx.players.get(pid);
   if (meta?.mir4Equipment?.[equipSlot] === undefined) return 'Nothing equipped.';
   delete meta.mir4Equipment[equipSlot];
+  markMir4WireDirty(meta);
   recalcFor(ctx, pid);
   return 'Unequipped.';
 }
@@ -177,21 +227,25 @@ export type Mir4EnhanceOutcome =
 export function mir4Enhance(ctx: SimContext, pid: number, itemId: number): Mir4EnhanceOutcome {
   const meta = ctx.players.get(pid);
   if (!meta) return { ok: false, code: 'unknown-item' };
-  const def = mir4EquipmentItem(itemId);
+  const def = mir4EquipmentDefinition(itemId);
   if (!def) return { ok: false, code: 'unknown-item' };
+  if (!mir4OwnsEquipmentItem(meta, itemId)) return { ok: false, code: 'unknown-item' };
   if (!def.enhanceable) return { ok: false, code: 'not-enhanceable' };
   const inst = instanceFor(meta, itemId);
   if (inst.destroyed) return { ok: false, code: 'unknown-item' };
   if (inst.enhancement >= def.maxEnhancementLevel) return { ok: false, code: 'max-level' };
-  const wallet = (meta.mir4Materials ??= { ...MIR4_EMPTY_MATERIALS });
+  const wallet = meta.mir4Materials ?? { ...MIR4_EMPTY_MATERIALS };
   if (wallet.solarScroll < 1) return { ok: false, code: 'no-materials' };
+  meta.mir4Materials = wallet;
   wallet.solarScroll -= 1;
+  markMir4WireDirty(meta);
   const target = inst.enhancement + 1;
   const chanceBps = MIR4_ENHANCEMENT_SUCCESS_BPS[target] ?? 100_000;
   const roll = Math.floor(ctx.rng.next() * 100_000);
   if (roll < chanceBps) {
     inst.enhancement = target;
     if (isEquipped(meta, itemId)) recalcFor(ctx, pid);
+    creditMir4ArcTutorialReceipt(meta, { kind: 'enhance-item', level: target });
     return { ok: true, level: target, destroyed: false, protected: false };
   }
   if (target > 5) {
@@ -241,12 +295,7 @@ export function mir4EquippedAttributes(
   const out: [number, number][] = [];
   for (const id of Object.values(equipment ?? {})) {
     if (id === undefined) continue;
-    if (id === 200201000) {
-      // The native starter weapon keeps its verbatim pairs from items.ts.
-      for (const attr of MIR4_ITEMS[200201000]?.attributes ?? []) out.push([attr[0], attr[1]]);
-      continue;
-    }
-    const def = mir4EquipmentItem(id);
+    const def = mir4EquipmentDefinition(id);
     if (!def) continue;
     if (instances?.[id]?.destroyed) continue;
     for (const attr of mir4ItemAttributes(def, instances?.[id])) out.push([attr[0], attr[1]]);
@@ -258,9 +307,9 @@ export function mir4EquippedAttributes(
 export function mir4WeaponAttributes(
   equipment: Mir4Equipment | undefined,
 ): readonly (readonly [number, number])[] {
-  const weapon = equipment?.weapon;
+  const weapon = equipment?.[1] ?? equipment?.weapon;
   if (weapon === undefined) return [];
-  return MIR4_ITEMS[weapon]?.attributes ?? [];
+  return mir4EquipmentDefinition(weapon)?.baseAttributes ?? [];
 }
 
 export const MIR4_EQUIPMENT_CATALOG_SIZE = MIR4_EQUIPMENT_CATALOG.length;

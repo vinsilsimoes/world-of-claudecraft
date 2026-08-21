@@ -6,6 +6,7 @@ import * as http from 'node:http';
 import * as path from 'node:path';
 import { WebSocketServer } from 'ws';
 import { DEEDS } from '../src/sim/content/deeds';
+import { isClassForGameProfile } from '../src/sim/game_profile_roster';
 import {
   LEADERBOARD_MAX,
   LEADERBOARD_PAGE_SIZE,
@@ -13,9 +14,8 @@ import {
   paginateGuildLeaderboard,
   paginateLeaderboard,
 } from '../src/sim/leaderboard_page';
-import type { PlayerClass } from '../src/sim/types';
+import type { PlayableClass } from '../src/sim/types';
 import { virtualLevel } from '../src/sim/types';
-import { WORLD_SEED } from '../src/sim/world_seed';
 import {
   type DeedsLeaderboardEntry,
   type DeedsLeaderboardSelf,
@@ -486,7 +486,7 @@ function liveGame(): GameServer {
 }
 
 function initialCharacterState(
-  cls: PlayerClass,
+  cls: PlayableClass,
   name: string,
   skin: number,
 ): import('../src/sim/sim').CharacterState {
@@ -1685,18 +1685,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
             error: 'character name is not allowed',
             code: 'character.name_not_allowed',
           });
-        const validClasses = [
-          'warrior',
-          'paladin',
-          'hunter',
-          'rogue',
-          'priest',
-          'shaman',
-          'mage',
-          'warlock',
-          'druid',
-        ];
-        if (!validClasses.includes(body.class))
+        if (!isClassForGameProfile(body.class, GAME_PROFILE))
           return json(res, 400, { error: 'invalid class', code: 'character.invalid_class' });
         const skin = Math.max(
           0,
@@ -2777,6 +2766,7 @@ configureAppleAuthRuntime({
 // public share origin. Done at module load, before any request, mirroring the two calls
 // above. The legacy handleApi character arms stay intact as the flag-off rollback path.
 configureCharactersRuntime({
+  gameProfile: GAME_PROFILE,
   isCharacterOnline: (characterId) =>
     [...liveGame().clients.values()].some((s) => s.characterId === characterId),
   takeOverCharacter: (accountId, characterId) =>

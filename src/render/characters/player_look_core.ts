@@ -16,11 +16,18 @@
 // it, and would silently dress every peer in whatever set this machine last
 // picked.
 
+import {
+  MIR4_NATIVE_ARMOR_MASK,
+  MIR4_NATIVE_ARMOR_SET,
+  MIR4_NATIVE_VISUAL_CLASS,
+} from '../../sim/mir4/native_equipment_visuals';
 import type { Entity, PlayerClass } from '../../sim/types';
 import { sameAppearance } from '../../world_api/appearance';
 import {
+  type ArmorLoadout,
   type ArmorSetId,
   classArmorSet,
+  DEFAULT_APPEARANCE,
   fullSet,
   type ModularAppearance,
   type ModularLook,
@@ -81,6 +88,42 @@ export function inWorldLookFor(
 ): ModularLook | null {
   if (e.kind !== 'player' || !e.modularAppearance) return null;
   return composedLook(e.modularAppearance, armorSetFor(e.templateId as PlayerClass), e.helmHidden);
+}
+
+/**
+ * MIR4 profile variant of the in-world compositor. The authored face/body is
+ * retained, but visible armour sockets and the animation rig come from the
+ * native WoC presentation projection rather than the classic Warrior shell.
+ * A pre-creator character receives WoC's default modular body so the MIR4
+ * class override can still render without importing any source-game asset.
+ */
+export function mir4InWorldLookFor(e: Entity): ModularLook | null {
+  if (e.kind !== 'player') return null;
+  const classId = e.mir4VisualClassId;
+  const armorSet = classId === undefined ? undefined : MIR4_NATIVE_ARMOR_SET[classId];
+  if (!armorSet) return null;
+  const mask = e.mir4VisualArmorMask ?? 0;
+  const worn: ArmorLoadout = {};
+  if ((mask & MIR4_NATIVE_ARMOR_MASK.chest) !== 0) {
+    worn.chest = armorSet;
+    worn.arms = armorSet;
+    worn.legs = armorSet;
+    worn.back = armorSet;
+  }
+  if ((mask & MIR4_NATIVE_ARMOR_MASK.head) !== 0 && !e.helmHidden) worn.head = armorSet;
+  if ((mask & MIR4_NATIVE_ARMOR_MASK.hands) !== 0) worn.hands = armorSet;
+  if ((mask & MIR4_NATIVE_ARMOR_MASK.feet) !== 0) worn.feet = armorSet;
+  const app = normalizeAppearance(
+    (e.modularAppearance ?? DEFAULT_APPEARANCE) as Partial<ModularAppearance>,
+  );
+  return { app, worn };
+}
+
+/** Existing WoC class rig selected for a MIR4 visual identity. */
+export function mir4VisualClassForEntity(e: Entity): PlayerClass | null {
+  return e.mir4VisualClassId === undefined
+    ? null
+    : (MIR4_NATIVE_VISUAL_CLASS[e.mir4VisualClassId] ?? null);
 }
 
 /**

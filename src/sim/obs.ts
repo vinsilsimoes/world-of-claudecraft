@@ -7,8 +7,23 @@ import {
   dominionTemplateForAbility,
 } from './combat/necromancy_dominion';
 import { canUseForbiddenReflection } from './combat/warlock_talents';
+import { MIR4_MAX_LEVEL, mir4LevelRow } from './content/mir4';
+import { MIR4_QUESTS_MAIN } from './content/mir4/quests_arc';
 import { noticeboardDefByEntityId } from './content/noticeboards';
-import { CLASSES, ITEMS, QUEST_ORDER, QUESTS, WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } from './data';
+import {
+  CLASSES,
+  ITEMS,
+  QUEST_ORDER,
+  QUESTS,
+  STRIP_MAX_X,
+  STRIP_MIN_X,
+  WORLD_MAX_X,
+  WORLD_MAX_Z,
+  WORLD_MIN_X,
+  WORLD_MIN_Z,
+} from './data';
+import { MIR4_GAME_PROFILE } from './game_profile';
+import { mir4ArcStageGoal, mir4QuestCurrentStage } from './mir4/arc_quests';
 import {
   ASCENSION_CHARGES,
   ASCENSION_DURATION,
@@ -28,6 +43,7 @@ import {
   questObjectiveRequired,
   xpForLevel,
 } from './types';
+import { worldContentBounds } from './world_content_bounds';
 
 // ---------------------------------------------------------------------------
 // Discrete action space for RL agents.
@@ -56,6 +72,8 @@ export const ACTIONS = [
   'interact', // loot corpse / pick up object / talk to quest npc
   'stop', // stop moving + stop attacking
   'eat_drink', // consume best food (or water for mana classes) from bags
+  'claim_achievement_20101', // MIR4 player-level achievement grade 1
+  'claim_achievement_20102', // MIR4 player-level achievement grade 2
 ] as const;
 
 export const NUM_ACTIONS = ACTIONS.length;
@@ -125,6 +143,12 @@ export function applyAction(sim: Sim, action: number): void {
       }
       break;
     }
+    case 'claim_achievement_20101':
+      sim.mir4ClaimAchievement(20101);
+      break;
+    case 'claim_achievement_20102':
+      sim.mir4ClaimAchievement(20102);
+      break;
     case 'noop':
       break;
     default: {
@@ -151,22 +175,40 @@ export function applyAction(sim: Sim, action: number): void {
 const NEARBY_MOBS = 5;
 
 export function obsSize(): number {
-  return 16 + ABILITY_SLOTS * 2 + 9 + NEARBY_MOBS * 6 + 5 + QUEST_ORDER.length * 2 + 3;
+  return 16 + ABILITY_SLOTS * 2 + 9 + NEARBY_MOBS * 6 + 5 + QUEST_ORDER.length * 2 + 3 + 3 + 1;
 }
 
 export function encodeObs(sim: Sim): number[] {
   const p = sim.player;
   const obs: number[] = [];
+  const isMir4 = sim.cfg.gameProfile === MIR4_GAME_PROFILE;
+  const authoredBounds = sim.cfg.world
+    ? worldContentBounds(sim.cfg.world, STRIP_MIN_X, STRIP_MAX_X)
+    : null;
+  const minX = authoredBounds?.minX ?? WORLD_MIN_X;
+  const maxX = authoredBounds?.maxX ?? WORLD_MAX_X;
+  const minZ = authoredBounds?.minZ ?? WORLD_MIN_Z;
+  const maxZ = authoredBounds?.maxZ ?? WORLD_MAX_Z;
+  const centerX = (minX + maxX) / 2;
+  const centerZ = (minZ + maxZ) / 2;
+  const halfWidth = Math.max(1, (maxX - minX) / 2);
+  const halfDepth = Math.max(1, (maxZ - minZ) / 2);
 
   // --- self (16) ---
   obs.push(p.hp / Math.max(1, p.maxHp));
   obs.push(p.resource / Math.max(1, p.maxResource));
-  obs.push(p.level / MAX_LEVEL);
-  obs.push(p.level >= MAX_LEVEL ? 1 : sim.xp / xpForLevel(p.level));
-  obs.push(clamp(p.pos.x / WORLD_MAX_X, -1, 1));
+  const levelCap = isMir4 ? MIR4_MAX_LEVEL : MAX_LEVEL;
+  obs.push(p.level / levelCap);
+  const mir4RequiredXp = isMir4 ? Number(mir4LevelRow(p.mir4?.classId ?? 1, p.level)?.[2] ?? 0) : 0;
   obs.push(
-    clamp((p.pos.z - (WORLD_MIN_Z + WORLD_MAX_Z) / 2) / ((WORLD_MAX_Z - WORLD_MIN_Z) / 2), -1, 1),
+    p.level >= levelCap
+      ? 1
+      : isMir4
+        ? sim.xp / Math.max(1, mir4RequiredXp)
+        : sim.xp / xpForLevel(p.level),
   );
+  obs.push(clamp((p.pos.x - centerX) / halfWidth, -1, 1));
+  obs.push(clamp((p.pos.z - centerZ) / halfDepth, -1, 1));
   obs.push(Math.sin(p.facing));
   obs.push(Math.cos(p.facing));
   obs.push(p.gcdRemaining / GCD);
@@ -196,9 +238,8 @@ export function encodeObs(sim: Sim): number[] {
       obs.push(0, 0);
       continue;
     }
-    const cd = canUseForbiddenReflection(p, known.def.id)
-      ? 0
-      : (p.cooldowns.get(known.def.id) ?? 0);
+    const cooldownKey = known.cooldownId ?? known.def.id;
+    const cd = canUseForbiddenReflection(p, known.def.id) ? 0 : (p.cooldowns.get(cooldownKey) ?? 0);
     const requiredAuraReady =
       !known.def.requiresAuraKind ||
       p.auras.some(
@@ -330,32 +371,75 @@ export function encodeObs(sim: Sim): number[] {
     obs.push(0, 1.5, 0, 0, 0);
   }
 
-  // --- quests (10 x 2 = 20) ---
-  for (const qid of QUEST_ORDER) {
-    const state = sim.questState(qid);
-    obs.push(state === 'done' ? 1 : state === 'ready' ? 0.66 : state === 'active' ? 0.33 : 0);
-    const qp = sim.questLog.get(qid);
-    if (qp) {
-      const quest = QUESTS[qid];
-      let total = 0,
-        have = 0;
-      quest.objectives.forEach((_objective, i) => {
-        const required = questObjectiveRequired(quest, qp, i);
-        total += required;
-        have += Math.min(qp.counts[i], required);
-      });
-      obs.push(total > 0 ? have / total : 0);
-    } else {
-      obs.push(state === 'done' ? 1 : 0);
+  // --- quests (stable classic-sized window x 2) ---
+  if (isMir4) {
+    const progressById = sim.players.get(sim.playerId)?.mir4ArcQuests ?? {};
+    const firstIncomplete = MIR4_QUESTS_MAIN.findIndex(
+      (quest) => progressById[quest.questId]?.state !== 'done',
+    );
+    const start =
+      firstIncomplete >= 0
+        ? firstIncomplete
+        : Math.max(0, MIR4_QUESTS_MAIN.length - QUEST_ORDER.length);
+    for (let offset = 0; offset < QUEST_ORDER.length; offset++) {
+      const quest = MIR4_QUESTS_MAIN[start + offset];
+      const progress = quest ? progressById[quest.questId] : undefined;
+      const state = progress?.state;
+      obs.push(state === 'done' ? 1 : state === 'ready' ? 0.66 : state === 'active' ? 0.33 : 0);
+      if (!progress || !quest) {
+        obs.push(0);
+        continue;
+      }
+      if (state === 'done' || state === 'ready') {
+        obs.push(1);
+        continue;
+      }
+      const stageCount = Math.max(1, progress.selectedStageIndexes?.length ?? quest.stages.length);
+      const stage = mir4QuestCurrentStage(progress);
+      const withinStage = stage ? Math.min(1, progress.stageProgress / mir4ArcStageGoal(stage)) : 0;
+      obs.push(Math.min(1, (progress.stageIndex + withinStage) / stageCount));
+    }
+  } else {
+    for (const qid of QUEST_ORDER) {
+      const state = sim.questState(qid);
+      obs.push(state === 'done' ? 1 : state === 'ready' ? 0.66 : state === 'active' ? 0.33 : 0);
+      const qp = sim.questLog.get(qid);
+      if (qp) {
+        const quest = QUESTS[qid];
+        let total = 0,
+          have = 0;
+        quest.objectives.forEach((_objective, i) => {
+          const required = questObjectiveRequired(quest, qp, i);
+          total += required;
+          have += Math.min(qp.counts[i], required);
+        });
+        obs.push(total > 0 ? have / total : 0);
+      } else {
+        obs.push(state === 'done' ? 1 : 0);
+      }
     }
   }
 
   // --- Paladin class resource (3), appended to preserve every existing index ---
+  // MIR4 level-achievement progress and its source-backed currencies. Keep the
+  // three values profile-neutral in shape and bounded to the Python Box(-2, 2).
+  const mir4Meta = isMir4 ? sim.players.get(sim.playerId) : undefined;
+  obs.push(
+    isMir4 ? clamp((mir4Meta?.mir4AchievementClears?.[201] ?? 0) / 2, 0, 1) : 0,
+    isMir4 ? clamp((mir4Meta?.mir4Currencies?.darksteel ?? 0) / 1_000, 0, 2) : 0,
+    isMir4 ? clamp((mir4Meta?.mir4SkillResources?.effectPoints ?? 0) / 500, 0, 2) : 0,
+  );
+
   // Non-Paladins emit zeros so the cross-class observation shape stays fixed.
   const devotion = p.paladinDevotion;
   obs.push(devotion ? devotion.value / MAX_DEVOTION : 0);
   obs.push(devotion ? devotion.ascensionCharges / ASCENSION_CHARGES : 0);
   obs.push(devotion ? devotion.ascensionRemaining / ASCENSION_DURATION : 0);
+
+  // Skill Tomes were added after every established observation field so
+  // trained consumers keep all prior indices. Three tomes fund one sealed
+  // L2 transition; cap at the Python Box upper bound for larger save wallets.
+  obs.push(isMir4 ? clamp((mir4Meta?.mir4SkillResources?.skillTomes ?? 0) / 3, 0, 2) : 0);
 
   return obs;
 }

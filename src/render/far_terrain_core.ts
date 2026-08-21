@@ -21,6 +21,9 @@
 import {
   COLUMN_ZONES,
   columnBlendAt,
+  getActiveWorldContent,
+  STRIP_MAX_X,
+  STRIP_MIN_X,
   STRIP_ZONES,
   WORLD_MAX_X,
   WORLD_MAX_Z,
@@ -30,7 +33,7 @@ import {
 } from '../sim/data';
 import { fbm2 } from '../sim/rng';
 import type { BiomeId } from '../sim/types';
-import { terrainHeight, WATER_LEVEL, zoneBiomeAt } from '../sim/world';
+import { LAKE_BLEND_RADIUS_MULT, terrainHeight, waterLevel, zoneBiomeAt } from '../sim/world';
 import {
   FAR_CELL_PROBES,
   farCellOvershoot,
@@ -46,6 +49,7 @@ import {
 } from './shore_water_gate_core';
 import { meshTerrainHeight } from './terrain_mesh_height';
 import { BIOME_PALETTE, ROCK_SLOPE_START, TERRAIN_TONES } from './terrain_palette';
+import type { WorldRect } from './terrain_region_core';
 
 /** Square far-mesh tile edge, world units. Divisible by every tier spacing.
  *  Sized so the whole world is about a dozen draws: each tile carries only a
@@ -56,6 +60,63 @@ export const FAR_TILE_SIZE = 960;
 /** How far past the zone-rect world the far mesh extends: covers the rim
  *  mountains' far side and the open sea apron band beyond them. */
 export const FAR_WORLD_MARGIN = 600;
+
+let farBoundsContent: ReturnType<typeof getActiveWorldContent> | null = null;
+let farBoundsCache: WorldRect | null = null;
+let farWaterContent: ReturnType<typeof getActiveWorldContent> | null = null;
+let farWaterCache = true;
+
+/** Active authored bounds; injected WorldContent is allowed to exceed the classic atlas. */
+export function farWorldBounds(): WorldRect {
+  const content = getActiveWorldContent();
+  if (content === farBoundsContent && farBoundsCache) return farBoundsCache;
+  const activeZones = content.zones;
+  if (activeZones.length === 0 || activeZones === ZONES) {
+    farBoundsCache = {
+      minX: WORLD_MIN_X,
+      maxX: WORLD_MAX_X,
+      minZ: WORLD_MIN_Z,
+      maxZ: WORLD_MAX_Z,
+    };
+  } else {
+    farBoundsCache = {
+      minX: Math.min(...activeZones.map((zone) => zone.xMin ?? STRIP_MIN_X)),
+      maxX: Math.max(...activeZones.map((zone) => zone.xMax ?? STRIP_MAX_X)),
+      minZ: Math.min(...activeZones.map((zone) => zone.zMin)),
+      maxZ: Math.max(...activeZones.map((zone) => zone.zMax)),
+    };
+  }
+  farBoundsContent = content;
+  return farBoundsCache;
+}
+
+function hasInjectedFarTopology(): boolean {
+  const activeZones = getActiveWorldContent().zones;
+  return activeZones.length > 0 && activeZones !== ZONES;
+}
+
+function farWorldHasOpenEdgeWater(): boolean {
+  const content = getActiveWorldContent();
+  if (content === farWaterContent) return farWaterCache;
+  farWaterContent = content;
+  if (content.zones === ZONES) {
+    farWaterCache = true;
+    return farWaterCache;
+  }
+  const bounds = farWorldBounds();
+  farWaterCache = content.zones.some((zone) =>
+    zone.lakes.some((lake) => {
+      const radius = lake.radius * LAKE_BLEND_RADIUS_MULT;
+      return (
+        lake.x - radius <= bounds.minX ||
+        lake.x + radius >= bounds.maxX ||
+        lake.z - radius <= bounds.minZ ||
+        lake.z + radius >= bounds.maxZ
+      );
+    }),
+  );
+  return farWaterCache;
+}
 
 /** Vertical drop applied to every far-mesh vertex so the coarse mesh never
  *  pokes through the dense near terrain where the two overlap. */
@@ -430,6 +491,22 @@ const zoneFarPalettes: FarPalette[] = ZONES.map((zn) => {
     sand: srgbHexToLinear(p.sand),
   };
 });
+const biomeFarPalettes = new Map<BiomeId, FarPalette>();
+
+function farPaletteForBiome(biome: BiomeId): FarPalette {
+  const cached = biomeFarPalettes.get(biome);
+  if (cached) return cached;
+  const source = BIOME_PALETTE[biome];
+  const palette = {
+    grass: srgbHexToLinear(source.grass),
+    grassDark: srgbHexToLinear(source.grassDark),
+    grassYellow: srgbHexToLinear(source.grassYellow),
+    dirt: srgbHexToLinear(source.dirt),
+    sand: srgbHexToLinear(source.sand),
+  };
+  biomeFarPalettes.set(biome, palette);
+  return palette;
+}
 
 const TONE = {
   dirtDark: srgbHexToLinear(TERRAIN_TONES.dirtDark),
@@ -475,6 +552,15 @@ const stripPalette = (zn: (typeof ZONES)[number]): FarPalette =>
  *  over linear triples. Writes into the module scratch (hot loop). */
 function farPaletteAt(x: number, z: number): FarPalette {
   const out = farPaletteScratch;
+  if (hasInjectedFarTopology()) {
+    const palette = farPaletteForBiome(zoneBiomeAt(x, z));
+    copy3(out.grass, palette.grass);
+    copy3(out.grassDark, palette.grassDark);
+    copy3(out.grassYellow, palette.grassYellow);
+    copy3(out.dirt, palette.dirt);
+    copy3(out.sand, palette.sand);
+    return out;
+  }
   const first = stripPalette(STRIP_ZONES[0]);
   copy3(out.grass, first.grass);
   copy3(out.grassDark, first.grassDark);
@@ -508,6 +594,7 @@ function farPaletteAt(x: number, z: number): FarPalette {
 
 /** Blend weight of one biome across the same windows the palette fades. */
 function biomeWeightAt(biome: BiomeId, x: number, z: number): number {
+  if (hasInjectedFarTopology()) return zoneBiomeAt(x, z) === biome ? 1 : 0;
   let w = STRIP_ZONES[0].biome === biome ? 1 : 0;
   for (let i = 0; i + 1 < STRIP_ZONES.length; i++) {
     const b = STRIP_ZONES[i].zMax;
@@ -562,10 +649,13 @@ const FAR_FOREST_DENSITY: Partial<Record<BiomeId, number>> = {
 // the same pair): its memo is what keeps the ring sampling affordable. Reset
 // on a seed change because the memo is keyed on position alone.
 let shoreProbeSeed = Number.NaN;
+let shoreProbeContent: unknown = null;
 let shoreProbe = makeShoreProbe(() => 0);
 function shoreProbeFor(seed: number): ShoreProbe {
-  if (seed !== shoreProbeSeed) {
+  const content = getActiveWorldContent();
+  if (seed !== shoreProbeSeed || content !== shoreProbeContent) {
     shoreProbeSeed = seed;
+    shoreProbeContent = content;
     shoreProbe = makeShoreProbe((x, z) => terrainHeight(x, z, seed));
   }
   return shoreProbe;
@@ -583,6 +673,7 @@ export function farGroundColor(
 ): number {
   const pal = farPaletteAt(x, z);
   const biome = zoneBiomeAt(x, z);
+  const wl = waterLevel();
   let grassW = 1;
 
   // base grass with the same patchy fbm variation the near tint uses
@@ -614,7 +705,7 @@ export function farGroundColor(
   }
 
   // far forest mass: clumped canopy paint over gentle, dry, low ground
-  const shoreH = h - (WATER_LEVEL + SHORE_BAND_HEIGHT);
+  const shoreH = h - (wl + SHORE_BAND_HEIGHT);
   const rockStart = ROCK_SLOPE_START[biome];
   const density = FAR_FOREST_DENSITY[biome] ?? 0.3;
   if (h < 22 && shoreH > 1.2 && slope < rockStart) {
@@ -637,8 +728,8 @@ export function farGroundColor(
   // steepens. Gated on water actually being there by the same rule the near
   // splat terrain uses, so a dry inland dip at beach elevation reads as plain
   // ground at BOTH tiers instead of a pale coast on one of them.
-  let shore = 1 - softRamp(h, WATER_LEVEL, WATER_LEVEL + SHORE_BAND_HEIGHT, cellRise);
-  if (shore > 0) shore *= shoreWaterGate(x, z, h, WATER_LEVEL, shoreProbeFor(seed));
+  let shore = 1 - softRamp(h, wl, wl + SHORE_BAND_HEIGHT, cellRise);
+  if (shore > 0) shore *= shoreWaterGate(x, z, h, wl, shoreProbeFor(seed));
   if (shore > 0) {
     const wetStone = biome === 'peaks' || biome === 'volcano' || biome === 'cave';
     lerp3(out, wetStone ? TONE.wetRock : biome === 'marsh' ? TONE.dirtDark : pal.sand, shore);
@@ -702,7 +793,7 @@ export function farGroundColor(
   // the Frostveil's blanket: snow down to the shore wherever frost blends in
   const frostW = biomeWeightAt('frost', x, z);
   if (frostW > 0) {
-    const blanket = softRamp(h, WATER_LEVEL + 1.2, WATER_LEVEL + 4.2, cellRise) * frostW;
+    const blanket = softRamp(h, wl + 1.2, wl + 4.2, cellRise) * frostW;
     lerp3(out, TONE.snowCap, blanket * 0.8);
     grassW *= 1 - blanket;
   }
@@ -717,10 +808,12 @@ export function farGroundColor(
   // weather. Halved, and still altitude-weighted (tall silhouettes recede,
   // valleys stay grounded), so the rim keeps its real rock and snow and the
   // atmosphere over it is the part that moves.
+  const worldBounds = farWorldBounds();
   const edge = Math.max(
-    Math.abs(x) - (WORLD_MAX_X - 70),
-    WORLD_MIN_Z + 70 - z,
-    z - (WORLD_MAX_Z - 70),
+    x - (worldBounds.maxX - 70),
+    worldBounds.minX + 70 - x,
+    worldBounds.minZ + 70 - z,
+    z - (worldBounds.maxZ - 70),
   );
   const rim = clamp01(edge / 64);
   if (rim > 0) {
@@ -795,11 +888,12 @@ export interface FarTileBuilder {
  */
 /** How far outside the zone-rect world a point sits (0 inside). */
 function outsideWorldBy(x: number, z: number): number {
-  return Math.max(0, x - WORLD_MAX_X, WORLD_MIN_X - x, z - WORLD_MAX_Z, WORLD_MIN_Z - z);
+  const bounds = farWorldBounds();
+  return Math.max(0, x - bounds.maxX, bounds.minX - x, z - bounds.maxZ, bounds.minZ - z);
 }
 
 /** Seabed the beyond-rim band settles to (under WATER_LEVEL, gentle). */
-const BEYOND_RIM_SEABED = WATER_LEVEL - 6;
+const beyondRimSeabed = (): number => waterLevel() - 6;
 
 export function farVertexHeight(x: number, z: number, _spacing: number, seed: number): number {
   // Beyond the world rect the heightfield is unauthored procedural noise:
@@ -808,23 +902,29 @@ export function farVertexHeight(x: number, z: number, _spacing: number, seed: nu
   // mountains' far side and the sea apron, so past the rim it settles to
   // open seabed over a short falloff and the horizon meets clean water.
   const outside = outsideWorldBy(x, z);
-  if (outside >= 90) return BEYOND_RIM_SEABED;
+  const bounds = farWorldBounds();
+  const edgeX = Math.min(bounds.maxX, Math.max(bounds.minX, x));
+  const edgeZ = Math.min(bounds.maxZ, Math.max(bounds.minZ, z));
+  const edgeY = terrainHeight(edgeX, edgeZ, seed);
+  // Inland lakes do not turn the whole outer apron into ocean. Only built-in
+  // coasts or a declared custom water footprint that reaches the outer world
+  // edge may hand the horizon off to seabed.
+  const dryInjectedWorld = !farWorldHasOpenEdgeWater();
+  const seabed = beyondRimSeabed();
+  const dryHorizon = Math.max(edgeY - 3, waterLevel() + 1.4);
+  if (outside >= 90) return dryInjectedWorld ? dryHorizon : seabed;
   let y = terrainHeight(x, z, seed);
   if (outside > 0) {
     const t = outside / 90;
     const fall = t * t * (3 - 2 * t);
-    y = y * (1 - fall) + BEYOND_RIM_SEABED * fall;
+    y = y * (1 - fall) + (dryInjectedWorld ? dryHorizon : seabed) * fall;
     // OPEN COASTS stay open: where the world-edge terrain itself is under
     // the waterline, the unauthored noise outside it must never blend in as
     // land standing offshore (measured live: a 38 yard noise plateau held a
     // dark slab 3.5 yards above the sea on the west horizon). Rim mountains
     // keep their far side: their edge sample is high, so no cap applies.
-    const edgeY = terrainHeight(
-      Math.min(WORLD_MAX_X, Math.max(WORLD_MIN_X, x)),
-      Math.min(WORLD_MAX_Z, Math.max(WORLD_MIN_Z, z)),
-      seed,
-    );
-    if (edgeY < WATER_LEVEL) y = Math.min(y, WATER_LEVEL - 1.5);
+    const wl = waterLevel();
+    if (!dryInjectedWorld && edgeY < wl) y = Math.min(y, wl - 1.5);
   }
   // High ground gets a build-time crag: the coarse grid renders peaks as
   // smooth cones, and with the fog gone that smoothness reads from across

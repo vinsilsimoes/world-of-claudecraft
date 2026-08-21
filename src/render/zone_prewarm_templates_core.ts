@@ -9,6 +9,7 @@
 // has no static camp record, so whatever the sim already knows is unioned in,
 // without making correctness depend on snapshot timing.
 import { CAMPS, DUNGEON_X_THRESHOLD, NPCS, zoneAt } from '../sim/data';
+import type { CampDef, NpcDef } from '../sim/types';
 
 export interface ZonePrewarmEntity {
   kind: string;
@@ -16,18 +17,24 @@ export interface ZonePrewarmEntity {
   pos: { x: number; z: number };
 }
 
+export interface ZonePrewarmStaticContent {
+  camps: readonly CampDef[];
+  npcs: Readonly<Record<string, NpcDef>>;
+}
+
 export function zonePrewarmTemplateIds(
   zoneId: string,
   kind: 'mob' | 'npc',
   liveEntities: Iterable<ZonePrewarmEntity>,
+  staticContent: ZonePrewarmStaticContent = { camps: CAMPS, npcs: NPCS },
 ): string[] {
   const ids = new Set<string>();
   if (kind === 'mob') {
-    for (const camp of CAMPS) {
+    for (const camp of staticContent.camps) {
       if (zoneAt(camp.center.x, camp.center.z).id === zoneId) ids.add(camp.mobId);
     }
   } else {
-    for (const npc of Object.values(NPCS)) {
+    for (const npc of Object.values(staticContent.npcs)) {
       if (!npc.dynamic && zoneAt(npc.pos.x, npc.pos.z).id === zoneId) ids.add(npc.id);
     }
   }

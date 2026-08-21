@@ -124,7 +124,7 @@ export type {
 // 8 = the first frame now carries the required game profile. An auth-world-7
 // server would ignore that field and could admit a MIR4 client into the classic
 // world, so both rolling-deploy directions need a new discriminator.
-export const ONLINE_WORLD_LAYOUT_VERSION = 8 as const;
+export const ONLINE_WORLD_LAYOUT_VERSION = 9 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI

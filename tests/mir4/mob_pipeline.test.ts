@@ -14,7 +14,7 @@ import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 // the magic shield) and wolf kills pay the m01 map model XP (34).
 
 function makeSim(seed = 121): Sim {
-  return new Sim({
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerName: 'Aldric',
@@ -22,6 +22,9 @@ function makeSim(seed = 121): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: MIR4_SLICE_WORLD,
   });
+  sim.mir4UnequipSlot(1);
+  sim.mir4UnequipSlot(5);
+  return sim;
 }
 
 function spawnWolf(sim: Sim): Entity {

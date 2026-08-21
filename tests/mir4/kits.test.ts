@@ -12,7 +12,7 @@ import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 // and the 4106 stun's PvE chance.
 
 function makeClassSim(cls: Mir4ClassKey, seed = 91): Sim {
-  return new Sim({
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerClassMir4: cls,
@@ -21,6 +21,9 @@ function makeClassSim(cls: Mir4ClassKey, seed = 91): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: MIR4_SLICE_WORLD,
   });
+  sim.mir4UnequipSlot(1);
+  sim.mir4UnequipSlot(5);
+  return sim;
 }
 
 function spawnWolf(sim: Sim, dx = 2): Entity {

@@ -8,6 +8,7 @@
 
 import type { ClientSession, GameServer } from '../../server/game';
 import { DEFAULT_GAME_PROFILE } from '../../src/game_profile';
+import { Mir4ClientFacet } from '../../src/net/mir4_client_facet';
 import { ClientWorld } from '../../src/net/online';
 import { emptyAllocation } from '../../src/sim/content/talents';
 import { ALL_RECIPES } from '../../src/sim/data';
@@ -220,6 +221,10 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   c.selfLockouts = {};
   c.selfOwnedMounts = [];
   c.selfRidingTrained = false;
+  c.mir4Facet = new Mir4ClientFacet(
+    (payload) => c.cmd(payload),
+    (payload) => c.cmdWithOutcome(payload),
+  );
   // Callback-typed fields the first (regex-based) defaults sweep was blind
   // to: their annotations contain `=>`, which the scrape's annotation group
   // could not cross. The AST-based sweep sees them.

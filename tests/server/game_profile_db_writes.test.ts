@@ -58,6 +58,13 @@ describe('game profile guards on character database writes', () => {
     expect(dbMock.connect).not.toHaveBeenCalled();
   });
 
+  it('rejects a classic-only class before a MIR4 character create reaches SQL', async () => {
+    await expect(createCharacterCapped(1, 'Paladin', 'paladin', 10, MIR4_STATE)).rejects.toThrow(
+      "character creation class 'paladin' is not valid for game profile mir4-gameplay-port",
+    );
+    expect(dbMock.connect).not.toHaveBeenCalled();
+  });
+
   it('rejects a classic save before checking out a database client', async () => {
     await expect(saveCharacterState(7, 1, CLASSIC_STATE)).rejects.toThrow(
       'character save belongs to game profile woc-classic',

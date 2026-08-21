@@ -25,7 +25,7 @@ export function requireGameProfile(value: unknown, source = 'GAME_PROFILE'): Gam
 }
 
 export function gameProfileSaveNamespace(profile: GameProfile): string {
-  return profile === MIR4_GAME_PROFILE ? 'mir4-gameplay-port-v1' : 'woc-classic-v1';
+  return profile === MIR4_GAME_PROFILE ? 'mir4-gameplay-port-v2' : 'woc-classic-v1';
 }
 
 export function gameProfileForCharacterState(state: unknown): GameProfile | null {

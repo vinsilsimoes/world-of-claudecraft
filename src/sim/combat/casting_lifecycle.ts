@@ -32,7 +32,9 @@ import { nearestAttackerId } from '../auto_acquire_target';
 import { ITEMS, isDelvePos, MOBS, zoneAt } from '../data';
 import { recalcPlayerStats } from '../entity';
 import { isShieldItem } from '../equipment_rules';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import { instanceInfoAt } from '../instances/dungeons';
+import { castMir4Action } from '../mir4/action_cast';
 import { forceDismount } from '../mounts';
 import {
   canActivateDivineAscension,
@@ -841,6 +843,14 @@ export function castAbility(
   const r = ctx.resolve(pid);
   if (!r) return;
   const { meta, e: p } = r;
+  if (castMir4Action(ctx, abilityId, p.id)) {
+    meta.lastActiveTick = ctx.tickCount;
+    return;
+  }
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    ctx.error(p.id, 'You do not know that ability.');
+    return;
+  }
   let res = ctx.resolvedAbility(abilityId, p.id);
   if (!res) {
     ctx.error(p.id, 'You do not know that ability.');

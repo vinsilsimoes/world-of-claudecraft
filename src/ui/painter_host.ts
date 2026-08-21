@@ -96,13 +96,13 @@ export interface PainterHostWriters {
    */
   toggleClass(el: HTMLElement, cls: string, on: boolean): void;
   /**
-   * Set an attribute on `el` via `el.setAttribute`, eliding a repeat of the same
-   * value for the same (element, attr). Multi-slot: different attributes on one
-   * element never collide. Added for the action-bar aria-label, which was
+   * Set or remove an attribute on `el`, eliding a repeat of the same value for
+   * the same (element, attr). null removes the attribute. Multi-slot: different
+   * attributes on one element never collide. Added for the action-bar aria-label, which was
    * written every frame per slot (Top risk 4); the rendered string still comes from
    * the core's `t()` call each frame, this only elides the DOM write.
    */
-  setAttr(el: HTMLElement, name: string, value: string): void;
+  setAttr(el: HTMLElement, name: string, value: string | null): void;
 }
 
 /**
@@ -170,7 +170,7 @@ export function makeWriterFacet(
   cache: SingleSlotCache,
   stylePropCache: Map<HTMLElement, Map<string, string>>,
   classCache: Map<HTMLElement, Map<string, string>>,
-  attrCache: Map<HTMLElement, Map<string, string>>,
+  attrCache: Map<HTMLElement, Map<string, string | null>>,
   onWrite: () => void,
   onSkip: () => void,
 ): PainterHostWriters {
@@ -185,11 +185,11 @@ export function makeWriterFacet(
   // Multi-slot variant: resolves (or lazily creates) the per-element inner map and
   // elides per (element, slot). Used by setStyleProp/toggleClass so one element can
   // hold many independent props/classes without them clobbering each other's cache.
-  const shouldWriteSlot = (
-    store: Map<HTMLElement, Map<string, string>>,
+  const shouldWriteSlot = <T extends string | null>(
+    store: Map<HTMLElement, Map<string, T>>,
     el: HTMLElement,
     slot: string,
-    value: string,
+    value: T,
   ): boolean => {
     let slots = store.get(el);
     if (slots === undefined) {
@@ -224,7 +224,9 @@ export function makeWriterFacet(
       if (shouldWriteSlot(classCache, el, cls, on ? 'on' : 'off')) el.classList.toggle(cls, on);
     },
     setAttr: (el, name, value) => {
-      if (shouldWriteSlot(attrCache, el, name, value)) el.setAttribute(name, value);
+      if (!shouldWriteSlot(attrCache, el, name, value)) return;
+      if (value === null) el.removeAttribute(name);
+      else el.setAttribute(name, value);
     },
   };
 }

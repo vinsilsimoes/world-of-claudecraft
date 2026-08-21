@@ -69,6 +69,9 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   ['tests/druid_balance_probe.test.ts', 540_000],
   ['tests/emerald_deck_escape.test.ts', 540_000],
   ['tests/guild_bank_pg_integration.test.ts', 840_000],
+  // Dedicated fail-closed PostgreSQL 16 lane: migration/race proofs plus the
+  // bounded 1,000-session autosave cycle deliberately exceed the default.
+  ['tests/mir4_save_v2_pg_integration.test.ts', 465_000],
   ['tests/nythraxis_matrix.test.ts', 1_200_000],
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
 ]);

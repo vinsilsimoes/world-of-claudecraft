@@ -39,7 +39,7 @@ describe('game profile contract', () => {
 
   it('gives each profile an isolated persistence namespace', () => {
     expect(gameProfileSaveNamespace('woc-classic')).toBe('woc-classic-v1');
-    expect(gameProfileSaveNamespace('mir4-gameplay-port')).toBe('mir4-gameplay-port-v1');
+    expect(gameProfileSaveNamespace('mir4-gameplay-port')).toBe('mir4-gameplay-port-v2');
     expect(gameProfileSaveNamespace('woc-classic')).not.toBe(
       gameProfileSaveNamespace('mir4-gameplay-port'),
     );

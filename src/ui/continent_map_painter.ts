@@ -237,7 +237,7 @@ export class ContinentMapPainter {
     world: IWorld,
     opts: ContinentPaintOptions,
   ): ContinentPaintResult {
-    this.ensureArt();
+    if (world.cfg.gameProfile !== 'mir4-gameplay-port') this.ensureArt();
     const contentAspect =
       this.art && this.art.naturalHeight > 0
         ? this.art.naturalWidth / this.art.naturalHeight
@@ -264,7 +264,7 @@ export class ContinentMapPainter {
     // itself. Regions, labels and the player marker draw on top.
     ctx.fillStyle = colors.ocean;
     ctx.fillRect(0, 0, S, S);
-    if (this.artState === 'ready' && this.art) {
+    if (model.usesArt && this.artState === 'ready' && this.art) {
       this.paintLetterbox(ctx, model.image, S, colors.backdropDim);
       ctx.imageSmoothingEnabled = true;
       // A soft drop shadow seats the plate on that surround, so the boundary
@@ -280,10 +280,22 @@ export class ContinentMapPainter {
     // carries a permanent quiet wash and the hovered one a brighter wash on top,
     // both masked to the painted land. Hovering your own zone draws the hover
     // alone rather than stacking the two.
+    if (!model.usesArt) {
+      ctx.save();
+      ctx.fillStyle = colors.regionCurrentFill;
+      ctx.strokeStyle = colors.outline;
+      for (const region of model.regions) {
+        ctx.globalAlpha = 0.18;
+        ctx.fillRect(region.rect.mx, region.rect.my, region.rect.w, region.rect.h);
+        ctx.globalAlpha = 0.45;
+        ctx.strokeRect(region.rect.mx, region.rect.my, region.rect.w, region.rect.h);
+      }
+      ctx.restore();
+    }
     const hovered = model.regions.find((r) => r.isHovered);
     const current = model.regions.find((r) => r.isCurrent && !r.isHovered);
-    if (current) this.wash(ctx, model.image, current, S, colors.regionCurrentFill);
-    if (hovered) this.wash(ctx, model.image, hovered, S, colors.regionHoverFill);
+    if (current) this.wash(ctx, model.image, current, S, colors.regionCurrentFill, model.usesArt);
+    if (hovered) this.wash(ctx, model.image, hovered, S, colors.regionHoverFill, model.usesArt);
 
     // Zone name labels: outlined for legibility over the art, hovered one lifted
     // to the top with the larger font. Loop-invariant text state is set per label
@@ -373,7 +385,13 @@ export class ContinentMapPainter {
     region: ContinentZoneRegion,
     S: number,
     fill: string,
+    useMask: boolean,
   ): void {
+    if (!useMask) {
+      ctx.fillStyle = fill;
+      ctx.fillRect(region.rect.mx, region.rect.my, region.rect.w, region.rect.h);
+      return;
+    }
     const mask = this.ensureMask();
     const rect = region.rect;
     if (!mask) {

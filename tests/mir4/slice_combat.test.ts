@@ -42,7 +42,7 @@ function ticks(sim: Sim, n: number): void {
 }
 
 describe('the mir4 slice: creation and stats', () => {
-  it('derives warrior level 1 from the ported table', () => {
+  it('derives warrior level 1 with the exact source-backed starter loadout', () => {
     const sim = makeSliceSim();
     const p = sim.entities.get(sim.playerId);
     if (!p) throw new Error('player missing');
@@ -50,10 +50,18 @@ describe('the mir4 slice: creation and stats', () => {
     expect(p.resourceType).toBe('mana');
     expect(p.maxResource).toBe(600);
     expect(p.resource).toBe(600);
-    expect(p.attackPower).toBe(50);
+    expect(p.attackPower).toBe(125);
     expect(p.mir4?.manaCostStat).toBe(204);
     expect(p.mir4?.classId).toBe(1);
-    expect(p.mir4?.criticalOutcome).toBe(0);
+    expect(p.mir4?.physicalDefense).toBe(12);
+    expect(p.mir4?.magicDefense).toBe(12);
+    expect(p.mir4?.accuracy).toBe(5);
+    expect(p.mir4?.skillDamageBps).toBe(10);
+    expect(p.mir4?.criticalOutcome).toBe(10);
+    expect(sim.players.get(sim.playerId)?.mir4Equipment).toEqual({
+      1: 200201000,
+      5: 301201000,
+    });
   });
   it('the forest wolf spawns with the source formula numbers', () => {
     expect(mir4MobStats(1)).toEqual({ maxHp: 127, attack: 7 });
@@ -66,9 +74,11 @@ describe('the mir4 slice: creation and stats', () => {
 });
 
 describe('the mir4 slice: skill 1102 and the basic attack', () => {
-  it('1102 spends 36 MP, arms its cooldown + GCD, deals 40+40+45, stuns 900ms', () => {
+  it('1102 spends 36 MP, arms its cooldown + GCD, deals 312, and stuns for 900ms', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
+    wolf.maxHp = 1_000;
+    wolf.hp = 1_000;
     const result = sim.castMir4Skill(1102, sim.playerId, wolf.id);
     expect(result).toEqual({ ok: true });
     const p = sim.entities.get(sim.playerId)!;
@@ -76,9 +86,9 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(p.cooldowns.has('1102')).toBe(true);
     expect(p.cooldowns.get('1102')).toBe(25);
     expect(p.gcdRemaining).toBe(1);
-    // 0/0 accuracy/dodge = guaranteed contact; 0 crit = no crits; 0 defense =
-    // passthrough: the pinned 125 total.
-    expect(wolf.hp).toBe(127 - 125);
+    // The source starter adds 75 PA and 10 bps skill damage to the level-1
+    // table, producing the shipping 100 + 100 + 112 impacts.
+    expect(wolf.hp).toBe(1_000 - 312);
     expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(true);
     expect(wolf.auras.find((a) => a.kind === 'stun')?.duration).toBe(0.9);
   });
@@ -98,6 +108,8 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
       reason: 'wrong-class',
     });
     const near = spawnWolf(sim);
+    near.maxHp = 1_000;
+    near.hp = 1_000;
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({ ok: true });
     expect(sim.castMir4Skill(1104, sim.playerId, near.id)).toEqual({ ok: false, reason: 'on-gcd' });
     ticks(sim, 21); // 1.05s: GCD gone, 1102 still on its 25s cooldown
@@ -107,14 +119,14 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     });
     expect(sim.mir4BasicAttack(near.id)).toEqual({ ok: true });
   });
-  it('the basic attack deals floor(PA * 6000 / 10000) = 30 on its own cadence', () => {
+  it('the basic attack deals floor(125 * 6000 / 10000) = 75 on its own cadence', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
     ticks(sim, 1);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
     expect(wolf.hp).toBe(127); // scheduled: nothing lands before the offset
     ticks(sim, 6); // 0.30s >= the authored 280ms offset
-    expect(wolf.hp).toBe(127 - 30);
+    expect(wolf.hp).toBe(127 - 75);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({
       ok: false,
       reason: 'on-cooldown',
@@ -125,13 +137,10 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
 });
 
 describe('the mir4 slice: kills, XP, and the level table', () => {
-  it('a kill pays the flat 22 reward through the profile funnel', () => {
+  it('a kill pays the flat 34 reward through the profile funnel', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
-    sim.castMir4Skill(1102, sim.playerId, wolf.id); // 125 of 127
-    ticks(sim, 1);
-    sim.mir4BasicAttack(wolf.id); // scheduled 30 -> dead
-    ticks(sim, 6); // land the impact
+    sim.castMir4Skill(1102, sim.playerId, wolf.id); // starter-scaled 312, lethal
     const meta = sim.players.get(sim.playerId);
     const p = sim.entities.get(sim.playerId)!;
     expect(wolf.dead).toBe(true);
@@ -144,10 +153,10 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     const p = sim.entities.get(sim.playerId)!;
     for (let wolfIndex = 0; wolfIndex < 5; wolfIndex++) {
       const wolf = spawnWolf(sim, 2);
-      // Burn the wolf down with basics only: 5 hits x 30 = 150 >= 127. Every
+      // Burn the wolf down with basics only: 2 hits x 75 = 150 >= 127. Every
       // wolf spawns inside the warrior's 4yd band: an unharmed mir4 mob is
       // passive-until-attacked and never closes the distance on its own.
-      for (let hit = 0; hit < 5 && !wolf.dead; hit++) {
+      for (let hit = 0; hit < 2 && !wolf.dead; hit++) {
         ticks(sim, 14);
         sim.mir4BasicAttack(wolf.id);
         ticks(sim, 7); // land the scheduled impact before re-checking
@@ -158,7 +167,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     expect(p.level).toBe(2);
     expect(p.maxHp).toBe(4240);
     expect(p.maxResource).toBe(610);
-    expect(p.attackPower).toBe(58);
+    expect(p.attackPower).toBe(133);
     expect(p.mir4?.manaCostStat).toBe(239);
   });
   it('is deterministic: same seed, same script, same numbers', () => {
@@ -183,19 +192,22 @@ describe('the mir4 slice: persistence round-trip', () => {
     const sim = makeSliceSim(555);
     const wolf = spawnWolf(sim);
     sim.castMir4Skill(1102, sim.playerId, wolf.id);
-    ticks(sim, 1);
-    sim.mir4BasicAttack(wolf.id);
     const state = sim.serializeCharacter(sim.playerId);
     if (!state) throw new Error('serialize failed');
     expect(state.gameProfile).toBe('mir4-gameplay-port');
     expect(state.level).toBe(1);
+    expect(state.mir4Equipment).toEqual({ 1: 200201000, 5: 301201000 });
+    expect(state.mir4EquipmentInstances).toEqual({
+      200201000: { itemId: 200201000, enhancement: 0 },
+      301201000: { itemId: 301201000, enhancement: 0 },
+    });
 
     const restored = makeSliceSim(556);
     const pid = restored.addPlayer('warrior', 'Aldric', { state });
     const p = restored.entities.get(pid)!;
     expect(p.level).toBe(1);
     expect(p.maxHp).toBe(4000);
-    expect(p.attackPower).toBe(50);
+    expect(p.attackPower).toBe(125);
     expect(p.resourceType).toBe('mana');
     expect(p.maxResource).toBe(600);
     expect(p.resource).toBe(600 - 36);

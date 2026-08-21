@@ -3,7 +3,10 @@
 // immutable shipped content, while live Rift entrances remain entity-backed and
 // deliberately obey the same 80-yard information boundary as their world art.
 
+import { MIR4_WORLD_ARC } from '../sim/content/mir4/world_arc';
 import { DELVE_LIST, PORTALS, zoneContaining } from '../sim/data';
+import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { MIR4_ARC_PORTALS } from '../sim/mir4/travel';
 import { isLiveMapEntityDisclosed } from './map_entity_disclosure_core';
 
 export type StableMapNavigationLandmark =
@@ -71,6 +74,41 @@ function buildStableMapNavigationLandmarks(): readonly StableMapNavigationLandma
 
 /** Shipped, entity-free navigation sites, constructed once at module load. */
 export const STABLE_MAP_NAVIGATION_LANDMARKS = buildStableMapNavigationLandmarks();
+
+const MIR4_MAP_NAVIGATION_LANDMARKS: readonly StableMapNavigationLandmark[] = Object.freeze(
+  MIR4_ARC_PORTALS.flatMap((portal, index) => {
+    const from = MIR4_WORLD_ARC[index]!;
+    const to = MIR4_WORLD_ARC[index + 1]!;
+    return [
+      Object.freeze({
+        kind: 'world-passage' as const,
+        id: portal.id,
+        side: 'a' as const,
+        zoneId: `mir4_${from.mapId}`,
+        destinationZoneId: `mir4_${to.mapId}`,
+        x: portal.a.x,
+        z: portal.a.z,
+      }),
+      Object.freeze({
+        kind: 'world-passage' as const,
+        id: portal.id,
+        side: 'b' as const,
+        zoneId: `mir4_${to.mapId}`,
+        destinationZoneId: `mir4_${from.mapId}`,
+        x: portal.b.x,
+        z: portal.b.z,
+      }),
+    ];
+  }),
+);
+
+export function stableMapNavigationLandmarks(
+  profile: GameProfile | undefined,
+): readonly StableMapNavigationLandmark[] {
+  return profile === MIR4_GAME_PROFILE
+    ? MIR4_MAP_NAVIGATION_LANDMARKS
+    : STABLE_MAP_NAVIGATION_LANDMARKS;
+}
 
 export interface LiveRiftZoneMapEntity {
   readonly kind: string;
