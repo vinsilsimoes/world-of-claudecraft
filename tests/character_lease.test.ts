@@ -266,7 +266,11 @@ describe('saveCharacterState lease fence', () => {
     expect(updates[0]).toContain('EXISTS');
     expect(updates[0]).toContain('character_leases');
     expect(updates[0]).toContain('WITH locked_character AS MATERIALIZED');
-    expect(updates[0]).toContain('expires_at >= clock_timestamp()');
+    expect(updates[0]).toContain('lock_time AS MATERIALIZED');
+    expect(updates[0]).toContain('clock_timestamp() AS checked_at');
+    expect(updates[0]).toContain('lease.expires_at >= lock_time.checked_at');
+    expect(updates[0]).toContain('lease.expires_at >= locked_lease.checked_at');
+    expect(updates[0]).not.toContain('lease.expires_at >= clock_timestamp()');
     expect(updates[0]).toContain('AS MATERIALIZED');
     expect(updates[0]).toContain('FOR UPDATE OF lease');
     expect(updates[0].indexOf('FROM characters')).toBeLessThan(
@@ -287,7 +291,6 @@ describe('saveCharacterState lease fence', () => {
     expect(updates[0]).toContain('UPDATE character_leases AS lease');
     expect(updates[0]).toContain('SET heartbeat_at = clock_timestamp()');
     expect(updates[0]).toContain('make_interval(secs => $6)');
-    expect(updates[0].match(/lease\.expires_at >= clock_timestamp\(\)/g)).toHaveLength(2);
     expect(updates[0].match(/lease\.holder = \$4 AND lease\.nonce = \$5/g)).toHaveLength(2);
     // The write runs on the checked-out client, never the bare pool.
     expect(dbMock.query).not.toHaveBeenCalled();

@@ -3459,6 +3459,10 @@ export async function renameCharacter(
 // escrow save cannot lose its lease merely because the global heartbeat skips
 // that busy row. `characters` is locked first everywhere that needs both rows:
 // this save, deletion, and the FK check performed by lease acquisition.
+// The expiry comparison uses a timestamp projected from the already-materialized
+// character lock. A direct clock_timestamp() predicate on the lease scan can be
+// evaluated before a contended character lock wait and incorrectly revive a
+// lease that expires while the save is queued.
 function characterUpdateStatement(
   characterId: number,
   level: number,
@@ -3477,22 +3481,26 @@ function characterUpdateStatement(
                 WHERE id = $1
                 FOR UPDATE
              ),
+             lock_time AS MATERIALIZED (
+               SELECT locked_character.id, clock_timestamp() AS checked_at
+                 FROM locked_character
+             ),
              locked_lease AS MATERIALIZED (
-               SELECT lease.character_id
+               SELECT lease.character_id, lock_time.checked_at
                  FROM character_leases AS lease
-                 JOIN locked_character ON locked_character.id = lease.character_id
+                 JOIN lock_time ON lock_time.id = lease.character_id
                 WHERE lease.holder = $4 AND lease.nonce = $5
-                  AND lease.expires_at >= clock_timestamp()
+                  AND lease.expires_at >= lock_time.checked_at
                 FOR UPDATE OF lease
              ),
              valid_lease AS MATERIALIZED (
                UPDATE character_leases AS lease
                  SET heartbeat_at = clock_timestamp(),
                       expires_at = clock_timestamp() + make_interval(secs => $6)
-                 FROM locked_lease
-                WHERE lease.character_id = locked_lease.character_id
-                  AND lease.holder = $4 AND lease.nonce = $5
-                  AND lease.expires_at >= clock_timestamp()
+                FROM locked_lease
+               WHERE lease.character_id = locked_lease.character_id
+                 AND lease.holder = $4 AND lease.nonce = $5
+                 AND lease.expires_at >= locked_lease.checked_at
                RETURNING lease.character_id
              )
              UPDATE characters AS character
