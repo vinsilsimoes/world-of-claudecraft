@@ -23,6 +23,7 @@ import { stripComments } from './helpers/strip_comments';
 
 const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 const mpBrowser = readFileSync(new URL('../scripts/mp_browser.mjs', import.meta.url), 'utf8');
+const smokeBrowser = readFileSync(new URL('../scripts/smoke_browser.mjs', import.meta.url), 'utf8');
 const mir4FeatureBrowser = readFileSync(
   new URL('../scripts/mir4_feature_browser.mjs', import.meta.url),
   'utf8',
@@ -916,6 +917,10 @@ describe('CI workflow parity', () => {
     expect(mir4Postgres).toContain('tmp/10_bags.png');
     expect(mpBrowser).toContain("'--no-sandbox'");
     expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(smokeBrowser).toContain("'--no-sandbox'");
+    expect(smokeBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(mir4FeatureBrowser).toContain("'--no-sandbox'");
+    expect(mir4FeatureBrowser).toContain("'--disable-setuid-sandbox'");
     expect(mpBrowser).toContain('protocolTimeout: 180000');
     expect(mpBrowser).toContain("const browserA = await launchBrowser('a');");
     expect(mpBrowser).toContain("const browserB = await launchBrowser('b');");

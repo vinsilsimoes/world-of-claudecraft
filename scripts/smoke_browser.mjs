@@ -19,7 +19,13 @@ fs.mkdirSync('tmp', { recursive: true });
 const browser = await puppeteer.launch({
   executablePath: EDGE,
   headless: 'new',
-  args: ['--window-size=1600,900', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--window-size=1600,900',
+    '--use-angle=swiftshader',
+    '--enable-unsafe-swiftshader',
+  ],
   defaultViewport: { width: 1600, height: 900 },
 });
 const page = await browser.newPage();
