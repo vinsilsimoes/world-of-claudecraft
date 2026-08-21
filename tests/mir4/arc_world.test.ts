@@ -108,6 +108,11 @@ describe('the arc band generator', () => {
       [...sim.entities.values()].filter((e) => e.templateId === 'mir4_m01-vila-do-vau_forest_wolf')
         .length,
     ).toBe(5);
+    const startZ = sim.player.pos.z;
+    sim.player.facing = 0;
+    sim.moveInput.forward = true;
+    for (let tick = 0; tick < 24; tick++) sim.tick();
+    expect(sim.player.pos.z - startZ).toBeGreaterThan(4);
     // The full arc builds too: 20 zones, 80 map-local giver placements, 40 camps.
     const all = buildMir4ArcWorld();
     expect(all.zones).toHaveLength(20);

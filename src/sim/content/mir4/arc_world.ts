@@ -140,6 +140,8 @@ function appendNativeMapProps(props: ZonePropsDef, band: Mir4ArcBand, map: Mir4A
  */
 export function buildMir4ArcWorld(maps: number = MIR4_WORLD_ARC.length): WorldContent {
   const bands = mir4ArcBands().slice(0, Math.max(1, maps));
+  const firstBand = bands[0];
+  if (!firstBand) throw new Error('MIR4 arc world requires at least one map band');
   const zones: ZoneDef[] = [];
   const camps: CampDef[] = [];
   const roads: { x: number; z: number }[][] = [];
@@ -235,7 +237,10 @@ export function buildMir4ArcWorld(maps: number = MIR4_WORLD_ARC.length): WorldCo
     roads,
     props,
     terrainEdits,
-    playerStart: { x: 0, z: bands[0]!.hub.z },
+    // Enter on the road's south approach rather than at the hub anchor. The
+    // hub's centre fire is solid, so spawning there blocked the first forward
+    // input after less than one yard and made a fresh character appear stuck.
+    playerStart: { x: firstBand.hub.x, z: firstBand.hub.z - 20 },
     services: {
       noticeboards,
       // ZoneDef.graveyard drives map presentation; the service registry is the
