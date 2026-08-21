@@ -334,7 +334,10 @@ if (IS_MIR4) {
   );
 }
 
-// A runs forward; B should observe A's position change
+// A moves through the real keyboard path; B should observe A's position change.
+// The shared spawn is intentionally populated with NPCs, players and props, so
+// try each WASD direction rather than treating a blocked forward lane as a
+// networking failure. Stop as soon as one direction clears the spawn collider.
 // B drains snapshots on rAF, which only runs foregrounded — so foreground B
 // around each position read, and A while it moves.
 await pageB.bringToFront();
@@ -344,23 +347,30 @@ const before = await pageB.evaluate((name) => {
   const a = [...w.entities.values()].find((e) => e.name === name);
   return a ? { x: a.pos.x, z: a.pos.z } : null;
 }, NAME_A);
-// rAF (and therefore the input mirror) only runs in the foreground tab.
-// Settle after the foreground switch: the blur from the previous switch can
-// otherwise land after keydown, and the game clears held keys on blur.
-await pageA.bringToFront();
-await new Promise((r) => setTimeout(r, 400));
-await pageA.keyboard.down('w');
-await new Promise((r) => setTimeout(r, 2500));
-await pageA.keyboard.up('w');
-await pageB.bringToFront();
-await new Promise((r) => setTimeout(r, 500));
-const after = await pageB.evaluate((name) => {
-  const w = window.__game.world;
-  const a = [...w.entities.values()].find((e) => e.name === name);
-  return a ? { x: a.pos.x, z: a.pos.z } : null;
-}, NAME_A);
-const moved = before && after ? Math.hypot(after.x - before.x, after.z - before.z) : 0;
-check('B watched A move', moved > 4, `${moved.toFixed(1)} yd`);
+let after = before;
+let moved = 0;
+const movementAttempts = [];
+for (const key of ['w', 's', 'a', 'd']) {
+  // Settle after the foreground switch: a late blur can otherwise land after
+  // keydown, and the game intentionally clears held keys on blur.
+  await pageA.bringToFront();
+  await new Promise((r) => setTimeout(r, 400));
+  await pageA.keyboard.down(key);
+  await new Promise((r) => setTimeout(r, 2500));
+  const input = await pageA.evaluate(() => window.__game.input.debugState());
+  await pageA.keyboard.up(key);
+  await pageB.bringToFront();
+  await new Promise((r) => setTimeout(r, 700));
+  after = await pageB.evaluate((name) => {
+    const w = window.__game.world;
+    const a = [...w.entities.values()].find((e) => e.name === name);
+    return a ? { x: a.pos.x, z: a.pos.z } : null;
+  }, NAME_A);
+  moved = before && after ? Math.hypot(after.x - before.x, after.z - before.z) : 0;
+  movementAttempts.push({ key, moved: Number(moved.toFixed(1)), input });
+  if (moved > 4) break;
+}
+check('B watched A move', moved > 4, JSON.stringify(movementAttempts));
 
 // chat from A (through the real chat input flow), read on B
 await pageA.bringToFront();

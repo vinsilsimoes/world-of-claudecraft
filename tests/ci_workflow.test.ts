@@ -910,6 +910,8 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toContain('ENTRY DIAGNOSTICS');
     expect(mpBrowser).toMatch(/loginAndEnter\(pageA, `duo_\$\{uniq\}`/);
     expect(mpBrowser).toMatch(/loginAndEnter\(pageB, `duob_\$\{uniq\}`/);
+    expect(mpBrowser).toContain("for (const key of ['w', 's', 'a', 'd'])");
+    expect(mpBrowser).toContain('window.__game.input.debugState()');
     expect(mpBrowser).toContain("'#btn-auth-toggle'");
     expect(mpBrowser).toContain("'#login-panel'");
     expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");
