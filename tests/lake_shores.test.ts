@@ -186,7 +186,7 @@ describe('every declared lake can be walked out of (terrain generation)', () => 
     const zones = BUILTIN_WORLD.zones.map((z, i) =>
       i === 0 ? { ...z, lakes: [...z.lakes, { x: cx, z: cz, radius: R }] } : z,
     );
-    const world: WorldContent = { ...BUILTIN_WORLD, zones };
+    const world: WorldContent = { ...BUILTIN_WORLD, zones, terrainModel: 'builtin' };
     const sim = makeSim(world, SEED);
 
     // the seam bed is under water and swimmable along the whole crossing...
@@ -215,7 +215,7 @@ describe('every declared lake can be walked out of (terrain generation)', () => 
     const zones = BUILTIN_WORLD.zones.map((z, i) =>
       i === 0 ? { ...z, lakes: [...z.lakes, { x: cx, z: sealed.at, radius: 15 }] } : z,
     );
-    setActiveWorldContent({ ...BUILTIN_WORLD, zones });
+    setActiveWorldContent({ ...BUILTIN_WORLD, zones, terrainModel: 'builtin' });
     // the sealed range is never gated by water: a tall wall still crosses the
     // lake (the movement seal, crossesSealedBorder, is independent of terrain)
     let crest = -Infinity;

@@ -45,7 +45,7 @@ import { petOf, serializePet, summonPet } from '../src/sim/pet/pet_commands';
 import { livePlaytimeSeconds } from '../src/sim/playtime';
 import { noteRelicItemFind, noteRelicObtain } from '../src/sim/reliquary';
 import { Sim } from '../src/sim/sim';
-import { type Aura, DT, type PlayerClass, type WorldContent } from '../src/sim/types';
+import { type Aura, DT, type Entity, type PlayerClass, type WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { absorbTotal } from '../src/ui/absorb_bar';
 import { auraEffectDescriptor } from '../src/ui/aura_effect';
@@ -74,6 +74,35 @@ const WIRE_TEST_WORLD: WorldContent = {
   npcs: {},
   groundObjects: [],
 };
+
+describe('runtime MIR4 entity presentation over the entity wire', () => {
+  it('round-trips magic-shield activity and generated mob presentation metadata', () => {
+    const mob = createMob(
+      77,
+      {
+        ...MOBS.wolf,
+        id: 'mir4_runtime_arc_boss',
+        name: 'Arc Warden',
+        family: 'undead',
+        elite: true,
+        boss: true,
+      },
+      40,
+      { x: 4, y: 0, z: 8 },
+    );
+    mob.mir4Shield = { remaining: 6, magnitude: 0.22 };
+    const wire = wireEntity(mob);
+    const client = bareClient(999);
+
+    (client as any).applySnapshot({ t: 'snap', ents: [wire] });
+
+    const mirrored = client.entities.get(mob.id)! as Entity;
+    expect(mirrored.mir4Shield).toEqual({ remaining: 6, magnitude: 0.22 });
+    expect((mirrored as any).mobFamily).toBe('undead');
+    expect((mirrored as any).mobElite).toBe(true);
+    expect((mirrored as any).mobBoss).toBe(true);
+  });
+});
 
 const DELTA_KEYS = [
   'inv',
@@ -4190,6 +4219,7 @@ const ALL_DELTA_KEYS = [
   'market',
   'marks',
   'milestones',
+  'mir4',
   'mktU',
   'mloot',
   'mntLesson',
@@ -4222,13 +4252,13 @@ const ALL_DELTA_KEYS = [
   'xp',
 ] as const;
 
-/** The delta keys a FRESH session is guaranteed to receive on its first
- *  snapshot. Every registered key but one: `app` is the authored modular look,
+/** The delta keys a FRESH CLASSIC session is guaranteed to receive on its first
+ *  snapshot. `app` is the authored modular look,
  *  and a character created before the creator (or by a client that posts no
  *  appearance) has none, so it stays sparse on the wire the way `eq`/`eqi` do
- *  on the entity record. Its own round trip is pinned in
- *  tests/appearance_broadcast.test.ts, including that it ships exactly once. */
-const DENSE_DELTA_KEYS = ALL_DELTA_KEYS.filter((key) => key !== 'app');
+ *  on the entity record. `mir4` is profile-scoped and therefore absent from a
+ *  classic session. Both have dedicated round-trip tests. */
+const DENSE_DELTA_KEYS = ALL_DELTA_KEYS.filter((key) => key !== 'app' && key !== 'mir4');
 
 // The terse wire key -> IWorld member name rename map, in sorted order. The wire
 // string IS the protocol (contract #4): a terse key renamed on one side passes tsc
@@ -4720,7 +4750,7 @@ describe('full self-state snapshot delta fixture', () => {
     broadcast(server);
     const snap = lastSnap(fc.sent);
     expect(snap).not.toBeNull();
-    for (const key of ALL_DELTA_KEYS) {
+    for (const key of ALL_DELTA_KEYS.filter((candidate) => candidate !== 'mir4')) {
       expect(snap.self, `self.${key} missing from first snapshot`).toHaveProperty(key);
       // each was dirtied to a non-default value, so none rides the wire as null
       expect(snap.self[key], `self.${key} arrived null`).not.toBeNull();
@@ -5141,7 +5171,7 @@ describe('gather node cooldown wire round trip (ncd)', () => {
 });
 
 describe('delta-key contract pins (anti-drift)', () => {
-  it('ALL_DELTA_KEYS contains exactly 86 unique keys in sorted order', () => {
+  it('ALL_DELTA_KEYS contains exactly 87 unique keys in sorted order', () => {
     // +1: guildBank (Guild Bank Phase 2), +1: the battleground bg key, +1: the
     // commission order board's corder key (issue #1298), +1: the character
     // sheet's lifetime played-time key ptime, for 67, then +16: the static
@@ -5153,11 +5183,12 @@ describe('delta-key contract pins (anti-drift)', () => {
     // modular look, which cannot come from the entity list because the
     // broadcast loop skips the viewer's own entity, and which is heavy and
     // immutable so it rides this channel instead of re-serializing per tick),
-    // for 86. Every v0.36.0 sync conflicts here because each side pins its own
+    // for 86, plus the profile-scoped authoritative `mir4` state for 87. Every
+    // v0.36.0 sync conflicts here because each side pins its own
     // additions alone; the merged tree carries all of them, and this number
     // came from a run on the merged tree.
-    expect(ALL_DELTA_KEYS).toHaveLength(86);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(86);
+    expect(ALL_DELTA_KEYS).toHaveLength(87);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(87);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -5187,8 +5218,9 @@ describe('delta-key contract pins (anti-drift)', () => {
     // key ptime for 67, then the 16 static combat-rating/progression scalars
     // (ap/sp/sh/crit/dodge/blk/bval/crat/hrat/hirat/xp/lxp/rxp/prk/copper/ddiff)
     // for 83, then reliq (Reliquary Phase 3 sparse blob) for 84, the nameplate
-    // border echo aborder for 85, and the authored modular look `app` for 86.
-    expect(scraped.size).toBe(86);
+    // border echo aborder for 85, the authored modular look `app` for 86, and
+    // the profile-scoped authoritative MIR4 block for 87.
+    expect(scraped.size).toBe(87);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

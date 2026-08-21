@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {
+  getActiveWorldContent,
   STRIP_MAX_X,
   STRIP_MIN_X,
   WORLD_MAX_X,
@@ -10,7 +11,7 @@ import {
   ZONES,
 } from '../sim/data';
 import type { ZoneDef } from '../sim/types';
-import { waterLevel, waterLevelAt } from '../sim/world';
+import { waterBodies, waterLevel, waterLevelAt } from '../sim/world';
 import { loadTexture } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import {
@@ -1592,7 +1593,9 @@ function buildShaderWater(seed: number, renderer?: THREE.WebGLRenderer): WaterVi
   };
 }
 
-function buildPhongWater(): WaterView {
+function buildPhongWater(
+  localBodies?: readonly { x: number; z: number; radius: number }[],
+): WaterView {
   const tex = waterNormalish();
   const [norm] = waterNormalMaps();
   const mat = new THREE.MeshPhongMaterial({
@@ -1605,17 +1608,32 @@ function buildPhongWater(): WaterView {
     normalMap: norm,
     normalScale: new THREE.Vector2(0.8, 0.8),
   });
-  // low tier gets the same to-the-horizon apron by simply oversizing the
-  // one plane (the tiled texture keeps its density via the repeat bump)
-  const worldDepth = WORLD_MAX_Z - WORLD_MIN_Z + 2400;
-  tex.repeat.set(240, 240);
-  norm.repeat.set(210, 620);
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3000, worldDepth).rotateX(-Math.PI / 2), mat);
-  mesh.position.set(0, waterLevel(), (WORLD_MIN_Z + WORLD_MAX_Z) / 2);
-  const meshes = [mesh];
+  // The classic low tier keeps its to-the-horizon apron. Injected worlds are
+  // finite authored documents: build one local disc per declared lake so a
+  // custom map never inherits the WoC ocean plane on any graphics tier.
+  const meshes = localBodies
+    ? localBodies.map((body) => {
+        const mesh = new THREE.Mesh(
+          new THREE.CircleGeometry(body.radius, 48).rotateX(-Math.PI / 2),
+          mat,
+        );
+        mesh.position.set(body.x, waterLevel(), body.z);
+        return mesh;
+      })
+    : (() => {
+        const worldDepth = WORLD_MAX_Z - WORLD_MIN_Z + 2400;
+        tex.repeat.set(240, 240);
+        norm.repeat.set(210, 620);
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(3000, worldDepth).rotateX(-Math.PI / 2),
+          mat,
+        );
+        mesh.position.set(0, waterLevel(), (WORLD_MIN_Z + WORLD_MAX_Z) / 2);
+        return [mesh];
+      })();
   const group = new THREE.Group();
   group.name = 'water';
-  group.add(mesh);
+  group.add(...meshes);
   return {
     group,
     meshes,
@@ -1650,7 +1668,33 @@ function buildPhongWater(): WaterView {
   };
 }
 
+function buildEmptyWater(): WaterView {
+  const group = new THREE.Group();
+  group.name = 'water';
+  return {
+    group,
+    meshes: [],
+    ensureZone: async () => [],
+    isZoneLoaded: () => true,
+    update: () => 0,
+    addSplash: () => {},
+    enterContact: () => {},
+    moveContact: () => {},
+    releaseContact: () => {},
+    setWavesEnabled: () => {},
+    setLevel: () => {},
+    unloadZone: () => {},
+    dispose: () => {},
+  };
+}
+
 export function buildWater(seed: number, renderer?: THREE.WebGLRenderer): WaterView {
+  const content = getActiveWorldContent();
+  if (content.zones.length > 0 && content.zones !== ZONES) {
+    const bodies = waterBodies();
+    if (bodies.length === 0) return buildEmptyWater();
+    return buildPhongWater(bodies);
+  }
   return GFX.standardMaterials && hasWaterShaderAssets()
     ? buildShaderWater(seed, renderer)
     : buildPhongWater();

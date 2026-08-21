@@ -52,6 +52,11 @@ describe('bags_window: accessibility contract', () => {
 });
 
 describe('bags_window: load-bearing behaviors preserved', () => {
+  it('delegates the MIR4 profile to the shared-window inventory adapter', () => {
+    expect(painter).toContain("from './mir4_equipment_window_adapter'");
+    expect(painter).toContain('paintMir4InventoryWindow({');
+  });
+
   it('uses the branded Claudium icon and matching balance color', () => {
     expect(hud).toContain('src="/claudium/icons/claudium_coin_64.webp"');
     expect(components).toMatch(/\.claudium-launcher\s*\{[^}]*color:\s*#9eeeff;/s);

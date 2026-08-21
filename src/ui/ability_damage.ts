@@ -10,6 +10,8 @@
 // (which effect each placeholder reads), so ability_description.ts and the tooltip-consistency
 // guard test share one definition and cannot drift. Unit-tested in
 // tests/ability_damage.test.ts; hud.ts is the thin consumer.
+
+import { mir4ActionRawDamage } from '../sim/mir4/action_abilities';
 import type { ResolvedAbility } from '../sim/sim';
 import {
   abilityScalingPower,
@@ -27,6 +29,8 @@ export interface AbilityScaling {
   spellPower: number;
   rangedPower: number;
   attackPower: number;
+  /** MIR4-only STATUS 44 boost; ignored by classic abilities. */
+  mir4SkillDamageBps?: number;
 }
 
 /** Flat bonus this character adds to ONE displayed hit of `eff` (or, for a DoT, to
@@ -37,6 +41,14 @@ export function abilityDamageBonus(
   scaling: AbilityScaling,
 ): number {
   const def = res.def;
+  const mir4Damage = mir4ActionRawDamage(
+    def.id,
+    res.rank,
+    scaling.attackPower,
+    scaling.spellPower,
+    scaling.mir4SkillDamageBps,
+  );
+  if (mir4Damage !== null && eff.type === 'directDamage') return mir4Damage;
   // Finishers (Eviscerate, Ferocious Bite) fold Attack Power into the listed
   // damage via the sim's effectiveAttackPower / 14 path, separate from the
   // coefficient model below; only physical finishers get it.

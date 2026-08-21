@@ -193,7 +193,10 @@ yourself or the S3 guard throws "status.json is missing".
 - **Opt-in DB gates.** `*_integration.test.ts` bodies run only when `TEST_DATABASE_URL`
   is set (dev DB via `npm run db:up`; without it they skip green), and SQL differential
   blocks gate on `WOCC_PG_DIFFERENTIAL=1`. Run the relevant ones before calling DB-shape
-  work done; CI's floor is the DB-free structural pins.
+  work done. The dedicated `MIR4 PostgreSQL 16 proof` CI job is the scoped exception to
+  the otherwise DB-free CI floor: it supplies a disposable PostgreSQL 16 service and sets
+  `WOC_REQUIRE_PG_INTEGRATION=1`, so the lease and MIR4 save-v2 integration suites fail
+  instead of skipping when that required job is miswired.
 - **DOM in tests, the two-branch rule.** The default Vitest env is plain Node (no
   `document`/`window`). Game-HUD/UI tests stay there: stub a single global on `globalThis`
   (`localStorage` in `keybinds.test.ts`, `WebSocket` in `snapshots.test.ts`) or build a small

@@ -19,6 +19,7 @@ import {
   QUESTS,
   ZONES,
 } from '../src/sim/data';
+import { MIR4_ACTION_ABILITY_DEFS } from '../src/sim/mir4/action_abilities';
 import type { PlayerClass } from '../src/sim/types';
 import { abilityBuffValue } from '../src/ui/ability_damage';
 import {
@@ -800,8 +801,9 @@ describe('i18n Localization Key Coverage', () => {
 
     expect(entityCount('class', 'name')).toBe(Object.keys(CLASSES).length);
     expect(entityCount('class', 'description')).toBe(Object.keys(CLASSES).length);
-    expect(entityCount('ability', 'name')).toBe(Object.keys(ABILITIES).length);
-    expect(entityCount('ability', 'description')).toBe(Object.keys(ABILITIES).length);
+    const abilityCount = Object.keys(ABILITIES).length + MIR4_ACTION_ABILITY_DEFS.length;
+    expect(entityCount('ability', 'name')).toBe(abilityCount);
+    expect(entityCount('ability', 'description')).toBe(abilityCount);
     // Heroic upgraded variants (heroicOf) have no name key: they share the base
     // item name, so they are excluded from the entity manifest.
     expect(entityCount('item', 'name')).toBe(
@@ -874,7 +876,9 @@ describe('i18n Localization Key Coverage', () => {
       0,
     );
     expect(classAbilityEntries).toHaveLength(
-      Object.keys(CLASSES).length * 2 + Object.keys(ABILITIES).length * 2 + specNoteCount,
+      Object.keys(CLASSES).length * 2 +
+        (Object.keys(ABILITIES).length + MIR4_ACTION_ABILITY_DEFS.length) * 2 +
+        specNoteCount,
     );
     const missingClassAbilities = missingEntityTranslationsForGroups(['classAbility']);
     expect(missingClassAbilities, JSON.stringify(missingClassAbilities, null, 2)).toHaveLength(0);
@@ -1638,7 +1642,13 @@ describe('i18n Localization Key Coverage', () => {
     expect(minimapPainterSource).toContain('this.writers.setText(zoneLabelEl, this.localizeZone(');
     expect(hudSource).toContain('zonePoiLabel');
     expect(hudSource).toContain('dungeonDisplayNameFromSource');
-    expect(hudSource).not.toContain('zoneWelcomeText(');
+    expect(hudSource).toContain('zoneWelcomeText(zone.id)');
+    const entityI18nSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/ui/entity_i18n.ts'),
+      'utf8',
+    );
+    expect(entityI18nSource).toContain('mir4ZoneNameKey(zoneId)');
+    expect(entityI18nSource).toContain("tEntity({ kind: 'zone', id: zoneId, field: 'welcome' })");
 
     // The per-entity nameplate content (corpse/mob names) moved into the
     // NameplatePainter; localization is preserved, just relocated (mirrors the

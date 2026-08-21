@@ -724,14 +724,15 @@ describe('options_window: Reset to Defaults is scoped per sub-view (#2341)', () 
 });
 
 // Key Bindings' Reset to Defaults used to reset only the rebindable key-code
-// map (Keybinds.reset()), silently leaving the seven GameSettings toggles the
-// same panel renders (mouse camera, click-to-move + its mouse button, attack
+// map (Keybinds.reset()), silently leaving the six adjustable GameSettings the
+// same panel renders (cursor lock, click-to-move + its mouse button, attack
 // move, left-handed touch, profanity filter) untouched.
 describe('options_window: Key Bindings Reset to Defaults also resets its own toggles', () => {
-  it('names the same seven setting keys the panel renders via settingToggleKeybind/clickMoveMouseButtonRow', () => {
+  it('names the same six adjustable setting keys the panel renders', () => {
     expect(painter).toContain(
-      "const KEYBIND_PANEL_SETTING_KEYS: (keyof GameSettings)[] = [\n  'mouseCamera',\n  'lockCursorOnRotate',\n  'clickToMove',\n  'clickToMoveButton',\n  'attackMove',\n  'leftHandedTouch',\n  'filterProfanity',\n];",
+      "const KEYBIND_PANEL_SETTING_KEYS: (keyof GameSettings)[] = [\n  'lockCursorOnRotate',\n  'clickToMove',\n  'clickToMoveButton',\n  'attackMove',\n  'leftHandedTouch',\n  'filterProfanity',\n];",
     );
+    expect(painter).not.toContain("t('hud.options.mouseCamera'), 'mouseCamera'");
   });
 
   it("renderKeybinds' reset handler resets the keybind map AND the panel's own settings, then re-applies them", () => {

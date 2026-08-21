@@ -99,6 +99,50 @@ describe('splitCopper', () => {
 });
 
 describe('characterSheet: shared fields', () => {
+  it('renders a native MIR4 identity without entering classic talent or stat tables', () => {
+    const state = makeState({
+      gameProfile: 'mir4-gameplay-port',
+      level: 25,
+      hp: 4500,
+      resource: 700,
+      mir4Equipment: { 1: 991010201 },
+      mir4EquipmentInstances: { 991010201: { itemId: 991010201, enhancement: 0 } },
+      mir4Mounts: {
+        owned: { 'meadow-courser': 1 },
+        discovered: ['meadow-courser'],
+        equippedMountId: 'meadow-courser',
+      },
+    });
+    const row = makeRow('warrior', 25, state);
+    row.class = 'elementalist';
+    const sheet = characterSheet(input({ row }));
+    expect(sheet.gameProfile).toBe('mir4-gameplay-port');
+    expect(sheet.class).toBe('elementalist');
+    expect(sheet.classLabel).toBe('Elementalist');
+    expect(sheet.spec).toBeNull();
+    expect(sheet.avatarUrl).toBe('https://worldofclaudecraft.com/avatar/warrior/0.png');
+    expect(sheet.stats).toBeUndefined();
+    expect(sheet.mir4Stats).toMatchObject({
+      classId: 2,
+      magicAttack: expect.any(Number),
+      physicalDefense: expect.any(Number),
+      magicDefense: expect.any(Number),
+    });
+    expect(sheet.vitals?.hp).toBe(4500);
+    expect(sheet.vitals?.resource.type).toBe('mana');
+
+    const withoutMount = characterSheet(
+      input({
+        row: {
+          ...row,
+          state: { ...state, mir4Mounts: undefined },
+        },
+      }),
+    );
+    expect(sheet.mir4Stats!.physicalDefense - withoutMount.mir4Stats!.physicalDefense).toBe(4);
+    expect(sheet.mir4Stats!.magicDefense - withoutMount.mir4Stats!.magicDefense).toBe(4);
+  });
+
   it('derives classLabel, zone, virtualLevel, prestige, spec, avatar + profile urls', () => {
     const sheet = characterSheet(input());
     expect(sheet.name).toBe('Thrallish');

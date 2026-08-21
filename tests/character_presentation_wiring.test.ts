@@ -109,14 +109,15 @@ describe('char-select roster wiring (source pins)', () => {
     const start = main.indexOf(
       "row.querySelector('.reroll-char-btn')?.addEventListener('click', (e) => {",
     );
-    const end = main.indexOf('redesignEditor.open(c, opener);', start);
+    const openCall = 'redesignEditor.open({ ...c, class: entryShellClass(c.class) }, opener);';
+    const end = main.indexOf(openCall, start);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    const block = main.slice(start, end + 'redesignEditor.open(c, opener);'.length);
+    const block = main.slice(start, end + openCall.length);
 
     const openerAt = block.indexOf('const opener = e.currentTarget as HTMLButtonElement;');
     const selectRowAt = block.indexOf('selectRow();');
-    const openAt = block.indexOf('redesignEditor.open(c, opener);');
+    const openAt = block.indexOf(openCall);
 
     expect(openerAt).toBeGreaterThan(-1);
     expect(selectRowAt).toBeGreaterThan(openerAt);

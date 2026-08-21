@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { isDispellableAura } from '../src/sim/aura_classify';
@@ -71,6 +71,7 @@ import { addThreat } from '../src/sim/threat';
 import { DT, type Entity, type SimEvent } from '../src/sim/types';
 import { UNSTUCK_COUNTDOWN_SECONDS } from '../src/sim/unstuck';
 import { groundHeight } from '../src/sim/world';
+import { tsFilesUnder } from './helpers/ts_files_under';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The staged 5v5 arms (graveyard no-auto-release, the 720s cap, the fairness
@@ -3575,13 +3576,12 @@ describe('the outcome log stays observability-only', () => {
     // at all, so its CONTENTS legitimately differ across the three hosts. That
     // is only safe while nothing gameplay-facing reads it, which no type can
     // express, so the reference set is pinned here.
-    const root = new URL('..', import.meta.url);
-    const hits = execFileSync('grep', ['-rl', 'bgOutcomes', 'src', 'server', 'headless'], {
-      cwd: fileURLToPath(root),
-      encoding: 'utf8',
-    })
-      .split('\n')
-      .filter(Boolean)
+    const hits = ['src', 'server', 'headless']
+      .flatMap((root) =>
+        tsFilesUnder(fileURLToPath(new URL(`../${root}`, import.meta.url)))
+          .filter(({ full }) => readFileSync(full, 'utf8').includes('bgOutcomes'))
+          .map(({ file }) => `${root}/${file}`),
+      )
       .sort();
     expect(hits).toEqual([
       'server/game.ts', // the one host that drains

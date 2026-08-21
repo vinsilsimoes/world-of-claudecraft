@@ -64,7 +64,7 @@ function makeWorld(): { world: ClientWorld; wire: ClientInternals } {
   const wire = world as unknown as ClientInternals;
   // The production join flow: hello binds playerId (targetEntity's optimistic
   // write resolves the self entity through it) before the first snapshot.
-  wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 20061 }));
+  wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 20061, gameProfile: 'woc-classic' }));
   return { world, wire };
 }
 
@@ -253,7 +253,7 @@ describe('ClientWorld pending-target echo protection', () => {
     // Simulate the auto-reconnect arm: hello with reconnectAttempts > 0 runs the
     // per-session transient reset (input acking, interest, and this hold).
     wire.reconnectAttempts = 1;
-    wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 20061 }));
+    wire.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 20061, gameProfile: 'woc-classic' }));
 
     // The server resends the world from scratch; its value applies immediately.
     wire.applySnapshot(snap(null));

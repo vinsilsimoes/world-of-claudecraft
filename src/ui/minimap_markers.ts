@@ -61,7 +61,7 @@ import {
   type MapMarkerSemantic,
   mapMarkerSemanticLayer,
 } from './map_marker_semantics_core';
-import { STABLE_MAP_NAVIGATION_LANDMARKS } from './map_navigation_landmarks_core';
+import { stableMapNavigationLandmarks } from './map_navigation_landmarks_core';
 
 // The painter clips the 162px minimap two pixels inside the canvas. Visibility
 // is footprint-aware: a painted square must fit its full half-diagonal inside
@@ -562,7 +562,7 @@ export function createMinimapMarkers(): MinimapMarkers {
       // Entity-free shipped routes use the same radial cull as every nearby
       // world marker. The table and staging array are module/core-owned, so the
       // 10Hz scan creates only the marker records that will actually draw.
-      for (const site of STABLE_MAP_NAVIGATION_LANDMARKS) {
+      for (const site of stableMapNavigationLandmarks(world.cfg.gameProfile)) {
         const dx = -(site.x - p.pos.x) * pxPerYard;
         const dz = -(site.z - p.pos.z) * pxPerYard;
         const size = MAP_MARKER_SIZES[compact ? 'minimapNavigationCompact' : 'minimapNavigation'];

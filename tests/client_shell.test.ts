@@ -248,7 +248,8 @@ describe('client HTML shell', () => {
       expect(entry).toContain('id="map-canvas"');
       expect(entry).toContain('data-i18n-aria="hud.core.mapCanvasLabel"');
       expect(entry).toContain('aria-describedby="map-summary map-marker-summary"');
-      expect(entry).not.toMatch(/id="map-canvas"[^>]*tabindex=/);
+      expect(entry).toMatch(/id="map-canvas"[^>]*tabindex="0"/);
+      expect(entry).toMatch(/id="map-canvas"[^>]*aria-keyshortcuts="[^"]*ArrowLeft[^"]*Enter/);
       expect(entry).toContain('<span id="map-summary"');
       expect(entry).toContain('role="status"');
       expect(entry).toContain('aria-live="polite"');
@@ -698,7 +699,7 @@ describe('client HTML shell', () => {
     // and the combo pip `on` toggle (now on the PLAYER frame: combo points are
     // character-bound) through toggleClass. No raw classList/style write on either
     // frame survives (those silently collapse the hot-DOM skip rate).
-    expect(hudTs).toContain('const targetRank = targetRankView(targetTemplate);');
+    expect(hudTs).toContain('const targetRank = entityTargetRank(target);');
     // Written into the reused target descriptor rather than a per-frame object
     // literal; the routing this test guards is unchanged.
     expect(hudTs).toContain('targetFrame.levelText = String(target.level);');

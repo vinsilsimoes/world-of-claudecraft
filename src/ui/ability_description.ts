@@ -8,6 +8,7 @@
 // injector) go through abilityDisplayDescription, and the field CHOICE is a pure
 // core (abilityDescriptionField) a vitest drives directly.
 
+import { mir4SkillIdFromAction } from '../sim/mir4/action_abilities';
 import type { ResolvedAbility } from '../sim/sim';
 import {
   type AbilityEffect,
@@ -46,6 +47,9 @@ export function abilityEffectText(res: ResolvedAbility, scaling?: AbilityScaling
       : '';
   };
   const primary = abilityPrimaryEffect(res);
+  if (primary && scaling && mir4SkillIdFromAction(res.def.id) !== null) {
+    return formatAbilityNumber(abilityDamageBonus(res, primary, scaling));
+  }
   if (primary) {
     switch (primary.type) {
       case 'directDamage':

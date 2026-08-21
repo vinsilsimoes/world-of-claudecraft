@@ -23,6 +23,23 @@ describe('zonePrewarmTemplateIds', () => {
     expect(elsewhere.length).toBeGreaterThan(0);
   });
 
+  it('uses injected world content instead of leaking classic camps into a profile world', () => {
+    const here = firstCampIn(EASTBROOK);
+    const ids = zonePrewarmTemplateIds(EASTBROOK, 'mob', [], {
+      camps: [
+        {
+          mobId: 'mir4_m01_forest_wolf',
+          center: { x: here.x, z: here.z },
+          radius: 12,
+          count: 3,
+        },
+      ],
+      npcs: {},
+    });
+
+    expect(ids).toEqual(['mir4_m01_forest_wolf']);
+  });
+
   it('takes the static NPCs of the zone and never a dynamic one', () => {
     const ids = zonePrewarmTemplateIds(EASTBROOK, 'npc', []);
     expect(ids).toContain('brother_aldric');

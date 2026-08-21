@@ -7,6 +7,7 @@ import { logAssetMissOnce } from './asset_miss_log';
 import { mechHeldWeaponOverride, modularVisualKey, VISUALS, visualKeyFor } from './manifest';
 import { MODULAR_WARRIOR_KEY, type ModularLook } from './modular';
 import { npcModularKeyFor } from './npc_looks';
+import { mir4VisualClassForEntity } from './player_look_core';
 import { CharacterVisual } from './visual';
 
 export { npcLookFor } from './npc_looks';
@@ -49,7 +50,7 @@ export function modularLookFor(e: Entity): ModularLook | null {
  *  warrior's default sword and swing set. */
 export function modularKeyFor(e: Entity): string {
   if (e.kind !== 'player') return npcModularKeyFor(e.templateId);
-  const key = modularVisualKey(e.templateId as PlayerClass);
+  const key = modularVisualKey(mir4VisualClassForEntity(e) ?? (e.templateId as PlayerClass));
   return VISUALS[key] ? key : MODULAR_WARRIOR_KEY;
 }
 

@@ -193,6 +193,7 @@ export interface AbilityVfxEntityState {
   hp?: number;
   kind?: string;
   templateId?: string;
+  mir4Shield?: { remaining: number; magnitude: number };
   // On-next-swing queue (heroic-strike style ability id while armed). Present
   // on every offline entity; the online mirror carries it for the local
   // player (the self wire's `queued`), others stay null - which is where the
@@ -1222,6 +1223,7 @@ export class AbilityVfx {
     }
     let bands = 0;
     let discs = 0;
+    let shellHeld = false;
     // Peeked (never charged) degrade tier for this entity's orbit bands,
     // computed lazily on the first orbit-carrying aura: tier >= 1 halves each
     // band's sprite count in the fx engine while the read survives.
@@ -1267,7 +1269,10 @@ export class AbilityVfx {
         continue;
       }
       // barrier specs wear the translucent fresnel shell while the aura lives
-      if (full?.barrier && !wornDebuff) fx.holdShell(e.id, abilityVfxColor(spec));
+      if (full?.barrier && !wornDebuff) {
+        fx.holdShell(e.id, abilityVfxColor(spec), this.deps.localPlayerId?.() === e.id);
+        shellHeld = true;
+      }
       // Held buffs: the sustained whole-rig tint is RESERVED. Morph forms and
       // ultimate cooldowns keep a restrained rim; every other buff wears the
       // subtle under-character ground aura instead (band 0 the soft disc,
@@ -1362,6 +1367,12 @@ export class AbilityVfx {
         }
       }
       bands++;
+    }
+    if (!shellHeld && (e.mir4Shield?.remaining ?? 0) > 0) {
+      const shieldSpec = abilityVfxSpec('power_word_shield');
+      if (shieldSpec) {
+        fx.holdShell(e.id, abilityVfxColor(shieldSpec), this.deps.localPlayerId?.() === e.id);
+      }
     }
     // The hard-CC tell: a worn stun, fear, or root aura wears its band for the
     // aura's whole life. Matched by what the SIM says the victim is suffering

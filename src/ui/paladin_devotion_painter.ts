@@ -21,6 +21,9 @@ export class PaladinDevotionPainter {
     this.writers.setDisplay(this.frame, state.visible ? 'flex' : 'none');
     this.writers.setStyleProp(this.fill, '--devotion-scale', state.fillFrac.toFixed(3));
     this.writers.setText(this.label, state.label);
+    this.writers.setAttr(this.frame, 'aria-label', state.ariaLabel);
+    this.writers.setAttr(this.root, 'aria-label', state.ariaLabel);
+    this.writers.setAttr(this.root, 'aria-valuemax', String(state.maxValue));
     this.writers.setAttr(this.root, 'aria-valuenow', String(state.value));
     this.writers.setAttr(this.root, 'aria-valuetext', state.ariaValueText);
     this.writers.setText(this.status, state.announcement);

@@ -428,6 +428,11 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
         return;
       }
       const template = MOBS[mob.templateId];
+      // A mob with no classic template (the mir4 profile's ported mobs) never
+      // proximity-aggroes: it is passive until attacked, exactly like the
+      // source project's tutorial-zone spawn rule. Threat-based retaliation
+      // still reaches it through the targeting update.
+      if (!template) return;
       let detected: Entity | null = null;
       let detectedD = Infinity;
       // Resolved once per scan, not per candidate (same reason as the boss branch).

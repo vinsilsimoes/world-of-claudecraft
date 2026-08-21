@@ -263,6 +263,7 @@ function makeFakeHost() {
   const entities = new Map<number, Entity>();
   const clock = { time: 0, tick: 0 };
   const host: SimContextHost = {
+    gameProfile: 'woc-classic',
     riftCollisionToken: 1,
     naturalRiftPortals: [],
     riftEvents: [],
@@ -282,6 +283,10 @@ function makeFakeHost() {
       return entities;
     },
     players: new Map(),
+    mir4ArcEscortRuns: new Map(),
+    mir4ArcDungeonRuns: new Map(),
+    mir4ArcEncounterRuns: new Map(),
+    mir4RuntimeMobTemplates: new Map(),
     masteryResetNoticeCounter: { pending: 0 },
     stationPlacements: [],
     primaryId: -1,

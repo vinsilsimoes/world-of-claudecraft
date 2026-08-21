@@ -10,12 +10,7 @@ import {
   devCategoryVisible,
   filteredDevActions,
 } from './dev_command_view';
-import {
-  DEV_ITEM_PICKER_LIMIT,
-  type DevItemCandidate,
-  rankDevItems,
-  resolveDevItem,
-} from './dev_item_picker_view';
+import { type DevItemCandidate, rankDevItems, resolveDevItem } from './dev_item_picker_view';
 import { markDialogRoot } from './dialog_root';
 import { classDisplayName, tEntity } from './entity_i18n';
 import { esc } from './esc';
@@ -170,8 +165,9 @@ function actionFields(actionId: string): string {
       return `${selectField(
         'devCommand.fields.dungeon',
         'dungeon',
-        optionsHtml(Object.values(DUNGEONS), (dungeon) =>
-          tEntity({ kind: 'dungeon', id: dungeon.id, field: 'name' }),
+        optionsHtml(
+          Object.values(DUNGEONS).filter((dungeon) => !dungeon.internalOnly),
+          (dungeon) => tEntity({ kind: 'dungeon', id: dungeon.id, field: 'name' }),
         ),
       )}${selectField('devCommand.fields.difficulty', 'difficulty', `<option value="normal">${esc(t('devCommand.difficulty.normal'))}</option><option value="heroic">${esc(t('devCommand.difficulty.heroic'))}</option>`)}`;
     case 'raid':

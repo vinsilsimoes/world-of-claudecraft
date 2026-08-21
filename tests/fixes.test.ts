@@ -679,7 +679,11 @@ describe('the Hollow Crypt doors', () => {
 
 describe('dungeon instance placement and targetability', () => {
   it('places every dungeon entry and mob spawn on unblocked instance ground', () => {
-    for (const dungeon of DUNGEON_LIST) {
+    // Engine-only scripted rooms are entered through enterScriptedDungeon and
+    // receive their encounters dynamically. Their placement and lifecycle are
+    // covered by the profile-specific instance suites, not the public door
+    // contract exercised here.
+    for (const dungeon of DUNGEON_LIST.filter((entry) => !entry.internalOnly)) {
       const sim = makeSim();
       if (dungeon.id === 'nythraxis_boss_arena') {
         sim.players.get(sim.playerId)?.questsDone.add('q_nythraxis_bound_guardian');

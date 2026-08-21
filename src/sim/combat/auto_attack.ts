@@ -27,7 +27,9 @@
 // `src/sim`-pure: no DOM/Three, no Math.random/Date.now; all randomness is the shared
 // `ctx.rng` stream, drawn in the exact pre-move positions.
 
+import { setMir4AutoBattleMode } from '../auto_battle/core';
 import { isArenaPos, MOBS } from '../data';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import { questGateBlocksAggro } from '../mob/quest_gated_aggro';
 import { forceDismount } from '../mounts';
 import { grantDevotionFromBlock } from '../paladin_devotion';
@@ -122,6 +124,11 @@ export function startAutoAttack(ctx: SimContext, pid?: number): void {
   const r = ctx.resolve(pid);
   if (!r) return;
   const p = r.e;
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    setMir4AutoBattleMode(ctx, p.id, 'battle');
+    r.meta.lastActiveTick = ctx.tickCount;
+    return;
+  }
   if (p.dead) return;
   if (isInStasis(p)) return;
   if (isValkyrsCallingAirborne(p)) return;
@@ -186,10 +193,13 @@ export function startAutoAttack(ctx: SimContext, pid?: number): void {
 
 export function stopAutoAttack(ctx: SimContext, pid?: number): void {
   const r = ctx.resolve(pid);
-  if (r) r.e.autoAttack = false;
+  if (!r) return;
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) setMir4AutoBattleMode(ctx, r.e.id, 'off');
+  else r.e.autoAttack = false;
 }
 
 export function updatePlayerAutoAttack(ctx: SimContext, p: Entity, meta: PlayerMeta): void {
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) return;
   p.swingTimer = Math.max(0, p.swingTimer - DT);
   p.offhandSwingTimer = Math.max(0, p.offhandSwingTimer - DT);
   if (isValkyrsCallingAirborne(p)) return;

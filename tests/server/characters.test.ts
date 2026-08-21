@@ -46,6 +46,7 @@ import {
   resetRateLimitClock,
 } from '../../server/ratelimit';
 import { DEEDS_RECENT_CAP } from '../../src/sim/deeds';
+import { MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
 import type { CharacterState } from '../../src/sim/sim';
 import { type FakeRes, fakeCtx } from './helpers';
 
@@ -104,6 +105,7 @@ function scopeOf(scope: 'read' | 'full') {
 /** The default injected runtime; every member is a stub, overridable per test. */
 function fakeRuntime(overrides: Partial<CharactersRuntime> = {}): CharactersRuntime {
   return {
+    gameProfile: 'woc-classic',
     isCharacterOnline: () => false,
     takeOverCharacter: async () => 'not-online',
     rekeyMarketSeller: () => false,
@@ -661,6 +663,46 @@ describe('create handler', () => {
     });
     expect(res.status).toBe(400);
     expect(res.body).toEqual({ error: 'invalid class', code: 'character.invalid_class' });
+  });
+
+  it('accepts the five MIR4 classes and rejects classic-only classes in the MIR4 profile', async () => {
+    const createCharacterCapped = vi.fn(async (...args: unknown[]) =>
+      charRow({ id: 12, name: String(args[1]), class: args[2] as CharacterRow['class'] }),
+    );
+    const initialCharacterState = vi.fn((_cls: CharacterRow['class']) =>
+      st({ gameProfile: MIR4_GAME_PROFILE }),
+    );
+    installRuntime({ gameProfile: MIR4_GAME_PROFILE, initialCharacterState });
+    setCharactersDbForTests({ createCharacterCapped });
+
+    const names = ['Aldric', 'Beren', 'Cora', 'Dalen', 'Elora'];
+    for (const [index, cls] of [
+      'warrior',
+      'elementalist',
+      'taoist',
+      'arbalist',
+      'lancer',
+    ].entries()) {
+      const res = await callHandler('POST', '/api/characters', {
+        account: { accountId: 7, scope: 'full' },
+        body: { name: names[index], class: cls },
+      });
+      expect(res.status).toBe(200);
+    }
+
+    const rejected = await callHandler('POST', '/api/characters', {
+      account: { accountId: 7, scope: 'full' },
+      body: { name: 'Paladin', class: 'paladin' },
+    });
+    expect(rejected.status).toBe(400);
+    expect(createCharacterCapped).toHaveBeenCalledTimes(5);
+    expect(initialCharacterState.mock.calls.map(([cls]) => cls)).toEqual([
+      'warrior',
+      'elementalist',
+      'taoist',
+      'arbalist',
+      'lancer',
+    ]);
   });
 
   it('400s the character limit when createCharacterCapped returns null', async () => {

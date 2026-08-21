@@ -223,7 +223,7 @@ describe('active-world noticeboard service', () => {
     expect(noticeboardCaseAt).toBeGreaterThan(handleEventsAt);
     expect(nextCaseAt).toBeGreaterThan(noticeboardCaseAt);
     const branch = source.slice(noticeboardCaseAt, nextCaseAt);
-    const resolveAt = branch.indexOf("const message = t('hudChrome.noticeboard.empty');");
+    const resolveAt = branch.indexOf('const message = mir4NoticeboardMessage(ev.contractQuestId);');
     const bannerAt = branch.indexOf('this.showBanner(message);');
     const logAt = branch.indexOf("this.log(message, '#c8b98f');");
     expect(resolveAt).toBeGreaterThan(-1);

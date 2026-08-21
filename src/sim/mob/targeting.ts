@@ -204,6 +204,6 @@ export function updateVossTarget(ctx: SimContext, mob: Entity): void {
 // auto-aggroing from proximity. Elites, rares, and bosses are never trivial.
 export function isTrivialTo(mob: Entity, player: Entity): boolean {
   const template = MOBS[mob.templateId];
-  if (template.elite || template.rare || template.boss) return false;
+  if (template?.elite || template?.rare || template?.boss) return false;
   return player.level - mob.level >= TRIVIAL_LEVEL_GAP;
 }

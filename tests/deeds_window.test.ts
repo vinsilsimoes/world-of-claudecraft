@@ -105,7 +105,12 @@ describe('painter hygiene', () => {
     // render() must prune BEFORE the cap renders, and a drop must persist,
     // bump the repaint signature, and nudge the HUD tracker, or the freed
     // slot stays disabled until another dimension moves.
-    expect(painter).toMatch(/if \(!this\.opened\) return;\s*this\.pruneWatchedIfStale\(\);/);
+    const renderStart = painter.indexOf('render(): void {');
+    const profileBranch = painter.indexOf('if (this.isMir4Profile()) {', renderStart);
+    const classicPrune = painter.indexOf('this.pruneWatchedIfStale();', profileBranch);
+    expect(renderStart).toBeGreaterThan(-1);
+    expect(profileBranch).toBeGreaterThan(renderStart);
+    expect(classicPrune).toBeGreaterThan(profileBranch);
     const start = painter.indexOf('private pruneWatchedIfStale(');
     expect(start).toBeGreaterThan(-1);
     const body = painter.slice(start, painter.indexOf('private ensureWatchLoaded(', start));

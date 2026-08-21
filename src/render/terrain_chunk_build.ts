@@ -26,20 +26,28 @@ import * as THREE from 'three';
 import {
   COLUMN_ZONES,
   columnBlendAt,
+  getActiveWorldContent,
+  STRIP_MAX_X,
+  STRIP_MIN_X,
   STRIP_ZONES,
   WORLD_MAX_X,
   WORLD_MAX_Z,
+  WORLD_MIN_X,
   WORLD_MIN_Z,
   ZONES,
 } from '../sim/data';
 import { fbm2 } from '../sim/rng';
-import { roadDistance, WATER_LEVEL, zoneBiomeAt } from '../sim/world';
+import { roadDistance, waterLevel, zoneBiomeAt } from '../sim/world';
 import { impactCraterTerrainBlend } from './impact_terrain';
 import { clamp01 } from './num_clamp';
 import { meshTerrainHeight } from './terrain_mesh_height';
 import { BIOME_PALETTE, ROCK_SLOPE_START, TERRAIN_TONES } from './terrain_palette';
+import { chunkAlignedWorldRect, type WorldRect } from './terrain_region_core';
 
 const SKIRT_DROP = 0.3;
+// Must match terrain.ts CHUNK_SIZE. Kept here to avoid a renderer -> generator
+// cycle; both values are pinned by the chunk geometry and streaming suites.
+const TERRAIN_WORLD_CHUNK_SIZE = 60;
 // Three-quad tiles keep a compact working set across both diagonal choices.
 // The old full-row walk evicted one grid row before the next quad could reuse
 // it on the 25-52-quad chunk widths.
@@ -91,6 +99,16 @@ const zonePalettes = ZONES.map((zn) => {
 });
 
 function paletteAt(x: number, z: number): void {
+  const activeZones = getActiveWorldContent().zones;
+  if (activeZones.length > 0 && activeZones !== ZONES) {
+    const palette = BIOME_PALETTE[zoneBiomeAt(x, z)];
+    grassC.set(palette.grass);
+    grassDarkC.set(palette.grassDark);
+    grassYellowC.set(palette.grassYellow);
+    dirtC.set(palette.dirt);
+    sandC.set(palette.sand);
+    return;
+  }
   const stripPalette = (zn: (typeof ZONES)[number]) =>
     zonePalettes[ZONES.indexOf(zn)] ?? zonePalettes[0];
   grassC.copy(stripPalette(STRIP_ZONES[0]).grass);
@@ -125,6 +143,10 @@ function paletteAt(x: number, z: number): void {
 // How "marsh" a given z is — mirrors the palette/heightfield blend windows so
 // the mud texture fades in exactly where the marsh palette does.
 function marshWeightAt(x: number, z: number): number {
+  const activeZones = getActiveWorldContent().zones;
+  if (activeZones.length > 0 && activeZones !== ZONES) {
+    return zoneBiomeAt(x, z) === 'marsh' ? 1 : 0;
+  }
   let w = STRIP_ZONES[0].biome === 'marsh' ? 1 : 0;
   for (let i = 0; i + 1 < STRIP_ZONES.length; i++) {
     const b = STRIP_ZONES[i].zMax;
@@ -201,7 +223,7 @@ function ensureHeightRow(state: ChunkGeometryBuildState, hcj: number): void {
 }
 
 function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): VertexSample {
-  const { nx, x0, z0, stepX, stepZ, seed, lowShade } = state;
+  const { nx, x0, z0, stepX, stepZ, seed, lowShade, customTopology, worldBounds } = state;
   const x = x0 + ci * stepX;
   const z = z0 + cj * stepZ;
   const hw = nx + 3;
@@ -231,7 +253,9 @@ function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): V
   paletteAt(x, z);
   const biome = zoneBiomeAt(x, z);
   const w: [number, number, number, number] = [1, 0, 0, 0];
-  const impact = impactCraterTerrainBlend(x, z);
+  const impact = customTopology
+    ? { scorch: 0, ash: 0, dirt: 0, rock: 0 }
+    : impactCraterTerrainBlend(x, z);
 
   // base grass with patchy variation: a coarse fbm layer for dry/lush
   // patches plus a fine one for grain, replacing the old pure-sine tint
@@ -285,7 +309,7 @@ function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): V
   // instead), rocky/ashen biomes get a darker wet-rock tint, everywhere else
   // keeps the classic sandy bank. Color and splat weight share one feathered
   // falloff so the shore blends out instead of cutting a razor-hard edge.
-  const wl = WATER_LEVEL;
+  const wl = waterLevel();
   const shore = clamp01((wl + 1.6 - h) / 1.6);
   if (biome === 'marsh') {
     cTmp.lerp(dirtDarkC, shore);
@@ -299,7 +323,8 @@ function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): V
   }
   // packed dirt at each hub settlement (same feather as the splat weight —
   // a constant lerp stamped a clean-edged brown disc on the grass)
-  for (const zn of ZONES) {
+  const contentZones = getActiveWorldContent().zones;
+  for (const zn of contentZones.length > 0 ? contentZones : ZONES) {
     const dHub = Math.hypot(x - zn.hub.x, z - zn.hub.z);
     if (dHub < 14) {
       const hubT = clamp01((14 - dHub) / 3);
@@ -410,7 +435,7 @@ function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): V
     const green = passT * clamp01((Math.abs(x) - 95) / 85);
     const snowline = 1 - green;
     if (green > 0) cTmp.lerp(emberForestC, green * 0.8);
-    const blanket = clamp01((h - (WATER_LEVEL + 1.2)) / 3) * snowline;
+    const blanket = clamp01((h - (wl + 1.2)) / 3) * snowline;
     cTmp.lerp(snowCapC, 0.8 * blanket);
     snow = Math.max(snow, 0.85 * blanket);
   }
@@ -450,9 +475,10 @@ function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): V
   // so from a zone's centre the rim reads as atmospheric haze rather than a
   // crisp silhouette, reinforcing the reduced BIOME_FOG draw distance.
   const edge = Math.max(
-    Math.abs(x) - (WORLD_MAX_X - 70),
-    WORLD_MIN_Z + 70 - z,
-    z - (WORLD_MAX_Z - 70),
+    x - (worldBounds.maxX - 70),
+    worldBounds.minX + 70 - x,
+    worldBounds.minZ + 70 - z,
+    z - (worldBounds.maxZ - 70),
   );
   const rim = clamp01(edge / 64);
   if (rim > 0) {
@@ -523,7 +549,11 @@ export interface ChunkGeometryBuildState extends ChunkGeometryArrays {
   stepZ: number;
   seed: number;
   skirtSpan: number;
+  worldBounds: WorldRect;
+  worldMinX: number;
+  worldWidth: number;
   worldDepth: number;
+  customTopology: boolean;
   /** GFX.lowPlus && !GFX.terrainSplat, resolved by the CALLER: gfx.ts reads
    *  document/navigator, so a worker would resolve a different tier. */
   lowShade: boolean;
@@ -545,6 +575,22 @@ export function beginChunkGeometry(
   skirtSpan: number,
   lowShade: boolean,
 ): ChunkGeometryBuildState {
+  const contentZones = getActiveWorldContent().zones;
+  const zones = contentZones.length > 0 ? contentZones : ZONES;
+  const customTopology = zones !== ZONES;
+  const worldBounds: WorldRect = customTopology
+    ? (chunkAlignedWorldRect(zones, TERRAIN_WORLD_CHUNK_SIZE, STRIP_MIN_X, STRIP_MAX_X) ?? {
+        minX: WORLD_MIN_X,
+        maxX: WORLD_MAX_X,
+        minZ: WORLD_MIN_Z,
+        maxZ: WORLD_MAX_Z,
+      })
+    : {
+        minX: WORLD_MIN_X,
+        maxX: WORLD_MAX_X,
+        minZ: WORLD_MIN_Z,
+        maxZ: WORLD_MAX_Z,
+      };
   const nx = Math.max(4, Math.round(size / spacing));
   const nz = nx;
   const stepX = size / nx;
@@ -579,7 +625,11 @@ export function beginChunkGeometry(
     stepZ,
     seed,
     skirtSpan,
-    worldDepth: WORLD_MAX_Z - WORLD_MIN_Z,
+    worldBounds,
+    worldMinX: worldBounds.minX,
+    worldWidth: worldBounds.maxX - worldBounds.minX,
+    worldDepth: worldBounds.maxZ - worldBounds.minZ,
+    customTopology,
     lowShade,
     positions,
     normals,
@@ -595,7 +645,7 @@ export function beginChunkGeometry(
 }
 
 export function fillChunkVertexRow(state: ChunkGeometryBuildState, gj: number): void {
-  const { nx, nz, gw, x0, z0, stepX, stepZ, skirtSpan, worldDepth } = state;
+  const { nx, nz, gw, x0, z0, stepX, stepZ, skirtSpan, worldMinX, worldWidth, worldBounds } = state;
   for (let gi = 0; gi < gw; gi++) {
     const i = gi - 1,
       j = gj - 1; // interior indices; -1 / n+1 are skirt
@@ -623,8 +673,8 @@ export function fillChunkVertexRow(state: ChunkGeometryBuildState, gj: number): 
     state.colors[vi * 3] = s.color[0];
     state.colors[vi * 3 + 1] = s.color[1];
     state.colors[vi * 3 + 2] = s.color[2];
-    state.uvs[vi * 2] = (x + WORLD_MAX_X) / (WORLD_MAX_X * 2);
-    state.uvs[vi * 2 + 1] = (z - WORLD_MIN_Z) / worldDepth;
+    state.uvs[vi * 2] = (x - worldMinX) / worldWidth;
+    state.uvs[vi * 2 + 1] = (z - worldBounds.minZ) / state.worldDepth;
     if (state.splats) {
       state.splats[vi * 4] = s.splat[0];
       state.splats[vi * 4 + 1] = s.splat[1];

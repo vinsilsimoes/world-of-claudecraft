@@ -187,7 +187,7 @@ export function combatReadout(e: Entity): string {
 // only the static DUNGEON_LIST (already entrance-sorted by index) and the
 // door zone via zoneAt — no new fields.
 export function dungeonsReadout(): string {
-  const parts = DUNGEON_LIST.map(
+  const parts = DUNGEON_LIST.filter((dungeon) => !dungeon.internalOnly).map(
     (d) => `${d.name} (${zoneAt(d.doorPos.x, d.doorPos.z).name}, ${d.suggestedPlayers} players)`,
   );
   return `Dungeons (${parts.length}): ${parts.join(', ')}.`;

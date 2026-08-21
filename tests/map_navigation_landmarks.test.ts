@@ -4,9 +4,26 @@ import { LIVE_MAP_ENTITY_DISCLOSURE_RADIUS } from '../src/ui/map_entity_disclosu
 import {
   isNearbyLiveRiftZoneMapEntity,
   STABLE_MAP_NAVIGATION_LANDMARKS,
+  stableMapNavigationLandmarks,
 } from '../src/ui/map_navigation_landmarks_core';
 
 describe('stable map navigation landmarks', () => {
+  it('projects both sides of every MIR4 arc portal without classic landmarks', () => {
+    const mir4 = stableMapNavigationLandmarks('mir4-gameplay-port');
+    expect(mir4).toHaveLength(38);
+    expect(mir4.every((site) => site.kind === 'world-passage')).toBe(true);
+    expect(mir4[0]).toMatchObject({
+      zoneId: 'mir4_m01-vila-do-vau',
+      destinationZoneId: 'mir4_m02-trilha-dos-juncos',
+      side: 'a',
+    });
+    expect(mir4[1]).toMatchObject({
+      zoneId: 'mir4_m02-trilha-dos-juncos',
+      destinationZoneId: 'mir4_m01-vila-do-vau',
+      side: 'b',
+    });
+  });
+
   it('publishes every authored delve door with its exact zone identity', () => {
     const landmarks = STABLE_MAP_NAVIGATION_LANDMARKS.filter(
       (landmark) => landmark.kind === 'delve-entrance',

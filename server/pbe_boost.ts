@@ -47,6 +47,7 @@ import { normalizeCharName, offensiveName } from './auth';
 import { createCharacterCapped, saveCharacterState } from './db';
 import { logger } from './http/logger';
 import { isUniqueViolation } from './http_util';
+import { GAME_PROFILE } from './realm';
 
 export const BOOST_LEVEL = 20;
 // Mirrors the per-realm character cap in server/characters.ts (10) and its
@@ -569,7 +570,12 @@ export function buildBoostedCharacterState(
   name: string,
   skin: number,
 ): CharacterState {
-  const sim = new Sim({ seed: BOOST_SEED, playerClass: cls, playerName: name });
+  const sim = new Sim({
+    seed: BOOST_SEED,
+    playerClass: cls,
+    playerName: name,
+    gameProfile: GAME_PROFILE,
+  });
   const pid = sim.playerId;
   sim.setPlayerSkin(pid, skin);
   if (!applyBoostKitToPlayer(sim, pid)) {

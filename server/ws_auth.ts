@@ -15,6 +15,8 @@ import { randomUUID } from 'node:crypto';
 import type { EventEmitter } from 'node:events';
 import type * as http from 'node:http';
 import type { WebSocket, WebSocketServer } from 'ws';
+import { gameProfileStateMatches, gameProfilesMatch } from '../src/sim/game_profile';
+import { isClassForGameProfile } from '../src/sim/game_profile_roster';
 import {
   type BankBonusSource,
   ONLINE_WORLD_AUTH_TYPE,
@@ -269,6 +271,10 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
       );
       return;
     }
+    if (!gameProfilesMatch(game.sim.cfg.gameProfile, msg.gameProfile)) {
+      rejectHandshake(ws, WS_AUTH_ERROR.incompatibleWorldLayout);
+      return;
+    }
 
     const token = typeof msg.token === 'string' ? msg.token : '';
     const characterId = Number(msg.character ?? 'NaN');
@@ -298,6 +304,13 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
       const character = await getCharacter(accountId, characterId);
       if (!character) {
         rejectHandshake(ws, WS_AUTH_ERROR.noSuchCharacter);
+        return;
+      }
+      if (
+        !gameProfileStateMatches(game.sim.cfg.gameProfile, character.state) ||
+        !isClassForGameProfile(character.class, game.sim.cfg.gameProfile)
+      ) {
+        rejectHandshake(ws, WS_AUTH_ERROR.incompatibleWorldLayout);
         return;
       }
       if (character.force_rename) {
@@ -453,6 +466,17 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
                 );
                 leaseNonce = undefined;
                 rejectHandshake(ws, WS_AUTH_ERROR.noSuchCharacter);
+                return;
+              }
+              if (
+                !gameProfileStateMatches(game.sim.cfg.gameProfile, refreshedCharacter.state) ||
+                !isClassForGameProfile(refreshedCharacter.class, game.sim.cfg.gameProfile)
+              ) {
+                await releaseCharacterLease(character.id, leaseNonce).catch((err) =>
+                  console.error('lease release failed:', err),
+                );
+                leaseNonce = undefined;
+                rejectHandshake(ws, WS_AUTH_ERROR.incompatibleWorldLayout);
                 return;
               }
               if (refreshedCharacter.force_rename) {

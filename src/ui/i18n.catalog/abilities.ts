@@ -7,6 +7,9 @@ const abilityStringsEn = {
     actionBar: {
       attackName: 'Attack',
       attackTooltip: 'Toggle auto-attack on your target. Right-clicking an enemy also attacks.',
+      autoBattleName: 'Auto Battle',
+      autoBattleTooltip:
+        'Toggle automatic target acquisition, movement, and skill rotation around your current position.',
       // Shown under the Attack tooltip: right-click removes the button from the bar,
       // freeing the slot (and its key) for a normal action. Restored in Options.
       attackRemoveHint: 'Right-click to remove it from the bar and free the slot.',
@@ -610,6 +613,254 @@ function abilityTranslations(
 const classAbilityNamesEn = {
   entities: {
     abilities: abilityTranslations([
+      // mir4-gameplay-port: profile content rendered by the existing spellbook/action bar.
+      [
+        'mir4_skill_1102',
+        'Void Strike',
+        'Deals {damage} damage to an enemy. Stuns the target for 0.9 sec.',
+      ],
+      [
+        'mir4_skill_1104',
+        'Lacerating Strike',
+        'Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec.',
+      ],
+      [
+        'mir4_skill_1304',
+        'Tackle',
+        'Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec.',
+      ],
+      [
+        'mir4_skill_1401',
+        'Ground Smash',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec.',
+      ],
+      ['mir4_skill_1501', 'Gale Strike', 'Affects an enemy. Slows the target by 35% for 3.2 sec.'],
+      [
+        'mir4_skill_2101',
+        'Prismatic Beam',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec.',
+      ],
+      [
+        'mir4_skill_2111',
+        'Ember Spear',
+        'Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec.',
+      ],
+      [
+        'mir4_skill_2301',
+        'Smite Seal',
+        "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec.",
+      ],
+      [
+        'mir4_skill_2501',
+        'Evoked Core',
+        'Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec.',
+      ],
+      ['mir4_skill_2503', 'Magic Shield', 'Reduces damage taken by 22% for 10 sec.'],
+      [
+        'mir4_skill_3101',
+        'Seal Sequence',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec.',
+      ],
+      ['mir4_skill_3104', 'Totem 1010', 'Affects an enemy. Stuns the target for 1.4 sec.'],
+      [
+        'mir4_skill_3301',
+        'Totem Seal II',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec.',
+      ],
+      ['mir4_skill_3503', 'Jade Lotus', 'Restores 18% of maximum health.'],
+      [
+        'mir4_skill_3506',
+        'Totem Seal I',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec.',
+      ],
+      [
+        'mir4_skill_4101',
+        'Burst 4101',
+        "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec.",
+      ],
+      [
+        'mir4_skill_4102',
+        'Sequence 4102',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec.',
+      ],
+      [
+        'mir4_skill_4103',
+        'Twin Echo',
+        "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec.",
+      ],
+      [
+        'mir4_skill_4106',
+        'Charge 4106',
+        'Deals {damage} damage to an enemy. Stuns the target for 2 sec.',
+      ],
+      [
+        'mir4_skill_4107',
+        'Flare Arrow',
+        "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec.",
+      ],
+      [
+        'mir4_skill_5101',
+        'Thrust 5101',
+        'Deals {damage} damage to an enemy. Knocks the target down for 1 sec.',
+      ],
+      [
+        'mir4_skill_5104',
+        'Sweep 5104',
+        'Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec.',
+      ],
+      [
+        'mir4_skill_5201',
+        'Strike 5201',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec.',
+      ],
+      [
+        'mir4_skill_5301',
+        'Chain 5301',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec.',
+      ],
+      ['mir4_skill_5401', 'Raging Storm', 'Affects an enemy. Knocks the target down for 1 sec.'],
+      [
+        'mir4_ultimate_1',
+        'Ultimate',
+        'Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_2',
+        'Ultimate',
+        'Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_3',
+        'Ultimate',
+        'Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_4',
+        'Ultimate',
+        'Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_5',
+        'Ultimate',
+        'Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge.',
+      ],
+      ['mir4_passive_warrior_heavy_armor', 'Heavy Armor', 'Increases maximum health by 8%.'],
+      [
+        'mir4_passive_warrior_weapon_mastery',
+        'Weapon Discipline',
+        'Increases physical attack by 6%.',
+      ],
+      [
+        'mir4_passive_warrior_iron_skin',
+        'Iron Skin',
+        'Increases physical defense by 8% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_warrior_fighting_spirit',
+        'Fighting Spirit',
+        'Increases maximum health by 4% and physical attack by 4%.',
+      ],
+      [
+        'mir4_passive_warrior_indomitable_will',
+        'Indomitable Will',
+        'Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%.',
+      ],
+      ['mir4_passive_elementalist_mana_well', 'Mana Well', 'Increases maximum mana by 10%.'],
+      [
+        'mir4_passive_elementalist_arcane_intellect',
+        'Arcane Acumen',
+        'Increases magic attack by 7%.',
+      ],
+      [
+        'mir4_passive_elementalist_elemental_protection',
+        'Elemental Protection',
+        'Increases physical defense by 6% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_elementalist_channeling',
+        'Channeling',
+        'Increases maximum mana by 5% and magic attack by 4%.',
+      ],
+      [
+        'mir4_passive_elementalist_arcane_ascension',
+        'Arcane Ascension',
+        'Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%.',
+      ],
+      [
+        'mir4_passive_taoist_spiritual_vessel',
+        'Spiritual Vessel',
+        'Increases maximum health by 4% and maximum mana by 7%.',
+      ],
+      [
+        'mir4_passive_taoist_twin_paths',
+        'Twin Paths',
+        'Increases physical attack by 4% and magic attack by 4%.',
+      ],
+      [
+        'mir4_passive_taoist_sacred_guard',
+        'Sacred Guard',
+        'Increases physical defense by 6% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_taoist_serene_mind',
+        'Serene Mind',
+        'Increases maximum health by 4% and maximum mana by 5%.',
+      ],
+      [
+        'mir4_passive_taoist_celestial_harmony',
+        'Celestial Harmony',
+        'Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%.',
+      ],
+      [
+        'mir4_passive_arbalist_eagle_eye',
+        'Eagle Eye',
+        'Increases physical attack by 3% and accuracy by 5%.',
+      ],
+      [
+        'mir4_passive_arbalist_ballistic_mastery',
+        'Ballistic Mastery',
+        'Increases physical attack by 7%.',
+      ],
+      [
+        'mir4_passive_arbalist_nature_guard',
+        "Nature's Guard",
+        'Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%.',
+      ],
+      [
+        'mir4_passive_arbalist_hunter_instinct',
+        "Hunter's Instinct",
+        'Increases physical attack by 5% and dodge by 5%.',
+      ],
+      [
+        'mir4_passive_arbalist_perfect_shot',
+        'Perfect Shot',
+        'Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%.',
+      ],
+      [
+        'mir4_passive_lancer_war_conditioning',
+        'War Conditioning',
+        'Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%.',
+      ],
+      [
+        'mir4_passive_lancer_spear_mastery',
+        'Spear Mastery',
+        'Increases physical attack by 5% and magic attack by 5%.',
+      ],
+      [
+        'mir4_passive_lancer_vanguard_armor',
+        'Vanguard Armor',
+        'Increases physical defense by 6% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_lancer_battle_rhythm',
+        'Battle Rhythm',
+        'Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%.',
+      ],
+      [
+        'mir4_passive_lancer_dragon_vanguard',
+        "Dragon's Vanguard",
+        'Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%.',
+      ],
       // The Vale Cup sport kit (docs/prd/vale-cup.md).
       ['sport_kick', 'Kick', 'Knock the ball along the ground toward the aim point.'],
       [

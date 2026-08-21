@@ -12,12 +12,22 @@
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
-import { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_X, WORLD_MIN_Z, ZONES, zoneAt } from '../src/sim/data';
+import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
+import {
+  setActiveWorldContent,
+  WORLD_MAX_X,
+  WORLD_MAX_Z,
+  WORLD_MIN_X,
+  WORLD_MIN_Z,
+  ZONES,
+  zoneAt,
+} from '../src/sim/data';
 import {
   buildContinentMapModel,
   CONTINENT_FALLBACK_ASPECT,
   type ContinentMapInput,
   continentZoneAt,
+  continentZoneForKeyboard,
 } from '../src/ui/continent_map_view';
 import type { IWorld } from '../src/world_api';
 
@@ -91,6 +101,49 @@ describe('buildContinentMapModel: image contain-fit rect', () => {
       expect(m.image.my).toBe(0);
     },
   );
+});
+
+describe('buildContinentMapModel: MIR4 campaign atlas', () => {
+  it('reuses the overview canvas as a readable 4x5 atlas without classic map art', () => {
+    setActiveWorldContent(buildMir4ArcWorld());
+    try {
+      const world = worldAt('client', 0, 40) as unknown as { cfg: Record<string, unknown> };
+      world.cfg.gameProfile = 'mir4-gameplay-port';
+      const model = buildContinentMapModel(input(world as unknown as IWorld, 0.5));
+      expect(model.usesArt).toBe(false);
+      expect(model.regions).toHaveLength(20);
+      expect(model.regions[0]?.zoneId).toBe('mir4_m01-vila-do-vau');
+      expect(model.regions[19]?.zoneId).toBe('mir4_m20-bastilha-do-eclipse');
+      expect(model.currentZoneId).toBe('mir4_m01-vila-do-vau');
+      for (const region of model.regions) {
+        expect(continentZoneAt(model.regions, region.labelX, region.labelY)).toBe(region.zoneId);
+      }
+    } finally {
+      setActiveWorldContent(null);
+    }
+  });
+
+  it('moves keyboard focus through the painted 4x5 atlas and holds at its edges', () => {
+    setActiveWorldContent(buildMir4ArcWorld());
+    try {
+      const world = worldAt('client', 0, 40) as unknown as { cfg: Record<string, unknown> };
+      world.cfg.gameProfile = 'mir4-gameplay-port';
+      const regions = buildContinentMapModel(input(world as unknown as IWorld, 0.5)).regions;
+      expect(continentZoneForKeyboard(regions, null, 'Home')).toBe('mir4_m01-vila-do-vau');
+      expect(continentZoneForKeyboard(regions, 'mir4_m01-vila-do-vau', 'ArrowRight')).toBe(
+        'mir4_m02-trilha-dos-juncos',
+      );
+      expect(continentZoneForKeyboard(regions, 'mir4_m01-vila-do-vau', 'ArrowDown')).toBe(
+        'mir4_m05-clareira-da-fenda',
+      );
+      expect(continentZoneForKeyboard(regions, 'mir4_m01-vila-do-vau', 'ArrowLeft')).toBe(
+        'mir4_m01-vila-do-vau',
+      );
+      expect(continentZoneForKeyboard(regions, null, 'End')).toBe('mir4_m20-bastilha-do-eclipse');
+    } finally {
+      setActiveWorldContent(null);
+    }
+  });
 });
 
 describe('CONTINENT_FALLBACK_ASPECT tracks the shipped plate', () => {

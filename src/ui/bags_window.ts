@@ -81,6 +81,7 @@ import {
   UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS,
 } from './item_instance_glyph_mark';
 import { knownItemDef } from './known_item';
+import { paintMir4InventoryWindow } from './mir4_equipment_window_adapter';
 import type { PainterHostPresentation } from './painter_host';
 import {
   installPromptDialog as installModalPromptDialog,
@@ -352,7 +353,10 @@ export class BagsWindow {
    *  from isModalOpen(), so canUseGameKeys() stays true and Tab is swallowed by
    *  target-nearest, which means keyboard focus never lands in here to begin with. */
   private paintMoneyRow(row: HTMLElement, copper: number): void {
-    row.innerHTML = `${this.deps.wocBalanceHtml()}${this.deps.claudiumLauncherHtml()}${this.deps.moneyHtml(copper)}`;
+    row.innerHTML =
+      this.deps.world().cfg?.gameProfile === 'mir4-gameplay-port'
+        ? this.deps.moneyHtml(copper)
+        : `${this.deps.wocBalanceHtml()}${this.deps.claudiumLauncherHtml()}${this.deps.moneyHtml(copper)}`;
     row.querySelector('[data-claudium-launcher]')?.addEventListener('click', () => {
       this.deps.openClaudium();
     });
@@ -411,6 +415,19 @@ export class BagsWindow {
     this.clearTrackerHighlight();
     const el = this.deps.root();
     const world = this.deps.world();
+    if (
+      paintMir4InventoryWindow({
+        ...this.deps,
+        root: el,
+        world,
+        close: () => this.close(),
+        afterEquipmentChange: () => {
+          this.render();
+          this.deps.renderCharIfOpen();
+        },
+      })
+    )
+      return;
     // The focused control's identity, carried across the rebuild (the vendor
     // ladder pattern, the phase 13 QA hand-off): this window rebuilds whole
     // on the same onInventoryChanged hook the vendor does, and used to drop

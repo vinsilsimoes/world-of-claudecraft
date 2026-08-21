@@ -46,6 +46,11 @@ import {
   lootSlotVisibleTo,
   pruneCorpseLoot,
 } from './loot/loot_roll';
+import { tryStartMir4ArcEscort } from './mir4/arc_escorts';
+import {
+  mir4HandleArcBoardInteract,
+  mir4HandleArcObjectiveInteract,
+} from './mir4/arc_quest_runtime';
 import { applyFocusBonus, applyFocusTierBonus, type FocusAllocation } from './professions/focus';
 import {
   forfeitsEveryMappedYield,
@@ -770,10 +775,12 @@ export function pickUpObject(
     return false;
   }
   if (noticeboardDef) {
+    const contractQuestId = mir4HandleArcBoardInteract(ctx, meta.entityId);
     ctx.emit({
       type: 'noticeboard',
       noticeboardId: noticeboardDef.templateId,
       state: 'empty',
+      ...(contractQuestId ? { contractQuestId } : {}),
       pid: meta.entityId,
     });
     return true;
@@ -872,6 +879,8 @@ export function interact(
     ctx.error(r.meta.entityId, "You can't do that while dead.");
     return;
   }
+  if (tryStartMir4ArcEscort(ctx, p)) return;
+  if (mir4HandleArcObjectiveInteract(ctx, p.id)) return;
   if (p.targetId !== null) {
     const target = ctx.entities.get(p.targetId);
     if (target && dist2d(p.pos, target.pos) <= INTERACT_RANGE + 2) {

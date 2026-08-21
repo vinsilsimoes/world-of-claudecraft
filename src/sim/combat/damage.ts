@@ -23,13 +23,18 @@
 // `src/sim`-pure: no DOM/Three/render/ui/game/net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
+import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
+import { mir4KillXpReward } from '../content/mir4/mobs';
 import { computeTalentModifiers } from '../content/talents';
 import { ABILITIES, DELVES, GROUP_XP_BONUS, ITEMS, MOBS } from '../data';
 import * as deedsMod from '../deeds';
 import { recalcPlayerStats } from '../entity';
 import { DAMAGE_IDLE_DESPAWN_MOB_IDS, DAMAGE_IDLE_DESPAWN_SECONDS } from '../entity_roster';
 import { weaponHand } from '../equipment_rules';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import { lockNormalDungeonResetOnBossKill, spawnBossExitPortal } from '../instances/dungeons';
+import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
+import { grantMir4Xp } from '../mir4/combat';
 import { spawnWidowHatchlingOnEggDeath } from '../mob/egg_hatchling';
 import { grantAbilityDevotion } from '../paladin_devotion';
 import { PET_AGGRESSIVE_RANGE } from '../pet/pet_ai';
@@ -587,6 +592,11 @@ export function dealDamage(
     }
   }
 
+  // The mir4 magic shield (2503) shaves what reaches health; classic sims
+  // never carry it. Applied here so EVERY incoming path benefits once.
+  if (!resolvedHpLoss && target.kind === 'player' && amount > 0 && target.mir4Shield) {
+    amount = Math.max(1, Math.floor(amount * (1 - target.mir4Shield.magnitude)));
+  }
   if (!resolvedHpLoss && target.kind === 'player' && amount > 0) {
     const meta = ctx.players.get(target.id);
     if (meta?.cls === 'hunter') breakEnduringCourserBurst(ctx, target);
@@ -1718,11 +1728,18 @@ export function handleDeath(
         // mobXpValue keeps the level-diff (anti-farm) scaling; grantXp now
         // routes the award to lifetimeXp even at the cap, so the party gate no
         // longer blocks max-level members — it just forwards every positive award.
-        const xpGain = Math.round(
-          (mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length,
-        );
+        // The mir4 profile pays flat per-template rewards from the ported mob
+        // catalog instead of the classic level curve.
+        const xpGain =
+          ctx.gameProfile === MIR4_GAME_PROFILE
+            ? mir4KillXpReward(e.templateId) ||
+              (ctx.mir4RuntimeMobTemplates.get(e.templateId)?.mir4XpReward ??
+                mir4ArcMobTemplate(e.templateId)?.mir4XpReward ??
+                0)
+            : Math.round((mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length);
         if (xpGain > 0) grantXp(ctx, xpGain, member, { fromKill: true });
         ctx.onMobKilledForQuests(e, member);
+        mir4CreditArcQuestKills(ctx, member, e.templateId);
       }
       // A destroyed Broodmother egg may hatch a widow that swarms the killer.
       if (e.templateId === 'spider_egg' && killer) spawnWidowHatchlingOnEggDeath(ctx, e, killer);
@@ -1764,6 +1781,12 @@ export function grantXp(
   meta: PlayerMeta,
   opts?: { fromKill?: boolean },
 ): void {
+  // The mir4 profile advances through the ported level table (BigInt-safe
+  // reqExp) instead of the classic XP_TABLE loop; see src/sim/mir4/combat.ts.
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    grantMir4Xp(ctx, amount, meta);
+    return;
+  }
   const p = ctx.entities.get(meta.entityId);
   if (!p || amount <= 0) return;
   // Rested XP bonus: the classic-era rule only doubles KILL xp (not quests), and

@@ -12,14 +12,22 @@
 // Run `node dist-env/env_server.cjs --bench` for a throughput benchmark.
 
 import * as readline from 'node:readline';
+import { GAME_PROFILES, type GameProfile, MIR4_GAME_PROFILE } from '../src/game_profile';
+import { MIR4_MAX_LEVEL } from '../src/sim/content/mir4';
 import type { TalentAllocation } from '../src/sim/content/talents';
+import { classesForGameProfile } from '../src/sim/game_profile_roster';
+import { activateWorldForGameProfile } from '../src/sim/game_profile_world';
+import { mir4ShellClassFor } from '../src/sim/mir4/stats';
 import { ACTIONS, applyAction, encodeObs, NUM_ACTIONS, obsSize } from '../src/sim/obs';
 import { type RewardCounters, Sim } from '../src/sim/sim';
-import { ALL_CLASSES, MAX_LEVEL, type PlayerClass } from '../src/sim/types';
+import { MAX_LEVEL, type Mir4ClassKey, type PlayableClass } from '../src/sim/types';
+import { buildHeadlessEpisodeInfo } from './info';
 import {
   MAX_INPUT_LINE_LENGTH,
+  maxLevelForGameProfile,
   parseTalentResetRequest,
   validateAction,
+  validateGameProfile,
   validatePlayerClass,
 } from './protocol';
 import { ownedPetDamageForReward } from './reward_credit';
@@ -72,16 +80,18 @@ const DEFAULT_CONFIG: EnvConfig = {
 class Env {
   sim: Sim | null = null;
   config: EnvConfig = DEFAULT_CONFIG;
-  playerClass: PlayerClass = 'warrior';
+  playerClass: PlayableClass = 'warrior';
+  gameProfile: GameProfile = 'woc-classic';
   stepCount = 0;
   prev: RewardCounters | null = null;
 
   reset(
     seed: number,
-    playerClass: PlayerClass,
+    playerClass: PlayableClass,
     cfg: Partial<EnvConfig> & { rewards?: Partial<EnvConfig['rewards']> },
     playerLevel = 1,
     talents?: TalentAllocation,
+    gameProfile: GameProfile = 'woc-classic',
   ): object {
     this.config = {
       ...DEFAULT_CONFIG,
@@ -89,11 +99,16 @@ class Env {
       rewards: { ...DEFAULT_CONFIG.rewards, ...(cfg.rewards ?? {}) },
     };
     this.playerClass = playerClass;
+    this.gameProfile = gameProfile;
     this.sim = new Sim({
       seed,
-      playerClass,
+      playerClass: mir4ShellClassFor(playerClass, gameProfile),
+      playerClassMir4:
+        gameProfile === MIR4_GAME_PROFILE ? (playerClass as Mir4ClassKey) : undefined,
+      gameProfile,
+      world: activateWorldForGameProfile(gameProfile),
       respawnSeconds: this.config.respawnSeconds,
-      autoEquip: true,
+      autoEquip: gameProfile !== MIR4_GAME_PROFILE,
       idleMobTickRadius: 80,
     });
     if (playerLevel !== 1) this.sim.setPlayerLevel(playerLevel);
@@ -128,7 +143,8 @@ class Env {
     const died = c.deaths > this.prev.deaths;
     this.prev = { ...c };
 
-    const terminated = (this.config.terminateOnDeath && died) || sim.player.level >= MAX_LEVEL;
+    const levelCap = this.gameProfile === MIR4_GAME_PROFILE ? MIR4_MAX_LEVEL : MAX_LEVEL;
+    const terminated = (this.config.terminateOnDeath && died) || sim.player.level >= levelCap;
     const truncated = this.config.maxSteps > 0 && this.stepCount >= this.config.maxSteps;
 
     return {
@@ -141,17 +157,7 @@ class Env {
   }
 
   infoDict(): object {
-    const sim = this.sim!;
-    return {
-      level: sim.player.level,
-      xp: sim.xp,
-      hp: sim.player.hp,
-      kills: sim.counters.kills,
-      deaths: sim.counters.deaths,
-      quests_done: sim.counters.questsCompleted,
-      copper: sim.copper,
-      step: this.stepCount,
-    };
+    return buildHeadlessEpisodeInfo(this.sim!, this.stepCount);
   }
 }
 
@@ -199,21 +205,37 @@ function serve(): void {
     try {
       switch (msg.cmd) {
         case 'info':
-          send({
-            obs_size: obsSize(),
-            num_actions: NUM_ACTIONS,
-            actions: ACTIONS,
-            max_level: MAX_LEVEL,
-          });
+          {
+            const gameProfile = validateGameProfile(msg.game_profile);
+            if (gameProfile === null) {
+              send({ error: `invalid game_profile: expected one of ${GAME_PROFILES.join(', ')}` });
+              break;
+            }
+            send({
+              obs_size: obsSize(),
+              num_actions: NUM_ACTIONS,
+              actions: ACTIONS,
+              max_level: maxLevelForGameProfile(gameProfile),
+              game_profile: gameProfile,
+              game_profiles: GAME_PROFILES,
+            });
+          }
           break;
         case 'reset':
           {
-            const playerClass = validatePlayerClass(msg.player_class ?? 'warrior');
-            if (playerClass === null) {
-              send({ error: `invalid player_class: expected one of ${ALL_CLASSES.join(', ')}` });
+            const gameProfile = validateGameProfile(msg.game_profile);
+            if (gameProfile === null) {
+              send({ error: `invalid game_profile: expected one of ${GAME_PROFILES.join(', ')}` });
               break;
             }
-            const reset = parseTalentResetRequest(msg);
+            const playerClass = validatePlayerClass(msg.player_class ?? 'warrior', gameProfile);
+            if (playerClass === null) {
+              send({
+                error: `invalid player_class: expected one of ${classesForGameProfile(gameProfile).join(', ')}`,
+              });
+              break;
+            }
+            const reset = parseTalentResetRequest(msg, gameProfile, playerClass);
             if (!reset.ok) {
               send({ error: reset.error });
               break;
@@ -225,6 +247,7 @@ function serve(): void {
                 msg.config ?? {},
                 reset.playerLevel,
                 reset.talents,
+                gameProfile,
               ),
             );
           }

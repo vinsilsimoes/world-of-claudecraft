@@ -141,6 +141,10 @@ the deeper check when you want the whole suite locally.
   `tests/architecture.test.ts`.)
 - **Gameplay math follows real classic-era MMO formulas** (rage, hit tables, armor DR,
   XP curves; see `README.md` and `docs/design/`). Don't invent balance numbers.
+  The rule is profile-scoped: under the `mir4-gameplay-port` game profile the
+  ported Survival-Game formulas and values are the rule instead
+  (`docs/migration/survival-game-port-plan.md`, "Standing decisions"); never
+  rewrite one profile's numbers into the other profile's formulas.
 - **Graphics and performance settings are gameplay-neutral.** A preset or tier knob may shed
   cosmetic richness but NEVER actionable information a player reacts to (own debuffs, party/raid
   HP, cast bars, target HP granularity, enemy positions). Tier knobs read the STATIC preset via

@@ -170,6 +170,8 @@ export interface ActionBarDescriptor {
  *  spy); names + the slot label are wrapped by the host. */
 export interface ActionBarDeps {
   t(key: TranslationKey, values?: InterpolationValues): string;
+  /** Profile-aware label for the fixed attack-family slot. */
+  attackName?(): string;
   abilityName(def: AbilityDef): string;
   itemName(item: ItemDef): string;
   slotLabel(slotIndex: number): string;
@@ -280,6 +282,9 @@ export interface ActionBarSlotState {
   fateSentenceReady: boolean;
   ariaLabel: string;
   ariaDescription: string;
+  /** Toggle state for the fixed Attack/Auto Battle control. null removes the
+   *  toggle semantic when slot 0 is rebound to an ordinary action. */
+  ariaPressed: 'true' | 'false' | null;
   keybindLabel: string;
 }
 
@@ -319,6 +324,7 @@ function makeSlotState(): ActionBarSlotState {
     fateSentenceReady: false,
     ariaLabel: '',
     ariaDescription: '',
+    ariaPressed: null,
     keybindLabel: '',
   };
 }
@@ -448,9 +454,10 @@ export function createActionBarView(
           slot.fateSentenceReady = false;
           slot.ariaLabel = deps.t(SLOT_ARIA_KEY, {
             slot: slotLabel,
-            ability: deps.t(ATTACK_NAME_KEY),
+            ability: deps.attackName?.() ?? deps.t(ATTACK_NAME_KEY),
           });
           slot.ariaDescription = '';
+          slot.ariaPressed = player.autoAttack ? 'true' : 'false';
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }
@@ -481,6 +488,7 @@ export function createActionBarView(
           slot.fateSentenceReady = false;
           slot.ariaLabel = deps.t(EMPTY_SLOT_ARIA_KEY, { slot: slotLabel });
           slot.ariaDescription = '';
+          slot.ariaPressed = null;
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }
@@ -523,6 +531,7 @@ export function createActionBarView(
             ability: deps.itemName(item),
           });
           slot.ariaDescription = '';
+          slot.ariaPressed = null;
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }
@@ -714,6 +723,7 @@ export function createActionBarView(
             : slot.procGlow
               ? deps.t(PROC_ARIA_KEY)
               : '';
+        slot.ariaPressed = null;
         slot.keybindLabel = sd.keybindLabel();
       }
 

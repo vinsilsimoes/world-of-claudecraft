@@ -18,6 +18,12 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '
 describe('questlog_window: WCAG chrome (dialog + rows + focus-return)', () => {
   it('drives the panel from the pure view core', () => {
     expect(code).toContain('buildQuestLogView(');
+    expect(code).toContain('buildMir4QuestLogView(');
+  });
+
+  it('adapts the same quest-log root to authoritative MIR4 state and auto journey', () => {
+    expect(code).toContain('world.mir4PlayerState()');
+    expect(code).toContain('world.setMir4AutoQuest(!world.mir4AutoQuestActive())');
   });
 
   it('renders the dialog role + labelledby for the window', () => {

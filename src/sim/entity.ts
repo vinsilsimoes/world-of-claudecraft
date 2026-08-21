@@ -751,6 +751,9 @@ export function createMob(id: number, template: MobTemplate, level: number, pos:
   e.kind = 'mob';
   e.templateId = template.id;
   e.name = template.name;
+  e.mobFamily = template.family;
+  e.mobElite = template.elite === true;
+  e.mobBoss = template.boss === true;
   e.level = level;
   e.hostile = true;
   // Elite scaling, classic-style: ~2.3x health, ~1.5x damage.

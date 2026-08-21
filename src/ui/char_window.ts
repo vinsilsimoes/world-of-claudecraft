@@ -19,7 +19,7 @@
 
 import { audio } from '../game/audio';
 import { ITEMS } from '../sim/data';
-import { type EquipSlot, isMechWearer } from '../sim/types';
+import { type EquipSlot, isMechWearer, type PlayerClass } from '../sim/types';
 import type { IWorld } from '../world_api';
 import { STAT_PANELS } from './char_stats_view';
 import { buildPaperdollView, type PaperdollSlot } from './char_view';
@@ -36,6 +36,8 @@ import { formatNumber, type TranslationKey, t, tPlural } from './i18n';
 import { iconDataUrl, QUALITY_COLOR } from './icons';
 import type { ItemDragState } from './item_drag_state';
 import { wornTooltipInstance } from './item_instance_tooltip';
+import type { Mir4PreviewArmorLoadout } from './mir4_character_view';
+import { paintMir4CharacterWindow } from './mir4_equipment_window_adapter';
 import type { PainterHostPresentation } from './painter_host';
 import { playtimeParts, playtimeShape } from './playtime_view';
 import { hydratePortraits, modularLookFor, portraitChipHtml } from './portrait_chip';
@@ -151,7 +153,11 @@ export interface CharWindowDeps extends PainterHostPresentation {
   /** End a drag-to-unequip: clear the HUD slot and the bags drop-target hint. */
   endUnequipDrag(): void;
   /** Mount the shared 3D turntable into the model panel (HUD-owned lifecycle). */
-  renderPreview(): void;
+  renderPreview(
+    equipmentOverride?: Readonly<Partial<Record<EquipSlot, string | null>>>,
+    visualClass?: PlayerClass,
+    wornOverride?: Mir4PreviewArmorLoadout,
+  ): void;
   /** Paint the cosmetic skin picker into the skin row (HUD-owned cosmetics). */
   renderSkinPicker(): void;
   openPlayerCard(): void;
@@ -235,6 +241,21 @@ export class CharWindow {
     const hadFocus = focusedControl !== null;
     const world = this.deps.world();
     const p = world.player;
+    if (
+      paintMir4CharacterWindow({
+        ...this.deps,
+        root: el,
+        world,
+        close: () => this.close(),
+        focusedAct,
+        hadFocus,
+        afterEquipmentChange: () => {
+          this.deps.renderBags();
+          this.renderIfOpen();
+        },
+      })
+    )
+      return;
     const className = classDisplayName(world.cfg.playerClass);
     const level = formatNumber(p.level, { maximumFractionDigits: 0 });
     // WCAG 2.2 AA: name the focus-trapped root via the character title span.

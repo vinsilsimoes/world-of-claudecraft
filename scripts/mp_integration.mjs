@@ -1,11 +1,18 @@
 // Multiplayer integration test against a running game server (+ postgres).
-// Covers: register, login, character CRUD, two clients in one world seeing
-// each other, movement sync, combat, chat, persistence across reconnect.
+// Covers: register, login, profile-native character CRUD, two clients in one
+// world seeing each other, movement sync, combat, chat, profile-native starter
+// equipment, and persistence across reconnect. GAME_PROFILE selects the classic
+// or MIR4 scenario.
 import WebSocket from 'ws';
-import { worldAuthMessage } from './lib/world_auth.mjs';
+import { multiplayerScenarioForProfile } from './lib/mp_profile_scenario.mjs';
+import { mergeEntitySnapshot, mergeSelfSnapshot } from './lib/mp_snapshot_merge.mjs';
+import { requireGameProfile, worldAuthMessage } from './lib/world_auth.mjs';
 
 const BASE = process.env.SERVER_URL ?? 'http://localhost:8787';
 const WS_BASE = BASE.replace(/^http/, 'ws');
+const GAME_PROFILE = requireGameProfile(process.env.GAME_PROFILE);
+const SCENARIO = multiplayerScenarioForProfile(GAME_PROFILE);
+const IS_MIR4 = GAME_PROFILE === 'mir4-gameplay-port';
 let pass = 0,
   fail = 0;
 
@@ -32,45 +39,6 @@ async function api(path, opts = {}, token = null) {
   return { status: res.status, body };
 }
 
-// heavy self fields (inventory, quests, party, ...) arrive only when they
-// changed; an absent field means "same as the previous snapshot"
-const DELTA_SELF_KEYS = [
-  'inv',
-  'equip',
-  'qlog',
-  'qdone',
-  'cds',
-  'stats',
-  'weapon',
-  'party',
-  'trade',
-  'duel',
-];
-function mergeSelf(prev, next) {
-  if (prev) for (const k of DELTA_SELF_KEYS) if (!(k in next)) next[k] = prev[k];
-  return next;
-}
-
-// entity identity fields ride only in "full" records (first sight and
-// changes); "lite" records inherit them from the previous state. Ids in
-// snap.keep are alive but unchanged; anything absent from both is gone.
-const ENTITY_IDENTITY_KEYS = ['k', 'tid', 'nm', 'lv', 'sc', 'c', 'dgn'];
-function mergeEnts(prevEnts, snap) {
-  const next = new Map();
-  for (const w of snap.ents) {
-    const prev = prevEnts.get(w.id);
-    if (prev && w.k === undefined) {
-      for (const key of ENTITY_IDENTITY_KEYS) if (key in prev) w[key] = prev[key];
-    }
-    next.set(w.id, w);
-  }
-  for (const id of snap.keep ?? []) {
-    const prev = prevEnts.get(id);
-    if (prev) next.set(id, prev);
-  }
-  return next;
-}
-
 class Client {
   constructor() {
     this.snapshots = [];
@@ -94,8 +62,8 @@ class Client {
           clearTimeout(timeout);
           resolve(msg);
         } else if (msg.t === 'snap') {
-          this.self = mergeSelf(this.self, msg.self);
-          this.entities = mergeEnts(this.entities, msg);
+          this.self = mergeSelfSnapshot(this.self, msg.self);
+          this.entities = mergeEntitySnapshot(this.entities, msg);
           this.entities.set(this.self.id, this.self);
         } else if (msg.t === 'events') {
           this.events.push(...msg.list);
@@ -131,6 +99,8 @@ const uniq = Date.now().toString(36);
 const alpha = uniq.replace(/[0-9]/g, (d) => 'abcdefghij'[Number(d)]).slice(-6);
 
 async function main() {
+  console.log(`Multiplayer integration profile: ${GAME_PROFILE}`);
+
   // --- status
   const status = await api('/api/status');
   check('server status', status.status === 200 && status.body.ok);
@@ -174,13 +144,25 @@ async function main() {
   check('characters require auth', noAuth.status === 401);
   const c1 = await api(
     '/api/characters',
-    { method: 'POST', body: JSON.stringify({ name: `Thorg${alpha}`, class: 'warrior' }) },
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `${SCENARIO.primary.namePrefix}${alpha}`,
+        class: SCENARIO.primary.classKey,
+      }),
+    },
     t1,
   );
   check('create character 1', c1.status === 200 && c1.body.id > 0);
   const c2 = await api(
     '/api/characters',
-    { method: 'POST', body: JSON.stringify({ name: `Zappy${alpha}`, class: 'mage' }) },
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `${SCENARIO.secondary.namePrefix}${alpha}`,
+        class: SCENARIO.secondary.classKey,
+      }),
+    },
     t2,
   );
   check('create character 2', c2.status === 200 && c2.body.id > 0);
@@ -204,7 +186,38 @@ async function main() {
   check('client A sees B', a.entities.has(b.pid), `ents=${a.entities.size}`);
   check('client B sees A', b.entities.has(a.pid));
   const bSeenByA = a.entities.get(b.pid);
-  check('remote player wire data', bSeenByA && bSeenByA.k === 'player' && bSeenByA.tid === 'mage');
+  check(
+    'remote player wire data',
+    bSeenByA &&
+      bSeenByA.k === 'player' &&
+      (IS_MIR4
+        ? typeof bSeenByA.nm === 'string' && bSeenByA.nm.startsWith(SCENARIO.secondary.namePrefix)
+        : bSeenByA.tid === 'mage'),
+  );
+  if (IS_MIR4) {
+    check(
+      'client A receives authoritative MIR4 identity',
+      a.self?.mir4?.classId === SCENARIO.primary.mir4ClassId,
+      JSON.stringify(a.self?.mir4),
+    );
+    check(
+      'client B receives authoritative MIR4 identity',
+      b.self?.mir4?.classId === SCENARIO.secondary.mir4ClassId,
+      JSON.stringify(b.self?.mir4),
+    );
+    check(
+      'MIR4 creation grants the source-backed starter loadout in the owner snapshot',
+      a.self?.mir4?.mir4Equipment?.[1] === SCENARIO.primary.starterItemId &&
+        a.self?.mir4?.mir4Equipment?.[5] === SCENARIO.primary.starterArmorItemId &&
+        a.self?.mir4?.mir4EquipmentInstances?.[SCENARIO.primary.starterItemId]?.enhancement === 0 &&
+        a.self?.mir4?.mir4EquipmentInstances?.[SCENARIO.primary.starterArmorItemId]?.enhancement ===
+          0,
+      JSON.stringify({
+        equipment: a.self?.mir4?.mir4Equipment,
+        instances: a.self?.mir4?.mir4EquipmentInstances,
+      }),
+    );
+  }
 
   // duplicate character login rejected
   const dupClient = new Client();
@@ -230,34 +243,87 @@ async function main() {
   a.cmd({ cmd: 'chat', text: 'Hello from A!' });
   await sleep(400);
   const bChat = b.events.find((e) => e.type === 'chat' && e.text === 'Hello from A!');
-  check('B receives A chat', !!bChat && bChat.from.startsWith('Thorg'));
+  check('B receives A chat', !!bChat && bChat.from.startsWith(SCENARIO.primary.namePrefix));
 
-  // --- combat: teleport-free version — A targets nearest mob and attacks via commands.
-  // Find a mob near A in B's view? Use A's own entity list.
-  a.cmd({ cmd: 'targetNearest' });
-  await sleep(200);
-  check('target acquired or none in range', true); // mobs may be far from town; not fatal
-  // server-side cast validation: warrior with 0 rage is denied Battle Shout...
-  a.cmd({ cmd: 'cast', ability: 'battle_shout' });
-  await sleep(400);
-  const denied = a.events.some((e) => e.type === 'error' && e.text.includes('rage'));
-  check('server denies cast without resource', denied);
-  // ...while the mage (full mana) successfully buffs Frost Armor
-  b.cmd({ cmd: 'cast', ability: 'frost_armor' });
-  await sleep(600);
-  const armorAura = b.self?.auras?.some((x) => x.id === 'frost_armor');
-  check('B buffs with Frost Armor (server-side cast)', !!armorAura, JSON.stringify(b.self?.auras));
+  if (IS_MIR4) {
+    // MIR4 automation is a server-owned command whose state returns only in
+    // the authoritative profile payload. This also proves that the standalone
+    // client retains a delta-elided `mir4` block between snapshots.
+    a.cmd({ cmd: 'mir4', m: 'auto', on: true });
+    await sleep(500);
+    check(
+      'MIR4 auto battle is acknowledged authoritatively',
+      a.self?.mir4?.autoBattle?.mode === 'battle',
+      JSON.stringify(a.self?.mir4?.autoBattle),
+    );
+    a.cmd({ cmd: 'mir4', m: 'auto', on: false });
+    await sleep(500);
+    check(
+      'MIR4 auto battle stop is acknowledged authoritatively',
+      a.self?.mir4?.autoBattle?.mode === 'off',
+      JSON.stringify(a.self?.mir4?.autoBattle),
+    );
+    a.cmd({ cmd: 'mir4', m: 'quest', on: true });
+    await sleep(400);
+    check(
+      'MIR4 journey is acknowledged authoritatively',
+      typeof a.self?.mir4?.mir4AutoQuest?.questId === 'string',
+      JSON.stringify(a.self?.mir4?.mir4AutoQuest),
+    );
+    a.cmd({ cmd: 'mir4', m: 'quest', on: false });
+    await sleep(400);
+    check(
+      'MIR4 journey stop is acknowledged authoritatively',
+      a.self?.mir4?.mir4AutoQuest === undefined,
+      JSON.stringify(a.self?.mir4?.mir4AutoQuest),
+    );
 
-  // xp/copper persistence: grant via quest accept (q_wolves needs marshal proximity — spawn is near)
-  a.cmd({ cmd: 'interact' });
-  await sleep(400);
+    // A crafted classic ability command must not leak the WoC class kit into
+    // the MIR4 profile. Lancer rides a Warrior render shell, so this assertion
+    // protects the profile boundary rather than a cosmetic class distinction.
+    b.cmd({ cmd: 'cast', ability: 'battle_shout' });
+    await sleep(400);
+    check(
+      'classic abilities stay blocked in the MIR4 profile',
+      !b.self?.auras?.some((x) => x.id === 'battle_shout'),
+      JSON.stringify(b.self?.auras),
+    );
+  } else {
+    // --- classic combat: teleport-free version — A targets nearest mob and attacks.
+    a.cmd({ cmd: 'targetNearest' });
+    await sleep(200);
+    check('target acquired or none in range', true); // mobs may be far from town; not fatal
+    a.cmd({ cmd: 'cast', ability: 'battle_shout' });
+    await sleep(400);
+    const denied = a.events.some((e) => e.type === 'error' && e.text.includes('rage'));
+    check('server denies cast without resource', denied);
+    b.cmd({ cmd: 'cast', ability: 'frost_armor' });
+    await sleep(600);
+    const armorAura = b.self?.auras?.some((x) => x.id === 'frost_armor');
+    check(
+      'B buffs with Frost Armor (server-side cast)',
+      !!armorAura,
+      JSON.stringify(b.self?.auras),
+    );
+  }
+
+  // Classic interaction remains in its established scenario. MIR4 quest state
+  // was exercised above through the profile command and self snapshot.
+  if (!IS_MIR4) {
+    a.cmd({ cmd: 'interact' });
+    await sleep(400);
+  }
   const qlog = a.self?.qlog ?? [];
-  check('A accepted a quest via interact', qlog.length >= 0); // proximity-dependent; non-fatal
 
   // --- persistence across reconnect: record state, disconnect, reconnect
   const beforeXp = a.self.xp;
   const beforeCopper = a.self.copper;
   const beforePos = { x: a.self.x, z: a.self.z };
+  const beforeMir4 = a.self.mir4;
+  const beforeMir4Equipment = JSON.stringify({
+    equipment: beforeMir4?.mir4Equipment,
+    instances: beforeMir4?.mir4EquipmentInstances,
+  });
   a.close();
   await sleep(800); // server saves on disconnect
   const a2 = new Client();
@@ -270,8 +336,24 @@ async function main() {
   );
   const posDelta = Math.hypot(a2.self.x - beforePos.x, a2.self.z - beforePos.z);
   check('reconnect restores position', posDelta < 3, `delta=${posDelta.toFixed(1)}`);
+  if (IS_MIR4) {
+    check(
+      'reconnect restores MIR4 identity and automation state',
+      a2.self?.mir4?.classId === beforeMir4?.classId &&
+        a2.self?.mir4?.autoBattle?.mode === beforeMir4?.autoBattle?.mode,
+      JSON.stringify(a2.self?.mir4),
+    );
+    check(
+      'reconnect restores the class-native MIR4 starter equipment',
+      JSON.stringify({
+        equipment: a2.self?.mir4?.mir4Equipment,
+        instances: a2.self?.mir4?.mir4EquipmentInstances,
+      }) === beforeMir4Equipment,
+      JSON.stringify(a2.self?.mir4?.mir4Equipment),
+    );
+  }
   check(
-    'aura state listed in quest log after reconnect',
+    'classic quest-log projection is stable after reconnect',
     (a2.self.qlog ?? []).length === qlog.length,
   );
 

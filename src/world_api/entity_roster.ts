@@ -1,9 +1,16 @@
+import type { GameProfile } from '../sim/game_profile';
 import type { Entity, MoveInput, PlayerClass, WorldContent } from '../sim/types';
 
 export interface IWorldEntityRoster {
-  // `world` is the offline editor play-test world (carries render-only placements
-  // for the renderer); optional and absent online.
-  cfg: { seed: number; playerClass: PlayerClass; world?: WorldContent };
+  // `world` is optional for the classic host. Injected profiles keep it on both
+  // offline and online clients so renderer streaming uses the same zone authority
+  // as terrain/collision and the authoritative server.
+  cfg: {
+    seed: number;
+    playerClass: PlayerClass;
+    gameProfile?: GameProfile;
+    world?: WorldContent;
+  };
   entities: Map<number, Entity>;
   playerId: number;
   player: Entity;

@@ -71,4 +71,15 @@ describe('developer command window', () => {
     expect(document.activeElement).toBe(fresh);
     expect(document.querySelector('[data-dev-action="spawn"]')).not.toBeNull();
   });
+
+  it('does not expose engine-only campaign rooms in the dungeon picker', () => {
+    const { window } = makeWindow();
+    window.toggle();
+    document.querySelector<HTMLButtonElement>('[data-dev-category="travel"]')?.click();
+
+    const picker = document.querySelector<HTMLSelectElement>('[data-dev-field="dungeon"]');
+    expect(picker).not.toBeNull();
+    const values = picker ? [...picker.options].map((option) => option.value) : [];
+    expect(values).not.toContain('campaign_trial_room');
+  });
 });

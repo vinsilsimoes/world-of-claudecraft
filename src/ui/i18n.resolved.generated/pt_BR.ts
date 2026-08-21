@@ -779,7 +779,390 @@ export const pt_BR: EnTranslations = {
     "questTracker": {
       "count": "({count})",
       "collapseHint": "Recolher missões",
-      "expandHint": "Expandir missões"
+      "expandHint": "Expandir missões",
+      "mir4": {
+        "firstTraces": "Primeiros Rastros",
+        "reachTarek": "Chegue até Tarek",
+        "inspectClues": "Investigue as pistas",
+        "returnToTarek": "Retorne a Tarek",
+        "pausedSuffix": "(jornada automática pausada pelo controle manual)",
+        "startAutoJourney": "Iniciar jornada automática",
+        "stopAutoJourney": "Parar jornada automática"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "Corcel da Campina",
+          "moss-boar": "Javali Musgoso",
+          "brook-stag": "Cervo do Arroio",
+          "gray-wolf": "Lobo Cinzento",
+          "dun-packhorse": "Cavalo Baio de Carga",
+          "birch-doe": "Corça da Bétula",
+          "red-maned-pony": "Pônei de Crina Rubra",
+          "lowland-elk": "Alce das Baixadas",
+          "field-lynx": "Lince do Campo",
+          "tawny-mastiff": "Mastim Fulvo",
+          "dune-jackal": "Chacal das Dunas",
+          "reed-puma": "Puma dos Juncos",
+          "clay-ox": "Boi de Argila",
+          "valley-buffalo": "Búfalo do Vale",
+          "shaggy-yak": "Iaque Lanoso",
+          "creek-lizard": "Lagarto do Riacho",
+          "shellback-tortoise": "Jabuti Casco-Pedra",
+          "plains-ostrich": "Avestruz da Planície",
+          "dusk-emu": "Ema do Crepúsculo",
+          "copper-ant-carrier": "Cargueiro Formiga de Cobre",
+          "mist-moose": "Alce da Bruma",
+          "leaf-panther": "Pantera de Folha",
+          "turf-rhino": "Rinoceronte de Turfa",
+          "valley-monitor": "Lagarto do Vale",
+          "granite-ibex": "Íbex de Granito",
+          "silver-dapple-mare": "Égua Malhada de Prata",
+          "marsh-stag": "Cervo do Brejo",
+          "snow-mane-lion": "Leão de Juba Nevada",
+          "ember-fox": "Raposa de Brasa",
+          "striped-hyena": "Hiena Listrada",
+          "iron-tusk-boar": "Javali Presa-de-Ferro",
+          "cedar-bear": "Urso do Cedro",
+          "swamp-hippo": "Hipopótamo do Pântano",
+          "thorn-iguana": "Iguana Espinhosa",
+          "dryland-crocodile": "Crocodilo da Terra Seca",
+          "horned-cassowary": "Casuar de Chifre",
+          "bronze-raptor": "Corredor de Bronze",
+          "amber-scarab": "Escaravelho de Âmbar",
+          "dune-scorpion": "Escorpião das Dunas",
+          "root-golem": "Golem de Raiz",
+          "amber-bear": "Urso de Âmbar",
+          "sunset-tiger": "Tigre do Poente",
+          "root-drake": "Draco de Raiz",
+          "hill-griffin": "Grifo das Colinas",
+          "obsidian-zebra": "Zebra de Obsidiana",
+          "stormhorn-ram": "Carneiro Chifre-Trovão",
+          "dusk-elk": "Alce do Ocaso",
+          "frost-warg": "Warg da Geada",
+          "basalt-rhino": "Rinoceronte de Basalto",
+          "tundra-mammoth": "Mamute da Tundra",
+          "crystal-ankylosaur": "Anquilossauro de Cristal",
+          "ember-salamander": "Salamandra de Brasa",
+          "thunder-komodo": "Komodo Trovejante",
+          "moon-crocodile": "Crocodilo Lunar",
+          "razorbeak-strider": "Corredor Bico-Lâmina",
+          "plume-raptor": "Raptor de Plumas",
+          "glass-mantis": "Louva-a-Deus de Vidro",
+          "thunder-beetle": "Besouro do Trovão",
+          "iron-sentinel": "Sentinela de Ferro",
+          "mossstone-colossus": "Colosso de Pedra Musgosa",
+          "eclipse-lion": "Leão do Eclipse",
+          "crimson-wyvern": "Wyvern Rubra",
+          "astral-stag": "Cervo Astral",
+          "jade-basilisk": "Basilisco de Jade",
+          "solar-wolf": "Lobo Solar",
+          "forest-chimera": "Quimera do Bosque",
+          "tempest-courser": "Corcel Tempestuoso",
+          "thorn-elephant": "Elefante de Espinhos",
+          "void-spider": "Aranha do Vazio",
+          "rune-golem": "Golem Rúnico",
+          "dawn-phoenix": "Fênix da Alvorada",
+          "imperial-griffin": "Grifo Imperial",
+          "stone-leviathan": "Leviatã de Pedra",
+          "void-unicorn": "Unicórnio do Vazio",
+          "golden-manticore": "Manticora Dourada",
+          "imperial-tiger": "Tigre Imperial",
+          "dawn-mammoth": "Mamute da Aurora",
+          "magma-drake": "Draco de Magma",
+          "crown-scorpion": "Escorpião da Coroa",
+          "sunforged-colossus": "Colosso Forjado ao Sol",
+          "ground-dragon": "Dragão Terrestre",
+          "eternal-phoenix": "Fênix Eterna",
+          "celestial-kirin": "Kirín Celestial",
+          "firmament-behemoth": "Leão do Firmamento",
+          "time-hydra": "Hidra do Tempo"
+        },
+        "spirits": {
+          "spirit-common-01": "Faisca da Campina",
+          "spirit-common-02": "Brisa do Arroio",
+          "spirit-common-03": "Folha Vigia",
+          "spirit-common-04": "Eco de Pedra",
+          "spirit-uncommon-01": "Lume da Alvorada",
+          "spirit-uncommon-02": "Ninfa da Bruma",
+          "spirit-uncommon-03": "Guardiao de Musgo",
+          "spirit-uncommon-04": "Salamandra do Vale",
+          "spirit-rare-01": "Raposa de Ambar",
+          "spirit-rare-02": "Coruja do Poente",
+          "spirit-rare-03": "Draco de Raiz",
+          "spirit-rare-04": "Oraculo das Colinas",
+          "spirit-epic-01": "Avatar do Eclipse",
+          "spirit-epic-02": "Ifrit Rubro",
+          "spirit-epic-03": "Cervo Astral",
+          "spirit-epic-04": "Sentinela de Jade",
+          "spirit-epic-05": "Lobo Solar",
+          "spirit-epic-06": "Quimera Etérea",
+          "spirit-legendary-01": "Titã Terrestre",
+          "spirit-legendary-02": "Fenix da Alvorada",
+          "spirit-legendary-03": "Arconte Imperial",
+          "spirit-legendary-04": "Leviata de Cristal",
+          "spirit-legendary-05": "Unicornio do Vazio",
+          "spirit-legendary-06": "Manticora Aurea",
+          "spirit-mythical-01": "Alma Primordial",
+          "spirit-mythical-02": "Fenix Eterna",
+          "spirit-mythical-03": "Kirin Celestial",
+          "spirit-mythical-04": "Beemote do Firmamento",
+          "spirit-mythical-05": "Serafim Abissal",
+          "spirit-mythical-06": "Hidra do Tempo"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "Centelha Errante",
+          "spirit-skill-1-02": "Instinto do Ocaso",
+          "spirit-skill-1-03": "Orvalho Vital",
+          "spirit-skill-1-04": "Sopro de Mana",
+          "spirit-skill-2-01": "Clarão Ascendente",
+          "spirit-skill-2-02": "Presa da Neblina",
+          "spirit-skill-2-03": "Seiva Restauradora",
+          "spirit-skill-2-04": "Pulso Arcano",
+          "spirit-skill-3-01": "Ruptura de Âmbar",
+          "spirit-skill-3-02": "Julgamento do Poente",
+          "spirit-skill-3-03": "Vínculo Vital",
+          "spirit-skill-3-04": "Fonte de Raiz",
+          "spirit-skill-4-01": "Raio do Eclipse",
+          "spirit-skill-4-02": "Fúria Rubra",
+          "spirit-skill-4-03": "Graça Astral",
+          "spirit-skill-4-04": "Orbe de Jade",
+          "spirit-skill-4-05": "Corte Solar",
+          "spirit-skill-4-06": "Foco Etéreo",
+          "spirit-skill-5-01": "Impacto Tectônico",
+          "spirit-skill-5-02": "Chama Renascente",
+          "spirit-skill-5-03": "Veredito Imperial",
+          "spirit-skill-5-04": "Maré de Cristal",
+          "spirit-skill-5-05": "Fenda do Vazio",
+          "spirit-skill-5-06": "Coroa Áurea",
+          "spirit-skill-6-01": "Gênesis",
+          "spirit-skill-6-02": "Retorno Eterno",
+          "spirit-skill-6-03": "Mandato Celestial",
+          "spirit-skill-6-04": "Peso do Firmamento",
+          "spirit-skill-6-05": "Espiral Abissal",
+          "spirit-skill-6-06": "Instante Absoluto"
+        }
+      },
+      "ultimateGauge": "Medidor de ultimate",
+      "ultimateGaugeStatus": "Medidor de ultimate: {value} de {max}",
+      "ultimateReadyAnnouncement": "Ultimate pronta.",
+      "achievements": {
+        "title": "Achievements",
+        "close": "Close achievements",
+        "summary": "{claimed}/{total} rewards claimed",
+        "balances": "Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}",
+        "levelTitle": "Level {level}",
+        "levelDescription": "Reach level {level}.",
+        "progressAria": "Level progress: {current}/{target}",
+        "progressText": "{current}/{target}",
+        "rewardCopper": "{amount} copper",
+        "rewardDarksteel": "{amount} Darksteel",
+        "rewardEffectPoints": "{amount} Effect Points",
+        "rewardSkillTomes": "{amount} Skill Tomes",
+        "rewards": "Rewards: {rewards}",
+        "claim": "Claim",
+        "claimed": "Claimed",
+        "locked": "Reach level {level}",
+        "previousGrade": "Claim the previous grade first",
+        "claimAria": "Claim the level {level} achievement reward"
+      },
+      "questLog": {
+        "narrative": "Investigue os três locais com pistas ao redor do vau e depois retorne a Tarek Duas Pontes.",
+        "giverName": "Tarek Duas Pontes",
+        "emptyHint": "Encontre Tarek Duas Pontes no assentamento de M01 ou inicie a jornada automática.",
+        "completedHint": "Primeiros Rastros foi concluída. As demais missões da campanha ainda não estão ativas."
+      },
+      "campaign": {
+        "questTitle": "Campanha {id}",
+        "narrative": "Conclua os objetivos atuais da campanha de {id}.",
+        "contact": "Contato da campanha",
+        "objective": {
+          "returnToContact": "Retorne ao contato da campanha",
+          "talk": "Fale com o contato da campanha",
+          "deliver": "Entregue os itens solicitados",
+          "travel": "Viaje até o objetivo marcado",
+          "inspect": "Investigue a evidência marcada",
+          "gather": "Colete os recursos solicitados",
+          "defend": "Defenda o objetivo marcado",
+          "combat": "Derrote os inimigos marcados",
+          "escort": "Escolte o aliado marcado",
+          "escortSupplies": "Escolte o grupo de suprimentos",
+          "dungeon": "Conclua a masmorra da campanha",
+          "craft": "Fabrique os suprimentos solicitados",
+          "tutorial": "Conclua a lição do sistema",
+          "interact": "Interaja com o objetivo marcado",
+          "complete": "Conclua o objetivo atual"
+        }
+      },
+      "characterTitle": "Personagem",
+      "awaitingState": "Aguardando dados autoritativos do personagem...",
+      "combatPowerLine": "Poder de Combate {value}",
+      "equipmentVisualShell": "Aparência do World of ClaudeCraft com atributos de combate MIR4",
+      "equipmentTierGrade": "Tier {tier}, Grau {grade}",
+      "equipmentRequiredLevel": "Requer nível {level}",
+      "unequipHint": "Clique no X ou use o botão direito para desequipar.",
+      "unequipAria": "Desequipar {item}",
+      "equipHint": "Clique para equipar.",
+      "equipAria": "Equipar {item}",
+      "inventoryEquipment": "Equipamentos",
+      "inventoryRuntimeItems": "Native World of ClaudeCraft Items",
+      "inventoryCollectionTickets": "Collection Tickets",
+      "inventoryMaterials": "Materiais de Refinamento",
+      "noUnequippedEquipment": "Nenhum equipamento desequipado.",
+      "materialCount": "Possui: {count}",
+      "mountTicketDawn": "Dawn Mount Ticket",
+      "mountTicketTwilight": "Twilight Mount Ticket",
+      "mountTicketDawnDescription": "Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.",
+      "mountTicketTwilightDescription": "Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.",
+      "redeemMountTicket": "Use {ticket}",
+      "inventoryMounts": "Montarias",
+      "inventoryPendingMounts": "Montarias Aguardando Confirmação",
+      "mountGrade": "Grau {grade}",
+      "mountOwned": "Possui: {count}",
+      "mountEquipped": "Equipada",
+      "mountEquipHint": "Clique para equipar esta Montaria e invocar seu modelo visual nativo do World of ClaudeCraft.",
+      "mountUnequipHint": "Clique para desequipar esta Montaria e desmontar.",
+      "mountConfirmHint": "Clique para confirmar esta Montaria e adicioná-la à sua coleção.",
+      "mountConfirmAria": "Confirmar {mount}",
+      "mountEffectShell": "Modelo nativo do World of ClaudeCraft com atributos de Montaria MIR4",
+      "mountMoveSpeed": "Velocidade de Movimento: +{amount}%",
+      "mountDefenses": "Defesa Física: +{physical} · Defesa Mágica: +{magic}",
+      "equippedMountLine": "Montaria: {mount} (Grau {grade})",
+      "noEquippedMount": "Montaria: nenhuma equipada",
+      "inventoryMountCombination": "Combinação de Montarias",
+      "combineMountsAria": "Combinar quatro Montarias de Grau {grade}",
+      "combineMountsHint": "Consome quatro Montarias possuídas deste grau. Há 20% de chance de receber uma Montaria aleatória do grau seguinte. Em caso de falha, você recebe uma Montaria aleatória do mesmo grau. Recompensas Épicas ou superiores aguardam confirmação.",
+      "inventorySpirits": "Spirits",
+      "inventoryPendingSpirits": "Spirits Awaiting Confirmation",
+      "spiritTicketDawn": "Dawn Spirit Ticket",
+      "spiritTicketSunset": "Sunset Spirit Ticket",
+      "spiritTicketDawnDescription": "Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.",
+      "spiritTicketSunsetDescription": "Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.",
+      "redeemSpiritTicket": "Summon with {ticket}",
+      "spiritGrade": "Grade {grade}",
+      "spiritOwned": "Owned: {count}",
+      "spiritEquipped": "Equipped",
+      "spiritEquipHint": "Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.",
+      "spiritUnequipHint": "Click to unequip this Spirit.",
+      "spiritConfirmHint": "Click to confirm this Spirit and add it to your collection.",
+      "spiritConfirmAria": "Confirm {spirit}",
+      "spiritEffectShell": "Native World of ClaudeCraft presentation with MIR4 Spirit effects",
+      "equippedSpiritLine": "Spirit: {spirit} (Grade {grade})",
+      "noEquippedSpirit": "Spirit: none equipped",
+      "inventorySpiritCombination": "Spirit Combination",
+      "combineSpiritsAria": "Combine four Grade {grade} Spirits",
+      "combineSpiritsHint": "Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.",
+      "spiritSkillChanceCooldown": "{chance}% chance · {cooldown}s cooldown",
+      "spiritSkillBonusDamage": "Increases the triggering hit's raw damage by {amount}%.",
+      "spiritSkillExecute": "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
+      "spiritSkillLifeSiphon": "Restores {amount}% of maximum Health.",
+      "spiritSkillManaSurge": "Restores {amount}% of maximum Mana.",
+      "spiritSkillArmorRend": "Adds {amount}% Defense Penetration to the triggering hit.",
+      "spiritSkillCriticalFocus": "Forces the triggering hit to be critical.",
+      "equipmentSlots": {
+        "weapon": "Arma",
+        "necklace": "Colar",
+        "ring": "Anel",
+        "talisman": "Talismã",
+        "chest": "Peitoral",
+        "helmet": "Elmo",
+        "gloves": "Luvas",
+        "boots": "Botas"
+      },
+      "stats": {
+        "combatPower": "Poder de Combate",
+        "maxHp": "Vida Máxima",
+        "maxMana": "Mana Máxima",
+        "physicalAttack": "Ataque Físico",
+        "magicAttack": "Ataque Mágico",
+        "physicalDefense": "Defesa Física",
+        "magicDefense": "Defesa Mágica",
+        "accuracy": "Acerto",
+        "dodge": "Esquiva",
+        "critical": "Crítico",
+        "avoidCritical": "Evasão Crítica",
+        "criticalOutcome": "Dano Crítico",
+        "bossDamage": "Boss Damage",
+        "skillDamage": "Skill Damage",
+        "penetration": "Defense Penetration",
+        "unknown": "Atributo de Combate"
+      },
+      "materials": {
+        "sunStone": "Pedra do Sol",
+        "moonStone": "Pedra da Lua",
+        "solarScroll": "Pergaminho Solar",
+        "lunarSeal": "Selo Lunar",
+        "dawnTear": "Lágrima da Aurora",
+        "solarWard": "Amparo Solar"
+      },
+      "maps": {
+        "portal": "Portal de {zone}",
+        "actWelcome": "{zone} (Ato {act}).",
+        "m01": "Vila do Vau",
+        "m02": "Trilha dos Juncos",
+        "m03": "Bosque do Vale",
+        "m04": "Ruínas da Encosta",
+        "m05": "Clareira da Fenda",
+        "m06": "Criptas de Pedra-Vela",
+        "m07": "Galerias do Ossário",
+        "m08": "Fortaleza de Brumapedra",
+        "m09": "Pântano das Lanternas",
+        "m10": "Charcos do Rei Bog",
+        "m11": "Mangue das Sanguessugas",
+        "m12": "Porto dos Juncos",
+        "m13": "Dunas de Vidro",
+        "m14": "Necrópole de Akhet",
+        "m15": "Caldeira de Cinerita",
+        "m16": "Forja do Sol Partido",
+        "m17": "Tundra dos Uivos",
+        "m18": "Passo do Jarl",
+        "m19": "Véu da Noite",
+        "m20": "Bastilha do Eclipse"
+      },
+      "progression": {
+        "title": "Oficina de Equipamentos",
+        "refinement": "Refinamento",
+        "enchantment": "Encantamento",
+        "blessing": "Bênção",
+        "crafting": "Fabricação",
+        "ownedEquipment": "Equipamentos Possuídos",
+        "noEquipment": "Nenhum equipamento está disponível para esta operação.",
+        "equipped": "Equipado",
+        "enhancementLevel": "Aprimoramento +{level} de +{max}",
+        "successChance": "Chance de sucesso: {chance}%",
+        "safeFailure": "A falha mantém o equipamento.",
+        "destructiveFailure": "A falha destrói o equipamento acima de +5.",
+        "wardProtection": "Um Amparo Solar será consumido para impedir a destruição.",
+        "noWardProtection": "Nenhum Amparo Solar está disponível.",
+        "enhanceCost": "Custo: 1 Pergaminho Solar",
+        "enhance": "Aprimorar",
+        "maxEnhancement": "Aprimoramento máximo alcançado",
+        "currentEffects": "Efeitos Atuais",
+        "noCurrentEffects": "Nenhum efeito aplicado.",
+        "rollCostEnchantment": "Custo: 1 Selo Lunar",
+        "layerUnsupported": "Este item não pode receber efeitos de {layer}.",
+        "rollCostBlessing": "Custo: 1 Lágrima da Aurora",
+        "roll": "Gerar Prévia",
+        "pendingOtherLayer": "Resolva primeiro a prévia pendente de {layer}.",
+        "preview": "Prévia Pendente",
+        "acceptPreview": "Aplicar Prévia",
+        "keepCurrent": "Manter Atual",
+        "inactiveEffect": "Efeito migrado (ainda inativo em combate)",
+        "materialRecipes": "Receitas de Materiais",
+        "campaignProfession": "Campaign Profession Order",
+        "campaignProfessionProgress": "Progress: {current}/{goal}",
+        "campaignProfessionMaterials": "Eligible materials: {held}/{needed}",
+        "campaignProfessionHint": "Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.",
+        "campaignCraft": "Craft Component",
+        "campaignRefine": "Refine Component",
+        "campaignSalvage": "Salvage Gear",
+        "creates": "Cria {count} {material}",
+        "materialCost": "{held}/{needed} {material}",
+        "copperCost": "{amount} de cobre",
+        "create": "Criar",
+        "requestSent": "O servidor está validando a operação do equipamento."
+      }
     },
     "interfaceTabs": {
       "general": "Geral",
@@ -2479,7 +2862,10 @@ export const pt_BR: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "Adicionar {name} à barra de ação",
-      "removeFromBarAria": "Remover {name} da barra de ação"
+      "removeFromBarAria": "Remover {name} da barra de ação",
+      "upgradeRank": "Rank {rank}",
+      "maxRank": "Max rank",
+      "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}"
     },
     "nameplate": {
       "mobLevel": "{level}",
@@ -2809,7 +3195,8 @@ export const pt_BR: EnTranslations = {
       "tip": "Receita de vendas ou itens devolvidos estão esperando por você com o Mercador."
     },
     "noticeboard": {
-      "empty": "Parece que não há nada afixado."
+      "empty": "Parece que não há nada afixado.",
+      "contract": "Contrato ativo: {title}"
     },
     "bank": {
       "title": "Banco",
@@ -7029,6 +7416,10 @@ export const pt_BR: EnTranslations = {
   },
   "classes": {
     "warrior": "Guerreiro",
+    "elementalist": "Elementalista",
+    "taoist": "Taoista",
+    "arbalist": "Besteiro",
+    "lancer": "Lanceiro",
     "paladin": "Paladino",
     "hunter": "Caçador",
     "rogue": "Ladino",
@@ -7038,6 +7429,10 @@ export const pt_BR: EnTranslations = {
     "warlock": "Bruxo",
     "druid": "Druida",
     "warriorAria": "Classe Guerreiro",
+    "elementalistAria": "Classe Elementalista",
+    "taoistAria": "Classe Taoista",
+    "arbalistAria": "Classe Besteiro",
+    "lancerAria": "Classe Lanceiro",
     "paladinAria": "Classe Paladino",
     "hunterAria": "Classe Caçador",
     "rogueAria": "Classe Ladino",
@@ -7961,6 +8356,31 @@ export const pt_BR: EnTranslations = {
       "warlock": "Bruxos invocam demônios, aplicam maldições e magia de dano contínuo, e sugam a vida dos inimigos para resistir.",
       "druid": "Druidas canalizam a natureza, curam feridas, enredam inimigos e assumem formas animais para defender ou causar dano."
     },
+    "mir4": {
+      "labels": {
+        "damage": "Dano",
+        "combatRange": "Alcance de combate",
+        "startingSkills": "Habilidades iniciais"
+      },
+      "damage": {
+        "physical": "Físico",
+        "magic": "Mágico"
+      },
+      "range": {
+        "melee": "Corpo a corpo",
+        "medium": "Médio alcance",
+        "long": "Longo alcance",
+        "extended": "Corpo a corpo estendido"
+      },
+      "weapons": {
+        "heavySword": "Espada pesada",
+        "largeStaff": "Cajado grande",
+        "shortStaff": "Cajado curto",
+        "arbalest": "Besta",
+        "spear": "Lança"
+      },
+      "aria": "Detalhes da classe {className}: dano {damage}, alcance {range}, arma {weapon}, {skills} habilidades iniciais."
+    },
     "aria": "Detalhes de classe para {className}: função {role}. Atributos iniciais: Força {str}, Agilidade {agi}, Vigor {sta}, Intelecto {int}, Espírito {spi}.",
     "statBarAria": "{stat}: {value} de 25"
   },
@@ -8719,6 +9139,8 @@ export const pt_BR: EnTranslations = {
     "actionBar": {
       "attackName": "Atacar",
       "attackTooltip": "Ativa ou desativa o autoataque no alvo. Clicar com o botão direito em um inimigo também ataca.",
+      "autoBattleName": "Batalha Automática",
+      "autoBattleTooltip": "Ative ou desative a busca de alvos, o movimento e a rotação de habilidades ao redor da sua posição atual.",
       "attackRemoveHint": "Clique com o botão direito para removê-lo da barra e liberar o espaço.",
       "emptySlot": "Espaço vazio",
       "slotAria": "Espaço de ação {slot}: {ability}",
@@ -9165,6 +9587,226 @@ export const pt_BR: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "Golpe de Vácuo",
+        "description": "Causa {damage} de dano a um inimigo. Atordoa o alvo por 0,9 s."
+      },
+      "mir4_skill_1104": {
+        "name": "Golpe Lacerante",
+        "description": "Causa {damage} de dano a um inimigo. Derruba o alvo por 1,2 s."
+      },
+      "mir4_skill_1304": {
+        "name": "Placagem",
+        "description": "Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 12% por 4,5 s."
+      },
+      "mir4_skill_1401": {
+        "name": "Esmagamento Terrestre",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 70% desse dano. Derruba o alvo por 0,8 s."
+      },
+      "mir4_skill_1501": {
+        "name": "Golpe de Vendaval",
+        "description": "Afeta um inimigo. Reduz a velocidade do alvo em 35% por 3,2 s."
+      },
+      "mir4_skill_2101": {
+        "name": "Raio Prismático",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Congela o alvo por 1,4 s."
+      },
+      "mir4_skill_2111": {
+        "name": "Lança de Brasa",
+        "description": "Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 8% por 4,5 s."
+      },
+      "mir4_skill_2301": {
+        "name": "Selo de Smite",
+        "description": "Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s."
+      },
+      "mir4_skill_2501": {
+        "name": "Núcleo Evocado",
+        "description": "Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 8 jardas recebem 60% desse dano. Congela o alvo por 1,8 s."
+      },
+      "mir4_skill_2503": {
+        "name": "Escudo Mágico",
+        "description": "Reduz o dano recebido em 22% por 10 s."
+      },
+      "mir4_skill_3101": {
+        "name": "Sequência de Selo",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Aumenta o dano recebido em 10% por 4 s."
+      },
+      "mir4_skill_3104": {
+        "name": "Totem 1010",
+        "description": "Afeta um inimigo. Atordoa o alvo por 1,4 s."
+      },
+      "mir4_skill_3301": {
+        "name": "Selo de Totem II",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 60% desse dano. Reduz a velocidade do alvo em 35% por 4,2 s."
+      },
+      "mir4_skill_3503": {
+        "name": "Cura",
+        "description": "Restaura 18% da vida máxima."
+      },
+      "mir4_skill_3506": {
+        "name": "Selo de Totem I",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 60% desse dano. Enraíza o alvo por 1,6 s."
+      },
+      "mir4_skill_4101": {
+        "name": "Rajada 4101",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Reduz o dano causado pelo alvo em 45% por 3,5 s."
+      },
+      "mir4_skill_4102": {
+        "name": "Sequência 4102",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,625 jardas recebem 65% desse dano. Reduz a velocidade do alvo em 30% por 3,5 s."
+      },
+      "mir4_skill_4103": {
+        "name": "Eco Gêmeo",
+        "description": "Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,5 jardas recebem 55% desse dano. Reduz o dano causado pelo alvo em 60% por 5 s."
+      },
+      "mir4_skill_4106": {
+        "name": "Investida 4106",
+        "description": "Causa {damage} de dano a um inimigo. Atordoa o alvo por 2 s."
+      },
+      "mir4_skill_4107": {
+        "name": "Seta do Clarão",
+        "description": "Afeta um inimigo. Reduz o dano causado pelo alvo em 45% por 3,2 s."
+      },
+      "mir4_skill_5101": {
+        "name": "Estocada 5101",
+        "description": "Causa {damage} de dano a um inimigo. Derruba o alvo por 1 s."
+      },
+      "mir4_skill_5104": {
+        "name": "Varredura 5104",
+        "description": "Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 14% por 4,5 s."
+      },
+      "mir4_skill_5201": {
+        "name": "Golpe 5201",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Atordoa o alvo por 1,1 s."
+      },
+      "mir4_skill_5301": {
+        "name": "Cadeia 5301",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 70% desse dano. Atordoa o alvo por 0,9 s."
+      },
+      "mir4_skill_5401": {
+        "name": "Tempestade Arrebatadora",
+        "description": "Afeta um inimigo. Derruba o alvo por 1 s."
+      },
+      "mir4_ultimate_1": {
+        "name": "Ultimate",
+        "description": "Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio."
+      },
+      "mir4_ultimate_2": {
+        "name": "Ultimate",
+        "description": "Causa {damage} de dano em 4 impactos. Requer o medidor de ultimate cheio."
+      },
+      "mir4_ultimate_3": {
+        "name": "Ultimate",
+        "description": "Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio."
+      },
+      "mir4_ultimate_4": {
+        "name": "Ultimate",
+        "description": "Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio."
+      },
+      "mir4_ultimate_5": {
+        "name": "Ultimate",
+        "description": "Causa {damage} de dano em 2 impactos. Requer o medidor de ultimate cheio."
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "Armadura Pesada",
+        "description": "Aumenta a vida máxima em 8%."
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "Maestria da Arma",
+        "description": "Aumenta o ataque físico em 6%."
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "Pele de Ferro",
+        "description": "Aumenta a defesa física em 8% e a defesa mágica em 6%."
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "Espírito de Luta",
+        "description": "Aumenta a vida máxima em 4% e o ataque físico em 4%."
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "Vontade Indomável",
+        "description": "Aumenta a vida máxima, a defesa física e a defesa mágica em 5%."
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "Poço de Mana",
+        "description": "Aumenta a mana máxima em 10%."
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "Intelecto Arcano",
+        "description": "Aumenta o ataque mágico em 7%."
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "Proteção Elemental",
+        "description": "Aumenta a defesa física e a defesa mágica em 6%."
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "Canalização",
+        "description": "Aumenta a mana máxima em 5% e o ataque mágico em 4%."
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "Ascensão Arcana",
+        "description": "Aumenta a mana máxima em 5%, o ataque mágico em 6%, a defesa física em 3% e a defesa mágica em 3%."
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "Vaso Espiritual",
+        "description": "Aumenta a vida máxima em 4% e a mana máxima em 7%."
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "Caminhos Gêmeos",
+        "description": "Aumenta o ataque físico e o ataque mágico em 4%."
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "Guarda Sagrada",
+        "description": "Aumenta a defesa física e a defesa mágica em 6%."
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "Mente Serena",
+        "description": "Aumenta a vida máxima em 4% e a mana máxima em 5%."
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "Harmonia Celestial",
+        "description": "Aumenta a vida máxima, a mana máxima, o ataque físico, o ataque mágico, a defesa física e a defesa mágica em 4%."
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "Olho de Águia",
+        "description": "Aumenta o ataque físico em 3% e a precisão em 5%."
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "Maestria Balística",
+        "description": "Aumenta o ataque físico em 7%."
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "Guarda da Natureza",
+        "description": "Aumenta a vida máxima, a defesa física e a defesa mágica em 5%."
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "Instinto do Caçador",
+        "description": "Aumenta o ataque físico em 5% e a esquiva em 5%."
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "Tiro Perfeito",
+        "description": "Aumenta a vida máxima em 3%, o ataque físico em 6% e a precisão em 5%."
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "Condicionamento de Guerra",
+        "description": "Aumenta a vida máxima em 5%, o ataque físico em 3% e o ataque mágico em 3%."
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "Maestria da Lança",
+        "description": "Aumenta o ataque físico e o ataque mágico em 5%."
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "Couraça da Vanguarda",
+        "description": "Aumenta a defesa física e a defesa mágica em 6%."
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "Ritmo de Batalha",
+        "description": "Aumenta a mana máxima, o ataque físico e o ataque mágico em 4%."
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "Vanguarda do Dragão",
+        "description": "Aumenta a vida máxima em 4%, o ataque físico em 5%, o ataque mágico em 5%, a defesa física em 5% e a defesa mágica em 5%."
+      },
       "sport_kick": {
         "name": "Chute",
         "description": "Empurre a bola rente ao chão em direção ao ponto de mira."
@@ -16870,6 +17512,11 @@ export const pt_BR: EnTranslations = {
         "name": "Santuário do Gravewyrm",
         "enterText": "O ar fica frio. Algo imenso respira abaixo...",
         "leaveText": "Você cambaleia de volta ao vento da montanha."
+      },
+      "campaign_trial_room": {
+        "name": "Provação da Campanha",
+        "enterText": "Você entra na provação da campanha.",
+        "leaveText": "Você deixa a provação da campanha."
       },
       "nythraxis_crypt": {
         "name": "Cripta abandonada",

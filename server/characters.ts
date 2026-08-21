@@ -45,8 +45,10 @@ import type * as http from 'node:http';
 import { rekeyInstanceSigner } from '../src/sim/character_rename';
 import { resolveActiveWeaponSkin } from '../src/sim/content/weapon_skin_rules';
 import { DEEDS_RECENT_CAP } from '../src/sim/deeds';
+import type { GameProfile } from '../src/sim/game_profile';
+import { isClassForGameProfile } from '../src/sim/game_profile_roster';
 import type { CharacterState } from '../src/sim/sim';
-import type { PlayerClass } from '../src/sim/types';
+import type { PlayableClass } from '../src/sim/types';
 // The shared, host-agnostic bounds check for an untrusted look (the
 // action_bar.ts pattern). The renderer owns what the values MEAN; the server
 // only guarantees the stored document is small and well shaped.
@@ -140,18 +142,6 @@ const REROLL_NOT_AVAILABLE = {
 const CHARACTER_RESOURCE = 'character';
 /** Per-account character cap (mirrors the legacy createCharacterCapped default). */
 const CHARACTER_LIMIT = 10;
-/** The nine playable classes accepted by create (mirrors the legacy inline list). */
-const VALID_CLASSES: readonly string[] = [
-  'warrior',
-  'paladin',
-  'hunter',
-  'rogue',
-  'priest',
-  'shaman',
-  'mage',
-  'warlock',
-  'druid',
-];
 /** Highest selectable skin index (mirrors the legacy Math.min(7, ...) clamp). */
 const MAX_SKIN = 7;
 /** The free-redesign window: every character created before this instant carries
@@ -180,6 +170,7 @@ const BEARER_PATTERN = /^Bearer ([a-f0-9]{64})$/;
 // ---------------------------------------------------------------------------
 
 export interface CharactersRuntime {
+  gameProfile: GameProfile;
   /** Is this character currently in a live world session? (game.clients scan.) */
   isCharacterOnline(characterId: number): boolean;
   /** game.takeOverCharacter: free a stale session so the owner can re-enter. */
@@ -207,7 +198,7 @@ export interface CharactersRuntime {
   /** game.purgeMailOwner: clear a deleted character's Ravenpost mailbox. */
   purgeMailOwner(characterId: number, name: string): boolean;
   /** main.ts initialCharacterState: the serialized fresh-character state for create. */
-  initialCharacterState(cls: PlayerClass, name: string, skin: number): CharacterState;
+  initialCharacterState(cls: PlayableClass, name: string, skin: number): CharacterState;
   /** main.ts publicOrigin: canonical share origin for the owner-sheet URLs. */
   publicOrigin(req: http.IncomingMessage): string;
 }
@@ -645,11 +636,11 @@ async function createCharacterHandler(ctx: Ctx): Promise<void> {
     json(ctx.res, 400, CHAR_NAME_NOT_ALLOWED);
     return;
   }
-  if (typeof body.class !== 'string' || !VALID_CLASSES.includes(body.class)) {
+  if (!isClassForGameProfile(body.class, rt.gameProfile)) {
     json(ctx.res, 400, INVALID_CLASS);
     return;
   }
-  const cls = body.class as PlayerClass;
+  const cls = body.class;
   const skin = Math.max(
     0,
     Math.min(MAX_SKIN, Math.floor(typeof body.skin === 'number' ? body.skin : 0)),

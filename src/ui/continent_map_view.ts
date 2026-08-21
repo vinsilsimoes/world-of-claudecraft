@@ -18,6 +18,7 @@
 // drive it directly with both a Sim-shaped and a ClientWorld-mirror-shaped stub.
 
 import {
+  getActiveWorldContent,
   STRIP_MAX_X,
   STRIP_MIN_X,
   WORLD_MAX_X,
@@ -82,6 +83,8 @@ export interface ContinentMapModel {
   party: ContinentPartyMarker[];
   /** The zone id the player currently stands in (the on-canvas subtitle). */
   currentZoneId: string;
+  /** Classic uses the shipped continent plate; MIR4 uses a generated atlas grid. */
+  usesArt: boolean;
 }
 
 export interface ContinentMapInput {
@@ -118,6 +121,56 @@ function zoneXBounds(zone: ZoneDef): [number, number] {
  */
 export function buildContinentMapModel(input: ContinentMapInput): ContinentMapModel {
   const { world, canvasSize: S, contentAspect, hoveredZoneId } = input;
+  if (world.cfg.gameProfile === 'mir4-gameplay-port') {
+    const zones = getActiveWorldContent().zones;
+    const columns = 4;
+    const rows = Math.max(1, Math.ceil(zones.length / columns));
+    const top = 30;
+    const gap = 4;
+    const cellW = (S - gap * (columns + 1)) / columns;
+    const cellH = (S - top - gap * (rows + 1)) / rows;
+    const currentZoneId = zoneAt(world.player.pos.x, world.player.pos.z).id;
+    const regions = zones.map((zone, index): ContinentZoneRegion => {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      const rect = {
+        mx: gap + column * (cellW + gap),
+        my: top + gap + row * (cellH + gap),
+        w: cellW,
+        h: cellH,
+      };
+      return {
+        zoneId: zone.id,
+        rect,
+        labelX: rect.mx + rect.w / 2,
+        labelY: rect.my + rect.h / 2,
+        isCurrent: zone.id === currentZoneId,
+        isHovered: zone.id === hoveredZoneId,
+        levelMin: zone.levelRange[0],
+        levelMax: zone.levelRange[1],
+      };
+    });
+    const centerOf = (zoneId: string) => {
+      const region = regions.find((candidate) => candidate.zoneId === zoneId);
+      return region
+        ? { mx: region.labelX, my: region.labelY + Math.min(14, region.rect.h / 4) }
+        : null;
+    };
+    const party: ContinentPartyMarker[] = [];
+    for (const member of world.partyInfo?.members ?? []) {
+      if (member.pid === world.player.id) continue;
+      const marker = centerOf(zoneAt(member.x, member.z).id);
+      if (marker) party.push({ ...marker, cls: member.cls, dead: member.dead !== 0 });
+    }
+    return {
+      image: { mx: 0, my: top, w: S, h: S - top },
+      regions,
+      player: centerOf(currentZoneId),
+      party,
+      currentZoneId,
+      usesArt: false,
+    };
+  }
   const worldSpanX = WORLD_MAX_X - WORLD_MIN_X;
   const worldSpanZ = WORLD_MAX_Z - WORLD_MIN_Z;
   // Contain-fit the art plate's aspect into the square canvas (ocean letterbox on
@@ -189,6 +242,7 @@ export function buildContinentMapModel(input: ContinentMapInput): ContinentMapMo
     player,
     party,
     currentZoneId,
+    usesArt: true,
   };
 }
 
@@ -206,4 +260,59 @@ export function continentZoneAt(
     }
   }
   return null;
+}
+
+/** Keys accepted by the focusable continent canvas. Kept here, beside the
+ * region geometry, so keyboard navigation follows the painted layout instead
+ * of duplicating MIR4's current 4x5 ordering in the DOM host. */
+export type ContinentNavigationKey =
+  | 'ArrowLeft'
+  | 'ArrowRight'
+  | 'ArrowUp'
+  | 'ArrowDown'
+  | 'Home'
+  | 'End';
+
+/** Resolve the next focused zone from the region centres. This works for both
+ * MIR4's generated atlas and the classic irregular continent layout: arrows
+ * choose the nearest region in the requested half-plane, while Home/End use
+ * visual reading order. At an outer edge the current region remains selected. */
+export function continentZoneForKeyboard(
+  regions: readonly ContinentZoneRegion[],
+  currentZoneId: string | null,
+  key: ContinentNavigationKey,
+): string | null {
+  if (regions.length === 0) return null;
+
+  const readingOrder = [...regions].sort(
+    (a, b) => a.labelY - b.labelY || a.labelX - b.labelX || a.zoneId.localeCompare(b.zoneId),
+  );
+  if (key === 'Home') return readingOrder[0]?.zoneId ?? null;
+  if (key === 'End') return readingOrder.at(-1)?.zoneId ?? null;
+
+  const origin =
+    regions.find((region) => region.zoneId === currentZoneId) ??
+    regions.find((region) => region.isCurrent) ??
+    readingOrder[0];
+  if (!origin) return null;
+
+  const horizontal = key === 'ArrowLeft' || key === 'ArrowRight';
+  const sign = key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1;
+  let winner: ContinentZoneRegion | null = null;
+  let winnerScore = Number.POSITIVE_INFINITY;
+  for (const candidate of regions) {
+    if (candidate === origin) continue;
+    const dx = candidate.labelX - origin.labelX;
+    const dy = candidate.labelY - origin.labelY;
+    const primary = horizontal ? dx : dy;
+    if (primary * sign <= 0) continue;
+    const cross = horizontal ? dy : dx;
+    // Prefer staying in the same row/column, then the closest forward cell.
+    const score = Math.abs(primary) + Math.abs(cross) * 4;
+    if (score < winnerScore) {
+      winner = candidate;
+      winnerScore = score;
+    }
+  }
+  return winner?.zoneId ?? origin.zoneId;
 }

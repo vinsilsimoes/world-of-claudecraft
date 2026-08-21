@@ -231,7 +231,7 @@ describe('v0.36 release-audit Reliquary deed art', () => {
       expect(path.isAbsolute(reference.repositoryPath), reference.id).toBe(false);
       expect(path.isAbsolute(reference.generationTimePath), reference.id).toBe(true);
       expect(reference.generationTimePath).toBe(
-        path.join(generation.worktree, reference.repositoryPath),
+        path.posix.join(generation.worktree, reference.repositoryPath),
       );
       const file = path.join(repoRoot, reference.repositoryPath);
       const bytes = readFileSync(file);

@@ -42,6 +42,11 @@ describe('dungeon entry clearance: zoning in never aggros a pack', () => {
 });
 
 describe('dungeon door clearance: no camp mob spawns on an overworld door', () => {
+  it('does not reserve overworld space for engine-only instance rooms', () => {
+    expect(DUNGEONS.campaign_trial_room.overworldDoor).toBe(false);
+    expect(DUNGEON_DOORS).not.toContainEqual(DUNGEONS.campaign_trial_room.doorPos);
+  });
+
   it('projects a point inside a door ring out to the ring edge', () => {
     const door = DUNGEON_DOORS[0];
     const inside = projectOutsideDungeonDoors(door.x + 3, door.z);

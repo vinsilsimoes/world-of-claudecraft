@@ -4,6 +4,7 @@
 // both the renderer and the NameplatePainter can share objectDisplayName without
 // a renderer <-> painter import cycle.
 
+import { NPCS } from '../sim/data';
 import type { Entity } from '../sim/types';
 import { dungeonDisplayName, tEntity } from '../ui/entity_i18n';
 import { t } from '../ui/i18n';
@@ -12,8 +13,10 @@ export function mobDisplayName(mobId: string): string {
   return tEntity({ kind: 'mob', id: mobId, field: 'name' });
 }
 
-export function npcDisplayName(npcId: string): string {
-  return tEntity({ kind: 'npc', id: npcId, field: 'name' });
+export function npcDisplayName(entity: Entity): string {
+  return NPCS[entity.templateId]
+    ? tEntity({ kind: 'npc', id: entity.templateId, field: 'name' })
+    : entity.name;
 }
 
 export function objectDisplayName(entity: Entity): string {

@@ -19,9 +19,11 @@ import {
   QUESTS,
   ZONES,
 } from '../sim/data';
+import { MIR4_ACTION_ABILITY_DEFS, mir4ActionAbilityDef } from '../sim/mir4/action_abilities';
 import type { ItemDef, PlayerClass } from '../sim/types';
 import {
   en,
+  formatNumber,
   getLanguage,
   hasTranslation,
   type InterpolationValues,
@@ -32,6 +34,7 @@ import {
   tOptional,
 } from './i18n';
 import { ownEntry } from './known_item';
+import { mir4ZoneAct, mir4ZoneNameKey } from './mir4_map_names';
 
 export type EntityTranslationGroup = 'classAbility' | 'item' | 'itemSet' | 'world';
 export type EntityTranslationKind =
@@ -275,7 +278,7 @@ function canonicalEntityText(request: EntityTranslationRequest): string {
         ? (CLASSES[request.id]?.name ?? request.id)
         : classDescriptionSource(request.id);
     case 'ability': {
-      const ability = ABILITIES[request.id];
+      const ability = ABILITIES[request.id] ?? mir4ActionAbilityDef(request.id) ?? undefined;
       if (!ability) return request.id;
       return request.field === 'name' ? ability.name : ability.description;
     }
@@ -502,11 +505,31 @@ export function classDisplayName(cls: PlayerClass): string {
 }
 
 export function zoneDisplayName(zoneId: string): string {
+  const mir4Key = mir4ZoneNameKey(zoneId);
+  if (mir4Key) return t(mir4Key);
   return tEntity({ kind: 'zone', id: zoneId, field: 'name' });
 }
 
 export function zonePoiLabel(zoneId: string, poiIndex: number): string {
+  const mir4Key = mir4ZoneNameKey(zoneId);
+  if (mir4Key) {
+    const zone = t(mir4Key);
+    if (poiIndex === 0) return zone;
+    if (poiIndex === 1) return t('hudChrome.mir4.maps.portal', { zone });
+  }
   return tEntity({ kind: 'zonePoi', zoneId, poiIndex, field: 'label' });
+}
+
+export function zoneWelcomeText(zoneId: string): string {
+  const mir4Key = mir4ZoneNameKey(zoneId);
+  const act = mir4ZoneAct(zoneId);
+  if (mir4Key && act !== null) {
+    return t('hudChrome.mir4.maps.actWelcome', {
+      zone: t(mir4Key),
+      act: formatNumber(act, { maximumFractionDigits: 0 }),
+    });
+  }
+  return tEntity({ kind: 'zone', id: zoneId, field: 'welcome' });
 }
 
 export function dungeonDisplayName(dungeonId: string): string {
@@ -548,7 +571,9 @@ export function entityTranslationManifest(): EntityTranslationManifestEntry[] {
       ),
     );
   }
-  for (const ability of Object.values(ABILITIES).sort(compareById)) {
+  for (const ability of [...Object.values(ABILITIES), ...MIR4_ACTION_ABILITY_DEFS].sort(
+    compareById,
+  )) {
     entries.push(
       entry(
         'ability',

@@ -3,6 +3,7 @@
 import type { ChatSenderFlair, StreamerLinks } from './account_flair';
 import type { MountKey } from './content/mounts';
 import type { GatheringProfessionId, ToolEffectId } from './content/professions';
+import type { GameProfile } from './game_profile';
 import type { LockSession, LootTier, PickAction, StepResult, VisibleCell } from './lockpick';
 import type { HarvestYield } from './professions/harvest_yields';
 import type { RespawnWindow } from './respawn_policy';
@@ -202,6 +203,15 @@ export type PlayerClass =
   | 'mage'
   | 'warlock'
   | 'druid';
+
+// The mir4-gameplay-port class keys (the profile's five-class roster). These
+// ride `SimConfig.playerClass`/`addPlayer` ALONGSIDE the classic union: a
+// mir4-only key means the classic derivations (talents, recalc, render rig)
+// use the warrior SHELL while the mir4 identity lives on Entity.mir4.classId
+// (src/sim/mir4/stats.ts owns the mapping). The classic union and tables stay
+// untouched, so no classic content obligations fire.
+export type Mir4ClassKey = 'warrior' | 'elementalist' | 'taoist' | 'arbalist' | 'lancer';
+export type PlayableClass = PlayerClass | Mir4ClassKey;
 
 // Sanguine Aura's class-level melee recipient filter. It excludes the pure
 // casters and Hunter, whose primary attack loop is ranged.
@@ -1452,6 +1462,71 @@ export type MobFamily =
 export type PetMode = 'passive' | 'defensive' | 'aggressive';
 export type PetRole = 'melee_tank' | 'ranged_dps';
 
+// mir4-gameplay-port profile: the per-entity combat-stat bag the ported bps
+// formulas consume (accuracy/dodge/critical/... have no classic Entity field).
+// Written by src/sim/mir4/stats.ts; see the Entity.mir4 field comment.
+export interface Mir4PlayerCombatState {
+  classId: number;
+  manaCostStat: number;
+  accuracy: number;
+  dodge: number;
+  critical: number;
+  avoidCritical: number;
+  criticalOutcome: number;
+  /** STATUS 41 AddAtkBossDamage on the source's 10,000-point percentage scale. */
+  bossDamageBps: number;
+  /** STATUS 44 AddSkillDamage on the source's 10,000-point percentage scale. */
+  skillDamageBps: number;
+  physicalDefense: number;
+  magicDefense: number;
+  penetrationBps: number;
+  /** Source-profile equipped Mount speed, mirrored for deterministic prediction. */
+  mountMoveSpeedBps: number;
+}
+
+// mir4-gameplay-port target-effect state (CC/debuffs on any entity, usually a
+// mob): the ported crowd-control bag. Hard control also mirrors into a classic
+// 'stun'/'slow' aura so the shared mob AI and render react unchanged; the bag
+// owns the mir4 semantics (effectId dedup, magnitudes, the 750ms post-expiry
+// control immunity). Runtime-only; decayed per tick by src/sim/mir4/effects.ts.
+export type Mir4EffectKind =
+  | 'stun'
+  | 'knockdown'
+  | 'dazed'
+  | 'root'
+  | 'freeze'
+  | 'slow'
+  | 'blind'
+  | 'defense-break'
+  | 'burn';
+
+export interface Mir4ActiveEffect {
+  effectId: string;
+  kind: Mir4EffectKind;
+  remaining: number;
+  duration: number;
+  magnitude: number;
+  sourceId: number;
+}
+
+export interface Mir4TargetEffects {
+  active: Mir4ActiveEffect[];
+  controlImmuneUntil: number;
+}
+
+// A scheduled mir4 impact (basic/ultimate): the damage resolves AT the
+// authored offset (rolls drawn then, matching the source's dueAt clock).
+export interface Mir4PendingImpact {
+  dueAt: number;
+  sourceId: number;
+  targetId: number;
+  rawDamage: number;
+  channel: 'physical' | 'magic';
+  name: string | null;
+  gaugeGain: number;
+  spiritProcEligible?: boolean;
+}
+
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
 // same dot-aura shape the on-hit venom/cinder affix family applies, shared by
 // arcCleave / breathCone / broodWhelp so every burn rides the one seam.
@@ -1508,6 +1583,14 @@ export interface MobTemplate {
   // Kill-XP multiplier (default 1). 0 marks a puzzle-object mob (e.g. the 1 HP
   // spider egg-sac) that must not pay full kill XP for a single hit.
   xpMult?: number;
+  // mir4-gameplay-port profile: flat kill XP replacing the classic level
+  // formula (source evidence: the native L1 field-mob catalog value). Inert
+  // under woc-classic.
+  mir4XpReward?: number;
+  // mir4-gameplay-port boss contextual defense. Regional bosses use 250 bps
+  // and source-definition/dungeon bosses use 500 bps in the original runtime.
+  // The shared classic combat pipeline ignores this field.
+  mir4BossDamageReductionBps?: number;
   // Quest-gated destructible: when set, the mob is only damageable by a player who
   // has this quest active (state 'active' or 'ready'). Used for quest-exclusive
   // objects like Broodmother eggs so non-questers cannot grief the clutch.
@@ -3441,6 +3524,9 @@ export interface DungeonDef {
   id: string;
   name: string;
   index: number; // x-band for instance origins; must be unique
+  /** Engine-only room omitted from player-facing dungeon catalogues. It still
+   *  participates in renderer/collision lookup and owns normal instance slots. */
+  internalOnly?: boolean;
   doorPos: { x: number; z: number }; // overworld entrance portal
   /** where leaving drops the player, relative to doorPos (default 0,-4);
    *  doors flush against a building face need a FORWARD drop instead */
@@ -4134,6 +4220,12 @@ export interface Entity extends ClientMirroredEntityFields {
   kind: EntityKind;
   templateId: string; // mob/npc template id, or class for player
   name: string;
+  // Immutable mob presentation metadata stamped from the spawn template. Dynamic
+  // campaign templates do not live in the classic MOBS table, so these fields are
+  // the authoritative family/rank source for both offline render and online wire.
+  mobFamily?: MobFamily;
+  mobElite?: boolean;
+  mobBoss?: boolean;
   level: number;
   guild: string;
   // Book of Deeds display title: a deed id (never display text), null/absent
@@ -4180,6 +4272,25 @@ export interface Entity extends ClientMirroredEntityFields {
   resource: number;
   maxResource: number;
   resourceType: ResourceType | null;
+  // mir4-gameplay-port per-entity combat state: the level-table columns the
+  // bps formulas read that have no classic Entity counterpart. Derived ONLY by
+  // src/sim/mir4/stats.ts recalcMir4PlayerStats (recomputed from level on
+  // load, never persisted); classic entities never carry it.
+  mir4?: Mir4PlayerCombatState;
+  // Render-only MIR4 presentation mirror. The class id selects an existing
+  // WoC player rig; the four-bit mask tells the modular compositor which
+  // native armour sockets are visibly occupied. These fields carry no stats
+  // and are safe to expose to peers through the identity wire.
+  mir4VisualClassId?: number;
+  mir4VisualArmorMask?: number;
+  // mir4 target-effect bag (CC/debuffs); see the Mir4TargetEffects comment.
+  mir4Effects?: Mir4TargetEffects;
+  // mir4 ultimate gauge (0..100) and the pending authored-offset impacts.
+  mir4UltGauge?: number;
+  mir4PendingImpacts?: Mir4PendingImpact[];
+  // mir4 magic-shield self utility (2503): the 0.22 magnitude cuts incoming
+  // damage; runtime-only, decayed with the effects phase.
+  mir4Shield?: { remaining: number; magnitude: number };
   overheadEmoteId: OverheadEmoteId | null;
   overheadEmoteUntil: number;
   overheadEmoteSeq: number;
@@ -5333,7 +5444,7 @@ export type SimEvent = { pid?: number } & (
   | { type: 'bank' }
   // Interacting with a town noticeboard. Structured and personal: the client
   // owns localized feedback, and online routing sends it only to the reader.
-  | { type: 'noticeboard'; noticeboardId: string; state: 'empty' }
+  | { type: 'noticeboard'; noticeboardId: string; state: 'empty'; contractQuestId?: string }
   | {
       // A world object (a torched murloc hut, q_deepfen_purge) bursts into flames.
       // The renderer plays a fire burst at (x, z). Visual-only.
@@ -6815,11 +6926,24 @@ export interface WorldContent {
   // Water surface height for this map; absent = the built-in WATER_LEVEL (-4.5).
   // Read through waterLevel() in src/sim/world.ts, never directly.
   waterLevel?: number;
+  // Terrain topology selector. Omitted content keeps the identity-based default:
+  // the shipping ZONES array uses the authored WoC terrain and injected worlds
+  // use the generic WorldContent heightfield. Tests/tools that clone the built-in
+  // world may pin `builtin` so their added lake/edit still exercises WoC borders.
+  terrainModel?: 'builtin' | 'content';
 }
 
 export interface SimConfig {
   seed: number;
   playerClass: PlayerClass;
+  // D1 (port plan): under the mir4 profile the TRUE roster key when it differs
+  // from the shell (playerClass carries the warrior shell for every classic
+  // derivation; Entity.mir4.classId carries the identity).
+  playerClassMir4?: Mir4ClassKey;
+  // Runtime/content identity. Defaults to woc-classic at the Sim boundary so
+  // existing tests and tools remain compatible until they opt into the MIR4
+  // port. Hosts resolve external configuration through requireGameProfile.
+  gameProfile?: GameProfile;
   // Global base mob respawn delay (seconds). LEAVE IT UNSET for a normal world:
   // open-world trash then respawns on the per-zone level-band tier
   // (src/sim/respawn_policy.ts), and only mobs outside every zone rect (instanced

@@ -49,7 +49,7 @@ import { overworldDungeonPortals } from './map_dungeon_portals';
 import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
   isNearbyLiveRiftZoneMapEntity,
-  STABLE_MAP_NAVIGATION_LANDMARKS,
+  stableMapNavigationLandmarks,
 } from './map_navigation_landmarks_core';
 import { questNumbersByLog } from './map_quest_list_view';
 
@@ -985,7 +985,7 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
     landmarks.push(placed);
     return placed;
   };
-  for (const site of STABLE_MAP_NAVIGATION_LANDMARKS) {
+  for (const site of stableMapNavigationLandmarks(world.cfg.gameProfile)) {
     if (site.zoneId !== zone.id) continue;
     const placed = placeNavigation(site.x, site.z);
     if (!placed) continue;

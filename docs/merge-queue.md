@@ -158,6 +158,15 @@ Required on both `main` and `release/**`, all sourced from GitHub Actions:
   because a non-matrix job's skipped check run keeps its exact required name,
   which satisfies protection.
 - `PR checks`.
+- `MIR4 PostgreSQL 16 proof`: boots a disposable PostgreSQL 16 service and
+  executes the real v1-to-v2 namespace migration, lease-lock race matrix, and
+  a 1,000-session autosave cycle, including the lease heartbeat, at the production
+  concurrency of four. It then boots the built MIR4 server/client and executes
+  the profile-aware WebSocket and two-browser multiplayer scenarios against the
+  same disposable database. The job
+  sets a fail-closed environment guard, so a missing database cannot turn the
+  integration files into green skips. It runs (or docs-only-skips) under the
+  same exact name on every PR and merge-queue result.
 - `Lint (changed files)`: deterministic, diff-scoped, minutes
   long, and a red here is always a real defect in the changed files. On queue
   runs it diffs against the merge group's base SHA, falling back to the live

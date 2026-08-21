@@ -16,6 +16,7 @@ vi.mock('pg', () => ({
 }));
 
 vi.mock('../server/realm', () => ({
+  GAME_PROFILE: 'woc-classic',
   REALM: 'test-realm',
   REALM_DIRECTORY: [{ name: 'test-realm', url: '', type: 'Normal' }],
 }));

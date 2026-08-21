@@ -55,7 +55,7 @@ export function expectScansOnlyThroughSharedWalkers(
   }
   for (const walker of walkerModules) {
     expect(
-      new RegExp(`from\\s+'\\.\\/helpers\\/${walker}'`).test(code),
+      new RegExp(`from\\s+'(?:\\.\\/|\\.\\.\\/)helpers\\/${walker}'`).test(code),
       `${name} no longer imports helpers/${walker}`,
     ).toBe(true);
   }

@@ -11,7 +11,7 @@ import { AbilityVfx } from '../src/render/ability_vfx/painter';
 import { ABILITY_VFX_FULL_SPECS } from '../src/render/ability_vfx_full_specs';
 import { holdsBuffVfxWhileWorn } from '../src/render/ability_vfx_longbuff_core';
 
-function makePainter(now: () => number = () => 12.5) {
+function makePainter(now: () => number = () => 12.5, localPlayerId?: number) {
   const fx = {
     setDelegates: vi.fn(),
     warmSpiritsForClass: vi.fn(),
@@ -39,6 +39,7 @@ function makePainter(now: () => number = () => 12.5) {
     anchor: () => ({ x: 0, y: 0, z: 0 }),
     spawnAoeRing: vi.fn(),
     triggerAttack: vi.fn(),
+    localPlayerId: localPlayerId === undefined ? undefined : () => localPlayerId,
   } as unknown as AbilityVfxDeps;
   const painter = new AbilityVfx(deps, now);
   return { painter, fx, vfx };
@@ -187,6 +188,17 @@ describe('everything else keeps its held read', () => {
     painter.syncEntity(ent(['ice_barrier']));
 
     expect(fx.holdShell).toHaveBeenCalledTimes(1);
+  });
+
+  it('holds the native barrier shell for the full MIR4 magic-shield state', () => {
+    const { painter, fx } = makePainter(() => 12.5, 7);
+
+    painter.syncEntity({
+      ...ent([]),
+      mir4Shield: { remaining: 6, magnitude: 0.22 },
+    } as AbilityVfxEntityState);
+
+    expect(fx.holdShell).toHaveBeenCalledWith(7, expect.any(Number), true);
   });
 
   it('a morph form keeps its sustained identity rim and never gets a disc', () => {

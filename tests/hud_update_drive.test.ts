@@ -344,6 +344,14 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
   {
     call: 'this.renderCrafting',
     band: 'slow',
+    gate: "this.sim.cfg.gameProfile === MIR4_GAME_PROFILE && $('#crafting-window').style.display === 'flex'",
+    surface: 'window',
+    guard: { kind: 'callsite' },
+    why: 'keeps the reused Crafting window synchronized with MIR4 material and refinement state while that profile-specific provider is open',
+  },
+  {
+    call: 'this.renderCrafting',
+    band: 'slow',
     gate: "$('#crafting-window').style.display === 'flex' && stationTypesSignature(inRangeStationTypes(sim.stationPlacements, sim.player.pos, sim.activeMobileStationCraft)) !== this.lastCraftingStationSig",
     surface: 'window',
     guard: { kind: 'callsite' },
@@ -1644,7 +1652,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // release's own window/chrome churn), so it cannot be reconciled by
       // arithmetic across a merge. The numbers below were set from a suite run
       // on the merged tree, not from either side's narrative.
-    ).toEqual({ window: 47, chrome: 82, none: 17 });
+    ).toEqual({ window: 48, chrome: 82, none: 17 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
@@ -1665,7 +1673,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // (lastCharSheetSig), like its profession sibling, because the cold
       // char_window painter holds no signature of its own to diff.
       hud: 7,
-      callsite: 12,
+      callsite: 13,
       none: 4,
     });
     // ...and the honest-exception list by NAME, because that is the one that should never

@@ -63,4 +63,9 @@ describe('MediaWiki ability visibility', () => {
     expect(xml).toContain('<title>Debt of Light (Ability)</title>');
     expect(xml).not.toContain('Faithforged Guard (Ability)');
   });
+
+  it('does not publish engine-only campaign rooms', () => {
+    expect(xml).not.toContain('<title>Campaign Trial</title>');
+    expect(xml).not.toContain('campaign_trial_room');
+  });
 });

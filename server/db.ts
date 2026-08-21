@@ -5,10 +5,12 @@ import {
   EMPTY_ACCOUNT_FLAIR,
   normalizeAccountFlair,
 } from '../src/sim/account_flair';
+import { DEFAULT_GAME_PROFILE, gameProfileSaveNamespace } from '../src/sim/game_profile';
+import { assertClassForGameProfile } from '../src/sim/game_profile_roster';
 import { LEADERBOARD_MAX } from '../src/sim/leaderboard_page';
 import { sanitizeRemovedZone1Content } from '../src/sim/removed_zone1_content';
 import type { CharacterState, MailSave, MarketSave } from '../src/sim/sim';
-import type { ArenaFormat, PlayerClass } from '../src/sim/types';
+import type { ArenaFormat, PlayableClass, PlayerClass } from '../src/sim/types';
 import type { ActionBarLayout } from '../src/world_api/action_bar';
 import { AD_SPEND_SCHEMA } from './ad_spend_db';
 import { bustAdminGuildListReads } from './admin_guilds_read';
@@ -21,6 +23,10 @@ import {
   configureLifetimeXpRankCache,
   readLifetimeXpRankForCharacter,
 } from './character_rank_cache';
+import {
+  characterUpdateStatement,
+  renewCharacterLeaseBeforeCommit,
+} from './character_save_fence_db';
 import { seedChatFilterDefaults } from './chat_filter_db';
 import type { ChatLogRow } from './chat_log';
 import {
@@ -36,6 +42,11 @@ import type { RankedDeedsAccount } from './deeds_board';
 import { DISCORD_SCHEMA } from './discord_db';
 import { enqueueLinkChange } from './discord_link_changes';
 import { bustDiscordStatus } from './discord_status_cache';
+import {
+  assertCharacterStateGameProfile,
+  ensureGameProfilePersistence,
+  SCHEMA_ADVISORY_LOCK_KEY,
+} from './game_profile_db';
 import {
   GENERAL_CHAT_QUOTA_DB_POOL_MAX_CLIENTS,
   GENERAL_CHAT_QUOTA_LISTENER_CONNECTIONS,
@@ -69,12 +80,14 @@ import {
 } from './player_metrics_db';
 import { PROGRESS_EVENTS_SCHEMA } from './progress_events_db';
 import { RATELIMIT_PRUNE_SQL, RATELIMIT_SCHEMA } from './ratelimit_db';
-import { REALM, REALM_DIRECTORY } from './realm';
+import { GAME_PROFILE, REALM, REALM_DIRECTORY } from './realm';
 import { chooseArchiveName } from './reclaim_name';
 import { SEEKER_ENTITLEMENT_SCHEMA } from './seeker_entitlement_db';
 import { SOCIAL_SCHEMA } from './social_db';
 import { UNSTUCK_SCHEMA } from './unstuck_db';
 import { USER_ASSETS_SCHEMA } from './user_assets_db';
+
+const PERSISTENCE_GAME_PROFILE = GAME_PROFILE ?? DEFAULT_GAME_PROFILE;
 
 // The realm-market key helpers and the backfill marker key live in
 // server/market_backfill.ts (a *_db-style module with no db.ts dependency, so
@@ -1221,8 +1234,6 @@ SELECT assoc.account_id, ib.reason
     ON ib.ip_address = assoc.ip_address;
 `;
 
-const SCHEMA_ADVISORY_LOCK_KEY = 0x57_4f_43_01; // "WOC\x01"
-
 export async function ensureSchema(): Promise<void> {
   // In the process-per-realm model several server processes boot against the
   // same database at once. Their idempotent CREATE/ALTER statements would
@@ -1253,6 +1264,7 @@ export async function ensureSchema(): Promise<void> {
     // have set server-side (SET LOCAL reverts at COMMIT).
     await client.query('SET LOCAL statement_timeout = 0');
     await client.query('SELECT pg_advisory_xact_lock($1)', [SCHEMA_ADVISORY_LOCK_KEY]);
+    await ensureGameProfilePersistence(client, PERSISTENCE_GAME_PROFILE);
     await client.query(SCHEMA);
     // Local-recovery reports reference accounts/characters, so their additive
     // schema runs after the core tables under the same boot advisory lock.
@@ -1708,6 +1720,11 @@ export async function createAccount(
     if (!account) throw new Error('account insert returned no row');
 
     for (const character of buildCommunityTestCharacters(account.id)) {
+      assertCharacterStateGameProfile(
+        character.state,
+        PERSISTENCE_GAME_PROFILE,
+        'community test character state',
+      );
       let inserted = false;
       for (let attempt = 0; attempt < GENERATED_NAME_ATTEMPTS; attempt++) {
         const name = generatedTestCharacterName(account.id, character.cls, attempt);
@@ -2445,6 +2462,8 @@ export async function exportAccountData(
   );
   return {
     exportedAt: new Date().toISOString(),
+    gameProfile: PERSISTENCE_GAME_PROFILE,
+    saveNamespace: gameProfileSaveNamespace(PERSISTENCE_GAME_PROFILE),
     account: {
       id: acct.id,
       username: acct.username,
@@ -2924,7 +2943,7 @@ export interface CharacterRow {
   id: number;
   account_id: number;
   name: string;
-  class: PlayerClass;
+  class: PlayableClass;
   level: number;
   state: CharacterState | null;
   is_gm: boolean;
@@ -3179,13 +3198,15 @@ export async function guildNameForCharacter(characterId: number): Promise<string
 export async function createCharacterCapped(
   accountId: number,
   name: string,
-  cls: PlayerClass,
+  cls: PlayableClass,
   limit = 10,
   state: CharacterState | null = null,
   // The authored modular look, already normalized by the route handler.
   // Null = created without the creator (legacy rig).
   appearance: Record<string, unknown> | null = null,
 ): Promise<CharacterRow | null> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character creation state');
+  assertClassForGameProfile(cls, PERSISTENCE_GAME_PROFILE, 'character creation class');
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -3312,11 +3333,46 @@ export async function reclaimDeactivatedName(name: string): Promise<{
 }
 
 export async function deleteCharacter(accountId: number, characterId: number): Promise<boolean> {
-  const res = await pool.query(
-    'DELETE FROM characters WHERE id = $1 AND account_id = $2 AND realm = $3',
-    [characterId, accountId, REALM],
-  );
-  const deleted = (res.rowCount ?? 0) > 0;
+  // The save fence and this delete share one global row-lock order:
+  // `characters` first, then `character_leases`. Locking the owned character
+  // row also closes the missing-lease gap: a concurrent lease INSERT must take
+  // a FK key-share lock on this row, so it either finishes before our lock (and
+  // is observed below) or waits until the character has been deleted and then
+  // fails its FK check. No realm-wide lease-table lock is needed, so deleting
+  // one account cannot pause every session heartbeat while cascades run.
+  const deleted = await runWithStatementTimeout(DB_STATEMENT_TIMEOUT_MS, async (query) => {
+    const character = await query(
+      `SELECT id
+         FROM characters
+        WHERE id = $1 AND account_id = $2 AND realm = $3
+        FOR UPDATE`,
+      [characterId, accountId, REALM],
+    );
+    if (character.rows.length === 0) return false;
+    if (character.rows.length !== 1 || character.rows[0]?.id !== characterId) {
+      throw new Error('deleteCharacter: malformed locked-character result');
+    }
+    const lease = await query(
+      `SELECT expires_at >= clock_timestamp() AS active
+         FROM character_leases
+        WHERE character_id = $1
+        FOR UPDATE`,
+      [characterId],
+    );
+    if (lease.rows.length > 1) {
+      throw new Error('deleteCharacter: malformed active-lease result');
+    }
+    const active = lease.rows[0]?.active;
+    if (lease.rows.length === 1 && typeof active !== 'boolean') {
+      throw new Error('deleteCharacter: malformed active-lease result');
+    }
+    if (active === true) return false;
+    const res = await query(
+      'DELETE FROM characters WHERE id = $1 AND account_id = $2 AND realm = $3',
+      [characterId, accountId, REALM],
+    );
+    return (res.rowCount ?? 0) > 0;
+  });
   // Only a delete that matched a row is a transition: deleting the top character
   // promotes the next-ordered one (or none). A miss (wrong owner, wrong realm,
   // already gone) changes nothing and must not enqueue.
@@ -3340,7 +3396,7 @@ export async function characterCountsByRealm(accountId: number): Promise<Record<
 
 export interface CharacterSearchRow {
   name: string;
-  cls: PlayerClass;
+  cls: PlayableClass;
   level: number;
 }
 
@@ -3397,45 +3453,25 @@ export async function renameCharacter(
 // pair would race the takeover that steals the lease between the two. The no-nonce path
 // (tests, resumes, meta-less sessions) writes unconditionally and returns true, exactly
 // as before.
-// The ONE fenced character UPDATE the whole save family issues
-// (saveCharacterState, saveCharacterAndMarketState, and the guild bank escrow
-// sibling). Extracted so the lease fence stays byte-identical across the
-// family: the fence rides the write statement itself (never a separate
-// pre-check that would race a takeover), and a nonce that matches no lease row
-// touches nothing, which every caller must treat as "persist NOTHING".
-function characterUpdateStatement(
-  characterId: number,
-  level: number,
-  stateJson: string,
-  leaseNonce: string | undefined,
-): { text: string; values: unknown[] } {
-  return leaseNonce === undefined
-    ? {
-        text: 'UPDATE characters SET level = $2, state = $3, updated_at = now() WHERE id = $1',
-        values: [characterId, level, stateJson],
-      }
-    : {
-        text: `UPDATE characters SET level = $2, state = $3, updated_at = now()
-            WHERE id = $1
-              AND EXISTS (
-                SELECT 1 FROM character_leases
-                 WHERE character_id = $1 AND holder = $4 AND nonce = $5
-              )`,
-        values: [characterId, level, stateJson, PROCESS_LEASE_HOLDER, leaseNonce],
-      };
-}
-
 export async function saveCharacterState(
   characterId: number,
   level: number,
   state: CharacterState,
   leaseNonce?: string,
 ): Promise<boolean> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character save');
   const cleanState = sanitizeRemovedZone1Content(state).state;
   // A character save should wait out a slow database rather than lose state, so
   // run it on the raised heavy allowance; still bounded so a leave / shutdown
   // flush cannot hang past the container stop grace.
-  const stmt = characterUpdateStatement(characterId, level, JSON.stringify(cleanState), leaseNonce);
+  const stmt = characterUpdateStatement(
+    characterId,
+    level,
+    JSON.stringify(cleanState),
+    leaseNonce,
+    PROCESS_LEASE_HOLDER,
+    LEASE_TTL_SECONDS,
+  );
   const res = await runWithStatementTimeout(DB_HEAVY_STATEMENT_TIMEOUT_MS, (query) =>
     query(stmt.text, stmt.values),
   );
@@ -3466,6 +3502,7 @@ export async function saveCharacterAndMarketState(
   // Out-parameter, same contract as saveCharacterAndGuildBankState's.
   results?: GuildBankWriteResult[],
 ): Promise<boolean> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character market save');
   // Gate the escrow flush on the boot backfill just like saveMarketState:
   // this writes the realm-market row, so it must not run before ensureSchema
   // has confirmed the marker and opened the gate. Checked before any pool work.
@@ -3490,6 +3527,8 @@ export async function saveCharacterAndMarketState(
       level,
       JSON.stringify(cleanState),
       leaseNonce,
+      PROCESS_LEASE_HOLDER,
+      LEASE_TTL_SECONDS,
     );
     const charRes = await client.query(stmt.text, stmt.values);
     if (leaseNonce !== undefined && (charRes.rowCount ?? 0) === 0) {
@@ -3514,6 +3553,18 @@ export async function saveCharacterAndMarketState(
     // never land for a displaced session, and a failure anywhere rolls back
     // the character, market, mail, and book halves together.
     await writeGuildBankRows(client, guildBanks ?? [], results);
+    if (
+      !(await renewCharacterLeaseBeforeCommit(
+        client,
+        characterId,
+        leaseNonce,
+        PROCESS_LEASE_HOLDER,
+        LEASE_TTL_SECONDS,
+      ))
+    ) {
+      await client.query('ROLLBACK');
+      return false;
+    }
     await client.query('COMMIT');
     return true;
   } catch (err) {
@@ -3650,6 +3701,7 @@ export async function saveCharacterAndGuildBankState(
   // signal and every call site (and every test double) reads it as one.
   results?: GuildBankWriteResult[],
 ): Promise<boolean> {
+  assertCharacterStateGameProfile(state, PERSISTENCE_GAME_PROFILE, 'character guild bank save');
   const cleanState = sanitizeRemovedZone1Content(state).state;
   const client = await pool.connect();
   try {
@@ -3662,6 +3714,8 @@ export async function saveCharacterAndGuildBankState(
       level,
       JSON.stringify(cleanState),
       leaseNonce,
+      PROCESS_LEASE_HOLDER,
+      LEASE_TTL_SECONDS,
     );
     const charRes = (await client.query(stmt.text, stmt.values)) as { rowCount: number | null };
     if (leaseNonce !== undefined && (charRes.rowCount ?? 0) === 0) {
@@ -3669,6 +3723,18 @@ export async function saveCharacterAndGuildBankState(
       return false;
     }
     await writeGuildBankRows(client, guildBanks, results);
+    if (
+      !(await renewCharacterLeaseBeforeCommit(
+        client,
+        characterId,
+        leaseNonce,
+        PROCESS_LEASE_HOLDER,
+        LEASE_TTL_SECONDS,
+      ))
+    ) {
+      await client.query('ROLLBACK');
+      return false;
+    }
     await client.query('COMMIT');
     return true;
   } catch (err) {
@@ -4546,21 +4612,34 @@ export async function acquireCharacterLease(
 ): Promise<boolean> {
   const res = await pool.query(
     // The nonce rotation needs no extra code: this ONE atomic statement already
-    // re-stamps nonce = EXCLUDED.nonce, which IS the fence rotation. The account arm
-    // uses PLAIN EQUALITY (never IS NOT DISTINCT FROM): SQL NULL semantics make a
-    // NULL account_id row (a lease that predates this column) fail the account arm
-    // and every arm except expiry, which is exactly the locked fail-closed behavior.
-    `INSERT INTO character_leases (character_id, realm, holder, nonce, account_id, acquired_at, heartbeat_at, expires_at)
-     VALUES ($1, $2, $3, $4, $5, now(), now(), now() + make_interval(secs => $6))
+    // re-stamps nonce = EXCLUDED.nonce, which IS the fence rotation. Explicitly
+    // materialize and key-share-lock the owned character before the INSERT: an
+    // ON CONFLICT implementation may touch the child lease tuple before its FK
+    // trigger checks the parent, so relying on trigger order could invert the
+    // characters -> character_leases order shared by save/delete. The CTE makes
+    // that order part of our SQL and repeats the caller's ownership/realm gate.
+    // The account reclaim arm uses PLAIN EQUALITY (never IS NOT DISTINCT FROM):
+    // SQL NULL semantics make a pre-column NULL account_id row fail every arm
+    // except expiry, which is exactly the locked fail-closed behavior.
+    `WITH locked_character AS MATERIALIZED (
+       SELECT id
+         FROM characters
+        WHERE id = $1 AND account_id = $5 AND realm = $2
+        FOR KEY SHARE
+     )
+     INSERT INTO character_leases (character_id, realm, holder, nonce, account_id, acquired_at, heartbeat_at, expires_at)
+     SELECT locked_character.id, $2, $3, $4, $5, clock_timestamp(), clock_timestamp(),
+            clock_timestamp() + make_interval(secs => $6)
+       FROM locked_character
      ON CONFLICT (character_id) DO UPDATE
        SET realm = EXCLUDED.realm,
            holder = EXCLUDED.holder,
            nonce = EXCLUDED.nonce,
            account_id = EXCLUDED.account_id,
-           acquired_at = now(),
-           heartbeat_at = now(),
-           expires_at = EXCLUDED.expires_at
-       WHERE character_leases.expires_at < now() OR character_leases.holder = EXCLUDED.holder OR character_leases.account_id = EXCLUDED.account_id`,
+           acquired_at = clock_timestamp(),
+           heartbeat_at = clock_timestamp(),
+           expires_at = clock_timestamp() + make_interval(secs => $6)
+       WHERE character_leases.expires_at < clock_timestamp() OR character_leases.holder = EXCLUDED.holder OR character_leases.account_id = EXCLUDED.account_id`,
     [characterId, REALM, holder, nonce, accountId, LEASE_TTL_SECONDS],
   );
   return (res.rowCount ?? 0) > 0;
@@ -4592,17 +4671,28 @@ export async function releaseCharacterLease(
   );
 }
 
-// Extend every lease this process holds in one statement, called from the
-// autosave loop. A lease already reclaimed by another holder is not matched, so
-// this can never steal one back.
-export async function heartbeatCharacterLeases(holder = PROCESS_LEASE_HOLDER): Promise<void> {
-  await pool.query(
-    `UPDATE character_leases
+// Extend every idle lease this process holds in one statement, called from the
+// autosave loop. Saves renew their own exact row inside the fenced character
+// write above. SKIP LOCKED means one slow escrow save cannot hold this whole
+// statement behind its row lock until statement_timeout and roll back every
+// other session's renewal. A lease already reclaimed by another holder is not
+// matched, so this can never steal one back.
+export async function heartbeatCharacterLeases(holder = PROCESS_LEASE_HOLDER): Promise<number> {
+  const result = await pool.query(
+    `WITH renewable AS MATERIALIZED (
+       SELECT character_id
+         FROM character_leases
+        WHERE holder = $1 AND expires_at >= now()
+        FOR UPDATE SKIP LOCKED
+     )
+     UPDATE character_leases AS lease
         SET heartbeat_at = now(),
             expires_at = now() + make_interval(secs => $2)
-      WHERE holder = $1`,
+       FROM renewable
+      WHERE lease.character_id = renewable.character_id`,
     [holder, LEASE_TTL_SECONDS],
   );
+  return result.rowCount ?? 0;
 }
 
 // Shutdown sweep: drop every lease this process holds so a clean restart never

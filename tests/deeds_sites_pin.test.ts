@@ -91,6 +91,7 @@ function encounterInstance(
     resetAvailableAt: 0,
     clearedBy: new Set(),
     enteredBy: new Set(),
+    scriptedReturnPositions: new Map(),
     combatExitMemory: new Map(),
   };
   sim.ctx.instances.push(inst);

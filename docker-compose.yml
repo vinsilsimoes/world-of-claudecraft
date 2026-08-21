@@ -39,6 +39,9 @@ services:
         VITE_TURNSTILE_SITEKEY: ${VITE_TURNSTILE_SITEKEY:-}
         VITE_REOWN_PROJECT_ID: ${VITE_REOWN_PROJECT_ID:-}
         VITE_WALLET_DISABLED: ${VITE_WALLET_DISABLED:-}
+        # One profile value builds the browser and boots the server, so the
+        # WebSocket compatibility guard cannot drift inside this stack.
+        VITE_GAME_PROFILE: ${GAME_PROFILE:-woc-classic}
     container_name: eastbrook-game
     restart: unless-stopped
     depends_on:
@@ -47,6 +50,9 @@ services:
     environment:
       DATABASE_URL: postgres://eastbrook:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env. See .env.example.}@postgres:5432/eastbrook
       PORT: "8787"
+      # Gameplay/content profile. The database is bound to its first boot
+      # profile; use a fresh volume/database for mir4-gameplay-port.
+      GAME_PROFILE: ${GAME_PROFILE:-woc-classic}
       # Runtime: node flags for the game process, chiefly the V8 heap ceiling
       # (--max-old-space-size). Node sizes its default old-space from TOTAL SYSTEM
       # memory, not from the container's cgroup limit, so on a box larger than

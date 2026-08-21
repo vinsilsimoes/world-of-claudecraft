@@ -99,6 +99,11 @@ env:
 #                 summary, malware gate, game/admin typecheck, env/server/bot/client
 #                 builds), parallel with pr-gate. Same triggers as pr-gate.
 #
+#   mir4-postgres the real PostgreSQL 16 migration, lease-race, 1,000-session
+#                 autosave-cycle, WebSocket, and browser multiplayer proof. It is
+#                 code-path filtered on ordinary PRs, always runs for release
+#                 candidates, and is a required queue check.
+#
 #   release-gate  full TEST job for a release ref. Runs on release/** pushes and on
 #                 the release-to-main PR merge result. Runs at PR tier (no
 #                 I18N_RELEASE_TIER), same 8-shard matrix as pr-gate, tests only
@@ -123,7 +128,7 @@ env:
 # Path filters (D10): a cheap `changes` job classifies pull_request diffs as
 # code vs docs-only. Docs/markdown/screenshot-only PRs keep lint (and any
 # other always-on cheap jobs) and skip the PR-tier work: pr-long-sims-a/-b,
-# pr-checks, and browser-gate skip at JOB level, while pr-gate's matrix legs
+# pr-checks, mir4-postgres, and browser-gate skip at JOB level, while pr-gate's matrix legs
 # start and skip at STEP level so all eight suffixed required check runs
 # still report (see the pr-gate job comment for why that difference is
 # load-bearing). Any touch of the code path set forces the full PR tier. push
@@ -145,7 +150,8 @@ env:
 # full-suite backstops.
 #
 # Merge queue runs: a merge_group event routes through the PR-tier jobs
-# (changes, lint, pr-gate, pr-long-sims-a/-b, pr-checks, browser-gate). The
+# (changes, lint, pr-gate, pr-long-sims-a/-b, pr-checks, mir4-postgres,
+# browser-gate). The
 # changes job treats every non-PR event as code=true and test_mode=full, so
 # the queue always runs the FULL suite on the exact merge result it is about
 # to make the branch tip.
@@ -251,6 +257,154 @@ jobs:
         # runner's preinstalled Node: no setup-node, no dependency install on
         # this serial critical path.
         run: node scripts/detect_code_changes.mjs
+
+  # Real-engine proof for the MIR4 persistence boundary. The DB-free unit
+  # suites pin SQL strings and caller behavior, but cannot prove PostgreSQL's
+  # row-lock queueing, READ COMMITTED rechecks, namespace transaction, JSONB
+  # size, or the production-concurrency autosave cycle. A disposable PostgreSQL
+  # 16 service makes those acceptance conditions mandatory without ever
+  # touching a developer or production database.
+  mir4-postgres:
+    name: MIR4 PostgreSQL 16 proof
+    needs: changes
+    # Ordinary docs-only PRs may skip this non-matrix job under its exact check
+    # name. A release-to-main candidate always runs it even when its final diff
+    # is documentation-only; push/workflow/merge_group classification already
+    # fails closed to code=true.
+    if: needs.changes.outputs.code != 'false' || (github.event_name == 'pull_request' && github.base_ref == 'main' && startsWith(github.head_ref, 'release/'))
+    # Toolchain setup, two focused integration files, and the real MIR4
+    # WebSocket/browser scenarios. The 1,000-session heartbeat plus save cycle
+    # has a 30-second acceptance budget; 20 minutes retains setup/build/browser
+    # margin without weakening that inner threshold.
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      # Makes a missing/miswired service fail at module load instead of turning
+      # every integration case into a green skip.
+      WOC_REQUIRE_PG_INTEGRATION: '1'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 26
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run PostgreSQL 16 migration, lease, and load proofs
+        run: pnpm exec vitest run tests/character_lease_pg_integration.test.ts tests/mir4_save_v2_pg_integration.test.ts --maxWorkers=1
+
+      - name: Resolve Playwright version for cache key
+        id: mir4-playwright-version
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright Chromium browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.mir4-playwright-version.outputs.version }}
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build MIR4 client and server
+        env:
+          VITE_GAME_PROFILE: mir4-gameplay-port
+        run: |
+          pnpm run build
+          pnpm run build:server
+
+      - name: Run MIR4 multiplayer WebSocket and browser proofs
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+          GAME_PROFILE: mir4-gameplay-port
+          VITE_GAME_PROFILE: mir4-gameplay-port
+          SERVER_URL: http://127.0.0.1:8787
+          GAME_URL: http://127.0.0.1:8787
+        run: |
+          export BROWSER_PATH="$(node -e 'process.stdout.write(require("playwright").chromium.executablePath())')"
+          node dist-server/server.cjs > mir4-server.log 2>&1 &
+          server_pid=$!
+          vite_pid=""
+          cleanup() {
+            if [ -n "$vite_pid" ]; then kill "$vite_pid" || true; fi
+            kill "$server_pid" || true
+            cat mir4-server.log
+            if [ -f mir4-vite.log ]; then cat mir4-vite.log; fi
+          }
+          trap cleanup EXIT
+          ready=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error http://127.0.0.1:8787/api/status > /dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 0.5
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "MIR4 server did not become ready" >&2
+            exit 1
+          fi
+          node scripts/mp_integration.mjs
+          node scripts/mp_browser.mjs
+          pnpm exec vite --host 127.0.0.1 --port 5174 > mir4-vite.log 2>&1 &
+          vite_pid=$!
+          ready=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error http://127.0.0.1:5174/ > /dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 0.5
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "MIR4 Vite development server did not become ready" >&2
+            exit 1
+          fi
+          GAME_URL=http://127.0.0.1:5174 node scripts/smoke_browser.mjs
+          GAME_URL=http://127.0.0.1:5174 node scripts/mir4_feature_browser.mjs
+
+      - name: Upload MIR4 external proof evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mir4-external-proof-${{ github.run_id }}
+          path: |
+            mir4-server.log
+            mir4-vite.log
+            tmp/mp_*.png
+            tmp/mir4_feature_*.png
+            tmp/0*.png
+            tmp/10_bags.png
+          if-no-files-found: warn
+          retention-days: 14
 
   # Biome formatter + linter, adopted as a forward ratchet: only files actually
   # changed by this push/PR are checked (`--changed`), so the large existing tree

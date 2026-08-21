@@ -3479,6 +3479,15 @@
   body.mobile-touch #bags .bag-grid {
     min-height: 150px;
   }
+  body.mobile-touch #bags .mir4-bag-scroll {
+    padding-bottom: max(18px, calc(12px + env(safe-area-inset-bottom)));
+    scroll-padding-bottom: max(18px, calc(12px + env(safe-area-inset-bottom)));
+    box-sizing: border-box;
+  }
+  body.mobile-touch #bags .mir4-bag-scroll > .bag-grid {
+    min-height: 0;
+    padding-bottom: 2px;
+  }
   body.mobile-touch :is(.bag-grid, .bank-scroll, .soc-body, .ql-detail-body) {
     padding-bottom: max(18px, calc(12px + env(safe-area-inset-bottom)));
     scroll-padding-bottom: max(18px, calc(12px + env(safe-area-inset-bottom)));
@@ -4751,6 +4760,18 @@
   }
   body.mobile-touch #spellbook .spell-hotbar-toggle:disabled {
     opacity: 0.45;
+  }
+  body.mobile-touch #spellbook .spell-evolution {
+    max-width: 112px;
+  }
+  body.mobile-touch #spellbook .spell-upgrade-btn {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 4px 8px;
+    font-size: 16px;
+  }
+  body.mobile-touch #spellbook .spell-evolution-cost {
+    font-size: 12px;
   }
   body.mobile-touch #spellbook .spellbook-reset {
     min-height: 40px;

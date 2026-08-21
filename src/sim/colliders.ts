@@ -124,6 +124,7 @@ import {
   terrainHeight,
   waterLevelAt,
 } from './world';
+import { worldContentBounds } from './world_content_bounds';
 import { yumiMazeColliders } from './yumi_maze_layout';
 
 // Static world collision. Prop placement comes from the per-zone content
@@ -370,6 +371,42 @@ function staticWorldColliders(seed: number): Collider[] {
   const out: Collider[] = [];
   const content = getActiveWorldContent();
   const PROPS = content.props;
+
+  // Injected worlds own a finite authored rectangle. Four ordinary static
+  // OBBs close that perimeter so players, mobs and pathfinding all consume the
+  // same collision fact instead of walking beyond the streamed terrain mesh.
+  // The built-in world keeps its historical ridge/sealed-border contract.
+  if (content !== BUILTIN_WORLD) {
+    const bounds = worldContentBounds(content, STRIP_MIN_X, STRIP_MAX_X);
+    if (bounds) {
+      const midX = (bounds.minX + bounds.maxX) / 2;
+      const midZ = (bounds.minZ + bounds.maxZ) / 2;
+      const halfWidth = (bounds.maxX - bounds.minX) / 2 + FENCE_END_PAD;
+      const halfDepth = (bounds.maxZ - bounds.minZ) / 2 + FENCE_END_PAD;
+      for (const z of [bounds.minZ, bounds.maxZ]) {
+        out.push({
+          type: 'obb',
+          x: midX,
+          z,
+          hw: halfWidth,
+          hd: FENCE_HALF_DEPTH,
+          rot: 0,
+          cameraTopY: topY(seed, midX, z, BLOCKER_WALL_HEIGHT),
+        });
+      }
+      for (const x of [bounds.minX, bounds.maxX]) {
+        out.push({
+          type: 'obb',
+          x,
+          z: midZ,
+          hw: halfDepth,
+          hd: FENCE_HALF_DEPTH,
+          rot: Math.PI / 2,
+          cameraTopY: topY(seed, x, midZ, BLOCKER_WALL_HEIGHT),
+        });
+      }
+    }
+  }
 
   // Render hideables still block movement while their render subsystem fades
   // whichever one crosses the eye-to-camera segment to 20% opacity.

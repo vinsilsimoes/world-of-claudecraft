@@ -10,6 +10,7 @@
 
 import { isRawCookingCatch } from '../sim/content/items';
 import { ABILITIES, ITEMS } from '../sim/data';
+import { mir4ActionAbilityDef } from '../sim/mir4/action_abilities';
 import { crestIconUrl } from './crest_icon_art';
 import { currencyImageUrl } from './currency_art';
 import { DEED_IMAGE_IDS } from './deed_image_ids';
@@ -3901,7 +3902,7 @@ function abilityPrimitive(name: string, effectsJson: string): PrimitiveName {
 }
 
 function abilityFallback(id: string): IconRecipe | null {
-  const a = Object.hasOwn(ABILITIES, id) ? ABILITIES[id] : undefined;
+  const a = Object.hasOwn(ABILITIES, id) ? ABILITIES[id] : (mir4ActionAbilityDef(id) ?? undefined);
   if (!a) return null;
   const style = SCHOOL_STYLE[a.school] ?? SCHOOL_STYLE.physical;
   const prim = abilityPrimitive(a.name.toLowerCase(), JSON.stringify(a.effects ?? []));

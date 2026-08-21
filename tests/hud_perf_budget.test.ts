@@ -2418,6 +2418,7 @@ function fakeEl(): HTMLElement {
       toggle(): void {},
     },
     setAttribute(): void {},
+    removeAttribute(): void {},
   } as unknown as HTMLElement;
 }
 
@@ -2576,6 +2577,7 @@ function buildHarnesses(shape: WorldShape, facet: PainterHostWriters): PainterHa
           fateSentenceReady: false,
           ariaLabel: 'A',
           ariaDescription: '',
+          ariaPressed: null,
           keybindLabel: 'K',
         },
       ],

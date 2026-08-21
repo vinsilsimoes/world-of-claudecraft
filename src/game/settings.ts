@@ -176,7 +176,10 @@ export const SETTING_RANGES = {
 } as const;
 
 export const BOOL_SETTINGS = {
-  mouseCamera: { def: false },
+  // Mouse Camera is the sole desktop camera scheme. The key remains in the
+  // persisted shape so older profiles migrate without a schema fork, but load,
+  // patch and set all force it on and the options UI does not expose a toggle.
+  mouseCamera: { def: true },
   // on by default: while a camera drag is active, pointer-lock the canvas so the
   // OS cursor cannot leave the window during rotation (otherwise it hits the
   // screen edge and the camera freezes, or slips onto a second monitor).
@@ -498,6 +501,10 @@ export class Settings {
       out[key] = typeof v === 'number' ? clampNumeric(key, v) : SETTING_RANGES[key].def;
     }
     for (const key of BOOL_KEYS) {
+      if (key === 'mouseCamera') {
+        out[key] = true;
+        continue;
+      }
       const v = raw[key];
       out[key] = typeof v === 'boolean' ? v : defaultBoolSetting(key, out);
     }
@@ -528,7 +535,7 @@ export class Settings {
         if (typeof value !== 'boolean') {
           throw new TypeError(`Invalid boolean setting: ${key}`);
         }
-        staged[key] = value;
+        staged[key] = key === 'mouseCamera' ? true : value;
         continue;
       }
       if ((NUMERIC_KEYS as readonly string[]).includes(key)) {
@@ -551,7 +558,7 @@ export class Settings {
   set<K extends BoolSettingKey>(key: K, value: boolean): boolean;
   set<K extends keyof GameSettings>(key: K, value: GameSettings[K]): GameSettings[K] {
     if ((BOOL_KEYS as readonly string[]).includes(key)) {
-      const v = !!value;
+      const v = key === 'mouseCamera' ? true : !!value;
       (this.values as Record<string, unknown>)[key] = v;
       this.save();
       return v as GameSettings[K];

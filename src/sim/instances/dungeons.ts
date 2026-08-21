@@ -32,6 +32,7 @@ import { arenaQueueLeave } from '../social/arena';
 import { resurrectOnInstanceReentry } from '../spirit';
 import { dropThreat } from '../threat';
 import {
+  type DungeonDef,
   dist2d,
   type Entity,
   INSTANCE_EMPTY_TIMEOUT,
@@ -50,6 +51,8 @@ const DOOR_TRIGGER_RADIUS = 2.0; // walking this close to a dungeon door telepor
 const HEROIC_REWARD_WINDOW_MS = 24 * 60 * 60 * 1000;
 const RAID_ALLOWED_DUNGEON_IDS = new Set(['nythraxis_crypt', 'nythraxis_boss_arena']);
 const RAID_REQUIRED_DUNGEON_IDS = new Set(['nythraxis_boss_arena']);
+
+type ResolvedPlayer = NonNullable<ReturnType<SimContext['resolve']>>;
 
 export function instanceKeyFor(ctx: SimContext, pid: number): string {
   const party = ctx.partyOf(pid);
@@ -256,6 +259,29 @@ export function updateDoorTriggers(ctx: SimContext, p: Entity): void {
   }
 }
 
+function placePlayerInClaim(
+  ctx: SimContext,
+  r: ResolvedPlayer,
+  inst: InstanceSlot,
+  dungeon: DungeonDef,
+): void {
+  const origin = instanceOriginOf(inst);
+  const p = r.e;
+  // A live gather/fishing session never survives an instance displacement.
+  cancelProfessionSessionOnDisplacement(ctx, p);
+  p.pos = ctx.groundPos(origin.x + dungeon.entry.x, origin.z + dungeon.entry.z);
+  p.prevPos = { ...p.pos };
+  ctx.rebucket(p);
+  p.facing = 0;
+  p.prevFacing = 0;
+  p.targetId = null;
+  p.autoAttack = false;
+  inst.emptyFor = 0;
+  inst.enteredBy.add(r.meta.entityId);
+  // An arena queue must never form while its member stands in any instance.
+  arenaQueueLeave(ctx, r.meta.entityId);
+}
+
 export function enterDungeon(
   ctx: SimContext,
   dungeonId: string,
@@ -267,7 +293,7 @@ export function enterDungeon(
 ): boolean {
   const r = ctx.resolve(pid);
   const dungeon = DUNGEONS[dungeonId];
-  if (!r || !dungeon) return false;
+  if (!r || !dungeon || dungeon.internalOnly) return false;
   const bypass = devBypass && ctx.devCommands;
   // A living player enters normally; a ghost that has run its spirit back re-enters to
   // resurrect at the entrance (below). A fresh corpse (dead, spirit not yet released)
@@ -407,25 +433,8 @@ export function enterDungeon(
       pid: r.meta.entityId,
     });
   }
-  const origin = instanceOriginOf(inst);
+  placePlayerInClaim(ctx, r, inst, dungeon);
   const p = r.e;
-  // A live gather/fishing session never survives the door (R28 family).
-  cancelProfessionSessionOnDisplacement(ctx, p);
-  p.pos = ctx.groundPos(origin.x + dungeon.entry.x, origin.z + dungeon.entry.z);
-  p.prevPos = { ...p.pos };
-  ctx.rebucket(p);
-  p.facing = 0;
-  p.prevFacing = 0;
-  p.targetId = null;
-  p.autoAttack = false;
-  inst.emptyFor = 0;
-  // Session participation record for this run: awardHeroicMarks pays the mail
-  // arm only to locked players who actually walked through the door.
-  inst.enteredBy.add(r.meta.entityId);
-  // Stepping inside removes you from any arena queue: a match must never form for
-  // a player standing in an instance and teleport them back inside fully restored
-  // (issue #1600). No-op if they were not queued; notifies any 2v2 teammate.
-  arenaQueueLeave(ctx, r.meta.entityId);
   // A ghost that ran its spirit back and re-entered resurrects at the entrance,
   // penalty-free: the re-entry IS the corpse run under the instance death model (no
   // Spirit Healer inside an instance).
@@ -531,6 +540,8 @@ export function leaveDungeon(ctx: SimContext, pid?: number): boolean {
   // that silently teleported outdoor callers to the Hollow Crypt door)
   const dungeon = dungeonAt(p.pos.x);
   if (!dungeon) return false;
+  const inst = instanceAt(ctx, p.pos);
+  const scriptedReturn = inst?.scriptedReturnPositions.get(p.id) ?? null;
   if (dungeon.id === 'nythraxis_boss_arena') {
     const inst = ctx.instances.find(
       (i) => i.dungeonId === dungeon.id && i.partyKey === instanceKeyFor(ctx, p.id),
@@ -547,7 +558,11 @@ export function leaveDungeon(ctx: SimContext, pid?: number): boolean {
   ctx.rebucket(p);
   p.targetId = null;
   p.autoAttack = false;
-  ctx.emit({ type: 'log', text: dungeon.leaveText, color: '#b9f', pid: r.meta.entityId });
+  // Scripted rooms are narrated by their owning campaign stage. Their static
+  // DungeonDef text is an engine fallback, not player-facing journey prose.
+  if (!scriptedReturn) {
+    ctx.emit({ type: 'log', text: dungeon.leaveText, color: '#b9f', pid: r.meta.entityId });
+  }
   return true;
 }
 
@@ -579,6 +594,8 @@ export function detachFromDungeon(ctx: SimContext, p: Entity): { x: number; z: n
   const inst = ctx.instances.find((i) => i.partyKey !== null && instanceClaimContains(i, p.pos));
   if (inst) scrubInstanceThreat(ctx, inst, p.id);
   cancelProfessionSessionOnDisplacement(ctx, p);
+  const scriptedReturn = inst?.scriptedReturnPositions.get(p.id);
+  if (scriptedReturn) return { ...scriptedReturn };
   const drop = dungeon.leaveOffset ?? { x: 0, z: -DUNGEON_DOOR_RETURN_INSET };
   return { x: dungeon.doorPos.x + drop.x, z: dungeon.doorPos.z + drop.z };
 }
@@ -653,6 +670,58 @@ export function leaveCrypt(ctx: SimContext, pid?: number): void {
   leaveDungeon(ctx, pid);
 }
 
+/**
+ * Enter an engine-only authored room from a dynamic world position. Unlike the
+ * public dungeon door flow, the caller supplies a per-run claim key and the
+ * exact outdoor return point; no classic difficulty, party-size, visit or prose
+ * side effects are emitted. The room still uses the normal native instance
+ * renderer, collision, exit object and empty-claim lifecycle.
+ */
+export function enterScriptedDungeon(
+  ctx: SimContext,
+  dungeonId: string,
+  claimKey: string,
+  pid: number,
+  returnPos: { x: number; z: number },
+): InstanceSlot | null {
+  const r = ctx.resolve(pid);
+  const dungeon = DUNGEONS[dungeonId];
+  if (!r || !dungeon?.internalOnly || r.e.dead) return null;
+  let inst = ctx.instances.find(
+    (candidate) => candidate.dungeonId === dungeonId && candidate.partyKey === claimKey,
+  );
+  if (!inst) {
+    inst = ctx.instances.find(
+      (candidate) => candidate.dungeonId === dungeonId && candidate.partyKey === null,
+    );
+    if (!inst) return null;
+    claimInstance(ctx, inst, claimKey, 'normal');
+  }
+  if (!inst.scriptedReturnPositions.has(pid)) {
+    inst.scriptedReturnPositions.set(pid, { ...returnPos, facing: r.e.facing });
+  }
+  placePlayerInClaim(ctx, r, inst, dungeon);
+  return inst;
+}
+
+/** Immediately recycle an empty scripted claim after its owning stage ends. */
+export function releaseScriptedDungeon(
+  ctx: SimContext,
+  dungeonId: string,
+  claimKey: string,
+): boolean {
+  const inst = ctx.instances.find(
+    (candidate) => candidate.dungeonId === dungeonId && candidate.partyKey === claimKey,
+  );
+  if (!inst || !DUNGEONS[dungeonId]?.internalOnly) return false;
+  for (const meta of ctx.players.values()) {
+    const player = ctx.entities.get(meta.entityId);
+    if (player && instanceClaimContains(inst, player.pos)) return false;
+  }
+  freeInstance(ctx, inst);
+  return true;
+}
+
 function claimInstance(
   ctx: SimContext,
   inst: InstanceSlot,
@@ -667,6 +736,7 @@ function claimInstance(
   inst.claimedAt = ctx.time;
   inst.clearedBy = new Set();
   inst.enteredBy = new Set();
+  inst.scriptedReturnPositions = new Map();
   inst.combatExitMemory = new Map();
   const origin = instanceOriginOf(inst);
   for (const spawn of dungeon.spawns) {
@@ -748,6 +818,7 @@ function freeInstance(ctx: SimContext, inst: InstanceSlot): void {
   inst.claimedAt = undefined;
   inst.clearedBy = new Set();
   inst.enteredBy = new Set();
+  inst.scriptedReturnPositions = new Map();
   inst.combatExitMemory = new Map();
 }
 
