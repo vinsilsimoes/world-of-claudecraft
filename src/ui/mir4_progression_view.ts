@@ -25,6 +25,8 @@ export interface Mir4ProgressionItemView {
   successBps: number;
   destroysOnFailure: boolean;
   wardAvailable: boolean;
+  enchantable: boolean;
+  blessable: boolean;
   enchantment: readonly (readonly [number, number])[];
   blessing: readonly (readonly [number, number])[];
   pending: NonNullable<Mir4EquipmentInstanceState['pendingRoll']> | null;
@@ -79,6 +81,8 @@ export function buildMir4ProgressionView(
           nextEnhancement === null ? 0 : (MIR4_ENHANCEMENT_SUCCESS_BPS[nextEnhancement] ?? 100_000),
         destroysOnFailure: nextEnhancement !== null && nextEnhancement > 5,
         wardAvailable: wallet.solarWard > 0,
+        enchantable: def.enchantable,
+        blessable: def.blessable,
         enchantment: instance.affixes?.enchantment ?? [],
         blessing: instance.affixes?.blessing ?? [],
         pending: instance.pendingRoll ?? null,

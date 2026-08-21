@@ -56,6 +56,7 @@ describe('MIR4 existing Crafting-window adapter', () => {
       afterMutation: vi.fn(),
       announce: vi.fn(),
     });
+    expect(root.style.display).toBe('flex');
     expect(root.textContent).toContain('Equipment Workshop');
     expect(root.textContent).toContain('Failure destroys the equipment above +5.');
     root.querySelector<HTMLButtonElement>('[data-enhance]')?.click();
@@ -79,7 +80,10 @@ describe('MIR4 existing Crafting-window adapter', () => {
     root.querySelector<HTMLButtonElement>('[data-roll]')?.click();
     expect(methods.mir4RollItemLayer).toHaveBeenCalledWith(991010101, 'enchantment');
 
-    state.mir4EquipmentInstances![991010101]!.pendingRoll = {
+    const progressionItem = state.mir4EquipmentInstances?.[991010101];
+    expect(progressionItem).toBeDefined();
+    if (!progressionItem) return;
+    progressionItem.pendingRoll = {
       rollId: 'preview-1',
       layer: 'enchantment',
       affixes: [
@@ -99,6 +103,77 @@ describe('MIR4 existing Crafting-window adapter', () => {
     root.querySelector<HTMLButtonElement>('[data-tab="crafting"]')?.click();
     root.querySelector<HTMLButtonElement>('[data-recipe="solar-scroll"]')?.click();
     expect(methods.mir4CraftMaterial).toHaveBeenCalledWith('solar-scroll');
+  });
+
+  it('disables layer rolls for starter equipment that does not support them', () => {
+    const { state, world, methods } = harness();
+    state.mir4EquipmentInstances = {
+      ...state.mir4EquipmentInstances,
+      200201000: { itemId: 200201000, enhancement: 0 },
+    };
+    const root = document.createElement('section');
+    paintMir4ProgressionWindow({
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterMutation: vi.fn(),
+      announce: vi.fn(),
+    });
+
+    root.querySelector<HTMLButtonElement>('[data-tab="enchantment"]')?.click();
+    const starter = root.querySelector<HTMLButtonElement>('[data-roll="200201000"]');
+    const progression = root.querySelector<HTMLButtonElement>('[data-roll="991010101"]');
+    expect(starter?.disabled).toBe(true);
+    expect(progression?.disabled).toBe(false);
+    expect(starter?.getAttribute('aria-label')).toContain('cannot receive Enchantment effects');
+    starter?.click();
+    expect(methods.mir4RollItemLayer).not.toHaveBeenCalled();
+
+    root.querySelector<HTMLButtonElement>('[data-tab="blessing"]')?.click();
+    const starterBlessing = root.querySelector<HTMLButtonElement>('[data-roll="200201000"]');
+    expect(starterBlessing?.disabled).toBe(true);
+    expect(starterBlessing?.getAttribute('aria-label')).toContain(
+      'cannot receive Blessing effects',
+    );
+    starterBlessing?.click();
+    expect(methods.mir4RollItemLayer).not.toHaveBeenCalled();
+  });
+
+  it('elides unchanged slow-band paints and carries focus and scroll across a changed repaint', () => {
+    const { state, world } = harness();
+    const root = document.createElement('section');
+    document.body.appendChild(root);
+    const deps = {
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterMutation: vi.fn(),
+      announce: vi.fn(),
+    };
+    paintMir4ProgressionWindow(deps);
+    root.querySelector<HTMLButtonElement>('[data-tab="enchantment"]')?.click();
+    const body = root.querySelector<HTMLElement>('.crafting-body');
+    const roll = root.querySelector<HTMLButtonElement>('[data-roll="991010101"]');
+    expect(body).not.toBeNull();
+    expect(roll).not.toBeNull();
+    if (!body || !roll) return;
+    body.scrollTop = 37;
+    roll.focus();
+
+    paintMir4ProgressionWindow(deps);
+    expect(root.querySelector('[data-roll="991010101"]')).toBe(roll);
+
+    if (state.mir4Materials) state.mir4Materials.lunarSeal = 2;
+    paintMir4ProgressionWindow(deps);
+    expect(root.querySelector<HTMLElement>('.crafting-body')?.scrollTop).toBe(37);
+    expect((document.activeElement as HTMLElement | null)?.dataset.focusKey).toBe(
+      'roll:enchantment:991010101',
+    );
+    root.remove();
   });
 
   it('uses the same Crafting tab for campaign profession receipts', () => {

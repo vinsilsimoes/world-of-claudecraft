@@ -1865,9 +1865,9 @@ export class OptionsWindow {
   // Key Bindings (cluster 5)
   // -------------------------------------------------------------------------
 
-  // Toggle row styled for the Key Bindings panel. Handles the bool Mouse Camera
-  // setting and the numeric (0/1) Click to Move setting, which both live here
-  // alongside the rebindable keys.
+  // Toggle row styled for the Key Bindings panel. Mouse Camera is deliberately
+  // absent because it is the sole camera scheme; this helper remains for the
+  // other boolean settings and numeric (0/1) Click to Move setting.
   private settingToggleKeybind(
     parent: HTMLElement,
     label: string,

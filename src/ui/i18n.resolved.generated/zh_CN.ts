@@ -1141,6 +1141,7 @@ export const zh_CN: EnTranslations = {
         "currentEffects": "当前效果",
         "noCurrentEffects": "没有已应用的效果。",
         "rollCostEnchantment": "费用：1 个月之印",
+        "layerUnsupported": "此物品无法获得{layer}效果。",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
         "roll": "生成预览",
         "pendingOtherLayer": "请先处理待定的{layer}预览。",

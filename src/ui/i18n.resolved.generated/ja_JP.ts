@@ -1141,6 +1141,7 @@ export const ja_JP: EnTranslations = {
         "currentEffects": "現在の効果",
         "noCurrentEffects": "適用中の効果はありません。",
         "rollCostEnchantment": "費用：月の印章 1個",
+        "layerUnsupported": "このアイテムには{layer}効果を付与できません。",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
         "roll": "プレビューを抽選",
         "pendingOtherLayer": "先に保留中の{layer}プレビューを確定してください。",

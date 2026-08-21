@@ -154,6 +154,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.progression.currentEffects': 'Текущие эффекты',
   'hudChrome.mir4.progression.noCurrentEffects': 'Нет применённых эффектов.',
   'hudChrome.mir4.progression.rollCostEnchantment': 'Стоимость: 1 Лунная печать',
+  'hudChrome.mir4.progression.layerUnsupported': 'Этот предмет не может получить эффекты «{layer}».',
   'hudChrome.mir4.progression.roll': 'Создать предпросмотр',
   'hudChrome.mir4.progression.pendingOtherLayer': 'Сначала разрешите ожидающий предпросмотр слоя «{layer}».',
   'hudChrome.mir4.progression.preview': 'Ожидающий предпросмотр',

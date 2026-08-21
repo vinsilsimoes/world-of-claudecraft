@@ -40,6 +40,8 @@ describe('MIR4 progression view', () => {
       successBps: 50_000,
       destroysOnFailure: true,
       wardAvailable: true,
+      enchantable: true,
+      blessable: true,
       pending: { rollId: 'r1', layer: 'blessing' },
     });
     expect(view.items[0]?.enchantment).toEqual([[20, 7]]);

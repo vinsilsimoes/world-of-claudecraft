@@ -5,9 +5,13 @@ import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 
 import { BROWSER_PATH as EDGE } from './browser_path.mjs';
+import { enterOfflineGame } from './enter_offline_game.mjs';
+import { isExpectedOfflineDevResponse } from './lib/browser_dev_response_allowlist.mjs';
 import { browserSmokeScenarioForProfile } from './lib/browser_smoke_scenario.mjs';
+import { suppressGpuNotice } from './lib/gpu_notice_suppress.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
+const GAME_ORIGIN = new globalThis.URL(URL).origin;
 const PROFILE = process.env.GAME_PROFILE ?? process.env.VITE_GAME_PROFILE ?? 'woc-classic';
 const scenario = browserSmokeScenarioForProfile(PROFILE);
 fs.mkdirSync('tmp', { recursive: true });
@@ -23,20 +27,30 @@ const errors = [];
 const failures = [];
 page.on('pageerror', (e) => errors.push(`PAGEERROR: ${e.message}`));
 page.on('console', (msg) => {
-  if (msg.type() === 'error') errors.push(`CONSOLE: ${msg.text()}`);
+  if (msg.type() === 'error' && !msg.text().startsWith('Failed to load resource:')) {
+    errors.push(`CONSOLE: ${msg.text()}`);
+  }
+});
+page.on('response', (response) => {
+  if (
+    response.status() >= 400 &&
+    new globalThis.URL(response.url()).origin === GAME_ORIGIN &&
+    !isExpectedOfflineDevResponse(response.status(), response.url(), GAME_ORIGIN)
+  ) {
+    errors.push(`RESPONSE ${response.status()}: ${response.url()}`);
+  }
 });
 
+await suppressGpuNotice(page);
 await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
-await page.waitForSelector('#btn-offline', { visible: true, timeout: 60000 });
-await page.evaluate(() => document.querySelector('#btn-offline').click());
-await new Promise((r) => setTimeout(r, 200));
-await page.type('#char-name', 'Adventurer');
 await page.screenshot({ path: 'tmp/01_start.png' });
-
-// Pick the profile's representative class through the existing entry shell.
-await page.click(`#offline-select .mini-class[data-class="${scenario.classKey}"]`);
-await page.click('#btn-start-offline');
-await page.waitForFunction(() => window.__game?.sim?.player, { timeout: 60000 });
+const booted = await enterOfflineGame(page, {
+  charClass: scenario.classKey,
+  charName: 'Adventurer',
+  settleMs: 800,
+  gameBootTimeoutMs: 60000,
+});
+if (!booted) throw new Error('Browser smoke did not reach the offline game world');
 await page.screenshot({ path: 'tmp/02_spawn.png' });
 
 const state0 = await page.evaluate(() => {
@@ -284,6 +298,7 @@ console.log('final:', JSON.stringify(final));
 if (errors.length) {
   console.log('\n=== PAGE ERRORS ===');
   for (const e of errors.slice(0, 20)) console.log(e);
+  failures.push(`BROWSER: ${errors.length} page, console, or same-origin response errors`);
 } else {
   console.log('no page errors');
 }

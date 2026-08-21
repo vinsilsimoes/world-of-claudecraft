@@ -1141,6 +1141,7 @@ export const ru_RU: EnTranslations = {
         "currentEffects": "Текущие эффекты",
         "noCurrentEffects": "Нет применённых эффектов.",
         "rollCostEnchantment": "Стоимость: 1 Лунная печать",
+        "layerUnsupported": "Этот предмет не может получить эффекты «{layer}».",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
         "roll": "Создать предпросмотр",
         "pendingOtherLayer": "Сначала разрешите ожидающий предпросмотр слоя «{layer}».",

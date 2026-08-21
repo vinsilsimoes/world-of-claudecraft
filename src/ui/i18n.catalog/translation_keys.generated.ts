@@ -9364,6 +9364,7 @@ export type TranslationKeyFlat =
   | 'hudChrome.mir4.progression.equipped'
   | 'hudChrome.mir4.progression.inactiveEffect'
   | 'hudChrome.mir4.progression.keepCurrent'
+  | 'hudChrome.mir4.progression.layerUnsupported'
   | 'hudChrome.mir4.progression.materialCost'
   | 'hudChrome.mir4.progression.materialRecipes'
   | 'hudChrome.mir4.progression.maxEnhancement'

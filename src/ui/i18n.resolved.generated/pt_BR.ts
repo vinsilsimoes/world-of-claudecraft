@@ -1141,6 +1141,7 @@ export const pt_BR: EnTranslations = {
         "currentEffects": "Efeitos Atuais",
         "noCurrentEffects": "Nenhum efeito aplicado.",
         "rollCostEnchantment": "Custo: 1 Selo Lunar",
+        "layerUnsupported": "Este item não pode receber efeitos de {layer}.",
         "rollCostBlessing": "Custo: 1 Lágrima da Aurora",
         "roll": "Gerar Prévia",
         "pendingOtherLayer": "Resolva primeiro a prévia pendente de {layer}.",

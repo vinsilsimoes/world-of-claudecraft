@@ -600,6 +600,7 @@ export const hudChromeStrings = {
       currentEffects: 'Current Effects',
       noCurrentEffects: 'No effects applied.',
       rollCostEnchantment: 'Cost: 1 Lunar Seal',
+      layerUnsupported: 'This item cannot receive {layer} effects.',
       rollCostBlessing: 'Cost: 1 Dawn Tear',
       roll: 'Roll Preview',
       pendingOtherLayer: 'Resolve the pending {layer} preview first.',

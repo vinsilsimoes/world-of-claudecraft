@@ -1141,6 +1141,7 @@ export const ko_KR: EnTranslations = {
         "currentEffects": "현재 효과",
         "noCurrentEffects": "적용된 효과가 없습니다.",
         "rollCostEnchantment": "비용: 달의 인장 1개",
+        "layerUnsupported": "이 아이템에는 {layer} 효과를 부여할 수 없습니다.",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
         "roll": "미리보기 굴리기",
         "pendingOtherLayer": "먼저 대기 중인 {layer} 미리보기를 결정하세요.",

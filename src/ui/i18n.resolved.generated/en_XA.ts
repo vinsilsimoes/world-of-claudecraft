@@ -1141,6 +1141,7 @@ export const en_XA: EnTranslations = {
         "currentEffects": "[Çúŕŕéñţ Éƒƒéçţš]",
         "noCurrentEffects": "[Ñó éƒƒéçţš áþþļíéð.]",
         "rollCostEnchantment": "[Çóšţ: 1 Ļúñáŕ Šéáļ]",
+        "layerUnsupported": "[Ţĥíš íţéɱ çáññóţ ŕéçéíʋé {layer} éƒƒéçţš.]",
         "rollCostBlessing": "[Çóšţ: 1 Ðáŵñ Ţéáŕ]",
         "roll": "[Ŕóļļ Þŕéʋíéŵ]",
         "pendingOtherLayer": "[Ŕéšóļʋé ţĥé þéñðíñĝ {layer} þŕéʋíéŵ ƒíŕšţ.]",

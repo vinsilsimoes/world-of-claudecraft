@@ -154,6 +154,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.progression.currentEffects': '現在の効果',
   'hudChrome.mir4.progression.noCurrentEffects': '適用中の効果はありません。',
   'hudChrome.mir4.progression.rollCostEnchantment': '費用：月の印章 1個',
+  'hudChrome.mir4.progression.layerUnsupported': 'このアイテムには{layer}効果を付与できません。',
   'hudChrome.mir4.progression.roll': 'プレビューを抽選',
   'hudChrome.mir4.progression.pendingOtherLayer': '先に保留中の{layer}プレビューを確定してください。',
   'hudChrome.mir4.progression.preview': '保留中のプレビュー',

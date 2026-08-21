@@ -160,7 +160,12 @@ heartbeat. It then builds the MIR4 client/server against that same disposable
 database and runs `scripts/mp_integration.mjs` and `scripts/mp_browser.mjs`, so
 the required check also proves the native roster, authoritative owner snapshot,
 reconnect, mutual visibility, movement, chat and existing-HUD profile gates over
-the real HTTP/WebSocket/browser stack.
+the real HTTP/WebSocket/browser stack. The same job then starts a separate Vite
+development server for the intentionally offline-only browser fixtures and runs
+`scripts/smoke_browser.mjs` plus `scripts/mir4_feature_browser.mjs`. Those scripts
+exercise movement, the five-class action bars, Mouse Camera without a mode chooser,
+skill evolution, equipment progression, Mounts, Spirits and a short dungeon through
+the existing WoC launchers and controls. Production offline mode remains disabled.
 
 ### Selective gate (`gate:select`)
 

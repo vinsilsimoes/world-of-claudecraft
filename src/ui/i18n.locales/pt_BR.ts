@@ -7783,6 +7783,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.progression.currentEffects': 'Efeitos Atuais',
   'hudChrome.mir4.progression.noCurrentEffects': 'Nenhum efeito aplicado.',
   'hudChrome.mir4.progression.rollCostEnchantment': 'Custo: 1 Selo Lunar',
+  'hudChrome.mir4.progression.layerUnsupported': 'Este item não pode receber efeitos de {layer}.',
   'hudChrome.mir4.progression.rollCostBlessing': 'Custo: 1 Lágrima da Aurora',
   'hudChrome.mir4.progression.roll': 'Gerar Prévia',
   'hudChrome.mir4.progression.pendingOtherLayer': 'Resolva primeiro a prévia pendente de {layer}.',

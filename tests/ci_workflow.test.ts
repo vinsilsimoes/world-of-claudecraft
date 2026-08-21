@@ -23,6 +23,10 @@ import { stripComments } from './helpers/strip_comments';
 
 const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 const mpBrowser = readFileSync(new URL('../scripts/mp_browser.mjs', import.meta.url), 'utf8');
+const mir4FeatureBrowser = readFileSync(
+  new URL('../scripts/mir4_feature_browser.mjs', import.meta.url),
+  'utf8',
+);
 const detectEntry = readFileSync(
   new URL('../scripts/detect_code_changes.mjs', import.meta.url),
   'utf8',
@@ -899,6 +903,17 @@ describe('CI workflow parity', () => {
     expect(mir4Postgres).toContain('GAME_PROFILE: mir4-gameplay-port');
     expect(mir4Postgres).toContain('node scripts/mp_integration.mjs');
     expect(mir4Postgres).toContain('node scripts/mp_browser.mjs');
+    expect(mir4Postgres).toMatch(
+      /^\s+GAME_URL=http:\/\/127\.0\.0\.1:5174 node scripts\/smoke_browser\.mjs\s*$/m,
+    );
+    expect(mir4Postgres).toMatch(
+      /^\s+GAME_URL=http:\/\/127\.0\.0\.1:5174 node scripts\/mir4_feature_browser\.mjs\s*$/m,
+    );
+    expect(mir4Postgres).toContain('pnpm exec vite --host 127.0.0.1 --port 5174');
+    expect(mir4Postgres).not.toMatch(/scripts\/(?:smoke|mir4_feature)_browser\.mjs.*\|\|\s*true/);
+    expect(mir4Postgres).toContain('tmp/mir4_feature_*.png');
+    expect(mir4Postgres).toContain('tmp/0*.png');
+    expect(mir4Postgres).toContain('tmp/10_bags.png');
     expect(mpBrowser).toContain("'--no-sandbox'");
     expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
     expect(mpBrowser).toContain('protocolTimeout: 180000');
@@ -920,11 +935,27 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toContain("'#realm-list .realm-row'");
     expect(mpBrowser).toContain('#charcreate-panel .mini-class[data-class=');
     expect(mpBrowser).not.toContain("'#btn-register'");
+    expect(mir4FeatureBrowser).toContain('const CLASS_ROWS = [');
+    expect(mir4FeatureBrowser).toContain("['warrior', 1]");
+    expect(mir4FeatureBrowser).toContain("['elementalist', 2]");
+    expect(mir4FeatureBrowser).toContain("['taoist', 3]");
+    expect(mir4FeatureBrowser).toContain("['arbalist', 4]");
+    expect(mir4FeatureBrowser).toContain("['lancer', 5]");
+    expect(mir4FeatureBrowser).toContain("await openHudWindow(page, '#mm-crafting'");
+    expect(mir4FeatureBrowser).toContain('await page.click(selector)');
+    expect(mir4FeatureBrowser).toContain('response.status() >= 400');
+    expect(mir4FeatureBrowser).toContain('isExpectedOfflineDevResponse');
+    expect(mir4FeatureBrowser).toContain('await suppressGpuNotice(page)');
+    expect(mir4FeatureBrowser).toContain("'M04-Q05'");
+    expect(mir4FeatureBrowser).toContain('\'#actionbar .action-btn[data-hotbar-slot="0"]\'');
+    expect(mir4FeatureBrowser).toContain("'.camera-prompt-backdrop'");
     expect(mir4Postgres).toContain('node dist-server/server.cjs');
     expect(mir4Postgres).toContain(
       'export BROWSER_PATH="$(node -e \'process.stdout.write(require("playwright").chromium.executablePath())\')"',
     );
-    expect(mir4Postgres).toContain('trap \'kill "$server_pid" || true; cat mir4-server.log\' EXIT');
+    expect(mir4Postgres).toContain('trap cleanup EXIT');
+    expect(mir4Postgres).toContain('kill "$server_pid" || true');
+    expect(mir4Postgres).toContain('if [ -n "$vite_pid" ]; then kill "$vite_pid" || true; fi');
     expect(mir4Postgres).toContain('uses: actions/upload-artifact@v4');
     // biome-ignore lint/suspicious/noTemplateCurlyInString: pins literal GitHub Actions syntax.
     expect(mir4Postgres).toContain('name: mir4-external-proof-${{ github.run_id }}');

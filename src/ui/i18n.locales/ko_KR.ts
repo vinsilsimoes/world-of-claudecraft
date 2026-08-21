@@ -154,6 +154,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.progression.currentEffects': '현재 효과',
   'hudChrome.mir4.progression.noCurrentEffects': '적용된 효과가 없습니다.',
   'hudChrome.mir4.progression.rollCostEnchantment': '비용: 달의 인장 1개',
+  'hudChrome.mir4.progression.layerUnsupported': '이 아이템에는 {layer} 효과를 부여할 수 없습니다.',
   'hudChrome.mir4.progression.roll': '미리보기 굴리기',
   'hudChrome.mir4.progression.pendingOtherLayer': '먼저 대기 중인 {layer} 미리보기를 결정하세요.',
   'hudChrome.mir4.progression.preview': '대기 중인 미리보기',

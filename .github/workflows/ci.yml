@@ -352,7 +352,14 @@ jobs:
           export BROWSER_PATH="$(node -e 'process.stdout.write(require("playwright").chromium.executablePath())')"
           node dist-server/server.cjs > mir4-server.log 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid" || true; cat mir4-server.log' EXIT
+          vite_pid=""
+          cleanup() {
+            if [ -n "$vite_pid" ]; then kill "$vite_pid" || true; fi
+            kill "$server_pid" || true
+            cat mir4-server.log
+            if [ -f mir4-vite.log ]; then cat mir4-vite.log; fi
+          }
+          trap cleanup EXIT
           ready=0
           for attempt in $(seq 1 120); do
             if curl --fail --silent --show-error http://127.0.0.1:8787/api/status > /dev/null 2>&1; then
@@ -367,6 +374,22 @@ jobs:
           fi
           node scripts/mp_integration.mjs
           node scripts/mp_browser.mjs
+          pnpm exec vite --host 127.0.0.1 --port 5174 > mir4-vite.log 2>&1 &
+          vite_pid=$!
+          ready=0
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error http://127.0.0.1:5174/ > /dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 0.5
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "MIR4 Vite development server did not become ready" >&2
+            exit 1
+          fi
+          GAME_URL=http://127.0.0.1:5174 node scripts/smoke_browser.mjs
+          GAME_URL=http://127.0.0.1:5174 node scripts/mir4_feature_browser.mjs
 
       - name: Upload MIR4 external proof evidence
         if: always()
@@ -375,7 +398,11 @@ jobs:
           name: mir4-external-proof-${{ github.run_id }}
           path: |
             mir4-server.log
+            mir4-vite.log
             tmp/mp_*.png
+            tmp/mir4_feature_*.png
+            tmp/0*.png
+            tmp/10_bags.png
           if-no-files-found: warn
           retention-days: 14
 

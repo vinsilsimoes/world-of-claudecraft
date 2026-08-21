@@ -152,6 +152,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.progression.currentEffects': '当前效果',
   'hudChrome.mir4.progression.noCurrentEffects': '没有已应用的效果。',
   'hudChrome.mir4.progression.rollCostEnchantment': '费用：1 个月之印',
+  'hudChrome.mir4.progression.layerUnsupported': '此物品无法获得{layer}效果。',
   'hudChrome.mir4.progression.roll': '生成预览',
   'hudChrome.mir4.progression.pendingOtherLayer': '请先处理待定的{layer}预览。',
   'hudChrome.mir4.progression.preview': '待定预览',
