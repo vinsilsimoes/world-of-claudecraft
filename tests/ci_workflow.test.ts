@@ -912,6 +912,8 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toMatch(/loginAndEnter\(pageB, `duob_\$\{uniq\}`/);
     expect(mpBrowser).toContain("for (const key of ['w', 's', 'a', 'd'])");
     expect(mpBrowser).toContain('window.__game.input.debugState()');
+    expect(mpBrowser).toContain("await pageA.type('#chat-input', 'Together online!')");
+    expect(mpBrowser).toContain('attempt < 20 && !bGotChat');
     expect(mpBrowser).toContain("'#btn-auth-toggle'");
     expect(mpBrowser).toContain("'#login-panel'");
     expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");

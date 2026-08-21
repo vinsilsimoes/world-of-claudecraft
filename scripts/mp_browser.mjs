@@ -375,22 +375,26 @@ check('B watched A move', moved > 4, JSON.stringify(movementAttempts));
 // chat from A (through the real chat input flow), read on B
 await pageA.bringToFront();
 await new Promise((r) => setTimeout(r, 600));
-await pageA.evaluate(() => {
-  window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', key: 'Enter' }));
+await pageA.keyboard.press('Enter');
+await pageA.waitForFunction(() => {
   const input = document.querySelector('#chat-input');
-  input.value = 'Together online!';
-  input.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', key: 'Enter', bubbles: true }));
+  return input && getComputedStyle(input).display !== 'none';
 });
+await pageA.type('#chat-input', 'Together online!');
+await pageA.keyboard.press('Enter');
 // Allow WebSocket frame to flush before bringing B to front
 await new Promise((r) => setTimeout(r, 800));
 // B's HUD drains network events on rAF, which only runs while foregrounded
 await pageB.bringToFront();
-await new Promise((r) => setTimeout(r, 1200));
-const bGotChat = await pageB.evaluate(() =>
-  [...document.querySelectorAll('#chatlog div, #combatlog div')].some((d) =>
-    d.textContent.includes('Together online!'),
-  ),
-);
+let bGotChat = false;
+for (let attempt = 0; attempt < 20 && !bGotChat; attempt++) {
+  await new Promise((r) => setTimeout(r, 500));
+  bGotChat = await pageB.evaluate(() =>
+    [...document.querySelectorAll('#chatlog div, #combatlog div')].some((d) =>
+      d.textContent.includes('Together online!'),
+    ),
+  );
+}
 check('chat A -> B', bGotChat);
 
 // point B's camera at A and screenshot both perspectives
