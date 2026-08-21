@@ -22,6 +22,7 @@ import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_a
 import { stripComments } from './helpers/strip_comments';
 
 const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+const mpBrowser = readFileSync(new URL('../scripts/mp_browser.mjs', import.meta.url), 'utf8');
 const detectEntry = readFileSync(
   new URL('../scripts/detect_code_changes.mjs', import.meta.url),
   'utf8',
@@ -898,6 +899,8 @@ describe('CI workflow parity', () => {
     expect(mir4Postgres).toContain('GAME_PROFILE: mir4-gameplay-port');
     expect(mir4Postgres).toContain('node scripts/mp_integration.mjs');
     expect(mir4Postgres).toContain('node scripts/mp_browser.mjs');
+    expect(mpBrowser).toContain("'--no-sandbox'");
+    expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
     expect(mir4Postgres).toContain('node dist-server/server.cjs');
     expect(mir4Postgres).toContain(
       'export BROWSER_PATH="$(node -e \'process.stdout.write(require("playwright").chromium.executablePath())\')"',

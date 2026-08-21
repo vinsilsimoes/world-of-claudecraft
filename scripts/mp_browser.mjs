@@ -38,7 +38,13 @@ const browser = await puppeteer.launch({
   executablePath: EDGE,
   headless: 'new',
   protocolTimeout: 60000,
-  args: ['--window-size=1280,760', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--window-size=1280,760',
+    '--use-angle=swiftshader',
+    '--enable-unsafe-swiftshader',
+  ],
   defaultViewport: { width: 1280, height: 760 },
 });
 
