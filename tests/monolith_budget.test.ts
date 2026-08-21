@@ -163,7 +163,7 @@ const MONOLITHS: MonolithRow[] = [
   },
   {
     file: 'server/db.ts',
-    ceiling: 4980,
+    ceiling: 4930,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {

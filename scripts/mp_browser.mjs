@@ -76,7 +76,15 @@ async function loginAndEnter(page, username, password, charName, cls, fresh) {
   await sleep(1000);
   step('loaded');
   // evaluate-based DOM interaction (page.click can stall on this page under swiftshader)
-  await page.evaluate(() => document.querySelector('#btn-online')?.click());
+  await page.waitForFunction(
+    () => {
+      const loginPanel = document.querySelector('#login-panel');
+      if (loginPanel && !loginPanel.hasAttribute('hidden')) return true;
+      document.querySelector('#btn-online')?.click();
+      return false;
+    },
+    { timeout: 45000, polling: 500 },
+  );
   await page.waitForSelector('#login-user', { visible: true, timeout: 45000 });
   let submitted = false;
   for (let attempt = 0; attempt < 6 && !submitted; attempt++) {

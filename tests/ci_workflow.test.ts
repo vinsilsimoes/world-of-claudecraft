@@ -902,6 +902,8 @@ describe('CI workflow parity', () => {
     expect(mpBrowser).toContain("'--no-sandbox'");
     expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
     expect(mpBrowser).toContain("'#btn-auth-toggle'");
+    expect(mpBrowser).toContain("'#login-panel'");
+    expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");
     expect(mpBrowser).toContain("'#realm-list .realm-row'");
     expect(mpBrowser).toContain('#charcreate-panel .mini-class[data-class=');
     expect(mpBrowser).not.toContain("'#btn-register'");

@@ -23,6 +23,10 @@ import {
   configureLifetimeXpRankCache,
   readLifetimeXpRankForCharacter,
 } from './character_rank_cache';
+import {
+  characterUpdateStatement,
+  renewCharacterLeaseBeforeCommit,
+} from './character_save_fence_db';
 import { seedChatFilterDefaults } from './chat_filter_db';
 import type { ChatLogRow } from './chat_log';
 import {
@@ -3449,100 +3453,6 @@ export async function renameCharacter(
 // pair would race the takeover that steals the lease between the two. The no-nonce path
 // (tests, resumes, meta-less sessions) writes unconditionally and returns true, exactly
 // as before.
-// The ONE fenced character UPDATE the whole save family issues
-// (saveCharacterState, saveCharacterAndMarketState, and the guild bank escrow
-// sibling). Extracted so the lease fence stays byte-identical across the
-// family: the fence rides the write statement itself (never a separate
-// pre-check that would race a takeover), and a nonce that matches no lease row
-// touches nothing, which every caller must treat as "persist NOTHING". A
-// successful fence also renews the exact lease while it is locked, so a long
-// escrow save cannot lose its lease merely because the global heartbeat skips
-// that busy row. `characters` is locked first everywhere that needs both rows:
-// this save, deletion, and the FK check performed by lease acquisition.
-// The expiry comparison uses a timestamp projected from the already-materialized
-// character lock. A direct clock_timestamp() predicate on the lease scan can be
-// evaluated before a contended character lock wait and incorrectly revive a
-// lease that expires while the save is queued.
-function characterUpdateStatement(
-  characterId: number,
-  level: number,
-  stateJson: string,
-  leaseNonce: string | undefined,
-): { text: string; values: unknown[] } {
-  return leaseNonce === undefined
-    ? {
-        text: 'UPDATE characters SET level = $2, state = $3, updated_at = now() WHERE id = $1',
-        values: [characterId, level, stateJson],
-      }
-    : {
-        text: `WITH locked_character AS MATERIALIZED (
-               SELECT id
-                 FROM characters
-                WHERE id = $1
-                FOR UPDATE
-             ),
-             lock_time AS MATERIALIZED (
-               SELECT locked_character.id, clock_timestamp() AS checked_at
-                 FROM locked_character
-             ),
-             locked_lease AS MATERIALIZED (
-               SELECT lease.character_id, lock_time.checked_at
-                 FROM character_leases AS lease
-                 JOIN lock_time ON lock_time.id = lease.character_id
-                WHERE lease.holder = $4 AND lease.nonce = $5
-                  AND lease.expires_at >= lock_time.checked_at
-                FOR UPDATE OF lease
-             ),
-             valid_lease AS MATERIALIZED (
-               UPDATE character_leases AS lease
-                 SET heartbeat_at = clock_timestamp(),
-                      expires_at = clock_timestamp() + make_interval(secs => $6)
-                FROM locked_lease
-               WHERE lease.character_id = locked_lease.character_id
-                 AND lease.holder = $4 AND lease.nonce = $5
-                 AND lease.expires_at >= locked_lease.checked_at
-               RETURNING lease.character_id
-             )
-             UPDATE characters AS character
-                SET level = $2, state = $3, updated_at = now()
-               FROM locked_character
-              WHERE character.id = locked_character.id
-               AND EXISTS (SELECT 1 FROM valid_lease)`,
-        values: [
-          characterId,
-          level,
-          stateJson,
-          PROCESS_LEASE_HOLDER,
-          leaseNonce,
-          LEASE_TTL_SECONDS,
-        ],
-      };
-}
-
-// Escrow saves can execute several bounded statements after the character
-// write while deliberately retaining both row locks. `now()` is fixed at the
-// transaction start, and even a clock-based first renewal can be older than
-// the 90-second TTL by the time a slow transaction commits. Refresh the exact
-// holder+nonce immediately before COMMIT. The row is still locked by this
-// transaction, so an expiry predicate here would only reject a lease no peer
-// could have reclaimed; identity, not its intermediate timestamp, is the
-// final fence.
-async function renewCharacterLeaseBeforeCommit(
-  client: { query: (text: string, values?: unknown[]) => Promise<QueryResult> },
-  characterId: number,
-  leaseNonce: string | undefined,
-): Promise<boolean> {
-  if (leaseNonce === undefined) return true;
-  const result = await client.query(
-    `UPDATE character_leases
-        SET heartbeat_at = clock_timestamp(),
-            expires_at = clock_timestamp() + make_interval(secs => $4)
-      WHERE character_id = $1 AND holder = $2 AND nonce = $3`,
-    [characterId, PROCESS_LEASE_HOLDER, leaseNonce, LEASE_TTL_SECONDS],
-  );
-  return (result.rowCount ?? 0) === 1;
-}
-
 export async function saveCharacterState(
   characterId: number,
   level: number,
@@ -3554,7 +3464,14 @@ export async function saveCharacterState(
   // A character save should wait out a slow database rather than lose state, so
   // run it on the raised heavy allowance; still bounded so a leave / shutdown
   // flush cannot hang past the container stop grace.
-  const stmt = characterUpdateStatement(characterId, level, JSON.stringify(cleanState), leaseNonce);
+  const stmt = characterUpdateStatement(
+    characterId,
+    level,
+    JSON.stringify(cleanState),
+    leaseNonce,
+    PROCESS_LEASE_HOLDER,
+    LEASE_TTL_SECONDS,
+  );
   const res = await runWithStatementTimeout(DB_HEAVY_STATEMENT_TIMEOUT_MS, (query) =>
     query(stmt.text, stmt.values),
   );
@@ -3610,6 +3527,8 @@ export async function saveCharacterAndMarketState(
       level,
       JSON.stringify(cleanState),
       leaseNonce,
+      PROCESS_LEASE_HOLDER,
+      LEASE_TTL_SECONDS,
     );
     const charRes = await client.query(stmt.text, stmt.values);
     if (leaseNonce !== undefined && (charRes.rowCount ?? 0) === 0) {
@@ -3634,7 +3553,15 @@ export async function saveCharacterAndMarketState(
     // never land for a displaced session, and a failure anywhere rolls back
     // the character, market, mail, and book halves together.
     await writeGuildBankRows(client, guildBanks ?? [], results);
-    if (!(await renewCharacterLeaseBeforeCommit(client, characterId, leaseNonce))) {
+    if (
+      !(await renewCharacterLeaseBeforeCommit(
+        client,
+        characterId,
+        leaseNonce,
+        PROCESS_LEASE_HOLDER,
+        LEASE_TTL_SECONDS,
+      ))
+    ) {
       await client.query('ROLLBACK');
       return false;
     }
@@ -3787,6 +3714,8 @@ export async function saveCharacterAndGuildBankState(
       level,
       JSON.stringify(cleanState),
       leaseNonce,
+      PROCESS_LEASE_HOLDER,
+      LEASE_TTL_SECONDS,
     );
     const charRes = (await client.query(stmt.text, stmt.values)) as { rowCount: number | null };
     if (leaseNonce !== undefined && (charRes.rowCount ?? 0) === 0) {
@@ -3794,7 +3723,15 @@ export async function saveCharacterAndGuildBankState(
       return false;
     }
     await writeGuildBankRows(client, guildBanks, results);
-    if (!(await renewCharacterLeaseBeforeCommit(client, characterId, leaseNonce))) {
+    if (
+      !(await renewCharacterLeaseBeforeCommit(
+        client,
+        characterId,
+        leaseNonce,
+        PROCESS_LEASE_HOLDER,
+        LEASE_TTL_SECONDS,
+      ))
+    ) {
       await client.query('ROLLBACK');
       return false;
     }
