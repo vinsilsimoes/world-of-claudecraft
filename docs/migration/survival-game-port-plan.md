@@ -158,6 +158,11 @@ names. Plan them into each slice, do not defer them to the end.
    authoritative gameplay identity and supply class requirements, tier, grade,
    enhancement, attributes and effects. No 2D equipment asset or separate MIR4
    inventory/paperdoll is introduced.
+10. **Mouse Camera is the only camera scheme.** Fresh and persisted profiles
+    always run with Mouse Camera enabled. The existing Key Bindings window does
+    not offer a Classic Camera toggle and world entry does not show a camera-mode
+    chooser. The persisted key remains only as a compatibility seam; loading or
+    writing a historical `false` value normalizes it to `true`.
 
 ### Asset and toolchain release gate
 
@@ -262,7 +267,7 @@ merely that a dataset or unit-tested sim function exists.
 
 | Slice | Dataset | Sim | Host | Persisted/online | Existing UI | E2E | Status |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Profile/world/roster | yes | yes | yes | yes | yes | partial | active, release proof pending |
+| Profile/world/roster | yes | yes | yes | yes | yes | yes | active; PostgreSQL 16 and two-browser release proof passed |
 | M01 combat + five kits | yes | yes | yes | yes | yes | partial | active |
 | L2 skill evolution | yes | yes | yes | yes | existing Spellbook + Deeds | partial | active; first upgrade resources are earnable through achievements plus campaign copper |
 | M01 quest/auto journey | yes | yes | yes | yes | tracker + log | partial | active |
@@ -275,15 +280,17 @@ merely that a dataset or unit-tested sim function exists.
 Current implementation estimate: **93%**. This is the normalized maturity-layer
 score for the ledger above (`yes`/`n/a` = 1, `partial` = 0.5), rounded to the
 nearest whole percent. It measures implemented migration scope, not release
-readiness: PostgreSQL-backed multiplayer/load evidence and the staged full gate
-remain mandatory before the profile can be called shipping-complete.
+readiness. The PostgreSQL-backed multiplayer/load proof and staged PR gate now
+pass; the remaining percentage is the partial E2E coverage called out per slice,
+not missing external infrastructure.
 
 The profile host now resolves and activates the same `buildMir4ArcWorld()` for
 offline, headless and server execution. Native class keys cross creation, DB,
 join and snapshot boundaries. MIR4 save state is sanitized, versioned under
 `mir4-gameplay-port-v2`, restored online, and echoed authoritatively; the
-one-shot v1-to-v2 migration is dry-run by default. Production activation still
-requires the PostgreSQL 16 migration/load proof described in the release gate.
+one-shot v1-to-v2 migration is dry-run by default. The PostgreSQL 16
+migration/load proof is recorded below; production activation still requires
+the documented operational drain before applying a v1-to-v2 migration.
 Current-release save, acquire and delete paths share the explicit lock order
 `characters` -> `character_leases`: acquire materializes an ownership/realm-
 scoped `FOR KEY SHARE` parent lock before its `INSERT ... ON CONFLICT`, while
@@ -511,26 +518,35 @@ stored as a duration, never a cross-session clock deadline), so reconnect cannot
 erase either combat resource. Destroyed logical equipment instances are terminal
 and cannot be re-equipped through their historical reward receipt.
 
-Remaining release blockers are live PostgreSQL-backed multiplayer E2E, the
-PostgreSQL 16 migration/load proof and the full contribution gate. The existing
-`scripts/mp_integration.mjs`
+The external release proof is complete. The existing `scripts/mp_integration.mjs`
 WebSocket integration rig is now profile-aware: its MIR4 scenario creates native
 Elementalist and Lancer characters, reconstructs delta-elided MIR4 owner state,
 checks authoritative AUTO battle and quest-journey echoes, proves classic
 abilities remain blocked, and compares the profile state after reconnect. Its
-pure profile and snapshot reconstruction helpers are unit-tested. This host has
-neither PostgreSQL nor Docker, so that live script has not been represented as a
-passing online proof. `scripts/mp_browser.mjs` uses the same scenario selector
+pure profile and snapshot reconstruction helpers are unit-tested.
+`scripts/mp_browser.mjs` uses the same scenario selector
 and real character-creation/HUD DOM: in MIR4 it checks the native class id, the
 existing action bar's Auto Battle toggle, the classic Talents gate, mutual
 visibility, movement and chat, and now exits nonzero on any failed assertion.
-It is likewise prepared but not claimed as executed without the server.
-The required `MIR4 PostgreSQL 16 proof` CI job now owns that execution as well:
+The required `MIR4 PostgreSQL 16 proof` CI job owns that execution:
 after the migration/load cases, it builds the profile client/server, boots the
 server against the same disposable PostgreSQL 16 service and runs both
 multiplayer scripts. No hosted database or separate paid service is required;
-the remaining evidence is the result of that required job, not another manual
-environment recipe.
+GitHub Actions supplies the disposable service and Chromium.
+
+CI run [32477064316](https://github.com/vinsilsimoes/world-of-claudecraft/actions/runs/32477064316)
+passed this proof on PostgreSQL 16. The maximum-state probe persisted four
+concurrent 86,975-byte character projections in 24.77 ms and produced 145,888
+diagnostic WAL bytes. The 1,000-session cycle renewed all 1,000 leases, completed
+its heartbeat in 9.74 ms and the full four-worker save cycle in 2,440.85 ms
+(p50 9.22 ms, p95 14.28 ms, p99 18.57 ms, maximum 22.57 ms). The real WebSocket
+scenario passed 32 assertions with no failures. Two independent Chromium
+processes then entered Ford Village through the shipping shell and passed all
+10 assertions: mutual visibility, authoritative MIR4 class, the existing WoC
+Auto Battle control and state, hidden classic Talents launcher, remote WASD
+movement, chat delivery and zero page errors. The retained artifact contains
+both screenshots and the server log; visual inspection confirms the existing
+WoC 3D world/UI and no camera-mode chooser or 2D asset surface.
 
 Local verification for this execution includes the complete serial
 `tests/mir4/` suite, the focused profile, world,
@@ -645,8 +661,8 @@ wait, rather than reusing the earlier attempted-insert timestamp.
 `tests/character_lease_pg_integration.test.ts` is the opt-in disposable-database
 proof for that TTL, heartbeat `SKIP LOCKED`, both delete/acquire orderings and
 stale-save rejection. Its five cases require `TEST_DATABASE_URL`; they are
-prepared but remain unexecuted on this host, so PostgreSQL-backed interleaving
-is still a release proof rather than a claim inferred from mocks.
+not run on this Windows host, but execute in the required staged PostgreSQL 16
+job rather than being inferred from mocks.
 `tests/mir4_save_v2_pg_integration.test.ts` now provides the matching disposable
 PostgreSQL 16 harness for the profile itself: v1 dry-run/apply, active-lease and
 native-roster refusal, the lease-table migration fence, both deterministic
@@ -662,8 +678,8 @@ unique per process and cleanup failures are test failures. The dedicated
 `MIR4 PostgreSQL 16 proof` CI job supplies PostgreSQL 16 and sets a fail-closed
 guard, so these files cannot silently skip on a required PR, merge-queue or
 release-candidate run. The same job now follows them with the real WebSocket and
-browser multiplayer scenarios. All four remain unexecuted on this local host
-until that job runs because no local PostgreSQL service is available.
+browser multiplayer scenarios. Run 32477064316 executed and passed the complete
+chain; the local host does not need its own PostgreSQL or Docker installation.
 
 The opt-in WoC Chromium suite is now a local passing proof: `npm run
 test:browser` executed the complete configured browser matrix covering
@@ -688,8 +704,8 @@ The final clean day-loop gate also passes on the complete migration worktree.
 generation pass over the 58 tracked i18n, wiki, SFX and media-manifest artifacts
 also produced identical SHA-256 values, proving the worktree artifacts are
 deterministic and current relative to their generators. This closes the
-deterministic local regression gate; it does not replace the staged merge
-contract or the live database proof below.
+deterministic local regression gate; staged run 32477064316 supplies the matching
+Linux, PostgreSQL and real-browser evidence.
 
 Within that final state, the exact five-class starter-loadout integration also
 passed the complete MIR4 suite (74 passing files, one skipped; 377 passing
@@ -697,16 +713,15 @@ tests, eight skipped), a 46-test focused creation/save/UI/snapshot/command band,
 and a 19-test headless observation/info band. TypeScript, both multiplayer
 scenario syntax checks and `git diff --check` also pass. The multiplayer scenario now
 asserts both exact starter slots and instances across creation and reconnect;
-its live PostgreSQL-backed run remains part of the external proof below.
+its live PostgreSQL-backed execution passed in run 32477064316.
 
-The formal contribution gate is not yet claimed. On this unstaged worktree its
-i18n freshness step correctly stops because generated locale artifacts and the
-removed temporary slice are not represented in the Git index. Staging files is
-outside this execution's authority. The PostgreSQL 16 migration,
-lock-concurrency, payload-size and 1,000-session load suite is now a required,
-fail-closed CI job, but its passing runtime evidence remains pending until the
-workflow executes; this host exposes neither PostgreSQL binaries, Docker, Podman
-nor a `DATABASE_URL`.
+The formal contribution evidence now passes in both environments. Locally,
+`npm run gate:fast` completed the full deterministic suite described above.
+Externally, CI run 32477064316 passed changed-file lint, browser regressions,
+typecheck and all builds, the PostgreSQL 16 proof, eight balanced PR test shards
+and both long-simulation lanes. Release-only jobs were correctly skipped for the
+ordinary feature PR. The measured shard timings from that green run are checked
+into `scripts/ci_shard_weights.generated.json` for subsequent CI balancing.
 
 ### Historical Phase 2 seed, superseded by the execution ledger
 
