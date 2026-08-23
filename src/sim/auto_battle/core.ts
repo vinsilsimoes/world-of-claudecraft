@@ -9,34 +9,44 @@
 // admission rule. Draws rng only through those casts. Classic profiles never
 // run this system (the tick phase is profile-gated in sim.ts).
 
-import { mir4SkillsForClass } from '../content/mir4';
+import { advanceMir4AutomationRoute, type Mir4AutomationRouteState } from '../auto_quest/route';
 import { castMir4Skill, mir4BasicAttack, mir4Ultimate, mir4UsePotion } from '../mir4/combat';
-import { mir4HardControlled } from '../mir4/effects';
-import { mir4SkillManaCost } from '../mir4/math';
 import { markMir4WireDirty } from '../mir4/wire_revision';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
-import { DT, dist2d, RUN_SPEED } from '../types';
+import { DT, dist2d } from '../types';
+import { mir4AutomationActionBlocked, mir4AutomationRunSpeed } from './admission';
+import { mir4AutoBattleActionRange, pickMir4AutoBattleSkill } from './rotation';
+import {
+  blockMir4AutoBattleTarget,
+  type Mir4AutoBattleTargetMemory,
+  mir4AutoBattleTargetBlocked,
+  observeMir4AutoBattlePursuit,
+  pruneMir4AutoBattleTargetBlocks,
+} from './target_memory';
 
 /**
- * Default target-acquisition radius from the ANCHOR (source: anchor, not
- * player). Tripled from the source's 12yd per product direction; a future UI
- * setting lets each player tune their own radius on the state field below.
+ * Default target-acquisition radius from the activation ANCHOR (source:
+ * anchor, not the player's moving position). The hunt must stay local: killing
+ * one target cannot move the search center and pull the player across a camp.
+ * A future UI setting can tune the radius through the state field below.
  */
-export const MIR4_AUTO_BATTLE_ACQUIRE_YARDS = 36;
+export const MIR4_AUTO_BATTLE_ACQUIRE_YARDS = 30;
 /** How close to the anchor the bot must stand before it stops walking home. */
 export const MIR4_AUTO_BATTLE_ANCHOR_TOLERANCE_YARDS = 2;
 /** Source passive MP regen (fraction of max pool per second). */
 export const MIR4_MP_REGEN_COMBAT = 0.0025;
 export const MIR4_MP_REGEN_REST = 0.005;
 
-export interface Mir4AutoBattleState {
+export interface Mir4AutoBattleState extends Mir4AutoBattleTargetMemory {
   mode: 'off' | 'battle';
   anchorX: number;
   anchorZ: number;
   acquireRadiusYards: number;
   /** Manual intervention pauses the bot; it resumes (re-anchored) when the player's hands leave the keys. */
   suspended: boolean;
+  /** Session-only collision-aware route. Persistence projects only authoritative settings. */
+  route?: Mir4AutomationRouteState;
 }
 
 export function setMir4AutoBattleMode(
@@ -44,12 +54,18 @@ export function setMir4AutoBattleMode(
   pid: number,
   mode: 'off' | 'battle',
   acquireRadiusYards = MIR4_AUTO_BATTLE_ACQUIRE_YARDS,
+  source: 'player' | 'journey' = 'player',
 ): void {
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return;
   p.autoAttack = mode === 'battle';
   if (mode === 'battle') {
+    if (source === 'player' && meta.mir4AutoQuest?.battleOwned) {
+      // An explicit off -> on is a player takeover. Journey must not switch
+      // that manually re-enabled battle off when its combat stage ends.
+      meta.mir4AutoQuest.battleOwned = false;
+    }
     meta.autoBattle = {
       mode,
       anchorX: p.pos.x,
@@ -65,22 +81,33 @@ export function setMir4AutoBattleMode(
   }
 }
 
-function livingMobAt(ctx: SimContext, id: number | null | undefined): Entity | null {
+function livingHostileMobAt(
+  ctx: SimContext,
+  attacker: Entity,
+  id: number | null | undefined,
+): Entity | null {
   if (id === null || id === undefined) return null;
   const e = ctx.entities.get(id);
-  return e && e.kind === 'mob' && !e.dead ? e : null;
+  return e && e.kind === 'mob' && !e.dead && ctx.isHostileTo(attacker, e) ? e : null;
 }
 
 function faceTowards(p: Entity, x: number, z: number): void {
   p.facing = Math.atan2(x - p.pos.x, z - p.pos.z);
 }
 
-function acquireTarget(ctx: SimContext, p: Entity, st: Mir4AutoBattleState): Entity | null {
+function acquireTarget(
+  ctx: SimContext,
+  p: Entity,
+  st: Mir4AutoBattleState,
+  anchorX = st.anchorX,
+  anchorZ = st.anchorZ,
+): Entity | null {
   let best: Entity | null = null;
   let bestD = Infinity;
   for (const e of ctx.entities.values()) {
-    if (e.kind !== 'mob' || e.dead) continue;
-    const d = dist2d({ x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos'], e.pos);
+    if (e.kind !== 'mob' || e.dead || !ctx.isHostileTo(p, e)) continue;
+    if (mir4AutoBattleTargetBlocked(st, e.id, ctx.time)) continue;
+    const d = dist2d({ x: anchorX, y: 0, z: anchorZ } as Entity['pos'], e.pos);
     const fromPlayer = dist2d(p.pos, e.pos);
     if (d > st.acquireRadiusYards || fromPlayer >= bestD) continue;
     best = e;
@@ -109,6 +136,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
   for (const meta of ctx.players.values()) {
     const st = meta.autoBattle;
     if (st?.mode !== 'battle') continue;
+    pruneMir4AutoBattleTargetBlocks(st, ctx.time);
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
 
@@ -135,152 +163,132 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       st.suspended = false;
       st.anchorX = p.pos.x;
       st.anchorZ = p.pos.z;
+      st.route = undefined;
+      st.pursuit = undefined;
+      st.blockedUntilByTargetId = undefined;
       markMir4WireDirty(meta);
     }
 
-    let target = livingMobAt(ctx, p.targetId);
+    // Every hard-control representation is a total Auto Battle lockout. The
+    // classic predicates cover stun, root and incapacitate; the MIR4 bag also
+    // protects cc-immune entities that deliberately have no classic mirror.
+    if (mir4AutomationActionBlocked(ctx, p)) continue;
+
+    // Auto Journey owns locomotion while it is active. Its moving position is
+    // also the battle acquisition anchor, so combat can clear mobs encountered
+    // along the route without the old fixed grind anchor pulling the player
+    // back after every journey step.
+    const journeyActive = meta.mir4AutoQuest !== undefined && !meta.mir4AutoQuest.suspended;
+    const effectiveAnchorX = journeyActive ? p.pos.x : st.anchorX;
+    const effectiveAnchorZ = journeyActive ? p.pos.z : st.anchorZ;
+    let target = livingHostileMobAt(ctx, p, p.targetId);
     if (
       target &&
-      dist2d({ x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos'], target.pos) >
-        st.acquireRadiusYards
+      (mir4AutoBattleTargetBlocked(st, target.id, ctx.time) ||
+        dist2d({ x: effectiveAnchorX, y: 0, z: effectiveAnchorZ } as Entity['pos'], target.pos) >
+          st.acquireRadiusYards)
     ) {
       target = null; // outside the anchor: drop it, exactly like the source
     }
     if (!target) {
-      target = acquireTarget(ctx, p, st);
+      target = acquireTarget(ctx, p, st, effectiveAnchorX, effectiveAnchorZ);
       p.targetId = target ? target.id : null;
     }
 
     if (!target) {
+      if (journeyActive) continue;
+      st.pursuit = undefined;
       // No prey: walk home and stand guard. moveToward (the shared mob/pet
       // movement entry) instead of meta.moveInput: the browser client
       // overwrites moveInput from the keyboard every frame, which would
       // clobber an input-driven pursuit between ticks.
       const home = dist2d(p.pos, { x: st.anchorX, y: p.pos.y, z: st.anchorZ } as Entity['pos']);
       if (home > MIR4_AUTO_BATTLE_ANCHOR_TOLERANCE_YARDS) {
-        ctx.moveToward(p, { x: st.anchorX, y: p.pos.y, z: st.anchorZ }, RUN_SPEED);
+        moveAutoBattleToward(ctx, p, st, { x: st.anchorX, z: st.anchorZ });
+      } else {
+        st.route = undefined;
       }
       continue;
     }
 
-    const rangeYards = 4; // warrior band; per-class bands arrive with Phase 3 kits
-    if (dist2d(p.pos, target.pos) > rangeYards) {
-      ctx.moveToward(p, target.pos, RUN_SPEED);
-      continue;
-    }
-    faceTowards(p, target.pos.x, target.pos.z);
-
     // Auto-potion (source defaults): HP first at <=50%, then MP at <=35%.
+    // It is valid while closing distance, so survival never waits for melee.
     if (p.hp / p.maxHp <= 0.5) {
       if (mir4UsePotion(ctx, p.id, 'hp')) continue;
     } else if (p.maxResource > 0 && p.resource / p.maxResource <= 0.35) {
       if (mir4UsePotion(ctx, p.id, 'mp')) continue;
     }
 
+    const area = {
+      anchorX: effectiveAnchorX,
+      anchorZ: effectiveAnchorZ,
+      acquireRadiusYards: st.acquireRadiusYards,
+    };
+    const pick = pickMir4AutoBattleSkill(ctx, p, target, area);
+    if (pick?.selfUtility) {
+      const result = castMir4Skill(ctx, p.id, pick.skillId, target.id);
+      if (result.ok) continue;
+    }
+
+    const rangeYards = mir4AutoBattleActionRange(p, pick);
+    const ultimateReady = (p.mir4UltGauge ?? 0) >= 100 && !p.cooldowns.has('mir4_ult');
+    const needsTargetLineOfSight = ultimateReady || pick?.actorCentered !== true;
+    const actorCenteredReady = pick?.actorCentered === true && !ultimateReady;
+    const needsPursuit =
+      !actorCenteredReady &&
+      (dist2d(p.pos, target.pos) > rangeYards ||
+        (needsTargetLineOfSight && !ctx.hasLineOfSight(p, target)));
+    if (needsPursuit) {
+      // Auto Journey is the sole locomotion owner while active. Auto Battle
+      // may attack an enemy already in range, but it must never add a second
+      // moveToward step or pull the journey away from its authored route.
+      if (journeyActive) continue;
+      const observed = observeMir4AutoBattlePursuit(st.pursuit, target.id, p.pos);
+      st.pursuit = observed.pursuit;
+      if (observed.stalled) {
+        blockMir4AutoBattleTarget(st, target.id, ctx.time);
+        st.route = undefined;
+        p.targetId = null;
+        continue;
+      }
+      moveAutoBattleToward(ctx, p, st, target.pos);
+      continue;
+    }
+    st.route = undefined;
+    st.pursuit = undefined;
+    faceTowards(p, target.pos.x, target.pos.z);
+
     // The ultimate first when the gauge is full (the source's selection
     // order), then the rotation cascade, else the basic filler.
     if ((p.mir4UltGauge ?? 0) >= 100) {
-      mir4Ultimate(ctx, p.id, target.id);
+      const result = mir4Ultimate(ctx, p.id, target.id);
+      if (result.ok) continue;
     }
-    const pick = pickRotationSkill(ctx, p, target, st);
-    if (pick) {
+    if (pick && !pick.selfUtility) {
       const result = castMir4Skill(ctx, p.id, pick.skillId, target.id);
-      if (result.ok || result.reason === 'on-gcd') {
-        if (result.ok) continue; // cast committed; basic filler not needed
-      }
+      if (result.ok) continue;
     }
     mir4BasicAttack(ctx, p.id, target.id);
   }
 }
 
-/**
- * The source's rotation cascade (mir4-auto-hunt-rotation-v1):
- * survival-utility (HP<=45%) -> aoe (nearby >= max(3, minTargets)) -> debuff
- * (effect still missing on the target) -> execution (target HP <= threshold)
- * -> single-target. Warrior adds the client's setup/payoff ordering: against
- * a hard-controlled target the payoff skills come first.
- */
-function pickRotationSkill(
+function moveAutoBattleToward(
   ctx: SimContext,
   p: Entity,
-  target: Entity,
   st: Mir4AutoBattleState,
-): { skillId: number } | null {
-  const kit = mir4SkillsForClass((p.mir4?.classId ?? 1) as 1 | 2 | 3 | 4 | 5).filter(
-    (s) => s.requiresTarget && (s.unlock.kind !== 'level' || p.level >= s.unlock.level),
+  destination: { x: number; z: number },
+): void {
+  const next = advanceMir4AutomationRoute(
+    ctx.cfg.seed,
+    p.pos,
+    destination,
+    st.route,
+    ctx.riftCollisionToken,
   );
-  const hpPercent = (p.hp / p.maxHp) * 100;
-  const targetHpPercent = (target.hp / target.maxHp) * 100;
-  let nearby = 0;
-  for (const e of ctx.entities.values()) {
-    if (e.kind !== 'mob' || e.dead) continue;
-    if (
-      dist2d({ x: st.anchorX, y: 0, z: st.anchorZ } as Entity['pos'], e.pos) <=
-      st.acquireRadiusYards
-    ) {
-      nearby++;
-    }
-  }
-  const controlled = mir4HardControlled(target);
-  const order = orderKit(kit, p.mir4?.classId ?? 1, controlled);
-
-  const wants = (roles: readonly string[], role: string) => roles.includes(role);
-  for (const phase of [
-    'survival-utility',
-    'aoe',
-    'debuff',
-    'execution',
-    'single-target',
-  ] as const) {
-    for (const skill of order) {
-      // Availability admission (the source checks it per candidate): a skill
-      // on cooldown or short of MP is never recommended, or the cascade would
-      // stall on its top pick forever.
-      if (p.cooldowns.has(String(skill.skillId))) continue;
-      const cost = mir4SkillManaCost(
-        p.mir4?.manaCostStat ?? 0,
-        skill.skillCost,
-        skill.skillCostType,
-      );
-      if (p.resource < cost) continue;
-      const roles = skill.roles;
-      if (phase === 'survival-utility' && !(wants(roles, phase) && hpPercent <= 45)) continue;
-      if (phase === 'aoe' && !(wants(roles, phase) && nearby >= Math.max(3, skill.minTargets ?? 3)))
-        continue;
-      if (phase === 'debuff' && !(wants(roles, phase) && (skill.effect?.effect ?? '') !== ''))
-        continue;
-      if (phase === 'execution' && !(wants(roles, phase) && targetHpPercent <= 30)) {
-        continue;
-      }
-      if (phase === 'single-target' && !wants(roles, phase)) continue;
-      // CC admission: a skill whose effect is already active on the target
-      // is skipped (the engine would refuse it anyway).
-      const effectName = skill.effect?.effect;
-      if (
-        effectName &&
-        target.mir4Effects?.active.some((f) => f.effectId === `mir4_${skill.skillId}_${effectName}`)
-      ) {
-        continue;
-      }
-      return { skillId: skill.skillId };
-    }
-  }
-  return null;
-}
-
-/** Warrior setup/payoff flip; every other class keeps catalog order. */
-function orderKit<T extends { skillId: number }>(
-  kit: readonly T[],
-  classId: number,
-  targetControlled: boolean,
-): T[] {
-  if (classId !== 1) return [...kit];
-  const rank = targetControlled
-    ? { 1104: 0, 1401: 1, 1102: 2, 1304: 3 } // payoff: burst the controlled target
-    : { 1102: 0, 1304: 1, 1104: 2, 1401: 3 }; // setup: control first
-  return [...kit].sort(
-    (a, b) =>
-      (rank[a.skillId as 1102 | 1104 | 1304 | 1401] ?? 9) -
-      (rank[b.skillId as 1102 | 1104 | 1304 | 1401] ?? 9),
+  st.route = next.route;
+  ctx.moveToward(
+    p,
+    { x: next.waypoint.x, y: p.pos.y, z: next.waypoint.z },
+    mir4AutomationRunSpeed(ctx, p),
   );
 }

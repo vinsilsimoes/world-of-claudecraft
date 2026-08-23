@@ -9,9 +9,10 @@
 // classic 'slow' aura so the shared mob AI, render, and client react without
 // knowing the profile; the mir4 bag stays the owner of the semantics.
 
+import { isVeilboundMarchActive } from '../combat/paladin_veilbound_state';
 import type { SimContext } from '../sim_context';
 import type { Entity, Mir4ActiveEffect, Mir4EffectKind, Mir4TargetEffects } from '../types';
-import { DT, dist2d } from '../types';
+import { DT } from '../types';
 
 /** The source's CONTROL_IMMUNITY_TAIL: 750ms after a hard control expires. */
 export const MIR4_CONTROL_IMMUNITY_TAIL_SECONDS = 0.75;
@@ -84,10 +85,10 @@ export function applyMir4Effect(
   };
   bag.active.push(entry);
   if (HARD_CC.has(spec.kind)) {
-    bag.controlImmuneUntil = Math.max(
-      bag.controlImmuneUntil,
-      ctx.time + spec.durationSeconds + MIR4_CONTROL_IMMUNITY_TAIL_SECONDS,
-    );
+    const until = ctx.time + spec.durationSeconds + MIR4_CONTROL_IMMUNITY_TAIL_SECONDS;
+    bag.controlImmuneUntil = Math.max(bag.controlImmuneUntil, until);
+    if (!bag.controlImmunityByEffectId) bag.controlImmunityByEffectId = {};
+    bag.controlImmunityByEffectId[spec.effectId] = { sourceId: spec.sourceId, until };
   }
 
   // Classic mirror: hard control rides the shared stun aura (movement AND
@@ -110,7 +111,9 @@ export function applyMir4Effect(
       kind: 'slow',
       remaining: spec.durationSeconds,
       duration: spec.durationSeconds,
-      value: spec.magnitude ?? 0,
+      // Classic movement reads slow aura values as the remaining speed
+      // multiplier, while MIR4 stores magnitude as the reduction fraction.
+      value: 1 - (spec.magnitude ?? 0),
       sourceId: spec.sourceId,
       school: 'physical',
     });
@@ -126,7 +129,13 @@ export function updateMir4Effects(ctx: SimContext): void {
       if (e.mir4Shield.remaining <= 0) e.mir4Shield = undefined;
     }
     const bag = e.mir4Effects;
-    if (!bag || bag.active.length === 0) continue;
+    if (!bag) continue;
+    attributeLegacyActiveControlImmunity(bag, ctx.time);
+    reconcileMir4ControlImmunity(bag, ctx.time);
+    if (bag.active.length === 0) {
+      if (bag.controlImmuneUntil <= ctx.time) e.mir4Effects = undefined;
+      continue;
+    }
     let changed = false;
     for (const f of bag.active) f.remaining -= DT;
     const kept = bag.active.filter((f) => f.remaining > 0);
@@ -136,6 +145,39 @@ export function updateMir4Effects(ctx: SimContext): void {
       e.mir4Effects = undefined;
     }
   }
+}
+
+function reconcileMir4ControlImmunity(bag: Mir4TargetEffects, now: number): void {
+  const attributed = bag.controlImmunityByEffectId;
+  if (!attributed) return;
+  let latest = 0;
+  for (const [effectId, immunity] of Object.entries(attributed)) {
+    if (immunity.until <= now) {
+      delete attributed[effectId];
+      continue;
+    }
+    latest = Math.max(latest, immunity.until);
+  }
+  bag.controlImmuneUntil = latest;
+  if (Object.keys(attributed).length === 0) bag.controlImmunityByEffectId = undefined;
+}
+
+function attributeLegacyActiveControlImmunity(bag: Mir4TargetEffects, now: number): void {
+  if (bag.controlImmunityByEffectId !== undefined) return;
+  const activeHardControl = bag.active.filter((effect) => HARD_CC.has(effect.kind));
+  if (activeHardControl.length === 0) return;
+  const authoritativeUntil = bag.controlImmuneUntil;
+  bag.controlImmunityByEffectId = {};
+  for (const effect of activeHardControl) {
+    bag.controlImmunityByEffectId[effect.effectId] = {
+      sourceId: effect.sourceId,
+      until:
+        authoritativeUntil > now
+          ? authoritativeUntil
+          : now + effect.remaining + MIR4_CONTROL_IMMUNITY_TAIL_SECONDS,
+    };
+  }
+  reconcileMir4ControlImmunity(bag, now);
 }
 
 /** Sum of the damage-taken magnitudes (defense-break + burn), 0 when clean. */
@@ -175,24 +217,127 @@ export function mir4MovementMultiplier(target: Entity): number {
 }
 
 /**
- * The AoE secondary set: up to `maxTargets` OTHER living mobs within
- * `radiusYards` of the primary target, nearest first (stable by id), exactly
- * how the combat module consumes the execution contract's area profile.
+ * Replace the classic strongest-only interpretation of MIR4 slow mirrors with
+ * the profile's multiplicative slow product, while retaining every unrelated
+ * classic slow and speed modifier already folded into the shared multiplier.
  */
+export function mir4MovementMultiplierFromShared(target: Entity, sharedMultiplier: number): number {
+  if (
+    isVeilboundMarchActive(target) ||
+    target.auras.some((aura) => aura.kind === 'slow_immunity')
+  ) {
+    return sharedMultiplier;
+  }
+  const mir4Slows = (target.mir4Effects?.active ?? []).filter((effect) => effect.kind === 'slow');
+  if (mir4Slows.length === 0) return sharedMultiplier;
+
+  const mir4SlowIds = new Set(mir4Slows.map((effect) => effect.effectId));
+  let strongestSharedSlow = 1;
+  let strongestNonMir4Slow = 1;
+  for (const aura of target.auras) {
+    if (aura.kind !== 'slow') continue;
+    strongestSharedSlow = Math.min(strongestSharedSlow, aura.value);
+    if (!mir4SlowIds.has(aura.id)) {
+      strongestNonMir4Slow = Math.min(strongestNonMir4Slow, aura.value);
+    }
+  }
+  const mir4Product = mir4MovementMultiplier(target);
+  return (
+    sharedMultiplier *
+    ((strongestNonMir4Slow * mir4Product) / Math.max(Number.EPSILON, strongestSharedSlow))
+  );
+}
+
+/** Strip session combat effects attributed to one PvP controller. */
+export function clearMir4EffectsFromController(
+  ctx: SimContext,
+  target: Entity | undefined,
+  controllerPid: number,
+  controlled: ReadonlySet<number> | undefined,
+): void {
+  const bag = target?.mir4Effects;
+  if (!target || !bag) return;
+  attributeLegacyActiveControlImmunity(bag, ctx.time);
+  // A runtime-only bag from before source attribution may already be in its
+  // tail-only phase. No source evidence survives there, so duel teardown
+  // explicitly drops that ambiguous scalar rather than handing the loser back
+  // blocked by control that the classic mirror has already removed.
+  const clearUnattributedLegacyTail =
+    bag.controlImmunityByEffectId === undefined && bag.controlImmuneUntil > ctx.time;
+  const ownedByController = (sourceId: number): boolean => {
+    const source = ctx.entities.get(sourceId);
+    const byController = source
+      ? ctx.pvpController(source)?.id === controllerPid
+      : sourceId === controllerPid;
+    return byController || controlled?.has(sourceId) === true;
+  };
+  const kept = bag.active.filter((effect) => {
+    return !ownedByController(effect.sourceId);
+  });
+  const removedActive = kept.length !== bag.active.length;
+  let removedImmunity = false;
+  for (const [effectId, immunity] of Object.entries(bag.controlImmunityByEffectId ?? {})) {
+    if (ownedByController(immunity.sourceId)) {
+      if (bag.controlImmunityByEffectId) delete bag.controlImmunityByEffectId[effectId];
+      removedImmunity = true;
+    }
+  }
+  if (!removedActive && !removedImmunity && !clearUnattributedLegacyTail) return;
+  if (clearUnattributedLegacyTail) bag.controlImmuneUntil = ctx.time;
+  else reconcileMir4ControlImmunity(bag, ctx.time);
+  if (kept.length === 0) {
+    if (bag.controlImmuneUntil <= ctx.time) target.mir4Effects = undefined;
+    else bag.active = kept;
+    return;
+  }
+  bag.active = kept;
+}
+
+/**
+ * A deterministic visible enemy collection around an AoE center. Both monsters and
+ * hostile players are valid combat entities; NPCs/objects, friendlies, the
+ * attacker, covered entities, and an optional primary are excluded before the
+ * distance/id ordering so rejected rows consume no combat RNG.
+ */
+export function mir4AoEHostileTargets(
+  ctx: SimContext,
+  attacker: Entity,
+  center: Entity,
+  radiusYards: number,
+  maxTargets: number,
+  excludeId?: number,
+): Entity[] {
+  const found: { e: Entity; d: number }[] = [];
+  const radiusSq = radiusYards * radiusYards;
+  for (const e of ctx.entities.values()) {
+    if (
+      e.id === attacker.id ||
+      e.id === excludeId ||
+      (e.kind !== 'mob' && e.kind !== 'player') ||
+      e.dead
+    ) {
+      continue;
+    }
+    const dx = e.pos.x - center.pos.x;
+    const dz = e.pos.z - center.pos.z;
+    const distanceSq = dx * dx + dz * dz;
+    if (distanceSq > radiusSq) continue;
+    if (!ctx.isHostileTo(attacker, e) || !ctx.hasLineOfSight(attacker, e)) continue;
+    found.push({ e, d: Math.sqrt(distanceSq) });
+  }
+  found.sort((a, b) => (a.d === b.d ? a.e.id - b.e.id : a.d - b.d));
+  return found.slice(0, maxTargets).map((f) => f.e);
+}
+
+/** Target-centered AoE fan-out, excluding the already-resolved primary. */
 export function mir4AoESecondaryTargets(
   ctx: SimContext,
+  attacker: Entity,
   primary: Entity,
   radiusYards: number,
   maxTargets: number,
 ): Entity[] {
-  const found: { e: Entity; d: number }[] = [];
-  for (const e of ctx.entities.values()) {
-    if (e === primary || e.kind !== 'mob' || e.dead) continue;
-    const d = dist2d(primary.pos, e.pos);
-    if (d <= radiusYards) found.push({ e, d });
-  }
-  found.sort((a, b) => (a.d === b.d ? a.e.id - b.e.id : a.d - b.d));
-  return found.slice(0, maxTargets).map((f) => f.e);
+  return mir4AoEHostileTargets(ctx, attacker, primary, radiusYards, maxTargets, primary.id);
 }
 
 /**

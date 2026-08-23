@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
+import { VEILBOUND_MARCH_ID } from '../../src/sim/combat/paladin_veilbound_state';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
@@ -9,10 +10,12 @@ import {
   mir4DamageTakenAddend,
   mir4EffectAdmits,
   mir4MovementMultiplier,
+  mir4MovementMultiplierFromShared,
 } from '../../src/sim/mir4/effects';
 import { Sim } from '../../src/sim/sim';
-import type { Entity } from '../../src/sim/types';
+import type { Entity, Mir4ClassKey } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 // Phase 3.1: the mir4 effect/CC engine and the full warrior kit's effect
 // surface, pinned against the source's crowd-control policy (dedup by
@@ -41,6 +44,36 @@ function spawnWolf(sim: Sim, dx: number, dz: number): Entity {
     1,
     sim.groundPos(p.pos.x + dx, p.pos.z + dz),
   );
+  sim.addEntity(wolf);
+  return wolf;
+}
+
+function makeClassSim(seed: number, playerClassMir4: Mir4ClassKey): Sim {
+  return new Sim({
+    seed,
+    playerClass: 'warrior',
+    playerClassMir4,
+    playerName: 'AreaTester',
+    gameProfile: 'mir4-gameplay-port',
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    world: EMPTY_TEST_WORLD,
+  });
+}
+
+function spawnTankWolf(sim: Sim, x: number, z: number, id: string): Entity {
+  const wolf = createMob(
+    sim.nextId++,
+    {
+      ...MIR4_MOBS.mir4_forest_wolf,
+      id,
+      hpBase: 5000,
+      hpPerLevel: 0,
+      moveSpeed: 0,
+    } as never,
+    1,
+    sim.groundPos(x, z),
+  );
+  wolf.wanderTimer = 999999;
   sim.addEntity(wolf);
   return wolf;
 }
@@ -97,7 +130,99 @@ describe('the mir4 effect engine', () => {
       sourceId: sim.playerId,
     });
     expect(mir4MovementMultiplier(wolf)).toBeCloseTo(0.65, 10);
+    expect(wolf.auras.find((aura) => aura.id === 'test_slow')?.value).toBeCloseTo(0.65, 10);
     expect(mir4DamageTakenAddend(wolf)).toBe(0);
+  });
+  it('does not reapply a MIR4 slow that the shared slow-immunity aura rejected', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(6201);
+    const wolf = spawnWolf(sim, 3, 0);
+    wolf.auras.push({
+      id: 'test_slow_immunity',
+      name: 'Slow Immunity',
+      kind: 'slow_immunity',
+      remaining: 3,
+      duration: 3,
+      value: 1,
+      sourceId: wolf.id,
+      school: 'physical',
+    });
+    expect(
+      applyMir4Effect(sim.ctx, wolf, {
+        effectId: 'immune_mir4_slow',
+        kind: 'slow',
+        durationSeconds: 3,
+        magnitude: 0.35,
+        name: 'Rejected Slow Mirror',
+        sourceId: sim.playerId,
+      }),
+    ).toEqual({ ok: true });
+    expect(wolf.auras.some((aura) => aura.id === 'immune_mir4_slow')).toBe(false);
+    const sharedMultiplier = sim.moveSpeedMult(wolf);
+    expect(sharedMultiplier).toBe(1);
+    expect(mir4MovementMultiplierFromShared(wolf, sharedMultiplier)).toBe(sharedMultiplier);
+  });
+  it('does not reapply slow products during Veilbound March', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(6202);
+    const wolf = spawnWolf(sim, 3, 0);
+    wolf.auras.push(
+      {
+        id: 'classic_slow_before_march',
+        name: 'Classic Slow',
+        kind: 'slow',
+        remaining: 3,
+        duration: 3,
+        value: 0.5,
+        sourceId: sim.playerId,
+        school: 'physical',
+      },
+      {
+        id: VEILBOUND_MARCH_ID,
+        name: 'Veilbound March',
+        kind: 'buff_speed',
+        remaining: 3,
+        duration: 3,
+        value: 1,
+        sourceId: wolf.id,
+        school: 'holy',
+      },
+    );
+    expect(
+      applyMir4Effect(sim.ctx, wolf, {
+        effectId: 'march_mir4_slow',
+        kind: 'slow',
+        durationSeconds: 3,
+        magnitude: 0.35,
+        name: 'March Slow',
+        sourceId: sim.playerId,
+      }),
+    ).toEqual({ ok: true });
+    const sharedMultiplier = sim.moveSpeedMult(wolf);
+    expect(sharedMultiplier).toBe(1);
+    expect(mir4MovementMultiplierFromShared(wolf, sharedMultiplier)).toBe(sharedMultiplier);
+  });
+  it('migrates a legacy active hard-control tail without extending its deadline', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(621);
+    const wolf = spawnWolf(sim, 3, 0);
+    expect(
+      applyMir4Effect(sim.ctx, wolf, {
+        effectId: 'legacy_deadline_stun',
+        kind: 'stun',
+        durationSeconds: 1,
+        name: 'Legacy deadline stun',
+        sourceId: sim.playerId,
+      }),
+    ).toEqual({ ok: true });
+    const originalDeadline = wolf.mir4Effects?.controlImmuneUntil;
+    expect(originalDeadline).toBe(1.75);
+    if (!wolf.mir4Effects) throw new Error('legacy effect bag missing');
+    wolf.mir4Effects.controlImmunityByEffectId = undefined;
+
+    sim.tick();
+
+    expect(wolf.mir4Effects?.controlImmuneUntil).toBe(originalDeadline);
   });
 });
 
@@ -151,6 +276,124 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     expect(before.get(near1.id)! - near1.hp).toBe(87);
     expect(before.get(near2.id)! - near2.hp).toBe(87);
     expect(far.hp).toBe(before.get(far.id));
+  });
+  it('requires line of sight for admission and for every AoE secondary', () => {
+    const sim = makeClassSim(651, 'warrior');
+    const p = sim.player;
+    p.pos = sim.groundPos(27, 0);
+    const primary = spawnTankWolf(sim, 27, 2, 'visible_primary');
+    const visible = spawnTankWolf(sim, 27, -2, 'visible_secondary');
+    const covered = spawnTankWolf(sim, 30, 0, 'covered_secondary');
+    const originalHasLineOfSight = sim.ctx.hasLineOfSight;
+    sim.ctx.hasLineOfSight = (_attacker, target) => target.id !== covered.id;
+    expect(sim.ctx.hasLineOfSight(p, primary)).toBe(true);
+    expect(sim.ctx.hasLineOfSight(p, visible)).toBe(true);
+    expect(sim.ctx.hasLineOfSight(p, covered)).toBe(false);
+    const draws = vi.spyOn(sim.rng, 'next').mockReturnValue(0.5);
+
+    expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
+
+    sim.ctx.hasLineOfSight = originalHasLineOfSight;
+    expect(primary.hp).toBeLessThan(primary.maxHp);
+    expect(visible.hp).toBeLessThan(visible.maxHp);
+    expect(visible.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(true);
+    expect(covered.hp).toBe(covered.maxHp);
+    expect(covered.mir4Effects?.active ?? []).toHaveLength(0);
+    expect(draws).toHaveBeenCalledTimes(4);
+  });
+  it('rejects distant AoE candidates before tracing their line of sight', () => {
+    const sim = makeClassSim(6511, 'warrior');
+    const p = sim.player;
+    const primary = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'los_budget_primary');
+    spawnTankWolf(sim, p.pos.x + 3, p.pos.z + 1, 'los_budget_secondary');
+    const distant = spawnTankWolf(sim, p.pos.x + 100, p.pos.z, 'los_budget_distant');
+    const checkedIds: number[] = [];
+    sim.ctx.hasLineOfSight = (_attacker, target) => {
+      checkedIds.push(target.id);
+      return true;
+    };
+
+    expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
+
+    expect(checkedIds).not.toContain(distant.id);
+  });
+  it.each([
+    ['elementalist', 2501, 'freeze', 8],
+    ['taoist', 3506, 'root', 7],
+    ['arbalist', 4103, 'blind', 7.5],
+    ['lancer', 5201, 'stun', 7],
+  ] as const)(
+    'casts the %s actor-centered AoE %i without a selected target',
+    (cls, skillId, effectKind, radius) => {
+      const sim = makeClassSim(652 + skillId, cls);
+      const p = sim.player;
+      const primary = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, `${skillId}_primary`);
+      const secondary = spawnTankWolf(sim, p.pos.x + 3, p.pos.z + 1, `${skillId}_secondary`);
+      const friendly = spawnTankWolf(sim, p.pos.x + 3, p.pos.z - 1, `${skillId}_friendly`);
+      friendly.hostile = false;
+      const outside = spawnTankWolf(sim, p.pos.x + radius + 0.01, p.pos.z, `${skillId}_outside`);
+      sim.ctx.hasLineOfSight = () => true;
+
+      expect(sim.mir4CastSkill(skillId)).toEqual({ ok: true });
+
+      expect(p.cooldowns.has(String(skillId))).toBe(true);
+      expect(primary.hp).toBeLessThan(primary.maxHp);
+      expect(secondary.hp).toBeLessThan(secondary.maxHp);
+      expect(primary.mir4Effects?.active.some((effect) => effect.kind === effectKind)).toBe(true);
+      expect(secondary.mir4Effects?.active.some((effect) => effect.kind === effectKind)).toBe(true);
+      expect(friendly.hp).toBe(friendly.maxHp);
+      expect(friendly.mir4Effects?.active ?? []).toHaveLength(0);
+      expect(outside.hp).toBe(outside.maxHp);
+      expect(outside.mir4Effects?.active ?? []).toHaveLength(0);
+    },
+  );
+  it.each([
+    ['elementalist', 2501, 'freeze', 8],
+    ['taoist', 3506, 'root', 7],
+    ['arbalist', 4103, 'blind', 7.5],
+    ['lancer', 5201, 'stun', 7],
+  ] as const)(
+    'includes the exact %s actor-area boundary for skill %i',
+    (cls, skillId, effectKind, radius) => {
+      const sim = makeClassSim(1652 + skillId, cls);
+      const p = sim.player;
+      const edge = spawnTankWolf(sim, p.pos.x + radius, p.pos.z, `${skillId}_exact_edge`);
+      const outside = spawnTankWolf(
+        sim,
+        p.pos.x + radius + 0.01,
+        p.pos.z,
+        `${skillId}_beyond_edge`,
+      );
+      sim.ctx.hasLineOfSight = () => true;
+
+      expect(sim.mir4CastSkill(skillId)).toEqual({ ok: true });
+
+      expect(edge.mir4Effects?.active.some((effect) => effect.kind === effectKind)).toBe(true);
+      expect(outside.hp).toBe(outside.maxHp);
+      expect(outside.mir4Effects?.active ?? []).toHaveLength(0);
+    },
+  );
+  it('includes a hostile player, but never a friendly player, in targeted AoE fan-out', () => {
+    const sim = makeClassSim(653, 'warrior');
+    const p = sim.player;
+    const primary = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'player_fanout_primary');
+    const hostilePid = sim.addPlayer('elementalist', 'HostileSecondary');
+    const friendlyPid = sim.addPlayer('taoist', 'FriendlySecondary');
+    const hostile = sim.entities.get(hostilePid)!;
+    const friendly = sim.entities.get(friendlyPid)!;
+    hostile.pos = sim.groundPos(p.pos.x + 3, p.pos.z + 1);
+    friendly.pos = sim.groundPos(p.pos.x + 3, p.pos.z - 1);
+    const originalIsHostileTo = sim.ctx.isHostileTo;
+    sim.ctx.isHostileTo = (attacker, target) =>
+      attacker.id === p.id && (target.id === primary.id || target.id === hostile.id);
+    const hostileHp = hostile.hp;
+    const friendlyHp = friendly.hp;
+
+    expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
+
+    sim.ctx.isHostileTo = originalIsHostileTo;
+    expect(hostile.hp).toBeLessThan(hostileHp);
+    expect(friendly.hp).toBe(friendlyHp);
   });
   it('the immunity tail pins to the source constant', () => {
     expect(MIR4_CONTROL_IMMUNITY_TAIL_SECONDS).toBe(0.75);

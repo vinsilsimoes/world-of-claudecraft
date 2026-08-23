@@ -83,6 +83,7 @@ export interface Mir4DerivedPlayerStats {
   manaCost: number;
   penetrationBps: number;
   mountMoveSpeedBps: number;
+  mountBasicAttackSpeedBps: number;
   combatPower: number;
 }
 
@@ -150,6 +151,7 @@ export function deriveMir4PlayerStats(
     manaCost: get(19),
     penetrationBps: spirit.penetrationBps,
     mountMoveSpeedBps: mount.moveSpeedBps,
+    mountBasicAttackSpeedBps: mount.basicAttackSpeedBps,
     combatPower: combatPower(classId, values),
   };
 }

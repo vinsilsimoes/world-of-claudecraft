@@ -1,8 +1,11 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
+import { mir4ArcRegionAt } from '../../src/sim/content/mir4/arc_world_layout';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { mir4ResolveLayer, mir4RollLayer } from '../../src/sim/mir4/affixes';
 import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
+import { buildMir4WocCampaignWorld } from '../../src/sim/mir4/woc_comparison_world';
 import { Sim } from '../../src/sim/sim';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 
@@ -24,6 +27,108 @@ afterAll(() => {
 });
 
 describe('MIR4 character persistence', () => {
+  it('keeps the current narrative dialogue session-only', () => {
+    const source = makeMir4Sim(396);
+    const meta = source.players.get(source.playerId)!;
+    meta.mir4NarrativeDialogue = {
+      id: 'M01-Q01:accept:-1:17',
+      questId: 'M01-Q01',
+      npcEntityId: 17,
+      npcTemplateId: 'mir4_npc_m01_tarek_duas_pontes',
+      action: 'accept',
+      beat: 'accept',
+      startedAt: 10,
+      durationSeconds: 8,
+      completesAt: 18,
+    };
+
+    const saved = source.serializeCharacter(source.playerId)!;
+    expect(saved).not.toHaveProperty('mir4NarrativeDialogue');
+
+    const target = makeMir4Sim(397, true);
+    const restoredPid = target.addPlayer('warrior', 'Fresh Conversation', { state: saved });
+    expect(target.players.get(restoredPid)?.mir4NarrativeDialogue).toBeUndefined();
+  });
+
+  it('round-trips the limited MIR4 dungeon ticket wallet', () => {
+    const source = makeMir4Sim(397);
+    const meta = source.players.get(source.playerId)!;
+    meta.mir4DungeonTickets = { ticketType: 3, count: 1, resetAtMs: 123_000 };
+
+    const saved = source.serializeCharacter(source.playerId)!;
+    expect(saved.mir4DungeonTickets).toEqual(meta.mir4DungeonTickets);
+
+    const target = makeMir4Sim(398, true);
+    const restoredPid = target.addPlayer('warrior', 'Ticket Restore', { state: saved });
+    expect(target.players.get(restoredPid)?.mir4DungeonTickets).toEqual(meta.mir4DungeonTickets);
+  });
+
+  it('recovers legacy strip positions and corpse markers into the epoch-11 continent', () => {
+    const source = makeMir4Sim(398);
+    const saved = source.serializeCharacter(source.playerId)!;
+    saved.pos = { x: 0, z: 1000 };
+    saved.dead = true;
+    saved.ghost = true;
+    saved.corpsePos = { x: 0, z: 1000 };
+
+    const world = buildMir4ArcWorld(2);
+    setActiveWorldContent(world);
+    const target = new Sim({
+      seed: 399,
+      playerClass: 'warrior',
+      playerName: 'Legacy Position',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+      noPlayer: true,
+    });
+    const pid = target.addPlayer('warrior', 'Legacy Position', { state: saved });
+    const player = target.entities.get(pid)!;
+
+    expect(mir4ArcRegionAt(player.pos)).not.toBeNull();
+    expect(player.pos.x).toBeCloseTo(world.playerStart.x, 3);
+    expect(player.pos.z).toBeCloseTo(world.playerStart.z, 3);
+    expect(player.corpsePos).not.toBeNull();
+    expect(mir4ArcRegionAt(player.corpsePos!)).not.toBeNull();
+    expect(player.corpsePos!.x).toBeCloseTo(world.playerStart.x, 3);
+    expect(player.corpsePos!.z).toBeCloseTo(world.playerStart.z, 3);
+  });
+
+  it('recovers authored-continent positions and corpse markers into the WoC campaign world', () => {
+    const sourceWorld = buildMir4ArcWorld(2);
+    setActiveWorldContent(sourceWorld);
+    const source = new Sim({
+      seed: 3_981,
+      playerClass: 'warrior',
+      playerName: 'Authored Position',
+      gameProfile: 'mir4-gameplay-port',
+      world: sourceWorld,
+    });
+    const saved = source.serializeCharacter(source.playerId)!;
+    const authoredPosition = { x: 2_600, z: -62 };
+    saved.pos = { ...authoredPosition };
+    saved.dead = true;
+    saved.ghost = true;
+    saved.corpsePos = { ...authoredPosition };
+
+    const world = buildMir4WocCampaignWorld();
+    setActiveWorldContent(world);
+    const target = new Sim({
+      seed: 3_982,
+      playerClass: 'warrior',
+      playerName: 'WoC Position',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+      noPlayer: true,
+    });
+    const pid = target.addPlayer('warrior', 'WoC Position', { state: saved });
+    const player = target.entities.get(pid)!;
+
+    expect(player.pos.x).toBeCloseTo(world.playerStart.x, 3);
+    expect(player.pos.z).toBeCloseTo(world.playerStart.z, 3);
+    expect(player.corpsePos?.x).toBeCloseTo(world.playerStart.x, 3);
+    expect(player.corpsePos?.z).toBeCloseTo(world.playerStart.z, 3);
+  });
+
   it.each([
     [21, 21],
     [100, 100],
@@ -51,14 +156,102 @@ describe('MIR4 character persistence', () => {
       phase: 'to-site',
       siteIndex: 2,
       suspended: false,
+      battleOwned: true,
     };
 
     const saved = source.serializeCharacter(source.playerId)!;
-    expect(saved.mir4AutoQuest).toEqual(meta.mir4AutoQuest);
+    expect(saved.mir4AutoQuest).toEqual({
+      questId: 'M01-Q02',
+      phase: 'to-site',
+      siteIndex: 2,
+      suspended: false,
+    });
 
     const target = makeMir4Sim(401, true);
     const restoredPid = target.addPlayer('warrior', 'Journey', { state: saved });
-    expect(target.players.get(restoredPid)?.mir4AutoQuest).toEqual(meta.mir4AutoQuest);
+    expect(target.players.get(restoredPid)?.mir4AutoQuest).toEqual(saved.mir4AutoQuest);
+  });
+
+  it('keeps automation routes, pursuit, and target blacklist session-only', () => {
+    const source = makeMir4Sim(4001);
+    const meta = source.players.get(source.playerId)!;
+    const route = {
+      goalX: 18,
+      goalZ: -7,
+      waypoints: [{ x: 15, z: -4 }],
+      lastX: 12,
+      lastZ: -2,
+      stalledTicks: 3,
+    };
+    meta.mir4ArcQuests = {
+      'M01-Q02': { questId: 'M01-Q02', stageIndex: 2, stageProgress: 1, state: 'active' },
+    };
+    meta.autoBattle = {
+      mode: 'battle',
+      anchorX: 12,
+      anchorZ: -2,
+      acquireRadiusYards: 30,
+      suspended: false,
+      route: structuredClone(route),
+      pursuit: { targetId: 91, lastX: 12, lastZ: -2, stalledTicks: 40 },
+      blockedUntilByTargetId: { '91': 28.5 },
+    };
+    meta.mir4AutoQuest = {
+      questId: 'M01-Q02',
+      phase: 'to-site',
+      siteIndex: 2,
+      suspended: false,
+      battleOwned: true,
+      route: structuredClone(route),
+    };
+
+    const saved = source.serializeCharacter(source.playerId)! as any;
+    expect(saved.autoBattle).toBeUndefined();
+    expect(saved.mir4AutoQuest).not.toHaveProperty('route');
+    expect(saved.mir4AutoQuest).not.toHaveProperty('battleOwned');
+
+    const target = makeMir4Sim(4002, true);
+    const restoredPid = target.addPlayer('warrior', 'Sessionless Automation', { state: saved });
+    const restored = target.players.get(restoredPid)!;
+    expect(restored.autoBattle).toBeUndefined();
+    expect(restored.mir4AutoQuest).not.toHaveProperty('route');
+    expect(restored.mir4AutoQuest).not.toHaveProperty('battleOwned');
+  });
+
+  it('heals a legacy journey-owned Auto Battle state on its first tick and save', () => {
+    const source = makeMir4Sim(4003);
+    const legacy = source.serializeCharacter(source.playerId)! as any;
+    legacy.autoBattle = {
+      mode: 'battle',
+      anchorX: 0,
+      anchorZ: 0,
+      acquireRadiusYards: 36,
+      suspended: false,
+    };
+    legacy.mir4ArcQuests = {
+      'M01-Q02': { questId: 'M01-Q02', stageIndex: 4, stageProgress: 0, state: 'active' },
+    };
+    legacy.mir4AutoQuest = {
+      questId: 'M01-Q02',
+      phase: 'to-site',
+      siteIndex: 4,
+      suspended: false,
+      battleOwned: true,
+    };
+
+    const target = makeMir4Sim(4004, true);
+    const pid = target.addPlayer('warrior', 'Legacy Battle Owner', { state: legacy });
+    const restored = target.players.get(pid)!;
+    expect(restored.autoBattle?.mode).toBe('battle');
+    expect(restored.mir4AutoQuest?.battleOwned).toBe(true);
+
+    target.tick();
+
+    expect(restored.autoBattle?.mode ?? 'off').toBe('off');
+    expect(restored.mir4AutoQuest?.battleOwned).toBeUndefined();
+    const healed = target.serializeCharacter(pid)!;
+    expect(healed.autoBattle?.mode).toBe('off');
+    expect(healed.mir4AutoQuest?.battleOwned).toBeUndefined();
   });
 
   it('round-trips every authoritative MIR4 player field without aliasing the live state', () => {

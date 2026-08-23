@@ -11,6 +11,7 @@
 // on Sim and are read through the seam.
 
 import { ownedNecromancyUndead } from '../combat/necromancy';
+import { clearMir4EffectsFromController } from '../mir4/effects';
 import type { DuelState } from '../sim';
 import type { SimContext } from '../sim_context';
 import { DT, dist2d, type Entity } from '../types';
@@ -251,6 +252,8 @@ export function endDuel(ctx: SimContext, duel: DuelState, winnerPid: number | nu
   // not disagree about whose doing something was.
   clearAurasFromController(ctx, ea, duel.b, duel.controlled?.get(duel.b));
   clearAurasFromController(ctx, eb, duel.a, duel.controlled?.get(duel.a));
+  clearMir4EffectsFromController(ctx, ea, duel.b, duel.controlled?.get(duel.b));
+  clearMir4EffectsFromController(ctx, eb, duel.a, duel.controlled?.get(duel.a));
   if (winnerPid !== null && aMeta && bMeta) {
     const winner = winnerPid === duel.a ? aMeta : bMeta;
     const loser = winnerPid === duel.a ? bMeta : aMeta;

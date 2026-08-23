@@ -22,6 +22,7 @@ import {
   ZONES,
   zoneAt,
 } from '../src/sim/data';
+import { buildMir4WocComparisonWorld } from '../src/sim/mir4/woc_comparison_world';
 import {
   buildContinentMapModel,
   CONTINENT_FALLBACK_ASPECT,
@@ -54,8 +55,9 @@ function input(
   world: IWorld,
   contentAspect: number,
   hoveredZoneId: string | null = null,
+  zones = ZONES,
 ): ContinentMapInput {
-  return { world, canvasSize: CANVAS, contentAspect, hoveredZoneId };
+  return { world, zones, canvasSize: CANVAS, contentAspect, hoveredZoneId };
 }
 
 // Independent re-derivation of the core's projection, to check region rects
@@ -104,12 +106,42 @@ describe('buildContinentMapModel: image contain-fit rect', () => {
 });
 
 describe('buildContinentMapModel: MIR4 campaign atlas', () => {
-  it('reuses the overview canvas as a readable 4x5 atlas without classic map art', () => {
-    setActiveWorldContent(buildMir4ArcWorld());
+  it('keeps the original WoC continent art for the transplanted MIR4 story world', () => {
+    const activeWorld = buildMir4WocComparisonWorld();
+    setActiveWorldContent(activeWorld);
     try {
-      const world = worldAt('client', 0, 40) as unknown as { cfg: Record<string, unknown> };
+      const world = worldAt(
+        'client',
+        activeWorld.playerStart.x,
+        activeWorld.playerStart.z,
+      ) as unknown as { cfg: Record<string, unknown> };
       world.cfg.gameProfile = 'mir4-gameplay-port';
-      const model = buildContinentMapModel(input(world as unknown as IWorld, 0.5));
+      const model = buildContinentMapModel(
+        input(world as unknown as IWorld, 0.5, null, activeWorld.zones),
+      );
+
+      expect(model.usesArt).toBe(true);
+      expect(model.regions).toHaveLength(activeWorld.zones.length);
+      expect(model.currentZoneId).toBe('eastbrook_vale');
+      expect(model.regions.some((region) => region.zoneId === 'veiled_hollow')).toBe(true);
+    } finally {
+      setActiveWorldContent(null);
+    }
+  });
+
+  it('reuses the overview canvas as a readable 4x5 atlas without classic map art', () => {
+    const activeWorld = buildMir4ArcWorld(20);
+    setActiveWorldContent(activeWorld);
+    try {
+      const firstHub = activeWorld.zones[0]?.hub;
+      if (!firstHub) throw new Error('missing M01 hub');
+      const world = worldAt('client', firstHub.x, firstHub.z) as unknown as {
+        cfg: Record<string, unknown>;
+      };
+      world.cfg.gameProfile = 'mir4-gameplay-port';
+      const model = buildContinentMapModel(
+        input(world as unknown as IWorld, 0.5, null, activeWorld.zones),
+      );
       expect(model.usesArt).toBe(false);
       expect(model.regions).toHaveLength(20);
       expect(model.regions[0]?.zoneId).toBe('mir4_m01-vila-do-vau');
@@ -124,11 +156,18 @@ describe('buildContinentMapModel: MIR4 campaign atlas', () => {
   });
 
   it('moves keyboard focus through the painted 4x5 atlas and holds at its edges', () => {
-    setActiveWorldContent(buildMir4ArcWorld());
+    const activeWorld = buildMir4ArcWorld(20);
+    setActiveWorldContent(activeWorld);
     try {
-      const world = worldAt('client', 0, 40) as unknown as { cfg: Record<string, unknown> };
+      const firstHub = activeWorld.zones[0]?.hub;
+      if (!firstHub) throw new Error('missing M01 hub');
+      const world = worldAt('client', firstHub.x, firstHub.z) as unknown as {
+        cfg: Record<string, unknown>;
+      };
       world.cfg.gameProfile = 'mir4-gameplay-port';
-      const regions = buildContinentMapModel(input(world as unknown as IWorld, 0.5)).regions;
+      const regions = buildContinentMapModel(
+        input(world as unknown as IWorld, 0.5, null, activeWorld.zones),
+      ).regions;
       expect(continentZoneForKeyboard(regions, null, 'Home')).toBe('mir4_m01-vila-do-vau');
       expect(continentZoneForKeyboard(regions, 'mir4_m01-vila-do-vau', 'ArrowRight')).toBe(
         'mir4_m02-trilha-dos-juncos',

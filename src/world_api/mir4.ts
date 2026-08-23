@@ -19,11 +19,17 @@ export interface IWorldMir4 {
   setMir4AutoBattle(on: boolean): void;
   /** Authoritative auto-quest journey read. */
   mir4AutoQuestActive(): boolean;
-  setMir4AutoQuest(on: boolean): void;
+  setMir4AutoQuest(on: boolean, questId?: string): void;
   /** English status line for the tracker (localized by the HUD domain). */
   mir4QuestStatusText(): string;
   /** Authoritative profile projection consumed by the existing quest tracker. */
   mir4QuestTrackerEntries(): readonly Mir4QuestTrackerEntry[];
+  /** Confirm that the player opened the highlighted existing window for an
+   * informational campaign lesson. Gameplay lessons still require their
+   * concrete server-owned action receipt. */
+  mir4AcknowledgeTutorial(questId: string): void;
+  /** Skip the currently visible authoritative Auto Mission conversation. */
+  mir4SkipNarrativeDialogue(dialogueId: string): void;
   mir4CastSkill(skillId: number, targetId?: number): Mir4CastResult;
   /** Request a revision-guarded skill rank transition; the server remains authoritative. */
   mir4UpgradeSkill(skillId: number, expectedCurrentLevel: number): void;

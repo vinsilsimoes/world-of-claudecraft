@@ -489,6 +489,34 @@ describe('version', () => {
 });
 
 describe('round trip (the server never stores an unloadable byte)', () => {
+  it('preserves presentation-only biome paint across storage sanitization', () => {
+    const doc = rawDoc();
+    Object.assign(doc, {
+      biomePaint: {
+        cell: 20,
+        cols: 1,
+        rows: 1,
+        originX: 30,
+        originZ: 50,
+        ids: [13],
+        affectsTerrain: false,
+      },
+    });
+    const first = sanitizeMapDoc(doc);
+    expect(first?.biomePaint).toEqual({
+      cell: 20,
+      cols: 1,
+      rows: 1,
+      originX: 30,
+      originZ: 50,
+      ids: [13],
+      affectsTerrain: false,
+    });
+    expect(sanitizeMapDoc(JSON.parse(JSON.stringify(first)))?.biomePaint).toEqual(
+      first?.biomePaint,
+    );
+  });
+
   it('sanitize(JSON.parse(JSON.stringify(sanitize(x)))) succeeds and is stable', () => {
     // A kitchen-sink hostile document: every table populated, plus junk.
     const nasty = rawDoc({

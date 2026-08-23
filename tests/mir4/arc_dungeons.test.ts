@@ -1,7 +1,10 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
 import { DUNGEONS, dungeonAt, instanceOrigin, setActiveWorldContent } from '../../src/sim/data';
-import { updateMir4ArcDungeonEncounters } from '../../src/sim/mir4/arc_dungeons';
+import {
+  mir4ArcDungeonTargetForPlayer,
+  updateMir4ArcDungeonEncounters,
+} from '../../src/sim/mir4/arc_dungeons';
 import { mir4ArcStageAnchor } from '../../src/sim/mir4/arc_quest_runtime';
 import { type Mir4ArcQuestProgress, mir4QuestCurrentStage } from '../../src/sim/mir4/arc_quests';
 import { Sim } from '../../src/sim/sim';
@@ -136,6 +139,29 @@ describe('MIR4 campaign dungeon instances', () => {
     expect(sim.player.pos.z).toBeCloseTo(returnPos.z, 6);
     expect(dungeonAt(sim.player.pos.x)).toBeNull();
     expect(sim.mir4ArcDungeonRuns.size).toBe(0);
+  });
+
+  it('exposes a living guard and then the boss as the authored automation target', () => {
+    const sim = makeSim();
+    const progress = startRun(sim);
+    const run = required([...sim.mir4ArcDungeonRuns.values()][0], 'campaign dungeon run');
+
+    const first = required(
+      mir4ArcDungeonTargetForPlayer(sim.ctx, sim.playerId, progress.questId, progress.stageIndex),
+      'first automation target',
+    );
+    expect(run.guardIds).toContain(first.id);
+    for (const guardId of run.guardIds) {
+      const guard = required(sim.entities.get(guardId), `guard ${guardId}`);
+      sim.dealDamage(sim.player, guard, guard.hp + 1, false, 'physical', null, 'hit');
+    }
+    updateMir4ArcDungeonEncounters(sim.ctx);
+
+    const boss = required(
+      mir4ArcDungeonTargetForPlayer(sim.ctx, sim.playerId, progress.questId, progress.stageIndex),
+      'boss automation target',
+    );
+    expect(boss.id).toBe(run.bossId);
   });
 
   it('routes the existing dungeon-exit interaction to the saved return point', () => {

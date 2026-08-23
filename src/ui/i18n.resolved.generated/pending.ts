@@ -390,6 +390,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -504,7 +505,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "es_ES": [
     "abilityUi.actionBar.autoBattleName",
@@ -887,6 +890,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -1001,7 +1005,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "fr_FR": [
     "abilityUi.actionBar.autoBattleName",
@@ -1384,6 +1390,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -1498,7 +1505,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "fr_CA": [
     "abilityUi.actionBar.autoBattleName",
@@ -1881,6 +1890,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -1995,7 +2005,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "en_CA": [],
   "it_IT": [
@@ -2379,6 +2391,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -2493,7 +2506,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "de_DE": [
     "abilityUi.actionBar.autoBattleName",
@@ -2876,6 +2891,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -2990,7 +3006,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "zh_CN": [
     "entities.abilities.mir4_passive_elementalist_mana_well.name",
@@ -3000,11 +3018,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.maps.m10",
     "hudChrome.mir4.maps.m18",
     "hudChrome.mir4.materials.dawnTear",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.progression.materialCost",
     "hudChrome.mir4.progression.rollCostBlessing",
     "hudChrome.mir4.redeemMountTicket",
     "hudChrome.spellbook.evolutionCost",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "zh_TW": [
     "entities.abilities.mir4_passive_elementalist_mana_well.name",
@@ -3014,11 +3035,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.maps.m10",
     "hudChrome.mir4.maps.m18",
     "hudChrome.mir4.materials.dawnTear",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.progression.materialCost",
     "hudChrome.mir4.progression.rollCostBlessing",
     "hudChrome.mir4.redeemMountTicket",
     "hudChrome.spellbook.evolutionCost",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "ko_KR": [
     "entities.abilities.mir4_passive_elementalist_mana_well.name",
@@ -3028,11 +3052,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.maps.m10",
     "hudChrome.mir4.maps.m18",
     "hudChrome.mir4.materials.dawnTear",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.progression.materialCost",
     "hudChrome.mir4.progression.rollCostBlessing",
     "hudChrome.mir4.redeemMountTicket",
     "hudChrome.spellbook.evolutionCost",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "ja_JP": [
     "entities.abilities.mir4_passive_elementalist_mana_well.name",
@@ -3042,11 +3069,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.maps.m10",
     "hudChrome.mir4.maps.m18",
     "hudChrome.mir4.materials.dawnTear",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.progression.materialCost",
     "hudChrome.mir4.progression.rollCostBlessing",
     "hudChrome.mir4.redeemMountTicket",
     "hudChrome.spellbook.evolutionCost",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "pt_BR": [
     "hudChrome.mir4.achievements.balances",
@@ -3075,6 +3105,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.inventoryRuntimeItems",
     "hudChrome.mir4.inventorySpiritCombination",
     "hudChrome.mir4.inventorySpirits",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountTicketDawn",
     "hudChrome.mir4.mountTicketDawnDescription",
     "hudChrome.mir4.mountTicketTwilight",
@@ -3123,11 +3154,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.maps.m10",
     "hudChrome.mir4.maps.m18",
     "hudChrome.mir4.materials.dawnTear",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.progression.materialCost",
     "hudChrome.mir4.progression.rollCostBlessing",
     "hudChrome.mir4.redeemMountTicket",
     "hudChrome.spellbook.evolutionCost",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "cs_CZ": [
     "abilityUi.actionBar.autoBattleName",
@@ -3510,6 +3544,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -3624,7 +3659,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "nl_NL": [
     "abilityUi.actionBar.autoBattleName",
@@ -4007,6 +4044,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -4121,7 +4159,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "pl_PL": [
     "abilityUi.actionBar.autoBattleName",
@@ -4504,6 +4544,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -4618,7 +4659,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "id_ID": [
     "abilityUi.actionBar.autoBattleName",
@@ -5001,6 +5044,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -5115,7 +5159,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "tr_TR": [
     "abilityUi.actionBar.autoBattleName",
@@ -5498,6 +5544,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -5612,7 +5659,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "sv_SE": [
     "abilityUi.actionBar.autoBattleName",
@@ -5995,6 +6044,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -6109,7 +6159,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "vi_VN": [
     "abilityUi.actionBar.autoBattleName",
@@ -6492,6 +6544,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -6606,7 +6659,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ],
   "da_DK": [
     "abilityUi.actionBar.autoBattleName",
@@ -6989,6 +7044,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.materials.solarScroll",
     "hudChrome.mir4.materials.solarWard",
     "hudChrome.mir4.materials.sunStone",
+    "hudChrome.mir4.mountBasicAttackSpeed",
     "hudChrome.mir4.mountConfirmAria",
     "hudChrome.mir4.mountConfirmHint",
     "hudChrome.mir4.mountDefenses",
@@ -7103,6 +7159,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.questTracker.mir4.stopAutoJourney",
     "hudChrome.spellbook.evolutionCost",
     "hudChrome.spellbook.maxRank",
-    "hudChrome.spellbook.upgradeRank"
+    "hudChrome.spellbook.upgradeRank",
+    "questUi.dialog.autoContinue",
+    "questUi.dialog.skipDialogue"
   ]
 };

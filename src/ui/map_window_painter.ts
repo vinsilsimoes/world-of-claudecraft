@@ -40,7 +40,7 @@
 // (cached for the frame, never per-marker); every other literal (font, radius,
 // line width, label offset, triangle geometry) is a named constant.
 
-import { getActiveWorldContent, type ZoneDef } from '../sim/data';
+import { BUILTIN_WORLD, getActiveWorldContent, type ZoneDef } from '../sim/data';
 import type { GatherNodeType, RiftTier } from '../sim/types';
 import { type Decoration, generateDecorationsInBounds } from '../sim/world';
 import type { IWorld } from '../world_api';
@@ -62,6 +62,7 @@ import {
 import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
   buildOverworldMapModel,
+  layoutMapPoiLabels,
   type MapAllyMarker,
   type MapDetail,
   type MapGatherNodeMarker,
@@ -526,7 +527,10 @@ export class MapWindowPainter {
       decorations = generateDecorationsInBounds(world.cfg.seed, opts.zoneBg.region);
       this.decorationsByZone.set(opts.zone.id, decorations);
     }
-    const activeWorld = getActiveWorldContent();
+    // Real hosts always provide cfg.world; the active-content fallback keeps
+    // narrow legacy/test IWorld stubs compatible without putting the shipped
+    // painter back on mutable global authority.
+    const activeWorld = world.cfg.world ?? getActiveWorldContent();
     // Resolve responsive state once. Both pure placement and painted geometry
     // consume the same profile for this complete redraw.
     const profile = this.markerProfile();
@@ -542,7 +546,15 @@ export class MapWindowPainter {
       markerProfile: profile,
     });
     const colors = this.resolveColors();
-    this.draw(ctx, model, opts.zoneBg, opts.canvasSize, colors, profile);
+    this.draw(
+      ctx,
+      model,
+      opts.zoneBg,
+      opts.canvasSize,
+      colors,
+      profile,
+      activeWorld !== BUILTIN_WORLD,
+    );
     return {
       view: model.view,
       cursor: model.cursor,
@@ -567,6 +579,7 @@ export class MapWindowPainter {
     S: number,
     colors: MapColors,
     profile: MapMarkerProfile,
+    authoredCustomMap: boolean,
   ): void {
     // Reclaim any label sprites the last redraws left over the budget, before
     // this redraw asks for its own (never mid-redraw: see text_sprite_cache).
@@ -727,15 +740,58 @@ export class MapWindowPainter {
       lineWidth: geometry.textOutlineWidth,
     });
 
-    // POI labels (the title's outline + label color, one size down).
+    // POI labels (the title's outline + label color, one size down). Authored
+    // custom maps may carry ten named places in one frame, so their labels use
+    // deterministic collision avoidance and a small anchored cartography dot.
+    // The built-in atlas keeps its established pixel layout unchanged.
     const poiLabel: TextSpriteStyle = {
       font: geometry.labelFont,
       fill: colors.label,
       stroke: colors.outline,
       lineWidth: geometry.textOutlineWidth,
     };
-    for (const poi of model.pois) {
-      this.labels.draw(ctx, zonePoiLabel(poi.zoneId, poi.poiIndex), poi.mx, poi.my, poiLabel);
+    const poiRows = model.pois.map((poi) => {
+      const text = zonePoiLabel(poi.zoneId, poi.poiIndex);
+      return { poi, text, width: this.labels.measureAdvance(text, poiLabel) };
+    });
+    const laidOut = authoredCustomMap
+      ? layoutMapPoiLabels(
+          poiRows.map(({ poi, width }) => ({ mx: poi.mx, my: poi.my - 7, width })),
+          S,
+          profile === 'compact' ? 23 : 15,
+        )
+      : poiRows.map(({ poi, width }) => ({
+          mx: poi.mx,
+          my: poi.my,
+          width,
+          labelX: poi.mx,
+          labelY: poi.my,
+        }));
+    if (authoredCustomMap) {
+      ctx.strokeStyle = colors.outline;
+      ctx.fillStyle = colors.label;
+      ctx.lineWidth = 1;
+      for (let index = 0; index < laidOut.length; index++) {
+        const label = laidOut[index];
+        const poi = poiRows[index]?.poi;
+        if (!poi) continue;
+        if (Math.abs(label.labelX - poi.mx) > 0.5 || Math.abs(label.labelY - (poi.my - 7)) > 0.5) {
+          ctx.beginPath();
+          ctx.moveTo(poi.mx, poi.my);
+          ctx.lineTo(label.labelX, label.labelY + 3);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(poi.mx, poi.my, 2.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    for (let index = 0; index < poiRows.length; index++) {
+      const row = poiRows[index];
+      const label = laidOut[index];
+      if (!row || !label) continue;
+      this.labels.draw(ctx, row.text, label.labelX, label.labelY, poiLabel);
     }
 
     // Dungeon entrance portals: a purple dot plus the dungeon name above it. The

@@ -1482,6 +1482,8 @@ export interface Mir4PlayerCombatState {
   penetrationBps: number;
   /** Source-profile equipped Mount speed, mirrored for deterministic prediction. */
   mountMoveSpeedBps: number;
+  /** Basic-attack haste from the equipped logical Mount; active while dismounted. */
+  mountBasicAttackSpeedBps: number;
 }
 
 // mir4-gameplay-port target-effect state (CC/debuffs on any entity, usually a
@@ -1512,6 +1514,8 @@ export interface Mir4ActiveEffect {
 export interface Mir4TargetEffects {
   active: Mir4ActiveEffect[];
   controlImmuneUntil: number;
+  /** Runtime attribution for hard-control immunity tails; never persisted. */
+  controlImmunityByEffectId?: Record<string, { sourceId: number; until: number }>;
 }
 
 // A scheduled mir4 impact (basic/ultimate): the damage resolves AT the
@@ -3446,6 +3450,11 @@ export interface CampDef {
   center: { x: number; z: number };
   radius: number;
   count: number;
+  // Optional encounter-specific band inside the owning mob template's range.
+  // Authored maps use this to make local danger match quest progression rather
+  // than rolling every camp across the zone's entire level span.
+  minLevel?: number;
+  maxLevel?: number;
   // Scatter this camp off a PRIVATE rng sub-stream instead of the shared
   // world stream (the ambient-horse / training-dummy principle in the Sim camp
   // loop, generalized so a camp can still scatter). The shared stream's
@@ -3621,7 +3630,13 @@ export interface ZoneDef {
   // it, so it must never change once shipped); label is display-only and may be
   // re-worded freely. Optional because user-authored custom maps (MapDocContent
   // reuses ZoneDef) omit it; every static ZONES poi carries one (content-guarded).
-  pois: { x: number; z: number; label: string; id?: string }[];
+  pois: {
+    x: number;
+    z: number;
+    label: string;
+    id?: string;
+    diagnosticSpawn?: { x: number; z: number };
+  }[];
   welcome: string; // chat-log hint shown on first entry
   welcomeQuestId?: string; // only show the hint while this quest is available
   // The zone's southern border ridge has NO road pass and is raised past the
@@ -6741,10 +6756,10 @@ export interface BlockerDef {
   z2: number;
 }
 
-// A coarse 2D biome paint grid (editor). Each cell holds a biome id (0=vale,
-// 1=marsh, 2=peaks) or 255 for unpainted. Where painted, it overrides both the
-// terrain SHAPE (sim, in shapeAt) and the ground COLOR (render). Absent for the
-// built-in world, so terrain stays byte-identical.
+// A coarse 2D biome paint grid (editor and authored presentation). Each cell
+// holds an append-only biome id or 255 for unpainted. By default paint changes
+// both terrain shape and presentation. Authored worlds may set affectsTerrain
+// false when the paint is an art-direction layer over already sculpted ground.
 export interface BiomePaint {
   cell: number; // cell size in yards
   cols: number;
@@ -6752,6 +6767,7 @@ export interface BiomePaint {
   originX: number; // world x of the grid's (col 0) edge
   originZ: number; // world z of the grid's (row 0) edge
   ids: number[]; // length cols*rows; 0/1/2 = biome, 255 = unpainted
+  affectsTerrain?: boolean;
 }
 
 export type StationType = 'forge' | 'kitchens' | 'apothecary' | 'tannery' | 'loom' | 'toolworks';
@@ -6894,6 +6910,28 @@ export interface WorldServicesDef {
   graveyards?: readonly GraveyardDef[];
 }
 
+/** One local-only campaign coordinate projection. It lets diagnostics retain
+ * an existing world's terrain and scenery while seating MIR4 actors and quest
+ * anchors inside that world's physical regions. */
+export interface Mir4ArcMapProjection {
+  mapId: string;
+  targetZoneId: string;
+  source: { xMin: number; xMax: number; zMin: number; zMax: number };
+  target: { xMin: number; xMax: number; zMin: number; zMax: number };
+  /** Physically audited subset used for actor and objective projection. The
+   * full target remains the logical region boundary used by map detection. */
+  contentTarget?: { xMin: number; xMax: number; zMin: number; zMax: number };
+  controlPoints?: readonly {
+    source: { x: number; z: number };
+    target: { x: number; z: number };
+  }[];
+  localScale?: number;
+  portalIn?: { x: number; z: number };
+  portalInLanding?: { x: number; z: number };
+  portalOut?: { x: number; z: number };
+  portalOutLanding?: { x: number; z: number };
+}
+
 // A swappable world definition: the spatial + content data the terrain function
 // and the Sim spawn loop derive a playable world from. The built-in 3-zone world
 // is one of these (data.ts BUILTIN_WORLD); the map editor produces custom ones for
@@ -6907,6 +6945,17 @@ export interface WorldContent {
   npcs: Record<string, NpcDef>;
   groundObjects: GroundObjectDef[];
   roads: { x: number; z: number }[][];
+  /** World-owned overworld passages. MIR4 normally derives chapter portals;
+   * the WoC campaign transplant reuses the original world's physical gates. */
+  travelPortals?: readonly PortalDef[];
+  // Roads maintained and lit by settlements. Omitted means every road may
+  // receive streetlamps, preserving the classic world. Authored wilderness
+  // maps can keep navigable trails without planting human infrastructure
+  // through animal habitats or ancient ruins.
+  litRoads?: { x: number; z: number }[][];
+  // Authored bridge, ford and causeway footprints that remain dry after lake
+  // shaping. They are visible traversable terrain, never invisible collision.
+  dryCrossings?: { x: number; z: number; radius: number }[];
   props: ZonePropsDef;
   playerStart: { x: number; z: number };
   // Optional by design: active custom maps that omit services must not inherit
@@ -6921,7 +6970,8 @@ export interface WorldContent {
   // Invisible blocker walls (editor). Collision-only OBBs in the sim's static
   // colliders; never rendered. Absent for the built-in world.
   blockers?: BlockerDef[];
-  // 2D biome paint overriding terrain shape (sim) and color (render).
+  // 2D biome paint overriding presentation and, unless explicitly disabled,
+  // terrain shape in the sim.
   biomePaint?: BiomePaint;
   // Water surface height for this map; absent = the built-in WATER_LEVEL (-4.5).
   // Read through waterLevel() in src/sim/world.ts, never directly.
@@ -6931,6 +6981,10 @@ export interface WorldContent {
   // use the generic WorldContent heightfield. Tests/tools that clone the built-in
   // world may pin `builtin` so their added lake/edit still exercises WoC borders.
   terrainModel?: 'builtin' | 'content';
+  // Development comparison seam: maps authored MIR4 campaign coordinates into
+  // another world's physical regions. Production MIR4 worlds omit it and keep
+  // their authored coordinates byte-identical.
+  mir4ArcMapProjections?: readonly Mir4ArcMapProjection[];
 }
 
 export interface SimConfig {

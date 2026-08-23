@@ -2207,6 +2207,7 @@ export class Hud {
       questTitle,
       objectiveLabel: questObjectiveLabel,
       openQuest: (questId) => this.questlogWindow.openWithQuest(questId),
+      shortcut: (action) => this.keybinds.primaryLabel(action),
       click: () => audio.click(),
     });
     this.questDialog = new QuestDialogController({
@@ -2682,12 +2683,9 @@ export class Hud {
     // Collapse/expand the on-screen quest tracker by clicking its header. The
     // overlay is click-through (pointer-events:none) except the header button, so
     // delegate on the stable container (the header is rebuilt on each render).
-    $('#quest-tracker').addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.qt-header')) this.toggleQuestTrackerCollapsed();
-      // A quest row jumps to that quest's detail in the quest log window.
-      const row = (e.target as HTMLElement).closest<HTMLElement>('.qt-title');
-      if (row?.dataset.quest) this.questTracker.activateQuest(row.dataset.quest);
-    });
+    $('#quest-tracker').addEventListener('click', (e) =>
+      this.questTracker.handleClick(e.target as HTMLElement),
+    );
     // Keyboard activation: handle Enter/Space here and stop the event before it
     // bubbles to the window-level game keybinds (Enter is bound to Open Chat,
     // Space is preventDefault'd for jump), which would otherwise hijack the
@@ -6984,7 +6982,9 @@ export class Hud {
       this.flashActionSlot(0);
       return;
     }
-    if (this.sim.player.autoAttack) this.sim.stopAutoAttack();
+    if (this.sim.cfg.gameProfile === MIR4_GAME_PROFILE)
+      this.sim.setMir4AutoBattle(!this.sim.mir4AutoBattleActive());
+    else if (this.sim.player.autoAttack) this.sim.stopAutoAttack();
     else this.sim.startAutoAttack();
     this.flashActionSlot(0);
   }
@@ -7573,21 +7573,10 @@ export class Hud {
       };
     });
 
-    // Wire clicks: attack -> the classic fixed control while the
-    // player is auto-attacking or holds a live hostile target, and the
-    // acquire-nearest fallback (the old Closest behavior, injected by main.ts
-    // as onMobileAttackNearest) otherwise, so a bare tap with nothing targeted
-    // picks the closest enemy and starts swinging instead of erroring. Slot
-    // buttons -> castSlot(the resolved source slot for the CURRENT page at
-    // click time, not a captured page). Mirrors the desktop action-btn click
-    // pattern (audio.click, blur), EXCEPT the peek guard: the ring has no
-    // tooltip of its own (see the no-tooltip note below), so a set peek flag
-    // here is always STALE cross-talk from some other control's long-press.
-    // Each handler clears it and dismisses any lingering tooltip box but never
-    // early-returns on it (an early return here ate the player's next cast).
-    // bindTouchTap, not 'click': the browser only synthesizes click for the
-    // PRIMARY pointer, so click-bound ring buttons went dead the moment the
-    // other thumb held the joystick, which is how combat is actually played.
+    // Mobile attack mirrors the desktop slot. Classic can acquire nearest;
+    // MIR4 directly toggles its radius-based Auto Battle even with no target.
+    // bindTouchTap keeps the second-thumb joystick case alive, and the peek
+    // guard is consumed because this ring owns no tooltip.
     bindTouchTap(attackBtn, () => {
       this.peekGuard.consume();
       this.hideTooltip();
@@ -7601,7 +7590,11 @@ export class Hud {
       const target = p.targetId !== null ? this.sim.entities.get(p.targetId) : null;
       const hasLiveHostileTarget = !!target && !target.dead && target.hostile;
       handleMobileAttackTap(
-        { autoAttack: p.autoAttack, hasLiveHostileTarget },
+        {
+          autoAttack: p.autoAttack,
+          hasLiveHostileTarget,
+          directToggle: this.sim.cfg.gameProfile === MIR4_GAME_PROFILE,
+        },
         {
           activateAttack: () => this.activateFixedAttackSlot(),
           attackNearest: this.onMobileAttackNearest,
@@ -9424,6 +9417,8 @@ export class Hud {
     let actionBarWorld = this.actionBarWorldInput;
     if (actionBarWorld) {
       actionBarWorld.player = p;
+      actionBarWorld.fixedAttackActive =
+        sim.cfg.gameProfile === MIR4_GAME_PROFILE ? sim.mir4AutoBattleActive() : undefined;
       actionBarWorld.target = target ?? null;
       actionBarWorld.inventory = sim.inventory;
       actionBarWorld.stealthed = stealthed;
@@ -9433,6 +9428,8 @@ export class Hud {
     } else {
       actionBarWorld = {
         player: p,
+        fixedAttackActive:
+          sim.cfg.gameProfile === MIR4_GAME_PROFILE ? sim.mir4AutoBattleActive() : undefined,
         target: target ?? null,
         inventory: sim.inventory,
         stealthed,
@@ -9740,9 +9737,9 @@ export class Hud {
     // The bag money row is a cold painter, and several copper credits reach no bags
     // arm in EITHER host (a trainer fee, a settled Vale Cup bet, delve and lockpick
     // copper), so this is the backstop that converges them all (#2373). Online the
-    // ClientWorld purse diff gets there first via onInventoryChanged. The window owns
-    // the latch and repaints only its .money footer, never the whole grid.
+    // ClientWorld gets there first; this latch repaints only its .money footer.
     if (slowHud) this.bagsWindow.refreshIfChanged();
+    if (slowHud && this.questlogWindow.isOpen) this.questlogWindow.refreshIfChanged();
     if (slowHud && this.deedsWindow.isOpen) this.deedsWindow.refreshIfChanged();
     if (slowHud && this.reliquaryWindow.isOpen) this.reliquaryWindow.refreshIfChanged();
     if (slowHud) this.refreshOpenProfessionSurfacesIfChanged();
@@ -10273,7 +10270,7 @@ export class Hud {
   private prewarmMapBg(zoneId: string): void {
     if (this.mapBgCache.has(zoneId)) return;
     if (this.mapPrewarm?.zoneId === zoneId) return; // already prewarming it
-    const zone = ZONES.find((z) => z.id === zoneId);
+    const zone = getActiveWorldContent().zones.find((z) => z.id === zoneId);
     if (!zone) return;
     if (bakedMapBgEligible(this.sim.cfg.seed, zoneId)) {
       loadBakedMapBg(

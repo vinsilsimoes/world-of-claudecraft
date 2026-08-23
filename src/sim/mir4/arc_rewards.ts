@@ -1,8 +1,9 @@
 // Authoritative reward ledger for the imported campaign contracts. Logical
-// item ids are progression tokens only: equipment presentation continues to
-// use World of ClaudeCraft's native runtime item shells and assets.
+// item ids remain progression tokens. Equipment milestones grant only the
+// existing World of ClaudeCraft runtime catalog and its native presentation.
 
-import { MIR4_QUESTS_ARC, type Mir4ArcQuest } from '../content/mir4/quests_arc';
+import { MIR4_QUESTS_ARC, type Mir4ArcQuest } from '../content/mir4/arc_campaign';
+import { MIR4_EQUIPMENT_CATALOG } from '../content/mir4/equipment_catalog';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
 import { MIR4_EMPTY_MATERIALS, MIR4_MATERIAL_IDS, type Mir4Materials } from './equipment';
@@ -28,6 +29,20 @@ interface RewardMeta {
 }
 
 const MAX_COUNT = 1_000_000_000;
+const M01_Q03_WEAPON_GRANT_ID = 'tutorial-m01-q03-recovered-weapon';
+const EQUIPMENT_MILESTONE_RANK = new Map<string, number>([
+  ['M01-Q06', 1],
+  ['M02-Q06', 2],
+  ['M03-Q06', 3],
+  ['M05-Q06', 4],
+  ['M07-Q06', 5],
+  ['M09-Q06', 6],
+]);
+const M01_Q03_WEAPON_BY_CLASS = new Map(
+  MIR4_EQUIPMENT_CATALOG.filter((item) => item.equipSlot === 1 && item.catalogRank === 1).map(
+    (item) => [item.classId, item.itemId] as const,
+  ),
+);
 const materialKeyById = new Map<number, keyof Mir4Materials>(
   Object.entries(MIR4_MATERIAL_IDS).map(([key, id]) => [id, key as keyof Mir4Materials]),
 );
@@ -41,6 +56,13 @@ const allowed = {
   grantIds: new Set<string>(),
 };
 allowed.items.add('profession-salvaged-parts');
+allowed.grantIds.add(M01_Q03_WEAPON_GRANT_ID);
+for (const item of MIR4_EQUIPMENT_CATALOG) allowed.items.add(String(item.itemId));
+for (let classId = 1; classId <= 5; classId += 1) {
+  for (let rank = 1; rank <= 6; rank += 1) {
+    allowed.grantIds.add(`campaign-equipment-rank-${rank}-class-${classId}`);
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -173,6 +195,57 @@ function claimOnce(meta: RewardMeta, grantId: string | undefined): boolean {
   return true;
 }
 
+function ownsEquipmentReward(meta: PlayerMeta, itemId: number): boolean {
+  const instance = meta.mir4EquipmentInstances?.[itemId];
+  return instance && !instance.destroyed
+    ? true
+    : (meta.mir4ArcRewards?.items?.[String(itemId)] ?? 0) > 0;
+}
+
+function grantMir4ArcEquipmentMilestone(
+  ctx: SimContext,
+  meta: PlayerMeta,
+  questId: string,
+): boolean {
+  const rank = EQUIPMENT_MILESTONE_RANK.get(questId);
+  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId;
+  if (rank === undefined || classId === undefined) return false;
+  const grantId = `campaign-equipment-rank-${rank}-class-${classId}`;
+  if (!claimOnce(meta, grantId)) return false;
+  for (const item of MIR4_EQUIPMENT_CATALOG) {
+    if (item.classId !== classId || item.catalogRank !== rank) continue;
+    if (!ownsEquipmentReward(meta, item.itemId)) grantItem(meta, item.itemId, 1);
+  }
+  return true;
+}
+
+/** Backfills native catalog sets for characters that cleared a milestone
+ * before equipment progression was connected to the imported campaign. */
+export function ensureMir4ArcEquipmentMilestones(ctx: SimContext, meta: PlayerMeta): boolean {
+  let changed = false;
+  for (const [questId] of EQUIPMENT_MILESTONE_RANK) {
+    if (meta.mir4ArcQuests?.[questId]?.state !== 'done') continue;
+    if (grantMir4ArcEquipmentMilestone(ctx, meta, questId)) changed = true;
+  }
+  return changed;
+}
+
+function grantM01Q03RecoveredWeapon(ctx: SimContext, meta: PlayerMeta): boolean {
+  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId;
+  const itemId = M01_Q03_WEAPON_BY_CLASS.get(classId as 1 | 2 | 3 | 4 | 5);
+  if (itemId === undefined || !claimOnce(meta, M01_Q03_WEAPON_GRANT_ID)) return false;
+  grantItem(meta, itemId, 1);
+  return true;
+}
+
+/** Repairs characters that accepted M01-Q03 before its recovered-weapon grant
+ * existed. The claim id makes this safe to run from the authoritative tick. */
+export function ensureMir4ArcTutorialGrants(ctx: SimContext, meta: PlayerMeta): boolean {
+  const progress = meta.mir4ArcQuests?.['M01-Q03'];
+  if (progress?.state !== 'active' || progress.stageIndex < 3) return false;
+  return grantM01Q03RecoveredWeapon(ctx, meta);
+}
+
 export function grantMir4ArcAcceptGrants(
   ctx: SimContext,
   meta: PlayerMeta,
@@ -196,6 +269,7 @@ export function grantMir4ArcAcceptGrants(
       }
     }
   }
+  if (quest.questId === 'M01-Q03') grantM01Q03RecoveredWeapon(ctx, meta);
   const state = rewardState(meta);
   state.recipes = addUnique(state.recipes, stringArray(accept.recipes));
   for (const row of itemRows(accept.currencies)) {
@@ -219,6 +293,7 @@ export function grantMir4ArcQuestRewards(
   quest: Mir4ArcQuest,
 ): void {
   const rewards = quest.rewards;
+  grantMir4ArcEquipmentMilestone(ctx, meta, quest.questId);
   const xp = positiveCount(rewards.xp ?? quest.xp);
   if (xp > 0) ctx.grantXp(xp, meta);
   const copper = positiveCount(rewards.copper ?? quest.copper);

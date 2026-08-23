@@ -3,7 +3,11 @@
 // rules are gameplay data; every rendered/summoned model remains a target-owned
 // WoC mount selected deterministically by mir4MountVisualKey.
 
-import { MIR4_MOUNTS_CATALOG, mir4MountById } from '../content/mir4/mounts_catalog';
+import {
+  MIR4_MOUNTS_CATALOG,
+  type Mir4MountDef,
+  mir4MountById,
+} from '../content/mir4/mounts_catalog';
 import type { MountKey } from '../content/mounts';
 
 export type Mir4MountTicketId = 'mount-ticket-dawn' | 'mount-ticket-twilight';
@@ -24,8 +28,51 @@ export interface Mir4MountState {
 
 export interface Mir4MountBonuses {
   moveSpeedBps: number;
+  basicAttackSpeedBps: number;
   physicalDefense: number;
   magicDefense: number;
+}
+
+export interface Mir4MountRuntimeStats {
+  moveSpeedBps: number;
+  basicAttackSpeedBps: number;
+  physicalDefense: number;
+  magicDefense: number;
+}
+
+export const MIR4_MOUNT_MOVE_SPEED_BPS_BY_GRADE: Readonly<Record<number, number>> = {
+  1: 1_000,
+  2: 1_500,
+  3: 2_000,
+  4: 2_500,
+  5: 5_000,
+  6: 8_000,
+};
+
+export const MIR4_MOUNT_BASIC_ATTACK_SPEED_BPS_BY_GRADE: Readonly<Record<number, number>> = {
+  1: 500,
+  2: 1_000,
+  3: 1_500,
+  4: 2_000,
+  5: 3_500,
+  6: 5_000,
+};
+
+export function mir4MountMoveSpeedBpsForGrade(grade: number): number {
+  return MIR4_MOUNT_MOVE_SPEED_BPS_BY_GRADE[grade] ?? 0;
+}
+
+export function mir4MountBasicAttackSpeedBpsForGrade(grade: number): number {
+  return MIR4_MOUNT_BASIC_ATTACK_SPEED_BPS_BY_GRADE[grade] ?? 0;
+}
+
+/** Live balance projection over the preserved, generated source catalog. */
+export function mir4MountRuntimeStats(mount: Mir4MountDef): Mir4MountRuntimeStats {
+  return {
+    ...mount.stats,
+    moveSpeedBps: mir4MountMoveSpeedBpsForGrade(mount.grade),
+    basicAttackSpeedBps: mir4MountBasicAttackSpeedBpsForGrade(mount.grade),
+  };
 }
 
 const TICKET_GRADES: Readonly<Record<Mir4MountTicketId, readonly (readonly [number, number])[]>> = {
@@ -142,6 +189,7 @@ export function mir4MountOwnedCount(state: Mir4MountState | undefined, grade: nu
 
 export function mir4MountBonuses(state: Mir4MountState | undefined): Mir4MountBonuses {
   const equipped = state?.equippedMountId ? mir4MountById(state.equippedMountId) : null;
+  const equippedStats = equipped ? mir4MountRuntimeStats(equipped) : null;
   let collectionDefense = 0;
   const discovered = new Set(state?.discovered ?? []);
   for (let grade = 1; grade <= 6; grade++) {
@@ -155,9 +203,10 @@ export function mir4MountBonuses(state: Mir4MountState | undefined): Mir4MountBo
     }
   }
   return {
-    moveSpeedBps: equipped?.stats.moveSpeedBps ?? 0,
-    physicalDefense: (equipped?.stats.physicalDefense ?? 0) + collectionDefense,
-    magicDefense: (equipped?.stats.magicDefense ?? 0) + collectionDefense,
+    moveSpeedBps: equippedStats?.moveSpeedBps ?? 0,
+    basicAttackSpeedBps: equippedStats?.basicAttackSpeedBps ?? 0,
+    physicalDefense: (equippedStats?.physicalDefense ?? 0) + collectionDefense,
+    magicDefense: (equippedStats?.magicDefense ?? 0) + collectionDefense,
   };
 }
 

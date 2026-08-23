@@ -4,11 +4,17 @@
 // central Sim class.
 
 import { setMir4AutoBattleMode } from '../auto_battle/core';
-import { mir4AutoQuestStatus, setMir4AutoQuest } from '../auto_quest/core';
+import {
+  mir4AutoQuestStatus,
+  mir4FullCampaignAvailable,
+  setMir4AutoQuest,
+} from '../auto_quest/core';
 import type { SimContext } from '../sim_context';
 import { claimMir4Achievement, type Mir4AchievementClaimResult } from './achievements';
 import { type Mir4LayerKind, mir4ResolveLayer, mir4RollLayer } from './affixes';
 import { mir4CampaignProfessionAction } from './arc_professions';
+import { acknowledgeMir4ArcTutorial } from './arc_receipts';
+import { mir4CampaignMapIdsForWorld } from './campaign_availability';
 import {
   combineMir4Mounts,
   combineMir4Spirits,
@@ -27,6 +33,7 @@ import {
   mir4UnequipSlot,
   mir4UnequipWeapon,
 } from './equipment';
+import { skipMir4NarrativeDialogue } from './narrative_dialogue';
 import { mir4QuestTrackerEntries, mir4TalkOrInspect } from './quest';
 import type { Mir4QuestTrackerEntry } from './quest_tracker';
 import { type Mir4SkillUpgradeResult, upgradeMir4Skill } from './skill_evolution';
@@ -42,13 +49,15 @@ export interface Mir4SimFacade {
   mir4BasicAttack(targetId?: number, pid?: number): Mir4CastResult;
   setMir4AutoBattleMode(mode: 'off' | 'battle', pid?: number): void;
   mir4TalkOrInspect(pid?: number): string;
-  setMir4AutoQuest(on: boolean, pid?: number): void;
+  setMir4AutoQuest(on: boolean, questId?: string, pid?: number): void;
   mir4AutoBattleActive(pid?: number): boolean;
   mir4PlayerState(pid?: number): Mir4PlayerUiState | null;
   setMir4AutoBattle(on: boolean, pid?: number): void;
   mir4AutoQuestActive(pid?: number): boolean;
   mir4QuestStatusText(pid?: number): string;
   mir4QuestTrackerEntries(pid?: number): readonly Mir4QuestTrackerEntry[];
+  mir4AcknowledgeTutorial(questId: string, pid?: number): void;
+  mir4SkipNarrativeDialogue(dialogueId: string, pid?: number): void;
   mir4CastSkill(skillId: number, targetId?: number, pid?: number): Mir4CastResult;
   mir4UpgradeSkill(
     skillId: number,
@@ -98,8 +107,8 @@ export const mir4SimFacade = defineMir4SimFacade({
   mir4TalkOrInspect(this: Mir4SimFacadeHost, pid = this.playerId) {
     return mir4TalkOrInspect(this.ctx, pid);
   },
-  setMir4AutoQuest(this: Mir4SimFacadeHost, on, pid = this.playerId) {
-    setMir4AutoQuest(this.ctx, pid, on);
+  setMir4AutoQuest(this: Mir4SimFacadeHost, on, questId, pid = this.playerId) {
+    setMir4AutoQuest(this.ctx, pid, on, questId);
   },
   mir4AutoBattleActive(this: Mir4SimFacadeHost, pid = this.playerId) {
     return this.ctx.players.get(pid)?.autoBattle?.mode === 'battle';
@@ -110,7 +119,10 @@ export const mir4SimFacade = defineMir4SimFacade({
       this.ctx.gameProfile,
       this.ctx.players.get(pid),
       player?.mir4,
+      player?.level,
+      mir4FullCampaignAvailable(this.ctx),
       player?.mir4UltGauge,
+      mir4CampaignMapIdsForWorld(this.ctx.worldContent),
     );
   },
   setMir4AutoBattle(this: Mir4SimFacadeHost, on, pid = this.playerId) {
@@ -123,7 +135,22 @@ export const mir4SimFacade = defineMir4SimFacade({
     return mir4AutoQuestStatus(this.ctx.players.get(pid) ?? {});
   },
   mir4QuestTrackerEntries(this: Mir4SimFacadeHost, pid = this.playerId) {
-    return mir4QuestTrackerEntries(this.ctx.players.get(pid) ?? {});
+    const meta = this.ctx.players.get(pid);
+    return mir4QuestTrackerEntries({
+      playerLevel: this.ctx.entities.get(pid)?.level,
+      fullCampaignAvailable: mir4FullCampaignAvailable(this.ctx),
+      campaignMapIds: mir4CampaignMapIdsForWorld(this.ctx.worldContent),
+      mir4Quests: meta?.mir4Quests,
+      mir4ArcQuests: meta?.mir4ArcQuests,
+      mir4AutoQuest: meta?.mir4AutoQuest,
+    });
+  },
+  mir4AcknowledgeTutorial(this: Mir4SimFacadeHost, questId, pid = this.playerId) {
+    const meta = this.ctx.players.get(pid);
+    if (meta) acknowledgeMir4ArcTutorial(meta, questId);
+  },
+  mir4SkipNarrativeDialogue(this: Mir4SimFacadeHost, dialogueId, pid = this.playerId) {
+    skipMir4NarrativeDialogue(this.ctx, pid, dialogueId);
   },
   mir4CastSkill(this: Mir4SimFacadeHost, skillId, targetId, pid = this.playerId) {
     return castMir4Skill(this.ctx, pid, skillId, targetId);

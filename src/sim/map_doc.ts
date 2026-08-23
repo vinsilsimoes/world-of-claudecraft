@@ -259,7 +259,15 @@ function sanitizeBiomePaint(v: unknown): BiomePaint | undefined {
   const ids = b.ids.map((n) =>
     typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < idCount ? n : 255,
   );
-  return { cell, cols, rows, originX: num(b.originX, 0), originZ: num(b.originZ, 0), ids };
+  return {
+    cell,
+    cols,
+    rows,
+    originX: num(b.originX, 0),
+    originZ: num(b.originZ, 0),
+    ids,
+    ...(typeof b.affectsTerrain === 'boolean' ? { affectsTerrain: b.affectsTerrain } : {}),
+  };
 }
 
 function sanitizeMeta(v: unknown): MapDocMeta {

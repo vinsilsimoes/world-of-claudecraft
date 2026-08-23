@@ -4,9 +4,11 @@ import {
   createCameraFeel,
   LEAD_MAX,
   LEAD_TIME,
+  mir4StableCameraFeel,
   punchCameraFov,
   SPEED_FOV_MAX,
   stepCameraFeel,
+  stepCameraFrame,
   stepLandingDetector,
 } from '../src/render/camera_feel_core';
 import { RUN_SPEED } from '../src/sim/types';
@@ -54,6 +56,25 @@ describe('FOV kicks', () => {
     expect(cameraFovOffset(s)).toBeLessThanOrEqual(12);
     punchCameraFov(s, -300);
     expect(cameraFovOffset(s)).toBeGreaterThanOrEqual(-8);
+  });
+});
+
+describe('MIR4 steady chase camera', () => {
+  it('does not pulse when manual W motion crosses the run-speed threshold', () => {
+    expect(mir4StableCameraFeel('mir4-gameplay-port')).toBe(true);
+    expect(mir4StableCameraFeel('woc-classic')).toBe(false);
+    const stable = createCameraFeel();
+    const dynamic = createCameraFeel();
+    let dynamicPeak = 0;
+    for (let frame = 0; frame < 240; frame++) {
+      const speed = RUN_SPEED * (frame % 2 === 0 ? 0.98 : 1.08);
+      stepCameraFrame(stable, 10, 0, speed, 1 / 60, true, true);
+      stepCameraFrame(dynamic, 10, 0, speed, 1 / 60, true, false);
+      dynamicPeak = Math.max(dynamicPeak, cameraFovOffset(dynamic));
+    }
+    expect(stable.leadZ).toBe(0);
+    expect(cameraFovOffset(stable)).toBe(0);
+    expect(dynamicPeak).toBeGreaterThan(0.2);
   });
 });
 

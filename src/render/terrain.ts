@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { customWorldRimIntersectsRect } from '../sim/custom_world_terrain';
 import {
   getActiveWorldContent,
   STRIP_MAX_X,
@@ -1773,7 +1774,8 @@ export interface TerrainView {
 }
 
 export function buildTerrain(seed: number, priorityPoint?: { x: number; z: number }): TerrainView {
-  const activeZones = getActiveWorldContent().zones;
+  const activeContent = getActiveWorldContent();
+  const activeZones = activeContent.zones;
   const zones = activeZones.length > 0 ? activeZones : ZONES;
   const customTopology = zones !== ZONES;
   const worldBounds: WorldRect = customTopology
@@ -1840,6 +1842,16 @@ export function buildTerrain(seed: number, priorityPoint?: { x: number; z: numbe
   // densest band; the walls sit far from every hub, so hub-distance LOD alone
   // hands the steepest, most looked-at cliffs the coarsest grid.
   const wallChunkAt = (x0: number, z0: number, size: number): boolean => {
+    if (customTopology) {
+      return customWorldRimIntersectsRect(
+        activeContent,
+        x0,
+        z0,
+        x0 + size,
+        z0 + size,
+        WALL_LOD_RIM_MARGIN,
+      );
+    }
     if (
       x0 < worldBounds.minX + WALL_LOD_RIM_MARGIN ||
       x0 + size > worldBounds.maxX - WALL_LOD_RIM_MARGIN
@@ -1884,13 +1896,12 @@ export function buildTerrain(seed: number, priorityPoint?: { x: number; z: numbe
     const z0 = worldBounds.minZ + cz * CHUNK_SIZE;
     const centerX = x0 + CHUNK_SIZE / 2;
     const centerZ = z0 + CHUNK_SIZE / 2;
-    // Cells outside every realm (see zoneRects) are open sea floor and the
-    // outer face of the rim: no quest, camp, or road ever lands there, and the
-    // sim drowns a player who swims out. They take the coarsest band whatever
-    // wallChunkAt says, so the gap fill costs a handful of merged super-chunks
-    // instead of a dense grid over water nobody stands on. Checked BEFORE the
-    // wall promotion, which would otherwise hand the empty south-west quadrant
-    // the 1.2u spacing meant for the terraced inter-zone walls.
+    // Cells outside every realm (see zoneRects) use the coarsest band. Only a
+    // custom world's authored rim may promote one of those cells: the classic
+    // world has deliberate empty-grid overhangs whose old coarse LOD is part
+    // of its draw budget, while a content-world rim must visually match its
+    // physical wall.
+    if (customTopology && wallChunkAt(x0, z0, CHUNK_SIZE)) return 0;
     if (!insideAnyZone(centerX, centerZ)) return bands.length - 1;
     if (wallChunkAt(x0, z0, CHUNK_SIZE)) return 0;
     let hubDist = Infinity;

@@ -8,7 +8,7 @@
 
 import { mir4LevelRow } from '../content/mir4';
 import type { GameProfile } from '../game_profile';
-import type { Entity, Mir4ClassKey, Mir4PlayerCombatState, PlayerClass } from '../types';
+import type { Entity, Mir4ClassKey, PlayerClass } from '../types';
 import { deriveMir4PlayerStats } from './derived_stats';
 import type { Mir4MountState } from './mounts';
 import { mir4NativeEquipmentPresentation } from './native_equipment_visuals';
@@ -161,6 +161,7 @@ export function recalcMir4PlayerStats(
     magicDefense: stats.magicDefense,
     penetrationBps: stats.penetrationBps,
     mountMoveSpeedBps: stats.mountMoveSpeedBps,
+    mountBasicAttackSpeedBps: stats.mountBasicAttackSpeedBps,
   };
   const presentation = mir4NativeEquipmentPresentation(classId, equipment);
   e.mir4VisualClassId = presentation.classId;

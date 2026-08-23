@@ -1,9 +1,12 @@
-// Target-native art-direction recipes for the 20-map MIR4 campaign. Records
-// contain only existing World of ClaudeCraft prop keys and fresh 3D world
-// coordinates. Source TMX geometry and source-project assets never enter this
-// layer.
+// Temporary target-native dressing recipes for campaign maps that have not
+// passed their map-specific authoring gate. Production-authored maps live in
+// their own modules and are resolved before this scaffold table.
 
 import type { HeightStamp, ZonePropsDef } from '../../types';
+import { M01_VILA_DO_VAU_BLUEPRINT } from './m01_vila_do_vau_world';
+import { M02_TRILHA_DOS_JUNCOS_BLUEPRINT } from './m02_trilha_dos_juncos_world';
+import { M03_BOSQUE_DO_VALE_BLUEPRINT } from './m03_bosque_do_vale_world';
+import { M04_RUINAS_DA_ENCOSTA_BLUEPRINT } from './m04_ruinas_da_encosta_world';
 
 type DecorProp = NonNullable<ZonePropsDef['decorProps']>[number];
 type LocalDecorProp = Omit<DecorProp, 'x' | 'z'> & { dx: number; dz: number };
@@ -35,60 +38,6 @@ export interface Mir4ArcMapDressing {
 // clear for roads, quest anchors and portal travel. Large silhouettes occupy
 // the side thirds, beyond the two hunting camps rather than inside them.
 export const MIR4_ARC_MAP_DRESSING_RECIPES: readonly Mir4ArcMapDressingRecipe[] = [
-  {
-    mapId: 'm01-vila-do-vau',
-    themeId: 'river-grove',
-    decorProps: [
-      { key: 'gardenArch', dx: -42, dz: 88, rot: 0.1, scale: 2.8 },
-      { key: 'oakTree', dx: -48, dz: 101, rot: 0.7, scale: 1.35, r: 0.8, h: 9 },
-      { key: 'oakTree', dx: -37, dz: 108, rot: -1.1, scale: 1.2, r: 0.8, h: 9 },
-    ],
-    lakes: [
-      { dx: -98, dz: 74, radius: 11 },
-      { dx: -98, dz: 101, radius: 12 },
-    ],
-    terrainEdits: [{ dx: 91, dz: 112, radius: 26, delta: 6, falloff: 'smooth' }],
-  },
-  {
-    mapId: 'm02-trilha-dos-juncos',
-    themeId: 'reed-crossing',
-    decorProps: [
-      { key: 'hexBoat', dx: 91, dz: 105, rot: -0.8, scale: 5 },
-      { key: 'mushroomGlowCluster', dx: -43, dz: 104, rot: 0.4, scale: 1.8 },
-      { key: 'hexbTowerBase', dx: 42, dz: 96, rot: 0.3, scale: 4.5, r: 2.5, h: 7 },
-    ],
-    lakes: [
-      { dx: 96, dz: 96, radius: 14 },
-      { dx: -96, dz: 119, radius: 13 },
-    ],
-    terrainEdits: [{ dx: -88, dz: 76, radius: 24, delta: 3, falloff: 'smooth' }],
-  },
-  {
-    mapId: 'm03-bosque-do-vale',
-    themeId: 'ancient-grove',
-    decorProps: [
-      { key: 'stagShrine', dx: -43, dz: 101, rot: 0.8, r: 2, h: 4.2 },
-      { key: 'oakTree', dx: -54, dz: 112, rot: 2.1, scale: 1.5, r: 0.9, h: 10 },
-      { key: 'oakTree', dx: -34, dz: 117, rot: -0.2, scale: 1.3, r: 0.8, h: 9 },
-    ],
-    terrainEdits: [
-      { dx: 88, dz: 102, radius: 30, delta: 8, falloff: 'smooth' },
-      { dx: -91, dz: 61, radius: 23, delta: 5, falloff: 'smooth' },
-    ],
-  },
-  {
-    mapId: 'm04-ruinas-da-encosta',
-    themeId: 'highland-ruins',
-    decorProps: [
-      { key: 'hexTower', dx: 46, dz: 98, rot: -0.5, scale: 7, r: 3.6, h: 15 },
-      { key: 'hexFlag', dx: 39, dz: 91, rot: 0.2, scale: 3 },
-      { key: 'kcasRubbleLarge', dx: -45, dz: 111, rot: 1.4, scale: 1.2 },
-    ],
-    terrainEdits: [
-      { dx: 90, dz: 111, radius: 28, delta: 13, falloff: 'smooth' },
-      { dx: -91, dz: 121, radius: 24, delta: 10, falloff: 'smooth' },
-    ],
-  },
   {
     mapId: 'm05-clareira-da-fenda',
     themeId: 'open-crypt',
@@ -318,6 +267,54 @@ export function mir4ArcMapDressing(
   mapId: string,
   hub: Readonly<{ x: number; z: number }>,
 ): Mir4ArcMapDressing {
+  if (mapId === M01_VILA_DO_VAU_BLUEPRINT.mapId) {
+    return {
+      themeId: 'vila-do-vau-authored-valley',
+      decorProps: M01_VILA_DO_VAU_BLUEPRINT.decorPlacements.map(
+        ({ poiId: _poiId, origin: _origin, ...prop }) => ({ ...prop }),
+      ),
+      lakes: M01_VILA_DO_VAU_BLUEPRINT.lakes.map((lake) => ({ ...lake })),
+      terrainEdits: M01_VILA_DO_VAU_BLUEPRINT.terrainEdits.map((edit) => ({ ...edit })),
+      mines: [],
+      docks: [],
+    };
+  }
+  if (mapId === M02_TRILHA_DOS_JUNCOS_BLUEPRINT.mapId) {
+    return {
+      themeId: 'trilha-dos-juncos-authored-wetland',
+      decorProps: M02_TRILHA_DOS_JUNCOS_BLUEPRINT.decorPlacements.map(
+        ({ poiId: _poiId, origin: _origin, ...prop }) => ({ ...prop }),
+      ),
+      lakes: M02_TRILHA_DOS_JUNCOS_BLUEPRINT.lakes.map((lake) => ({ ...lake })),
+      terrainEdits: M02_TRILHA_DOS_JUNCOS_BLUEPRINT.terrainEdits.map((edit) => ({ ...edit })),
+      mines: [],
+      docks: [],
+    };
+  }
+  if (mapId === M03_BOSQUE_DO_VALE_BLUEPRINT.mapId) {
+    return {
+      themeId: 'bosque-do-vale-authored-ancient-forest',
+      decorProps: M03_BOSQUE_DO_VALE_BLUEPRINT.decorPlacements.map(
+        ({ poiId: _poiId, origin: _origin, ...prop }) => ({ ...prop }),
+      ),
+      lakes: M03_BOSQUE_DO_VALE_BLUEPRINT.lakes.map((lake) => ({ ...lake })),
+      terrainEdits: M03_BOSQUE_DO_VALE_BLUEPRINT.terrainEdits.map((edit) => ({ ...edit })),
+      mines: [],
+      docks: [],
+    };
+  }
+  if (mapId === M04_RUINAS_DA_ENCOSTA_BLUEPRINT.mapId) {
+    return {
+      themeId: 'ruinas-da-encosta-authored-highland-city',
+      decorProps: M04_RUINAS_DA_ENCOSTA_BLUEPRINT.decorPlacements
+        .filter((placement) => placement.key !== 'bonfire')
+        .map(({ poiId: _poiId, origin: _origin, ...prop }) => ({ ...prop })),
+      lakes: M04_RUINAS_DA_ENCOSTA_BLUEPRINT.lakes.map((lake) => ({ ...lake })),
+      terrainEdits: M04_RUINAS_DA_ENCOSTA_BLUEPRINT.terrainEdits.map((edit) => ({ ...edit })),
+      mines: [],
+      docks: [],
+    };
+  }
   const recipe = DRESSING_BY_MAP.get(mapId);
   if (!recipe) throw new Error(`Missing MIR4 native dressing recipe for ${mapId}`);
   return {

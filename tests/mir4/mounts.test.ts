@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
+import { spellHasteMult } from '../../src/sim/combat/spell_combat';
+import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_MOUNTS_CATALOG } from '../../src/sim/content/mir4/mounts_catalog';
+import { createMob } from '../../src/sim/entity';
 import {
   combineMir4Mounts,
   confirmMir4Mount,
@@ -16,15 +19,27 @@ import {
 import { mountItemId } from '../../src/sim/mounts';
 import { moveSpeedMult } from '../../src/sim/player_motion';
 import { Sim } from '../../src/sim/sim';
+import type { Entity, Mir4ClassKey } from '../../src/sim/types';
 
-function makeSim(seed = 1_091): Sim {
+function makeSim(seed = 1_091, playerClassMir4: Mir4ClassKey = 'warrior'): Sim {
   return new Sim({
     seed,
     playerClass: 'warrior',
-    playerClassMir4: 'warrior',
+    playerClassMir4,
     playerName: 'Mount Tester',
     gameProfile: 'mir4-gameplay-port',
   });
+}
+
+function spawnAttackTarget(sim: Sim): Entity {
+  const target = createMob(
+    sim.nextId++,
+    MIR4_MOBS.mir4_forest_wolf as never,
+    1,
+    sim.groundPos(sim.player.pos.x + 2, sim.player.pos.z),
+  );
+  sim.addEntity(target);
+  return target;
 }
 
 function required<T>(value: T | null | undefined, label: string): T {
@@ -66,7 +81,8 @@ describe('MIR4 Mount progression', () => {
         equippedMountId: 'meadow-courser',
       }),
     ).toEqual({
-      moveSpeedBps: 400,
+      moveSpeedBps: 1_000,
+      basicAttackSpeedBps: 500,
       physicalDefense: 9,
       magicDefense: 9,
     });
@@ -103,6 +119,31 @@ describe('MIR4 Mount progression', () => {
           mir4MountBonuses({ discovered: ids.slice(0, threshold), owned: {} }).physicalDefense,
         ).toBe(expected);
       }
+    }
+  });
+
+  it('applies the exact movement-speed schedule for every Mount grade', () => {
+    const expectedByGrade = new Map<number, readonly [number, number]>([
+      [1, [1_000, 500]],
+      [2, [1_500, 1_000]],
+      [3, [2_000, 1_500]],
+      [4, [2_500, 2_000]],
+      [5, [5_000, 3_500]],
+      [6, [8_000, 5_000]],
+    ]);
+
+    for (const [grade, [expectedMoveSpeedBps, expectedBasicAttackSpeedBps]] of expectedByGrade) {
+      const mount = required(
+        MIR4_MOUNTS_CATALOG.find((candidate) => candidate.grade === grade),
+        `grade ${grade} Mount`,
+      );
+      const bonuses = mir4MountBonuses({
+        owned: { [mount.id]: 1 },
+        discovered: [mount.id],
+        equippedMountId: mount.id,
+      });
+      expect(bonuses.moveSpeedBps).toBe(expectedMoveSpeedBps);
+      expect(bonuses.basicAttackSpeedBps).toBe(expectedBasicAttackSpeedBps);
     }
   });
 
@@ -240,11 +281,72 @@ describe('MIR4 Mount progression', () => {
     expect(failureMeta.mir4Mounts.owned).toEqual({ 'meadow-courser': 1 });
   });
 
-  it('uses source movement speed instead of stacking native shell tuning', () => {
+  it('uses MIR4 movement speed instead of stacking native shell tuning', () => {
     const sim = makeSim(1_093);
+    required(sim.player.mir4, 'MIR4 player stats').mountMoveSpeedBps = 1_000;
+
+    expect(moveSpeedMult(sim.player)).toBe(1);
+
     sim.player.mountKey = mir4MountVisualKey('meadow-courser');
-    required(sim.player.mir4, 'MIR4 player stats').mountMoveSpeedBps = 400;
-    expect(moveSpeedMult(sim.player)).toBeCloseTo(1.04);
+    expect(moveSpeedMult(sim.player)).toBeCloseTo(1.1);
+  });
+
+  it('shortens the real melee and ranged basic cooldown while dismounted without speeding spells', () => {
+    const sim = makeSim(1_100);
+    const meta = required(sim.players.get(sim.playerId), 'player meta');
+    meta.mir4Mounts = {
+      owned: { 'meadow-courser': 1 },
+      discovered: ['meadow-courser'],
+    };
+    meta.ridingTrained = true;
+    const spellHasteBefore = spellHasteMult(sim.player);
+    const target = spawnAttackTarget(sim);
+    target.maxHp = 5_000;
+    target.hp = target.maxHp;
+    expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
+    expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65, 8);
+    sim.player.cooldowns.delete('mir4_basic');
+
+    expect(equipMir4Mount(sim.ctx, sim.playerId, 'meadow-courser')).toMatchObject({
+      ok: true,
+      status: 'equipped',
+    });
+    expect(sim.player.mountKey).toBe('');
+    expect(required(sim.player.mir4, 'MIR4 player stats').mountBasicAttackSpeedBps).toBe(500);
+    expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
+    expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65 / 1.05, 8);
+    expect(spellHasteMult(sim.player)).toBe(spellHasteBefore);
+    expect(sim.mir4CastSkill(1102, target.id)).toEqual({ ok: true });
+    expect(sim.player.cooldowns.get('1102')).toBe(25);
+    expect(sim.player.gcdRemaining).toBe(1);
+
+    expect(equipMir4Mount(sim.ctx, sim.playerId, null)).toMatchObject({
+      ok: true,
+      status: 'unequipped',
+    });
+    expect(required(sim.player.mir4, 'MIR4 player stats').mountBasicAttackSpeedBps).toBe(0);
+    sim.player.cooldowns.delete('mir4_basic');
+    expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
+    expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65, 8);
+
+    const ranged = makeSim(1_101, 'elementalist');
+    const rangedMeta = required(ranged.players.get(ranged.playerId), 'ranged player meta');
+    const mythicalMount = required(
+      MIR4_MOUNTS_CATALOG.find((mount) => mount.grade === 6),
+      'mythical Mount',
+    );
+    rangedMeta.mir4Mounts = {
+      owned: { [mythicalMount.id]: 1 },
+      discovered: [mythicalMount.id],
+    };
+    rangedMeta.ridingTrained = true;
+    expect(equipMir4Mount(ranged.ctx, ranged.playerId, mythicalMount.id)).toMatchObject({
+      ok: true,
+      status: 'equipped',
+    });
+    const rangedTarget = spawnAttackTarget(ranged);
+    expect(ranged.mir4BasicAttack(rangedTarget.id)).toEqual({ ok: true });
+    expect(ranged.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.75 / 1.5, 8);
   });
 
   it('sanitizes forged ownership, equips, and pending rows', () => {

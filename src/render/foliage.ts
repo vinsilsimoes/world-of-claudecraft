@@ -20,11 +20,11 @@ import type { BiomeId } from '../sim/types';
 import { isInSowfieldShell } from '../sim/vale_cup_layout';
 import type { Decoration } from '../sim/world';
 import {
+  biomeAt,
   generateDecorations,
   roadDistance,
   terrainHeight,
   WATER_LEVEL,
-  zoneBiomeAt,
 } from '../sim/world';
 import { loadGltf, releaseGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
@@ -1610,8 +1610,7 @@ function buildTrees(
   // parterre bed, and NO wild pines anywhere on the lawns (kind 'tree' is
   // the pine; the realm keeps its oaks, topiary, and specimen elders)
   const decos = generateDecorations(seed).filter(
-    (d) =>
-      !inParterrePlot(d.x, d.z, 6) && !(d.kind === 'tree' && zoneBiomeAt(d.x, d.z) === 'garden'),
+    (d) => !inParterrePlot(d.x, d.z, 6) && !(d.kind === 'tree' && biomeAt(d.x, d.z) === 'garden'),
   );
   const sourceDecos = !GFX.leanFoliage
     ? decos
@@ -1940,7 +1939,7 @@ function dressingSpotTint(
     // mushrooms keep their painted cap colors: brightness jitter only
     return out.setScalar(0.85 + hashAt(s.x, s.z, 47) * 0.3);
   }
-  const biome = zoneBiomeAt(s.x, s.z);
+  const biome = biomeAt(s.x, s.z);
   if (kind === 'bushFlowers' && biome === 'amber') {
     return out.set(AMBER_BLOOM_TINTS[Math.floor(hashAt(s.x, s.z, 48) * AMBER_BLOOM_TINTS.length)]);
   }
@@ -2154,7 +2153,7 @@ function generateDressing(seed: number): DressingSpot[] {
   for (let gx = -xHalf; gx < xHalf; gx += step) {
     for (let gz = WORLD_MIN_Z + 16; gz < WORLD_MAX_Z - 16; gz += step) {
       const r = hashAt(gx, gz, 41);
-      const biome = zoneBiomeAt(gx, gz);
+      const biome = biomeAt(gx, gz);
       // the Evergarden takes NO random dressing: every bush there belongs to
       // an authored parterre arrangement (appended after this scatter loop)
       if (biome === 'garden') continue;
@@ -2853,7 +2852,7 @@ function buildGrassRing(
     partial: GrassChunkPartialMeshes,
   ): Generator<undefined, void, undefined> {
     let n = 0;
-    const chunkBiome = zoneBiomeAt(chunk.centerX, chunk.centerZ);
+    const chunkBiome = biomeAt(chunk.centerX, chunk.centerZ);
     // dense-grass biomes get a matching buffer so the extra tufts are never
     // clipped by the base cap (allocation is per chunk, biome known here)
     const chunkCap = Math.ceil(maxChunkCount * Math.max(1, GRASS_BIOME_DENSITY[chunkBiome] ?? 1));
@@ -2938,7 +2937,7 @@ function buildGrassRing(
         if (x < minX || x >= maxX || z < minZ || z >= maxZ) continue;
         if (Math.abs(x) > WORLD_MAX_X - 16 || z < WORLD_MIN_Z + 16 || z > WORLD_MAX_Z - 16)
           continue;
-        const tuftBiome = zoneBiomeAt(x, z);
+        const tuftBiome = biomeAt(x, z);
         // the Evergarden lawn is mown bare, but around the plantings grass
         // grows back the way a real bed does: through every parterre bed
         // and slightly past its hedge line, and across the meadow patches a

@@ -12,6 +12,7 @@ import {
   CLASSES,
   DELVES,
   DUNGEONS,
+  getActiveWorldContent,
   ITEM_SETS,
   ITEMS,
   MOBS,
@@ -116,8 +117,22 @@ export type EntityTranslationRequest =
       field: 'name' | ItemSetBonusField;
       values?: InterpolationValues;
     }
-  | { kind: 'mob'; id: string; field: 'name'; values?: InterpolationValues }
-  | { kind: 'npc'; id: string; field: 'name' | 'title' | 'greeting'; values?: InterpolationValues }
+  | {
+      kind: 'mob';
+      id: string;
+      field: 'name';
+      /** Canonical runtime fallback for profile-authored dynamic identities. */
+      source?: string;
+      values?: InterpolationValues;
+    }
+  | {
+      kind: 'npc';
+      id: string;
+      field: 'name' | 'title' | 'greeting';
+      /** Canonical runtime fallback for profile-authored dynamic identities. */
+      source?: string;
+      values?: InterpolationValues;
+    }
   | {
       kind: 'quest';
       id: string;
@@ -303,10 +318,10 @@ function canonicalEntityText(request: EntityTranslationRequest): string {
       return set.bonuses.find((b) => b.pieces === pieces)?.text ?? request.id;
     }
     case 'mob':
-      return ownEntry(MOBS, request.id)?.name ?? request.id;
+      return ownEntry(MOBS, request.id)?.name ?? request.source ?? request.id;
     case 'npc': {
       const npc = ownEntry(NPCS, request.id);
-      if (!npc) return request.id;
+      if (!npc) return request.source ?? request.id;
       if (request.field === 'title') return npc.title;
       if (request.field === 'greeting') return npc.greeting;
       return npc.name;
@@ -513,6 +528,10 @@ export function zoneDisplayName(zoneId: string): string {
 export function zonePoiLabel(zoneId: string, poiIndex: number): string {
   const mir4Key = mir4ZoneNameKey(zoneId);
   if (mir4Key) {
+    const authored = getActiveWorldContent().zones.find((zone) => zone.id === zoneId)?.pois[
+      poiIndex
+    ]?.label;
+    if (authored) return authored;
     const zone = t(mir4Key);
     if (poiIndex === 0) return zone;
     if (poiIndex === 1) return t('hudChrome.mir4.maps.portal', { zone });

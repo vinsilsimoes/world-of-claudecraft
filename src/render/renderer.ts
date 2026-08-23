@@ -40,8 +40,8 @@ import {
 import type { DelveModuleId } from '../sim/delve_layout';
 import { generateRiftFloor, riftLiftAt } from '../sim/rift/rift_gen';
 import type { BiomeId, ZoneDef } from '../sim/types';
-import { ALL_CLASSES, type Entity, isMechWearer, type SimEvent } from '../sim/types';
-import { groundHeight, waterLevelAt, zoneBiomeAt } from '../sim/world';
+import { ALL_CLASSES, type Entity, isMechWearer, RUN_SPEED, type SimEvent } from '../sim/types';
+import { biomeAt, groundHeight, waterLevelAt } from '../sim/world';
 import type { ChatBubbleStyle } from '../ui/chat_bubble_style';
 import { tEntity } from '../ui/entity_i18n';
 import type { IWorld } from '../world_api';
@@ -74,7 +74,7 @@ import { BattlegroundFx } from './battleground_fx';
 import { updateBattlegroundOccluderFades } from './battleground_placements';
 import { buildBattlegroundObject } from './battleground_props';
 import { ensureBiomeHazeField, setBiomeHazeCamera, setBiomeHazeGrade } from './biome_haze_field';
-import { type BiomeHazePreset, hazeLightLevel } from './biome_haze_field_core';
+import { type BiomeHazePreset, hazeLightLevel, hazeWorldBounds } from './biome_haze_field_core';
 import { type BirdsView, buildBirds } from './birds';
 import { type BladeGrassView, buildBladeGrass } from './blade_grass';
 import { type BladeGrassBandView, buildBladeGrassBand } from './blade_grass_band';
@@ -95,13 +95,8 @@ import {
   startVista,
   stepCameraDirector,
 } from './camera_director_core';
-import {
-  cameraFovOffset,
-  createCameraFeel,
-  punchCameraFov,
-  stepCameraFeel,
-  stepLandingDetector,
-} from './camera_feel_core';
+// biome-ignore format: keep the extracted camera-feel surface compact in the renderer firewall
+import { cameraFovOffset, createCameraFeel, mir4StableCameraFeel, punchCameraFov, stepCameraFrame } from './camera_feel_core';
 import { buildCampBraziers, type CampBraziersView } from './camp_braziers';
 import { canopyDetailPrewarmTextures } from './canopy_detail';
 import { buildCastleFeatures, type CastleFeaturesView } from './castle_features';
@@ -534,7 +529,12 @@ import {
 import { type FlamePerceptualState, updateSceneryFlame } from './scenery_flame';
 import { downscaleDims } from './screenshot';
 import { drapeRingLocalY } from './selection_ring';
-import { type SelfMotionFrame, SelfMotionPredictor, updateSelfRenderFallback } from './self_motion';
+import {
+  mir4AuthoritativeSelfFallbackSpeed,
+  type SelfMotionFrame,
+  SelfMotionPredictor,
+  updateSelfRenderFallback,
+} from './self_motion';
 import { SelfSpiritPrewarmer } from './self_spirit_prewarm';
 import { SentenceVfx } from './sentence_vfx';
 import { sentenceImpactPlan } from './sentence_vfx_core';
@@ -1762,6 +1762,7 @@ export class Renderer {
     envTransition: () => this.envTransition,
     preparedZones: () => this.preparedZones,
     liveZones: () => this.sim.cfg.world?.zones ?? ZONES,
+    liveBiomePaint: () => this.sim.cfg.world?.biomePaint,
     zoneIdAt: (x, z) => this.zoneIdAt(x, z),
     prewarmTextureInIdle: (texture) => this.prewarmTextureInIdle(texture),
     runPmrem: (biome, label) =>
@@ -2269,7 +2270,7 @@ export class Renderer {
           precip: precipForBiome(biome) ?? undefined,
         };
       }
-      ensureBiomeHazeField(hazePresets);
+      ensureBiomeHazeField(hazePresets, hazeWorldBounds(this.sim.cfg.world?.zones));
     }
     // The night light field must decide before any splat material compiles:
     // the terrain gates its shader patch on hasNightLightField() at compile
@@ -2283,7 +2284,7 @@ export class Renderer {
     // low keeps the legacy canvas-gradient dome.
     const initialX = this.sim.player.pos.x;
     const initialZ = this.sim.player.pos.z;
-    const initialBiome = zoneBiomeAt(initialX, initialZ);
+    const initialBiome = biomeAt(initialX, initialZ);
     this.skyView = buildSky(LOW_GFX, SUN_ANCHOR, initialX, initialZ);
     this.sky = this.skyView.dome;
     setRenderCategory(this.sky, 'sky');
@@ -4813,7 +4814,7 @@ export class Renderer {
     const questLog = this.sim.questLog;
     for (const e of this.sim.entities.values()) {
       if (this.views.has(e.id)) continue;
-      if (!entityViewIsAdmitted(e, questLog, this.questObjectHidden)) continue;
+      if (!entityViewIsAdmitted(e, questLog, this.questObjectHidden, this.sim.playerId)) continue;
       const required = e.id === center.id || e.id === center.targetId;
       if (required && !includeRequired) continue;
       const d2 = entityViewDistanceSq(e, center);
@@ -4844,7 +4845,8 @@ export class Renderer {
     if (id === null) return 0;
     const e = this.sim.entities.get(id);
     if (!e || this.views.has(e.id)) return 0;
-    if (!entityViewIsAdmitted(e, this.sim.questLog, this.questObjectHidden)) return 0;
+    if (!entityViewIsAdmitted(e, this.sim.questLog, this.questObjectHidden, this.sim.playerId))
+      return 0;
     if (!this.viewCreateRetry.canAttempt(e.id, 'view', performance.now())) return 0;
     this.createView(e);
     this.sampleCreatedViewType(createdViewTypes, e);
@@ -9589,7 +9591,7 @@ export class Renderer {
 
   private outdoorFogPreset(): { color: number; near: number; far: number } {
     if (this.lowGfx) return Renderer.LOW_FOG;
-    return Renderer.BIOME_FOG[zoneBiomeAt(this.sim.player.pos.x, this.sim.player.pos.z)];
+    return Renderer.BIOME_FOG[biomeAt(this.sim.player.pos.x, this.sim.player.pos.z)];
   }
 
   /** Settle the light rig for a fog state (interior_light_rig.ts owns the
@@ -9732,7 +9734,7 @@ export class Renderer {
     } else {
       this.valeCupSky.mesh.visible = false;
     }
-    const biome = zoneBiomeAt(this.sim.player.pos.x, pz);
+    const biome = biomeAt(this.sim.player.pos.x, pz);
     // Per-biome god-ray strength, eased over about half a second so a border
     // crossing fades the shafts with the rest of the ambience.
     const shaftTarget = Renderer.BIOME_GOD_RAYS[biome] ?? 1;
@@ -10618,6 +10620,7 @@ export class Renderer {
     // lifecycle, mixers, uTime, the viewport poll) so coming back costs no
     // create burst or shader link, and only the terminal draw is skipped.
     present = true,
+    smoothSelfFallback = false,
   ): void {
     if (this.shutdownStarted) return;
     const totalStart = performance.now();
@@ -10665,13 +10668,13 @@ export class Renderer {
     }
     const sim = this.sim;
     const p = sim.player;
+    const stableCamera = smoothSelfFallback && selfAlphaLead === 0 && selfMotion === null;
     if (this.lastSelfId !== p.id) {
       this.lastSelfId = p.id;
       this.selfRenderPositionReady = false;
       this.selfFacingOverride = null;
       this.selfFacingLastTarget = null;
-      // A still-decaying predictor-handoff offset belongs to the previous
-      // character; leaking it would displace the new one for a few frames.
+      // Never leak a decaying predictor-handoff offset into the new character.
       this.selfMotionOffset.set(0, 0, 0);
     }
     const now = performance.now();
@@ -10682,6 +10685,7 @@ export class Renderer {
       selfAlphaLead,
       selfMotion,
       selfAuthoritativeDiscontinuity,
+      smoothSelfFallback,
     );
     phaseStart = this.markRendererPhase(framePhaseMs, 'setup', phaseStart);
 
@@ -12494,7 +12498,7 @@ export class Renderer {
     this.tickValeCupFx(dt);
     worldStart = this.markRendererWorldPhase(worldPhaseMs, 'vfx', worldStart);
 
-    this.updateCamera(selfPos, dt);
+    this.updateCamera(selfPos, dt, stableCamera || mir4StableCameraFeel(this.sim.cfg.gameProfile));
     worldStart = this.markRendererWorldPhase(worldPhaseMs, 'camera', worldStart);
     // Terrain chunks / tree buckets past the detail horizon are dropped
     // before the frustum; camera-ghost props fade against the eye ray. On
@@ -12705,8 +12709,8 @@ export class Renderer {
     this.weather.update(
       this.camera.position,
       dt,
-      this.fogState === 'outdoor' ? zoneBiomeAt(p.pos.x, p.pos.z) : null,
-      zoneBiomeAt,
+      this.fogState === 'outdoor' ? biomeAt(p.pos.x, p.pos.z) : null,
+      biomeAt,
     );
     worldStart = this.markRendererWorldPhase(worldPhaseMs, 'sky', worldStart);
     this.updateCelestialSprites();
@@ -12784,7 +12788,7 @@ export class Renderer {
     frameStats.playerPosition.x = roundMs(p.pos.x);
     frameStats.playerPosition.y = roundMs(p.pos.y);
     frameStats.playerPosition.z = roundMs(p.pos.z);
-    frameStats.biome = zoneBiomeAt(p.pos.x, p.pos.z);
+    frameStats.biome = biomeAt(p.pos.x, p.pos.z);
     if (this.lastQualityChange) {
       this.lastQualityChange.ageMs = roundMs(afterSubmit - this.lastQualityChange.atMs);
     }
@@ -12978,6 +12982,7 @@ export class Renderer {
     selfAlphaLead: number,
     selfMotion: SelfMotionFrame | null = null,
     authoritativeDiscontinuity = false,
+    smoothSelfFallback = false,
   ): THREE.Vector3 {
     const p = this.sim.player;
     // Online intent-driven extrapolation: when active it owns the position and
@@ -13027,8 +13032,11 @@ export class Renderer {
       pz,
       this.selfRenderPositionReady,
       dt,
-      selfAlphaLead > 0,
+      selfAlphaLead > 0 || smoothSelfFallback,
       authoritativeDiscontinuity,
+      smoothSelfFallback && selfAlphaLead === 0
+        ? mir4AuthoritativeSelfFallbackSpeed(p)
+        : Number.POSITIVE_INFINITY,
     );
     this.selfRenderPositionReady = true;
     return this.selfRenderPosition;
@@ -13223,7 +13231,7 @@ export class Renderer {
     return this.placedAssetsView;
   }
 
-  private updateCamera(selfPos: THREE.Vector3, dt: number): void {
+  private updateCamera(selfPos: THREE.Vector3, dt: number, stableServerOwnedMotion = false): void {
     // Map-editor free camera: use the editor pose verbatim and skip the entire
     // player-chase path. Every camera-relative cull in sync() then
     // runs off this free camera with no other change.
@@ -13249,12 +13257,6 @@ export class Renderer {
     // Landing thump, detected from the display trajectory alone (works in
     // both hosts): a short FOV dip plus a touch of trauma, scaled by fall
     // speed. addShake/punchFov are reduced-motion no-ops already.
-    const thump = stepLandingDetector(this.camFeel, selfPos.y, dt);
-    if (thump > 0) {
-      this.punchFov(-3.5 * thump);
-      this.addShake(0.1 + 0.3 * thump);
-    }
-
     // Look-ahead lead + speed FOV, fed by the horizontal display velocity.
     let velX = 0;
     let velZ = 0;
@@ -13267,7 +13269,12 @@ export class Renderer {
         velZ = 0;
       }
     }
-    stepCameraFeel(this.camFeel, velX, velZ, dt, !reduce);
+    // biome-ignore format: keep this adapter inside renderer's pinned extraction budget
+    const thump = stepCameraFrame(this.camFeel, selfPos.y, velX, velZ, dt, !reduce, stableServerOwnedMotion);
+    if (thump > 0) {
+      this.punchFov(-3.5 * thump);
+      this.addShake(0.1 + 0.3 * thump);
+    }
 
     // Flipping reduce motion on mid-directive blends any running move out.
     if (reduce) cancelCameraDirective(this.camDirector);
@@ -13373,7 +13380,7 @@ export class Renderer {
       const fl = Math.hypot(fx, fy, fz) || 1;
       sink.setListener(cpx, cpy, cpz, fx / fl, fy / fl, fz / fl);
       const inDungeon = px > DUNGEON_X_THRESHOLD;
-      const biome = zoneBiomeAt(px, pz);
+      const biome = biomeAt(px, pz);
       const precip =
         !this.weatherOn || inDungeon
           ? null

@@ -1,9 +1,13 @@
+import {
+  type Mir4TutorialRequirement,
+  mir4ArcTutorialGuidance,
+} from '../../../sim/content/mir4/arc_tutorial_guidance';
 import { QUESTS } from '../../../sim/data';
 import { MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import { questObjectiveRequired } from '../../../sim/types';
 import type { IWorld } from '../../../world_api';
 import { esc } from '../../esc';
-import { formatNumber, t } from '../../i18n';
+import { formatNumber, type TranslationKey, t } from '../../i18n';
 import { ownEntry } from '../../known_item';
 import { mir4QuestObjectiveLabel, mir4QuestTitle } from '../../mir4_quest_i18n';
 import { type QuestTrackerView, questTrackerView, type TrackedQuest } from './quest_tracker';
@@ -19,17 +23,45 @@ export interface QuestTrackerControllerDeps {
   document: Document;
   world(): Pick<
     IWorld,
-    'cfg' | 'mir4AutoQuestActive' | 'mir4QuestTrackerEntries' | 'questLog' | 'setMir4AutoQuest'
+    | 'cfg'
+    | 'mir4AcknowledgeTutorial'
+    | 'mir4AutoQuestActive'
+    | 'mir4QuestTrackerEntries'
+    | 'questLog'
+    | 'setMir4AutoQuest'
   >;
   settings: QuestTrackerSettingsPort;
   questTitle(questId: string): string;
   objectiveLabel(questId: string, objectiveIndex: number): string;
   openQuest(questId: string): void;
+  shortcut(action: string): string;
   click(): void;
 }
 
+const TUTORIAL_DESTINATION_KEYS: Readonly<Record<string, TranslationKey>> = {
+  bags: 'itemUi.bags.title',
+  char: 'hud.keybinds.actions.char',
+  crafting: 'hudChrome.crafting.title',
+  dfinder: 'hudChrome.finder.title',
+  map: 'hud.keybinds.actions.map',
+  questlog: 'questUi.log.title',
+};
+
+const TUTORIAL_REQUIREMENT_KEYS: Readonly<Record<string, TranslationKey>> = {
+  dawnTear: 'hudChrome.mir4.materials.dawnTear',
+  lunarSeal: 'hudChrome.mir4.materials.lunarSeal',
+  moonStone: 'hudChrome.mir4.materials.moonStone',
+  solarScroll: 'hudChrome.mir4.materials.solarScroll',
+  solarWard: 'hudChrome.mir4.materials.solarWard',
+  sunStone: 'hudChrome.mir4.materials.sunStone',
+  'mount-ticket-dawn': 'hudChrome.mir4.mountTicketDawn',
+  'spirit-ticket-dawn': 'hudChrome.mir4.spiritTicketDawn',
+};
+
 /** Owns quest tracker projection, collapse persistence, and elided DOM updates. */
 export class QuestTrackerController {
+  private tutorialLauncher: HTMLElement | null = null;
+
   constructor(private readonly deps: QuestTrackerControllerDeps) {}
 
   update(): void {
@@ -42,6 +74,7 @@ export class QuestTrackerController {
           questId: entry.id,
           kind: entry.objective.kind,
           stageKind: entry.objective.stageKind,
+          stageIndex: entry.objective.stageIndex,
           ready: entry.complete,
         });
         if (entry.autoJourneySuspended) {
@@ -62,6 +95,7 @@ export class QuestTrackerController {
                 ),
               }
             : {}),
+          ...(entry.objective.stageKind === 'system-tutorial' ? this.tutorialView(entry.id) : {}),
           objectives: [{ ...entry.objective, label }],
         });
       }
@@ -100,6 +134,9 @@ export class QuestTrackerController {
     }
     const html = this.renderHtml(questTrackerView(quests, collapsed));
     if (this.deps.element.innerHTML !== html) this.deps.element.innerHTML = html;
+    this.highlightTutorialLauncher(
+      collapsed ? null : (quests.find((quest) => quest.tutorial)?.tutorial?.launcherId ?? null),
+    );
   }
 
   toggleCollapsed(): void {
@@ -112,18 +149,43 @@ export class QuestTrackerController {
     if (refocus) this.deps.element.querySelector<HTMLElement>('.qt-header')?.focus();
   }
 
+  handleClick(target: HTMLElement): void {
+    const tutorial = target.closest<HTMLElement>('[data-tutorial-quest]');
+    if (tutorial?.dataset.tutorialQuest) {
+      this.openTutorialDestination(tutorial.dataset.tutorialQuest);
+      return;
+    }
+    if (target.closest('.qt-header')) this.toggleCollapsed();
+    const row = target.closest<HTMLElement>('.qt-title');
+    if (row?.dataset.quest) this.activateQuest(row.dataset.quest);
+  }
+
   activateQuest(questId: string): void {
     const world = this.deps.world();
     if (world.cfg?.gameProfile === MIR4_GAME_PROFILE) {
       const entry = world.mir4QuestTrackerEntries().find((candidate) => candidate.id === questId);
       if (entry?.autoJourneyAvailable !== false) {
-        world.setMir4AutoQuest(!world.mir4AutoQuestActive());
+        world.setMir4AutoQuest(!entry?.autoJourneyActive, questId);
         this.deps.click();
         this.update();
       } else this.deps.openQuest(questId);
       return;
     }
     this.deps.openQuest(questId);
+  }
+
+  openTutorialDestination(questId: string): void {
+    const guidance = mir4ArcTutorialGuidance(questId);
+    if (!guidance?.launcherId) return;
+    if (guidance.tab) {
+      const crafting = this.deps.document.getElementById('crafting-window');
+      if (crafting) crafting.dataset.mir4ProgressionTab = guidance.tab;
+    }
+    const launcher = this.deps.document.getElementById(guidance.launcherId);
+    if (!launcher) return;
+    launcher.click();
+    this.deps.world().mir4AcknowledgeTutorial(questId);
+    this.deps.click();
   }
 
   private renderHtml(view: QuestTrackerView): string {
@@ -152,8 +214,57 @@ export class QuestTrackerController {
       for (const objective of quest.objectives) {
         rows += `<div class="qt-obj${objective.done ? ' done' : ''}">- ${esc(this.progressText(objective.label, objective.current, objective.total))}</div>`;
       }
+      if (quest.tutorial) {
+        const tutorial = quest.tutorial;
+        const shortcut = tutorial.shortcut ? ` (${tutorial.shortcut})` : '';
+        const requirements = tutorial.requirements.length
+          ? `<div class="qt-tutorial-requirements">${tutorial.requirements.map((requirement) => `<span>${esc(requirement)}</span>`).join('')}</div>`
+          : '';
+        rows += `<div class="qt-tutorial" id="mir4-tutorial-guide"><div class="qt-tutorial-title">${esc(t('hudChrome.mir4.campaign.objective.tutorial'))}</div><ol>${tutorial.steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol>${requirements}<button type="button" class="btn qt-tutorial-open" data-tutorial-quest="${esc(quest.id)}"${tutorial.tab ? ` data-tutorial-tab="${esc(tutorial.tab)}"` : ''}>${esc(`${tutorial.destination}${shortcut}`)}</button></div>`;
+      }
     }
     return `${header}<div id="qt-list">${rows}</div>`;
+  }
+
+  private tutorialView(questId: string): Pick<TrackedQuest, 'tutorial'> | Record<string, never> {
+    const guidance = mir4ArcTutorialGuidance(questId);
+    if (!guidance?.launcherId || !guidance.shortcutAction) return {};
+    const destinationKey = TUTORIAL_DESTINATION_KEYS[guidance.shortcutAction];
+    return {
+      tutorial: {
+        launcherId: guidance.launcherId,
+        ...(guidance.tab ? { tab: guidance.tab } : {}),
+        destination: destinationKey ? t(destinationKey) : guidance.shortcutAction,
+        shortcut: this.deps.shortcut(guidance.shortcutAction),
+        steps: guidance.steps,
+        requirements: guidance.requirements.map((requirement) =>
+          this.tutorialRequirement(requirement),
+        ),
+      },
+    };
+  }
+
+  private tutorialRequirement(requirement: Mir4TutorialRequirement): string {
+    if (requirement.kind === 'enhancement')
+      return `${this.humanize(requirement.id)} +${this.number(requirement.quantity)}`;
+    const key = TUTORIAL_REQUIREMENT_KEYS[requirement.id];
+    const name = key ? t(key) : this.humanize(requirement.id);
+    return `${name} x${this.number(requirement.quantity)}`;
+  }
+
+  private humanize(value: string): string {
+    return value
+      .replace(/[-_]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/^./, (first) => first.toUpperCase());
+  }
+
+  private highlightTutorialLauncher(launcherId: string | null): void {
+    const next = launcherId ? this.deps.document.getElementById(launcherId) : null;
+    if (next === this.tutorialLauncher) return;
+    this.tutorialLauncher?.classList.remove('mir4-tutorial-target');
+    next?.classList.add('mir4-tutorial-target');
+    this.tutorialLauncher = next;
   }
 
   private number(value: number): string {

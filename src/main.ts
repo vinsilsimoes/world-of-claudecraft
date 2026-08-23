@@ -122,6 +122,12 @@ import {
   summarizeLoadProfile,
 } from './game/load_profiler';
 import {
+  mir4WorldAutomationOwnsMotion,
+  selfAlphaLeadForMotionOwner,
+  selfFallbackSmoothingEnabled,
+  selfMotionPredictionAllowedFor,
+} from './game/mir4_motion_ownership';
+import {
   interfaceModeFromSetting,
   isPhoneTouchDevice,
   MobileControls,
@@ -136,7 +142,7 @@ import { diagonalMovementVisualFacing } from './game/movement_visual';
 import { music } from './game/music';
 import { tryNearbyInteraction } from './game/nearby_interaction';
 import { isOfflineModeAvailable } from './game/offline_mode_gate';
-import { offlineSimOptions, sanitizeOfflineName } from './game/offline_sim_options';
+import { offlineStartupSimOptions, sanitizeOfflineName } from './game/offline_sim_options';
 import { padReelItemId } from './game/pad_reel';
 import { createPerfMonitor } from './game/perf';
 import { initPerfNudge } from './game/perf_nudge';
@@ -4389,7 +4395,12 @@ async function startGame(
           offlineSim.player.facing,
         );
         Object.assign(offlineSim.moveInput, mi);
-        const stepFacing = movementFacing ?? facing;
+        const automationOwnsMotion = mir4WorldAutomationOwnsMotion(
+          offlineSim,
+          mi,
+          offlineSim.players.get(offlineSim.playerId),
+        );
+        const stepFacing = automationOwnsMotion ? null : (movementFacing ?? facing);
         // A stun locks facing (issue #2426): stepPlayerMotion already blocks
         // turnLeft/turnRight while stunned, but mouselook/controller facing is
         // applied out of band, here, before tick(), and must honor the same gate
@@ -4459,9 +4470,16 @@ async function startGame(
       // and the reticle is only consumed by the skipped draw (phase 4 QA F7).
       if (gate.render) syncGroundAimReticle();
       perf.setNetwork(null);
-      const offlineRenderFacing =
-        visualFacingFor(input.readMoveInput(), movementFacing ?? offlineSim.player.facing) ??
-        movementFacing;
+      const offlineMoveInput = input.readMoveInput();
+      const offlineAutomationOwnsMotion = mir4WorldAutomationOwnsMotion(
+        offlineSim,
+        offlineMoveInput,
+        offlineSim.players.get(offlineSim.playerId),
+      );
+      const offlineRenderFacing = offlineAutomationOwnsMotion
+        ? null
+        : (visualFacingFor(offlineMoveInput, movementFacing ?? offlineSim.player.facing) ??
+          movementFacing);
       const offlineAlpha = acc / DT;
       const offlineViews = renderer.views.size;
       // A hidden frame skips the draw, so timing it would dilute the renderer
@@ -4469,7 +4487,8 @@ async function startGame(
       const rendererStart = gate.render ? perf.startTime() : 0;
       traceStart = perf.startTrace();
       try {
-        renderer.sync(acc / DT, frameDt, offlineRenderFacing, 0, null, false, gate.render);
+        // biome-ignore format: keep the offline adapter inside main's pinned extraction budget
+        renderer.sync(acc / DT, frameDt, offlineRenderFacing, 0, null, false, gate.render, offlineAutomationOwnsMotion);
       } finally {
         perf.finishTrace(
           'renderer.sync',
@@ -4536,7 +4555,8 @@ async function startGame(
     // facing interp capped at 1 - extrapolating angles past the snapshot oscillates
     const interpServerFacing =
       pe.prevFacing + wrapAngle(pe.facing - pe.prevFacing) * Math.min(1, alpha);
-    const foreignFacing = movementFacing ?? resolved.facing;
+    const automationOwnsMotion = mir4WorldAutomationOwnsMotion(net, resolved.mi);
+    const foreignFacing = automationOwnsMotion ? null : (movementFacing ?? resolved.facing);
     // Keyboard turns integrate the same TURN_SPEED locally and STREAM the
     // resulting heading on the facing channel, exactly like mouselook: the
     // server applies it outright instead of integrating the turn flags one
@@ -4548,7 +4568,9 @@ async function startGame(
     kbTurnArgs.turnLeft = resolved.mi.turnLeft;
     kbTurnArgs.turnRight = resolved.mi.turnRight;
     kbTurnArgs.turnAllowed = net.spectating === null && !movementFrozen() && !isStunned(pe);
-    kbTurnArgs.sentFacing = foreignFacing;
+    // Authority heading clears a partial client turn during automation; the final
+    // wire gate deliberately does not echo that heading back to the server.
+    kbTurnArgs.sentFacing = automationOwnsMotion ? interpServerFacing : foreignFacing;
     kbTurnArgs.serverFacing = interpServerFacing;
     kbTurnArgs.echoMs = onlineInputEchoMs;
     kbTurnArgs.frameDt = frameDt;
@@ -4557,9 +4579,10 @@ async function startGame(
     // Streaming the seam/glide corrections (which chase the mirror) would
     // close a feedback loop through the server that at high RTT never
     // converges (the observed self-spinning resonance under netem).
-    const netFacing = foreignFacing ?? kbTurn.wireFacing;
-    const onlineRenderFacing =
-      visualFacingFor(resolved.mi, netFacing ?? kbFacing ?? interpServerFacing) ?? netFacing;
+    const netFacing = automationOwnsMotion ? null : (foreignFacing ?? kbTurn.wireFacing);
+    const onlineRenderFacing = automationOwnsMotion
+      ? null
+      : (visualFacingFor(resolved.mi, netFacing ?? kbFacing ?? interpServerFacing) ?? netFacing);
     Object.assign(net.moveInput, resolved.mi);
     if (kbTurn.suppressTurnFlags) {
       net.moveInput.turnLeft = false;
@@ -4653,22 +4676,16 @@ async function startGame(
     // incapacitate/polymorph, and fear is a fear_incap incapacitate aura; the
     // fear steer and the charge/follow modes run server-side only), and inside
     // a delve (the portcullis door clamps are not mirrored client-side).
+    const onlineSelfAlphaLead = selfAlphaLeadForMotionOwner(
+      adaptiveSelfAlphaLead(onlineInputEchoMs, onlineJitterMs, net.snapInterval),
+      automationOwnsMotion,
+    );
+    // biome-ignore format: scalar arguments preserve the frame loop's zero-allocation contract
+    const predictSelfMotion = selfMotionPredictionAllowedFor(net.spectating !== null, movementFrozen(), playerImmobilized(), isDelvePos(pe.pos.x) || isRiftPos(pe.pos.x), pe.climbing === true, automationOwnsMotion);
     const selfMotion: SelfMotionFrame | null = SELF_MOTION_DISABLED
       ? null
       : selfMotionFrameBuffer.write(
-          net.spectating === null &&
-            !movementFrozen() &&
-            !playerImmobilized() &&
-            !isDelvePos(pe.pos.x) &&
-            // Rifts (like delves) are server-authoritative instanced content, and
-            // their raised sanctum tiers lift the player's Y server-side. The local
-            // kernel predicts a flat floor, so keep prediction off here and render
-            // the authoritative interpolated Y (no vertical jitter on the stairs).
-            !isRiftPos(pe.pos.x) &&
-            // A ledge climb is a server-owned scripted move the client does
-            // not re-simulate: predicting a fall through it would fight the
-            // authoritative pull-up and show the correction as a stutter.
-            pe.climbing !== true,
+          predictSelfMotion,
           resolved.mi,
           netFacing ?? interpServerFacing,
           onlineInputEchoMs,
@@ -4716,10 +4733,11 @@ async function startGame(
         // show it immediately; without it the click-move yaw would lag
         // the predicted position by a round trip and corners would slide.
         net.spectating === null ? onlineRenderFacing : null,
-        adaptiveSelfAlphaLead(onlineInputEchoMs, onlineJitterMs, net.snapInterval),
+        onlineSelfAlphaLead,
         selfMotion,
         selfAuthoritativeDiscontinuity,
         gate.render,
+        selfFallbackSmoothingEnabled(onlineSelfAlphaLead, automationOwnsMotion),
       );
     } finally {
       perf.finishTrace(
@@ -5155,7 +5173,11 @@ async function startOffline(
   enterLoadingState(t('loading.world'));
   const sim = loadSpan(
     'sim-build',
-    () => new Sim(offlineSimOptions({ playerClass, playerName: name, world, seedOverride })),
+    () =>
+      new Sim(
+        // biome-ignore format: the startup adapter owns query projection outside the main firewall
+        offlineStartupSimOptions({ playerClass, playerName: name, world, seedOverride }, startupParams, import.meta.env.DEV),
+      ),
   );
   sim.setPlayerSkin(sim.playerId, skin);
   // Offline has no account and no character row, so the local draft IS this

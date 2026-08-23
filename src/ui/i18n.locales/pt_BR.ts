@@ -13,6 +13,8 @@
 import type { TranslationKey } from '../i18n.catalog';
 
 export const pt_BR: Partial<Record<TranslationKey, string>> = {
+  'questUi.dialog.autoContinue': 'O diálogo continuará automaticamente',
+  'questUi.dialog.skipDialogue': 'Pular diálogo',
   'hudChrome.mir4.campaign.questTitle': 'Campanha {id}',
   'hudChrome.mir4.campaign.narrative':
     'Conclua os objetivos atuais da campanha de {id}.',

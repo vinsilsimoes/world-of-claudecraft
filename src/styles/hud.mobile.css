@@ -5854,7 +5854,10 @@
       transform: scale(1.27);
     }
     body.mobile-touch #quest-tracker {
-      display: none;
+      display: block;
+      max-height: min(160px, calc(100dvh - max(150px, env(safe-area-inset-top)) - 64px));
+      overflow-y: auto;
+      overflow-x: hidden;
     }
     body.mobile-touch #meters-window {
       position: fixed;

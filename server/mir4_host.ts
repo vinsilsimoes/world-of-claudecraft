@@ -1,4 +1,5 @@
 import type { Mir4ClassId } from '../src/sim/content/mir4/classes';
+import { MIR4_WORLD_ARC } from '../src/sim/content/mir4/world_arc';
 import { type GameProfile, MIR4_GAME_PROFILE } from '../src/sim/game_profile';
 import { activateWorldForGameProfile } from '../src/sim/game_profile_world';
 import type { Mir4PersistenceMeta } from '../src/sim/mir4/persistence';
@@ -17,6 +18,7 @@ interface CachedMir4Snapshot {
   classId: number;
   revision: number;
   ultimateGauge: number;
+  campaignMapKey: string;
   json: string;
 }
 
@@ -30,23 +32,35 @@ export class Mir4SelfWireCache {
     meta: Mir4PersistenceMeta,
     mir4: Entity['mir4'],
     ultimateGauge = 0,
+    campaignMapIds: readonly string[] = [],
   ): string | null {
     if (profile !== MIR4_GAME_PROFILE || !mir4) return null;
     const gauge = Math.max(0, Math.min(100, Math.floor(ultimateGauge)));
     const revision = mir4WireRevision(meta);
+    const campaignMapKey = campaignMapIds.join('|');
     const cached = this.cache.get(meta);
     if (
       cached?.revision === revision &&
       cached.classId === mir4.classId &&
-      cached.ultimateGauge === gauge
+      cached.ultimateGauge === gauge &&
+      cached.campaignMapKey === campaignMapKey
     )
       return cached.json;
     const json = JSON.stringify({
       classId: mir4.classId,
+      fullCampaignAvailable: campaignMapIds.length === MIR4_WORLD_ARC.length,
+      campaignMapIds,
       ultimateGauge: gauge,
       ...this.serialize(meta, mir4.classId as Mir4ClassId),
+      ...(meta.mir4NarrativeDialogue ? { mir4NarrativeDialogue: meta.mir4NarrativeDialogue } : {}),
     });
-    this.cache.set(meta, { classId: mir4.classId, revision, ultimateGauge: gauge, json });
+    this.cache.set(meta, {
+      classId: mir4.classId,
+      revision,
+      ultimateGauge: gauge,
+      campaignMapKey,
+      json,
+    });
     return json;
   }
 }
@@ -58,6 +72,7 @@ export function mir4SelfSnapshotJson(
   meta: Mir4PersistenceMeta,
   mir4: Entity['mir4'],
   ultimateGauge = 0,
+  campaignMapIds: readonly string[] = [],
 ): string | null {
-  return MIR4_SELF_WIRE_CACHE.encode(profile, meta, mir4, ultimateGauge);
+  return MIR4_SELF_WIRE_CACHE.encode(profile, meta, mir4, ultimateGauge, campaignMapIds);
 }

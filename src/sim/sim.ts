@@ -204,6 +204,7 @@ import {
   dungeonAt,
   getActiveWorldContent,
   INSTANCE_SLOT_COUNT,
+  INSTANCE_X_BASE,
   ITEMS,
   isArenaPos,
   isBgPos,
@@ -317,7 +318,7 @@ import { type MailSave, PostOffice } from './mail/post_office';
 import { Market, type MarketListing, type MarketSave } from './market';
 import { defaultMarketQuery, type MarketQuery } from './market_query';
 import { accountCosmeticsWithWornMechChroma } from './mech_chroma_ownership';
-import { mir4HandleArcNpcTalk } from './mir4/arc_quest_runtime';
+import { completeMir4OrGatherCast, mir4HandleArcNpcTalk } from './mir4/arc_quest_runtime';
 import {
   type Mir4ArcDungeonRun,
   type Mir4ArcEncounterRun,
@@ -333,6 +334,8 @@ import {
   serializeMir4ProfilePlayer,
   setMir4ProfilePlayerLevel,
 } from './mir4/profile_player';
+// biome-ignore format: keep the extracted save migration behind one import in the Sim firewall
+import { mir4SavedPositionIsStale, recoverMir4CorpsePosition } from './mir4/saved_position_migration';
 import { type Mir4SimFacade, mir4SimFacade } from './mir4/sim_facade';
 import { mir4ShellClassFor } from './mir4/stats';
 import { updateMir4Systems } from './mir4/systems';
@@ -359,6 +362,7 @@ import {
   retargetMob as retargetMobFn,
   updateMobTarget as updateMobTargetFn,
 } from './mob/targeting';
+import { rollCampMobLevel } from './mob/template';
 import { emitMobYell } from './mob/yells';
 import type { MobCombatProfile } from './mob_combat';
 import * as moderationMod from './moderation';
@@ -460,7 +464,6 @@ import * as fishing from './professions/fishing';
 import type { RespecPaymentTier } from './professions/focus';
 import * as professionsFocus from './professions/focus';
 import {
-  completeGatherCast as completeGatherCastImpl,
   drainGatheringGrants,
   emptyGatheringProficiency,
   foldPendingGatherGrants,
@@ -2033,6 +2036,8 @@ export class Sim {
   declare mir4AutoQuestActive: Mir4SimFacade['mir4AutoQuestActive'];
   declare mir4QuestStatusText: Mir4SimFacade['mir4QuestStatusText'];
   declare mir4QuestTrackerEntries: Mir4SimFacade['mir4QuestTrackerEntries'];
+  declare mir4AcknowledgeTutorial: Mir4SimFacade['mir4AcknowledgeTutorial'];
+  declare mir4SkipNarrativeDialogue: Mir4SimFacade['mir4SkipNarrativeDialogue'];
   declare mir4CastSkill: Mir4SimFacade['mir4CastSkill'];
   declare mir4UpgradeSkill: Mir4SimFacade['mir4UpgradeSkill'];
   declare mir4ClaimAchievement: Mir4SimFacade['mir4ClaimAchievement'];
@@ -2529,7 +2534,7 @@ export class Sim {
         const grounded = this.findSafePos(cleared.x, cleared.z, minHeight);
         const safe = projectOutsideDungeonDoors(grounded.x, grounded.z);
         const pos = this.groundPos(safe.x, safe.z);
-        const level = campRng.int(template.minLevel, template.maxLevel);
+        const level = rollCampMobLevel(template, camp, campRng);
         const mob = createMob(this.nextId++, template, level, pos);
         mob.facing = campRng.range(-Math.PI, Math.PI);
         mob.prevFacing = mob.facing;
@@ -2923,6 +2928,7 @@ export class Sim {
     const savedState = opts?.state
       ? sanitizeRemovedZone1Content(migrateCharacterTalentsV2(cls, opts.state)).state
       : undefined;
+    const playerStart = this.worldContent.playerStart;
     // Characters saved inside a dungeon instance rejoin at its entrance —
     // their old instance is gone (or belongs to someone else) by now.
     let savedPos = savedState?.pos ?? null;
@@ -2937,6 +2943,20 @@ export class Sim {
     // the collision migration must not walk it off a door the content author
     // placed, exactly as it does not walk a current-band exit off one.
     let legacyInstanceExit = false;
+    let recoveredStaleMir4WorldPosition = false;
+    if (
+      savedPos &&
+      savedPos.x < INSTANCE_X_BASE &&
+      mir4SavedPositionIsStale(this.cfg.gameProfile, this.worldContent, savedPos)
+    ) {
+      // Old MIR4 authored-world coordinates overlap the retired classic
+      // instance band. Recover them before migrateLegacyInstancePos can
+      // misclassify a campaign location as an old dungeon room. Current
+      // instance positions live at or beyond INSTANCE_X_BASE and retain the
+      // established door-exit handling below.
+      savedPos = { ...playerStart };
+      recoveredStaleMir4WorldPosition = true;
+    }
     if (savedPos) {
       const migrated = migrateLegacyInstancePos(savedPos);
       if (migrated) {
@@ -2955,7 +2975,13 @@ export class Sim {
     } else if (savedPos && savedPos.x > DUNGEON_X_THRESHOLD) {
       const dungeon = dungeonAt(savedPos.x) ?? DUNGEON_LIST[0];
       savedPos = { x: dungeon.doorPos.x, z: dungeon.doorPos.z - 4 };
-    } else if (savedPos && !legacyInstanceExit) {
+      // biome-ignore format: the extracted policy keeps the persistence branch readable and under budget
+    } else if (
+      savedPos &&
+      mir4SavedPositionIsStale(this.cfg.gameProfile, this.worldContent, savedPos)
+    ) {
+      savedPos = { ...playerStart };
+    } else if (savedPos && !legacyInstanceExit && !recoveredStaleMir4WorldPosition) {
       // Authored towns can grow across release boundaries. A living character
       // saved on what used to be open overworld ground must not resume trapped
       // inside a newly added solid prop. Preserve valid shoreline and swimming
@@ -2963,7 +2989,6 @@ export class Sim {
       // while instance/delve exits above retain their established behavior.
       savedPos = this.findSafePos(savedPos.x, savedPos.z, -Infinity, PLAYER_BODY_RADIUS);
     }
-    const playerStart = this.worldContent.playerStart;
     const startPos = savedPos
       ? this.groundPos(savedPos.x, savedPos.z)
       : this.groundPos(playerStart.x, playerStart.z);
@@ -3647,9 +3672,9 @@ export class Sim {
     if (savedState?.ghost) {
       player.dead = true;
       player.ghost = true;
-      player.corpsePos = savedState.corpsePos
-        ? this.groundPos(savedState.corpsePos.x, savedState.corpsePos.z)
-        : null;
+      // biome-ignore format: the extracted recovery policy keeps the ghost restore branch compact
+      const corpsePos = recoverMir4CorpsePosition(this.cfg.gameProfile, this.worldContent, savedState.corpsePos);
+      player.corpsePos = corpsePos ? this.groundPos(corpsePos.x, corpsePos.z) : null;
       // Instance ids are boot-local (recreated on every claim), so recompute
       // from the restored position via the same helper the death path uses
       // (spirit.ts releasePlayerSpirit) rather than persisting the raw id: a
@@ -3666,7 +3691,7 @@ export class Sim {
       // graveyard nearest the door) cannot drift from spirit.ts. Delve, arena,
       // and fiesta deaths keep their own bounded respawn rules and never enter
       // the ghost loop, so those positions load exactly as before.
-      player.pos = this.groundPos(savedState.pos.x, savedState.pos.z);
+      player.pos = { ...startPos };
       player.prevPos = { ...player.pos };
       this.rebucket(player);
       player.dead = true;
@@ -5167,6 +5192,9 @@ export class Sim {
       get stationPlacements() {
         return sim.stationPlacements;
       },
+      get worldContent() {
+        return sim.worldContent;
+      },
       get primaryId() {
         return sim.primaryId;
       },
@@ -5765,7 +5793,7 @@ export class Sim {
       completeFishing: (p, meta) => fishing.completeFishing(sim.ctx, p, meta),
       // Gather cast completion: module-bound with the live ctx,
       // exactly like completeFishing above; no Sim method exists for it.
-      completeGatherCast: (p, meta) => completeGatherCastImpl(sim.ctx, p, meta),
+      completeGatherCast: (p, meta) => completeMir4OrGatherCast(sim.ctx, p, meta),
       completeCraftCast: (p, meta) => completeCraftCastImpl(sim.ctx, p, meta),
       completeDisenchantCast: (p, meta) => completeDisenchantCastImpl(sim.ctx, p, meta),
       completeApplyEnchantCast: (p, meta) => completeApplyEnchantCastImpl(sim.ctx, p, meta),
@@ -10185,7 +10213,8 @@ export class Sim {
 
   isHostileTo(attacker: Entity, target: Entity): boolean {
     if (target.kind === 'mob') {
-      if (target.templateId.startsWith('vision_')) return false;
+      if (target.templateId.startsWith('vision_') || escortMod.isActiveEscortee(this.ctx, target))
+        return false;
       // A Protect Yumi cat is attackable only by the opposing team of its
       // live match (social/yumi.ts owns the rule).
       if (yumiMod.isYumiCat(target)) return yumiMod.yumiCatHostileTo(this.ctx, attacker, target);
@@ -10261,8 +10290,7 @@ export class Sim {
     if (target.kind === 'mob' && target.friendlyPracticeTarget) return true;
     // An escortee with a live run is heal/shield-targetable by any player or
     // player-owned pet (pvpController resolves a pet to its owner; escort.ts
-    // owns the predicate). Players can never attack it because isHostileTo
-    // resolves an ownerless mob to its hostile flag, false here.
+    // owns the predicate). Active escort identity wins over any stale hostile flag.
     if (target.kind === 'mob' && escortMod.isActiveEscortee(this.ctx, target)) {
       return this.pvpController(caster) !== null;
     }

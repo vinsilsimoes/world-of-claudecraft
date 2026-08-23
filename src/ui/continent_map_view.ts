@@ -18,7 +18,6 @@
 // drive it directly with both a Sim-shaped and a ClientWorld-mirror-shaped stub.
 
 import {
-  getActiveWorldContent,
   STRIP_MAX_X,
   STRIP_MIN_X,
   WORLD_MAX_X,
@@ -27,7 +26,6 @@ import {
   WORLD_MIN_Z,
   ZONES,
   type ZoneDef,
-  zoneAt,
 } from '../sim/data';
 import type { IWorld } from '../world_api';
 
@@ -89,6 +87,8 @@ export interface ContinentMapModel {
 
 export interface ContinentMapInput {
   world: IWorld;
+  /** World layout supplied by the host that owns the active content. */
+  zones?: readonly ZoneDef[];
   /** The square map-canvas side in px. */
   canvasSize: number;
   /** The displayed continent plate's aspect (width / height). The dest rect
@@ -107,9 +107,31 @@ export interface ContinentMapInput {
  *  tests/continent_map_view.test.ts, so re-cropping the plate must update this). */
 export const CONTINENT_FALLBACK_ASPECT = 543 / 1100;
 
+/** The retired authored MIR4 bands use a generated 4x5 atlas. The production
+ * transplant keeps the original WoC continent art even though its gameplay
+ * profile remains MIR4. */
+export function usesMir4CampaignAtlas(world: IWorld, zones: readonly ZoneDef[] = ZONES): boolean {
+  return (
+    world.cfg.gameProfile === 'mir4-gameplay-port' &&
+    zones.some((zone) => zone.id.startsWith('mir4_'))
+  );
+}
+
 /** A zone's east-west extent: its own column, or the original full-width strip. */
 function zoneXBounds(zone: ZoneDef): [number, number] {
   return [zone.xMin ?? STRIP_MIN_X, zone.xMax ?? STRIP_MAX_X];
+}
+
+function zoneAtFrom(zones: readonly ZoneDef[], x: number, z: number): ZoneDef {
+  const resolved = zones.length > 0 ? zones : ZONES;
+  let fallback: ZoneDef | null = null;
+  for (const zone of resolved) {
+    if (z >= zone.zMax) continue;
+    if (fallback === null || zone.zMax < fallback.zMax) fallback = zone;
+    const [xMin, xMax] = zoneXBounds(zone);
+    if (z >= zone.zMin && x >= xMin && x < xMax) return zone;
+  }
+  return fallback ?? resolved.reduce((a, b) => (b.zMax > a.zMax ? b : a));
 }
 
 /**
@@ -120,16 +142,15 @@ function zoneXBounds(zone: ZoneDef): [number, number] {
  * (east = -X), +Z is map-up (north at the top).
  */
 export function buildContinentMapModel(input: ContinentMapInput): ContinentMapModel {
-  const { world, canvasSize: S, contentAspect, hoveredZoneId } = input;
-  if (world.cfg.gameProfile === 'mir4-gameplay-port') {
-    const zones = getActiveWorldContent().zones;
+  const { world, canvasSize: S, contentAspect, hoveredZoneId, zones = ZONES } = input;
+  if (usesMir4CampaignAtlas(world, zones)) {
     const columns = 4;
     const rows = Math.max(1, Math.ceil(zones.length / columns));
     const top = 30;
     const gap = 4;
     const cellW = (S - gap * (columns + 1)) / columns;
     const cellH = (S - top - gap * (rows + 1)) / rows;
-    const currentZoneId = zoneAt(world.player.pos.x, world.player.pos.z).id;
+    const currentZoneId = zoneAtFrom(zones, world.player.pos.x, world.player.pos.z).id;
     const regions = zones.map((zone, index): ContinentZoneRegion => {
       const column = index % columns;
       const row = Math.floor(index / columns);
@@ -159,7 +180,7 @@ export function buildContinentMapModel(input: ContinentMapInput): ContinentMapMo
     const party: ContinentPartyMarker[] = [];
     for (const member of world.partyInfo?.members ?? []) {
       if (member.pid === world.player.id) continue;
-      const marker = centerOf(zoneAt(member.x, member.z).id);
+      const marker = centerOf(zoneAtFrom(zones, member.x, member.z).id);
       if (marker) party.push({ ...marker, cls: member.cls, dead: member.dead !== 0 });
     }
     return {
@@ -188,9 +209,9 @@ export function buildContinentMapModel(input: ContinentMapInput): ContinentMapMo
   });
 
   const p = world.player;
-  const currentZoneId = zoneAt(p.pos.x, p.pos.z).id;
+  const currentZoneId = zoneAtFrom(zones, p.pos.x, p.pos.z).id;
 
-  const regions: ContinentZoneRegion[] = ZONES.map((zone) => {
+  const regions: ContinentZoneRegion[] = zones.map((zone) => {
     const [xMin, xMax] = zoneXBounds(zone);
     // +X maps left and +Z maps up, so the rect's top-left corner sits at
     // (xMax, zMax) and its bottom-right at (xMin, zMin); both spans are positive.

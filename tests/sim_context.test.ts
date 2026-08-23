@@ -7,6 +7,7 @@
 //      same name, and the seam leaves same-seed-same-world determinism intact.
 
 import { describe, expect, it, vi } from 'vitest';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { createDeedRuntime } from '../src/sim/deeds';
 import { createMobScanCounters } from '../src/sim/mob/scan_counters';
 import { Rng } from '../src/sim/rng';
@@ -264,6 +265,7 @@ function makeFakeHost() {
   const clock = { time: 0, tick: 0 };
   const host: SimContextHost = {
     gameProfile: 'woc-classic',
+    worldContent: BUILTIN_WORLD,
     riftCollisionToken: 1,
     naturalRiftPortals: [],
     riftEvents: [],

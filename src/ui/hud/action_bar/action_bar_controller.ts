@@ -1,5 +1,6 @@
 import { SPORT_ABILITIES } from '../../../sim/content/vale_cup';
 import { ABILITIES, ITEMS } from '../../../sim/data';
+import { mir4ActionAbilityDef } from '../../../sim/mir4/action_abilities';
 import type { PlayerClass } from '../../../sim/types';
 import type { ActionBarLayout } from '../../../world_api/action_bar';
 import { knownItemDef } from '../../known_item';
@@ -420,7 +421,7 @@ export class ActionBarController {
   }
 
   private abilityDef(id: string) {
-    return ABILITIES[id] ?? SPORT_ABILITIES[id];
+    return ABILITIES[id] ?? SPORT_ABILITIES[id] ?? mir4ActionAbilityDef(id) ?? undefined;
   }
 
   private isAbilityPlacementAllowed(id: string): boolean {

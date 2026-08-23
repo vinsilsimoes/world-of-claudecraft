@@ -154,6 +154,32 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(sim.mir4AutoQuestActive()).toBe(false);
   });
 
+  it('routes an explicitly selected side quest and rejects malformed quest ids', () => {
+    const sim = makeSim('warrior', 1342);
+    const setJourney = vi.spyOn(sim, 'setMir4AutoQuest').mockImplementation(() => undefined);
+
+    handleMir4Command(sim, { m: 'quest', on: true, questId: 'M08-S01' }, sim.playerId);
+    for (const questId of ['', 'M8-S01', 'M08-X01', 801]) {
+      handleMir4Command(sim, { m: 'quest', on: true, questId }, sim.playerId);
+    }
+
+    expect(setJourney).toHaveBeenCalledOnce();
+    expect(setJourney).toHaveBeenCalledWith(true, 'M08-S01', sim.playerId);
+  });
+
+  it('validates the narrative skip id before routing it to the authoritative gate', () => {
+    const sim = makeSim('warrior', 1341);
+    const skip = vi.spyOn(sim, 'mir4SkipNarrativeDialogue').mockImplementation(() => undefined);
+
+    handleMir4Command(sim, { m: 'skipDialogue', dialogueId: 'M01-Q01:accept:-1:17' }, sim.playerId);
+    for (const dialogueId of ['', 17, 'x'.repeat(161)]) {
+      handleMir4Command(sim, { m: 'skipDialogue', dialogueId }, sim.playerId);
+    }
+
+    expect(skip).toHaveBeenCalledOnce();
+    expect(skip).toHaveBeenCalledWith('M01-Q01:accept:-1:17', sim.playerId);
+  });
+
   it('validates and routes skill evolution revisions without numeric coercion', () => {
     const sim = makeSim('warrior', 138);
     const upgrade = vi.spyOn(sim, 'mir4UpgradeSkill').mockReturnValue({
@@ -238,6 +264,9 @@ describe('the mir4 WS envelope dispatch', () => {
     const campaignProfession = vi
       .spyOn(sim, 'mir4CampaignProfession')
       .mockImplementation(() => undefined);
+    const acknowledgeTutorial = vi
+      .spyOn(sim, 'mir4AcknowledgeTutorial')
+      .mockImplementation(() => undefined);
 
     handleMir4Command(sim, { m: 'enhanceItem', itemId: 991010101 }, sim.playerId);
     handleMir4Command(sim, { m: 'rollLayer', itemId: 991010101, layer: 'blessing' }, sim.playerId);
@@ -258,6 +287,7 @@ describe('the mir4 WS envelope dispatch', () => {
     handleMir4Command(sim, { m: 'equipMount', mountId: null }, sim.playerId);
     handleMir4Command(sim, { m: 'combineMounts', grade: 3 }, sim.playerId);
     handleMir4Command(sim, { m: 'campaignProfession' }, sim.playerId);
+    handleMir4Command(sim, { m: 'ackTutorial', questId: 'M01-Q01' }, sim.playerId);
     expect(enhance).toHaveBeenCalledOnce();
     expect(roll).toHaveBeenCalledWith(991010101, 'blessing', sim.playerId);
     expect(resolve).toHaveBeenCalledWith(991010101, 'blessing', 'roll-1', false, sim.playerId);
@@ -273,6 +303,7 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(equipMount).toHaveBeenNthCalledWith(2, null, sim.playerId);
     expect(combineMounts).toHaveBeenCalledWith(3, sim.playerId);
     expect(campaignProfession).toHaveBeenCalledWith(sim.playerId);
+    expect(acknowledgeTutorial).toHaveBeenCalledWith('M01-Q01', sim.playerId);
 
     handleMir4Command(sim, { m: 'enhanceItem', itemId: 1.5 }, sim.playerId);
     handleMir4Command(sim, { m: 'rollLayer', itemId: 991010101, layer: 'other' }, sim.playerId);
@@ -303,6 +334,9 @@ describe('the mir4 WS envelope dispatch', () => {
     for (const grade of [0, 6, 1.5, '1']) {
       handleMir4Command(sim, { m: 'combineMounts', grade }, sim.playerId);
     }
+    for (const questId of ['M1-Q01', 'M01-S01', '../M01-Q01', 1]) {
+      handleMir4Command(sim, { m: 'ackTutorial', questId }, sim.playerId);
+    }
     expect(enhance).toHaveBeenCalledTimes(1);
     expect(roll).toHaveBeenCalledTimes(1);
     expect(resolve).toHaveBeenCalledTimes(1);
@@ -314,5 +348,6 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(confirmMount).toHaveBeenCalledTimes(1);
     expect(equipMount).toHaveBeenCalledTimes(2);
     expect(combineMounts).toHaveBeenCalledTimes(1);
+    expect(acknowledgeTutorial).toHaveBeenCalledTimes(1);
   });
 });

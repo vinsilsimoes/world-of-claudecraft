@@ -4,7 +4,7 @@
 
 import { createMob } from '../entity';
 import { enterScriptedDungeon, instanceAt, releaseScriptedDungeon } from '../instances/dungeons';
-import type { InstanceSlot } from '../sim';
+import type { InstanceSlot, PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
 import { addThreat } from '../threat';
 import type { Entity, MobTemplate } from '../types';
@@ -13,6 +13,8 @@ import { mir4ArcStageAnchor } from './arc_quest_runtime';
 import { mir4OrderedArcProgress, mir4QuestCurrentStage } from './arc_quests';
 import { type Mir4ArcDungeonRun, releaseMir4RuntimeMobTemplate } from './arc_runtime_state';
 import { MIR4_ARC_SHORT_DUNGEON_STAGE_KINDS } from './arc_stage_kinds';
+import { reserveMir4DungeonAdmission } from './dungeon_tickets';
+import { markMir4WireDirty } from './wire_revision';
 
 const MATERIALIZE_RADIUS = 46;
 const SEAL_GUARD_COUNT = 3;
@@ -22,6 +24,50 @@ export const MIR4_CAMPAIGN_ROOM_ID = 'campaign_trial_room';
 
 function runs(ctx: SimContext): Map<string, Mir4ArcDungeonRun> {
   return ctx.mir4ArcDungeonRuns;
+}
+
+function applyDungeonTicketState(
+  meta: PlayerMeta,
+  next: ReturnType<typeof reserveMir4DungeonAdmission>['state'],
+): void {
+  const previous = meta.mir4DungeonTickets;
+  if (
+    previous?.ticketType === next?.ticketType &&
+    previous?.count === next?.count &&
+    previous?.resetAtMs === next?.resetAtMs
+  ) {
+    return;
+  }
+  meta.mir4DungeonTickets = next;
+  markMir4WireDirty(meta);
+}
+
+/** Live authored target for Auto Journey inside a short campaign dungeon.
+ * Guards gate the boss, so a living guard always wins; within that band the
+ * nearest target avoids crossing back and forth across the room. */
+export function mir4ArcDungeonTargetForPlayer(
+  ctx: SimContext,
+  pid: number,
+  questId: string,
+  stageIndex: number,
+): Entity | null {
+  const run = runs(ctx).get(`${pid}:${questId}:${stageIndex}`);
+  const player = ctx.entities.get(pid);
+  if (!run || !player || !run.inside) return null;
+  let nearestGuard: Entity | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (const id of run.guardIds) {
+    const guard = ctx.entities.get(id);
+    if (!guard || guard.dead) continue;
+    const distance = Math.hypot(guard.pos.x - player.pos.x, guard.pos.z - player.pos.z);
+    if (distance >= nearestDistance) continue;
+    nearestGuard = guard;
+    nearestDistance = distance;
+  }
+  if (nearestGuard) return nearestGuard;
+  if (run.bossId === null) return null;
+  const boss = ctx.entities.get(run.bossId);
+  return boss && !boss.dead ? boss : null;
 }
 
 function runInstance(ctx: SimContext, run: Mir4ArcDungeonRun): InstanceSlot | undefined {
@@ -153,7 +199,12 @@ export function updateMir4ArcDungeonEncounters(ctx: SimContext): void {
       if (!stage || !MIR4_ARC_SHORT_DUNGEON_STAGE_KINDS.has(stage.kind)) continue;
       const key = `${meta.entityId}:${progress.questId}:${progress.stageIndex}`;
       activeKeys.add(key);
-      const worldAnchor = mir4ArcStageAnchor(progress.questId, stage, progress.stageProgress);
+      const worldAnchor = mir4ArcStageAnchor(
+        progress.questId,
+        stage,
+        progress.stageProgress,
+        ctx.worldContent.mir4ArcMapProjections,
+      );
       const source = stageMobSource(stage, progress.stageProgress);
       if (!worldAnchor || !source) continue;
       const bossTemplate = encounterTemplate(
@@ -171,6 +222,20 @@ export function updateMir4ArcDungeonEncounters(ctx: SimContext): void {
         if (dx * dx + dz * dz > MATERIALIZE_RADIUS * MATERIALIZE_RADIUS) continue;
         const claimKey = `mir4-campaign:${key}`;
         const returnPos = { x: player.pos.x, z: player.pos.z };
+        const admission = reserveMir4DungeonAdmission(
+          progress.questId,
+          meta.mir4DungeonTickets,
+          ctx.lockoutNowMs(),
+        );
+        if (!admission.ok) {
+          applyDungeonTicketState(meta, admission.state);
+          if (meta.mir4AutoQuest?.questId === progress.questId && !meta.mir4AutoQuest.suspended) {
+            meta.mir4AutoQuest.suspended = true;
+            markMir4WireDirty(meta);
+            ctx.error(meta.entityId, 'No MIR4 dungeon tickets remain. Daily reset: 05:00.');
+          }
+          continue;
+        }
         const inst = enterScriptedDungeon(
           ctx,
           MIR4_CAMPAIGN_ROOM_ID,
@@ -179,6 +244,7 @@ export function updateMir4ArcDungeonEncounters(ctx: SimContext): void {
           returnPos,
         );
         if (!inst) continue;
+        applyDungeonTicketState(meta, admission.state);
         run = {
           key,
           claimKey,

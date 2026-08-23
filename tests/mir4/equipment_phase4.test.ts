@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { mir4EquipmentItem } from '../../src/sim/content/mir4/equipment_catalog';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
@@ -87,6 +87,25 @@ describe('equipping catalog items', () => {
     expect(p.mir4?.accuracy).toBe(2);
   });
 
+  it('inherits enhancement and resolved layers when a higher-rank native item replaces a slot', () => {
+    const sim = makeSim(1411);
+    const meta = sim.players.get(sim.playerId)!;
+    sim.player.level = 105;
+    meta.mir4ArcRewards = { items: { '991010101': 1, '991010106': 1 } };
+    sim.mir4EquipItem(991010101);
+    meta.mir4EquipmentInstances![991010101] = {
+      itemId: 991010101,
+      enhancement: 7,
+      affixes: { enchantment: [[22, 7]], blessing: [[24, 5]] },
+    };
+
+    expect(sim.mir4EquipItem(991010106)).toBe('Lâmina do Rei equipped.');
+    expect(meta.mir4EquipmentInstances?.[991010106]).toMatchObject({
+      enhancement: 7,
+      affixes: { enchantment: [[22, 7]], blessing: [[24, 5]] },
+    });
+  });
+
   it('does not resurrect a destroyed reward item or credit its tutorial receipt', () => {
     const sim = makeSim(145);
     const meta = sim.players.get(sim.playerId)!;
@@ -172,5 +191,69 @@ describe('the enhancement path', () => {
     const inst = meta.mir4EquipmentInstances![991010101]!;
     expect(inst.destroyed).toBeUndefined();
     expect(inst.enhancement).toBe(5); // level kept, ward consumed
+  });
+
+  it('consumes the campaign guarantee so the first +6 lesson cannot fail or destroy gear', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(146);
+    const meta = sim.players.get(sim.playerId)!;
+    sim.mir4EquipItem(991010101);
+    meta.mir4EquipmentInstances = { 991010101: { itemId: 991010101, enhancement: 5 } };
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, solarScroll: 1, solarWard: 1 };
+    meta.mir4ArcRewards = {
+      ...meta.mir4ArcRewards,
+      guarantees: { 'tutorial-first-plus-six': 1 },
+    };
+    meta.mir4ArcQuests = {
+      'M07-Q05': {
+        questId: 'M07-Q05',
+        state: 'active',
+        stageIndex: 3,
+        stageProgress: 0,
+      },
+    };
+    vi.spyOn(sim.ctx.rng, 'next').mockReturnValue(0.99999);
+
+    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toEqual({
+      ok: true,
+      level: 6,
+      destroyed: false,
+      protected: false,
+    });
+    expect(meta.mir4ArcRewards.guarantees?.['tutorial-first-plus-six']).toBeUndefined();
+    expect(meta.mir4Materials.solarWard).toBe(1);
+    expect(meta.mir4ArcQuests['M07-Q05']?.stageIndex).toBe(4);
+  });
+
+  it('consumes the guided +10 guarantee so a mandatory main tutorial cannot destroy gear', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(147);
+    const meta = sim.players.get(sim.playerId)!;
+    sim.mir4EquipItem(991010101);
+    meta.mir4EquipmentInstances = { 991010101: { itemId: 991010101, enhancement: 9 } };
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, solarScroll: 1 };
+    meta.mir4ArcRewards = {
+      ...meta.mir4ArcRewards,
+      guarantees: { 'tutorial-guided-plus-10': 1 },
+    };
+    meta.mir4ArcQuests = {
+      'M19-Q06': {
+        questId: 'M19-Q06',
+        state: 'active',
+        stageIndex: 3,
+        stageProgress: 0,
+      },
+    };
+    const next = vi.spyOn(sim.rng, 'next');
+
+    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toEqual({
+      ok: true,
+      level: 10,
+      destroyed: false,
+      protected: false,
+    });
+    expect(next).not.toHaveBeenCalled();
+    expect(meta.mir4ArcRewards.guarantees?.['tutorial-guided-plus-10']).toBeUndefined();
+    expect(meta.mir4ArcQuests['M19-Q06']?.stageIndex).toBe(4);
   });
 });

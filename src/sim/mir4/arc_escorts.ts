@@ -20,11 +20,13 @@ import { type Mir4ArcEscortRun, releaseMir4RuntimeMobTemplate } from './arc_runt
 import { MIR4_ARC_ESCORT_STAGE_KINDS } from './arc_stage_kinds';
 import { markMir4WireDirty } from './wire_revision';
 
-const MATERIALIZE_RADIUS = 52;
+export const MIR4_ARC_ESCORT_MATERIALIZE_RADIUS = 52;
 const CREDIT_RADIUS = 18;
 const ARRIVE_RADIUS = 2.5;
 const RESPAWN_SECONDS = 5;
 const RUN_TIMEOUT_SECONDS = 300;
+const ESCORTEE_TEMPLATE_PREFIX = 'mir4_escort_';
+const AMBUSH_TEMPLATE_PREFIX = 'mir4_escort_ambush_';
 
 function runs(ctx: SimContext): Map<string, Mir4ArcEscortRun> {
   return ctx.mir4ArcEscortRuns;
@@ -140,7 +142,9 @@ function spawnEscortee(ctx: SimContext, run: Mir4ArcEscortRun, meta: PlayerMeta)
   const progress = meta.mir4ArcQuests?.[run.questId];
   const stage = progress ? mir4QuestCurrentStage(progress) : null;
   const player = ctx.entities.get(run.pid);
-  const anchor = stage ? mir4ArcStageAnchor(run.questId, stage, 0) : null;
+  const anchor = stage
+    ? mir4ArcStageAnchor(run.questId, stage, 0, ctx.worldContent.mir4ArcMapProjections)
+    : null;
   if (!stage || !player || !anchor) return;
   const target = Array.isArray(stage.target) ? stage.target[0] : stage.target;
   const template = escortTemplate(
@@ -195,6 +199,15 @@ function liveAmbush(ctx: SimContext, run: Mir4ArcEscortRun): boolean {
   });
 }
 
+/** Dynamic MIR4 escortees are inert native mob shells. Ambushers share the
+ * family prefix but remain ordinary hostile mobs. */
+export function isMir4ArcEscorteeTemplate(templateId: string): boolean {
+  return (
+    templateId.startsWith(ESCORTEE_TEMPLATE_PREFIX) &&
+    !templateId.startsWith(AMBUSH_TEMPLATE_PREFIX)
+  );
+}
+
 export function isActiveMir4ArcEscortee(ctx: SimContext, entity: Entity): boolean {
   for (const run of runs(ctx).values()) {
     if (run.started && run.npcId === entity.id) return true;
@@ -203,21 +216,76 @@ export function isActiveMir4ArcEscortee(ctx: SimContext, entity: Entity): boolea
 }
 
 /** Native entity followed by the existing auto-journey locomotion. */
-export function mir4ArcEscorteeForPlayer(ctx: SimContext, pid: number): Entity | null {
-  for (const run of runs(ctx).values()) {
-    if (run.pid !== pid || run.npcId === null) continue;
-    const entity = ctx.entities.get(run.npcId);
-    if (entity && !entity.dead) return entity;
+export function mir4ArcEscorteeForPlayer(
+  ctx: SimContext,
+  pid: number,
+  questId: string,
+  stageIndex: number,
+): Entity | null {
+  const run = runs(ctx).get(runKey(pid, questId, stageIndex));
+  if (!run || run.npcId === null) return null;
+  const entity = ctx.entities.get(run.npcId);
+  return entity && !entity.dead ? entity : null;
+}
+
+/** Nearest living ambusher for a player's started campaign escort. Equal
+ * distance resolves by entity id so every host makes the same choice. */
+export function mir4ArcEscortTargetForPlayer(
+  ctx: SimContext,
+  pid: number,
+  questId: string,
+  stageIndex: number,
+): Entity | null {
+  const player = ctx.entities.get(pid);
+  const run = runs(ctx).get(runKey(pid, questId, stageIndex));
+  if (!player || !run?.started) return null;
+  let best: Entity | null = null;
+  let bestDistanceSquared = Number.POSITIVE_INFINITY;
+  for (const id of run.ambushIds) {
+    const candidate = ctx.entities.get(id);
+    if (!candidate || candidate.dead) continue;
+    const dx = candidate.pos.x - player.pos.x;
+    const dz = candidate.pos.z - player.pos.z;
+    const distanceSquared = dx * dx + dz * dz;
+    if (
+      distanceSquared > bestDistanceSquared ||
+      (distanceSquared === bestDistanceSquared && best !== null && candidate.id > best.id)
+    ) {
+      continue;
+    }
+    best = candidate;
+    bestDistanceSquared = distanceSquared;
   }
-  return null;
+  return best;
 }
 
 /** Existing Interact-key entry point: starts the nearest player-owned escort. */
-export function tryStartMir4ArcEscort(ctx: SimContext, player: Entity): boolean {
+export function tryStartMir4ArcEscort(ctx: SimContext, player: Entity): boolean;
+export function tryStartMir4ArcEscort(
+  ctx: SimContext,
+  player: Entity,
+  questId: string,
+  stageIndex: number,
+): boolean;
+export function tryStartMir4ArcEscort(
+  ctx: SimContext,
+  player: Entity,
+  questId?: string,
+  stageIndex?: number,
+): boolean {
   if (ctx.gameProfile !== MIR4_GAME_PROFILE) return false;
   let best: Mir4ArcEscortRun | null = null;
   let bestDistance = INTERACT_RANGE;
-  for (const run of runs(ctx).values()) {
+  const exactRun =
+    questId !== undefined && stageIndex !== undefined
+      ? runs(ctx).get(runKey(player.id, questId, stageIndex))
+      : undefined;
+  const candidates = exactRun
+    ? [exactRun]
+    : questId === undefined && stageIndex === undefined
+      ? runs(ctx).values()
+      : [];
+  for (const run of candidates) {
     if (run.pid !== player.id || run.started || run.npcId === null) continue;
     const npc = ctx.entities.get(run.npcId);
     if (!npc || npc.dead) continue;
@@ -245,7 +313,12 @@ export function updateMir4ArcEscorts(ctx: SimContext): void {
       const key = runKey(meta.entityId, progress.questId, progress.stageIndex);
       activeKeys.add(key);
       let run = runs(ctx).get(key);
-      const anchor = mir4ArcStageAnchor(progress.questId, stage, 0);
+      const anchor = mir4ArcStageAnchor(
+        progress.questId,
+        stage,
+        0,
+        ctx.worldContent.mir4ArcMapProjections,
+      );
       if (!anchor) continue;
       if (!run) {
         run = {
@@ -266,7 +339,8 @@ export function updateMir4ArcEscorts(ctx: SimContext): void {
       if (run.npcId === null) {
         if (
           ctx.time < run.respawnAt ||
-          Math.hypot(player.pos.x - anchor.x, player.pos.z - anchor.z) > MATERIALIZE_RADIUS
+          Math.hypot(player.pos.x - anchor.x, player.pos.z - anchor.z) >
+            MIR4_ARC_ESCORT_MATERIALIZE_RADIUS
         )
           continue;
         spawnEscortee(ctx, run, meta);
@@ -300,6 +374,7 @@ export function updateMir4ArcEscorts(ctx: SimContext): void {
         progress.questId,
         stage,
         Math.min(run.checkpoint, goal - 1),
+        ctx.worldContent.mir4ArcMapProjections,
       );
       if (!waypoint) continue;
       if (Math.hypot(npc.pos.x - waypoint.x, npc.pos.z - waypoint.z) <= ARRIVE_RADIUS) {

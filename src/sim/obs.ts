@@ -8,7 +8,7 @@ import {
 } from './combat/necromancy_dominion';
 import { canUseForbiddenReflection } from './combat/warlock_talents';
 import { MIR4_MAX_LEVEL, mir4LevelRow } from './content/mir4';
-import { MIR4_QUESTS_MAIN } from './content/mir4/quests_arc';
+import { MIR4_QUESTS_MAIN } from './content/mir4/arc_campaign';
 import { noticeboardDefByEntityId } from './content/noticeboards';
 import {
   CLASSES,
@@ -193,6 +193,44 @@ export function encodeObs(sim: Sim): number[] {
   const centerZ = (minZ + maxZ) / 2;
   const halfWidth = Math.max(1, (maxX - minX) / 2);
   const halfDepth = Math.max(1, (maxZ - minZ) / 2);
+  let observedX = clamp((p.pos.x - centerX) / halfWidth, -1, 1);
+  let observedZ = clamp((p.pos.z - centerZ) / halfDepth, -1, 1);
+  if (isMir4 && sim.cfg.world && sim.cfg.world.zones.length > 0) {
+    const zones = sim.cfg.world.zones;
+    let zoneIndex = zones.findIndex(
+      (zone) =>
+        p.pos.x >= (zone.xMin ?? STRIP_MIN_X) &&
+        p.pos.x < (zone.xMax ?? STRIP_MAX_X) &&
+        p.pos.z >= zone.zMin &&
+        p.pos.z < zone.zMax,
+    );
+    if (zoneIndex < 0) {
+      let nearest = Infinity;
+      for (let index = 0; index < zones.length; index += 1) {
+        const zone = zones[index]!;
+        const dx = Math.max(
+          (zone.xMin ?? STRIP_MIN_X) - p.pos.x,
+          0,
+          p.pos.x - (zone.xMax ?? STRIP_MAX_X),
+        );
+        const dz = Math.max(zone.zMin - p.pos.z, 0, p.pos.z - zone.zMax);
+        const distance = dx * dx + dz * dz;
+        if (distance < nearest) {
+          nearest = distance;
+          zoneIndex = index;
+        }
+      }
+    }
+    const zone = zones[Math.max(0, zoneIndex)]!;
+    const zoneMinX = zone.xMin ?? STRIP_MIN_X;
+    const zoneMaxX = zone.xMax ?? STRIP_MAX_X;
+    observedX = clamp(((p.pos.x - zoneMinX) / Math.max(1, zoneMaxX - zoneMinX)) * 2 - 1, -1, 1);
+    const localZ = clamp((p.pos.z - zone.zMin) / Math.max(1, zone.zMax - zone.zMin), 0, 1);
+    // The campaign bends in world X/Z, so global Z is no longer progression.
+    // Fold map ordinal and local north/south position into one continuous axis:
+    // bots retain local navigation while later maps always observe later values.
+    observedZ = clamp(((Math.max(0, zoneIndex) + localZ) / zones.length) * 2 - 1, -1, 1);
+  }
 
   // --- self (16) ---
   obs.push(p.hp / Math.max(1, p.maxHp));
@@ -207,8 +245,8 @@ export function encodeObs(sim: Sim): number[] {
         ? sim.xp / Math.max(1, mir4RequiredXp)
         : sim.xp / xpForLevel(p.level),
   );
-  obs.push(clamp((p.pos.x - centerX) / halfWidth, -1, 1));
-  obs.push(clamp((p.pos.z - centerZ) / halfDepth, -1, 1));
+  obs.push(observedX);
+  obs.push(observedZ);
   obs.push(Math.sin(p.facing));
   obs.push(Math.cos(p.facing));
   obs.push(p.gcdRemaining / GCD);

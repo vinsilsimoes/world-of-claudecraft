@@ -16,8 +16,10 @@
 // hypsometric tinting, fbm vegetation mottling, rock exposure on steep
 // slopes, and worn dirt tracks with wobbling width and inked edges.
 import {
+  BUILTIN_WORLD,
   COLUMN_ZONES,
   columnBlendAt,
+  getActiveWorldContent,
   STRIP_MAX_X,
   STRIP_MIN_X,
   STRIP_ZONES,
@@ -30,12 +32,12 @@ import {
 import { fbm2, hash2 } from '../sim/rng';
 import type { BiomeId, ZoneDef } from '../sim/types';
 import {
+  biomeAt,
   inGardenMazeWall,
   inHollowOpenSea,
   roadDistance,
   terrainHeight,
   WATER_LEVEL,
-  zoneBiomeAt,
 } from '../sim/world';
 import { openSeaNearness } from './map_open_sea_edge_core';
 
@@ -79,12 +81,21 @@ export function mapZoneRegion(zone: ZoneDef): MapRegion {
   const side = Math.max(maxX - minX, zone.zMax - zone.zMin);
   const cx = (minX + maxX) / 2;
   const cz = (zone.zMin + zone.zMax) / 2;
-  // CLAMPED to the world. terrainHeight answers for any coordinate, including
-  // past the world's edge, so an unclamped square paints unreachable generator
-  // terrain as though it were a coastline the player could sail to (the
-  // Wraithwood's square reaches 100 yd past WORLD_MAX_X). Beyond the edge the
-  // painter's flat ocean fill is the honest answer, and it is seamless now that
-  // the fill matches the sea ramp's deep end.
+  // The built-in atlas is clamped to its shipped world. An injected authored
+  // world owns a different coordinate space and its terrain function already
+  // draws the visible outer ridge beyond the zone rectangle, so clamping it to
+  // WoC's constants can invert the region and leave a flat ocean plate.
+  if (getActiveWorldContent() !== BUILTIN_WORLD) {
+    return {
+      minX: cx - side / 2,
+      maxX: cx + side / 2,
+      minZ: cz - side / 2,
+      maxZ: cz + side / 2,
+    };
+  }
+  // CLAMPED to the built-in world. terrainHeight answers for any coordinate,
+  // including past the world's edge, so an unclamped square paints unreachable
+  // generator terrain as though it were a coastline the player could sail to.
   return {
     minX: Math.max(WORLD_MIN_X, cx - side / 2),
     maxX: Math.min(WORLD_MAX_X, cx + side / 2),
@@ -134,7 +145,7 @@ const SEA_DEEP_B = 100;
 const OPEN_SEA_RAMP_FLOOR = 0.62;
 
 // How thick the tree cover stipples per biome (chance per ~1.3yd hash cell).
-const FOREST_STIPPLE: Partial<Record<ReturnType<typeof zoneBiomeAt>, number>> = {
+const FOREST_STIPPLE: Partial<Record<ReturnType<typeof biomeAt>, number>> = {
   vale: 0.4,
   marsh: 0.26,
   peaks: 0.2,
@@ -320,7 +331,7 @@ export function paintTerrainRows(
       const left = ix === 0 ? h : leftH;
       const up = iy === 0 ? h : prevRow[ix];
       leftH = h;
-      const biome = zoneBiomeAt(x, z);
+      const biome = biomeAt(x, z);
       let r = 58,
         g = 105,
         b = 48;

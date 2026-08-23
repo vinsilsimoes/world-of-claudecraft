@@ -142,6 +142,18 @@ describe('mobile attack tap', () => {
     expect(calls).toEqual(['nearest']);
   });
 
+  it('directly toggles MIR4 Auto Battle without requiring a nearby target', () => {
+    const calls: string[] = [];
+    handleMobileAttackTap(
+      { autoAttack: false, hasLiveHostileTarget: false, directToggle: true },
+      {
+        activateAttack: () => calls.push('toggle'),
+        attackNearest: () => calls.push('nearest'),
+      },
+    );
+    expect(calls).toEqual(['toggle']);
+  });
+
   it('falls back to the auto-attack toggle when no nearest resolver is wired', () => {
     const calls: string[] = [];
 

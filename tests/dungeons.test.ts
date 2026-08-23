@@ -17,6 +17,7 @@ import {
   MOBS,
 } from '../src/sim/data';
 import { spawnNythraxisAdds } from '../src/sim/encounters/nythraxis';
+import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
 import { COMBAT_EXIT_MEMORY_SECONDS } from '../src/sim/instance_exit_memory';
 import {
   awardHeroicMarks,
@@ -160,6 +161,60 @@ describe('dungeons: door-trigger entry/exit', () => {
     expect(inst.partyKey).toBe(instanceKeyFor(sim.ctx, pid)); // solo:<pid>
     expect(inst.mobIds.length).toBeGreaterThan(0); // claimInstance spawned the elites
     expect(inst.exitId).not.toBeNull();
+  });
+
+  it('lets a MIR4 player enter an original WoC dungeon without a MIR4 ticket gate', () => {
+    const sim = new Sim({
+      seed: 99,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DUNGEON_TEST_WORLD,
+      gameProfile: MIR4_GAME_PROFILE,
+    }) as AnySim;
+    const pid = sim.addPlayer('warrior', 'Mir4Walker');
+    const p = sim.entities.get(pid) as AnyEntity;
+    const door = [...sim.entities.values()].find(
+      (entity: AnyEntity) =>
+        entity.templateId === 'dungeon_door' && entity.dungeonId === 'gravewyrm_sanctum',
+    ) as AnyEntity;
+    teleport(sim, p, door.pos.x, door.pos.z);
+
+    updateDoorTriggers(sim.ctx, p);
+
+    expect(p.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD);
+    expect(claimedDungeon(sim, 'gravewyrm_sanctum')).toBeDefined();
+  });
+
+  it('lets an attuned MIR4 raid walk through the native crypt door into Nythraxis', () => {
+    const sim = new Sim({
+      seed: 99,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DUNGEON_TEST_WORLD,
+      gameProfile: MIR4_GAME_PROFILE,
+    }) as AnySim;
+    const leader = sim.addPlayer('warrior', 'Mir4RaidLeader');
+    const leaderMeta = sim.players.get(leader);
+    if (!leaderMeta) throw new Error('MIR4 raid leader metadata is required');
+    leaderMeta.questsDone.add('q_nythraxis_bound_guardian');
+    for (let index = 0; index < 4; index += 1) {
+      const member = sim.addPlayer('warrior', `Mir4Raider${index}`);
+      sim.partyInvite(member, leader);
+      sim.partyAccept(member);
+    }
+    sim.convertPartyToRaid(leader);
+    enterDungeon(sim.ctx, 'nythraxis_crypt', leader);
+    const player = sim.entities.get(leader) as AnyEntity;
+    const royalDoor = [...sim.entities.values()].find(
+      (entity: AnyEntity) =>
+        entity.templateId === 'dungeon_door' && entity.dungeonId === 'nythraxis_boss_arena',
+    ) as AnyEntity;
+    teleport(sim, player, royalDoor.pos.x, royalDoor.pos.z);
+
+    updateDoorTriggers(sim.ctx, player);
+
+    expect(sim.instanceInfoAt(player.pos)?.dungeonId).toBe('nythraxis_boss_arena');
+    expect(claimedDungeon(sim, 'nythraxis_boss_arena')).toBeDefined();
   });
 
   it('a party of two walking the same door shares ONE instance (instanceKeyFor)', () => {

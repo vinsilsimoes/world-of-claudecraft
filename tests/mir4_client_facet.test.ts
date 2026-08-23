@@ -28,7 +28,8 @@ describe('MIR4 online client facet', () => {
       },
     );
     facet.setMir4AutoBattle(true);
-    facet.setMir4AutoQuest(true);
+    facet.setMir4AutoQuest(true, 'M08-S01');
+    facet.mir4SkipNarrativeDialogue('M01-Q01:accept:-1:17');
     facet.mir4CastSkill(2101, 17);
     facet.mir4BasicAttack(18);
     facet.mir4EquipStarterWeapon();
@@ -39,7 +40,8 @@ describe('MIR4 online client facet', () => {
 
     expect(sent).toEqual([
       { cmd: 'mir4', m: 'auto', on: true },
-      { cmd: 'mir4', m: 'quest', on: true },
+      { cmd: 'mir4', m: 'quest', on: true, questId: 'M08-S01' },
+      { cmd: 'mir4', m: 'skipDialogue', dialogueId: 'M01-Q01:accept:-1:17' },
       { cmd: 'mir4', m: 'cast', skill: 2101, target: 17 },
       { cmd: 'mir4', m: 'basic', target: 18 },
       { cmd: 'mir4', m: 'equip' },

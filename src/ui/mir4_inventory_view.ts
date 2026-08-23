@@ -12,7 +12,7 @@ import {
   type Mir4MountTicketId,
 } from '../sim/mir4/collection_tickets';
 import { MIR4_EMPTY_MATERIALS, type Mir4Materials } from '../sim/mir4/equipment';
-import { mir4MountOwnedCount, mir4MountVisualKey } from '../sim/mir4/mounts';
+import { mir4MountOwnedCount, mir4MountRuntimeStats, mir4MountVisualKey } from '../sim/mir4/mounts';
 import {
   isMir4SpiritTicketId,
   type Mir4SpiritSpecialSkill,
@@ -71,7 +71,12 @@ export interface Mir4MountView {
   count: number;
   equipped: boolean;
   visualItemId: string;
-  stats: Readonly<{ moveSpeedBps: number; physicalDefense: number; magicDefense: number }>;
+  stats: Readonly<{
+    moveSpeedBps: number;
+    basicAttackSpeedBps: number;
+    physicalDefense: number;
+    magicDefense: number;
+  }>;
 }
 
 export interface Mir4PendingMountView extends Omit<Mir4MountView, 'count' | 'equipped'> {
@@ -156,11 +161,22 @@ export function buildMir4InventoryView(
   runtimeInventory: readonly InvSlot[] = [],
 ): Mir4InventoryView {
   const equipped = new Set(Object.values(state.mir4Equipment ?? {}));
-  const equipment = Object.values(state.mir4EquipmentInstances ?? {})
-    .filter((instance) => !instance.destroyed && !equipped.has(instance.itemId))
-    .map((instance) => {
-      const def = mir4EquipmentDefinition(instance.itemId);
-      return def ? buildMir4EquipmentItemView(def, instance) : null;
+  const instances = state.mir4EquipmentInstances ?? {};
+  const ownedEquipmentIds = new Set<number>(
+    Object.values(instances).map((instance) => instance.itemId),
+  );
+  for (const [itemKey, count] of Object.entries(state.mir4ArcRewards?.items ?? {})) {
+    if (count <= 0) continue;
+    const itemId = Number(itemKey);
+    if (Number.isSafeInteger(itemId) && mir4EquipmentDefinition(itemId)) {
+      ownedEquipmentIds.add(itemId);
+    }
+  }
+  const equipment = [...ownedEquipmentIds]
+    .filter((itemId) => !instances[itemId]?.destroyed && !equipped.has(itemId))
+    .map((itemId) => {
+      const def = mir4EquipmentDefinition(itemId);
+      return def ? buildMir4EquipmentItemView(def, instances[itemId]) : null;
     })
     .filter((item): item is Mir4PaperdollItemView => item !== null)
     .sort((left, right) => left.slotId - right.slotId || left.itemId - right.itemId);
@@ -193,7 +209,7 @@ export function buildMir4InventoryView(
       count: state.mir4Mounts?.owned?.[mount.id] ?? 0,
       equipped: state.mir4Mounts?.equippedMountId === mount.id,
       visualItemId: requiredMountVisualItemId(mount.id),
-      stats: mount.stats,
+      stats: mir4MountRuntimeStats(mount),
     })),
     pendingMounts: (state.mir4Mounts?.pending ?? []).flatMap((pending) => {
       const mount = mir4MountById(pending.mountId);
@@ -205,7 +221,7 @@ export function buildMir4InventoryView(
               grade: mount.grade,
               gradeKey: mount.gradeKey,
               visualItemId: requiredMountVisualItemId(mount.id),
-              stats: mount.stats,
+              stats: mir4MountRuntimeStats(mount),
             },
           ]
         : [];

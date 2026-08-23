@@ -90,7 +90,10 @@ describe('MIR4 collection tickets use native WoC visual shells', () => {
       }),
     ).toBe(true);
     expect(sim.player.mountCastKey).toBe(visualKey);
-    expect(sim.player.mir4).toMatchObject({ mountMoveSpeedBps: 400 });
+    expect(sim.player.mir4).toMatchObject({
+      mountMoveSpeedBps: 1_000,
+      mountBasicAttackSpeedBps: 500,
+    });
 
     const sourceStatsBeforeNativeTransition = {
       maxHp: sim.player.maxHp,
@@ -98,6 +101,7 @@ describe('MIR4 collection tickets use native WoC visual shells', () => {
       physicalDefense: sim.player.mir4!.physicalDefense,
       magicDefense: sim.player.mir4!.magicDefense,
       mountMoveSpeedBps: sim.player.mir4!.mountMoveSpeedBps,
+      mountBasicAttackSpeedBps: sim.player.mir4!.mountBasicAttackSpeedBps,
     };
     for (let tick = 0; tick < 31; tick++) sim.tick();
     expect(sim.player.mountKey).toBe(visualKey);
@@ -107,6 +111,7 @@ describe('MIR4 collection tickets use native WoC visual shells', () => {
       physicalDefense: sim.player.mir4!.physicalDefense,
       magicDefense: sim.player.mir4!.magicDefense,
       mountMoveSpeedBps: sim.player.mir4!.mountMoveSpeedBps,
+      mountBasicAttackSpeedBps: sim.player.mir4!.mountBasicAttackSpeedBps,
     }).toEqual(sourceStatsBeforeNativeTransition);
   });
 

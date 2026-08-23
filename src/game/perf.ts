@@ -6,6 +6,7 @@ import {
   type HitchSummary,
   type SceneCensusReport,
 } from '../render/scene_census_core';
+import { t } from '../ui/i18n';
 import {
   createHeapSawtooth,
   type HeapFloorTrend,
@@ -386,6 +387,9 @@ export class PerfMonitor {
   readonly enabled: boolean;
   private overlay: HTMLDivElement | null = null;
   private overlayText: HTMLDivElement | null = null;
+  private overlayToggle: HTMLButtonElement | null = null;
+  private overlayCensusButton: HTMLDivElement | null = null;
+  private overlayCollapsed = false;
   private lastCensus: SceneCensusReport | null = null;
   // Rendered once per census run, not on every 1 Hz overlay repaint.
   private lastCensusLines: string[] = [];
@@ -1189,6 +1193,26 @@ export class PerfMonitor {
     ].join(';');
     this.overlay.title = 'Click to copy a JSON perf report';
     this.overlay.addEventListener('click', () => this.copyReport());
+    this.overlayToggle = document.createElement('button');
+    this.overlayToggle.type = 'button';
+    this.overlayToggle.style.cssText = [
+      'display:block',
+      'margin:0 0 6px auto',
+      'border:1px solid rgba(147,197,253,0.45)',
+      'border-radius:4px',
+      'padding:2px 6px',
+      'min-width:40px',
+      'min-height:40px',
+      'font:inherit',
+      'color:inherit',
+      'background:rgba(15,23,42,0.9)',
+      'cursor:pointer',
+    ].join(';');
+    this.overlayToggle.addEventListener('click', (event: Event) => {
+      event.stopPropagation();
+      this.setOverlayCollapsed(!this.overlayCollapsed);
+    });
+    this.overlay.appendChild(this.overlayToggle);
     this.overlayText = document.createElement('div');
     this.overlayText.textContent = 'perf: collecting...';
     this.overlay.appendChild(this.overlayText);
@@ -1202,8 +1226,32 @@ export class PerfMonitor {
       e.stopPropagation();
       this.runSceneCensus();
     });
+    this.overlayCensusButton = censusBtn;
     this.overlay.appendChild(censusBtn);
     document.body.appendChild(this.overlay);
+    this.setOverlayCollapsed(false);
+  }
+
+  private setOverlayCollapsed(collapsed: boolean): void {
+    if (!this.overlay || !this.overlayText || !this.overlayToggle || !this.overlayCensusButton) {
+      return;
+    }
+    this.overlayCollapsed = collapsed;
+    const expanded = !collapsed;
+    this.overlayText.style.display = expanded ? 'block' : 'none';
+    this.overlayCensusButton.style.display = expanded ? 'block' : 'none';
+    this.overlay.style.minWidth = expanded ? '210px' : '0';
+    this.overlay.style.padding = expanded ? '8px' : '4px';
+    this.overlayToggle.style.marginBottom = expanded ? '6px' : '0';
+    const label = t(
+      expanded
+        ? 'hudChrome.perf.diagnostics.controls.minimize'
+        : 'hudChrome.perf.diagnostics.controls.expand',
+    );
+    this.overlayToggle.textContent = label;
+    this.overlayToggle.title = label;
+    this.overlayToggle.setAttribute('aria-label', label);
+    this.overlayToggle.setAttribute('aria-expanded', String(expanded));
   }
 
   private renderOverlay(s: PerfSnapshot): void {

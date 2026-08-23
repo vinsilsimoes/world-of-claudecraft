@@ -119,7 +119,7 @@ export interface InspectorDeps {
   frameZone(id: string): void;
 }
 
-export const BIOME_OPTIONS: { id: number; labelKey: string; swatch: string }[] = [
+export const BIOME_OPTIONS: { id: number; labelKey?: string; label?: string; swatch: string }[] = [
   { id: 0, labelKey: 'editor.biome.vale', swatch: '#5aa850' },
   { id: 1, labelKey: 'editor.biome.marsh', swatch: '#786037' },
   { id: 2, labelKey: 'editor.biome.peaks', swatch: '#969ba5' },
@@ -127,6 +127,16 @@ export const BIOME_OPTIONS: { id: number; labelKey: string; swatch: string }[] =
   { id: 4, labelKey: 'editor.biome.desert', swatch: '#cf9040' },
   { id: 5, labelKey: 'editor.biome.volcano', swatch: '#b04030' },
   { id: 6, labelKey: 'editor.biome.cave', swatch: '#4a4a55' },
+  { id: 7, label: 'Dusk', swatch: '#7a5b86' },
+  { id: 8, label: 'Ember', swatch: '#8f4f3f' },
+  { id: 9, label: 'Frost', swatch: '#90a9c4' },
+  { id: 10, label: 'Amber', swatch: '#c89446' },
+  { id: 11, label: 'Fen', swatch: '#557a5c' },
+  { id: 12, label: 'Night', swatch: '#3b3154' },
+  { id: 13, label: 'Haunt', swatch: '#53635c' },
+  { id: 14, label: 'Jungle', swatch: '#3f7f4c' },
+  { id: 15, label: 'Garden', swatch: '#79a85c' },
+  { id: 16, label: 'Gale', swatch: '#93a7a3' },
   { id: 255, labelKey: 'editor.biome.erase', swatch: 'transparent' },
 ];
 
@@ -272,7 +282,7 @@ export class Inspector {
     pal.setAttribute('role', 'radiogroup');
     pal.setAttribute('aria-label', t('editor.biome.paletteLabel'));
     for (const opt of BIOME_OPTIONS) {
-      const label = t(opt.labelKey as Parameters<typeof t>[0]);
+      const label = opt.label ?? t(opt.labelKey as Parameters<typeof t>[0]);
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'ed-biome';

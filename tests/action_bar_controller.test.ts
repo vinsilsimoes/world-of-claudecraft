@@ -601,6 +601,42 @@ describe('ActionBarController attack slot', () => {
 });
 
 describe('ActionBarController: passives never occupy an action slot', () => {
+  it('preserves the six Warrior MIR4 actions through init, reload, and known sync', () => {
+    const warriorActions = [
+      'mir4_skill_1102',
+      'mir4_skill_1104',
+      'mir4_skill_1304',
+      'mir4_skill_1401',
+      'mir4_skill_1501',
+      'mir4_ultimate_1',
+    ];
+    const passive = 'mir4_passive_warrior-heavy-armor';
+    const key = 'woc_hotbar_warrior_ActionbarTester';
+    const storage = new MemoryStorage();
+    storage.setItem(key, JSON.stringify(bar(...warriorActions, passive)));
+    const { controller } = makeHarness('warrior', [...warriorActions, passive], bar(), storage);
+    const expectPreserved = (abilityIds: string[]): void => {
+      expect(controller.actions).toEqual(bar(...abilityIds));
+      expect(JSON.parse(storage.getItem(key) ?? 'null')).toEqual(bar(...abilityIds));
+    };
+
+    controller.init();
+    expectPreserved(warriorActions);
+
+    controller.syncKnownAbilities();
+    expectPreserved(warriorActions);
+    expect(controller.addAbility(passive)).toBe(false);
+    expectPreserved(warriorActions);
+
+    const reloadedActions = [...warriorActions].reverse();
+    storage.setItem(key, JSON.stringify(bar(...reloadedActions, passive)));
+    controller.reload();
+    expectPreserved(reloadedActions);
+
+    controller.syncKnownAbilities();
+    expectPreserved(reloadedActions);
+  });
+
   it('rejects adding a passive ability (measured_fury), leaving the bar empty', () => {
     const { controller } = makeHarness('warrior', ['measured_fury'], bar());
     expect(controller.addAbility('measured_fury')).toBe(false);

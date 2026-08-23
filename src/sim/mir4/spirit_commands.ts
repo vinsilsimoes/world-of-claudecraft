@@ -6,6 +6,7 @@ import { mir4SpiritById } from '../content/mir4/spirits_catalog';
 import { MIR4_GAME_PROFILE } from '../game_profile';
 import type { SimContext } from '../sim_context';
 import { creditMir4ArcTutorialReceipt } from './arc_receipts';
+import { grantMir4ArcLogicalItem, spendMir4ArcLogicalItems } from './arc_rewards';
 import {
   drawMir4Spirit,
   drawMir4SpiritFromGrade,
@@ -18,7 +19,13 @@ import { markMir4WireDirty } from './wire_revision';
 export type Mir4SpiritCommandResult =
   | {
       ok: true;
-      status: 'owned' | 'pending-confirmation' | 'equipped' | 'unequipped' | 'confirmed';
+      status:
+        | 'owned'
+        | 'pending-confirmation'
+        | 'equipped'
+        | 'unequipped'
+        | 'confirmed'
+        | 'tutorial-fusion';
       spiritId?: string;
       pendingId?: string;
       grade?: number;
@@ -178,6 +185,25 @@ export function combineMir4Spirits(
   if (!resolved) return { ok: false, reason: 'unavailable' };
   if (!resolved.meta.mir4ArcRewards?.systems?.includes('spirit-summon')) {
     return { ok: false, reason: 'locked' };
+  }
+  const tutorial = resolved.meta.mir4ArcQuests?.['M10-Q03'];
+  if (tutorial?.state === 'active' && tutorial.stageIndex === 4) {
+    const spent = spendMir4ArcLogicalItems(
+      resolved.meta,
+      4,
+      (itemId) => itemId === 'bound-spirit-replica',
+    );
+    if (!spent) return { ok: false, reason: 'insufficient-copies' };
+    const success = ctx.rng.next() < 0.2;
+    if (!success) grantMir4ArcLogicalItem(resolved.meta, 'bound-spirit-replica', 1);
+    markMir4WireDirty(resolved.meta);
+    creditMir4ArcTutorialReceipt(resolved.meta, { kind: 'combine-spirit' });
+    return {
+      ok: true,
+      status: 'tutorial-fusion',
+      outcome: success ? 'success' : 'failure',
+      grade: sourceGrade,
+    };
   }
   const state = resolved.meta.mir4Spirits;
   const candidates = Object.entries(state?.owned ?? {})

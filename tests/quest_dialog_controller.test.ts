@@ -1,8 +1,14 @@
 // @vitest-environment happy-dom
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  mir4ArcNpcIdentity,
+  mir4ArcNpcTemplateId,
+  mir4ArcQuest,
+} from '../src/sim/content/mir4/arc_campaign';
 import { DELVES, NPCS, QUESTS, STATIONS } from '../src/sim/data';
 import { CHRONICLER_TEMPLATE_IDS } from '../src/sim/deeds';
+import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import type { Entity } from '../src/sim/types';
 import { craftNameText } from '../src/ui/char_window';
 import type { FocusTrapHandle } from '../src/ui/focus_manager';
@@ -46,6 +52,7 @@ function harness(
   const acceptQuest = vi.fn();
   const turnInQuest = vi.fn();
   const reportTelemetry = vi.fn();
+  const mir4SkipNarrativeDialogue = vi.fn();
   const world = {
     entities,
     cfg: { playerClass: 'warrior' },
@@ -75,6 +82,7 @@ function harness(
     acceptQuest,
     turnInQuest,
     reportTelemetry,
+    mir4SkipNarrativeDialogue,
   } as unknown as IWorld;
   const release = vi.fn();
   const focusFirst = vi.fn();
@@ -104,11 +112,12 @@ function harness(
   const openUnbind = vi.fn();
   const openCrafting = vi.fn();
   const onOpenChange = vi.fn();
+  let now = 1_000;
   const controller = new QuestDialogController({
     element,
     document,
     world: () => world,
-    now: () => 1_000,
+    now: () => now,
     text: {
       npcName: (id) => `npc:${id}`,
       mobName: (id) => `mob:${id}`,
@@ -156,6 +165,7 @@ function harness(
     acceptQuest,
     turnInQuest,
     reportTelemetry,
+    mir4SkipNarrativeDialogue,
     release,
     focusFirst,
     trapOpener,
@@ -173,6 +183,9 @@ function harness(
     openUnbind,
     openCrafting,
     onOpenChange,
+    setNow: (value: number) => {
+      now = value;
+    },
   };
 }
 
@@ -205,6 +218,99 @@ describe('QuestDialogController', () => {
     expect(test.release).toHaveBeenCalledWith(true);
     expect(test.onOpenChange).toHaveBeenLastCalledWith(false);
     expect(test.controller.isOpen).toBe(false);
+  });
+
+  it('reuses the existing dialog for authored MIR4 conversations and authoritative talk', () => {
+    const quest = mir4ArcQuest('M01-Q01')!;
+    const contact = npc(70, mir4ArcNpcTemplateId(quest.giverNpcId));
+    const test = harness(contact);
+    (test.world.cfg as { gameProfile?: string }).gameProfile = 'mir4-gameplay-port';
+    (
+      test.world as unknown as { mir4PlayerState(): Readonly<Mir4PlayerUiState> | null }
+    ).mir4PlayerState = () => ({ playerLevel: 1, mir4ArcQuests: {} }) as Mir4PlayerUiState;
+
+    test.controller.open(contact.id);
+
+    expect(test.element.textContent).toContain(mir4ArcNpcIdentity(quest.giverNpcId)!.name);
+    expect(test.element.textContent).toContain(quest.title);
+    expect(test.element.textContent).toContain('Observe o lugar');
+    const action = test.element.querySelector<HTMLButtonElement>('.btn');
+    expect(action?.textContent).toBe(t('questUi.dialog.accept'));
+
+    action?.click();
+    expect(test.targetEntity).toHaveBeenCalledWith(contact.id);
+    expect(test.interact).toHaveBeenCalledTimes(1);
+    expect(test.element.style.display).toBe('none');
+  });
+
+  it('opens the existing dialog for Auto Mission lore and skips through authority', () => {
+    const quest = mir4ArcQuest('M01-Q01')!;
+    const contact = npc(71, mir4ArcNpcTemplateId(quest.giverNpcId));
+    const test = harness(contact);
+    (test.world.cfg as { gameProfile?: string }).gameProfile = 'mir4-gameplay-port';
+    let narrative: Mir4PlayerUiState['mir4NarrativeDialogue'] = {
+      id: `${quest.questId}:accept:-1:${contact.id}`,
+      questId: quest.questId,
+      npcEntityId: contact.id,
+      npcTemplateId: contact.templateId,
+      action: 'accept',
+      beat: 'accept',
+      startedAt: 10,
+      durationSeconds: 8,
+      completesAt: 18,
+    };
+    (
+      test.world as unknown as { mir4PlayerState(): Readonly<Mir4PlayerUiState> | null }
+    ).mir4PlayerState = () =>
+      ({
+        playerLevel: 1,
+        mir4ArcQuests: {},
+        mir4NarrativeDialogue: narrative,
+      }) as Mir4PlayerUiState;
+
+    test.controller.refreshIfChanged();
+
+    expect(test.element.style.display).toBe('block');
+    expect(test.element.classList.contains('mir4-narrative-dialogue')).toBe(true);
+    expect(test.element.textContent).toContain(quest.title);
+    const progressbar = test.element.querySelector<HTMLElement>('[role="progressbar"]');
+    expect(progressbar).not.toBeNull();
+    expect(progressbar?.hasAttribute('aria-valuenow')).toBe(false);
+    expect(progressbar?.getAttribute('aria-label')).toBe(t('questUi.dialog.autoContinue'));
+    expect(test.element.querySelector('[data-close]')).toBeNull();
+    const skip = test.element.querySelector<HTMLButtonElement>('.qd-dialogue-skip');
+    expect(skip?.textContent).toBe(t('questUi.dialog.skipDialogue'));
+    skip?.click();
+    expect(test.mir4SkipNarrativeDialogue).toHaveBeenCalledWith(
+      `${quest.questId}:accept:-1:${contact.id}`,
+    );
+    expect(test.interact).not.toHaveBeenCalled();
+
+    test.setNow(5_000);
+    test.controller.relocalize();
+    const resumed = test.element.querySelector<HTMLElement>('[role="progressbar"]');
+    expect(resumed?.hasAttribute('aria-valuenow')).toBe(false);
+    expect(resumed?.style.getPropertyValue('--mir4-dialogue-duration')).toBe('4s');
+
+    narrative = undefined;
+    test.controller.refreshIfChanged();
+    expect(test.element.style.display).toBe('none');
+  });
+
+  it('keeps ambient MIR4-prefixed NPCs on the normal gossip path', () => {
+    const ambient = npc(72, 'mir4_ambient_pathfinder');
+    const test = harness(ambient);
+    (test.world.cfg as { gameProfile?: string }).gameProfile = 'mir4-gameplay-port';
+    (
+      test.world as unknown as { mir4PlayerState(): Readonly<Mir4PlayerUiState> | null }
+    ).mir4PlayerState = () => ({ playerLevel: 1, mir4ArcQuests: {} }) as Mir4PlayerUiState;
+
+    test.controller.open(ambient.id);
+
+    expect(test.element.style.display).toBe('block');
+    expect(test.element.textContent).toContain('mob:mir4_ambient_pathfinder');
+    expect(test.element.classList.contains('mir4-narrative-dialogue')).toBe(false);
+    expect(test.element.querySelector('[data-close]')).not.toBeNull();
   });
 
   it('renders a completed repeatable as the blue row with the repeatable aria', () => {

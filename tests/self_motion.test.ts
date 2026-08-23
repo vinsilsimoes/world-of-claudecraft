@@ -1,7 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
+  mir4AutomationOwnsMotion,
+  selfAlphaLeadForMotionOwner,
+  selfFallbackSmoothingEnabled,
+  selfMotionPredictionAllowed,
+  selfMotionPredictionAllowedFor,
+  selfMotionPredictionEnabled,
+} from '../src/game/mir4_motion_ownership';
+import { createCameraBoom, stepCameraBoom } from '../src/render/camera_boom_core';
+import {
+  cameraFovOffset,
+  createCameraFeel,
+  resetCameraLandingDetector,
+  stepCameraFeel,
+  stepLandingDetector,
+} from '../src/render/camera_feel_core';
+import {
   BLOCK_EPISODE_MAX_MS,
   hasAuthoritativeSelfPositionDiscontinuity,
+  mir4AuthoritativeSelfFallbackSpeed,
   SELF_MOTION_CAP_MAX_MS,
   SELF_MOTION_CAP_MIN_MS,
   SELF_MOTION_SNAP_DIST_SQ,
@@ -11,7 +28,7 @@ import {
   type Vec3Like,
 } from '../src/render/self_motion';
 import { Sim } from '../src/sim/sim';
-import { type Entity, type MoveInput, RUN_SPEED } from '../src/sim/types';
+import { DT, type Entity, type MoveInput, RUN_SPEED } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
@@ -23,6 +40,219 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 const SEED = 42;
 const FRAME_MS = 1000 / 60;
 const SNAP_MS = 50;
+
+function automatedCameraWaveform(
+  alphaLead: number,
+  smoothFallback = alphaLead > 0,
+  options: {
+    authoritativeSpeed?: number;
+    tickPattern?: readonly number[];
+    stableServerOwnedMotion?: boolean;
+  } = {},
+): {
+  selfSpeedSpread: number;
+  maxSelfSpeed: number;
+  cameraSpeedSpread: number;
+  maxFovOffset: number;
+} {
+  const dt = 1 / 144;
+  const snapSeconds = SNAP_MS / 1000;
+  let now = 0;
+  let lastSnap = 0;
+  let nextSnap = snapSeconds;
+  let serverZ = 0;
+  let mirrorPrevZ = 0;
+  let mirrorPosZ = 0;
+  const display = { x: 0, y: 0, z: 0 };
+  let ready = false;
+  let lastDisplayZ = 0;
+  const boom = createCameraBoom();
+  let lastCameraPivotZ = 0;
+  const feel = createCameraFeel();
+  const selfSpeeds: number[] = [];
+  const cameraSpeeds: number[] = [];
+  const fovOffsets: number[] = [];
+  const tickPattern = options.tickPattern ?? [1];
+  const authoritativeSpeed = options.authoritativeSpeed ?? RUN_SPEED;
+  let snapIndex = 0;
+
+  for (let frame = 0; frame < 144 * 8; frame++) {
+    now += dt;
+    while (now >= nextSnap - 1e-10) {
+      const continuousAlpha =
+        lastSnap > 0 ? Math.min(1.25, (nextSnap - lastSnap) / snapSeconds) : 1;
+      mirrorPrevZ += (mirrorPosZ - mirrorPrevZ) * continuousAlpha;
+      const ticks = tickPattern[snapIndex++ % tickPattern.length] ?? 1;
+      serverZ += authoritativeSpeed * snapSeconds * ticks;
+      mirrorPosZ = Math.round(serverZ * 100) / 100;
+      lastSnap = nextSnap;
+      nextSnap += snapSeconds;
+    }
+    const alpha = lastSnap > 0 ? Math.min(1.25, (now - lastSnap) / snapSeconds) : 1;
+    const targetAlpha = Math.min(1.25, Math.max(0, alpha + alphaLead));
+    const targetZ = mirrorPrevZ + (mirrorPosZ - mirrorPrevZ) * targetAlpha;
+    updateSelfRenderFallback(
+      display,
+      0,
+      0,
+      targetZ,
+      ready,
+      dt,
+      smoothFallback,
+      false,
+      options.stableServerOwnedMotion ? authoritativeSpeed : Number.POSITIVE_INFINITY,
+    );
+    ready = true;
+    const selfSpeed = (display.z - lastDisplayZ) / dt;
+    lastDisplayZ = display.z;
+    stepCameraBoom(boom, display.x, display.y, display.z, dt);
+    stepCameraFeel(feel, 0, selfSpeed, dt, !options.stableServerOwnedMotion);
+    const cameraPivotZ = boom.z + feel.leadZ;
+    const cameraSpeed = (cameraPivotZ - lastCameraPivotZ) / dt;
+    lastCameraPivotZ = cameraPivotZ;
+    if (frame >= 144 * 5) {
+      selfSpeeds.push(selfSpeed);
+      cameraSpeeds.push(cameraSpeed);
+      fovOffsets.push(Math.abs(cameraFovOffset(feel)));
+    }
+  }
+
+  const spread = (values: number[]) => Math.max(...values) - Math.min(...values);
+  return {
+    selfSpeedSpread: spread(selfSpeeds),
+    maxSelfSpeed: Math.max(...selfSpeeds.map(Math.abs)),
+    cameraSpeedSpread: spread(cameraSpeeds),
+    maxFovOffset: Math.max(...fovOffsets),
+  };
+}
+
+describe('self-motion prediction ownership', () => {
+  it('uses local prediction only while movement is client-owned', () => {
+    expect(selfMotionPredictionEnabled(true, false)).toBe(true);
+    expect(selfMotionPredictionEnabled(true, true)).toBe(false);
+    expect(selfMotionPredictionEnabled(false, false)).toBe(false);
+  });
+
+  it('uses ordinary snapshot interpolation for server-owned automation', () => {
+    expect(selfAlphaLeadForMotionOwner(0.65, false)).toBe(0.65);
+    expect(selfAlphaLeadForMotionOwner(0.65, true)).toBe(0);
+    expect(
+      selfMotionPredictionAllowed({
+        spectating: false,
+        movementFrozen: false,
+        immobilized: false,
+        instancedCollision: false,
+        climbing: false,
+        automationOwnsMotion: true,
+      }),
+    ).toBe(false);
+    expect(selfMotionPredictionAllowedFor(false, false, false, false, false, false)).toBe(true);
+    expect(selfMotionPredictionAllowedFor(false, false, false, false, false, true)).toBe(false);
+  });
+
+  it('keeps the automated avatar and camera at a constant velocity across 20 Hz snapshots', () => {
+    const automatedLead = selfAlphaLeadForMotionOwner(0.65, true);
+    const stable = automatedCameraWaveform(
+      automatedLead,
+      selfFallbackSmoothingEnabled(automatedLead, true),
+    );
+    const oldPulsingPath = automatedCameraWaveform(0.65);
+
+    expect(stable.selfSpeedSpread).toBeLessThan(0.001);
+    expect(stable.cameraSpeedSpread).toBeLessThan(0.001);
+    expect(stable.maxFovOffset).toBeLessThan(0.01);
+    // Proves this harness exercises the former early-saturate/plateau defect.
+    expect(oldPulsingPath.selfSpeedSpread).toBeGreaterThan(3);
+    expect(oldPulsingPath.maxFovOffset).toBeGreaterThan(0.5);
+  });
+
+  it('does not turn bundled 0/2-tick automation snapshots into camera zoom', () => {
+    const automatedLead = selfAlphaLeadForMotionOwner(0.65, true);
+    const stable = automatedCameraWaveform(
+      automatedLead,
+      selfFallbackSmoothingEnabled(automatedLead, true),
+      { tickPattern: [0, 2], stableServerOwnedMotion: true },
+    );
+    const pulsing = automatedCameraWaveform(automatedLead, true, { tickPattern: [0, 2] });
+
+    expect(stable.maxSelfSpeed).toBeLessThanOrEqual(RUN_SPEED + 0.001);
+    expect(stable.maxFovOffset).toBeLessThan(0.01);
+    // The fixture must keep exercising the real catch-up cadence defect.
+    expect(pulsing.maxSelfSpeed).toBeGreaterThan(RUN_SPEED + 1);
+    expect(pulsing.maxFovOffset).toBeGreaterThan(0.5);
+  });
+
+  it('keeps mythical-mount automation smooth at the authoritative 1.8x speed', () => {
+    const automatedLead = selfAlphaLeadForMotionOwner(0.65, true);
+    const mountedSpeed = RUN_SPEED * 1.8;
+    const stable = automatedCameraWaveform(
+      automatedLead,
+      selfFallbackSmoothingEnabled(automatedLead, true),
+      {
+        authoritativeSpeed: mountedSpeed,
+        tickPattern: [0, 2],
+        stableServerOwnedMotion: true,
+      },
+    );
+
+    expect(stable.maxSelfSpeed).toBeLessThanOrEqual(mountedSpeed + 0.001);
+    expect(stable.maxFovOffset).toBeLessThan(0.01);
+  });
+
+  it('forgets false downhill fall history while server-owned ground motion is active', () => {
+    const feel = createCameraFeel();
+    expect(stepLandingDetector(feel, 10, 1 / 60)).toBe(0);
+    expect(stepLandingDetector(feel, 9.8, 1 / 60)).toBe(0);
+    expect(stepLandingDetector(feel, 9.6, 1 / 60)).toBe(0);
+    expect(stepLandingDetector(feel, 9.4, 1 / 60)).toBe(0);
+    resetCameraLandingDetector(feel);
+
+    expect(stepLandingDetector(feel, 9.4, 1 / 60)).toBe(0);
+    expect(feel.fallFrames).toBe(0);
+    expect(feel.lastVy).toBe(0);
+  });
+
+  it('smooths the predictor-to-automation handoff without restoring snapshot lead', () => {
+    const dt = 1 / 60;
+    const display = { x: 0, y: 0, z: RUN_SPEED * (SNAP_MS / 1000) };
+    const before = display.z;
+    const automationLead = selfAlphaLeadForMotionOwner(0.65, true);
+
+    updateSelfRenderFallback(
+      display,
+      0,
+      0,
+      0,
+      true,
+      dt,
+      selfFallbackSmoothingEnabled(automationLead, true),
+      false,
+    );
+
+    const visualStep = Math.abs(display.z - before);
+    const maxNonSnapStep = RUN_SPEED * dt * 1.25 + 0.005;
+    expect(automationLead).toBe(0);
+    expect(visualStep).toBeLessThanOrEqual(maxNonSnapStep);
+  });
+
+  it('gives MIR4 automation motion ownership until manual movement suspends it', () => {
+    const idle = mi();
+    expect(mir4AutomationOwnsMotion(true, false, idle)).toBe(true);
+    expect(mir4AutomationOwnsMotion(false, true, idle)).toBe(true);
+    expect(mir4AutomationOwnsMotion(false, false, idle)).toBe(false);
+    expect(mir4AutomationOwnsMotion(true, true, idle, true)).toBe(false);
+    for (const direction of [
+      'forward',
+      'back',
+      'strafeLeft',
+      'strafeRight',
+      'turnLeft',
+      'turnRight',
+    ] as const) {
+      expect(mir4AutomationOwnsMotion(true, true, mi({ [direction]: true }))).toBe(false);
+    }
+  });
+});
 
 const mi = (over: Partial<MoveInput> = {}): MoveInput => ({
   forward: false,
@@ -324,6 +554,56 @@ describe('SelfMotionPredictor', () => {
     expect(moved).toBeGreaterThan(0.2); // ~4 frames of RUN_SPEED
     // the server has not even received the input yet (120ms lag > 4 frames)
     expect(lab.srv.player.pos.z).toBeCloseTo(-80, 3);
+  });
+
+  it('adopts a changed MIR4 Mount speed without rebuilding the predictor', () => {
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      playerClassMir4: 'warrior',
+      playerName: 'Mount Swap Tester',
+      gameProfile: 'mir4-gameplay-port',
+      world: EMPTY_TEST_WORLD,
+    });
+    teleport(sim, 0, -40);
+    if (!sim.player.mir4) throw new Error('missing MIR4 player stats');
+    sim.player.mountKey = 'valorsteed';
+    sim.player.mir4 = { ...sim.player.mir4, mountMoveSpeedBps: 1_000 };
+    const self: Entity = {
+      ...sim.player,
+      pos: { ...sim.player.pos },
+      prevPos: { ...sim.player.prevPos },
+    };
+    if (!self.mir4) throw new Error('missing mirrored MIR4 player stats');
+    const predictor = new SelfMotionPredictor(SEED);
+    const frame: SelfMotionFrame = {
+      enabled: true,
+      moveInput: mi({ forward: true }),
+      displayFacing: 0,
+      echoMs: 350,
+      jitterMs: 0,
+      alpha: 1,
+      frameDt: DT,
+      snapAgeMs: 0,
+      snapIntervalMs: SNAP_MS,
+    };
+
+    predictor.step(self, frame);
+    const commonPose = predictor.step(self, frame);
+    if (!commonPose) throw new Error('predictor disabled unexpectedly');
+    const commonStep = commonPose.z - self.pos.z;
+
+    self.mir4 = { ...self.mir4, mountMoveSpeedBps: 8_000 };
+    expect(mir4AuthoritativeSelfFallbackSpeed(self)).toBeCloseTo(RUN_SPEED * 1.8, 5);
+    const beforeMythical = predictor.step(self, frame);
+    if (!beforeMythical) throw new Error('predictor disabled unexpectedly');
+    const beforeMythicalZ = beforeMythical.z;
+    const mythicalPose = predictor.step(self, frame);
+    if (!mythicalPose) throw new Error('predictor disabled unexpectedly');
+    const mythicalStep = mythicalPose.z - beforeMythicalZ;
+
+    expect(commonStep).toBeCloseTo(RUN_SPEED * DT * 1.1, 5);
+    expect(mythicalStep).toBeCloseTo(RUN_SPEED * DT * 1.8, 5);
   });
 
   // Running into a blocker (the Grand Armoury's flat south face at z = -12) is

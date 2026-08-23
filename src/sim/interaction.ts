@@ -50,6 +50,7 @@ import { tryStartMir4ArcEscort } from './mir4/arc_escorts';
 import {
   mir4HandleArcBoardInteract,
   mir4HandleArcObjectiveInteract,
+  mir4IsArcObjectiveEntity,
 } from './mir4/arc_quest_runtime';
 import { applyFocusBonus, applyFocusTierBonus, type FocusAllocation } from './professions/focus';
 import {
@@ -765,6 +766,12 @@ export function pickUpObject(
   }
   const obj = ctx.entities.get(objId);
   if (obj?.kind !== 'object' || !obj.lootable) return false;
+  // MIR4 campaign objectives are evidence entities, never inventory items.
+  // Route an exact click through the owner/stage-aware reducer and fail closed
+  // so neither the owner nor another player can collect the selector string.
+  if (mir4IsArcObjectiveEntity(obj)) {
+    return mir4HandleArcObjectiveInteract(ctx, meta.entityId, obj.id);
+  }
   const noticeboardDef = noticeboardDefByEntityId(noticeboardDefinitions, obj.id);
   // Preserve the historical no-op for malformed/non-pickup objects. The board
   // is the one intentional lootable object without an item payload.
@@ -775,7 +782,7 @@ export function pickUpObject(
     return false;
   }
   if (noticeboardDef) {
-    const contractQuestId = mir4HandleArcBoardInteract(ctx, meta.entityId);
+    const contractQuestId = mir4HandleArcBoardInteract(ctx, meta.entityId, noticeboardDef.entityId);
     ctx.emit({
       type: 'noticeboard',
       noticeboardId: noticeboardDef.templateId,
@@ -920,7 +927,12 @@ export function interact(
           // Rate-limited per player so repeated F-key spam does not re-open the UI.
           if (ctx.time >= (p.riftLockpickOfferAt ?? -Infinity) + LOCKPICK_OFFER_COOLDOWN) {
             p.riftLockpickOfferAt = ctx.time;
-            ctx.emit({ type: 'lockpickOffer', objectId: target.id, bountiful: false, pid: p.id });
+            ctx.emit({
+              type: 'lockpickOffer',
+              objectId: target.id,
+              bountiful: false,
+              pid: p.id,
+            });
           }
           return;
         }
@@ -1023,7 +1035,12 @@ export function interact(
     if (obj.templateId === 'rift_locked_chest') {
       if (ctx.time >= (p.riftLockpickOfferAt ?? -Infinity) + LOCKPICK_OFFER_COOLDOWN) {
         p.riftLockpickOfferAt = ctx.time;
-        ctx.emit({ type: 'lockpickOffer', objectId: obj.id, bountiful: false, pid: p.id });
+        ctx.emit({
+          type: 'lockpickOffer',
+          objectId: obj.id,
+          bountiful: false,
+          pid: p.id,
+        });
       }
       return;
     }

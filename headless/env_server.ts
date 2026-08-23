@@ -106,7 +106,7 @@ class Env {
       playerClassMir4:
         gameProfile === MIR4_GAME_PROFILE ? (playerClass as Mir4ClassKey) : undefined,
       gameProfile,
-      world: activateWorldForGameProfile(gameProfile),
+      world: activateWorldForGameProfile(gameProfile, { terrainSeed: seed }),
       respawnSeconds: this.config.respawnSeconds,
       autoEquip: gameProfile !== MIR4_GAME_PROFILE,
       idleMobTickRadius: 80,

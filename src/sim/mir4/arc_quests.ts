@@ -3,17 +3,18 @@
 // after validating talk proximity, map position, kills, receipts, timers or
 // interactions. Unknown stage kinds fail closed and no stage auto-completes.
 
-import { MIR4_ARC_MOB_IDS } from '../content/mir4/arc_mob_ids';
-import { mir4ArcBands } from '../content/mir4/arc_world';
 import {
   MIR4_QUESTS_ARC,
   MIR4_QUESTS_MAIN,
   type Mir4ArcQuestStage,
   mir4ArcQuest,
-} from '../content/mir4/quests_arc';
+} from '../content/mir4/arc_campaign';
+import { MIR4_ARC_MOB_IDS } from '../content/mir4/arc_mob_ids';
+import { mir4ArcBands } from '../content/mir4/arc_world';
 import { MIR4_WORLD_ARC_BY_MAP } from '../content/mir4/world_arc';
 import type { SimContext } from '../sim_context';
 import { MIR4_ARC_COMBAT_STAGE_KINDS } from './arc_stage_kinds';
+import { mir4ArcTargetSlug } from './arc_target_identity';
 
 export interface Mir4ArcQuestProgress {
   questId: string;
@@ -92,9 +93,9 @@ function mobTargetMatches(stage: Mir4ArcQuestStage, templateId: string, questId:
   if (candidates.length === 0) {
     return templateId.startsWith(`mir4_quest_${questId.toLowerCase()}_`);
   }
-  const normalizedTemplate = templateId.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  const normalizedTemplate = mir4ArcTargetSlug(templateId);
   return candidates.some((candidate) => {
-    const normalizedCandidate = candidate.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const normalizedCandidate = mir4ArcTargetSlug(candidate);
     return (
       templateId === candidate ||
       templateId === `mir4_${candidate}` ||

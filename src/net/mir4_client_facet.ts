@@ -38,9 +38,14 @@ export class Mir4ClientFacet implements IWorldMir4 {
   readonly mir4AutoBattleActive = (): boolean => this.snapshot?.autoBattle?.mode === 'battle';
   readonly setMir4AutoBattle = (on: boolean): void => this.send({ cmd: 'mir4', m: 'auto', on });
   readonly mir4AutoQuestActive = (): boolean => this.snapshot?.mir4AutoQuest !== undefined;
-  readonly setMir4AutoQuest = (on: boolean): void => this.send({ cmd: 'mir4', m: 'quest', on });
+  readonly setMir4AutoQuest = (on: boolean, questId?: string): void =>
+    this.send({ cmd: 'mir4', m: 'quest', on, ...(questId ? { questId } : {}) });
   readonly mir4QuestStatusText = (): string => mir4AutoQuestStatus(this.snapshot ?? {});
   readonly mir4QuestTrackerEntries = () => buildMir4QuestTrackerEntries(this.snapshot ?? {});
+  readonly mir4AcknowledgeTutorial = (questId: string): void =>
+    this.send({ cmd: 'mir4', m: 'ackTutorial', questId });
+  readonly mir4SkipNarrativeDialogue = (dialogueId: string): void =>
+    this.send({ cmd: 'mir4', m: 'skipDialogue', dialogueId });
   readonly mir4CastSkill = (skillId: number, targetId?: number): Mir4CastResult => {
     this.send({ cmd: 'mir4', m: 'cast', skill: skillId, target: targetId });
     return { ok: true };
@@ -148,14 +153,20 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   mir4AutoQuestActive(): boolean {
     return this.ensureMir4Facet().mir4AutoQuestActive();
   }
-  setMir4AutoQuest(on: boolean): void {
-    this.ensureMir4Facet().setMir4AutoQuest(on);
+  setMir4AutoQuest(on: boolean, questId?: string): void {
+    this.ensureMir4Facet().setMir4AutoQuest(on, questId);
   }
   mir4QuestStatusText(): string {
     return this.ensureMir4Facet().mir4QuestStatusText();
   }
   mir4QuestTrackerEntries() {
     return this.ensureMir4Facet().mir4QuestTrackerEntries();
+  }
+  mir4AcknowledgeTutorial(questId: string): void {
+    this.ensureMir4Facet().mir4AcknowledgeTutorial(questId);
+  }
+  mir4SkipNarrativeDialogue(dialogueId: string): void {
+    this.ensureMir4Facet().mir4SkipNarrativeDialogue(dialogueId);
   }
   mir4CastSkill(skillId: number, targetId?: number): Mir4CastResult {
     return this.ensureMir4Facet().mir4CastSkill(skillId, targetId);

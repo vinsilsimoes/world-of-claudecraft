@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import { mir4ArcQuest } from '../../src/sim/content/mir4/arc_campaign';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import {
@@ -60,7 +61,7 @@ describe('the arc quest chain', () => {
     expect(
       mir4AdvanceQuestStage(sim.ctx, sim.playerId, progress, {
         kind: 'talk',
-        target: 'tarek-duas-pontes',
+        target: mir4ArcQuest('M01-Q01')!.giverNpcId,
       }),
     ).toBe('advanced');
     expect(mir4ApplyQuestEvidence(progress, { kind: 'travel', target: 'm01-z01' })).toBe(
@@ -90,9 +91,12 @@ describe('the arc quest chain', () => {
         'advanced',
       );
     }
-    expect(mir4ApplyQuestEvidence(progress, { kind: 'talk', target: 'tarek-duas-pontes' })).toBe(
-      'ready',
-    );
+    expect(
+      mir4ApplyQuestEvidence(progress, {
+        kind: 'talk',
+        target: mir4ArcQuest('M01-Q01')!.turnInNpcId,
+      }),
+    ).toBe('ready');
     expect(progress.state).toBe('ready');
     expect(progress.stageIndex).toBe(7);
   });

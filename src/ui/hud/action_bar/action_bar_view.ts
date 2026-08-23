@@ -232,6 +232,10 @@ export interface ActionBarTargetInput {
  *  (the item-slot stack count source). */
 export interface ActionBarWorldInput {
   player: ActionBarPlayerInput;
+  /** Authoritative state of the fixed Attack-family toggle. MIR4 supplies its
+   * profile snapshot here because its automation state is not the classic
+   * white-swing flag mirrored on the player entity. */
+  fixedAttackActive?: boolean;
   target: ActionBarTargetInput | null;
   inventory: readonly { itemId: string; count: number }[];
   /** Aura-derived because the online player entity's local cache is not wired. */
@@ -445,7 +449,8 @@ export function createActionBarView(
           slot.rechargePercent = 0;
           slot.usable = true;
           slot.outOfRange = tgtDist !== null && tgtDist > MELEE_RANGE;
-          slot.queued = player.autoAttack;
+          const fixedAttackActive = world.fixedAttackActive ?? player.autoAttack;
+          slot.queued = fixedAttackActive;
           slot.procGlow = false;
           slot.empowered = false;
           slot.ascensionSpender = false;
@@ -457,7 +462,7 @@ export function createActionBarView(
             ability: deps.attackName?.() ?? deps.t(ATTACK_NAME_KEY),
           });
           slot.ariaDescription = '';
-          slot.ariaPressed = player.autoAttack ? 'true' : 'false';
+          slot.ariaPressed = fixedAttackActive ? 'true' : 'false';
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }

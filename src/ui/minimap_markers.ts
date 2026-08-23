@@ -562,7 +562,7 @@ export function createMinimapMarkers(): MinimapMarkers {
       // Entity-free shipped routes use the same radial cull as every nearby
       // world marker. The table and staging array are module/core-owned, so the
       // 10Hz scan creates only the marker records that will actually draw.
-      for (const site of stableMapNavigationLandmarks(world.cfg.gameProfile)) {
+      for (const site of stableMapNavigationLandmarks(world.cfg.gameProfile, world.cfg.world)) {
         const dx = -(site.x - p.pos.x) * pxPerYard;
         const dz = -(site.z - p.pos.z) * pxPerYard;
         const size = MAP_MARKER_SIZES[compact ? 'minimapNavigationCompact' : 'minimapNavigation'];

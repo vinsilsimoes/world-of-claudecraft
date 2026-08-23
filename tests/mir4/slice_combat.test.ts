@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MIR4_MOBS, mir4MobStats } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
+import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { Sim } from '../../src/sim/sim';
 import type { Entity } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
@@ -118,6 +119,82 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
       reason: 'on-cooldown',
     });
     expect(sim.mir4BasicAttack(near.id)).toEqual({ ok: true });
+  });
+  it('admits no skill, basic attack, or ultimate through blocked line of sight', () => {
+    const sim = makeSliceSim(42421);
+    const p = sim.player;
+    p.pos = sim.groundPos(27, 0);
+    const covered = spawnWolf(sim, 3);
+    covered.maxHp = 5000;
+    covered.hp = covered.maxHp;
+    p.mir4UltGauge = 100;
+    expect(sim.ctx.hasLineOfSight(p, covered)).toBe(false);
+    const draws = vi.spyOn(sim.rng, 'next');
+    const resourceBefore = p.resource;
+
+    expect(sim.mir4CastSkill(1102, covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
+    expect(sim.mir4BasicAttack(covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
+    expect(sim.mir4UltimateCast(covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
+
+    expect(covered.hp).toBe(covered.maxHp);
+    expect(p.resource).toBe(resourceBefore);
+    expect(p.mir4UltGauge).toBe(100);
+    expect(p.cooldowns.has('1102')).toBe(false);
+    expect(p.cooldowns.has('mir4_basic')).toBe(false);
+    expect(p.cooldowns.has('mir4_ult')).toBe(false);
+    expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
+    expect(draws).not.toHaveBeenCalled();
+  });
+  it('keeps the deterministic combat stream identical after a denied LoS attempt', () => {
+    const run = (attemptThroughCover: boolean) => {
+      const sim = makeSliceSim(42422);
+      const p = sim.player;
+      p.pos = sim.groundPos(27, 0);
+      const wolf = spawnWolf(sim, 3);
+      wolf.maxHp = 5000;
+      wolf.hp = wolf.maxHp;
+      if (attemptThroughCover) {
+        expect(sim.ctx.hasLineOfSight(p, wolf)).toBe(false);
+        expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({
+          ok: false,
+          reason: 'out-of-range',
+        });
+      }
+      wolf.pos = sim.groundPos(27, 2);
+      expect(sim.ctx.hasLineOfSight(p, wolf)).toBe(true);
+      expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+      return {
+        hp: wolf.hp,
+        resource: p.resource,
+        effects: wolf.mir4Effects,
+        nextDraw: sim.rng.next(),
+      };
+    };
+
+    expect(run(true)).toEqual(run(false));
+  });
+  it('revalidates LoS at a delayed impact without consuming combat RNG', () => {
+    const sim = makeSliceSim(42423);
+    const p = sim.player;
+    const wolf = spawnWolf(sim, 2);
+    wolf.maxHp = 5000;
+    wolf.hp = wolf.maxHp;
+    const originalHasLineOfSight = sim.ctx.hasLineOfSight;
+    let visible = true;
+    sim.ctx.hasLineOfSight = () => visible;
+    expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
+    const pending = p.mir4PendingImpacts?.[0];
+    if (!pending) throw new Error('MIR4 basic impact was not scheduled');
+    pending.dueAt = sim.ctx.time;
+    visible = false;
+    const draws = vi.spyOn(sim.rng, 'next');
+
+    updateMir4PendingImpacts(sim.ctx);
+
+    sim.ctx.hasLineOfSight = originalHasLineOfSight;
+    expect(wolf.hp).toBe(wolf.maxHp);
+    expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
+    expect(draws).not.toHaveBeenCalled();
   });
   it('the basic attack deals floor(125 * 6000 / 10000) = 75 on its own cadence', () => {
     const sim = makeSliceSim();

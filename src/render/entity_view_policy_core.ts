@@ -2,6 +2,7 @@
 // Candidate storage stays in view_candidate_pool_core; this module owns only
 // entity classification and lifecycle decisions.
 
+import { mir4ArcObjectiveVisibleTo } from '../sim/mir4/arc_objectives';
 import type { Entity, QuestProgress } from '../sim/types';
 import { interactionLandmarkViewPriority } from './prewarm_policy';
 import type { QuestObjectGate } from './quest_object_gate_core';
@@ -23,8 +24,12 @@ export function entityViewIsAdmitted(
   entity: Entity,
   questLog: Map<string, QuestProgress>,
   questObjectHidden: QuestObjectGate,
+  viewerId = -1,
 ): boolean {
-  return !questObjectHidden(entity, questLog);
+  return (
+    (viewerId < 0 || mir4ArcObjectiveVisibleTo(entity, viewerId)) &&
+    !questObjectHidden(entity, questLog)
+  );
 }
 
 export function entityViewCandidatePriority(entity: Entity, player: Entity, d2: number): number {
@@ -49,8 +54,9 @@ export function entityViewShouldDrop(
   questLog: Map<string, QuestProgress>,
   questObjectHidden: QuestObjectGate,
   destroyRangeSq: number,
+  viewerId = player.id,
 ): boolean {
-  if (!entity || !entityViewIsAdmitted(entity, questLog, questObjectHidden)) return true;
+  if (!entity || !entityViewIsAdmitted(entity, questLog, questObjectHidden, viewerId)) return true;
   return (
     !isPersistentPortalObject(entity) &&
     entity.id !== player.id &&

@@ -11,7 +11,7 @@
 import { DUNGEON_X_THRESHOLD, PORTALS } from './data';
 import { MIR4_GAME_PROFILE } from './game_profile';
 import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
-import { MIR4_ARC_PORTALS } from './mir4/travel';
+import { mir4ArcPortalsForWorld } from './mir4/travel';
 import { cancelProfessionSessionOnDisplacement } from './professions/session_teardown';
 import type { SimContext } from './sim_context';
 import type { Entity, PortalSide } from './types';
@@ -52,7 +52,8 @@ function teleport(ctx: SimContext, p: Entity, to: PortalSide, text: string): voi
 export function updatePortalTriggers(ctx: SimContext, p: Entity): void {
   if (p.kind !== 'player') return;
   if (p.pos.x > DUNGEON_X_THRESHOLD) return; // instances have their own exits
-  const portals = ctx.gameProfile === MIR4_GAME_PROFILE ? MIR4_ARC_PORTALS : PORTALS;
+  const portals =
+    ctx.gameProfile === MIR4_GAME_PROFILE ? mir4ArcPortalsForWorld(ctx.worldContent) : PORTALS;
   for (const portal of portals) {
     const radius = portal.radius > 0 ? portal.radius : PORTAL_TRIGGER_RADIUS;
     if (dist2dTo(p, portal.a) < radius) {

@@ -78,6 +78,13 @@ export const MIR4_ENHANCEMENT_SUCCESS_BPS: Readonly<Record<number, number>> = {
   15: 10_000,
 };
 
+const MIR4_FIRST_PLUS_SIX_GUARANTEE = 'tutorial-first-plus-six';
+
+function mir4TutorialEnhancementGuaranteeId(target: number): string | null {
+  if (target === 6) return MIR4_FIRST_PLUS_SIX_GUARANTEE;
+  return target >= 7 && target <= 10 ? `tutorial-guided-plus-${target}` : null;
+}
+
 /** Cumulative stat bonus percent per enhancement level (index = level). */
 export const MIR4_ENHANCEMENT_CUMULATIVE_PERCENT: readonly number[] = [
   0, 3, 6, 9, 12, 15, 19, 23, 27, 31, 36, 41, 46, 51, 56, 61,
@@ -198,8 +205,35 @@ export function mir4EquipItem(ctx: SimContext, pid: number, itemId: number): str
   if (!mir4OwnsEquipmentItem(meta, itemId)) return 'Unknown item.';
   if (def.classId !== p.mir4?.classId) return 'Your class cannot use this.';
   if (p.level < def.requiredLevel) return 'Your level is too low.';
+  const nextInstance = instanceFor(meta, itemId);
+  const inheritedSources = Object.values(meta.mir4EquipmentInstances ?? {})
+    .filter((instance) => {
+      if (instance.destroyed) return false;
+      const source = mir4EquipmentDefinition(instance.itemId);
+      return source?.classId === def.classId && source.equipSlot === def.equipSlot;
+    })
+    .sort((left, right) => right.enhancement - left.enhancement || left.itemId - right.itemId);
+  nextInstance.enhancement = Math.max(
+    nextInstance.enhancement,
+    ...inheritedSources.map((instance) => instance.enhancement),
+  );
+  const inheritedEnchantment =
+    nextInstance.affixes?.enchantment ??
+    inheritedSources.find((instance) => instance.affixes?.enchantment)?.affixes?.enchantment;
+  const inheritedBlessing =
+    nextInstance.affixes?.blessing ??
+    inheritedSources.find((instance) => instance.affixes?.blessing)?.affixes?.blessing;
+  if (inheritedEnchantment || inheritedBlessing) {
+    nextInstance.affixes = {
+      ...(inheritedEnchantment
+        ? { enchantment: inheritedEnchantment.map((affix) => [...affix] as const) }
+        : {}),
+      ...(inheritedBlessing
+        ? { blessing: inheritedBlessing.map((affix) => [...affix] as const) }
+        : {}),
+    };
+  }
   meta.mir4Equipment = { ...meta.mir4Equipment, [def.equipSlot]: itemId };
-  instanceFor(meta, itemId);
   markMir4WireDirty(meta);
   recalcFor(ctx, pid);
   creditMir4ArcTutorialReceipt(meta, { kind: 'equip-item' });
@@ -241,7 +275,15 @@ export function mir4Enhance(ctx: SimContext, pid: number, itemId: number): Mir4E
   markMir4WireDirty(meta);
   const target = inst.enhancement + 1;
   const chanceBps = MIR4_ENHANCEMENT_SUCCESS_BPS[target] ?? 100_000;
-  const roll = Math.floor(ctx.rng.next() * 100_000);
+  const guarantees = meta.mir4ArcRewards?.guarantees;
+  const guaranteeId = mir4TutorialEnhancementGuaranteeId(target);
+  const guaranteedUses = guaranteeId ? (guarantees?.[guaranteeId] ?? 0) : 0;
+  const guaranteed = guaranteedUses > 0;
+  if (guaranteed && guarantees && guaranteeId) {
+    if (guaranteedUses <= 1) delete guarantees[guaranteeId];
+    else guarantees[guaranteeId] = guaranteedUses - 1;
+  }
+  const roll = guaranteed ? -1 : Math.floor(ctx.rng.next() * 100_000);
   if (roll < chanceBps) {
     inst.enhancement = target;
     if (isEquipped(meta, itemId)) recalcFor(ctx, pid);

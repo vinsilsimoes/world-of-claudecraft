@@ -41,7 +41,7 @@
 // ZoneDef.trashRespawnSeconds remains the per-zone escape hatch. If a specific
 // zone ever needs its own cadence, set it there rather than reintroducing bands.
 
-import { zoneContaining } from './data';
+import { STRIP_MAX_X, STRIP_MIN_X, zoneContaining } from './data';
 import type { ZoneDef } from './types';
 
 /**
@@ -64,6 +64,16 @@ export const TRASH_RESPAWN_SECONDS = 60;
  * historical flat delay.
  */
 export const DEFAULT_RESPAWN_SECONDS = 25;
+
+function zoneContainingFrom(zones: readonly ZoneDef[], x: number, z: number): ZoneDef | null {
+  for (const zone of zones) {
+    if (z < zone.zMin || z >= zone.zMax) continue;
+    const x0 = zone.xMin ?? STRIP_MIN_X;
+    const x1 = zone.xMax ?? STRIP_MAX_X;
+    if (x >= x0 && x < x1) return zone;
+  }
+  return null;
+}
 
 /**
  * The trash respawn delay for one zone. Every authored zone takes the single
@@ -93,9 +103,11 @@ export function baseRespawnSecondsAt(
   x: number,
   z: number,
   cfgRespawnSeconds: number | undefined,
+  runtimeZones?: readonly ZoneDef[],
 ): number {
   if (cfgRespawnSeconds !== undefined) return cfgRespawnSeconds;
-  return trashRespawnSecondsForZone(zoneContaining(x, z));
+  const zone = runtimeZones ? zoneContainingFrom(runtimeZones, x, z) : zoneContaining(x, z);
+  return trashRespawnSecondsForZone(zone);
 }
 
 /**
@@ -187,11 +199,12 @@ export function resolveRespawnSeconds(
   spawnPos: { x: number; z: number },
   cfgRespawnSeconds: number | undefined,
   roll: RespawnRoll | null,
+  runtimeZones?: readonly ZoneDef[],
 ): number {
   if (template?.respawnSeconds !== undefined) return template.respawnSeconds;
   const base = isSelfScheduled(template)
     ? (cfgRespawnSeconds ?? LEGACY_RESPAWN_SECONDS)
-    : baseRespawnSecondsAt(spawnPos.x, spawnPos.z, cfgRespawnSeconds);
+    : baseRespawnSecondsAt(spawnPos.x, spawnPos.z, cfgRespawnSeconds, runtimeZones);
   // Not named `window`: src/sim must stay free of DOM globals, and
   // tests/architecture.test.ts scans for the identifier.
   const span = template?.respawnWindow;

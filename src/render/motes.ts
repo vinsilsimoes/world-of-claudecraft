@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { DUNGEON_X_THRESHOLD, WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } from '../sim/data';
 import type { BiomeId } from '../sim/types';
 import { isInSowfieldShell } from '../sim/vale_cup_layout';
-import { terrainHeight, WATER_LEVEL, zoneBiomeAt } from '../sim/world';
+import { biomeAt, terrainHeight, WATER_LEVEL } from '../sim/world';
 import { GFX } from './gfx';
 
 // ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ export function buildMotes(seed: number): MotesView {
     const z = pz + Math.sin(ang) * r;
     if (Math.abs(x) > WORLD_MAX_X - 8 || z < WORLD_MIN_Z + 8 || z > WORLD_MAX_Z - 8) return false;
     if (isInSowfieldShell(x, z)) return false; // no pollen drifting over the mown pitch
-    const biome = zoneBiomeAt(x, z);
+    const biome = biomeAt(x, z);
     if (MOTELESS_BIOMES.has(biome)) return false; // these realms drift no motes
     const h = terrainHeight(x, z, seed);
     if (h < WATER_LEVEL + 0.5) return false; // no motes hovering over open water

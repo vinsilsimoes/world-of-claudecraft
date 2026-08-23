@@ -7,6 +7,7 @@ import {
   mir4ArcStageAnchor,
   mir4HandleArcBoardInteract,
   mir4HandleArcObjectiveInteract,
+  updateMir4ArcObjectiveEntities,
   updateMir4ArcQuestTravel,
 } from '../../src/sim/mir4/arc_quest_runtime';
 import { type Mir4ArcQuestProgress, mir4QuestCurrentStage } from '../../src/sim/mir4/arc_quests';
@@ -48,8 +49,13 @@ describe('MIR4 campaign profession and logistics stages', () => {
     const meta = sim.players.get(sim.playerId)!;
     meta.mir4ArcQuests = { 'M01-S01': progress };
     placeAtStage(sim, progress);
+    updateMir4ArcObjectiveEntities(sim.ctx);
 
     expect(mir4HandleArcObjectiveInteract(sim.ctx, sim.playerId)).toBe(true);
+    expect(meta.mir4ArcRewards?.items?.['material-pele-jovem']).toBeUndefined();
+    expect(sim.player.castingAbility).toBe('gathering');
+    sim.player.castRemaining = 0;
+    sim.tick();
     expect(meta.mir4ArcRewards?.items?.['material-pele-jovem']).toBe(1);
   });
 

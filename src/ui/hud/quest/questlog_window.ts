@@ -22,6 +22,7 @@ import type { IWorld } from '../../../world_api';
 import { markDialogRoot } from '../../dialog_root';
 import { itemDisplayName, tEntity } from '../../entity_i18n';
 import { esc } from '../../esc';
+import { captureFocusKey, restoreFirstEnabled } from '../../focus_restore';
 import { formatNumber, t } from '../../i18n';
 import { QUALITY_COLOR } from '../../icons';
 import {
@@ -32,12 +33,33 @@ import {
 } from '../../mir4_quest_i18n';
 import type { PainterHostPresentation } from '../../painter_host';
 import { svgIcon } from '../../ui_icons';
-import { buildMir4QuestLogView } from './mir4_questlog_view';
+import { buildMir4QuestLogView, type Mir4QuestLogView } from './mir4_questlog_view';
 import { buildQuestLogView, type QuestDetailModel } from './questlog_view';
 
 // The reward-name color comes from the shared QUALITY_COLOR map; this token covers
 // an unknown quality, so the painter carries no literal hex.
 const QUALITY_DEFAULT_COLOR = 'var(--color-quality-default)';
+
+function mir4QuestLogSignature(view: Mir4QuestLogView): string {
+  const item = view.item;
+  if (!item) return `${view.summary.active}|${view.summary.completed}|empty`;
+  return [
+    view.summary.active,
+    view.summary.completed,
+    item.questId,
+    item.ready,
+    item.objective.kind,
+    item.objective.stageKind ?? '',
+    item.objective.stageIndex ?? '',
+    item.objective.current,
+    item.objective.total,
+    item.xpReward,
+    item.copperReward,
+    item.autoJourneyActive,
+    item.autoJourneySuspended,
+    item.autoJourneyAvailable,
+  ].join('|');
+}
 
 /**
  * Hud-supplied glue. The quest log renders from IWorld + these callbacks plus the
@@ -71,6 +93,7 @@ export class QuestLogWindow {
   // source of truth and Hud reads it back, mirroring the inline window's field.
   private selected: string | null = null;
   private openerFocus: HTMLElement | null = null;
+  private lastMir4Signature = '';
 
   constructor(private readonly deps: QuestLogWindowDeps) {}
 
@@ -120,6 +143,26 @@ export class QuestLogWindow {
     if (restoreFocus) this.deps.restoreFocus(target);
   }
 
+  /** Repaint an open MIR4 log only when its authoritative projection changes. */
+  refreshIfChanged(): void {
+    if (!this.isOpen) return;
+    const world = this.deps.world();
+    if (world.cfg?.gameProfile !== MIR4_GAME_PROFILE) return;
+    const view = buildMir4QuestLogView(world.mir4PlayerState());
+    const signature = mir4QuestLogSignature(view);
+    if (signature === this.lastMir4Signature) return;
+
+    const el = this.deps.root();
+    const focusKey = captureFocusKey(el);
+    this.renderMir4(el, world, view, false);
+    if (focusKey === null) return;
+    const keyed = [...el.querySelectorAll<HTMLElement>('[data-focus-key]')];
+    restoreFirstEnabled([
+      keyed.find((candidate) => candidate.dataset.focusKey === focusKey),
+      keyed.find((candidate) => candidate.dataset.focusKey === 'close'),
+    ]);
+  }
+
   render(): void {
     const el = this.deps.root();
     const world = this.deps.world();
@@ -127,6 +170,7 @@ export class QuestLogWindow {
       this.renderMir4(el, world);
       return;
     }
+    this.lastMir4Signature = '';
     const quests = [...world.questLog.values()];
     const view = buildQuestLogView({
       quests,
@@ -189,8 +233,13 @@ export class QuestLogWindow {
     this.deps.focusFirstInteractive(el);
   }
 
-  private renderMir4(el: HTMLElement, world: IWorld): void {
-    const view = buildMir4QuestLogView(world.mir4PlayerState());
+  private renderMir4(
+    el: HTMLElement,
+    world: IWorld,
+    view = buildMir4QuestLogView(world.mir4PlayerState()),
+    focusFirst = true,
+  ): void {
+    this.lastMir4Signature = mir4QuestLogSignature(view);
     const item = view.item;
     this.selected = item?.questId ?? null;
     markDialogRoot(el, { labelledBy: 'quest-log-title' });
@@ -199,7 +248,7 @@ export class QuestLogWindow {
         active: this.questNumber(view.summary.active),
         completed: this.questNumber(view.summary.completed),
       }),
-    )}</span></span><button type="button" class="x-btn" data-close aria-label="${esc(t('questUi.log.close'))}">${svgIcon('close')}</button></div>`;
+    )}</span></span><button type="button" class="x-btn" data-close data-focus-key="close" aria-label="${esc(t('questUi.log.close'))}">${svgIcon('close')}</button></div>`;
     const cols = document.createElement('div');
     cols.className = 'ql-cols';
     const list = document.createElement('div');
@@ -224,6 +273,7 @@ export class QuestLogWindow {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'ql-item sel';
+      button.dataset.focusKey = 'quest-row';
       button.setAttribute('aria-pressed', 'true');
       button.setAttribute(
         'aria-label',
@@ -236,6 +286,7 @@ export class QuestLogWindow {
         questId: item.questId,
         kind: item.objective.kind,
         stageKind: item.objective.stageKind,
+        stageIndex: item.objective.stageIndex,
         ready: item.ready,
       });
       const paused = item.autoJourneySuspended
@@ -263,6 +314,7 @@ export class QuestLogWindow {
         const journey = document.createElement('button');
         journey.className = 'btn';
         journey.type = 'button';
+        journey.dataset.focusKey = 'auto-journey';
         journey.setAttribute('aria-pressed', item.autoJourneyActive ? 'true' : 'false');
         journey.textContent = t(
           item.autoJourneyActive
@@ -270,8 +322,8 @@ export class QuestLogWindow {
             : 'hudChrome.questTracker.mir4.startAutoJourney',
         );
         journey.addEventListener('click', () => {
-          world.setMir4AutoQuest(!world.mir4AutoQuestActive());
-          this.render();
+          world.setMir4AutoQuest(!item.autoJourneyActive, item.questId);
+          this.refreshIfChanged();
         });
         actions.appendChild(journey);
       }
@@ -279,7 +331,7 @@ export class QuestLogWindow {
     }
 
     el.querySelector('[data-close]')?.addEventListener('click', () => this.close());
-    this.deps.focusFirstInteractive(el);
+    if (focusFirst) this.deps.focusFirstInteractive(el);
   }
 
   private renderDetail(detail: HTMLElement, d: QuestDetailModel, playerName: string): void {
@@ -341,11 +393,21 @@ export class QuestLogWindow {
   }
 
   private questNarrative(questId: string, playerName: string): string {
-    return tEntity({ kind: 'quest', id: questId, field: 'text', values: { playerName } });
+    return tEntity({
+      kind: 'quest',
+      id: questId,
+      field: 'text',
+      values: { playerName },
+    });
   }
 
   private questObjectiveLabel(questId: string, objectiveIndex: number): string {
-    return tEntity({ kind: 'questObjective', questId, objectiveIndex, field: 'label' });
+    return tEntity({
+      kind: 'questObjective',
+      questId,
+      objectiveIndex,
+      field: 'label',
+    });
   }
 
   private npcDisplayName(npcId: string): string {

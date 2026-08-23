@@ -162,6 +162,29 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     expect(root.querySelectorAll('[aria-disabled="true"]')).toHaveLength(6);
   });
 
+  it('equips a campaign reward from #bags before an equipment instance exists', () => {
+    const { world, state, mir4EquipItem } = harness();
+    state.mir4Equipment = {};
+    state.mir4EquipmentInstances = undefined;
+    state.mir4ArcRewards = { items: { '991010101': 1 } };
+    const root = document.createElement('section');
+
+    paintMir4InventoryWindow({
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterEquipmentChange: vi.fn(),
+    });
+
+    const reward = root.querySelector<HTMLButtonElement>('[data-focus-key="mir4-item:991010101"]');
+    expect(reward).not.toBeNull();
+    expect(reward?.getAttribute('aria-label')).toContain('Equip');
+    reward?.click();
+    expect(mir4EquipItem).toHaveBeenCalledWith(991010101);
+  });
+
   it('describes live MIR4 attributes but uses the WoC visual item name', () => {
     const def = mir4EquipmentItem(991010101);
     expect(def).not.toBeNull();
@@ -325,8 +348,15 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
       ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-mount:meadow-courser',
     )?.[1] as (() => string) | undefined;
     expect(mountTooltip?.()).toContain('Native World of ClaudeCraft model with MIR4 Mount stats');
-    expect(mountTooltip?.()).toContain('Movement Speed: +4%');
+    expect(mountTooltip?.()).toContain('Movement Speed: +10%');
+    expect(mountTooltip?.()).toContain('Basic Attack Speed: +5%');
     expect(mountTooltip?.()).toContain('Physical Defense: +4 · Magic Defense: +4');
+    const pendingMountTooltip = presentation.attachTooltip.mock.calls.find(
+      ([element]) =>
+        (element as HTMLElement).dataset.focusKey === 'mir4-mount-pending:mount-pending-1-1',
+    )?.[1] as (() => string) | undefined;
+    expect(pendingMountTooltip?.()).toContain('Movement Speed: +25%');
+    expect(pendingMountTooltip?.()).toContain('Basic Attack Speed: +20%');
     const combineTooltip = presentation.attachTooltip.mock.calls.find(
       ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-mount-combine:1',
     )?.[1] as (() => string) | undefined;

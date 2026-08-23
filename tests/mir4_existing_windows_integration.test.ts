@@ -222,7 +222,65 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
     expect(root.style.display).toBe('block');
     expect(root.querySelector('.ql-item')?.textContent).toContain('First Traces');
     root.querySelector<HTMLButtonElement>('.ql-detail-actions .btn')?.click();
-    expect(commands.setMir4AutoQuest).toHaveBeenCalledWith(true);
+    expect(commands.setMir4AutoQuest).toHaveBeenCalledWith(true, 'mir4_m01_q01');
+  });
+
+  it('repaints an open MIR4 quest log only after the authoritative auto-journey echo', () => {
+    const state: Mir4PlayerUiState = {
+      classId: 1,
+      ultimateGauge: 0,
+      mir4Quests: {
+        mir4_m01_q01: { state: 'active', inspected: [0] },
+      },
+    };
+    const { world, commands } = makeWorld(state);
+    const root = document.createElement('section');
+    root.id = 'quest-log';
+    document.body.appendChild(root);
+    const window = new QuestLogWindow({
+      ...presentation,
+      root: () => root,
+      world: () => world,
+      closeOthers: vi.fn(),
+      captureFocus: () => null,
+      restoreFocus: vi.fn(),
+      hideTooltip: vi.fn(),
+      focusFirstInteractive: vi.fn(),
+      confirmDialog: vi.fn(),
+      insertQuestChatLink: vi.fn(),
+    });
+    window.toggle();
+
+    const start = root.querySelector<HTMLButtonElement>('.ql-detail-actions .btn');
+    expect(start?.textContent).toContain('Start auto journey');
+    expect(start?.getAttribute('aria-pressed')).toBe('false');
+    start?.focus();
+    start?.click();
+
+    expect(commands.setMir4AutoQuest).toHaveBeenCalledWith(true, 'mir4_m01_q01');
+    expect(root.querySelector('.ql-detail-actions .btn')?.textContent).toContain(
+      'Start auto journey',
+    );
+    expect(root.querySelector('.ql-detail-actions .btn')?.getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+
+    state.mir4AutoQuest = {
+      questId: 'mir4_m01_q01',
+      phase: 'to-site',
+      siteIndex: 0,
+      suspended: false,
+      battleOwned: false,
+    };
+    window.refreshIfChanged();
+
+    const stop = root.querySelector<HTMLButtonElement>('.ql-detail-actions .btn');
+    expect(stop?.textContent).toContain('Stop auto journey');
+    expect(stop?.getAttribute('aria-pressed')).toBe('true');
+    expect(document.activeElement).toBe(stop);
+
+    window.refreshIfChanged();
+    expect(root.querySelector('.ql-detail-actions .btn')).toBe(stop);
   });
 
   it('routes the existing SpellbookWindow skill controls to the MIR4 facet and shared action bar', () => {

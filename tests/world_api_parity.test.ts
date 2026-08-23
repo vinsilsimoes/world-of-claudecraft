@@ -456,6 +456,8 @@ export const IWORLD_MEMBERS = [
   { name: 'setMir4AutoQuest', kind: 'method' },
   { name: 'mir4QuestStatusText', kind: 'method' },
   { name: 'mir4QuestTrackerEntries', kind: 'method' },
+  { name: 'mir4AcknowledgeTutorial', kind: 'method' },
+  { name: 'mir4SkipNarrativeDialogue', kind: 'method' },
   { name: 'mir4CastSkill', kind: 'method' },
   { name: 'mir4UpgradeSkill', kind: 'method' },
   { name: 'mir4ClaimAchievement', kind: 'method' },
@@ -637,9 +639,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(350);
+    expect(IWORLD_MEMBERS.length).toBe(352);
     expect(DATA_MEMBERS.length).toBe(86);
-    expect(METHOD_MEMBERS.length).toBe(264);
+    expect(METHOD_MEMBERS.length).toBe(266);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -837,6 +839,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'mir4AcknowledgeTutorial',
       'mir4AutoBattleActive',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
@@ -859,6 +862,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4RedeemTicket',
       'mir4ResolveItemLayer',
       'mir4RollItemLayer',
+      'mir4SkipNarrativeDialogue',
       'mir4UnequipSlot',
       'mir4UnequipWeapon',
       'mir4UpgradeSkill',
@@ -1228,6 +1232,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'mir4AcknowledgeTutorial',
       'mir4AutoBattleActive',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
@@ -1250,6 +1255,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4RedeemTicket',
       'mir4ResolveItemLayer',
       'mir4RollItemLayer',
+      'mir4SkipNarrativeDialogue',
       'mir4UnequipSlot',
       'mir4UnequipWeapon',
       'mir4UpgradeSkill',
@@ -1902,6 +1908,8 @@ type _ExhaustActionBar = AssertNever<
 >;
 
 const FACET_MIR4 = [
+  'mir4AcknowledgeTutorial',
+  'mir4SkipNarrativeDialogue',
   'mir4AutoBattleActive',
   'mir4AutoQuestActive',
   'mir4BasicAttack',
@@ -2002,8 +2010,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(350);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(350);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(352);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(352);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

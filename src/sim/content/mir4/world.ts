@@ -22,7 +22,10 @@ export const MIR4_SLICE_WORLD: WorldContent = {
       id: MIR4_VILA_DO_VAU_ZONE_ID,
       name: 'Vila do Vau',
       zMin: -40,
-      zMax: 24,
+      // Leave a real playfield apron north of the tutorial clearings. The
+      // physical custom-world ridge starts inside zMax, so ending at 24 put
+      // the wolf camp and its manual-control test position on the cliff face.
+      zMax: 48,
       levelRange: [1, 2],
       biome: 'vale',
       hub: { x: 0, z: -12, radius: 14, name: 'Vila do Vau' },

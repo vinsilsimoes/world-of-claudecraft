@@ -4,6 +4,8 @@
 // entity that did not change at all.
 
 const DELTA_SELF_KEYS = [
+  'xp',
+  'copper',
   'inv',
   'equip',
   'qlog',

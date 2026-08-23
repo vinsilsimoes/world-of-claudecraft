@@ -103,6 +103,7 @@ import {
 } from './rift_escape_window';
 import { rallyFleeingAllies } from './social_aggro';
 import { isTrivialTo, retargetMob, tickForcedTarget } from './targeting';
+import { resolveMobTemplate } from './template';
 import { emitMobYell } from './yells';
 
 // This module ENFORCES the aggro ceiling and the wander ring; the numbers themselves live
@@ -427,11 +428,10 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
         if (detected) ctx.aggroMob(mob, detected, true);
         return;
       }
-      const template = MOBS[mob.templateId];
-      // A mob with no classic template (the mir4 profile's ported mobs) never
-      // proximity-aggroes: it is passive until attacked, exactly like the
-      // source project's tutorial-zone spawn rule. Threat-based retaliation
-      // still reaches it through the targeting update.
+      const template = resolveMobTemplate(mob.templateId, ctx.mir4RuntimeMobTemplates);
+      // Unknown or deliberately non-combat entities stay passive. Generated
+      // MIR4 campaign mobs resolve through their map-scoped catalog and use
+      // the authored regional aggression radius here.
       if (!template) return;
       let detected: Entity | null = null;
       let detectedD = Infinity;
@@ -440,7 +440,7 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
       ctx.playerGrid.forEachInRadius(mob.pos.x, mob.pos.z, MAX_AGGRO_RADIUS, (e, d2) => {
         counters.aggroScanPlayerVisits++;
         if (e.dead) return;
-        if (isTrivialTo(mob, e)) return;
+        if (isTrivialTo(mob, e, ctx.mir4RuntimeMobTemplates)) return;
         let radius = Math.max(
           4,
           Math.min(MAX_AGGRO_RADIUS, template.aggroRadius + (mob.level - e.level) * 1.5),

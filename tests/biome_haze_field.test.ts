@@ -11,6 +11,7 @@
 //      terrain and the far vista tiles agree at the detail-horizon handoff
 //      instead of drawing a ring there.
 
+import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -210,6 +211,18 @@ describe('field installation', () => {
     const first = biomeHazeUniforms().uHazeField.value;
     ensureBiomeHazeField(presetTable());
     expect(biomeHazeUniforms().uHazeField.value).toBe(first);
+  });
+
+  it('installs custom-world bounds and keeps the renderer wiring explicit', () => {
+    const bounds = { minX: 2330, maxX: 5060, minZ: -180, maxZ: 430 };
+    ensureBiomeHazeField(presetTable(), bounds);
+    expect(biomeHazeFieldLayout()).toEqual(hazeFieldLayout(bounds));
+
+    const renderer = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
+    expect(renderer).toContain("hazeWorldBounds } from './biome_haze_field_core'");
+    expect(renderer).toContain(
+      'ensureBiomeHazeField(hazePresets, hazeWorldBounds(this.sim.cfg.world?.zones))',
+    );
   });
 });
 

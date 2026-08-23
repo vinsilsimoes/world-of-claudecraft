@@ -93,6 +93,28 @@ function interact(r: ReturnType<typeof rig>) {
 }
 
 describe('tryNearbyInteraction', () => {
+  it("ignores another player's overlapping physical MIR4 objective", () => {
+    const foreign = entity({
+      id: 2,
+      kind: 'object',
+      templateId: 'mir4_objective_9_m01-q01_2_0_2',
+      ownerId: 9,
+      lootable: true,
+    });
+    const owned = entity({
+      id: 3,
+      kind: 'object',
+      templateId: 'mir4_objective_1_m01-q01_2_0_3',
+      ownerId: 1,
+      lootable: true,
+    });
+    const r = rig([foreign, owned]);
+
+    expect(interact(r)).toBe(true);
+    expect(r.calls).toContain('pickup:3');
+    expect(r.calls).not.toContain('pickup:2');
+  });
+
   it('dispatches the nearest visible corpse loot', () => {
     const fartherCorpse = entity({
       id: 2,

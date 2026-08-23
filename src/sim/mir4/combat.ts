@@ -29,6 +29,7 @@ import { dist2d } from '../types';
 import { refreshMir4KnownAbilities } from './action_abilities';
 import {
   applyMir4Effect,
+  mir4AoEHostileTargets,
   mir4AoESecondaryTargets,
   mir4AttackMultiplier,
   mir4DamageTakenAddend,
@@ -54,6 +55,13 @@ import {
 } from './stats';
 
 const BASIC_ATTACK_COOLDOWN_KEY = 'mir4_basic';
+
+export function mir4BasicAttackCadenceSeconds(
+  authoredCadenceMs: number,
+  attackSpeedBps: number,
+): number {
+  return authoredCadenceMs / 1000 / (1 + Math.max(0, attackSpeedBps) / 10_000);
+}
 
 function mir4AttackerStats(p: Entity): Partial<Mir4CombatStats> {
   const s = p.mir4;
@@ -103,7 +111,7 @@ function classRangeYards(p: Entity): number {
   return def ? mir4ClassRangeYards(def) : 4;
 }
 
-function resolveLivingMobTarget(
+function resolveLivingHostileTarget(
   ctx: SimContext,
   pid: number,
   targetId: number | undefined,
@@ -111,7 +119,7 @@ function resolveLivingMobTarget(
   const p = ctx.entities.get(pid);
   if (!p || p.dead) return null;
   const target = targetId !== undefined ? ctx.entities.get(targetId) : null;
-  if (!target || target.kind !== 'mob' || target.dead) return null;
+  if (!target || target.dead || !ctx.isHostileTo(p, target)) return null;
   return target;
 }
 
@@ -149,15 +157,25 @@ export function castMir4Skill(
   if (skill.unlock.kind === 'level' && p.level < skill.unlock.level) {
     return { ok: false, reason: 'not-unlocked' };
   }
-  // Self utilities (2503 shield, 3503 heal) need no target; everything else
-  // does. The utility readiness rules mirror the source's applyActorUtility:
-  // a shield refuses while one is up, a heal refuses at full health.
+  // Self utilities need no target. Catalog rows that explicitly carry a
+  // targetless area resolve around the actor and choose visible enemies
+  // deterministically; other offensive rows still require a live target.
   const isSelfUtility =
     skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
+  const areaRadiusYards = (skill.effect?.areaRadiusPx ?? 0) / 16;
+  const isActorCenteredAoE = !skill.requiresTarget && areaRadiusYards > 0 && !isSelfUtility;
+  const maxSecondaryTargets = skill.effect?.maxSecondaryTargets ?? 0;
+  const actorCenteredTargets = isActorCenteredAoE
+    ? mir4AoEHostileTargets(ctx, p, p, areaRadiusYards, Math.max(1, maxSecondaryTargets + 1))
+    : [];
   const target = isSelfUtility
     ? null
-    : resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
-  if (!isSelfUtility && !target) return { ok: false, reason: 'no-target' };
+    : isActorCenteredAoE
+      ? (actorCenteredTargets[0] ?? null)
+      : resolveLivingHostileTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
+  if (!isSelfUtility && !isActorCenteredAoE && !target) {
+    return { ok: false, reason: 'no-target' };
+  }
   if (isSelfUtility) {
     if (skill.effect?.effect === 'magic-shield' && (p.mir4Shield?.remaining ?? 0) > 0) {
       return { ok: false, reason: 'utility-not-ready' };
@@ -167,7 +185,10 @@ export function castMir4Skill(
     }
   }
   const rangeYards = classRangeYards(p);
-  if (target && dist2d(p.pos, target.pos) > rangeYards) {
+  if (!isActorCenteredAoE && target && dist2d(p.pos, target.pos) > rangeYards) {
+    return { ok: false, reason: 'out-of-range' };
+  }
+  if (!isActorCenteredAoE && target && !ctx.hasLineOfSight(p, target)) {
     return { ok: false, reason: 'out-of-range' };
   }
   if (p.cooldowns.has(String(skillId))) return { ok: false, reason: 'on-cooldown' };
@@ -181,32 +202,38 @@ export function castMir4Skill(
   p.cooldowns.set(String(skillId), skill.cooldownMs / 1000);
   p.gcdRemaining = Math.max(p.gcdRemaining, MIR4_SKILL_GLOBAL_COOLDOWN_MS / 1000);
 
-  const channel = 'physical';
   // Skill level from the persisted per-skill state, fail-closed against the
   // frozen caps: an id without a cap entry (or past it) always resolves to 1.
   const meta = ctx.players.get(pid);
   const rawLevel = meta?.mir4SkillLevels?.[skillId] ?? 1;
   const cap = MIR4_SKILL_LEVEL_CAPS[classId ?? 0]?.[skillId] ?? 1;
   const skillLevel = Math.min(Math.max(1, Math.floor(rawLevel)), cap);
-  let anyImpactLanded = false;
+  const impactedTargets = new Set<number>();
   let totalRawDamage = 0;
   let spiritProcAttempted = false;
+  const areaSecondaries = target
+    ? isActorCenteredAoE
+      ? actorCenteredTargets.slice(1)
+      : areaRadiusYards > 0 && maxSecondaryTargets > 0
+        ? mir4AoESecondaryTargets(ctx, p, target, areaRadiusYards, maxSecondaryTargets)
+        : []
+    : [];
 
   // Authorial skills (the 7 source rebuilds) resolve through their policy:
   // hybrid sums the channels, impactCount is presentation-only cardinality.
   const policy = MIR4_AUTHORIAL_SKILL_POLICIES[skillId];
-  if (policy) {
+  if (policy && target) {
     const phys = Math.floor((p.attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
     const magic = Math.floor((p.spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
     totalRawDamage = mir4SkillDamageAfterBoost(Math.max(1, phys + magic), p.mir4?.skillDamageBps);
     const hitRoll = rollBps(ctx);
     const criticalRoll = rollBps(ctx);
-    const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, p, target!, {
-      rawDamage: Math.floor(totalRawDamage * (1 + mir4DamageTakenAddend(target!))),
+    const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, p, target, {
+      rawDamage: Math.floor(totalRawDamage * (1 + mir4DamageTakenAddend(target))),
       channel: 'physical',
       attacker: mir4AttackerStats(p),
-      defender: mir4DefenderStats(ctx, target!),
-      targetKind: mir4TargetKind(target!),
+      defender: mir4DefenderStats(ctx, target),
+      targetKind: mir4TargetKind(target),
       hitRoll,
       criticalRoll,
       allowSpiritProc: !spiritProcAttempted,
@@ -214,10 +241,10 @@ export function castMir4Skill(
     const resolved = spiritDamage.resolved;
     spiritProcAttempted ||= spiritDamage.attempted;
     if (resolved.hit) {
-      anyImpactLanded = true;
+      impactedTargets.add(target.id);
       ctx.dealDamage(
         p,
-        target!,
+        target,
         resolved.damage,
         resolved.critical,
         'physical',
@@ -229,6 +256,8 @@ export function castMir4Skill(
   }
 
   for (const component of skill.damage?.components ?? []) {
+    if (!target) break;
+    const componentTarget = target;
     const coefficient = component.coefficient + (skillLevel - 1) * component.levelUpCoefficient;
     // damageType 2 rides the magic channel (spellPower); 1 the physical one.
     const magic = component.damageType === 2;
@@ -247,15 +276,15 @@ export function castMir4Skill(
     for (let impact = 0; impact < impactCount; impact++) {
       // The source applies the target's damage-taken addend (defense-break +
       // burn magnitudes) to the raw damage BEFORE the resolve pipeline.
-      const rawWithTaken = Math.floor(perImpact * (1 + mir4DamageTakenAddend(target!)));
+      const rawWithTaken = Math.floor(perImpact * (1 + mir4DamageTakenAddend(componentTarget)));
       const hitRoll = rollBps(ctx);
       const criticalRoll = rollBps(ctx);
-      const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, p, target!, {
+      const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, p, componentTarget, {
         rawDamage: rawWithTaken,
         channel: componentChannel,
         attacker: mir4AttackerStats(p),
-        defender: mir4DefenderStats(ctx, target!),
-        targetKind: mir4TargetKind(target!),
+        defender: mir4DefenderStats(ctx, componentTarget),
+        targetKind: mir4TargetKind(componentTarget),
         hitRoll,
         criticalRoll,
         allowSpiritProc: !spiritProcAttempted,
@@ -263,10 +292,10 @@ export function castMir4Skill(
       const resolved = spiritDamage.resolved;
       spiritProcAttempted ||= spiritDamage.attempted;
       if (!resolved.hit) continue;
-      anyImpactLanded = true;
+      impactedTargets.add(componentTarget.id);
       ctx.dealDamage(
         p,
-        target!,
+        componentTarget,
         resolved.damage,
         resolved.critical,
         componentChannel,
@@ -274,24 +303,22 @@ export function castMir4Skill(
         'hit',
         true, // no rage: mir4 has no rage economy
       );
-      if (target!.dead) break;
+      if (componentTarget.dead) break;
     }
-    if (target!.dead) break;
+    if (componentTarget.dead) break;
   }
 
-  // The AoE secondaries: up to maxSecondaryTargets other mobs inside the
-  // effect radius each take the contract's secondary bps of the cast's total
-  // raw damage (soft-capped by target selection, so the full base lands).
-  const area = skill.effect?.areaRadiusPx;
-  if (area !== undefined && totalRawDamage > 0 && target) {
-    const maxTargets = skill.effect?.maxSecondaryTargets ?? 0;
+  // The visible hostile fan-out takes the contract's secondary bps of the
+  // primary raw damage. Actor-centered rows use the same ordered set that
+  // chose their primary, so selection, execution and RNG order cannot drift.
+  if (areaRadiusYards > 0 && totalRawDamage > 0 && target) {
     const bps = skill.effect?.secondaryDamageBasisPoints ?? 0;
-    if (maxTargets > 0 && bps > 0) {
-      const secondaries = mir4AoESecondaryTargets(ctx, target, area / 16, maxTargets);
+    if (maxSecondaryTargets > 0 && bps > 0) {
       const perSecondary = Math.floor(
-        (totalRawDamage * mir4SecondaryBps(bps, maxTargets, secondaries.length)) / 10_000,
+        (totalRawDamage * mir4SecondaryBps(bps, maxSecondaryTargets, areaSecondaries.length)) /
+          10_000,
       );
-      for (const secondary of secondaries) {
+      for (const secondary of areaSecondaries) {
         if (secondary.dead) continue;
         const resolved = mir4ResolveDamage({
           rawDamage: Math.floor(perSecondary * (1 + mir4DamageTakenAddend(secondary))),
@@ -303,6 +330,7 @@ export function castMir4Skill(
           criticalRoll: rollBps(ctx),
         });
         if (resolved.hit) {
+          impactedTargets.add(secondary.id);
           ctx.dealDamage(
             p,
             secondary,
@@ -346,20 +374,36 @@ export function castMir4Skill(
   }
 
   // Effect landing through the mir4 engine (dedup + 750ms immunity tail + the
-  // classic stun/slow aura mirror). 4106-style stuns roll their PvE chance
-  // (base + stunSuccess - stunResistance; mob resistance is 0 until 3.7).
+  // classic stun/slow aura mirror). Area rows land per affected entity whose
+  // damage connected (or every entity for a control-only area). A PvP target
+  // uses the authored PvP base chance instead of the PvE branch.
   const effect = skill.effect;
   const controlOnlySkill = skill.damage === null && policy === undefined;
-  if ((anyImpactLanded || controlOnlySkill) && effect && target && !target.dead) {
+  if (effect && target) {
     const kind = mir4EffectKindOf(effect.effect);
     if (kind) {
-      let lands = true;
-      if (kind === 'stun' && effect.pveChanceBasisPoints !== undefined) {
-        const chance = mir4StunChanceBps(effect.pveChanceBasisPoints, 0, 0);
-        lands = rollBps(ctx) < chance;
-      }
-      if (lands) {
-        applyMir4Effect(ctx, target, {
+      const effectTargets = areaRadiusYards > 0 ? [target, ...areaSecondaries] : [target];
+      for (const effectTarget of effectTargets) {
+        if (
+          effectTarget.dead ||
+          !ctx.isHostileTo(p, effectTarget) ||
+          (!controlOnlySkill && !impactedTargets.has(effectTarget.id))
+        ) {
+          continue;
+        }
+        let lands = true;
+        if (kind === 'stun') {
+          const baseChance =
+            effectTarget.kind === 'player'
+              ? effect.pvpChanceBasisPoints
+              : effect.pveChanceBasisPoints;
+          if (baseChance !== undefined) {
+            const chance = mir4StunChanceBps(baseChance, 0, 0);
+            lands = rollBps(ctx) < chance;
+          }
+        }
+        if (!lands) continue;
+        applyMir4Effect(ctx, effectTarget, {
           effectId: `mir4_${skillId}_${effect.effect}`,
           kind,
           durationSeconds: (effect.durationMs ?? 0) / 1000,
@@ -393,16 +437,20 @@ export function castMir4Skill(
 export function mir4BasicAttack(ctx: SimContext, pid: number, targetId?: number): Mir4CastResult {
   const p = ctx.entities.get(pid);
   if (!p || p.dead) return { ok: false, reason: 'no-target' };
-  const target = resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
+  const target = resolveLivingHostileTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
   if (!target) return { ok: false, reason: 'no-target' };
   const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1]!;
   const rangeYards = Math.min(classRangeYards(p), spec.basic.rangePx / 16);
   if (dist2d(p.pos, target.pos) > rangeYards) {
     return { ok: false, reason: 'out-of-range' };
   }
+  if (!ctx.hasLineOfSight(p, target)) return { ok: false, reason: 'out-of-range' };
   if (p.cooldowns.has(BASIC_ATTACK_COOLDOWN_KEY)) return { ok: false, reason: 'on-cooldown' };
 
-  p.cooldowns.set(BASIC_ATTACK_COOLDOWN_KEY, spec.basic.cadenceMs / 1000);
+  p.cooldowns.set(
+    BASIC_ATTACK_COOLDOWN_KEY,
+    mir4BasicAttackCadenceSeconds(spec.basic.cadenceMs, p.mir4?.mountBasicAttackSpeedBps ?? 0),
+  );
   const attackPower = spec.basic.channel === 'magic' ? p.spellPower : p.attackPower;
   const damage = mir4CoefficientDamage(attackPower, spec.basic.coefficient);
   for (const [index, offsetMs] of spec.basic.impactOffsetMs.entries()) {
@@ -457,7 +505,7 @@ const ULTIMATE_COOLDOWN_KEY = 'mir4_ult';
 export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): Mir4CastResult {
   const p = ctx.entities.get(pid);
   if (!p || p.dead) return { ok: false, reason: 'no-target' };
-  const target = resolveLivingMobTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
+  const target = resolveLivingHostileTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
   if (!target) return { ok: false, reason: 'no-target' };
   const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1]!;
   if ((p.mir4UltGauge ?? 0) < spec.ultimate.requiredGauge) {
@@ -467,6 +515,7 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
   if (dist2d(p.pos, target.pos) > rangeYards) {
     return { ok: false, reason: 'out-of-range' };
   }
+  if (!ctx.hasLineOfSight(p, target)) return { ok: false, reason: 'out-of-range' };
   if (p.cooldowns.has(ULTIMATE_COOLDOWN_KEY)) return { ok: false, reason: 'on-cooldown' };
 
   p.mir4UltGauge = 0;
@@ -526,7 +575,19 @@ export function updateMir4PendingImpacts(ctx: SimContext): void {
     for (const impact of due) {
       const source = ctx.entities.get(impact.sourceId);
       const target = ctx.entities.get(impact.targetId);
-      if (!source || !target || target.dead || source.dead) continue;
+      // A delayed impact is admitted again at impact time. A duel can end
+      // during the authored windup, and no stale projectile may damage a
+      // player who is no longer hostile or consume deterministic RNG draws.
+      if (
+        !source ||
+        !target ||
+        target.dead ||
+        source.dead ||
+        !ctx.isHostileTo(source, target) ||
+        !ctx.hasLineOfSight(source, target)
+      ) {
+        continue;
+      }
       const raw = Math.floor(impact.rawDamage * (1 + mir4DamageTakenAddend(target)));
       const hitRoll = rollBps(ctx);
       const criticalRoll = rollBps(ctx);

@@ -41,7 +41,10 @@ describe('game-profile world selection', () => {
   });
 
   it('builds the requested MIR4 arc and makes the Sim registry agree with it', () => {
-    const world = activateWorldForGameProfile(MIR4_GAME_PROFILE, { mir4MapCount: 2 });
+    const world = activateWorldForGameProfile(MIR4_GAME_PROFILE, {
+      mir4MapCount: 2,
+      mir4WocMap: false,
+    });
 
     expect(world?.zones.map((zone) => zone.id)).toEqual([
       'mir4_m01-vila-do-vau',
@@ -50,19 +53,38 @@ describe('game-profile world selection', () => {
     expect(getActiveWorldContent()).toBe(world);
   });
 
+  it('activates the full MIR4 story transplant on the original WoC map by default', () => {
+    const world = activateWorldForGameProfile(MIR4_GAME_PROFILE, {
+      mir4MapCount: 4,
+      mir4WocMap: true,
+    });
+
+    expect(world?.zones).toBe(BUILTIN_WORLD.zones);
+    expect(world?.props.buildings).toBe(BUILTIN_WORLD.props.buildings);
+    expect(world?.props.decorProps?.slice(0, BUILTIN_WORLD.props.decorProps?.length)).toEqual(
+      BUILTIN_WORLD.props.decorProps,
+    );
+    expect(world?.mir4ArcMapProjections).toHaveLength(20);
+    expect(world?.mir4ArcMapProjections?.at(0)?.mapId).toBe('m01-vila-do-vau');
+    expect(world?.mir4ArcMapProjections?.at(-1)?.mapId).toBe('m20-bastilha-do-eclipse');
+    expect(getActiveWorldContent()).toBe(world);
+  });
+
   it('gives an explicit editor world precedence over profile defaults', () => {
     const editorWorld = { ...BUILTIN_WORLD, zones: [] } as WorldContent;
 
-    expect(activateWorldForGameProfile(MIR4_GAME_PROFILE, { explicitWorld: editorWorld })).toBe(
-      editorWorld,
-    );
+    expect(
+      activateWorldForGameProfile(MIR4_GAME_PROFILE, {
+        explicitWorld: editorWorld,
+      }),
+    ).toBe(editorWorld);
     expect(getActiveWorldContent()).toBe(editorWorld);
   });
 
   it('activates the same profile world at the online client host boundary', () => {
     const mir4 = constructClient(MIR4_GAME_PROFILE);
-    expect(getActiveWorldContent().zones).toHaveLength(20);
-    expect(getActiveWorldContent().zones[0]?.id).toBe('mir4_m01-vila-do-vau');
+    expect(getActiveWorldContent().zones).toBe(BUILTIN_WORLD.zones);
+    expect(getActiveWorldContent().mir4ArcMapProjections).toHaveLength(20);
     expect(mir4.cfg.world).toBe(getActiveWorldContent());
 
     const classic = constructClient('woc-classic');

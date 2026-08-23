@@ -7,9 +7,10 @@ import type { AssetPlacement } from './custom_map';
 import type { EditorEntity, EntityKind } from './model';
 import type { Camera, Vec2, Viewport } from './view';
 
-// 2D overlay colours per biome id, matching world.ts BIOME_BY_ID order
-// (0=vale, 1=marsh, 2=peaks, 3=beach, 4=desert, 5=volcano, 6=cave).
-const BIOME_PAINT_COLOR = [
+// 2D overlay colours per biome id, matching world.ts BIOME_BY_ID order.
+// Keep append-only: imported authored maps must never turn a newer biome into
+// invisible paint just because the editor palette lagged behind the runtime.
+export const BIOME_PAINT_COLOR = [
   'rgba(90,170,80,0.35)',
   'rgba(120,95,55,0.4)',
   'rgba(150,155,165,0.4)',
@@ -17,6 +18,16 @@ const BIOME_PAINT_COLOR = [
   'rgba(207,144,64,0.4)',
   'rgba(176,64,48,0.4)',
   'rgba(74,74,85,0.45)',
+  'rgba(122,91,134,0.42)',
+  'rgba(143,79,63,0.42)',
+  'rgba(144,169,196,0.42)',
+  'rgba(200,148,70,0.42)',
+  'rgba(85,122,92,0.42)',
+  'rgba(59,49,84,0.48)',
+  'rgba(83,99,92,0.48)',
+  'rgba(63,127,76,0.42)',
+  'rgba(121,168,92,0.4)',
+  'rgba(147,167,163,0.42)',
 ];
 
 type Roads = readonly (readonly Vec2[])[];

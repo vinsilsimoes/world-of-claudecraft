@@ -23,6 +23,7 @@ vi.mock('../../server/db', () => ({
 import { GameServer } from '../../server/game';
 import { Mir4SelfWireCache } from '../../server/mir4_host';
 import { mir4ArcQuest } from '../../src/sim/content/mir4/quests_arc';
+import { MIR4_WORLD_ARC } from '../../src/sim/content/mir4/world_arc';
 import { MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
 import { grantMir4ArcQuestRewards } from '../../src/sim/mir4/arc_rewards';
 import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
@@ -184,6 +185,17 @@ describe('MIR4 online authoritative snapshot', () => {
       siteIndex: 2,
       suspended: true,
     };
+    meta.mir4NarrativeDialogue = {
+      id: 'M01-Q02:advance:2:17',
+      questId: 'M01-Q02',
+      npcEntityId: 17,
+      npcTemplateId: 'mir4_npc_m01_tarek_duas_pontes',
+      action: 'advance',
+      beat: 'reveal',
+      startedAt: 100,
+      durationSeconds: 8,
+      completesAt: 108,
+    };
     meta.mir4ArcRewards = {
       items: { 'material-tecido': 2 },
       systems: ['mount-summon'],
@@ -216,6 +228,8 @@ describe('MIR4 online authoritative snapshot', () => {
     const first = lastSnap(fc.sent);
     expect(first.self.mir4).toMatchObject({
       classId: 2,
+      fullCampaignAvailable: true,
+      campaignMapIds: MIR4_WORLD_ARC.map((map) => map.mapId),
       ultimateGauge: 33,
       autoBattle: { mode: 'battle' },
       mir4SkillLevels: { 2101: 2 },
@@ -233,6 +247,11 @@ describe('MIR4 online authoritative snapshot', () => {
         phase: 'to-site',
         siteIndex: 2,
         suspended: true,
+      },
+      mir4NarrativeDialogue: {
+        id: 'M01-Q02:advance:2:17',
+        npcEntityId: 17,
+        durationSeconds: 8,
       },
       mir4ArcRewards: {
         items: { 'material-tecido': 2 },
@@ -286,6 +305,13 @@ describe('MIR4 online authoritative snapshot', () => {
     broadcast(server);
     const second = lastSnap(fc.sent);
     expect(second.self).not.toHaveProperty('mir4');
+
+    meta.mir4NarrativeDialogue = undefined;
+    markMir4WireDirty(meta);
+    broadcast(server);
+    const dialogueCleared = lastSnap(fc.sent);
+    expect(dialogueCleared.self.mir4).toBeDefined();
+    expect(dialogueCleared.self.mir4).not.toHaveProperty('mir4NarrativeDialogue');
 
     expect(server.sim.mir4UpgradeSkill(2111, 1, joined.pid)).toMatchObject({
       ok: true,

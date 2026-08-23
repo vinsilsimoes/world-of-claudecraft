@@ -303,6 +303,10 @@ function mountTooltip(mount: Mir4MountView | Mir4PendingMountView): string {
       amount: formatNumber(mount.stats.moveSpeedBps / 100, { maximumFractionDigits: 2 }),
     }),
   )}</div><div>${esc(
+    t('hudChrome.mir4.mountBasicAttackSpeed', {
+      amount: formatNumber(mount.stats.basicAttackSpeedBps / 100, { maximumFractionDigits: 2 }),
+    }),
+  )}</div><div>${esc(
     t('hudChrome.mir4.mountDefenses', {
       physical: fmt(mount.stats.physicalDefense),
       magic: fmt(mount.stats.magicDefense),

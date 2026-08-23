@@ -31,6 +31,27 @@ afterEach(async () => {
 });
 
 describe('MIR4 terrain presentation', () => {
+  it('colors M03 near terrain from each painted district instead of its dusk zone alone', async () => {
+    vi.resetModules();
+    const [{ groundGrassColorAt }, { buildMir4ArcWorld }, { setActiveWorldContent }] =
+      await Promise.all([
+        import('../../src/render/terrain_chunk_build'),
+        import('../../src/sim/content/mir4/arc_world'),
+        import('../../src/sim/data'),
+      ]);
+    const world = buildMir4ArcWorld(3);
+    const terrainOnly = { ...world, biomePaint: undefined };
+    const colorAt = (x: number, z: number) =>
+      groundGrassColorAt(x, z, 171, new THREE.Color()).toArray();
+
+    setActiveWorldContent(world);
+    const paintedRefuge = colorAt(4425, 215);
+    const paintedGorge = colorAt(4980, 35);
+    setActiveWorldContent(terrainOnly);
+    expect(paintedRefuge).not.toEqual(colorAt(4425, 215));
+    expect(paintedGorge).not.toEqual(colorAt(4980, 35));
+  });
+
   it('streams geometry for the final map instead of stopping at the WoC atlas boundary', async () => {
     vi.useFakeTimers();
     vi.resetModules();
@@ -40,7 +61,7 @@ describe('MIR4 terrain presentation', () => {
       import('../../src/sim/content/mir4/arc_world'),
       import('../../src/sim/data'),
     ]);
-    const world = buildMir4ArcWorld();
+    const world = buildMir4ArcWorld(20);
     setActiveWorldContent(world);
     const last = world.zones.at(-1);
     if (!last) throw new Error('missing final MIR4 zone');

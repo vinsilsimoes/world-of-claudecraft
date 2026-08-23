@@ -16,6 +16,16 @@ describe('multiplayer integration snapshot reconstruction', () => {
     });
   });
 
+  it('retains delta-guarded progression scalars until the server changes them', () => {
+    const first = mergeSelfSnapshot(null, { id: 7, hp: 100, xp: 1432, copper: 200 });
+
+    expect(mergeSelfSnapshot(first, { id: 7, hp: 95 })).toMatchObject({
+      hp: 95,
+      xp: 1432,
+      copper: 200,
+    });
+  });
+
   it('retains unchanged entity identity through lite and keep records', () => {
     const initial = mergeEntitySnapshot(new Map(), {
       ents: [{ id: 8, k: 'player', tid: 'warrior', nm: 'Elyra', lv: 1, x: 1, z: 2 }],

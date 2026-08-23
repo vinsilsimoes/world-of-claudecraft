@@ -22,6 +22,7 @@ const FAMILIES: Record<string, FamilySpec> = {
   moss_skeleton: { family: 'undead', names: ['Esqueleto de Musgo'] },
   briar_guard: { family: 'humanoid', names: ['Guarda de Espinhos'] },
   dire_wolf: { family: 'beast', names: ['Lobo Sinistro'] },
+  owlbear_cub: { family: 'beast', names: ['Filhote de Urso-Coruja'] },
   crypt_rat: { family: 'beast', names: ['Rato da Cripta'] },
   grave_crawler: { family: 'undead', names: ['Rastejante de Tumba'] },
   skeleton_spearman: { family: 'undead', names: ['Lanceiro Esqueleto'] },
@@ -76,7 +77,10 @@ export function buildMir4ArcMobs(
   const hi = mir4MobStats(levelMax);
   const xp = mir4ArcNormalXp(sequence);
   for (const mobId of mobIds) {
-    const spec = FAMILIES[mobId] ?? { family: 'beast' as const, names: [mobId] };
+    const spec = FAMILIES[mobId] ?? {
+      family: 'beast' as const,
+      names: [mobId],
+    };
     const nameIdx = out ? Object.keys(out).length : 0;
     const name = spec.names[nameIdx % spec.names.length] ?? mobId;
     out[`mir4_${mobId}`] = {
@@ -95,7 +99,9 @@ export function buildMir4ArcMobs(
       attackSpeed: 2,
       armorPerLevel: 0,
       moveSpeed: 3.5,
-      aggroRadius: 8,
+      // Regional danger rises with progression. The hub and arrival pads are
+      // protected by placement, not by making every creature passive.
+      aggroRadius: Math.min(16, 9 + Math.floor((sequence - 1) / 3)),
       mir4XpReward: xp,
       loot: [{ copper: 2 + sequence, chance: 1 }],
       scale: 1,

@@ -39,7 +39,28 @@ function harness(
     },
     querySelector: (selector: string) => (selector === '.qt-header' ? header : null),
   } as unknown as HTMLElement;
-  const document = { activeElement: header } as unknown as Document;
+  const launchers = new Map<
+    string,
+    {
+      click: ReturnType<typeof vi.fn>;
+      classList: {
+        add: ReturnType<typeof vi.fn>;
+        remove: ReturnType<typeof vi.fn>;
+      };
+      dataset: Record<string, string>;
+    }
+  >();
+  for (const id of ['mm-crafting', 'crafting-window']) {
+    launchers.set(id, {
+      click: vi.fn(),
+      classList: { add: vi.fn(), remove: vi.fn() },
+      dataset: {},
+    });
+  }
+  const document = {
+    activeElement: header,
+    getElementById: (id: string) => launchers.get(id) ?? null,
+  } as unknown as Document;
   const settings = {
     available: vi.fn(() => true),
     collapsed: vi.fn(() => collapsed),
@@ -48,6 +69,11 @@ function harness(
     }),
   };
   const click = vi.fn();
+  const openQuest = vi.fn();
+  const acknowledgeTutorial = vi.fn();
+  const setMir4AutoQuest = vi.fn((on: boolean) => {
+    autoQuestActive = on;
+  });
   const controller = new QuestTrackerController({
     element,
     document,
@@ -56,18 +82,23 @@ function harness(
         questLog,
         cfg: { seed: 1, playerClass: 'warrior', gameProfile },
         mir4QuestTrackerEntries: () => mir4Entries,
+        mir4AcknowledgeTutorial: acknowledgeTutorial,
         mir4AutoQuestActive: () => autoQuestActive,
-        setMir4AutoQuest: (on: boolean) => {
-          autoQuestActive = on;
-        },
+        setMir4AutoQuest,
       }) as Pick<
         IWorld,
-        'cfg' | 'mir4AutoQuestActive' | 'mir4QuestTrackerEntries' | 'questLog' | 'setMir4AutoQuest'
+        | 'cfg'
+        | 'mir4AcknowledgeTutorial'
+        | 'mir4AutoQuestActive'
+        | 'mir4QuestTrackerEntries'
+        | 'questLog'
+        | 'setMir4AutoQuest'
       >,
     settings,
     questTitle: (questId) => `title:${questId}`,
     objectiveLabel: (questId, index) => `objective:${questId}:${index}`,
-    openQuest: vi.fn(),
+    openQuest,
+    shortcut: (action) => (action === 'crafting' ? 'T' : action),
     click,
   });
   return {
@@ -75,6 +106,9 @@ function harness(
     questLog,
     settings,
     click,
+    acknowledgeTutorial,
+    setMir4AutoQuest,
+    openQuest,
     header,
     html: () => html,
     writes: () => writes,
@@ -82,6 +116,7 @@ function harness(
       collapsed = next;
     },
     collapsed: () => collapsed,
+    launcher: (id: string) => launchers.get(id),
   };
 }
 
@@ -111,11 +146,19 @@ describe('QuestTrackerController', () => {
     // objectives, and the KNOWN quest behind it keeps number 3.
     // Built by hand: the progress() helper derives counts from QUESTS, which
     // is exactly what an unknown id cannot do (the wire sends counts as-is).
-    const ghost = { questId: 'q_ghost_of_v33', state: 'active' as const, counts: [0] };
+    const ghost = {
+      questId: 'q_ghost_of_v33',
+      state: 'active' as const,
+      counts: [0],
+    };
     // The prototype-key arm: QUESTS is a prototype-bearing Record, so a bare
     // truthiness read resolves 'constructor' to a FUNCTION and the objectives
     // deref throws; only the own-property gate renders it as unknown.
-    const proto = { questId: 'constructor', state: 'active' as const, counts: [0] };
+    const proto = {
+      questId: 'constructor',
+      state: 'active' as const,
+      counts: [0],
+    };
     const test = harness([progress('q_wolves'), ghost, proto, progress('q_boars', 'ready')]);
 
     test.controller.update();
@@ -164,6 +207,23 @@ describe('QuestTrackerController', () => {
     expect(test.header.focus).toHaveBeenCalledTimes(1);
   });
 
+  it('owns delegated click routing for tracker headers and quest rows', () => {
+    const test = harness([progress('q_wolves')]);
+    const headerTarget = {
+      closest: (selector: string) => (selector === '.qt-header' ? {} : null),
+    } as unknown as HTMLElement;
+    const rowTarget = {
+      closest: (selector: string) =>
+        selector === '.qt-title' ? { dataset: { quest: 'q_wolves' } } : null,
+    } as unknown as HTMLElement;
+
+    test.controller.handleClick(headerTarget);
+    test.controller.handleClick(rowTarget);
+
+    expect(test.collapsed()).toBe(true);
+    expect(test.openQuest).toHaveBeenCalledWith('q_wolves');
+  });
+
   it('adapts authoritative MIR4 progress into the same tracker without a classic detail link', () => {
     const test = harness([], 'mir4-gameplay-port', [
       {
@@ -187,5 +247,38 @@ describe('QuestTrackerController', () => {
     test.controller.activateQuest('mir4_m01_q01');
 
     expect(test.click).toHaveBeenCalledTimes(1);
+    expect(test.setMir4AutoQuest).toHaveBeenCalledWith(true, 'mir4_m01_q01');
+  });
+
+  it('renders tutorial steps, requirements and opens the existing highlighted destination', () => {
+    const test = harness([], 'mir4-gameplay-port', [
+      {
+        id: 'M01-Q06',
+        complete: false,
+        autoJourneyActive: false,
+        autoJourneySuspended: false,
+        objective: {
+          kind: 'campaign-stage',
+          stageKind: 'system-tutorial',
+          current: 0,
+          total: 1,
+        },
+      },
+    ]);
+
+    test.controller.update();
+
+    expect(test.html()).toContain('Sun Stone x2');
+    expect(test.html()).toContain('Solar Scroll x2');
+    expect(test.html()).toContain('Crafting (T)');
+    expect(test.launcher('mm-crafting')?.classList.add).toHaveBeenCalledWith(
+      'mir4-tutorial-target',
+    );
+
+    test.controller.openTutorialDestination('M01-Q06');
+
+    expect(test.launcher('crafting-window')?.dataset.mir4ProgressionTab).toBe('refinement');
+    expect(test.launcher('mm-crafting')?.click).toHaveBeenCalledTimes(1);
+    expect(test.acknowledgeTutorial).toHaveBeenCalledWith('M01-Q06');
   });
 });

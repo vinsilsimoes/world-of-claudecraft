@@ -6,7 +6,9 @@
 import { MIR4_WORLD_ARC } from '../sim/content/mir4/world_arc';
 import { DELVE_LIST, PORTALS, zoneContaining } from '../sim/data';
 import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
-import { MIR4_ARC_PORTALS } from '../sim/mir4/travel';
+import { mir4CampaignMapIdsForWorld } from '../sim/mir4/campaign_availability';
+import { MIR4_ARC_PORTALS, mir4ArcPortalsForWorld } from '../sim/mir4/travel';
+import type { WorldContent } from '../sim/types';
 import { isLiveMapEntityDisclosed } from './map_entity_disclosure_core';
 
 export type StableMapNavigationLandmark =
@@ -102,12 +104,107 @@ const MIR4_MAP_NAVIGATION_LANDMARKS: readonly StableMapNavigationLandmark[] = Ob
   }),
 );
 
+const MIR4_WORLD_NAVIGATION_CACHE = new WeakMap<
+  WorldContent,
+  readonly StableMapNavigationLandmark[]
+>();
+
 export function stableMapNavigationLandmarks(
   profile: GameProfile | undefined,
+  world?: WorldContent,
 ): readonly StableMapNavigationLandmark[] {
-  return profile === MIR4_GAME_PROFILE
-    ? MIR4_MAP_NAVIGATION_LANDMARKS
-    : STABLE_MAP_NAVIGATION_LANDMARKS;
+  if (profile !== MIR4_GAME_PROFILE) return STABLE_MAP_NAVIGATION_LANDMARKS;
+  if (world === undefined) return MIR4_MAP_NAVIGATION_LANDMARKS;
+  const cached = MIR4_WORLD_NAVIGATION_CACHE.get(world);
+  if (cached) return cached;
+  if (world.travelPortals) {
+    const zoneAt = (point: Readonly<{ x: number; z: number }>) =>
+      world.zones.find(
+        (zone) =>
+          point.x >= (zone.xMin ?? -180) &&
+          point.x < (zone.xMax ?? 180) &&
+          point.z >= zone.zMin &&
+          point.z < zone.zMax,
+      );
+    const landmarks = Object.freeze(
+      world.travelPortals.flatMap((portal) => {
+        const aZone = zoneAt(portal.a);
+        const bZone = zoneAt(portal.b);
+        if (!aZone || !bZone) return [];
+        return [
+          Object.freeze({
+            kind: 'world-passage' as const,
+            id: portal.id,
+            side: 'a' as const,
+            zoneId: aZone.id,
+            destinationZoneId: bZone.id,
+            x: portal.a.x,
+            z: portal.a.z,
+          }),
+          Object.freeze({
+            kind: 'world-passage' as const,
+            id: portal.id,
+            side: 'b' as const,
+            zoneId: bZone.id,
+            destinationZoneId: aZone.id,
+            x: portal.b.x,
+            z: portal.b.z,
+          }),
+        ];
+      }),
+    );
+    MIR4_WORLD_NAVIGATION_CACHE.set(world, landmarks);
+    return landmarks;
+  }
+  if (world.mir4ArcMapProjections?.length) {
+    const projectionByMap = new Map(
+      world.mir4ArcMapProjections.map((projection) => [projection.mapId, projection] as const),
+    );
+    const portals = mir4ArcPortalsForWorld(world);
+    const projected = Object.freeze(
+      portals.flatMap((portal, index) => {
+        const from = world.mir4ArcMapProjections?.[index];
+        const to = world.mir4ArcMapProjections?.[index + 1];
+        if (!from || !to || !projectionByMap.has(from.mapId) || !projectionByMap.has(to.mapId)) {
+          return [];
+        }
+        return [
+          Object.freeze({
+            kind: 'world-passage' as const,
+            id: portal.id,
+            side: 'a' as const,
+            zoneId: from.targetZoneId,
+            destinationZoneId: to.targetZoneId,
+            x: portal.a.x,
+            z: portal.a.z,
+          }),
+          Object.freeze({
+            kind: 'world-passage' as const,
+            id: portal.id,
+            side: 'b' as const,
+            zoneId: to.targetZoneId,
+            destinationZoneId: from.targetZoneId,
+            x: portal.b.x,
+            z: portal.b.z,
+          }),
+        ];
+      }),
+    );
+    MIR4_WORLD_NAVIGATION_CACHE.set(world, projected);
+    return projected;
+  }
+  const campaignMapIds = mir4CampaignMapIdsForWorld(world);
+  const admittedZones = new Set(campaignMapIds.map((mapId) => `mir4_${mapId}`));
+  const landmarks = Object.freeze(
+    MIR4_MAP_NAVIGATION_LANDMARKS.filter(
+      (landmark) =>
+        landmark.kind === 'world-passage' &&
+        admittedZones.has(landmark.zoneId) &&
+        admittedZones.has(landmark.destinationZoneId),
+    ),
+  );
+  MIR4_WORLD_NAVIGATION_CACHE.set(world, landmarks);
+  return landmarks;
 }
 
 export interface LiveRiftZoneMapEntity {

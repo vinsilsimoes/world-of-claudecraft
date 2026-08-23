@@ -9,6 +9,7 @@ import { ITEMS, MOBS } from '../../sim/data';
 import { ALL_CLASSES, type Entity, isMechWearer, type PlayerClass } from '../../sim/types';
 import { ITEM_WEAPON_VARIANTS } from '../../ui/weapon_variants';
 import type { OverheadEmoteId } from '../../world_api';
+import { mir4MobVisualKey, mir4NpcVisualKey, mir4PlayerVisualKey } from './mir4_presentation_core';
 import { NPC_PROP_SET_IDS, type NpcPropSet } from './npc_looks';
 
 export interface EmoteClipSpec {
@@ -169,8 +170,15 @@ const KAYKIT_EMOTES: Partial<Record<OverheadEmoteId, EmoteClipSpec>> = {
   salute: { clips: ['Spellcast_Raise', 'Block'], timeScale: 1.18 },
   cry: { clips: ['Hit_A', 'Sit_Floor_Down'], timeScale: 0.65 },
   bow: { clips: ['Sit_Floor_Down', 'Spellcast_Raise'], timeScale: 1.35 },
-  clap: { clips: ['1H_Melee_Attack_Slice_Diagonal', 'Cheer'], timeScale: 1.55, repeats: 2 },
-  roar: { clips: ['2H_Melee_Attack_Chop', '1H_Melee_Attack_Chop', 'Cheer'], timeScale: 0.9 },
+  clap: {
+    clips: ['1H_Melee_Attack_Slice_Diagonal', 'Cheer'],
+    timeScale: 1.55,
+    repeats: 2,
+  },
+  roar: {
+    clips: ['2H_Melee_Attack_Chop', '1H_Melee_Attack_Chop', 'Cheer'],
+    timeScale: 0.9,
+  },
   kneel: { clips: ['Sit_Floor_Down'], timeScale: 0.85 },
 };
 
@@ -1145,7 +1153,11 @@ export const VISUALS: Record<string, VisualDef> = {
         flash_of_light: 'Cast_HolyMend',
         lay_on_hands: 'Cast_HolyMend',
       },
-      attackTimeScaleByAbility: { final_edict: 1, sunward_disc: 1.8, bastion_sweep: 1 },
+      attackTimeScaleByAbility: {
+        final_edict: 1,
+        sunward_disc: 1.8,
+        bastion_sweep: 1,
+      },
     },
     // Ability-specific clips (scripts/build_paladin_ability_anims.mjs): a
     // mesh-free clip donor GLB baked off this rig's own poses.
@@ -1477,7 +1489,11 @@ export const VISUALS: Record<string, VisualDef> = {
     show: [],
     attach: [
       { url: `${WEAPONS}/wand.glb`, bone: 'handslot.r' },
-      { url: `${WEAPONS}/spellbook_open.glb`, bone: 'handslot.l', gripRef: 'Spellbook_open' },
+      {
+        url: `${WEAPONS}/spellbook_open.glb`,
+        bone: 'handslot.l',
+        gripRef: 'Spellbook_open',
+      },
     ],
     weaponSlots: [0], // mainhand (wand) swaps; spellbook offhand stays
     // Faint violet lift only, to tell this apart from the mage/priest models
@@ -1838,7 +1854,10 @@ export const VISUALS: Record<string, VisualDef> = {
     // spread the animal() factory result and override only attack, so the
     // repainted siblings (veiled_stag/gleamstag/veiled_doe/aurelhorn, separate
     // GLB files on the same rig) keep the standing Headbutt/Kick pair.
-    clips: { ...animal(['Attack_Headbutt', 'Attack_Kick']), attack: ['Stag_Attack_Charge'] },
+    clips: {
+      ...animal(['Attack_Headbutt', 'Attack_Kick']),
+      attack: ['Stag_Attack_Charge'],
+    },
     animUrls: [`${CREATURES}/stag_ability_anims.glb`],
     tint: 'entity',
     tintStrength: 0.35,
@@ -2616,7 +2635,10 @@ export const VISUALS: Record<string, VisualDef> = {
     // build_skelboss_anims.mjs, issue #2889). Spread the factory result and
     // override only attack, so skel_mage/delve_skel_varric/rift_ritualist stay
     // on the shared swing.
-    clips: { ...skeletonClips(['2H_Melee_Attack_Chop'], 'Taunt'), attack: ['SkelBoss_Attack'] },
+    clips: {
+      ...skeletonClips(['2H_Melee_Attack_Chop'], 'Taunt'),
+      attack: ['SkelBoss_Attack'],
+    },
     animUrls: [
       `${ENEMIES}/skeleton_mage_hit_variety_anims.glb`,
       `${ENEMIES}/skelboss_ability_anims.glb`,
@@ -2815,7 +2837,11 @@ export const VISUALS: Record<string, VisualDef> = {
     show: ['Mage_Hat'],
     attach: [
       { url: `${WEAPONS}/staff.glb`, bone: 'handslot.r' },
-      { url: `${WEAPONS}/spellbook_open.glb`, bone: 'handslot.l', gripRef: 'Spellbook_open' },
+      {
+        url: `${WEAPONS}/spellbook_open.glb`,
+        bone: 'handslot.l',
+        gripRef: 'Spellbook_open',
+      },
     ],
     tint: 'entity',
     tintStrength: 0.55,
@@ -2920,7 +2946,11 @@ const NPC_MODULAR_PROP_ATTACH: Record<NpcPropSet, AttachDef[]> = {
   oak_stave: [{ url: `${WEAPONS}/knotted_oak_stave.glb`, bone: 'handslot.r' }],
   tome: [
     { url: `${WEAPONS}/staff.glb`, bone: 'handslot.r' },
-    { url: `${WEAPONS}/spellbook_open.glb`, bone: 'handslot.l', gripRef: 'Spellbook_open' },
+    {
+      url: `${WEAPONS}/spellbook_open.glb`,
+      bone: 'handslot.l',
+      gripRef: 'Spellbook_open',
+    },
   ],
   crossbow: [{ url: `${WEAPONS}/crossbow_1handed.glb`, bone: 'handslot.r' }],
   hammer: [{ url: `${WEAPONS}/hammer_a.glb`, bone: 'handslot.r' }],
@@ -3221,15 +3251,21 @@ const NPC_KEYS: Record<string, string> = {
 export function visualKeyFor(e: Entity): string {
   if (e.kind === 'player') {
     if (isMechWearer(e)) return 'player_mech';
+    const mir4ClassId = e.mir4?.classId ?? e.mir4VisualClassId;
+    if (mir4ClassId !== undefined) return mir4PlayerVisualKey(mir4ClassId);
     return VISUALS[`player_${e.templateId}`] ? `player_${e.templateId}` : 'player_warrior';
   }
   if (e.kind === 'mob') {
+    const mir4Visual = mir4MobVisualKey(e.templateId, e.name);
+    if (mir4Visual) return mir4Visual;
     const override = MOB_KEYS[e.templateId];
     if (override) return override;
     const family = MOBS[e.templateId]?.family;
     return (family && FAMILY_KEYS[family]) || 'mob_bandit';
   }
   // npcs — Brother Aldric recurs in every hub under suffixed ids
+  const mir4Visual = mir4NpcVisualKey(e.templateId, e.name);
+  if (mir4Visual) return mir4Visual;
   if (e.templateId.startsWith('brother_aldric')) return 'npc_aldric';
   return NPC_KEYS[e.templateId] ?? 'npc_villager';
 }

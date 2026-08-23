@@ -4,7 +4,7 @@
 import { DUNGEON_X_THRESHOLD, getActiveWorldContent } from '../sim/data';
 import { dockSectionAt } from '../sim/dock_layout';
 import { isAtSowfield } from '../sim/vale_cup_layout';
-import { groundHeight, waterLevelAt, zoneBiomeAt } from '../sim/world';
+import { biomeAt, groundHeight, waterLevelAt } from '../sim/world';
 import type { AmbientPointSource, Surface } from './audio_sink';
 
 export function isOnDockDeck(x: number, z: number): boolean {
@@ -24,7 +24,7 @@ export function footstepSurfaceAt(
   if (isOnDockDeck(x, z)) return 'wood';
   const waterLevel = waterLevelAt(x, z, seed);
   if (groundHeight(x, z, seed) < waterLevel && y <= waterLevel + 0.3) return 'water';
-  const biome = zoneBiomeAt(x, z);
+  const biome = biomeAt(x, z);
   if (biome === 'vale') return 'grass';
   if (biome === 'marsh' || biome === 'ember') return 'dirt'; // ember: sandy waste
   if (biome === 'amber' || biome === 'fen') return 'grass';

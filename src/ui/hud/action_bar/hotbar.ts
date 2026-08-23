@@ -159,10 +159,15 @@ export function assignAttackSlotAction(
 }
 
 export function handleMobileAttackTap(
-  state: { autoAttack: boolean; hasLiveHostileTarget: boolean },
+  state: { autoAttack: boolean; hasLiveHostileTarget: boolean; directToggle?: boolean },
   actions: { activateAttack: () => void; attackNearest: (() => void) | null },
 ): void {
-  if (!state.autoAttack && !state.hasLiveHostileTarget && actions.attackNearest) {
+  if (
+    !state.directToggle &&
+    !state.autoAttack &&
+    !state.hasLiveHostileTarget &&
+    actions.attackNearest
+  ) {
     actions.attackNearest();
     return;
   }

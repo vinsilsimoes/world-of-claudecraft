@@ -30,7 +30,17 @@ export interface TrackedQuest {
   pressed?: boolean;
   /** Already-localized action hint for an actionable tracker row. */
   actionHint?: string;
+  tutorial?: TrackedTutorial;
   objectives: readonly TrackedObjective[];
+}
+
+export interface TrackedTutorial {
+  launcherId: string;
+  tab?: string;
+  destination: string;
+  shortcut: string;
+  steps: readonly string[];
+  requirements: readonly string[];
 }
 
 export interface QuestTrackerObjectiveRow extends TrackedObjective {
@@ -45,6 +55,7 @@ export interface QuestTrackerQuestRow {
   openable: boolean;
   pressed?: boolean;
   actionHint?: string;
+  tutorial?: TrackedTutorial;
   objectives: QuestTrackerObjectiveRow[];
 }
 
@@ -76,6 +87,7 @@ export function questTrackerView(
     openable: q.openable !== false,
     pressed: q.pressed,
     actionHint: q.actionHint,
+    tutorial: q.tutorial,
     objectives: q.objectives.map((o) => ({ ...o, done: o.current >= o.total })),
   }));
   return { visible: true, collapsed: false, count, quests: questRows };

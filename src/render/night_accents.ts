@@ -19,7 +19,7 @@ import * as THREE from 'three';
 import { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } from '../sim/data';
 import { hash2 } from '../sim/rng';
 import type { BiomeId } from '../sim/types';
-import { roadDistance, terrainHeight, WATER_LEVEL, zoneBiomeAt } from '../sim/world';
+import { biomeAt, roadDistance, terrainHeight, WATER_LEVEL } from '../sim/world';
 import { EMISSIVE_GLOW, GFX } from './gfx';
 import {
   FLORA_CAP_POOL,
@@ -127,7 +127,7 @@ export function buildNightAccents(seed = 0): NightAccentsView {
   const probes = {
     hash: cellHash,
     groundAt: (x: number, z: number) => terrainHeight(x, z, seed),
-    biomeAt: (x: number, z: number) => zoneBiomeAt(x, z),
+    biomeAt: (x: number, z: number) => biomeAt(x, z),
     excluded: (x: number, z: number, groundY: number): boolean => {
       if (groundY < WATER_LEVEL + FLORA_WATER_CLEAR) return true;
       if (Math.abs(x) > WORLD_MAX_X - 6 || z < WORLD_MIN_Z + 6 || z > WORLD_MAX_Z - 6) return true;
@@ -156,7 +156,7 @@ export function buildNightAccents(seed = 0): NightAccentsView {
       // blob. This is the CAP'S OWN colour and nothing else: the frame's glow
       // and pulse ride the shared material below, so the buffer is written on
       // a cell crossing and never per frame.
-      const biome: BiomeId = zoneBiomeAt(slot.x, slot.z);
+      const biome: BiomeId = biomeAt(slot.x, slot.z);
       floraTint.setHex(FLORA_TINT[biome]).multiplyScalar(0.7 + slot.variant * 0.5);
       if (tints) {
         const array = tints.array as Float32Array;
@@ -212,7 +212,7 @@ export function buildNightAccents(seed = 0): NightAccentsView {
     const z = pz + Math.sin(angle) * reach;
     if (Math.abs(x) > WORLD_MAX_X - 8 || z < WORLD_MIN_Z + 8 || z > WORLD_MAX_Z - 8) return false;
     const groundY = terrainHeight(x, z, seed);
-    if (!fireflyHabitat(groundY, WATER_LEVEL, zoneBiomeAt(x, z))) return false;
+    if (!fireflyHabitat(groundY, WATER_LEVEL, biomeAt(x, z))) return false;
     flyHomeX[i] = x;
     flyHomeZ[i] = z;
     flyBaseY[i] = groundY;

@@ -370,6 +370,7 @@ const UI_PURE_CORES = [
   'src/ui/reliquary_sheet_view.ts',
   'src/ui/reliquary_tracker_view.ts',
   'src/ui/spellbook_view.ts',
+  'src/ui/hud/quest/mir4_dialogue_view.ts',
   'src/ui/hud/quest/mir4_questlog_view.ts',
   'src/ui/hud/quest/questlog_view.ts',
   'src/ui/swing_timer.ts',
@@ -456,6 +457,7 @@ const RENDER_PURE_CORES = [
   'src/render/characters/portrait_prewarm_core.ts',
   'src/render/characters/soul_rend_prewarm_core.ts',
   'src/render/characters/design_code_core.ts',
+  'src/render/characters/mir4_presentation_core.ts',
   'src/render/reveal_gate_core.ts',
   'src/render/town_reveal_core.ts',
   'src/render/ability_vfx_core.ts',
@@ -532,6 +534,7 @@ const RENDER_PURE_CORES = [
   // logic with no three and no DOM, and the pacing pair is exactly the kind of
   // module that grows a `performance.now()` the first time someone is in a hurry.
   'src/render/link_rate_budget.ts',
+  'src/render/local_water_surface_core.ts',
   'src/render/prewarm_compile_lifecycle.ts',
   'src/render/prewarm_policy.ts',
   // Same reason, one seam over: the per-interior encounter prewarm's decision

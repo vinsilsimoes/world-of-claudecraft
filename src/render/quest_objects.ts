@@ -2,6 +2,8 @@
 
 import * as THREE from 'three';
 import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
+import { browserGameProfile } from '../game_profile_runtime';
+import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { loadGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import {
@@ -19,6 +21,22 @@ import { applySurfaceDetail, wornFamilyFor } from './worn_stone';
 const TARGET_HEIGHT = 1.35;
 
 const QUEST_OBJECT_URLS: Record<string, string> = {
+  // MIR4 campaign interaction families. These select existing WoC assets;
+  // they are not inventory items and are consumed only by the campaign host.
+  mir4_object_noticeboard_order: '/models/quest/weathered_ledger_page.glb',
+  mir4_object_device_cog: '/models/resources/parts_cog.glb',
+  mir4_object_network_map: '/models/tools/map.glb',
+  mir4_object_shortcut_key: '/models/tools/key_a.glb',
+  mir4_object_waypoint_crystal: '/models/props/hollow_gate_crystal.glb',
+  mir4_object_survey_compass: '/models/tools/compass_base.glb',
+  mir4_object_gather_patch: '/models/resources/gather_herb_cluster.glb',
+  mir4_object_clue_magnifier: '/models/tools/magnifying_glass.glb',
+  mir4_object_service_blueprint: '/models/tools/blueprint.glb',
+  mir4_object_lore_journal: '/models/tools/journal_open.glb',
+  mir4_object_supply_crate: '/models/quest/supply_crate.glb',
+  mir4_object_evidence_ledger: '/models/quest/weathered_ledger_page.glb',
+  mir4_object_repair_wrench: '/models/tools/wrench_a.glb',
+  mir4_object_tracking_map: '/models/tools/map_rolled.glb',
   crypt_ritual_circle: '/models/quest/crypt_ritual_circle.glb',
   supply_crate: '/models/quest/supply_crate.glb',
   lost_caravan_goods: '/models/quest/lost_caravan_goods.glb',
@@ -37,6 +55,13 @@ const QUEST_OBJECT_URLS: Record<string, string> = {
   grave_high_priest_malric: '/models/dungeon/gravestone.glb',
   grave_captain_voss: '/models/dungeon/gravestone.glb',
 };
+
+export function questObjectPreloadUrlsForProfile(profile: GameProfile): string[] {
+  const urls = Object.entries(QUEST_OBJECT_URLS)
+    .filter(([itemId]) => profile === MIR4_GAME_PROFILE || !itemId.startsWith('mir4_object_'))
+    .map(([, url]) => url);
+  return [...new Set(urls)];
+}
 
 const QUEST_OBJECT_HEIGHTS: Record<string, number> = {
   // The Nythraxis soul wardstones are an active raid mechanic — make them a tall,
@@ -67,7 +92,11 @@ interface ScrollStyle {
 }
 
 const SCROLL_STYLES: Record<string, ScrollStyle> = {
-  weathered_ledger_page: { parchmentTint: 0xd4c4a0, ink: 0x3a2818, textLines: 4 },
+  weathered_ledger_page: {
+    parchmentTint: 0xd4c4a0,
+    ink: 0x3a2818,
+    textLines: 4,
+  },
   fen_muster_order: {
     parchmentTint: 0xddd0b0,
     ribbon: 0xc9a227,
@@ -91,7 +120,11 @@ const ITEM_MAT_OVERRIDES: Record<
   gravecaller_sigil: { emissive: 0x6b3fa0, emissiveIntensity: 0.35 },
   gravewyrm_sigil: { emissive: 0x1a4060, emissiveIntensity: 0.45 },
   bastion_ward_stone: { emissive: 0x6b3fa0, emissiveIntensity: 0.3 },
-  soulshard_pillar: { color: 0x6f1b2c, emissive: 0x8f1232, emissiveIntensity: 0.42 },
+  soulshard_pillar: {
+    color: 0x6f1b2c,
+    emissive: 0x8f1232,
+    emissiveIntensity: 0.42,
+  },
   sanctum_key_shard: { emissive: 0x1a4060, emissiveIntensity: 0.5 },
   morthen_grimoire: { emissive: 0x3a1850, emissiveIntensity: 0.12 },
 };
@@ -124,7 +157,7 @@ export const questObjectCacheInternalsForTest = {
 };
 
 if (typeof window !== 'undefined') {
-  const urls = [...new Set(Object.values(QUEST_OBJECT_URLS))];
+  const urls = questObjectPreloadUrlsForProfile(browserGameProfile());
   for (const url of urls) {
     registerDeferredPreload(() =>
       loadGltf(url)
@@ -137,7 +170,12 @@ if (typeof window !== 'undefined') {
 }
 
 function matProps(color: number): Parameters<typeof surfaceMat>[0] {
-  return { color, roughness: 0.9, metalness: 0.05, flatShading: !GFX.standardMaterials };
+  return {
+    color,
+    roughness: 0.9,
+    metalness: 0.05,
+    flatShading: !GFX.standardMaterials,
+  };
 }
 
 function decorateScroll(root: THREE.Object3D, itemId: string): void {

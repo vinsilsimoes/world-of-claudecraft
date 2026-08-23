@@ -136,4 +136,19 @@ describe('entity view admission', () => {
     expect(entityViewIsAdmitted(hidden, questLog, hideCollectable)).toBe(false);
     expect(entityViewIsAdmitted(visible, questLog, hideCollectable)).toBe(true);
   });
+
+  it("admits only the local player's physical MIR4 objective", () => {
+    const owned = entity(2, 'object', {
+      templateId: 'mir4_objective_1_m01-q01_2_0_2',
+      ownerId: 1,
+    });
+    const foreign = entity(3, 'object', {
+      templateId: 'mir4_objective_9_m01-q01_2_0_3',
+      ownerId: 9,
+    });
+    const showAll: QuestObjectGate = () => false;
+
+    expect(entityViewIsAdmitted(owned, questLog, showAll, 1)).toBe(true);
+    expect(entityViewIsAdmitted(foreign, questLog, showAll, 1)).toBe(false);
+  });
 });

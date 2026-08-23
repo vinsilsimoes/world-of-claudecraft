@@ -1,5 +1,6 @@
 import { DELVES, ITEMS, NPCS, QUESTS, questRewardItem } from '../../../sim/data';
 import { CHRONICLER_TEMPLATE_IDS } from '../../../sim/deeds';
+import { MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import { craftsForPairTarget } from '../../../sim/professions/archetype';
 import { professionQuestSelectionTargets } from '../../../sim/quests/profession_quest_effects';
 import { npcQuestMarkerKind, type QuestMarkerKind } from '../../../sim/quests/quest_marker_kind';
@@ -22,6 +23,7 @@ import { isStationMasterNpc } from '../vendor/train_view';
 import { isWarfareVendorNpc } from '../vendor/warfare_vendor_view';
 import { gossipMenuIsEmpty } from './gossip_menu';
 import { masterCraftTarget } from './master_craft_core';
+import { buildMir4NpcDialogueView, isMir4CampaignNpcTemplateId } from './mir4_dialogue_view';
 import { PROF_INTRO_QUEST_ID, professionIntroHintVisible } from './prof_intro_hint_core';
 
 /** One string per offerable-row set, for cheap open-dialog change detection
@@ -106,6 +108,8 @@ export class QuestDialogController {
   private openedAt = 0;
   private voiceNpcId: number | null = null;
   private openState = false;
+  private narrativeDialogueId: string | null = null;
+  private narrativeVisualStartedAt = 0;
 
   constructor(private readonly deps: QuestDialogControllerDeps) {}
 
@@ -117,6 +121,17 @@ export class QuestDialogController {
     const world = this.deps.world();
     const npc = world.entities.get(npcId);
     if (npc?.kind !== 'npc') return;
+    if (
+      world.cfg.gameProfile === MIR4_GAME_PROFILE &&
+      isMir4CampaignNpcTemplateId(npc.templateId)
+    ) {
+      this.beginOpen();
+      this.openedAt = this.deps.now();
+      this.ensureFocusTrap();
+      this.deps.closeTransient();
+      this.renderMir4Dialogue(npc);
+      return;
+    }
     if (NPCS[npc.templateId]?.banker) {
       world.targetEntity(npc.id);
       world.interact();
@@ -191,6 +206,7 @@ export class QuestDialogController {
 
   close(restoreFocus = true): void {
     this.deps.element.style.display = 'none';
+    this.deps.element.classList.remove('mir4-narrative-dialogue');
     this.npcId = null;
     this.detailQuestId = null;
     this.lastIntroHintVisible = null;
@@ -207,7 +223,13 @@ export class QuestDialogController {
   refresh(): void {
     if (this.npcId === null || this.deps.element.style.display !== 'block') return;
     const npc = this.deps.world().entities.get(this.npcId);
-    if (npc) this.renderGossip(npc);
+    if (
+      npc &&
+      this.deps.world().cfg.gameProfile === MIR4_GAME_PROFILE &&
+      isMir4CampaignNpcTemplateId(npc.templateId)
+    ) {
+      this.renderMir4Dialogue(npc);
+    } else if (npc) this.renderGossip(npc);
     else this.close();
   }
 
@@ -222,6 +244,7 @@ export class QuestDialogController {
    *  the quest event arms, so an unchanged signature never rebuilds the DOM
    *  (the dialog holds focus-trapped buttons). */
   refreshIfChanged(): void {
+    if (this.syncNarrativeDialogue()) return;
     if (this.npcId === null || this.deps.element.style.display !== 'block') return;
     if (this.detailQuestId !== null || this.lastIntroHintVisible === null) return;
     const npc = this.deps.world().entities.get(this.npcId);
@@ -241,7 +264,12 @@ export class QuestDialogController {
       this.close();
       return;
     }
-    if (this.detailQuestId && QUESTS[this.detailQuestId]) {
+    if (
+      this.deps.world().cfg.gameProfile === MIR4_GAME_PROFILE &&
+      isMir4CampaignNpcTemplateId(npc.templateId)
+    ) {
+      this.renderMir4Dialogue(npc);
+    } else if (this.detailQuestId && QUESTS[this.detailQuestId]) {
       this.renderQuestDetail(npc, this.detailQuestId);
     } else {
       this.renderGossip(npc);
@@ -518,6 +546,126 @@ export class QuestDialogController {
     this.bindRoute('[data-card-duel]', this.deps.openCardDuel);
     this.bindClose();
     this.showAndFocus();
+  }
+
+  private renderMir4Dialogue(npc: Entity): void {
+    const world = this.deps.world();
+    const state = world.mir4PlayerState();
+    const view = buildMir4NpcDialogueView(npc.templateId, state);
+    if (!view) {
+      this.close();
+      return;
+    }
+    this.npcId = npc.id;
+    this.detailQuestId = null;
+    this.lastIntroHintVisible = null;
+    this.lastGossipRowSig = null;
+    this.voiceNpcId = npc.id;
+    markDialogRoot(this.deps.element, { labelledBy: 'quest-dialog-title' });
+    this.deps.element.classList.toggle('mir4-narrative-dialogue', view.autoNarrative);
+    const closeButton = view.autoNarrative
+      ? ''
+      : `<button type="button" class="x-btn" data-close aria-label="${esc(t('questUi.dialog.close'))}">${svgIcon('close')}</button>`;
+    let html = `<div class="panel-title"><span id="quest-dialog-title">${esc(view.npcName)}</span>${closeButton}</div>`;
+    if (view.questTitle) html += `<div class="qd-sub">${esc(view.questTitle)}</div>`;
+    if (view.lines.length === 0) {
+      html += `<div class="qd-text">"${esc(t('questUi.dialog.greetingFallback'))}"</div>`;
+    } else {
+      for (const line of view.lines) {
+        html += `<div class="qd-text"><strong>${esc(line.speaker)}:</strong> ${esc(line.text)}</div>`;
+      }
+    }
+    if (view.objectiveText) {
+      html += `<div class="qd-sub">${esc(t('questUi.detail.objectives'))}</div>`;
+      const progress = view.progress
+        ? ` ${this.deps.text.number(view.progress.current)}/${this.deps.text.number(view.progress.total)}`
+        : '';
+      html += `<div class="qd-obj">${esc(view.objectiveText)}${esc(progress)}</div>`;
+    }
+    this.deps.element.innerHTML = html;
+    if (view.autoNarrative && state?.mir4NarrativeDialogue) {
+      const narrative = state.mir4NarrativeDialogue;
+      if (this.narrativeDialogueId !== narrative.id) {
+        this.narrativeDialogueId = narrative.id;
+        this.narrativeVisualStartedAt = this.deps.now();
+      }
+      const totalSeconds = Math.max(0.05, view.readingSeconds ?? 6);
+      const elapsedSeconds = Math.max(0, (this.deps.now() - this.narrativeVisualStartedAt) / 1000);
+      const progressPercent = Math.min(100, (elapsedSeconds / totalSeconds) * 100);
+      const remainingSeconds = Math.max(0.05, totalSeconds - elapsedSeconds);
+      const wait = this.deps.document.createElement('div');
+      wait.className = 'qd-dialogue-wait';
+      wait.setAttribute('role', 'progressbar');
+      // The server owns completion and may already be partway through its
+      // timer when a client reconnects. Expose this as indeterminate to AT;
+      // the fill is only a visual reading-time hint, never client authority.
+      wait.setAttribute('aria-label', t('questUi.dialog.autoContinue'));
+      wait.style.setProperty('--mir4-dialogue-duration', `${remainingSeconds}s`);
+      wait.innerHTML = '<span aria-hidden="true"></span>';
+      wait.querySelector<HTMLElement>('span')?.style.setProperty('width', `${progressPercent}%`);
+      this.deps.element.appendChild(wait);
+      const button = this.makeButton(t('questUi.dialog.skipDialogue'));
+      button.classList.add('qd-dialogue-skip');
+      button.addEventListener('click', () => {
+        const dialogueId = this.deps.world().mir4PlayerState()?.mir4NarrativeDialogue?.id;
+        if (!dialogueId) return;
+        button.disabled = true;
+        this.deps.world().mir4SkipNarrativeDialogue(dialogueId);
+      });
+      this.deps.element.appendChild(button);
+    } else if (view.action !== 'none') {
+      const label =
+        view.action === 'accept'
+          ? t('questUi.dialog.accept')
+          : view.action === 'complete'
+            ? t('questUi.dialog.completeQuest')
+            : t('questUi.dialog.continue');
+      const button = this.makeButton(label);
+      button.addEventListener('click', () => {
+        const liveWorld = this.deps.world();
+        liveWorld.targetEntity(npc.id);
+        liveWorld.interact();
+        this.close();
+      });
+      this.deps.element.appendChild(button);
+    }
+    this.bindClose();
+    this.showAndFocus();
+  }
+
+  /** Keep the existing quest-dialog window synchronized with the session-only
+   * authoritative story gate, including when it opens without a manual click. */
+  private syncNarrativeDialogue(): boolean {
+    const world = this.deps.world();
+    if (world.cfg.gameProfile !== MIR4_GAME_PROFILE) return false;
+    const narrative = world.mir4PlayerState()?.mir4NarrativeDialogue;
+    if (!narrative) {
+      if (this.narrativeDialogueId === null) return false;
+      this.narrativeDialogueId = null;
+      this.narrativeVisualStartedAt = 0;
+      this.deps.element.classList.remove('mir4-narrative-dialogue');
+      this.close();
+      return true;
+    }
+    if (
+      this.narrativeDialogueId === narrative.id &&
+      this.npcId === narrative.npcEntityId &&
+      this.deps.element.style.display === 'block'
+    ) {
+      return true;
+    }
+    const npc = world.entities.get(narrative.npcEntityId);
+    if (!npc || npc.kind !== 'npc' || npc.templateId !== narrative.npcTemplateId) return true;
+    if (this.narrativeDialogueId !== narrative.id) {
+      this.narrativeDialogueId = narrative.id;
+      this.narrativeVisualStartedAt = this.deps.now();
+    }
+    this.beginOpen();
+    this.openedAt = this.deps.now();
+    this.ensureFocusTrap();
+    this.deps.closeTransient();
+    this.renderMir4Dialogue(npc);
+    return true;
   }
 
   private renderQuestDetail(npc: Entity, questId: string): void {

@@ -2,27 +2,22 @@
 // families/models and shared AI; only the authoritative MIR4 stats, names and
 // quest-credit identities are authored here.
 
+import { resolvePosition } from '../colliders';
+import { mir4ArcQuest } from '../content/mir4/arc_campaign';
 import { mir4ArcNormalXp } from '../content/mir4/arc_mobs';
 import { mir4MobStats } from '../content/mir4/mobs';
-import { mir4ArcQuest } from '../content/mir4/quests_arc';
 import { MIR4_WORLD_ARC_BY_MAP } from '../content/mir4/world_arc';
 import { createMob } from '../entity';
+import { PLAYER_BODY_RADIUS } from '../pathfind';
 import type { SimContext } from '../sim_context';
 import type { MobTemplate } from '../types';
-import { mir4ArcStageAnchor } from './arc_quest_runtime';
+import { mir4ArcQuestDropForPlayer, mir4ArcStageAnchor } from './arc_quest_runtime';
 import { mir4OrderedArcProgress, mir4QuestCurrentStage } from './arc_quests';
 import { type Mir4ArcEncounterRun, releaseMir4RuntimeMobTemplate } from './arc_runtime_state';
 import { MIR4_ARC_COMBAT_STAGE_KINDS, MIR4_ARC_SHORT_DUNGEON_STAGE_KINDS } from './arc_stage_kinds';
+import { mir4ArcTargetSlug } from './arc_target_identity';
 
 const SPAWN_DISTANCE = 46;
-function slug(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-}
 
 export function stageMobSource(
   stage: ReturnType<typeof mir4QuestCurrentStage>,
@@ -48,7 +43,7 @@ export function encounterTemplate(
   const quest = mir4ArcQuest(questId);
   const map = quest ? MIR4_WORLD_ARC_BY_MAP.get(quest.mapId) : undefined;
   if (!quest || !map) return null;
-  const id = `mir4_quest_${questId.toLowerCase()}_${stageIndex}_${progress}_${slug(source)}`;
+  const id = `mir4_quest_${questId.toLowerCase()}_${stageIndex}_${progress}_${mir4ArcTargetSlug(source)}`;
   const lo = mir4MobStats(map.levelMin);
   const hi = mir4MobStats(map.levelMax);
   return {
@@ -88,12 +83,18 @@ export function updateMir4ArcEncounters(ctx: SimContext): void {
     if (!player || player.dead) continue;
     for (const progress of mir4OrderedArcProgress(meta.mir4ArcQuests)) {
       const stage = mir4QuestCurrentStage(progress);
-      if (!stage || !MIR4_ARC_COMBAT_STAGE_KINDS.has(stage.kind)) continue;
+      const survivalThreat = stage?.kind === 'survive-zone' && Boolean(stage.guardian);
+      if (!stage || (!MIR4_ARC_COMBAT_STAGE_KINDS.has(stage.kind) && !survivalThreat)) continue;
       if (MIR4_ARC_SHORT_DUNGEON_STAGE_KINDS.has(stage.kind)) continue;
       const key = `${meta.entityId}:${progress.questId}:${progress.stageIndex}`;
       activeKeys.add(key);
       const source = stageMobSource(stage, progress.stageProgress);
-      const anchor = mir4ArcStageAnchor(progress.questId, stage, progress.stageProgress);
+      const anchor = mir4ArcStageAnchor(
+        progress.questId,
+        stage,
+        progress.stageProgress,
+        ctx.worldContent.mir4ArcMapProjections,
+      );
       if (!source || !anchor) continue;
       const dx = player.pos.x - anchor.x;
       const dz = player.pos.z - anchor.z;
@@ -107,6 +108,24 @@ export function updateMir4ArcEncounters(ctx: SimContext): void {
       );
       if (!template) continue;
       const existing = ctx.mir4ArcEncounterRuns.get(key);
+      const pendingDrop = mir4ArcQuestDropForPlayer(
+        ctx,
+        meta.entityId,
+        progress.questId,
+        progress.stageIndex,
+      );
+      if (pendingDrop) {
+        if (existing) {
+          const entity = ctx.entities.get(existing.entityId);
+          if (entity) {
+            const templateId = entity.templateId;
+            ctx.dropEntity(entity.id);
+            releaseMir4RuntimeMobTemplate(ctx, templateId);
+          }
+          ctx.mir4ArcEncounterRuns.delete(key);
+        }
+        continue;
+      }
       if (existing) {
         const entity = ctx.entities.get(existing.entityId);
         if (entity && !entity.dead) continue;
@@ -118,11 +137,18 @@ export function updateMir4ArcEncounters(ctx: SimContext): void {
         ctx.mir4ArcEncounterRuns.delete(key);
       }
       ctx.mir4RuntimeMobTemplates.set(template.id, template);
+      const authoredSpawn = { x: anchor.x + 8, z: anchor.z };
+      const safeSpawn = resolvePosition(
+        ctx.cfg.seed,
+        authoredSpawn.x,
+        authoredSpawn.z,
+        PLAYER_BODY_RADIUS,
+      );
       const mob = createMob(
         ctx.nextId++,
         template,
         Math.max(template.minLevel, Math.min(template.maxLevel, player.level)),
-        ctx.groundPos(anchor.x + 8, anchor.z),
+        ctx.groundPos(safeSpawn.x, safeSpawn.z),
       );
       mob.spawnPos = { ...mob.pos };
       mob.runScoped = true;

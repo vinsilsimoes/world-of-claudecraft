@@ -21,6 +21,7 @@
 // mobSwing, spawnDelveModule), never reaching into not-yet-extracted internals
 // in a way the sim itself does not already expose.
 
+import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import {
   arenaOrigin,
   DELVES,
@@ -61,6 +62,7 @@ import {
 import { terrainHeight } from '../../src/sim/world';
 import { runCraft } from '../helpers/enchant_family_cast';
 import { OPEN_FIELD } from '../helpers/open_field';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 import type { Recorder, Scenario } from './record';
 
 // ----- shared helpers ---------------------------------------------------------
@@ -155,6 +157,16 @@ function spawnMob(
   z: number,
 ): AnyEntity {
   const mob = createMob(sim.nextId++, MOBS[key], level, { x, y, z }) as AnyEntity;
+  sim.addEntity(mob);
+  return mob;
+}
+
+function spawnMir4Mob(sim: AnySim, key: keyof typeof MIR4_MOBS, x: number, z: number): AnyEntity {
+  const mob = createMob(sim.nextId++, MIR4_MOBS[key] as never, 1, sim.groundPos(x, z)) as AnyEntity;
+  mob.moveSpeed = 0;
+  mob.wanderTimer = 9999;
+  mob.swingTimer = 9999;
+  beef(mob);
   sim.addEntity(mob);
   return mob;
 }
@@ -5823,6 +5835,60 @@ function catFormAutoSwing(): Scenario {
   };
 }
 
+function mir4AutoBattleRng(): Scenario {
+  return {
+    name: 'mir4_auto_battle_rng',
+    coverage: [
+      'MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out',
+      'MIR4 4106 hit/crit/effect draw order on the following real simulation tick',
+      'friendly proximity contributes neither targeting nor combat rng draws',
+    ],
+    sampleEvery: 1,
+    build: () =>
+      new Sim({
+        seed: 7771,
+        noPlayer: true,
+        playerClass: 'warrior',
+        gameProfile: 'mir4-gameplay-port',
+        world: EMPTY_TEST_WORLD,
+      }),
+    drive(rec: Recorder) {
+      const sim = rec.sim;
+      const pid = sim.addPlayer('arbalist', 'Mir4Parity');
+      const player = requireEntity(sim, pid, 'MIR4 parity player');
+      teleport(sim, player, OPEN_FIELD.x, OPEN_FIELD.z);
+      player.resource = player.maxResource;
+
+      const retained = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 10, OPEN_FIELD.z);
+      const nearPlus = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 3, OPEN_FIELD.z + 1);
+      const nearMiddle = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 2, OPEN_FIELD.z);
+      const nearMinus = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 3, OPEN_FIELD.z - 1);
+      const friendlyPid = sim.addPlayer('warrior', 'Mir4Friendly');
+      const friendly = requireEntity(sim, friendlyPid, 'MIR4 parity friendly player');
+      teleport(sim, friendly, OPEN_FIELD.x + 2.5, OPEN_FIELD.z + 2);
+      player.targetId = retained.id;
+      player.cooldowns.set('4101', 10);
+      player.cooldowns.set('4102', 10);
+      sim.setMir4AutoBattleMode('battle', pid);
+
+      rec.notes.pid = pid;
+      rec.notes.retainedId = retained.id;
+      rec.notes.nearIds = [nearMiddle.id, nearPlus.id, nearMinus.id];
+      rec.notes.friendlyId = friendly.id;
+      rec.track(pid, retained.id, nearPlus.id, nearMiddle.id, nearMinus.id, friendly.id);
+      rec.snapshot('mir4-pack-ready');
+
+      rec.tick(1);
+      rec.snapshot('actor-centered-4103');
+
+      player.gcdRemaining = 0;
+      player.resource = player.maxResource;
+      rec.tick(1);
+      rec.snapshot('targeted-4106');
+    },
+  };
+}
+
 export const SCENARIOS: Scenario[] = [
   soloWarrior(),
   soloMage(),
@@ -5891,4 +5957,5 @@ export const SCENARIOS: Scenario[] = [
   riftBossFloor(),
   grixRespawnWindow(),
   catFormAutoSwing(),
+  mir4AutoBattleRng(),
 ];

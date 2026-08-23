@@ -658,4 +658,45 @@ describe('coverage: each scenario fires its subsystem', () => {
     const deaths = (rec.allEvents as Ev[]).filter((e) => e.type === 'death');
     expect(deaths.length).toBeGreaterThanOrEqual(2);
   });
+
+  it('mir4_auto_battle_rng: actor AoE fan-out and the following stun keep draw order', () => {
+    const { trace, rec } = record(
+      SCENARIOS.find((scenario) => scenario.name === 'mir4_auto_battle_rng')!,
+    );
+    const events = rec.allEvents as Ev[];
+    const nearIds = rec.notes.nearIds as number[];
+    const retainedId = rec.notes.retainedId as number;
+    const friendlyId = rec.notes.friendlyId as number;
+    const ecoTargets = events
+      .filter((event) => event.type === 'damage' && event.ability === 'Eco Gêmeo')
+      .map((event) => event.targetId);
+
+    expect(ecoTargets).toEqual(nearIds);
+    expect(ecoTargets).not.toContain(retainedId);
+    for (const id of nearIds) {
+      expect(
+        rec.sim.entities
+          .get(id)
+          ?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4103_blind'),
+      ).toBe(true);
+    }
+    const retained = rec.sim.entities.get(retainedId);
+    expect(
+      events.some(
+        (event) =>
+          event.type === 'damage' &&
+          event.targetId === retainedId &&
+          event.ability === 'Investida 4106',
+      ),
+    ).toBe(true);
+    expect(
+      retained?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4106_stun'),
+    ).toBe(true);
+    const friendly = rec.sim.entities.get(friendlyId);
+    expect(friendly?.hp).toBe(friendly?.maxHp);
+    expect(friendly?.mir4Effects?.active ?? []).toHaveLength(0);
+
+    expect(trace.frames.find((frame) => frame.label === 'actor-centered-4103')?.rng.draws).toBe(6);
+    expect(trace.frames.find((frame) => frame.label === 'targeted-4106')?.rng.draws).toBe(9);
+  });
 });

@@ -4763,8 +4763,71 @@ export const ABILITY_IMAGE_IDS = new Set<string>([
   'sudden_death',
 ]);
 
+/** MIR4 actions reuse the closest painted ability art already shipped by WoC.
+ * The logical ids, mechanics and balance remain MIR4-owned; only presentation
+ * is aliased, so no image is copied from the 2D source project. */
+export const MIR4_ABILITY_IMAGE_ALIASES: Readonly<Record<string, { class: string; id: string }>> = {
+  mir4_skill_1102: { class: 'warrior', id: 'heroic_strike' },
+  mir4_skill_1104: { class: 'warrior', id: 'deep_wounds' },
+  mir4_skill_1304: { class: 'warrior', id: 'charge' },
+  mir4_skill_1401: { class: 'warrior', id: 'thunder_clap' },
+  mir4_skill_1501: { class: 'warrior', id: 'whirlwind' },
+  mir4_skill_2101: { class: 'mage', id: 'arcane_missiles' },
+  mir4_skill_2111: { class: 'mage', id: 'fireball' },
+  mir4_skill_2501: { class: 'mage', id: 'summon_water_elemental' },
+  mir4_skill_2301: { class: 'mage', id: 'arcane_explosion' },
+  mir4_skill_2503: { class: 'mage', id: 'ice_barrier' },
+  mir4_skill_3506: { class: 'shaman', id: 'stoneward' },
+  mir4_skill_3101: { class: 'shaman', id: 'stormstrike' },
+  mir4_skill_3301: { class: 'shaman', id: 'healing_stream' },
+  mir4_skill_3104: { class: 'shaman', id: 'lightning_shield' },
+  mir4_skill_3503: { class: 'shaman', id: 'healing_wave' },
+  mir4_skill_4101: { class: 'hunter', id: 'rapid_fire' },
+  mir4_skill_4106: { class: 'hunter', id: 'trailbreak' },
+  mir4_skill_4102: { class: 'hunter', id: 'multi_shot' },
+  mir4_skill_4103: { class: 'mage', id: 'power_echo' },
+  mir4_skill_4107: { class: 'hunter', id: 'arcane_shot' },
+  mir4_skill_5201: { class: 'paladin', id: 'crusader_strike' },
+  mir4_skill_5101: { class: 'paladin', id: 'mercy_lance' },
+  mir4_skill_5104: { class: 'paladin', id: 'bastion_sweep' },
+  mir4_skill_5301: { class: 'paladin', id: 'oath_chain' },
+  mir4_skill_5401: { class: 'paladin', id: 'sun_gods_verdict' },
+  mir4_ultimate_1: { class: 'warrior', id: 'bladestorm' },
+  mir4_ultimate_2: { class: 'mage', id: 'meteor' },
+  mir4_ultimate_3: { class: 'shaman', id: 'bloodlust' },
+  mir4_ultimate_4: { class: 'hunter', id: 'volley' },
+  mir4_ultimate_5: { class: 'paladin', id: 'avenging_wrath' },
+  'mir4_passive_warrior-heavy-armor': { class: 'warrior', id: 'raised_guard' },
+  'mir4_passive_warrior-weapon-mastery': { class: 'warrior', id: 'combat_mastery' },
+  'mir4_passive_warrior-iron-skin': { class: 'warrior', id: 'iron_resolve' },
+  'mir4_passive_warrior-fighting-spirit': { class: 'warrior', id: 'battle_shout' },
+  'mir4_passive_warrior-indomitable-will': { class: 'warrior', id: 'avatar' },
+  'mir4_passive_elementalist-mana-well': { class: 'mage', id: 'overflowing_power' },
+  'mir4_passive_elementalist-arcane-intellect': { class: 'mage', id: 'arcane_intellect' },
+  'mir4_passive_elementalist-elemental-protection': { class: 'mage', id: 'mass_barrier' },
+  'mir4_passive_elementalist-channeling': { class: 'mage', id: 'presence_of_mind' },
+  'mir4_passive_elementalist-arcane-ascension': { class: 'mage', id: 'arcane_power' },
+  'mir4_passive_taoist-spiritual-vessel': { class: 'shaman', id: 'lifespring_weapon' },
+  'mir4_passive_taoist-twin-paths': { class: 'shaman', id: 'elemental_trance' },
+  'mir4_passive_taoist-sacred-guard': { class: 'shaman', id: 'stoneward' },
+  'mir4_passive_taoist-serene-mind': { class: 'shaman', id: 'tidecall' },
+  'mir4_passive_taoist-celestial-harmony': { class: 'shaman', id: 'primal_exaltation' },
+  'mir4_passive_arbalist-eagle-eye': { class: 'hunter', id: 'aspect_of_the_hawk' },
+  'mir4_passive_arbalist-ballistic-mastery': { class: 'hunter', id: 'trueshot_aura' },
+  'mir4_passive_arbalist-nature-guard': { class: 'hunter', id: 'aspect_of_the_wild' },
+  'mir4_passive_arbalist-hunter-instinct': { class: 'hunter', id: 'hunting_momentum' },
+  'mir4_passive_arbalist-perfect-shot': { class: 'hunter', id: 'measured_shot' },
+  'mir4_passive_lancer-war-conditioning': { class: 'paladin', id: 'righteous_fury' },
+  'mir4_passive_lancer-spear-mastery': { class: 'paladin', id: 'crusader_strike' },
+  'mir4_passive_lancer-vanguard-armor': { class: 'paladin', id: 'sacred_bulwark' },
+  'mir4_passive_lancer-battle-rhythm': { class: 'paladin', id: 'radiant_chorus' },
+  'mir4_passive_lancer-dragon-vanguard': { class: 'paladin', id: 'guardian_covenant' },
+};
+
 /** Static URL of an ability's image icon, or null if it uses a recipe. */
 export function abilityImageUrl(id: string): string | null {
+  const mir4Alias = MIR4_ABILITY_IMAGE_ALIASES[id];
+  if (mir4Alias) return `${SKILL_ICON_DIR}/${mir4Alias.class}/${mir4Alias.id}.webp`;
   if (!ABILITY_IMAGE_IDS.has(id)) return null;
   if (PET_ACTION_IMAGE_IDS.has(id)) return `${SKILL_ICON_DIR}/pet/${id}.webp`;
   const cls =

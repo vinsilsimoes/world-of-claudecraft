@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MIR4_QUESTS_ARC } from '../../src/sim/content/mir4/quests_arc';
+import { MIR4_QUESTS_ARC } from '../../src/sim/content/mir4/arc_campaign';
 import { mir4ApplyQuestEvidence, mir4ArcStageGoal } from '../../src/sim/mir4/arc_quests';
 import {
   MIR4_ARC_COMBAT_STAGE_KINDS,

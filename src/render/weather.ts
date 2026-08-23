@@ -260,7 +260,7 @@ export class Weather {
    * @param dt      seconds since last frame
    * @param biome   biome under the player, or null when precipitation should
    *                stop (indoors / underwater / suppressed)
-   * @param biomeAt world biome sampler (sim zoneBiomeAt), which is what lets a
+   * @param biomeAt world presentation-biome sampler, which is what lets a
    *                neighbouring zone's weather fall inside the box while the
    *                player stands outside it
    */

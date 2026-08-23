@@ -1,10 +1,10 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import { MIR4_QUESTS_ARC, mir4ArcQuest } from '../../src/sim/content/mir4/arc_campaign';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
-import { MIR4_QUESTS_ARC, mir4ArcQuest } from '../../src/sim/content/mir4/quests_arc';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { mir4ResolveLayer, mir4RollLayer } from '../../src/sim/mir4/affixes';
-import { mir4ArcObjectiveUsesInteract } from '../../src/sim/mir4/arc_quest_runtime';
 import {
+  acknowledgeMir4ArcTutorial,
   creditMir4ArcTutorialReceipt,
   type Mir4ArcTutorialReceipt,
 } from '../../src/sim/mir4/arc_receipts';
@@ -17,8 +17,8 @@ import { MIR4_ARC_PORTALS } from '../../src/sim/mir4/travel';
 import { Sim } from '../../src/sim/sim';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 
-function makeSim(): Sim {
-  const world = buildMir4ArcWorld(1);
+function makeSim(maps = 1): Sim {
+  const world = buildMir4ArcWorld(maps);
   setActiveWorldContent(world);
   const sim = new Sim({
     seed: 857,
@@ -78,9 +78,15 @@ describe('MIR4 campaign gameplay receipts', () => {
       },
     };
     meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, solarScroll: 2 };
-    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toMatchObject({ ok: true, level: 1 });
+    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toMatchObject({
+      ok: true,
+      level: 1,
+    });
     expect(meta.mir4ArcQuests['M01-Q06']?.stageIndex).toBe(3);
-    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toMatchObject({ ok: true, level: 2 });
+    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toMatchObject({
+      ok: true,
+      level: 2,
+    });
     expect(meta.mir4ArcQuests['M01-Q06']?.stageIndex).toBe(4);
   });
 
@@ -103,7 +109,7 @@ describe('MIR4 campaign gameplay receipts', () => {
   });
 
   it('credits portal travel only after the existing positional portal teleports the player', () => {
-    const sim = makeSim();
+    const sim = makeSim(2);
     const progress = armTutorial(sim, 'M02-Q01');
     const portal = MIR4_ARC_PORTALS[0]!;
     sim.player.pos = sim.groundPos(portal.a.x, portal.a.z);
@@ -155,6 +161,7 @@ describe('MIR4 campaign gameplay receipts', () => {
     });
     expect(equip.stageIndex).toBeGreaterThan(2);
 
+    meta.mir4ArcRewards.items = { 'bound-spirit-replica': 4 };
     const combine = armTutorial(sim, 'M10-Q03');
     expect(combineMir4Spirits(sim.ctx, sim.playerId, 1).ok).toBe(true);
     expect(combine.stageIndex).toBeGreaterThan(2);
@@ -179,7 +186,7 @@ describe('MIR4 campaign gameplay receipts', () => {
     expect(progress.stageIndex).toBeGreaterThan(2);
   });
 
-  it('has a concrete receipt or native Interact route for every authored system lesson', () => {
+  it('has a concrete gameplay receipt or explicit existing-window acknowledgement for every lesson', () => {
     const sim = makeSim();
     const receipts: readonly Mir4ArcTutorialReceipt[] = [
       { kind: 'use-health-potion' },
@@ -200,7 +207,6 @@ describe('MIR4 campaign gameplay receipts', () => {
     );
     expect(tutorials).toHaveLength(30);
     for (const { quest, stage, stageIndex } of tutorials) {
-      if (mir4ArcObjectiveUsesInteract(stage)) continue;
       const progress = {
         questId: quest.questId,
         stageIndex,
@@ -209,11 +215,36 @@ describe('MIR4 campaign gameplay receipts', () => {
       };
       const meta = sim.players.get(sim.playerId)!;
       meta.mir4ArcQuests = { [quest.questId]: progress };
+      const receiptSatisfied = receipts.some((receipt) =>
+        creditMir4ArcTutorialReceipt(meta, receipt),
+      );
       expect(
-        receipts.some((receipt) => creditMir4ArcTutorialReceipt(meta, receipt)),
+        receiptSatisfied || acknowledgeMir4ArcTutorial(meta, quest.questId),
         `${quest.questId}: ${stage.lesson}`,
       ).toBe(true);
     }
+  });
+
+  it('does not let opening a window bypass equipment or crafting gameplay lessons', () => {
+    const sim = makeSim();
+    for (const questId of ['M01-Q03', 'M01-Q04', 'M01-Q06']) {
+      const progress = armTutorial(sim, questId);
+      const stageIndex = progress.stageIndex;
+      expect(acknowledgeMir4ArcTutorial(sim.players.get(sim.playerId)!, questId)).toBe(false);
+      expect(progress.stageIndex).toBe(stageIndex);
+    }
+  });
+
+  it('keeps Auto Journey waiting at a tutorial until the taught action or window is used', () => {
+    const sim = makeSim();
+    const progress = armTutorial(sim, 'M01-Q01');
+    const stageIndex = progress.stageIndex;
+    sim.setMir4AutoQuest(true);
+    for (let tick = 0; tick < 20; tick++) sim.tick();
+    expect(progress.stageIndex).toBe(stageIndex);
+    expect(sim.mir4AutoQuestActive()).toBe(true);
+    expect(acknowledgeMir4ArcTutorial(sim.players.get(sim.playerId)!, 'M01-Q01')).toBe(true);
+    expect(progress.stageIndex).toBe(stageIndex + 1);
   });
 
   it('fails closed when a valid receipt does not match the current authored lesson', () => {
@@ -221,7 +252,9 @@ describe('MIR4 campaign gameplay receipts', () => {
     const progress = armTutorial(sim, 'M01-Q03');
     const stageIndex = progress.stageIndex;
     expect(
-      creditMir4ArcTutorialReceipt(sim.players.get(sim.playerId)!, { kind: 'combine-spirit' }),
+      creditMir4ArcTutorialReceipt(sim.players.get(sim.playerId)!, {
+        kind: 'combine-spirit',
+      }),
     ).toBe(false);
     expect(progress.stageIndex).toBe(stageIndex);
   });

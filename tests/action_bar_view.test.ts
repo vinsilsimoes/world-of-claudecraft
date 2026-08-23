@@ -85,6 +85,7 @@ function fakeDeps(): ActionBarDeps {
 interface WorldOpts {
   playerId?: number;
   autoAttack?: boolean;
+  fixedAttackActive?: boolean;
   dead?: boolean;
   resource?: number;
   cooldowns?: Map<string, number>;
@@ -134,6 +135,7 @@ function world(opts: WorldOpts = {}): ActionBarWorldInput {
       paladinDevotion: opts.paladinDevotion,
       paladinSpec: opts.paladinSpec,
     },
+    fixedAttackActive: opts.fixedAttackActive,
     target:
       targetPos === null
         ? null
@@ -268,6 +270,12 @@ describe('actionBarView: the four slot kinds classify correctly', () => {
       ariaPressed: 'false',
     });
     expect(view.tick(world({ autoAttack: true })).slots[0].ariaPressed).toBe('true');
+    expect(view.tick(world({ autoAttack: false, fixedAttackActive: true })).slots[0]).toMatchObject(
+      { queued: true, ariaPressed: 'true' },
+    );
+    expect(view.tick(world({ autoAttack: true, fixedAttackActive: false })).slots[0]).toMatchObject(
+      { queued: false, ariaPressed: 'false' },
+    );
   });
 
   it('slot 0 stops being Attack when isAttack() is false, rendering its assigned action', () => {

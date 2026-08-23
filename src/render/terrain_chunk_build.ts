@@ -37,7 +37,7 @@ import {
   ZONES,
 } from '../sim/data';
 import { fbm2 } from '../sim/rng';
-import { roadDistance, waterLevel, zoneBiomeAt } from '../sim/world';
+import { biomeAt, roadDistance, waterLevel } from '../sim/world';
 import { impactCraterTerrainBlend } from './impact_terrain';
 import { clamp01 } from './num_clamp';
 import { meshTerrainHeight } from './terrain_mesh_height';
@@ -101,7 +101,7 @@ const zonePalettes = ZONES.map((zn) => {
 function paletteAt(x: number, z: number): void {
   const activeZones = getActiveWorldContent().zones;
   if (activeZones.length > 0 && activeZones !== ZONES) {
-    const palette = BIOME_PALETTE[zoneBiomeAt(x, z)];
+    const palette = BIOME_PALETTE[biomeAt(x, z)];
     grassC.set(palette.grass);
     grassDarkC.set(palette.grassDark);
     grassYellowC.set(palette.grassYellow);
@@ -145,7 +145,7 @@ function paletteAt(x: number, z: number): void {
 function marshWeightAt(x: number, z: number): number {
   const activeZones = getActiveWorldContent().zones;
   if (activeZones.length > 0 && activeZones !== ZONES) {
-    return zoneBiomeAt(x, z) === 'marsh' ? 1 : 0;
+    return biomeAt(x, z) === 'marsh' ? 1 : 0;
   }
   let w = STRIP_ZONES[0].biome === 'marsh' ? 1 : 0;
   for (let i = 0; i + 1 < STRIP_ZONES.length; i++) {
@@ -251,7 +251,7 @@ function sampleVertex(state: ChunkGeometryBuildState, ci: number, cj: number): V
   ];
 
   paletteAt(x, z);
-  const biome = zoneBiomeAt(x, z);
+  const biome = biomeAt(x, z);
   const w: [number, number, number, number] = [1, 0, 0, 0];
   const impact = customTopology
     ? { scorch: 0, ash: 0, dirt: 0, rock: 0 }

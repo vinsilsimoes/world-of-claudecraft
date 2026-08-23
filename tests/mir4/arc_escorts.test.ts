@@ -2,7 +2,12 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
 import { setActiveWorldContent } from '../../src/sim/data';
-import { tryStartMir4ArcEscort, updateMir4ArcEscorts } from '../../src/sim/mir4/arc_escorts';
+import {
+  mir4ArcEscorteeForPlayer,
+  mir4ArcEscortTargetForPlayer,
+  tryStartMir4ArcEscort,
+  updateMir4ArcEscorts,
+} from '../../src/sim/mir4/arc_escorts';
 import { mir4ArcStageAnchor } from '../../src/sim/mir4/arc_quest_runtime';
 import { mir4QuestCurrentStage } from '../../src/sim/mir4/arc_quests';
 import { Sim } from '../../src/sim/sim';
@@ -147,6 +152,29 @@ describe('MIR4 native-runtime campaign escorts', () => {
     expect(escortee(sim)).toMatchObject({ hostile: false });
   });
 
+  it('keeps a started escortee friendly through mob upkeep and Auto Battle targeting', () => {
+    const sim = makeEscortSim();
+    const progress = sim.players.get(sim.playerId)!.mir4ArcQuests!['M02-Q02']!;
+    const stage = mir4QuestCurrentStage(progress)!;
+    const first = mir4ArcStageAnchor(progress.questId, stage, 0)!;
+    sim.player.pos = sim.groundPos(first.x, first.z);
+    updateMir4ArcEscorts(sim.ctx);
+    const npc = escortee(sim)!;
+    sim.player.pos = { ...npc.pos };
+    expect(tryStartMir4ArcEscort(sim.ctx, sim.player)).toBe(true);
+    npc.hostile = true;
+    expect(sim.isHostileTo(sim.player, npc)).toBe(false);
+    const hpBefore = npc.hp;
+    sim.player.targetId = npc.id;
+    sim.setMir4AutoBattleMode('battle');
+
+    sim.tick();
+
+    expect(npc).toMatchObject({ dead: false, hostile: false, hp: hpBefore });
+    expect(sim.isHostileTo(sim.player, npc)).toBe(false);
+    expect(sim.player.targetId).not.toBe(npc.id);
+  });
+
   it('releases the native escort shell and template after the quest leaves the stage', () => {
     const sim = makeEscortSim();
     const progress = sim.players.get(sim.playerId)!.mir4ArcQuests!['M02-Q02']!;
@@ -195,6 +223,88 @@ describe('MIR4 native-runtime campaign escorts', () => {
     sim.player.pos = { ...npc.pos };
     updateMir4ArcEscorts(sim.ctx);
     expect(progress.stageProgress).toBe(1);
+  });
+
+  it('selects the nearest living escort ambusher with an entity-id tie break', () => {
+    const sim = makeEscortSim();
+    const progress = sim.players.get(sim.playerId)!.mir4ArcQuests!['M02-Q02']!;
+    const stage = mir4QuestCurrentStage(progress)!;
+    const first = mir4ArcStageAnchor(progress.questId, stage, 0)!;
+    sim.player.pos = sim.groundPos(first.x, first.z);
+    updateMir4ArcEscorts(sim.ctx);
+    const npc = escortee(sim)!;
+    sim.player.pos = { ...npc.pos };
+    expect(tryStartMir4ArcEscort(sim.ctx, sim.player)).toBe(true);
+    npc.pos = sim.groundPos(first.x, first.z);
+    sim.player.pos = { ...npc.pos };
+    updateMir4ArcEscorts(sim.ctx);
+    const run = [...sim.mir4ArcEscortRuns.values()][0]!;
+    const ambushers = run.ambushIds.map((id) => sim.entities.get(id)!);
+    expect(ambushers).toHaveLength(2);
+
+    expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)?.id).toBe(
+      Math.min(...ambushers.map((ambusher) => ambusher.id)),
+    );
+    const higherId = ambushers.reduce((best, candidate) =>
+      candidate.id > best.id ? candidate : best,
+    );
+    higherId.pos = sim.groundPos(sim.player.pos.x + 1, sim.player.pos.z);
+    expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)?.id).toBe(higherId.id);
+    higherId.dead = true;
+    expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)?.id).not.toBe(
+      higherId.id,
+    );
+  });
+
+  it('scopes escortee, start and ambush selection to the exact quest stage', () => {
+    const sim = makeEscortSim();
+    const meta = sim.players.get(sim.playerId)!;
+    const main = meta.mir4ArcQuests!['M02-Q02']!;
+    const side = {
+      questId: 'M01-R01',
+      stageIndex: 0,
+      stageProgress: 0,
+      state: 'active' as const,
+      selectedStageIndexes: [2, 0],
+    };
+    meta.mir4ArcQuests!['M01-R01'] = side;
+    const mainStage = mir4QuestCurrentStage(main)!;
+    const sideStage = mir4QuestCurrentStage(side)!;
+    const mainFirst = mir4ArcStageAnchor(main.questId, mainStage, 0)!;
+    const sideFirst = mir4ArcStageAnchor(side.questId, sideStage, 0)!;
+
+    sim.player.pos = sim.groundPos(sideFirst.x, sideFirst.z);
+    updateMir4ArcEscorts(sim.ctx);
+    sim.player.pos = sim.groundPos(mainFirst.x, mainFirst.z);
+    updateMir4ArcEscorts(sim.ctx);
+    const mainNpc = mir4ArcEscorteeForPlayer(sim.ctx, sim.playerId, main.questId, main.stageIndex)!;
+    const sideNpc = mir4ArcEscorteeForPlayer(sim.ctx, sim.playerId, side.questId, side.stageIndex)!;
+    expect(mainNpc.id).not.toBe(sideNpc.id);
+
+    sim.player.pos = { ...mainNpc.pos };
+    expect(tryStartMir4ArcEscort(sim.ctx, sim.player, main.questId, main.stageIndex)).toBe(true);
+    expect(sim.mir4ArcEscortRuns.get(`${sim.playerId}:M02-Q02:2`)?.started).toBe(true);
+    expect(sim.mir4ArcEscortRuns.get(`${sim.playerId}:M01-R01:0`)?.started).toBe(false);
+    sim.player.pos = { ...sideNpc.pos };
+    expect(tryStartMir4ArcEscort(sim.ctx, sim.player, side.questId, side.stageIndex)).toBe(true);
+
+    mainNpc.pos = sim.groundPos(mainFirst.x, mainFirst.z);
+    sideNpc.pos = sim.groundPos(sideFirst.x, sideFirst.z);
+    updateMir4ArcEscorts(sim.ctx);
+    const mainRun = sim.mir4ArcEscortRuns.get(`${sim.playerId}:M02-Q02:2`)!;
+    const sideRun = sim.mir4ArcEscortRuns.get(`${sim.playerId}:M01-R01:0`)!;
+    expect(mainRun.ambushIds).toHaveLength(2);
+    expect(sideRun.ambushIds).toHaveLength(1);
+    expect(
+      mainRun.ambushIds.includes(
+        mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, main.questId, main.stageIndex)!.id,
+      ),
+    ).toBe(true);
+    expect(
+      sideRun.ambushIds.includes(
+        mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, side.questId, side.stageIndex)!.id,
+      ),
+    ).toBe(true);
   });
 
   it('times out and resets a stalled escort without granting progress', () => {

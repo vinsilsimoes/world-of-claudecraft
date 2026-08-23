@@ -186,6 +186,10 @@ every old process and active session, verify the aggregate `GROUP BY class`
 preflight contains only the five MIR4 product keys, then update the singleton
 guard inside the schema advisory lock. Once v2 has written a character, rollback
 to a v1 binary is forbidden: v1 would omit the new state on its next autosave.
+The same forward-only rule applies inside v2 after the dungeon-ticket wallet is
+enabled: an older v2 binary does not preserve that unknown field when it rewrites
+the character blob. Drain the old local/server process before starting this build;
+do not run mixed versions against one database and do not roll back after a save.
 Fresh databases adopt v2 directly; a stale namespace fails boot closed.
 
 ## Phases
@@ -738,6 +742,444 @@ Mount/Spirit redemption and equip, Character presentation, M04 isolated
 short-dungeon combat and campaign return without adding a parallel MIR4 UI or
 copying any 2D asset. Artifact `mir4-external-proof-32486719723` retains the
 server/Vite logs and browser screenshots for 14 days.
+
+### Native WoC asset adoption and physical objectives (2026-08-21)
+
+The target-native asset inventory is now reproducible through the existing WoC
+pipeline rather than a hand-maintained list. Run
+`node scripts/asset_pipeline/pipeline.mjs library --full`; the searchable visual
+catalogue is emitted to `tmp/asset_pipeline/library/index.html`. The current
+inventory contains 1,313 GLB/skin entries: 89 creatures, 31 player bodies, 14
+enemy bodies, one modular body, one form, 205 biome pieces, 379 dungeon pieces,
+179 props, 12 quest objects, 135 resources, 69 tools, 103 weapons, nine mounts,
+23 foliage entries, four settlement/city entries, three battleground entries,
+41 character skins and 15 mech chromas. The headless catalogue renderer now
+uses the repository's shared KTX2 transcoder wiring; a clean full pass rendered
+all 1,313 entries with zero errors. No source-project asset participates.
+
+The first MIR4 presentation assignment slice is active:
+
+- the five MIR4 classes select five existing WoC character bodies instead of
+  sharing the Warrior shell;
+- every unique campaign NPC identity deterministically selects an existing WoC
+  silhouette from role rules plus an eight-silhouette fallback pool;
+- dynamic quest and dungeon monsters select native WoC families by authored
+  name/identity (animal, undead, elemental, demon, humanoid, construct and boss
+  vocabularies), with a 22-family deterministic fallback and no generic Bandit
+  fallback;
+- all 25 class skills and five ultimates resolve shipping painted WoC skill art
+  instead of the procedural placeholder;
+- all 14 campaign interaction verbs materialize an authoritative, player-owned
+  ground object using native quest/resource/tool GLBs (clues, cog/device, maps,
+  keys, waypoint crystal, compass, herbs, blueprints, journals, supplies,
+  evidence and repair tools). Proximity alone no longer completes these stages:
+  the exact live entity must be reached and interacted with, then it is consumed
+  and the logical quest evidence is granted.
+
+The local real-boundary proof created a fresh Warrior and Elementalist through
+login, PostgreSQL 16 and WebSocket, completed a duel, then ran auto journey for
+180 seconds. Both completed M01-Q01 and M01-Q02, including three physical clue
+interactions, evidence reconstruction and lore registration; they reached level
+5 with 24/27 quest-stage advances, zero deaths, zero simulation/connection
+errors and no playtest findings. The report is reproducible under
+`tmp/mir4-bot-playtests/assetqa1-*.json`.
+
+This closes inventory and baseline placeholder removal, not final art direction.
+The quest-by-quest baseline matrix is now generated for all 230 quests and 1,204
+stages by `scripts/mir4_campaign_homologation.ts`. It reports 80 unique physical
+NPC identities, 20 maps, 38 native WoC character asset URLs and zero missing
+routes, tutorial guidance records, NPC references or presentation assignments.
+The reviewable JSON and CSV live under `tmp/mir4-campaign-homologation/` and are
+regenerated rather than hand-maintained. Final art direction still requires a
+human-quality visual pass for silhouette repetition, objective readability,
+item art, VFX and SFX. Those refinements must keep using the same catalogue and
+pipelines; they do not authorize source-project assets or a second renderer.
+
+### Campaign homologation and autonomous progression (2026-08-21)
+
+The full-campaign laboratory now creates one fresh character for each of the
+five MIR4 classes in the real `Sim`, enables the shipping Auto Journey and Auto
+Battle commands, drives only ordinary player verbs, detects a per-stage stall
+and writes a persistence-checked report through
+`scripts/mir4_campaign_soak.ts`. The short calibration pass completed M01-Q01
+for all five characters and reached M01-Q03 without a route failure; class
+clear-speed differences were retained instead of normalized. The runner uses
+the same `PLAYER_INTEREST_DROP_RADIUS` mob-idle policy as the local server.
+
+The campaign audit also closed four content deadlocks that were unrelated to
+player combat strength:
+
+- M10-Q03 now grants exactly four quest-bound Spirit replicas; its 20% tutorial
+  fusion consumes only those replicas, returns one on failure and never mutates
+  the real Spirit collection or tickets;
+- M11-Q05, M15-Q05, M17-Q06 and M19-Q06 each grant one craft input, its Copper
+  cost and a one-use guarantee for the required +7, +8, +9 or +10 step, so a
+  mandatory tutorial cannot destroy the player's native-shell weapon;
+- M13-Q03 grants the inputs for its required advanced-crafting receipt; and
+- M14-Q05 accepts the documented decision to retain an already-suitable item
+  after the player reviews the existing Blessing window, so no absent material
+  can deadlock the main chain.
+
+A real local browser proof then resumed the persistent Warrior at M07-Q05. The
+existing Equipment Workshop opened on the directed tabs, crafted the granted
+Solar Scroll, raised the equipped native WoC Pitted Shortsword from +5 to +6,
+advanced the tutorial, and closed the three-wave defense under Auto Battle.
+Auto Journey immediately selected the next main quest, the character reached
+level 63, and the browser console remained free of warnings and errors. The
+remaining homologation gate is the long M01-to-M20 soak for all five classes,
+followed by targeted fixes for any newly observed strength or content blocker;
+the short calibration is not represented as that final gate.
+
+### World-art priority, physical limits and authored-map passes (2026-08-22)
+
+Maps are now the highest-priority content program. The 20-region generator is a
+functional campaign carrier, but the repeated site stamp, sparse landmark layer
+and rectangular perimeter silhouettes do not yet meet the intended world quality.
+The target is not a copy of another game's geometry. The art-direction reference
+is its level-design language: distant landmarks that orient the player, named
+subareas with distinct silhouettes, several ways into and out of dangerous
+spaces, strong vertical identity, and terrain that tells the truth about where a
+character can walk. Blizzard's public level-design retrospective specifically
+calls out an early Nagrand that was attractive but too open and empty, and narrow
+canyons that became traps until they were widened, divided into subareas and
+given more entrances. The Highmountain preview likewise describes one dominant
+mountain fantasy, real-world reference and a deliberate sense of ascent.
+
+The physical-boundary contract is now explicit:
+
+- An open-looking field is traversable. No generated invisible rectangle may
+  stop a player or mob.
+- An impassable limit must be visible as steep terrain, deep water, a wall, a
+  closed gate or another authored 3D obstacle. Rendering, player movement, mob
+  reachability and pathfinding consume the same terrain/collider fact.
+- A rectangular content extent must not continue as a raised plateau into the
+  void. Its current physical ridge has a finite shoulder and a guaranteed
+  unwalkable face; authored map passes replace the rectangular footprint with
+  visible mountains, water, walls and gates without weakening that guarantee.
+- Every required route, quest anchor, camp and portal stays on dry, walkable
+  ground. Any apparent pass through the surrounding geography is either a real
+  traversable route or is visually closed.
+
+The first infrastructure slice applies the physical contract globally to
+injected world terrain. The hidden global OBB perimeter is removed; visible
+terrain supplies the unwalkable slope and decays outside the map. The original
+M02 Reed Trail scaffold was useful for proving asymmetric roads, water margins
+and low-quality terrain parity, but was explicitly rejected as production
+content. The authored M02 described below replaces that scaffold; neither
+version is a template for generating the remaining eighteen regions.
+
+The boundary hardening pass can check every side and corner of the development
+scaffolding,
+keeps fully and partially shared edges continuous, promotes custom-rim chunks to
+dense low-quality geometry before gap LOD selection, and keeps all 100 hostile
+camp footprints outside the ridge shoulder. Auto Journey consumes the authored
+road graph, including portal landing direction, rather than cutting straight
+through water or immediately re-entering a portal. Existing WoC arches mark both
+sides of every map transition. Floating boats share their visual waterline with
+their runtime colliders, and measured collider footprints replace oversized
+invisible circles. World layout epoch 11 rejects mixed geometry bundles and
+recovers legacy MIR4 save and corpse coordinates at the safe authored start.
+The RL observation keeps a continuous campaign axis by combining map ordinal
+with local north/south position, so the bent continent no longer collapses late
+maps onto the same normalized global Z value.
+
+#### Map authoring constitution
+
+No production map is generated in bulk. The campaign table may retain spatial
+scaffolding for simulation tests, but the player-facing world includes only maps
+that pass their own authored gate. Work finishes one map before starting the
+next.
+
+Every map must have:
+
+1. A map-specific blueprint derived from its quests, story, level band and
+   progression pressure. Size follows content and traversal rhythm; it is not a
+   fixed six-site rectangle.
+2. Between six and ten named points of interest. Only the main-quest locations
+   are mandatory; exploration, services, shortcuts, resources, events and
+   optional danger make the remainder.
+3. A coherent biome with deliberate relief, drainage, vegetation, sight lines,
+   skyline and natural limits. An open field remains traversable. A blocked
+   route visibly explains why it is blocked.
+4. Architecture that follows ecology and history. Intact human construction
+   belongs to settlements, roads, defenses or an explicitly occupied human
+   camp. Wildlife lairs do not receive random houses, stalls or towers. Ruins,
+   salvage and ancient structures appear only where the story explains them.
+   Before layout begins, narrative review classifies habitation as city,
+   settlement, outpost, dispersed or none. `isCity: false` never implies a
+   smaller town: it defaults to dispersed contacts or no habitation. An isolated
+   chapel, tower, refuge or mission camp is one landmark, not permission to add
+   a civic cluster. Only M04, M08, M12, M16 and M20 are city maps in the current
+   arc; every other inhabited map must earn each structure from its own story.
+5. A route graph with loops, alternate approaches and optional discoveries,
+   not a single road that walks the quest list in order.
+6. Quest interactions that physically exist in the landscape. Clues, cargo,
+   devices, defense anchors and guardian wards are interactable objects; arrival
+   alone never substitutes for the action.
+7. An encounter plan for population, patrols, aggro overlap, respawn, safe
+   observation shelves and the player-power thresholds at which Auto Journey
+   should require manual intervention.
+8. An art pass and browser playtest covering arrival composition, landmarks,
+   close-range prop cohesion, collision honesty, camera behavior and combat
+   frame time. The next map remains frozen until this gate passes.
+9. An artistic-tooling pass using the available level-art, Three.js, 3D asset
+   and browser-playtest skills. Suitable open-source GitHub projects may improve
+   editing, placement, optimization and validation, but they never generate the
+   authored layout or replace map-specific artistic judgment. Every visible
+   asset must participate in one shared environmental grammar instead of reading
+   as an isolated prop.
+
+#### Approved authored map: M01 Vila do Vau
+
+M01 passed user review and remains frozen. M02 is also approved, while M03 is
+under review. Its authored blueprint expands
+the previous 280 by 240 stamp into a 460 by 520 river valley and defines ten
+points of interest: the village, wolf-trail clearing, boar meadow, broken
+caravan, five-lights stone circle, moss cemetery, defended bridge, root cave,
+guardian grove and two-bridges lookout. Six distinct mission spaces follow the
+level 1 to 10 main line; three optional exploration sites create shortcuts and
+foreshadow the buried Root Beacon.
+
+The blueprint assigns every point an ecology, architectural language, narrative
+role and gameplay role. The village contains all intact civic buildings and all
+nine local NPCs. Wildlife spaces use natural or ancient dressing only. Human
+salvage is confined to the bandit caravan, while defensive structures belong to
+the bridge and lookout. Nine authored road paths form east, west and central
+loops. The camp plan now matches quest semantics exactly: wolves, boars,
+bandits, moss skeletons, briar guards and dire wolves occupy their corresponding
+spaces instead of inheriting the first five entries of a generic mob list. Each
+encounter also owns its exact level band from 1 to 10 and resolves to an
+appropriate existing WoC creature model instead of the shared placeholder.
+
+The first close-range art pass separates human-lit village lanes from unlit
+wilderness trails, pushes the outer ridge beyond every mission arena, rings the
+alpha encounter with authored oaks and grounds the existing WoC bridge asset
+between two shaped banks. The river leaves a visible dry ford at the tutorial
+crossing and a separate narrow bridge corridor at the defended crossing. Roads,
+water and terrain agree on both routes, so neither crossing depends on an
+invisible blocker. The existing map window now renders the authored world's
+own coordinate space instead of clamping it to the classic WoC atlas. It shows
+the real relief, lakes and road graph, anchors all ten POIs with cartography
+dots and deterministically separates overlapping labels. The same authored POI
+names appear directly in the HUD.
+
+The production order remains blueprint, implementation, full quest/art
+playtest and user review for one map at a time. No "twenty-map macro pass"
+remains in the plan.
+
+#### Approved authored map: M02 Trilha dos Juncos
+
+M02 now replaces its former three-route scaffold with a 640 by 440 authored
+wetland built directly from the six level 11 to 20 main quests. Ten named
+points of interest cover the defended Posto das Duas Pontes, three-flame reed
+ritual, scout crossing, cargo landing, four memory islands, old beacon, sunken
+depot, seasonal shortcut, three tide shelters and the guardian root. Nine road
+graphs form west-bank, memory-island, shelter and guardian loops instead of a
+single quest-order corridor. Two actual plank bridges occupy dry causeways
+between visible water banks.
+
+The six hunting grounds use distinct WoC runtime creatures and exact quest
+bands: thorn imps at 11-12, bandits at 13-14, moss skeletons at 15, rabid boars
+at 16-17, owlbear cubs at 18-19 and briar guards at 20. Intact Fenbridge
+architecture is confined to the raised settlement and maintained crossings.
+Wildlife spaces contain natural banks, one capsized supply run and no arbitrary
+human buildings; memory islands use drowned ritual props; rescue tents belong
+only to the flood shelters; root walls define the guardian sanctuary. Four
+campaign NPCs and five uniquely named residents live inside the defended post.
+
+The physical gate samples every authored road against the runtime water query,
+including both dry crossings, and rejects solid props or campfires that overlap
+a route. The integrated atlas renders all ten POIs, lakes and loops. A local
+browser pass on the integrated Intel GPU held approximately 54-57 FPS at the
+post and guardian root and approximately 55 FPS at the scout crossing on Low,
+rather than reproducing the former 10 FPS combat cliff. Auto Battle stayed
+inside its search radius at the safe post, then acquired and fought only nearby
+hostiles when the diagnostic entry started inside the camp.
+
+The close-range asset pass now applies each reused GLB's original WoC runtime
+normalization before the M02 placement multiplier. Fenbridge buildings retain
+their native dimensions; tents, sluice posts, dead trees, willows, shrines and
+root walls agree with their physical footprint; rectangular buildings and
+palisades use oriented boxes instead of oversized invisible circles. Every NPC
+is outside those solid footprints. The two bridge banks render as one merged
+water surface with the authored causeways physically cut out, eliminating both
+stacked lake discs and the water sheet that previously covered dry ground.
+
+All M02 objective stages now resolve to the visible landmark that explains the
+action rather than to a generic hashed point. The automated interaction reach
+is the same authoritative six-yard reach as manual Interact, so the three final
+root wards are operated from the reachable edge of their solid scenery instead
+of routing into the root collider. A deterministic run completed all thirteen
+M02 interaction stages without camps, and the dedicated guardian-root
+regression advances the formerly stuck stage through the real Auto Journey
+tick. The atlas derives navigation from the active physical world, displays the
+approved M01 return passage and the admitted M03 forward passage, and cannot
+expose the unfinished M04 portal from a stale twenty-map save.
+
+M02 passed user review and is frozen beside M01. A developer-only diagnostic
+URL can start at an authored map hub or POI for isolated local playtests;
+production entry, progress and saves never use that override.
+
+#### Approved authored map: M03 Bosque do Vale
+
+M03 is a 724 by 610 ancient twilight-forest valley authored around the complete
+level 21 to 30 main line. It deliberately stops repeating M01's daylight vale:
+the map has a green hunter refuge, a violet twilight forest and a cold,
+haunted eastern gorge. A visual-only biome paint connects those three districts
+without changing the authored heightfield, collision or traversal physics. Its
+ten POIs are Abrigo das Silvas, Ruínas da Marca Apagada,
+Jardim das Ervas Feridas, Campanário Partido, Covil da Vigia de Plumas,
+Encruzilhada dos Quatro Totens, Garganta do Uivo, Gruta do Orvalho Azul, Ponte
+da Raiz Fendida and Mirante do Farol da Raiz. Eleven road graphs connect those
+places through quest routes, shortcuts and alternate approaches; two physical
+plank bridges cross visible forest streams, and seven water bodies break the
+valley into distinct navigation spaces.
+
+The refuge is one hunter shelter with a spring well, not a settlement. Four
+contacts remain at that safe recovery point; five others occupy story-specific
+observation posts along the forest routes, including the herb approach, the old
+bell road and the totem ascent. The remaining landscapes use only natural,
+ancient, corrupted or guardian vocabulary. Six dense aggressive camps escalate
+from nine level 21-22 wolves to twelve level 30 dire wolves. One hundred and six
+hand-authored WoC prop placements, two ancient ruin rings and twenty-three
+terrain stamps provide the close-range art pass without importing an external
+or 2D asset. Living oaks and restrained refuge dressing stay around the shelter;
+luminous mushrooms, amethyst
+outcrops and a mixed living-dead canopy identify the central wilds; dead crowns,
+exposed root walls and the Star Heart crystal mark the final guardian ground.
+Both crystal cave mouths face
+their player approaches, remain physically traversable and use visible compound
+boulder shells instead of a solid invisible circle across the entrance or a
+walk-through visual mound. Settlement and
+ruin assets reuse their native WoC presentation normalization, with matching
+physical footprints.
+
+The final Garganta do Uivo is no longer an open field. Its combat floor is
+lowered between two visible root ridges more than ten yards above the arena,
+with two western approaches and the eastern map-exit corridor left open. Four
+large root walls and three ward shrines define the boss space without an
+invisible perimeter. Runtime terrain tests pin both ridges continuously and the
+open exit. Actual Sim Auto Journey runs operate all three M03-Q06 wards and,
+with seed 20061, complete the full return from the gorge to Selene. The two
+campaign branches around the first bridge are continuously dry and remain below
+the player climb limit.
+
+Twenty-seven exact interaction points cover thirteen authored objective plans
+for clues, sequences, tracks, defense preparation, evidence reconstruction and
+guardian wards. The integrated world projects each POI, NPC and hostile camp
+exactly once, has no overlap with any frozen source-data scaffold and admits
+only the M01-M02 and M02-M03 travel links. There is no M04 portal landmark or
+active trigger. The browser art pass reviewed the green refuge, twilight garden
+and cold gorge on the local Intel integrated GPU with the diagnostic overlays
+active. M03 remains admitted, but its habitation pass was reopened after the
+refuge was reduced from a compact settlement to one hunter shelter and five
+mission contacts were distributed through the forest. That revised composition
+requires the next user visual review before M03 is frozen again.
+
+#### Current approval candidate: M04 Ruínas da Encosta
+
+M04 replaces its generated level-band scaffold with an 860 by 760 highland
+city and ruin complex built around the complete level 31 to 40 main line. Its
+eleven named POIs are Passo da Lente, Muros sem Dono, Vau Dourado, Pedreira da
+Raiz, Muralha da Noite, Estrada das Três Voltas, Cidadela do Regente, Cripta da
+Raiz, Aqueduto do Vento, Farol da Raiz Invertida and Ponte da Fenda. Twelve
+branched road graphs connect the arrival pass, city, quarry, northern wall,
+switchbacks, citadel, crypt, aqueduct, final beacon and exit. No route leg
+depends on an invisible boundary, and the physical path gate validates every
+leg in both directions against collision, water depth and climb slope. The
+quarry and crypt use open doorway colliders with solid flanking masonry, while
+the final bridge crosses a physically lowered cleft instead of continuous flat
+ground.
+
+Four connected visual districts prevent M04 from repeating the prior forests.
+The inhabited terraces use warm amber stone and civic silhouettes; the quarry
+and crypt form a cold root undercroft; the outer ramparts and aqueduct use an
+exposed gale palette; the finale becomes an ember-lit inverted-root arena. The
+paint is presentation-only, so these local identities do not alter traversal
+physics. Recent human architecture exists only in defended Vau Dourado and the
+Regent's citadel. Military tents belong to occupied walls and switchbacks.
+Wildlife shelves contain natural geology or ancient infrastructure with a
+clear historical reason, never arbitrary houses.
+
+The authored population uses 78 aggressive enemies across six level-matched
+camps, from level 31 bandits to level 40 skeleton spearmen. The survival step
+at the northern wall now materializes an aggressive Alfa da Muralha instead of
+waiting in an empty circle. Six exact creature presentations and the named
+encounters resolve to existing WoC runtime models. Sixteen uniquely named
+residents live within the defended city terraces, including four campaign
+NPCs, while 133 hand-placed WoC props and fourteen terrain stamps establish the
+city, defenses, quarry, crypt and final arena without any 2D or external game
+asset.
+
+All thirteen M04 contracts are grounded in the same authored landscape, not
+only the six main quests. Forty-one objective plans with ninety-one physical
+points place clues, hunts, repairs, civilian preparation, defenses, supply
+escorts, resource work, service inspections, crafting stations, dungeon entry
+and beacon certification at their visible landmarks. Every point is physically
+reachable with the production world seed, including the six short local legs
+off the authored road graph. The three-point ascent
+escort completes through the real Auto Journey runtime, and profession
+receipts return to the visible Vau Dourado workshop instead of a hashed quest
+clearing. The Root Crypt remains a deliberate short-instance boundary; Auto
+Journey reaches its entrance and dungeon entry still requires the player's
+explicit confirmation.
+
+M01 through M03 remain frozen, and M05 is not admitted into the playable
+world. M04 advances to final browser art, combat-performance and quest-flow
+approval before any work begins on M05.
+
+#### Art and tooling research
+
+Concept images may be generated as non-shipping art references. Shipping
+geometry still uses the WoC 3D vocabulary and its deterministic GLB pipeline;
+no concept bitmap becomes terrain or a 2D game asset.
+
+The official Three.js repository includes a scene editor and transform controls
+that are useful references for a later developer-only placement overlay. The
+project already depends on Three.js and glTF Transform; the latter already owns
+the deterministic GLB optimization path, so no duplicate asset framework is
+needed. `three-mesh-bvh` is a possible future acceleration for terrain raycasts
+and spatial validation if profiling the larger authored map proves the current
+queries insufficient. Blender remains the appropriate open-source tool for
+manual mesh and terrain art when the runtime height-stamp vocabulary cannot
+produce the required silhouette. None of these projects is added merely because
+it exists; each adoption needs a measured repository gap, license review and a
+focused integration test.
+
+Asset procurement is intentionally gated after the physical and greybox passes:
+topology, routes and honest limits need no purchase. If the existing catalogue
+cannot supply the required silhouettes, the current shortlist is:
+
+- **Best first environment purchase:** Daniel Mistage's *STYLIZED Fantasy
+  Village* (currently USD 50), over 800 modular village/environment assets with
+  FBX/Blend sources and four atlases. Use for denser human settlements only
+  after GLB conversion/budget validation.
+- **Best direct-GLB organic settlement option:** Standout7's *LOKIT Elf Village
+  Modular Pack* (free subset; currently USD 15/29.99 tiers), with GLB/glTF,
+  atlas-based materials and CC0 terms. Use for forest and mystical villages.
+- **Dungeon gap, no purchase required:** Sigil's Vault *Modular Dungeon Kit
+  v1.0*, name-your-price/CC0, 90+ GLB/FBX modules on one trim sheet. Evaluate
+  only if the existing KayKit castle/dungeon vocabulary cannot distinguish the
+  underground maps.
+
+Do not buy an Unreal-only bundle, an AI-assisted pack with inconsistent pivots,
+or a pack with ambiguous redistribution terms for this web pipeline. No external
+asset is purchased, downloaded or imported until the user approves the exact
+pack; every approved source must still pass the repository GLB optimization,
+fingerprint, collision, attribution/license and browser-budget gates.
+
+Research references: [Blizzard Artcraft: Level Design Part
+4](https://worldofwarcraft.blizzard.com/en-us/news/16595426), [Blizzard
+Highmountain zone
+preview](https://worldofwarcraft.blizzard.com/en-us/news/20241588), [STYLIZED
+Fantasy Village](https://daniel-mistage.itch.io/stylized-fantasy-village),
+[LOKIT Elf Village](https://standout7.itch.io/lokit-elf-village), and [Modular
+Dungeon Kit v1.0](https://sigilsvault.itch.io/modular-dungeon-kit-v10).
+Open-source tooling references: [Three.js editor](https://github.com/mrdoob/three.js/tree/dev/editor),
+[Three.js transform controls](https://github.com/mrdoob/three.js/tree/dev/examples/jsm/controls),
+[glTF Transform](https://github.com/donmccurdy/glTF-Transform),
+[three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh), and the
+[official Blender mirror](https://github.com/blender/blender).
 
 ### Historical Phase 2 seed, superseded by the execution ledger
 

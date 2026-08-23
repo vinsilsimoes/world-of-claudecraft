@@ -8,7 +8,7 @@
 //   3. the distance ramp: nothing at gameplay range, a gentle saturating
 //      hint at vista range, and never a paint-over.
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   aerialHazeAmount,
   type BiomeHazePreset,
@@ -27,9 +27,19 @@ import {
   hazeFieldLayout,
   hazeLightLevel,
   hazeStrengthForFogFar,
+  hazeWorldBounds,
   sampleBiomeHazeField,
 } from '../src/render/biome_haze_field_core';
-import { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_X, WORLD_MIN_Z, ZONES } from '../src/sim/data';
+import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
+import {
+  BUILTIN_WORLD,
+  setActiveWorldContent,
+  WORLD_MAX_X,
+  WORLD_MAX_Z,
+  WORLD_MIN_X,
+  WORLD_MIN_Z,
+  ZONES,
+} from '../src/sim/data';
 import type { BiomeId } from '../src/sim/types';
 import { zoneBiomeAt } from '../src/sim/world';
 
@@ -38,6 +48,9 @@ import { zoneBiomeAt } from '../src/sim/world';
 // unmistakable colour per biome and a spread of fog `far` values.
 const RED = 0xff0000;
 const BLUE = 0x0000ff;
+const GREEN = 0x00ff00;
+
+afterEach(() => setActiveWorldContent(BUILTIN_WORLD));
 
 function presetTable(
   over: Partial<Record<BiomeId, BiomeHazePreset>> = {},
@@ -67,6 +80,64 @@ describe('haze field layout', () => {
   it('stays a small texture: the field is a per-frame texture fetch, not an atlas', () => {
     const l = hazeFieldLayout();
     expect(l.cols * l.rows).toBeLessThan(40_000);
+  });
+
+  it('can follow an injected map instead of clamping it to the WoC world rectangle', () => {
+    const bounds = { minX: 4336, maxX: 5060, minZ: -180, maxZ: 430 };
+    const l = hazeFieldLayout(bounds);
+    expect(l.originX).toBeLessThan(bounds.minX);
+    expect(l.originZ).toBeLessThan(bounds.minZ);
+    expect(l.originX + l.sizeX).toBeGreaterThan(bounds.maxX);
+    expect(l.originZ + l.sizeZ).toBeGreaterThan(bounds.maxZ);
+
+    const field = buildBiomeHazeFieldData(
+      presetTable({ dusk: { color: RED, far: 400 }, haunt: { color: BLUE, far: 200 } }),
+      (x) => (x >= 4800 ? 'haunt' : 'dusk'),
+      bounds,
+    );
+    const refuge = sampleBiomeHazeField(field, 4500, 0);
+    const gorge = sampleBiomeHazeField(field, 4980, 0);
+    expect(refuge.r).toBeGreaterThan(0.8);
+    expect(gorge.b).toBeGreaterThan(0.8);
+  });
+
+  it('projects authored zones into one renderer-ready rectangle', () => {
+    expect(
+      hazeWorldBounds([
+        { xMin: 4336, xMax: 4680, zMin: -180, zMax: 320 },
+        { xMin: 4680, xMax: 5060, zMin: -120, zMax: 430 },
+      ]),
+    ).toEqual({ minX: 4336, maxX: 5060, minZ: -180, maxZ: 430 });
+    expect(hazeWorldBounds([])).toBeUndefined();
+  });
+
+  it('bakes the real M03 vale, dusk and haunt paint through the default biome resolver', () => {
+    const world = buildMir4ArcWorld(3);
+    setActiveWorldContent(world);
+    const bounds = {
+      minX: Math.min(...world.zones.map((zone) => zone.xMin ?? zone.hub.x - zone.hub.radius)),
+      maxX: Math.max(...world.zones.map((zone) => zone.xMax ?? zone.hub.x + zone.hub.radius)),
+      minZ: Math.min(...world.zones.map((zone) => zone.zMin)),
+      maxZ: Math.max(...world.zones.map((zone) => zone.zMax)),
+    };
+    const field = buildBiomeHazeFieldData(
+      presetTable({
+        vale: { color: RED, far: 400 },
+        dusk: { color: GREEN, far: 400 },
+        haunt: { color: BLUE, far: 400 },
+      }),
+      undefined,
+      bounds,
+    );
+
+    const refuge = sampleBiomeHazeField(field, 4425, 215);
+    const wilds = sampleBiomeHazeField(field, 4610, 320);
+    const gorge = sampleBiomeHazeField(field, 4980, 35);
+    expect(refuge.r).toBeGreaterThan(refuge.g + refuge.b);
+    expect(wilds.g).toBeGreaterThan(wilds.r + wilds.b);
+    expect(gorge.b).toBeGreaterThan(gorge.r + gorge.g);
+    expect(field.layout.originX).toBeLessThan(world.zones[0]!.xMin!);
+    expect(field.layout.originX + field.layout.sizeX).toBeGreaterThan(world.zones.at(-1)!.xMax!);
   });
 });
 

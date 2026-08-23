@@ -109,7 +109,6 @@ import {
   type Decoration,
   farshorePalmSpots,
   gardenMazeCellPieces,
-  generateDecorations,
   generateDecorationsInBounds,
   groundHeight,
   MAZE_CELL,
@@ -124,7 +123,6 @@ import {
   terrainHeight,
   waterLevelAt,
 } from './world';
-import { worldContentBounds } from './world_content_bounds';
 import { yumiMazeColliders } from './yumi_maze_layout';
 
 // Static world collision. Prop placement comes from the per-zone content
@@ -372,41 +370,10 @@ function staticWorldColliders(seed: number): Collider[] {
   const content = getActiveWorldContent();
   const PROPS = content.props;
 
-  // Injected worlds own a finite authored rectangle. Four ordinary static
-  // OBBs close that perimeter so players, mobs and pathfinding all consume the
-  // same collision fact instead of walking beyond the streamed terrain mesh.
-  // The built-in world keeps its historical ridge/sealed-border contract.
-  if (content !== BUILTIN_WORLD) {
-    const bounds = worldContentBounds(content, STRIP_MIN_X, STRIP_MAX_X);
-    if (bounds) {
-      const midX = (bounds.minX + bounds.maxX) / 2;
-      const midZ = (bounds.minZ + bounds.maxZ) / 2;
-      const halfWidth = (bounds.maxX - bounds.minX) / 2 + FENCE_END_PAD;
-      const halfDepth = (bounds.maxZ - bounds.minZ) / 2 + FENCE_END_PAD;
-      for (const z of [bounds.minZ, bounds.maxZ]) {
-        out.push({
-          type: 'obb',
-          x: midX,
-          z,
-          hw: halfWidth,
-          hd: FENCE_HALF_DEPTH,
-          rot: 0,
-          cameraTopY: topY(seed, midX, z, BLOCKER_WALL_HEIGHT),
-        });
-      }
-      for (const x of [bounds.minX, bounds.maxX]) {
-        out.push({
-          type: 'obb',
-          x,
-          z: midZ,
-          hw: halfDepth,
-          hd: FENCE_HALF_DEPTH,
-          rot: Math.PI / 2,
-          cameraTopY: topY(seed, x, midZ, BLOCKER_WALL_HEIGHT),
-        });
-      }
-    }
-  }
+  // Custom-world limits are expressed by visible terrain, water, buildings or
+  // authored blockers. Do not synthesize a hidden rectangle here: an open
+  // field must remain traversable, and an impassable edge must be readable in
+  // the same groundHeight field consumed by movement and rendering.
 
   // Render hideables still block movement while their render subsystem fades
   // whichever one crosses the eye-to-camera segment to 20% opacity.
@@ -796,7 +763,11 @@ function staticWorldColliders(seed: number): Collider[] {
   // stands off its flat walls (that is the invisible wall players walk into) and
   // a circle drawn inside one cuts its corners off instead.
   for (const d of PROPS.decorProps ?? []) {
-    const cameraTopY = topY(seed, d.x, d.z, d.h ?? 4);
+    const baseY =
+      d.float !== undefined
+        ? Math.max(terrainHeight(d.x, d.z, seed), waterLevelAt(d.x, d.z, seed) - d.float)
+        : terrainHeight(d.x, d.z, seed);
+    const cameraTopY = baseY + (d.h ?? 4);
     if (d.hw !== undefined && d.hd !== undefined) {
       out.push({
         type: 'obb',
@@ -815,7 +786,7 @@ function staticWorldColliders(seed: number): Collider[] {
       x: d.x,
       z: d.z,
       r: d.r,
-      cameraTopY: topY(seed, d.x, d.z, d.h ?? 4),
+      cameraTopY,
     });
   }
 
@@ -1683,7 +1654,7 @@ interface WorldZoneRect {
 function buildStreetlampPlacements(seed: number): PlacedStreetlamp[] {
   const content = getActiveWorldContent();
   const plan = planStreetlamps(
-    content.roads,
+    content.litRoads ?? content.roads,
     content.zones.map((zone) => ({ x: zone.hub.x, z: zone.hub.z, radius: zone.hub.radius })),
     {
       groundAt: (x, z) => terrainHeight(x, z, seed),

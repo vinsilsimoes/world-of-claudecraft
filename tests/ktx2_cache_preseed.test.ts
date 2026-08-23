@@ -13,6 +13,14 @@ import { describe, expect, it } from 'vitest';
 
 const ROOT = path.resolve(__dirname, '..');
 const entrySource = readFileSync(path.join(ROOT, 'scripts', 'lib', 'ktx2_entry.js'), 'utf8');
+const assetPreviewEntrySource = readFileSync(
+  path.join(ROOT, 'scripts', 'asset_pipeline', 'preview_entry.js'),
+  'utf8',
+);
+const assetPreviewDriverSource = readFileSync(
+  path.join(ROOT, 'scripts', 'asset_pipeline', 'lib', 'preview.mjs'),
+  'utf8',
+);
 const fileLoaderSource = readFileSync(
   path.join(ROOT, 'node_modules', 'three', 'src', 'loaders', 'FileLoader.js'),
   'utf8',
@@ -27,7 +35,18 @@ describe('ktx2 transcoder cache pre-seed', () => {
   });
 
   it('pins the installed FileLoader cache-key shape the pre-seed depends on', () => {
-    expect(fileLoaderSource).toContain('Cache.get( `file:${url}` )');
-    expect(fileLoaderSource).toContain('Cache.add( `file:${url}`');
+    expect(fileLoaderSource).toContain('Cache.get( `file:$' + '{url}` )');
+    expect(fileLoaderSource).toContain('Cache.add( `file:$' + '{url}`');
+  });
+
+  it('wires the shared KTX2 helper into the headless asset-library preview', () => {
+    expect(assetPreviewEntrySource).toContain('import { attachKtx2 } from');
+    expect(assetPreviewEntrySource).toContain('../lib/ktx2_entry.js');
+    expect(assetPreviewEntrySource).toContain('attachKtx2(new GLTFLoader(), renderer)');
+    expect(assetPreviewDriverSource).toContain('ktx2TranscoderScriptTag');
+    expect(assetPreviewDriverSource).toMatch(/["']import\.meta\.url["']/);
+    expect(assetPreviewDriverSource).toContain('http://localhost/');
+    expect(assetPreviewDriverSource).toContain('ktx2TranscoderScriptTag(resolve(__dirname');
+    expect(assetPreviewDriverSource).toContain('../../..');
   });
 });

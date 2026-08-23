@@ -18,12 +18,14 @@
 import { HEROIC_DUNGEON_TUNING, HEROIC_MARK_ITEM_ID } from '../content/dungeon_difficulty';
 import { DUNGEON_X_THRESHOLD, DUNGEONS, dungeonAt, instanceOrigin, MOBS } from '../data';
 import { createGroundObject, createMob } from '../entity';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import {
   COMBAT_EXIT_MEMORY_SECONDS,
   type CombatExitThreatEntry,
   recordCombatExit,
   takeCombatExit,
 } from '../instance_exit_memory';
+import { dungeonAdmissionKind } from '../mir4/dungeon_access_policy';
 import { retargetMob } from '../mob/targeting';
 import { cancelProfessionSessionOnDisplacement } from '../professions/session_teardown';
 import type { InstanceSlot, PlayerMeta } from '../sim';
@@ -244,6 +246,9 @@ export function updateDoorTriggers(ctx: SimContext, p: Entity): void {
       }
     }
   }
+  // Original WoC doors remain physical, ticket-free world content under every
+  // gameplay profile. MIR4 ticket admission belongs only to MIR4 instances;
+  // it must never disable or charge these native overworld entrances.
   if (ctx.dungeonDoorIds === null) {
     ctx.dungeonDoorIds = [];
     for (const e of ctx.entities.values()) {
@@ -253,6 +258,12 @@ export function updateDoorTriggers(ctx: SimContext, p: Entity): void {
   for (const doorId of ctx.dungeonDoorIds) {
     const door = ctx.entities.get(doorId);
     if (door?.dungeonId && dist2d(p.pos, door.pos) < DOOR_TRIGGER_RADIUS) {
+      if (
+        ctx.gameProfile === MIR4_GAME_PROFILE &&
+        dungeonAdmissionKind(door.dungeonId) !== 'woc-open'
+      ) {
+        continue;
+      }
       enterDungeon(ctx, door.dungeonId, p.id);
       return;
     }

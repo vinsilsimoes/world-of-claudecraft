@@ -15,6 +15,8 @@ const isLayer = (value: unknown): value is 'enchantment' | 'blessing' =>
   value === 'enchantment' || value === 'blessing';
 const isAchievementId = (value: unknown): value is 20101 | 20102 =>
   value === 20101 || value === 20102;
+const isQuestId = (value: unknown): value is string =>
+  typeof value === 'string' && /^M\d{2}-[PQRS]\d{2}$/.test(value);
 
 export function handleMir4Command(
   sim: Sim,
@@ -30,7 +32,23 @@ export function handleMir4Command(
       if (typeof msg.on === 'boolean') sim.setMir4AutoBattle(msg.on, pid);
       break;
     case 'quest':
-      if (typeof msg.on === 'boolean') sim.setMir4AutoQuest(msg.on, pid);
+      if (typeof msg.on === 'boolean' && (msg.questId === undefined || isQuestId(msg.questId))) {
+        sim.setMir4AutoQuest(msg.on, msg.questId, pid);
+      }
+      break;
+    case 'ackTutorial':
+      if (typeof msg.questId === 'string' && /^M\d{2}-Q\d{2}$/.test(msg.questId)) {
+        sim.mir4AcknowledgeTutorial(msg.questId, pid);
+      }
+      break;
+    case 'skipDialogue':
+      if (
+        typeof msg.dialogueId === 'string' &&
+        msg.dialogueId.length > 0 &&
+        msg.dialogueId.length <= 160
+      ) {
+        sim.mir4SkipNarrativeDialogue(msg.dialogueId, pid);
+      }
       break;
     case 'cast':
       if (isItemId(msg.skill) && (msg.target === undefined || isItemId(msg.target))) {

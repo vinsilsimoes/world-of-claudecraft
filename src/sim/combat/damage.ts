@@ -35,7 +35,9 @@ import { MIR4_GAME_PROFILE } from '../game_profile';
 import { lockNormalDungeonResetOnBossKill, spawnBossExitPortal } from '../instances/dungeons';
 import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
 import { grantMir4Xp } from '../mir4/combat';
+import { mir4QuestObjectiveEntityIdFromCast } from '../mir4/quest_objective_cast';
 import { spawnWidowHatchlingOnEggDeath } from '../mob/egg_hatchling';
+import { resolveMobTemplate } from '../mob/template';
 import { grantAbilityDevotion } from '../paladin_devotion';
 import { PET_AGGRESSIVE_RANGE } from '../pet/pet_ai';
 import { snapshotPetOnOwnerDeath } from '../pet/pet_owner_revive';
@@ -1154,11 +1156,20 @@ export function dealDamage(
     if (target.sitting) target.sitting = false;
     // classic-era spell pushback: a landed hit delays the cast rather than
     // cancelling it (misses and fully absorbed hits don't push back)
-    if (
+    const tookDamage = amount > 0 || totalAbsorbed > 0;
+    const isMir4QuestObjectiveCast =
+      target.castingAbility !== null &&
+      mir4QuestObjectiveEntityIdFromCast(target.gatherCastNodeId) !== null;
+    if (target.castingAbility && tookDamage && isMir4QuestObjectiveCast) {
+      // Campaign collection is deliberately fragile: every real incoming
+      // damage event interrupts it, including environmental/periodic damage
+      // without an attacker. Auto Mission may retry, but never fights back.
+      ctx.cancelCast(target);
+    } else if (
       target.castingAbility &&
       source &&
       source.id !== target.id &&
-      (amount > 0 || totalAbsorbed > 0) &&
+      tookDamage &&
       (kind === 'hit' || kind === 'block')
     ) {
       // A non-spell cast (fishing/gather) cancels outright instead of pushing
@@ -1502,7 +1513,7 @@ export function handleDeath(
   }
 
   if (e.kind === 'mob') {
-    const template = MOBS[e.templateId];
+    const template = resolveMobTemplate(e.templateId, ctx.mir4RuntimeMobTemplates);
     const run = ctx.delveRunForMob(e.id);
     if (
       run &&
@@ -1545,11 +1556,15 @@ export function handleDeath(
           e.spawnPos,
           ctx.cfg.respawnSeconds,
           template?.respawnWindow ? (min, max) => ctx.rng.range(min, max) : null,
+          ctx.cfg.world?.zones,
         );
     // A fixed respawn also caps corpse decay so the mob returns on schedule whether
-    // or not its loot was looted (training dummy: 10s).
-    if (template?.respawnSeconds !== undefined) {
-      e.corpseTimer = Math.min(e.corpseTimer, template.respawnSeconds);
+    // or not its loot was looted (training dummy: 10s). MIR4's dense hunting
+    // grounds use the same rule for their short per-zone cadence: an untouched
+    // corpse must not stretch a declared 10-18s repopulation back to the classic
+    // 60s loot window.
+    if (template?.respawnSeconds !== undefined || ctx.gameProfile === MIR4_GAME_PROFILE) {
+      e.corpseTimer = Math.min(e.corpseTimer, e.respawnTimer);
     }
     // World bosses: snapshot the contributor set from the hate table BEFORE it is
     // cleared below, keep a long lootable-corpse window so every contributor can
@@ -1739,7 +1754,7 @@ export function handleDeath(
             : Math.round((mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length);
         if (xpGain > 0) grantXp(ctx, xpGain, member, { fromKill: true });
         ctx.onMobKilledForQuests(e, member);
-        mir4CreditArcQuestKills(ctx, member, e.templateId);
+        mir4CreditArcQuestKills(ctx, member, e.templateId, e);
       }
       // A destroyed Broodmother egg may hatch a widow that swarms the killer.
       if (e.templateId === 'spider_egg' && killer) spawnWidowHatchlingOnEggDeath(ctx, e, killer);

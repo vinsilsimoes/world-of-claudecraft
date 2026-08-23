@@ -26,6 +26,7 @@ describe('MIR4 equipment client commands', () => {
     client.mir4EquipSpirit('ember-wisp');
     client.mir4CombineSpirits(1);
     client.mir4CampaignProfession();
+    client.mir4AcknowledgeTutorial('M01-Q01');
     client.mir4UpgradeSkill(1102, 1);
     await expect(client.mir4ClaimAchievement(20102)).resolves.toBe(true);
     expect(sent).toEqual([
@@ -50,6 +51,7 @@ describe('MIR4 equipment client commands', () => {
       { cmd: 'mir4', m: 'equipSpirit', spiritId: 'ember-wisp' },
       { cmd: 'mir4', m: 'combineSpirits', grade: 1 },
       { cmd: 'mir4', m: 'campaignProfession' },
+      { cmd: 'mir4', m: 'ackTutorial', questId: 'M01-Q01' },
       { cmd: 'mir4', m: 'upgradeSkill', skillId: 1102, expectedCurrentLevel: 1 },
       { cmd: 'mir4', m: 'claimAchievement', achievementId: 20102 },
     ]);

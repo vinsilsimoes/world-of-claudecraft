@@ -2,13 +2,15 @@ import * as THREE from 'three';
 import {
   COLUMN_ZONES,
   columnBlendAt,
+  getActiveWorldContent,
   STRIP_MAX_X,
   STRIP_MIN_X,
   STRIP_ZONES,
   ZONES,
 } from '../sim/data';
-import type { BiomeId, ZoneDef } from '../sim/types';
+import type { BiomeId, BiomePaint, ZoneDef } from '../sim/types';
 import { SOWFIELD_CENTER } from '../sim/vale_cup_layout';
+import { BIOME_BY_ID, biomeAt as worldBiomeAt } from '../sim/world';
 import { loadKtx2Texture, loadTexture, releaseKtx2Texture, releaseTexture } from './assets/loader';
 import { BIOME_HAZE_DECLARATIONS, biomeHazeUniforms, hasBiomeHazeField } from './biome_haze_field';
 import { HAZE_SKY_SAMPLE_DIST, HAZE_SKY_TINT_MAX } from './biome_haze_field_core';
@@ -698,10 +700,23 @@ const PLACE_SKY_REGIONS: readonly SkyResidencyRegion<SkyKey>[] = [
   },
 ];
 
-/** Where each sky key is drawn, for the residency plan: one rectangle per zone
- *  (several zones can share a biome sky) plus the two place-keyed windows. */
+/** Biomes explicitly present in a paint grid, in stable id order. */
+export function paintedSkyBiomes(paint?: BiomePaint): BiomeId[] {
+  if (!paint) return [];
+  const present = new Set<number>();
+  for (const id of paint.ids) {
+    if (id >= 0 && id < BIOME_BY_ID.length) present.add(id);
+  }
+  return [...present].sort((a, b) => a - b).map((id) => BIOME_BY_ID[id]);
+}
+
+/** Where each sky key is drawn, for the residency plan: one rectangle per zone,
+ * one bounding rectangle per paint-only biome, plus place-keyed windows. A
+ * paint region is deliberately coarse: residency only needs a conservative
+ * keep/prefetch area, while the dome still samples the exact paint grid. */
 export function skyResidencyRegions(
   zones: readonly ZoneDef[] = ZONES,
+  paint?: BiomePaint,
 ): SkyResidencyRegion<SkyKey>[] {
   const regions: SkyResidencyRegion<SkyKey>[] = zones.map((zone) => ({
     key: zone.biome,
@@ -710,6 +725,34 @@ export function skyResidencyRegions(
     minZ: zone.zMin,
     maxZ: zone.zMax,
   }));
+  if (paint) {
+    const painted = new Map<BiomeId, SkyResidencyRegion<SkyKey>>();
+    const count = Math.min(paint.ids.length, paint.cols * paint.rows);
+    for (let i = 0; i < count; i++) {
+      const id = paint.ids[i];
+      if (id < 0 || id >= BIOME_BY_ID.length) continue;
+      const key = BIOME_BY_ID[id];
+      const col = i % paint.cols;
+      const row = Math.floor(i / paint.cols);
+      const minX = paint.originX + col * paint.cell;
+      const minZ = paint.originZ + row * paint.cell;
+      const maxX = minX + paint.cell;
+      const maxZ = minZ + paint.cell;
+      const region = painted.get(key);
+      if (region) {
+        painted.set(key, {
+          key,
+          minX: Math.min(region.minX, minX),
+          maxX: Math.max(region.maxX, maxX),
+          minZ: Math.min(region.minZ, minZ),
+          maxZ: Math.max(region.maxZ, maxZ),
+        });
+      } else {
+        painted.set(key, { key, minX, maxX, minZ, maxZ });
+      }
+    }
+    regions.push(...painted.values());
+  }
   regions.push(...PLACE_SKY_REGIONS);
   return regions;
 }
@@ -999,6 +1042,11 @@ ${
 // as they always did; a column zone blends in sideways with the same window
 // shape, so its sky rises as you walk its border pass.
 function biomeBlendAt(x: number, z: number): BiomeBlend {
+  const activeWorld = getActiveWorldContent();
+  if (activeWorld.zones.length > 0 && activeWorld.zones !== ZONES) {
+    const biome = worldBiomeAt(x, z);
+    return { from: biome, to: biome, t: 0 };
+  }
   let from: SkyKey = STRIP_ZONES[0].biome;
   let to: SkyKey = STRIP_ZONES[0].biome;
   let t = 0;

@@ -25,7 +25,12 @@ import { localizeSimAuraName } from '../ui/sim_i18n';
 import { type IWorld, OVERHEAD_EMOTES } from '../world_api';
 
 import { castBarState } from './cast_bar';
-import { mobDisplayName, npcDisplayName, objectDisplayName } from './entity_labels';
+import {
+  mobDisplayName,
+  mobEntityDisplayName,
+  npcDisplayName,
+  objectDisplayName,
+} from './entity_labels';
 import {
   createNameplateCanvasState,
   type NameplateCanvasState,
@@ -421,10 +426,7 @@ export class NameplatePainter {
     state.badges.length = 0;
 
     if (entity.kind === 'npc' || (!entity.hostile && entity.questIds.length > 0)) {
-      state.name =
-        entity.kind === 'npc'
-          ? npcDisplayName(entity)
-          : tEntity({ kind: 'mob', id: entity.templateId, field: 'name' });
+      state.name = entity.kind === 'npc' ? npcDisplayName(entity) : mobEntityDisplayName(entity);
       state.nameColor = FRIENDLY;
       const questMarker = this.questMarker(entity);
       state.marker = questMarker.marker;

@@ -150,6 +150,43 @@ describe('MIR4 Spirit progression', () => {
     expect(failureMeta.mir4Spirits.owned).toEqual({ 'spirit-rare-01': 1 });
   });
 
+  it('uses M10 bound replicas without mutating the real Spirit collection', () => {
+    const sim = mir4Sim(997);
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4ArcRewards = {
+      systems: ['spirit-summon'],
+      items: { 'bound-spirit-replica': 4 },
+    };
+    meta.mir4Spirits = {
+      owned: { 'spirit-common-01': 2 },
+      discovered: ['spirit-common-01'],
+      equippedSpiritId: 'spirit-common-01',
+    };
+    meta.mir4ArcQuests = {
+      'M10-Q03': {
+        questId: 'M10-Q03',
+        state: 'active',
+        stageIndex: 4,
+        stageProgress: 0,
+      },
+    };
+    vi.spyOn(sim.rng, 'next').mockReturnValueOnce(0.2);
+
+    expect(combineMir4Spirits(sim.ctx, sim.playerId, 1)).toEqual({
+      ok: true,
+      status: 'tutorial-fusion',
+      outcome: 'failure',
+      grade: 1,
+    });
+    expect(meta.mir4ArcRewards.items).toEqual({ 'bound-spirit-replica': 1 });
+    expect(meta.mir4Spirits).toEqual({
+      owned: { 'spirit-common-01': 2 },
+      discovered: ['spirit-common-01'],
+      equippedSpiritId: 'spirit-common-01',
+    });
+    expect(meta.mir4ArcQuests['M10-Q03']?.stageIndex).toBe(5);
+  });
+
   it('sanitizes forged ownership, invalid equips, and low-grade pending entries', () => {
     expect(
       sanitizeMir4SpiritState({

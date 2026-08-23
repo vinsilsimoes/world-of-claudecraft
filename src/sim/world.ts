@@ -11,7 +11,7 @@ import {
 } from './castle_layout';
 import { STABLE_FLAT, STABLE_PADDOCK } from './content/mounts';
 import { PALMREACH_PROPS } from './content/palmreach';
-import { customWorldTerrainHeight } from './custom_world_terrain';
+import { customWorldTerrainHeight, nearCustomWorldRim } from './custom_world_terrain';
 import {
   bgOriginAt,
   CAMPS,
@@ -28,6 +28,7 @@ import {
   STRIP_MAX_X,
   STRIP_MIN_X,
   STRIP_ZONES,
+  setActiveWorldContent,
   WORLD_MAX_X,
   WORLD_MAX_Z,
   WORLD_MIN_X,
@@ -66,7 +67,7 @@ import {
   terrainRegionHas,
 } from './terrain_region_index';
 import { cragLayer, highlandMask, reliefBase, ridged2, warpedCoords } from './terrain_relief';
-import type { BiomeId, HeightStamp, ZoneDef } from './types';
+import type { BiomeId, HeightStamp, WorldContent, ZoneDef } from './types';
 import { isInSowfieldShell, SOWFIELD_FLAT, sowfieldStandLift } from './vale_cup_layout';
 import { wildheartFieldHeight } from './wildheart_field';
 
@@ -83,6 +84,22 @@ const DETAIL_SCALE = 0.05;
 
 export const WATER_LEVEL = -4.3;
 
+/** Run a synchronous terrain query against an explicit world and restore the
+ * caller's registry even when the query throws. JavaScript cannot interleave
+ * another task inside this callback, so builders can sample canonical terrain
+ * without inheriting whichever editor or diagnostic world happened to be
+ * active before them. Async callbacks are deliberately rejected by type. */
+export function withWorldTerrainContent<T>(world: WorldContent, sample: () => T): T {
+  const previous = getActiveWorldContent();
+  if (previous === world) return sample();
+  setActiveWorldContent(world);
+  try {
+    return sample();
+  } finally {
+    setActiveWorldContent(previous);
+  }
+}
+
 // The ACTIVE water surface height: the custom map's level if one is loaded, else
 // the built-in constant. Cheap (identity-cached content lookup), safe in hot
 // paths. For the built-in world getActiveWorldContent() has no waterLevel, so
@@ -97,6 +114,13 @@ export function waterLevel(): number {
 // lake actually ends.
 export const LAKE_BLEND_RADIUS_MULT = 1.6;
 
+function isInDryCrossing(x: number, z: number): boolean {
+  for (const crossing of getActiveWorldContent().dryCrossings ?? []) {
+    if ((x - crossing.x) ** 2 + (z - crossing.z) ** 2 < crossing.radius ** 2) return true;
+  }
+  return false;
+}
+
 // True when (x,z) falls inside a declared lake's footprint (any active zone's
 // `lakes` list) or one of the programmatic border waters (the moats, column
 // straits, and row meres where two maps meet: BORDER_WATERS below). Terrain
@@ -106,6 +130,7 @@ export const LAKE_BLEND_RADIUS_MULT = 1.6;
 // footprints. (The open seas are handled separately by the coastal appliers
 // and inHollowOpenSea.)
 export function isInWaterBody(x: number, z: number): boolean {
+  if (isInDryCrossing(x, z)) return false;
   if (inBorderWater(x, z)) return true;
   for (const zone of getActiveWorldContent().zones) {
     for (const lake of zone.lakes) {
@@ -4706,6 +4731,8 @@ export function nearSteepWalls(x: number, z: number): boolean {
   // it must opt in before the generic flat-interior early return below.
   if (isBgPos(x)) return true;
   if (x > DUNGEON_X_THRESHOLD) return false; // instanced interiors: flat floors
+  const activeContent = getActiveWorldContent();
+  if (usesContentTerrain(activeContent)) return nearCustomWorldRim(activeContent, x, z);
   if (
     x > WORLD_MAX_X - 40 ||
     x < WORLD_MIN_X + 40 ||
@@ -4994,6 +5021,16 @@ export const BIOME_BY_ID: BiomeId[] = [
   'desert',
   'volcano',
   'cave',
+  'dusk',
+  'ember',
+  'frost',
+  'amber',
+  'fen',
+  'night',
+  'haunt',
+  'jungle',
+  'garden',
+  'gale',
 ];
 
 // The painted biome at (x,z), or null if unpainted / no paint layer. Cheap grid

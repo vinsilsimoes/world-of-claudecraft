@@ -42,6 +42,7 @@ import { STABLE_MAP_NAVIGATION_LANDMARKS } from '../src/ui/map_navigation_landma
 import {
   buildOverworldMapModel,
   gatherNodeMarkerAt,
+  layoutMapPoiLabels,
   MAP_GATHER_NODE_HIT_RADIUS,
   MAP_LANDMARK_PLACEMENT_BY_PROFILE,
   MAP_LANDMARK_SEPARATION,
@@ -65,6 +66,42 @@ import {
   stationMarkerAt,
 } from '../src/ui/map_window_view';
 import type { IWorld } from '../src/world_api';
+
+describe('authored world-map POI label layout', () => {
+  it('moves colliding labels while preserving their cartography anchors', () => {
+    const placed = layoutMapPoiLabels(
+      [
+        { mx: 200, my: 200, width: 120 },
+        { mx: 250, my: 200, width: 120 },
+        { mx: 390, my: 12, width: 90 },
+      ],
+      400,
+      15,
+    );
+
+    expect(placed[0]).toMatchObject({ mx: 200, my: 200, labelX: 200, labelY: 200 });
+    expect(placed[1]?.labelY).not.toBe(200);
+    expect(placed[2]?.labelX).toBeLessThanOrEqual(349);
+    expect(placed[2]?.labelY).toBeGreaterThanOrEqual(21);
+
+    const boxes = placed.map((label) => ({
+      left: label.labelX - label.width / 2 - 3,
+      right: label.labelX + label.width / 2 + 3,
+      top: label.labelY - 18,
+      bottom: label.labelY + 3,
+    }));
+    for (let index = 0; index < boxes.length; index += 1) {
+      for (let other = index + 1; other < boxes.length; other += 1) {
+        const a = boxes[index];
+        const b = boxes[other];
+        if (!a || !b) continue;
+        expect(a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top).toBe(
+          false,
+        );
+      }
+    }
+  });
+});
 
 const ZONE = ZONES[0];
 const ZONE_CZ = (ZONE.zMin + ZONE.zMax) / 2; // a z inside the committed zone band

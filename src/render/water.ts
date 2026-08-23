@@ -23,6 +23,7 @@ import {
 import { activeFarFieldPolicy } from './foliage_impostor';
 import { GFX, type GfxSettings, SUN_DIR } from './gfx';
 import { idleSlot, runIdleQueue } from './idle_queue';
+import { localWaterSurfaceData } from './local_water_surface_core';
 import { waterNormalish, waterNormalMaps } from './textures';
 import {
   bakeSwellGate,
@@ -1595,6 +1596,7 @@ function buildShaderWater(seed: number, renderer?: THREE.WebGLRenderer): WaterVi
 
 function buildPhongWater(
   localBodies?: readonly { x: number; z: number; radius: number }[],
+  localDryCrossings: readonly { x: number; z: number; radius: number }[] = [],
 ): WaterView {
   const tex = waterNormalish();
   const [norm] = waterNormalMaps();
@@ -1612,14 +1614,18 @@ function buildPhongWater(
   // finite authored documents: build one local disc per declared lake so a
   // custom map never inherits the WoC ocean plane on any graphics tier.
   const meshes = localBodies
-    ? localBodies.map((body) => {
-        const mesh = new THREE.Mesh(
-          new THREE.CircleGeometry(body.radius, 48).rotateX(-Math.PI / 2),
-          mat,
-        );
-        mesh.position.set(body.x, waterLevel(), body.z);
-        return mesh;
-      })
+    ? (() => {
+        const data = localWaterSurfaceData(localBodies, localDryCrossings);
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
+        geometry.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
+        geometry.setAttribute('uv', new THREE.BufferAttribute(data.uvs, 2));
+        geometry.computeBoundingSphere();
+        const mesh = new THREE.Mesh(geometry, mat);
+        mesh.position.y = waterLevel();
+        mesh.name = 'custom-world-water-surface';
+        return [mesh];
+      })()
     : (() => {
         const worldDepth = WORLD_MAX_Z - WORLD_MIN_Z + 2400;
         tex.repeat.set(240, 240);
@@ -1693,7 +1699,7 @@ export function buildWater(seed: number, renderer?: THREE.WebGLRenderer): WaterV
   if (content.zones.length > 0 && content.zones !== ZONES) {
     const bodies = waterBodies();
     if (bodies.length === 0) return buildEmptyWater();
-    return buildPhongWater(bodies);
+    return buildPhongWater(bodies, content.dryCrossings ?? []);
   }
   return GFX.standardMaterials && hasWaterShaderAssets()
     ? buildShaderWater(seed, renderer)

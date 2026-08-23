@@ -10,6 +10,7 @@
 //    0..1 thump the renderer turns into an FOV dip + a trauma shake.
 // Pure math, no Three/DOM; renderer.ts owns one state and steps it per frame.
 
+import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { RUN_SPEED } from '../sim/types';
 
 export interface CameraFeelState {
@@ -60,6 +61,41 @@ export function createCameraFeel(): CameraFeelState {
     fallFrames: 0,
     detectorActive: false,
   };
+}
+
+/** Forget display-only fall history while a server-owned ground route drives
+ * the player. Terrain-following Y changes are not airborne motion and must not
+ * turn an ordinary downhill waypoint into a landing FOV/shake impulse. */
+export function resetCameraLandingDetector(s: CameraFeelState): void {
+  s.lastVy = 0;
+  s.fallFrames = 0;
+  s.detectorActive = false;
+}
+
+/** MIR4 keeps the steady chase camera used by its automated journeys during
+ * manual travel too. Display-speed corrections around RUN_SPEED must not
+ * repeatedly cross the speed-FOV threshold when W is held. */
+export function mir4StableCameraFeel(profile: GameProfile | undefined): boolean {
+  return profile === MIR4_GAME_PROFILE;
+}
+
+/** One frame of camera dynamics. Server-owned ground travel intentionally
+ * keeps look-ahead, speed FOV and the display-only fall detector neutral:
+ * snapshot callbacks may bundle zero or several sim ticks even though the
+ * authored movement speed itself is constant. */
+export function stepCameraFrame(
+  s: CameraFeelState,
+  y: number,
+  vx: number,
+  vz: number,
+  dt: number,
+  enabled: boolean,
+  stableServerOwnedMotion: boolean,
+): number {
+  if (stableServerOwnedMotion) resetCameraLandingDetector(s);
+  const thump = stableServerOwnedMotion ? 0 : stepLandingDetector(s, y, dt);
+  stepCameraFeel(s, vx, vz, dt, enabled && !stableServerOwnedMotion);
+  return thump;
 }
 
 const ease = (current: number, target: number, omega: number, dt: number): number =>

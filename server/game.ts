@@ -54,6 +54,7 @@ import {
 import type { PickAction } from '../src/sim/lockpick';
 import { lootHasGoneFfa } from '../src/sim/loot/loot_ffa';
 import { type MarketQuery, sanitizeMarketQuery } from '../src/sim/market_query';
+import { mir4CampaignMapIdsForWorld } from '../src/sim/mir4/campaign_availability';
 import { parseMoveInputFrame } from '../src/sim/move_input';
 import {
   partyFrameAbsorb,
@@ -221,6 +222,7 @@ import {
 } from './economy_telemetry';
 import { appendEntityPresentationDynamic, entityIdentityFields } from './entity_presentation_wire';
 import { isUpdateDue } from './entity_update_cadence';
+import { canObserveOwnerScopedEntity } from './entity_visibility';
 // Imported from the mirror modules DIRECTLY (not the ./steam or ./epic
 // barrels), the same way deeds_records imports onDeedRecorded: the barrels
 // drag routes.ts (and its load-time requireAccount over the db module) into
@@ -8670,6 +8672,7 @@ export class GameServer {
   }
 
   private canObserveEntity(viewer: Entity, e: Entity, d2: number): boolean {
+    if (!canObserveOwnerScopedEntity(viewer, e)) return false;
     if (e.kind !== 'player' || !isStealthed(e)) return true;
     if (this.sim.isHostileTo(viewer, e)) return false;
     const party = this.sim.partyOf(viewer.id);
@@ -9049,7 +9052,13 @@ export class GameServer {
     }
     maybe('stats', p.stats);
     maybe('weapon', p.weapon);
-    const mir4 = mir4SelfSnapshotJson(this.sim.cfg.gameProfile, meta, p.mir4, p.mir4UltGauge);
+    const mir4 = mir4SelfSnapshotJson(
+      this.sim.cfg.gameProfile,
+      meta,
+      p.mir4,
+      p.mir4UltGauge,
+      mir4CampaignMapIdsForWorld(this.sim.ctx.worldContent),
+    );
     if (mir4) maybeRaw('mir4', mir4);
     selfLap?.('self.timers');
     maybe('party', this.partyWire(anchorSession.pid));

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { decodeMir4Snapshot } from '../../src/net/mir4_snapshot_wire';
 import { bareClient } from '../helpers/bare_client';
 
-function selfSnapshot(mir4?: unknown): Record<string, unknown> {
+function selfSnapshot(mir4?: unknown, level = 1): Record<string, unknown> {
   return {
     t: 'snap',
     ents: [],
@@ -11,7 +11,7 @@ function selfSnapshot(mir4?: unknown): Record<string, unknown> {
       k: 'player',
       tid: 'warrior',
       nm: 'Elyra',
-      lv: 1,
+      lv: level,
       x: 0,
       y: 0,
       z: 0,
@@ -41,6 +41,17 @@ describe('MIR4 snapshot wire', () => {
         mir4AchievementClears: { 201: 2, injected: 999 },
         mir4Currencies: { darksteel: 1_000.9, injected: 999 },
         mir4Materials: { sunStone: 3, injected: 999 },
+        mir4NarrativeDialogue: {
+          id: 'M01-Q01:accept:-1:17',
+          questId: 'M01-Q01',
+          npcEntityId: 17,
+          npcTemplateId: 'mir4_npc_m01_tarek_duas_pontes',
+          action: 'accept',
+          beat: 'accept',
+          startedAt: 10,
+          durationSeconds: 8,
+          completesAt: 18,
+        },
       }),
     ).toMatchObject({
       classId: 2,
@@ -51,9 +62,16 @@ describe('MIR4 snapshot wire', () => {
       mir4AchievementClears: { 201: 2 },
       mir4Currencies: { darksteel: 1_000 },
       mir4Materials: { sunStone: 3 },
+      mir4NarrativeDialogue: { id: 'M01-Q01:accept:-1:17', durationSeconds: 8 },
     });
     expect(decodeMir4Snapshot({ classId: 99, autoBattle: {} })).toBeNull();
     expect(decodeMir4Snapshot('invalid')).toBeNull();
+    expect(
+      decodeMir4Snapshot({
+        classId: 2,
+        mir4NarrativeDialogue: { id: 'forged', questId: 'unknown' },
+      }),
+    ).toBeNull();
   });
 
   it('reconciles client reads, retains omitted deltas, and ignores malformed replacements', () => {
@@ -64,6 +82,8 @@ describe('MIR4 snapshot wire', () => {
     apply.applySnapshot(
       selfSnapshot({
         classId: 2,
+        fullCampaignAvailable: true,
+        campaignMapIds: ['m02-trilha-dos-juncos', 'invalid-map', 'm01-vila-do-vau'],
         ultimateGauge: 72,
         autoBattle: {
           mode: 'battle',
@@ -81,10 +101,27 @@ describe('MIR4 snapshot wire', () => {
           siteIndex: 1,
           suspended: false,
         },
+        mir4NarrativeDialogue: {
+          id: 'M01-Q01:accept:-1:17',
+          questId: 'M01-Q01',
+          npcEntityId: 17,
+          npcTemplateId: 'mir4_npc_m01_tarek_duas_pontes',
+          action: 'accept',
+          beat: 'accept',
+          startedAt: 10,
+          durationSeconds: 8,
+          completesAt: 18,
+        },
       }),
     );
     expect(client.mir4AutoBattleActive()).toBe(true);
     expect(client.player.mir4UltGauge).toBe(72);
+    expect(client.mir4PlayerState()?.playerLevel).toBe(client.player.level);
+    expect(client.mir4PlayerState()?.fullCampaignAvailable).toBe(true);
+    expect(client.mir4PlayerState()?.campaignMapIds).toEqual([
+      'm01-vila-do-vau',
+      'm02-trilha-dos-juncos',
+    ]);
     expect(client.mir4AutoQuestActive()).toBe(true);
     expect(client.mir4QuestStatusText()).toContain('clue 2 of 3');
     expect(client.mir4QuestTrackerEntries()).toEqual([
@@ -103,16 +140,26 @@ describe('MIR4 snapshot wire', () => {
       'mir4_ultimate_2',
     ]);
 
-    apply.applySnapshot(selfSnapshot());
+    apply.applySnapshot(selfSnapshot(undefined, 8));
     expect(client.mir4AutoBattleActive()).toBe(true);
     expect(client.player.mir4UltGauge).toBe(72);
+    expect(client.mir4PlayerState()?.playerLevel).toBe(8);
     apply.applySnapshot(selfSnapshot('corrupt'));
     expect(client.mir4AutoBattleActive()).toBe(true);
+
+    apply.applySnapshot(
+      selfSnapshot({
+        classId: 2,
+        mir4NarrativeDialogue: { id: 'forged', questId: 'unknown' },
+      }),
+    );
+    expect(client.mir4PlayerState()?.mir4NarrativeDialogue?.id).toBe('M01-Q01:accept:-1:17');
 
     apply.applySnapshot(selfSnapshot({ classId: 2 }));
     expect(client.mir4AutoBattleActive()).toBe(false);
     expect(client.player.mir4UltGauge).toBe(0);
     expect(client.mir4AutoQuestActive()).toBe(false);
+    expect(client.mir4PlayerState()?.mir4NarrativeDialogue).toBeUndefined();
     expect(client.mir4QuestStatusText()).toBe('Auto quest off');
     expect(client.mir4QuestTrackerEntries()).toEqual([]);
   });

@@ -26,6 +26,7 @@
 // no mask: the wash degrades to the flat rectangle fill, which is still the only
 // affordance available without art.
 
+import { getActiveWorldContent } from '../sim/data';
 import type { IWorld } from '../world_api';
 import { loadContinentArt } from './continent_art';
 import { buildLandMaskCanvas } from './continent_land_mask';
@@ -35,6 +36,7 @@ import {
   type ContinentMapModel,
   type ContinentRect,
   type ContinentZoneRegion,
+  usesMir4CampaignAtlas,
 } from './continent_map_view';
 import { zoneDisplayName } from './entity_i18n';
 import { t } from './i18n';
@@ -237,13 +239,15 @@ export class ContinentMapPainter {
     world: IWorld,
     opts: ContinentPaintOptions,
   ): ContinentPaintResult {
-    if (world.cfg.gameProfile !== 'mir4-gameplay-port') this.ensureArt();
+    const zones = getActiveWorldContent().zones;
+    if (!usesMir4CampaignAtlas(world, zones)) this.ensureArt();
     const contentAspect =
       this.art && this.art.naturalHeight > 0
         ? this.art.naturalWidth / this.art.naturalHeight
         : CONTINENT_FALLBACK_ASPECT;
     const model = buildContinentMapModel({
       world,
+      zones,
       canvasSize: opts.canvasSize,
       contentAspect,
       hoveredZoneId: opts.hoveredZoneId,

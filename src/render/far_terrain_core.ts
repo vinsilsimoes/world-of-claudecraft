@@ -33,7 +33,7 @@ import {
 } from '../sim/data';
 import { fbm2 } from '../sim/rng';
 import type { BiomeId } from '../sim/types';
-import { LAKE_BLEND_RADIUS_MULT, terrainHeight, waterLevel, zoneBiomeAt } from '../sim/world';
+import { biomeAt, LAKE_BLEND_RADIUS_MULT, terrainHeight, waterLevel } from '../sim/world';
 import {
   FAR_CELL_PROBES,
   farCellOvershoot,
@@ -553,7 +553,7 @@ const stripPalette = (zn: (typeof ZONES)[number]): FarPalette =>
 function farPaletteAt(x: number, z: number): FarPalette {
   const out = farPaletteScratch;
   if (hasInjectedFarTopology()) {
-    const palette = farPaletteForBiome(zoneBiomeAt(x, z));
+    const palette = farPaletteForBiome(biomeAt(x, z));
     copy3(out.grass, palette.grass);
     copy3(out.grassDark, palette.grassDark);
     copy3(out.grassYellow, palette.grassYellow);
@@ -594,7 +594,7 @@ function farPaletteAt(x: number, z: number): FarPalette {
 
 /** Blend weight of one biome across the same windows the palette fades. */
 function biomeWeightAt(biome: BiomeId, x: number, z: number): number {
-  if (hasInjectedFarTopology()) return zoneBiomeAt(x, z) === biome ? 1 : 0;
+  if (hasInjectedFarTopology()) return biomeAt(x, z) === biome ? 1 : 0;
   let w = STRIP_ZONES[0].biome === biome ? 1 : 0;
   for (let i = 0; i + 1 < STRIP_ZONES.length; i++) {
     const b = STRIP_ZONES[i].zMax;
@@ -672,7 +672,7 @@ export function farGroundColor(
   out: Triple,
 ): number {
   const pal = farPaletteAt(x, z);
-  const biome = zoneBiomeAt(x, z);
+  const biome = biomeAt(x, z);
   const wl = waterLevel();
   let grassW = 1;
 

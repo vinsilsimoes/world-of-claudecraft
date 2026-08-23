@@ -1,3 +1,4 @@
+import { mir4ArcObjectiveVisibleTo } from '../sim/mir4/arc_objectives';
 import { isQuestGatedGroundObjectHidden } from '../sim/quest_gated_entity';
 import {
   dist2d,
@@ -122,6 +123,7 @@ export function tryNearbyInteraction(
       !player.dead &&
       entity.kind === 'object' &&
       entity.lootable &&
+      mir4ArcObjectiveVisibleTo(entity, playerId) &&
       // Nothing the viewer cannot see may win the press. An off-quest quest
       // collectable is withheld from the scene entirely (the renderer's gate), so
       // selecting it here would spend the interact on an invisible object and let

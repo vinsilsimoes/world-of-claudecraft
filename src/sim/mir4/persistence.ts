@@ -4,19 +4,21 @@
 
 import type { Mir4AutoBattleState } from '../auto_battle/core';
 import type { Mir4AutoQuestState } from '../auto_quest/core';
+import { mir4ArcQuest } from '../content/mir4/arc_campaign';
 import type { Mir4ClassId } from '../content/mir4/classes';
 import type { Mir4EquipmentItemDef } from '../content/mir4/equipment_catalog';
 import { MIR4_ITEMS, mir4EquipmentDefinition } from '../content/mir4/items';
 import { MIR4_QUESTS } from '../content/mir4/quests';
-import { mir4ArcQuest } from '../content/mir4/quests_arc';
 import { MIR4_SKILL_LEVEL_CAPS } from '../content/mir4/skills';
 import type { Mir4AchievementClears, Mir4Currencies } from './achievements';
 import { MIR4_AFFIXES } from './affixes';
 import type { Mir4ArcQuestProgress } from './arc_quests';
 import { type Mir4ArcRewardState, sanitizeMir4ArcRewards } from './arc_rewards';
+import { type Mir4DungeonTicketState, sanitizeMir4DungeonTickets } from './dungeon_tickets';
 import type { Mir4Equipment, Mir4EquipmentInstanceState, Mir4Materials } from './equipment';
 import { MIR4_EMPTY_MATERIALS } from './equipment';
 import { type Mir4MountState, sanitizeMir4MountState } from './mounts';
+import type { Mir4NarrativeDialogueState } from './narrative_dialogue';
 import type { Mir4QuestProgress } from './quest';
 import type { Mir4SkillEvolutionResources } from './skill_evolution';
 import { type Mir4SpiritState, sanitizeMir4SpiritState } from './spirits';
@@ -27,6 +29,7 @@ export interface Mir4PersistedPlayerState {
   mir4Quests?: Record<string, Mir4QuestProgress>;
   mir4ArcQuests?: Record<string, Mir4ArcQuestProgress>;
   mir4ArcRewards?: Mir4ArcRewardState;
+  mir4DungeonTickets?: Mir4DungeonTicketState;
   mir4AutoQuest?: Mir4AutoQuestState;
   mir4SkillLevels?: Record<number, number>;
   mir4SkillResources?: Mir4SkillEvolutionResources;
@@ -41,7 +44,11 @@ export interface Mir4PersistedPlayerState {
   mir4SpiritSkillCooldownRemaining?: number;
 }
 
-export interface Mir4PersistenceMeta extends Mir4PersistedPlayerState {}
+export interface Mir4PersistenceMeta extends Mir4PersistedPlayerState {
+  /** Session-only Auto Mission story gate. Deliberately omitted by the
+   * persistence serializer and restored fresh from the live quest state. */
+  mir4NarrativeDialogue?: Mir4NarrativeDialogueState;
+}
 
 const MATERIAL_KEYS = Object.keys(MIR4_EMPTY_MATERIALS) as (keyof Mir4Materials)[];
 const QUEST_STATES = new Set<Mir4QuestProgress['state']>(['active', 'ready', 'done']);
@@ -192,6 +199,8 @@ function sanitizeAutoQuest(
   ) {
     return undefined;
   }
+  const battleOwned = value.battleOwned === true;
+  const manualSelection = value.manualSelection === true;
   if (arcDef) {
     const progress = arcQuests?.[value.questId];
     if (!progress) {
@@ -201,6 +210,8 @@ function sanitizeAutoQuest(
         phase: 'to-giver',
         siteIndex: 0,
         suspended: value.suspended,
+        ...(battleOwned ? { battleOwned: true } : {}),
+        ...(manualSelection ? { manualSelection: true } : {}),
       };
     }
     if (progress.state === 'done') return undefined;
@@ -209,6 +220,8 @@ function sanitizeAutoQuest(
       phase: progress.state === 'ready' ? 'return' : 'to-site',
       siteIndex: progress.stageIndex,
       suspended: value.suspended,
+      ...(battleOwned ? { battleOwned: true } : {}),
+      ...(manualSelection ? { manualSelection: true } : {}),
     };
   }
   if (!def || (value.siteIndex as number) > def.sites.length) return undefined;
@@ -222,6 +235,8 @@ function sanitizeAutoQuest(
     phase,
     siteIndex: value.siteIndex as number,
     suspended: value.suspended,
+    ...(battleOwned ? { battleOwned: true } : {}),
+    ...(manualSelection ? { manualSelection: true } : {}),
   };
 }
 
@@ -405,6 +420,7 @@ export function sanitizeMir4PlayerState(
   const mir4Quests = sanitizeQuests(value.mir4Quests);
   const mir4ArcQuests = sanitizeArcQuests(value.mir4ArcQuests);
   const mir4ArcRewards = sanitizeMir4ArcRewards(value.mir4ArcRewards);
+  const mir4DungeonTickets = sanitizeMir4DungeonTickets(value.mir4DungeonTickets);
   const mir4AutoQuest = sanitizeAutoQuest(value.mir4AutoQuest, mir4Quests, mir4ArcQuests);
   const mir4SkillLevels = sanitizeSkillLevels(value.mir4SkillLevels, classId);
   const mir4SkillResources = sanitizeSkillResources(value.mir4SkillResources);
@@ -438,6 +454,7 @@ export function sanitizeMir4PlayerState(
     ...(mir4Quests ? { mir4Quests } : {}),
     ...(mir4ArcQuests ? { mir4ArcQuests } : {}),
     ...(mir4ArcRewards ? { mir4ArcRewards } : {}),
+    ...(mir4DungeonTickets ? { mir4DungeonTickets } : {}),
     ...(mir4AutoQuest ? { mir4AutoQuest } : {}),
     ...(mir4SkillLevels ? { mir4SkillLevels } : {}),
     ...(mir4SkillResources ? { mir4SkillResources } : {}),
@@ -457,7 +474,18 @@ export function serializeMir4PlayerState(
   meta: Mir4PersistenceMeta,
   classId: Mir4ClassId,
 ): Mir4PersistedPlayerState {
-  return sanitizeMir4PlayerState(meta, classId);
+  const serialized = sanitizeMir4PlayerState(meta, classId);
+  // Legacy Auto Journey builds temporarily owned Auto Battle while resolving
+  // combat. A successful save through this build heals that old session by
+  // stripping both the transient ownership marker and its battle mode. This
+  // cannot retroactively protect a row before the new build has loaded/saved it.
+  if (serialized.mir4AutoQuest?.battleOwned && serialized.autoBattle?.mode === 'battle') {
+    delete serialized.autoBattle;
+  }
+  if (serialized.mir4AutoQuest?.battleOwned) {
+    delete serialized.mir4AutoQuest.battleOwned;
+  }
+  return serialized;
 }
 
 export function restoreMir4PlayerState(
@@ -470,6 +498,7 @@ export function restoreMir4PlayerState(
   meta.mir4Quests = restored.mir4Quests;
   meta.mir4ArcQuests = restored.mir4ArcQuests;
   meta.mir4ArcRewards = restored.mir4ArcRewards;
+  meta.mir4DungeonTickets = restored.mir4DungeonTickets;
   meta.mir4AutoQuest = restored.mir4AutoQuest;
   meta.mir4SkillLevels = restored.mir4SkillLevels;
   meta.mir4SkillResources = restored.mir4SkillResources;
@@ -480,6 +509,7 @@ export function restoreMir4PlayerState(
   meta.mir4Materials = restored.mir4Materials;
   meta.mir4Mounts = restored.mir4Mounts;
   meta.mir4Spirits = restored.mir4Spirits;
+  meta.mir4NarrativeDialogue = undefined;
   markMir4WireDirty(meta);
   return restored;
 }

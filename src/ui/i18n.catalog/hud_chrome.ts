@@ -480,6 +480,7 @@ export const hudChromeStrings = {
     mountConfirmAria: 'Confirm {mount}',
     mountEffectShell: 'Native World of ClaudeCraft model with MIR4 Mount stats',
     mountMoveSpeed: 'Movement Speed: +{amount}%',
+    mountBasicAttackSpeed: 'Basic Attack Speed: +{amount}%',
     mountDefenses: 'Physical Defense: +{physical} · Magic Defense: +{magic}',
     equippedMountLine: 'Mount: {mount} (Grade {grade})',
     noEquippedMount: 'Mount: none equipped',

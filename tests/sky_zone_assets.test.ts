@@ -357,25 +357,48 @@ describe('zone-scoped sky assets', () => {
     for (const key of ['farshore', 'vale_cup']) {
       expect(builtIn.has(key), `place-keyed sky ${key} has no residency region`).toBe(true);
     }
-    // The custom-map arm: a paint-only biome present in the PASSED zone list
-    // gets a region, which is what makes the renderer's live-zone wiring
-    // sufficient for editor worlds.
-    const custom = sky.skyResidencyRegions([
-      { id: 'z', biome: 'beach', zMin: 0, zMax: 100, xMin: 0, xMax: 100 },
-    ] as never);
-    expect(custom.some((r: { key: string }) => r.key === 'beach')).toBe(true);
+    // The custom-map arm: a zone biome and every paint-only biome get their
+    // own residency rectangles. M03 deliberately paints vale and haunt over
+    // one dusk zone, so those skies must stay streamable without fake zones.
+    const custom = sky.skyResidencyRegions(
+      [{ id: 'z', biome: 'dusk', zMin: 0, zMax: 100, xMin: 0, xMax: 100 }] as never,
+      {
+        cell: 10,
+        cols: 4,
+        rows: 1,
+        originX: 100,
+        originZ: 200,
+        ids: [0, 255, 0, 13],
+        affectsTerrain: false,
+      },
+    );
+    expect(custom).toContainEqual({ key: 'vale', minX: 100, maxX: 130, minZ: 200, maxZ: 210 });
+    expect(custom).toContainEqual({ key: 'haunt', minX: 130, maxX: 140, minZ: 200, maxZ: 210 });
+    expect(
+      sky.paintedSkyBiomes({
+        cell: 10,
+        cols: 4,
+        rows: 1,
+        originX: 100,
+        originZ: 200,
+        ids: [0, 255, 0, 13],
+      }),
+    ).toEqual(['vale', 'haunt']);
     // And the residency lane derives its list from the live world, not static
     // ZONES: the renderer's host view supplies the zones, the driver passes
     // exactly those to skyResidencyRegions.
     const { readFileSync } = await import('node:fs');
     const renderer = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
     expect(renderer).toContain('liveZones: () => this.sim.cfg.world?.zones ?? ZONES');
+    expect(renderer).toContain('liveBiomePaint: () => this.sim.cfg.world?.biomePaint');
     const driver = readFileSync(
       new URL('../src/render/sky_residency_driver.ts', import.meta.url),
       'utf8',
     );
-    expect(driver).toContain('skyResidencyRegions(this.host.liveZones())');
-    expect(driver).toContain('new Set(this.host.liveZones().map((zone) => zone.biome))');
+    expect(driver).toContain('this.skyResidencyRegionListCache ??= skyResidencyRegions(');
+    expect(driver).toContain('this.host.liveZones()');
+    expect(driver).toContain('this.host.liveBiomePaint()');
+    expect(driver).toContain('...paintedSkyBiomes(this.host.liveBiomePaint())');
   });
 
   it('refuses to release a biome a warm lane pinned, until every pin is gone', async () => {

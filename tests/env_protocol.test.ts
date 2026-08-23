@@ -135,7 +135,9 @@ describe('headless environment protocol validation', () => {
   });
 
   it('projects MIR4 cooldowns, level cap, XP and campaign progress into the stable observation shape', () => {
-    const world = buildMir4ArcWorld();
+    // Observation normalization still verifies the explicit 20-map campaign
+    // scaffold; the production default intentionally contains authored maps only.
+    const world = buildMir4ArcWorld(20);
     const sim = new Sim({
       seed: 19,
       playerClass: 'warrior',
@@ -171,11 +173,14 @@ describe('headless environment protocol validation', () => {
     expect(obs[questStart]).toBe(0.33);
     expect(obs[questStart + 1]).toBeGreaterThan(0);
 
-    sim.player.pos.z = 2420;
+    sim.player.pos.x = world.zones[12]!.hub.x;
+    sim.player.pos.z = world.zones[12]!.hub.z;
     const earlyLateGame = encodeObs(sim)[5];
-    sim.player.pos.z = 3000;
+    sim.player.pos.x = world.zones[15]!.hub.x;
+    sim.player.pos.z = world.zones[15]!.hub.z;
     const midLateGame = encodeObs(sim)[5];
-    sim.player.pos.z = 3999;
+    sim.player.pos.x = world.zones[19]!.hub.x;
+    sim.player.pos.z = world.zones[19]!.hub.z;
     const finalMap = encodeObs(sim)[5];
     expect(earlyLateGame).toBeLessThan(midLateGame);
     expect(midLateGame).toBeLessThan(finalMap);

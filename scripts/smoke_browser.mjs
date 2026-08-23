@@ -237,7 +237,7 @@ if (scenario.questMode === 'tracker') {
   const questSetup = await page.evaluate(() => {
     const sim = window.__game.sim;
     const npc = [...sim.entities.values()].find(
-      (entity) => entity.templateId === 'mir4_tarek_duas_pontes',
+      (entity) => entity.templateId === 'mir4_m01_vila_do_vau_tarek_duas_pontes',
     );
     if (!npc) return { accepted: false, npcId: null };
     const player = sim.player;

@@ -2,8 +2,8 @@
 // It projects refinement, roll previews and material recipes without owning
 // DOM, transport, or client-side gameplay state.
 
+import { mir4ArcQuest } from '../sim/content/mir4/arc_campaign';
 import { mir4EquipmentDefinition } from '../sim/content/mir4/items';
-import { mir4ArcQuest } from '../sim/content/mir4/quests_arc';
 import { mir4ArcStageGoal, mir4QuestCurrentStage } from '../sim/mir4/arc_quests';
 import { MIR4_CRAFT_RECIPES } from '../sim/mir4/crafting';
 import {

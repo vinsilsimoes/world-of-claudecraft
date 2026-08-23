@@ -48,6 +48,7 @@
 
 import { moverHeight, resolveMovement } from '../sim/colliders';
 import { hasValkyrsCallingFlightAura } from '../sim/combat/paladin_valkyrs_calling_state';
+import { mir4MovementMultiplierFromShared } from '../sim/mir4/effects';
 import { moveSpeedMult, type PlayerMotionDeps, stepPlayerMotion } from '../sim/player_motion';
 import { DT, type Entity, type MoveInput, RUN_SPEED, type SimEvent } from '../sim/types';
 
@@ -147,6 +148,17 @@ export function hasAuthoritativeSelfPositionDiscontinuity(
 export const SELF_RENDER_SMOOTH_RATE = 30;
 
 /**
+ * The renderer's server-owned automation fallback must admit the same maximum
+ * horizontal step as the authoritative MIR4 movement path. In particular,
+ * mount speed lives on the mirrored entity and may raise that ceiling to
+ * 1.8x; retaining the on-foot ceiling makes the display fall behind and then
+ * snap forward at every bundled snapshot.
+ */
+export function mir4AuthoritativeSelfFallbackSpeed(player: Entity): number {
+  return RUN_SPEED * mir4MovementMultiplierFromShared(player, moveSpeedMult(player, 0));
+}
+
+/**
  * Advance the renderer's non-predictive self pose. A completed authoritative
  * recovery is a semantic discontinuity even when it moves less than the usual
  * six-yard teleport threshold, so it always replaces the prior display pose.
@@ -160,6 +172,7 @@ export function updateSelfRenderFallback(
   dt: number,
   smooth: boolean,
   authoritativeDiscontinuity: boolean,
+  maxSpeed = Number.POSITIVE_INFINITY,
 ): void {
   const dx = targetX - current.x;
   const dy = targetY - current.y;
@@ -176,9 +189,23 @@ export function updateSelfRenderFallback(
     return;
   }
   const t = 1 - Math.exp(-SELF_RENDER_SMOOTH_RATE * Math.max(0, dt));
-  current.x += dx * t;
-  current.y += dy * t;
-  current.z += dz * t;
+  let stepX = dx * t;
+  let stepY = dy * t;
+  let stepZ = dz * t;
+  const horizontalStep = Math.hypot(stepX, stepZ);
+  const maxHorizontalStep = Math.max(0, maxSpeed) * Math.max(0, dt);
+  if (horizontalStep > maxHorizontalStep) {
+    const scale = maxHorizontalStep / horizontalStep;
+    stepX *= scale;
+    stepZ *= scale;
+  }
+  const maxVerticalStep = Math.max(0, maxSpeed) * Math.max(0, dt);
+  if (Math.abs(stepY) > maxVerticalStep) {
+    stepY = Math.sign(stepY) * maxVerticalStep;
+  }
+  current.x += stepX;
+  current.y += stepY;
+  current.z += stepZ;
 }
 
 export class SelfMotionPredictor {
@@ -388,8 +415,10 @@ export class SelfMotionPredictor {
     actor.sitting = self.sitting;
     actor.castingAbility = self.castingAbility;
     actor.maxHp = self.maxHp;
-    // Mount speed reads the entity mirror (player_motion.moveSpeedMult), so a
-    // mid-session mount/dismount must reach the scratch actor the same frame.
+    // Mount speed reads both fields from the entity mirror. Recalculation
+    // replaces self.mir4, so borrow the current object as well as mountKey or a
+    // mid-session Mount swap leaves the scratch actor on the previous grade.
+    actor.mir4 = self.mir4;
     actor.mountKey = self.mountKey;
     // The kernel roots movement while a mount summon channel is in flight
     // (mountCastRemaining > 0 with a non-empty mountCastKey); borrow both so the

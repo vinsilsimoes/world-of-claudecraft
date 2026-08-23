@@ -80,6 +80,7 @@ import type {
   SkinCatalog,
   StationDef,
   Vec3,
+  WorldContent,
 } from './types';
 
 export interface DamageResolution {
@@ -111,6 +112,9 @@ export interface SimContextPrimitives {
   readonly mir4RuntimeMobTemplates: Mir4ArcRuntimeTemplateMap;
   /** Static crafting stations owned by this Sim's authored world bundle. */
   readonly stationPlacements: readonly StationDef[];
+  /** Exact authored world owned by this Sim. Never read the process-global
+   * active-world registry from gameplay systems. */
+  readonly worldContent: WorldContent;
   // The local / RL player id (single-player + renderer contexts). Reassigned on the
   // first join and on the primary's departure, so it is a LIVE getter, not a snapshot.
   // Stays a Sim field; the moved raid-marker `markerFor` (T1) reads it through the seam.
@@ -1167,6 +1171,9 @@ export function createSimContext(host: SimContextHost): SimContext {
     },
     get stationPlacements() {
       return host.stationPlacements;
+    },
+    get worldContent() {
+      return host.worldContent;
     },
     get primaryId() {
       return host.primaryId;

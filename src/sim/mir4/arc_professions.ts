@@ -29,7 +29,12 @@ export function mir4CampaignProfessionAction(
     if (!stage || !PROFESSION_KINDS.has(stage.kind)) continue;
     const target = Array.isArray(stage.target) ? stage.target[0] : stage.target;
     if (typeof target !== 'string') return 'unavailable';
-    const anchor = mir4ArcStageAnchor(progress.questId, stage, progress.stageProgress);
+    const anchor = mir4ArcStageAnchor(
+      progress.questId,
+      stage,
+      progress.stageProgress,
+      ctx.worldContent.mir4ArcMapProjections,
+    );
     if (!anchor || Math.hypot(player.pos.x - anchor.x, player.pos.z - anchor.z) > CRAFTER_RADIUS) {
       return 'too-far';
     }
