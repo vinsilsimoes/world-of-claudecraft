@@ -6,7 +6,7 @@ const mobileCss = readFileSync(new URL('../src/styles/hud.mobile.css', import.me
 describe('MIR4 tutorial guidance on mobile landscape', () => {
   it('keeps the quest tracker visible and scrollable on short landscape screens', () => {
     expect(mobileCss).toMatch(
-      /@media \(orientation: landscape\)[\s\S]*?body\.mobile-touch #quest-tracker \{\s*display: block;[\s\S]*?overflow-y: auto;/,
+      /body\.mobile-touch #quest-tracker\.mir4-tutorial-active \{\s*display: block;[\s\S]*?overflow-y: auto;/,
     );
   });
 });

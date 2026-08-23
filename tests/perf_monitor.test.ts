@@ -492,6 +492,61 @@ describe('perf monitor external dev-trace spans', () => {
 // fake renderer is a narrow structural mirror of the two members PerfMonitor
 // touches plus perfStats (which snapshot() always reads).
 describe('perf monitor scene census wiring', () => {
+  function censusReport(): SceneCensusReport {
+    return {
+      atMs: 123,
+      tier: 'ultra',
+      playerPosition: { x: 1, y: 2, z: 3 },
+      cameraPosition: { x: 1, y: 8, z: -3 },
+      baseline: { calls: 51, triangles: 6404, points: 0, lines: 0 },
+      shadow: { measured: true, calls: 12, triangles: 700, callsShare: 0.235 },
+      rows: [
+        {
+          category: 'props',
+          roots: 3,
+          visibleRoots: 3,
+          calls: 28,
+          triangles: 5000,
+          points: 0,
+          callsShare: 0.549,
+          trianglesShare: 0.781,
+        },
+      ],
+      residual: { calls: 4, triangles: 4 },
+      programs: 42,
+      textures: 7,
+      geometries: 9,
+      renders: 5,
+    };
+  }
+
+  function fakeRenderer() {
+    return {
+      hitchEnabled: [] as boolean[],
+      setHitchLogEnabled(enabled: boolean) {
+        this.hitchEnabled.push(enabled);
+      },
+      hitchStats: () => ({
+        frames: 100,
+        hitches: 2,
+        byCause: {
+          'shader-compile': 1,
+          'texture-upload': 0,
+          'zone-build': 0,
+          'view-create': 0,
+          gc: 0,
+          'off-frame': 0,
+          other: 1,
+        },
+        programGrowthFrames: 1,
+        programsAdded: 3,
+        recent: [],
+      }),
+      captureSceneCensus: censusReport,
+      perfStats: () => null,
+    };
+  }
+
   it('gates the renderer hitch log on the overlay enable state', () => {
     const offRenderer = fakeRenderer();
     const off = new PerfMonitor(offRenderer as unknown as Renderer);
@@ -519,6 +574,50 @@ describe('perf monitor scene census wiring', () => {
     expect(snap.census?.rows[0]?.category).toBe('props');
     expect(snap.hitches?.hitches).toBe(2);
     expect(snap.hitches?.byCause['shader-compile']).toBe(1);
+  });
+
+  it('renders every hitch cause counter on the overlay hitch line', () => {
+    // The zone-build, gc and off-frame causes are the ones the build ledger,
+    // the heap sample and the frame-gap attribution added: a hitch filed
+    // under them must be readable on the overlay, not only in the JSON report.
+    const created: Array<{ textContent?: string }> = [];
+    installBrowserGlobals('?perf');
+    (globalThis as any).document.createElement = () => {
+      const el = {
+        style: {},
+        textContent: '',
+        addEventListener: () => {},
+        appendChild: () => {},
+        setAttribute: () => {},
+      };
+      created.push(el);
+      return el;
+    };
+    const renderer = fakeRenderer();
+    renderer.hitchStats = () => ({
+      frames: 100,
+      hitches: 21,
+      byCause: {
+        'shader-compile': 1,
+        'texture-upload': 2,
+        'zone-build': 3,
+        'view-create': 4,
+        gc: 5,
+        'off-frame': 6,
+        other: 7,
+      },
+      programGrowthFrames: 1,
+      programsAdded: 8,
+      recent: [],
+    });
+    const perf = new PerfMonitor(renderer as unknown as Renderer);
+    perf.frame(0.016, 100);
+    perf.tick(2000);
+    const overlayText =
+      created.map((el) => el.textContent ?? '').find((text) => text.includes('fps ')) ?? '';
+    expect(overlayText).toContain(
+      'hitch 21 (compile 1 tex 2 zone 3 view 4 gc 5 off 6 other 7)  prog +8',
+    );
   });
 
   it('drops the one self-inflicted frame sample after a census run', () => {

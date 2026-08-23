@@ -10,6 +10,8 @@ import { esc } from '../../esc';
 import { formatNumber, type TranslationKey, t } from '../../i18n';
 import { ownEntry } from '../../known_item';
 import { mir4QuestObjectiveLabel, mir4QuestTitle } from '../../mir4_quest_i18n';
+import type { PainterHostWriters } from '../../painter_host';
+import { buildQuestStrip, type QuestStripController } from './quest_strip_controller';
 import { type QuestTrackerView, questTrackerView, type TrackedQuest } from './quest_tracker';
 
 export interface QuestTrackerSettingsPort {
@@ -19,6 +21,9 @@ export interface QuestTrackerSettingsPort {
 }
 
 export interface QuestTrackerControllerDeps {
+  /** Hud's shared write-elision facet, forwarded to the touch strip so its
+   *  band-driven writes elide against the same cache as every other HUD write. */
+  writers: PainterHostWriters;
   element: HTMLElement;
   document: Document;
   world(): Pick<
@@ -58,13 +63,35 @@ const TUTORIAL_REQUIREMENT_KEYS: Readonly<Record<string, TranslationKey>> = {
   'spirit-ticket-dawn': 'hudChrome.mir4.spiritTicketDawn',
 };
 
-/** Owns quest tracker projection, collapse persistence, and elided DOM updates. */
+/** Owns quest tracker projection, collapse persistence, and elided DOM updates.
+ *  The projection has TWO presentations: this right-anchored tracker on desktop,
+ *  and the top-band strip on touch, which is handed the same TrackedQuest[]
+ *  rather than projecting the log a second time. */
 export class QuestTrackerController {
+  private readonly strip: QuestStripController | null;
   private tutorialLauncher: HTMLElement | null = null;
+  /** The last frame time Hud handed down. The collapse toggle re-renders off a
+   *  user gesture rather than a frame, so it reuses it instead of minting a
+   *  clock here; the strip's grace is measured in seconds and cannot see the
+   *  one-tick staleness. */
+  private lastNow = 0;
 
-  constructor(private readonly deps: QuestTrackerControllerDeps) {}
+  constructor(private readonly deps: QuestTrackerControllerDeps) {
+    this.strip = buildQuestStrip({ writers: deps.writers, click: () => this.deps.click() });
+  }
 
-  update(): void {
+  /** Language switch: the desktop rows already re-resolve unconditionally in
+   *  renderHtml, but the strip is gated on a raw pre-resolve key that a locale
+   *  switch alone cannot move, so it needs its own nudge. Bumping the strip's
+   *  generation first, then rebuilding the tracked quests so their titles and
+   *  objective labels re-resolve too, covers both halves in one call. */
+  relocalize(): void {
+    this.strip?.relocalize();
+    this.update(this.lastNow);
+  }
+
+  update(now: number): void {
+    this.lastNow = now;
     let collapsed = this.deps.settings.collapsed();
     const quests: TrackedQuest[] = [];
     const world = this.deps.world();
@@ -132,6 +159,23 @@ export class QuestTrackerController {
       this.deps.settings.setCollapsed(false);
       collapsed = false;
     }
+    const tutorialActive = quests.some((quest) => quest.tutorial !== undefined);
+    this.deps.writers.toggleClass(
+      this.deps.element,
+      'mir4-tutorial-active',
+      tutorialActive,
+    );
+    // On touch the strip IS the tracker: the right-anchored markup is hidden in
+    // hud.mobile.css, so rendering it would be a string build a phone never sees.
+    // MIR4 system tutorials are the exception: their step-by-step guide and
+    // launcher cannot be compressed into the ordinary single-quest strip.
+    if (this.strip?.active() === true && !tutorialActive) {
+      this.strip.update(quests, now);
+      if (this.deps.element.innerHTML !== '') this.deps.element.innerHTML = '';
+      this.highlightTutorialLauncher(null);
+      return;
+    }
+    if (tutorialActive) this.strip?.update([], now);
     const html = this.renderHtml(questTrackerView(quests, collapsed));
     if (this.deps.element.innerHTML !== html) this.deps.element.innerHTML = html;
     this.highlightTutorialLauncher(
@@ -145,7 +189,7 @@ export class QuestTrackerController {
     const refocus = active?.classList.contains('qt-header') === true;
     this.deps.settings.setCollapsed(!this.deps.settings.collapsed());
     this.deps.click();
-    this.update();
+    this.update(this.lastNow);
     if (refocus) this.deps.element.querySelector<HTMLElement>('.qt-header')?.focus();
   }
 
@@ -167,7 +211,7 @@ export class QuestTrackerController {
       if (entry?.autoJourneyAvailable !== false) {
         world.setMir4AutoQuest(!entry?.autoJourneyActive, questId);
         this.deps.click();
-        this.update();
+        this.update(this.lastNow);
       } else this.deps.openQuest(questId);
       return;
     }

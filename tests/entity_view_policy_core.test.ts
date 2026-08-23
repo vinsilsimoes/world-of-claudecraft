@@ -5,6 +5,7 @@ import {
   entityViewIsAdmitted,
   entityViewShouldDrop,
   isPersistentPortalObject,
+  viewBuildClass,
 } from '../src/render/entity_view_policy_core';
 import type { QuestObjectGate } from '../src/render/quest_object_gate_core';
 import type { Entity, QuestProgress } from '../src/sim/types';
@@ -150,5 +151,20 @@ describe('entity view admission', () => {
 
     expect(entityViewIsAdmitted(owned, questLog, showAll, 1)).toBe(true);
     expect(entityViewIsAdmitted(foreign, questLog, showAll, 1)).toBe(false);
+  });
+});
+
+describe('view build class', () => {
+  it('names the local player before anything else, then the body kind', () => {
+    expect(viewBuildClass(entity(7, 'player'), 7, { modularLook: { race: 'human' } })).toBe('self');
+    expect(viewBuildClass(entity(8, 'player'), 7, { modularLook: { race: 'human' } })).toBe(
+      'composed',
+    );
+    expect(viewBuildClass(entity(9, 'mob'), 7, { modularLook: null })).toBe('rig');
+  });
+
+  it('classes visual-less builds by entity kind', () => {
+    expect(viewBuildClass(entity(10, 'object'), 7, null)).toBe('object');
+    expect(viewBuildClass(entity(11, 'mob'), 7, null)).toBe('other');
   });
 });

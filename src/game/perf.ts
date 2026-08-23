@@ -200,6 +200,9 @@ interface DevPerfTraceFrame {
     memoryUsedMb: number | null;
   };
   stallAttribution?: DevRenderStallAttribution;
+  /** Materials and objects the local render diagnostics saw for the first
+   *  time in this frame's sample: names for a program a long frame minted. */
+  firstSeen?: { materials: string[]; objects: string[] };
 }
 
 interface DevPerfTraceSpan {
@@ -910,6 +913,12 @@ export class PerfMonitor {
           return frame;
         })()
       : null;
+    const diagnostics = rendererFrame?.renderDiagnostics;
+    const firstSeen =
+      diagnostics &&
+      (diagnostics.newMaterials.length > 0 || diagnostics.firstVisibleObjects.length > 0)
+        ? { materials: diagnostics.newMaterials, objects: diagnostics.firstVisibleObjects }
+        : undefined;
     const stallAttribution =
       renderer && rendererFrame ? renderStallAttribution(renderer, rendererFrame) : undefined;
     const frame: DevPerfTraceFrame = {
@@ -943,6 +952,7 @@ export class PerfMonitor {
         memoryUsedMb: memory?.usedMB ?? null,
       },
       ...(stallAttribution ? { stallAttribution } : {}),
+      ...(firstSeen ? { firstSeen } : {}),
     };
     this.devTraceFrames.push(frame);
     this.devTraceFrames.sort(
@@ -1267,7 +1277,7 @@ export class PerfMonitor {
     const mem = s.browser.memory;
     const h = s.hitches;
     const hitchLine = h
-      ? `hitch ${h.hitches} (compile ${h.byCause['shader-compile']} tex ${h.byCause['texture-upload']} view ${h.byCause['view-create']} other ${h.byCause.other})  prog +${h.programsAdded}`
+      ? `hitch ${h.hitches} (compile ${h.byCause['shader-compile']} tex ${h.byCause['texture-upload']} zone ${h.byCause['zone-build']} view ${h.byCause['view-create']} gc ${h.byCause.gc} off ${h.byCause['off-frame']} other ${h.byCause.other})  prog +${h.programsAdded}`
       : null;
     const censusLines = this.lastCensusLines;
     // The hidden-skip counter's one live sink (phase 4 QA F11): sampled frames

@@ -6,6 +6,7 @@ vi.mock('../src/game/audio', () => ({ audio: { click: vi.fn() } }));
 vi.mock('../src/ui/portrait_chip', () => ({
   hydratePortraits: vi.fn(),
   modularLookFor: vi.fn(() => null),
+  onPortraitUpdate: vi.fn(),
   portraitChipHtml: vi.fn(() => '<span class="portrait-chip"></span>'),
 }));
 
@@ -310,6 +311,7 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
       setAttackOnBar: vi.fn(),
       addToBar,
       removeFromBar: vi.fn(() => true),
+      openBarEditor: vi.fn(),
       hasFormBars: () => false,
       resetFormBar: vi.fn(),
       setDragAction: vi.fn(),
