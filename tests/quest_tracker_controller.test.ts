@@ -1,8 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 import { QUESTS } from '../src/sim/data';
+import type { Mir4QuestTrackerEntry } from '../src/sim/mir4/quest_tracker';
 import type { QuestProgress } from '../src/sim/types';
 import { QuestTrackerController } from '../src/ui/hud/quest/quest_tracker_controller';
+import { makeWriterFacet } from '../src/ui/painter_host';
+import { dropPointerFocus } from '../src/ui/pointer_blur';
 import type { IWorld } from '../src/world_api';
+
+/** A private facet per rig: the controller takes Hud's shared one in production,
+ *  and a test needs only the elision behaviour. */
+function writers() {
+  return makeWriterFacet(
+    new Map(),
+    new Map(),
+    new Map(),
+    new Map(),
+    () => {},
+    () => {},
+  );
+}
 
 function progress(questId: string, state: QuestProgress['state'] = 'active'): QuestProgress {
   return {
@@ -14,16 +30,27 @@ function progress(questId: string, state: QuestProgress['state'] = 'active'): Qu
   };
 }
 
-function harness(entries: QuestProgress[] = []) {
+function harness(
+  entries: QuestProgress[] = [],
+  gameProfile: 'woc-classic' | 'mir4-gameplay-port' = 'woc-classic',
+  mir4Entries: Mir4QuestTrackerEntry[] = [],
+) {
   const questLog = new Map(entries.map((entry) => [entry.questId, entry]));
   let html = '';
   let writes = 0;
   let collapsed = false;
+  let autoQuestActive = false;
   const header = {
     classList: { contains: (value: string) => value === 'qt-header' },
     focus: vi.fn(),
+    // A real blur moves document focus to the body; the fake document mirrors that.
+    blur: vi.fn(() => {
+      docState.activeElement = null;
+    }),
   };
+  const docState: { activeElement: unknown } = { activeElement: header };
   const element = {
+    classList: { toggle: vi.fn() },
     get innerHTML() {
       return html;
     },
@@ -33,7 +60,30 @@ function harness(entries: QuestProgress[] = []) {
     },
     querySelector: (selector: string) => (selector === '.qt-header' ? header : null),
   } as unknown as HTMLElement;
-  const document = { activeElement: header } as unknown as Document;
+  const launchers = new Map<
+    string,
+    {
+      click: ReturnType<typeof vi.fn>;
+      classList: {
+        add: ReturnType<typeof vi.fn>;
+        remove: ReturnType<typeof vi.fn>;
+      };
+      dataset: Record<string, string>;
+    }
+  >();
+  for (const id of ['mm-crafting', 'crafting-window']) {
+    launchers.set(id, {
+      click: vi.fn(),
+      classList: { add: vi.fn(), remove: vi.fn() },
+      dataset: {},
+    });
+  }
+  const document = {
+    get activeElement() {
+      return docState.activeElement;
+    },
+    getElementById: (id: string) => launchers.get(id) ?? null,
+  } as unknown as Document;
   const settings = {
     available: vi.fn(() => true),
     collapsed: vi.fn(() => collapsed),
@@ -42,13 +92,37 @@ function harness(entries: QuestProgress[] = []) {
     }),
   };
   const click = vi.fn();
+  const openQuest = vi.fn();
+  const acknowledgeTutorial = vi.fn();
+  const setMir4AutoQuest = vi.fn((on: boolean) => {
+    autoQuestActive = on;
+  });
   const controller = new QuestTrackerController({
+    writers: writers(),
     element,
     document,
-    world: () => ({ questLog }) as Pick<IWorld, 'questLog'>,
+    world: () =>
+      ({
+        questLog,
+        cfg: { seed: 1, playerClass: 'warrior', gameProfile },
+        mir4QuestTrackerEntries: () => mir4Entries,
+        mir4AcknowledgeTutorial: acknowledgeTutorial,
+        mir4AutoQuestActive: () => autoQuestActive,
+        setMir4AutoQuest,
+      }) as Pick<
+        IWorld,
+        | 'cfg'
+        | 'mir4AcknowledgeTutorial'
+        | 'mir4AutoQuestActive'
+        | 'mir4QuestTrackerEntries'
+        | 'questLog'
+        | 'setMir4AutoQuest'
+      >,
     settings,
     questTitle: (questId) => `title:${questId}`,
     objectiveLabel: (questId, index) => `objective:${questId}:${index}`,
+    openQuest,
+    shortcut: (action) => (action === 'crafting' ? 'T' : action),
     click,
   });
   return {
@@ -56,6 +130,9 @@ function harness(entries: QuestProgress[] = []) {
     questLog,
     settings,
     click,
+    acknowledgeTutorial,
+    setMir4AutoQuest,
+    openQuest,
     header,
     html: () => html,
     writes: () => writes,
@@ -63,6 +140,7 @@ function harness(entries: QuestProgress[] = []) {
       collapsed = next;
     },
     collapsed: () => collapsed,
+    launcher: (id: string) => launchers.get(id),
   };
 }
 
@@ -70,8 +148,8 @@ describe('QuestTrackerController', () => {
   it('renders authoritative quests in acceptance order and elides an identical paint', () => {
     const test = harness([progress('q_wolves'), progress('q_boars', 'ready')]);
 
-    test.controller.update();
-    test.controller.update();
+    test.controller.update(0);
+    test.controller.update(0);
 
     expect(test.writes()).toBe(1);
     expect(test.html()).toContain('title:q_wolves');
@@ -92,14 +170,22 @@ describe('QuestTrackerController', () => {
     // objectives, and the KNOWN quest behind it keeps number 3.
     // Built by hand: the progress() helper derives counts from QUESTS, which
     // is exactly what an unknown id cannot do (the wire sends counts as-is).
-    const ghost = { questId: 'q_ghost_of_v33', state: 'active' as const, counts: [0] };
+    const ghost = {
+      questId: 'q_ghost_of_v33',
+      state: 'active' as const,
+      counts: [0],
+    };
     // The prototype-key arm: QUESTS is a prototype-bearing Record, so a bare
     // truthiness read resolves 'constructor' to a FUNCTION and the objectives
     // deref throws; only the own-property gate renders it as unknown.
-    const proto = { questId: 'constructor', state: 'active' as const, counts: [0] };
+    const proto = {
+      questId: 'constructor',
+      state: 'active' as const,
+      counts: [0],
+    };
     const test = harness([progress('q_wolves'), ghost, proto, progress('q_boars', 'ready')]);
 
-    test.controller.update();
+    test.controller.update(0);
 
     expect(test.html()).toContain('q_ghost_of_v33');
     // The title SAYS unknown (the questUi.tracker.unknownQuest sentence
@@ -122,8 +208,8 @@ describe('QuestTrackerController', () => {
     const test = harness();
     test.setCollapsed(true);
 
-    test.controller.update();
-    test.controller.update();
+    test.controller.update(0);
+    test.controller.update(0);
 
     expect(test.settings.setCollapsed).toHaveBeenCalledTimes(1);
     expect(test.settings.setCollapsed).toHaveBeenCalledWith(false);
@@ -131,9 +217,21 @@ describe('QuestTrackerController', () => {
     expect(test.writes()).toBe(0);
   });
 
+  it('renders the tracker header label through the real questUi.tracker.title key, at its runtime home', () => {
+    // The static index.html markup dropped its data-i18n="questUi.tracker.title"
+    // node (tests/localization_coverage.test.ts pins the absence): the header
+    // label is now painted here, directly via t('questUi.tracker.title')
+    // (quest_tracker_controller.ts), never through the questTitle dep (which
+    // only names individual quest rows). English source: 'Quests'
+    // (src/ui/i18n.catalog/quests.ts).
+    const test = harness([progress('q_wolves')]);
+    test.controller.update(0);
+    expect(test.html()).toContain('<span class="qt-h-label">Quests</span>');
+  });
+
   it('persists a toggle, repaints the collapsed header, and restores header focus', () => {
     const test = harness([progress('q_wolves')]);
-    test.controller.update();
+    test.controller.update(0);
 
     test.controller.toggleCollapsed();
 
@@ -143,5 +241,98 @@ describe('QuestTrackerController', () => {
     expect(test.html()).toContain('aria-expanded="false"');
     expect(test.html()).not.toContain('title:q_wolves');
     expect(test.header.focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('owns delegated click routing for tracker headers and quest rows', () => {
+    const test = harness([progress('q_wolves')]);
+    const headerTarget = {
+      closest: (selector: string) => (selector === '.qt-header' ? {} : null),
+    } as unknown as HTMLElement;
+    const rowTarget = {
+      closest: (selector: string) =>
+        selector === '.qt-title' ? { dataset: { quest: 'q_wolves' } } : null,
+    } as unknown as HTMLElement;
+
+    test.controller.handleClick(headerTarget);
+    test.controller.handleClick(rowTarget);
+
+    expect(test.collapsed()).toBe(true);
+    expect(test.openQuest).toHaveBeenCalledWith('q_wolves');
+  });
+
+  it('adapts authoritative MIR4 progress into the same tracker without a classic detail link', () => {
+    const test = harness([], 'mir4-gameplay-port', [
+      {
+        id: 'mir4_m01_q01',
+        complete: false,
+        autoJourneyActive: false,
+        autoJourneySuspended: false,
+        objective: { kind: 'inspect-clues', current: 2, total: 3 },
+      },
+    ]);
+
+    test.controller.update(0);
+
+    expect(test.html()).toContain('First Traces');
+    expect(test.html()).toContain('Inspect clues: 2/3');
+    expect(test.html()).toContain('data-quest="mir4_m01_q01"');
+    expect(test.html()).toContain('role="button"');
+    expect(test.html()).toContain('aria-pressed="false"');
+    expect(test.html()).toContain('Start auto journey');
+
+    test.controller.activateQuest('mir4_m01_q01');
+
+    expect(test.click).toHaveBeenCalledTimes(1);
+    expect(test.setMir4AutoQuest).toHaveBeenCalledWith(true, 'mir4_m01_q01');
+  });
+
+  it('renders tutorial steps, requirements and opens the existing highlighted destination', () => {
+    const test = harness([], 'mir4-gameplay-port', [
+      {
+        id: 'M01-Q06',
+        complete: false,
+        autoJourneyActive: false,
+        autoJourneySuspended: false,
+        objective: {
+          kind: 'campaign-stage',
+          stageKind: 'system-tutorial',
+          current: 0,
+          total: 1,
+        },
+      },
+    ]);
+
+    test.controller.update(0);
+
+    expect(test.html()).toContain('Sun Stone x2');
+    expect(test.html()).toContain('Solar Scroll x2');
+    expect(test.html()).toContain('Crafting (T)');
+    expect(test.launcher('mm-crafting')?.classList.add).toHaveBeenCalledWith(
+      'mir4-tutorial-target',
+    );
+
+    test.controller.openTutorialDestination('M01-Q06');
+
+    expect(test.launcher('crafting-window')?.dataset.mir4ProgressionTab).toBe('refinement');
+    expect(test.launcher('mm-crafting')?.click).toHaveBeenCalledTimes(1);
+    expect(test.acknowledgeTutorial).toHaveBeenCalledWith('M01-Q06');
+  });
+
+  it('does not restore header focus after a pointer-driven toggle (the focus drop ran first)', () => {
+    // hud.ts binds the pointer-only focus drop (src/ui/pointer_blur.ts) over
+    // #quest-tracker in the CAPTURE phase, so a mouse click drops the header's
+    // focus before the click handler toggles and repaints: the repaint's refocus
+    // check (activeElement is a .qt-header) then sees nothing to restore, and the
+    // header cannot be left holding focus for Space to re-toggle. Keyboard
+    // activation (no drop) keeps the restore above.
+    const test = harness([progress('q_wolves')]);
+    test.controller.update(0);
+
+    dropPointerFocus(test.header);
+    test.controller.toggleCollapsed();
+
+    expect(test.header.blur).toHaveBeenCalledTimes(1);
+    expect(test.collapsed()).toBe(true);
+    expect(test.header.focus).not.toHaveBeenCalled();
   });
 });

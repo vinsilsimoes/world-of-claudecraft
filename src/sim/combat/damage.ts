@@ -23,14 +23,21 @@
 // `src/sim`-pure: no DOM/Three/render/ui/game/net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
+import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
+import { mir4KillXpReward } from '../content/mir4/mobs';
 import { computeTalentModifiers } from '../content/talents';
 import { ABILITIES, DELVES, GROUP_XP_BONUS, ITEMS, MOBS } from '../data';
 import * as deedsMod from '../deeds';
 import { recalcPlayerStats } from '../entity';
 import { DAMAGE_IDLE_DESPAWN_MOB_IDS, DAMAGE_IDLE_DESPAWN_SECONDS } from '../entity_roster';
 import { weaponHand } from '../equipment_rules';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import { lockNormalDungeonResetOnBossKill, spawnBossExitPortal } from '../instances/dungeons';
+import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
+import { grantMir4Xp } from '../mir4/combat';
+import { mir4QuestObjectiveEntityIdFromCast } from '../mir4/quest_objective_cast';
 import { spawnWidowHatchlingOnEggDeath } from '../mob/egg_hatchling';
+import { resolveMobTemplate } from '../mob/template';
 import { grantAbilityDevotion } from '../paladin_devotion';
 import { PET_AGGRESSIVE_RANGE } from '../pet/pet_ai';
 import { snapshotPetOnOwnerDeath } from '../pet/pet_owner_revive';
@@ -587,6 +594,11 @@ export function dealDamage(
     }
   }
 
+  // The mir4 magic shield (2503) shaves what reaches health; classic sims
+  // never carry it. Applied here so EVERY incoming path benefits once.
+  if (!resolvedHpLoss && target.kind === 'player' && amount > 0 && target.mir4Shield) {
+    amount = Math.max(1, Math.floor(amount * (1 - target.mir4Shield.magnitude)));
+  }
   if (!resolvedHpLoss && target.kind === 'player' && amount > 0) {
     const meta = ctx.players.get(target.id);
     if (meta?.cls === 'hunter') breakEnduringCourserBurst(ctx, target);
@@ -1144,11 +1156,20 @@ export function dealDamage(
     if (target.sitting) target.sitting = false;
     // classic-era spell pushback: a landed hit delays the cast rather than
     // cancelling it (misses and fully absorbed hits don't push back)
-    if (
+    const tookDamage = amount > 0 || totalAbsorbed > 0;
+    const isMir4QuestObjectiveCast =
+      target.castingAbility !== null &&
+      mir4QuestObjectiveEntityIdFromCast(target.gatherCastNodeId) !== null;
+    if (target.castingAbility && tookDamage && isMir4QuestObjectiveCast) {
+      // Campaign collection is deliberately fragile: every real incoming
+      // damage event interrupts it, including environmental/periodic damage
+      // without an attacker. Auto Mission may retry, but never fights back.
+      ctx.cancelCast(target);
+    } else if (
       target.castingAbility &&
       source &&
       source.id !== target.id &&
-      (amount > 0 || totalAbsorbed > 0) &&
+      tookDamage &&
       (kind === 'hit' || kind === 'block')
     ) {
       // A non-spell cast (fishing/gather) cancels outright instead of pushing
@@ -1492,7 +1513,7 @@ export function handleDeath(
   }
 
   if (e.kind === 'mob') {
-    const template = MOBS[e.templateId];
+    const template = resolveMobTemplate(e.templateId, ctx.mir4RuntimeMobTemplates);
     const run = ctx.delveRunForMob(e.id);
     if (
       run &&
@@ -1535,11 +1556,15 @@ export function handleDeath(
           e.spawnPos,
           ctx.cfg.respawnSeconds,
           template?.respawnWindow ? (min, max) => ctx.rng.range(min, max) : null,
+          ctx.cfg.world?.zones,
         );
     // A fixed respawn also caps corpse decay so the mob returns on schedule whether
-    // or not its loot was looted (training dummy: 10s).
-    if (template?.respawnSeconds !== undefined) {
-      e.corpseTimer = Math.min(e.corpseTimer, template.respawnSeconds);
+    // or not its loot was looted (training dummy: 10s). MIR4's dense hunting
+    // grounds use the same rule for their short per-zone cadence: an untouched
+    // corpse must not stretch a declared 10-18s repopulation back to the classic
+    // 60s loot window.
+    if (template?.respawnSeconds !== undefined || ctx.gameProfile === MIR4_GAME_PROFILE) {
+      e.corpseTimer = Math.min(e.corpseTimer, e.respawnTimer);
     }
     // World bosses: snapshot the contributor set from the hate table BEFORE it is
     // cleared below, keep a long lootable-corpse window so every contributor can
@@ -1718,11 +1743,18 @@ export function handleDeath(
         // mobXpValue keeps the level-diff (anti-farm) scaling; grantXp now
         // routes the award to lifetimeXp even at the cap, so the party gate no
         // longer blocks max-level members — it just forwards every positive award.
-        const xpGain = Math.round(
-          (mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length,
-        );
+        // The mir4 profile pays flat per-template rewards from the ported mob
+        // catalog instead of the classic level curve.
+        const xpGain =
+          ctx.gameProfile === MIR4_GAME_PROFILE
+            ? mir4KillXpReward(e.templateId) ||
+              (ctx.mir4RuntimeMobTemplates.get(e.templateId)?.mir4XpReward ??
+                mir4ArcMobTemplate(e.templateId)?.mir4XpReward ??
+                0)
+            : Math.round((mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length);
         if (xpGain > 0) grantXp(ctx, xpGain, member, { fromKill: true });
         ctx.onMobKilledForQuests(e, member);
+        mir4CreditArcQuestKills(ctx, member, e.templateId, e);
       }
       // A destroyed Broodmother egg may hatch a widow that swarms the killer.
       if (e.templateId === 'spider_egg' && killer) spawnWidowHatchlingOnEggDeath(ctx, e, killer);
@@ -1764,6 +1796,12 @@ export function grantXp(
   meta: PlayerMeta,
   opts?: { fromKill?: boolean },
 ): void {
+  // The mir4 profile advances through the ported level table (BigInt-safe
+  // reqExp) instead of the classic XP_TABLE loop; see src/sim/mir4/combat.ts.
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    grantMir4Xp(ctx, amount, meta);
+    return;
+  }
   const p = ctx.entities.get(meta.entityId);
   if (!p || amount <= 0) return;
   // Rested XP bonus: the classic-era rule only doubles KILL xp (not quests), and

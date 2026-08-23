@@ -4,8 +4,10 @@ import './env';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import * as path from 'node:path';
+import { pipeline } from 'node:stream';
 import { WebSocketServer } from 'ws';
 import { DEEDS } from '../src/sim/content/deeds';
+import { isClassForGameProfile } from '../src/sim/game_profile_roster';
 import {
   LEADERBOARD_MAX,
   LEADERBOARD_PAGE_SIZE,
@@ -13,10 +15,8 @@ import {
   paginateGuildLeaderboard,
   paginateLeaderboard,
 } from '../src/sim/leaderboard_page';
-import { Sim } from '../src/sim/sim';
-import type { PlayerClass } from '../src/sim/types';
+import type { PlayableClass } from '../src/sim/types';
 import { virtualLevel } from '../src/sim/types';
-import { WORLD_SEED } from '../src/sim/world_seed';
 import {
   type DeedsLeaderboardEntry,
   type DeedsLeaderboardSelf,
@@ -257,6 +257,7 @@ import {
   moderationErrorBody,
   readBody,
 } from './http_util';
+import { initialCharacterState as buildInitialCharacterState } from './initial_character_state';
 import { configureInternalRuntime, handleInternalApi } from './internal';
 import { isConnectionRefused } from './ip_block';
 import { pruneExpiredBlockedIps } from './ip_block_db';
@@ -326,7 +327,13 @@ import {
   wocBalanceRateLimited,
 } from './ratelimit';
 import { createPgRateLimitStore } from './ratelimit_db';
-import { isPublicCorsPath, publicOriginFromRequest, REALM, REALM_DIRECTORY } from './realm';
+import {
+  GAME_PROFILE,
+  isPublicCorsPath,
+  publicOriginFromRequest,
+  REALM,
+  REALM_DIRECTORY,
+} from './realm';
 import { configureReliquaryRuntime } from './reliquary';
 import { reliquaryRarityCounts } from './reliquary_rarity_db';
 import { resolveReportTarget } from './report_target';
@@ -480,15 +487,11 @@ function liveGame(): GameServer {
 }
 
 function initialCharacterState(
-  cls: PlayerClass,
+  cls: PlayableClass,
   name: string,
   skin: number,
 ): import('../src/sim/sim').CharacterState {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: cls, playerName: name });
-  sim.setPlayerSkin(sim.playerId, skin);
-  const character = sim.serializeCharacter(sim.playerId);
-  if (!character) throw new Error('failed to serialize initial character');
-  return character;
+  return buildInitialCharacterState(cls, name, skin, GAME_PROFILE);
 }
 
 // ---------------------------------------------------------------------------
@@ -1256,6 +1259,19 @@ const MIME: Record<string, string> = {
   '.webp': 'image/webp',
   '.mp3': 'audio/mpeg',
 };
+// Stream a static file into a response with full teardown: bare pipe() never
+// destroys the SOURCE stream when the response side closes first, so every
+// client-aborted transfer leaked its file descriptor for the life of the
+// process (issue #3562). pipeline() destroys both ends on either side's
+// close. A premature close IS the normal client-abort case, so only real
+// read errors are logged.
+function streamStaticFile(file: string, res: http.ServerResponse): void {
+  pipeline(fs.createReadStream(file), res, (err) => {
+    if (err && (err as NodeJS.ErrnoException).code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      console.error(`[static] stream failed for ${file}:`, err);
+    }
+  });
+}
 // The admin dashboard is reached via the admin.* subdomain (Caddy proxies it
 // to this same port) or /admin for local dev. The hostname only picks which
 // HTML shell is served, the admin API itself is gated by admin tokens.
@@ -1325,7 +1341,7 @@ function serveStatic(req: http.IncomingMessage, res: http.ServerResponse): void 
     const index = path.join(STATIC_DIR, shell);
     if (fs.existsSync(index)) {
       res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache' });
-      fs.createReadStream(index).pipe(res);
+      streamStaticFile(index, res);
     } else {
       res.writeHead(404);
       res.end('not found (run `npm run build` to serve the client from the game server)');
@@ -1364,7 +1380,7 @@ function serveStatic(req: http.IncomingMessage, res: http.ServerResponse): void 
     res.end(verifiedSfx.bytes);
     return;
   }
-  fs.createReadStream(file).pipe(res);
+  streamStaticFile(file, res);
 }
 
 // ---------------------------------------------------------------------------
@@ -1683,18 +1699,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
             error: 'character name is not allowed',
             code: 'character.name_not_allowed',
           });
-        const validClasses = [
-          'warrior',
-          'paladin',
-          'hunter',
-          'rogue',
-          'priest',
-          'shaman',
-          'mage',
-          'warlock',
-          'druid',
-        ];
-        if (!validClasses.includes(body.class))
+        if (!isClassForGameProfile(body.class, GAME_PROFILE))
           return json(res, 400, { error: 'invalid class', code: 'character.invalid_class' });
         const skin = Math.max(
           0,
@@ -2775,6 +2780,7 @@ configureAppleAuthRuntime({
 // public share origin. Done at module load, before any request, mirroring the two calls
 // above. The legacy handleApi character arms stay intact as the flag-off rollback path.
 configureCharactersRuntime({
+  gameProfile: GAME_PROFILE,
   isCharacterOnline: (characterId) =>
     [...liveGame().clients.values()].some((s) => s.characterId === characterId),
   takeOverCharacter: (accountId, characterId) =>

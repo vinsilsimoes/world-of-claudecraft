@@ -10,6 +10,7 @@
 // getComputedStyle and are covered by the no-magic-values source guard instead.
 
 import { describe, expect, it } from 'vitest';
+import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
 import {
   BUILTIN_WORLD,
   CAMPS,
@@ -41,6 +42,7 @@ import { STABLE_MAP_NAVIGATION_LANDMARKS } from '../src/ui/map_navigation_landma
 import {
   buildOverworldMapModel,
   gatherNodeMarkerAt,
+  layoutMapPoiLabels,
   MAP_GATHER_NODE_HIT_RADIUS,
   MAP_LANDMARK_PLACEMENT_BY_PROFILE,
   MAP_LANDMARK_SEPARATION,
@@ -64,6 +66,42 @@ import {
   stationMarkerAt,
 } from '../src/ui/map_window_view';
 import type { IWorld } from '../src/world_api';
+
+describe('authored world-map POI label layout', () => {
+  it('moves colliding labels while preserving their cartography anchors', () => {
+    const placed = layoutMapPoiLabels(
+      [
+        { mx: 200, my: 200, width: 120 },
+        { mx: 250, my: 200, width: 120 },
+        { mx: 390, my: 12, width: 90 },
+      ],
+      400,
+      15,
+    );
+
+    expect(placed[0]).toMatchObject({ mx: 200, my: 200, labelX: 200, labelY: 200 });
+    expect(placed[1]?.labelY).not.toBe(200);
+    expect(placed[2]?.labelX).toBeLessThanOrEqual(349);
+    expect(placed[2]?.labelY).toBeGreaterThanOrEqual(21);
+
+    const boxes = placed.map((label) => ({
+      left: label.labelX - label.width / 2 - 3,
+      right: label.labelX + label.width / 2 + 3,
+      top: label.labelY - 18,
+      bottom: label.labelY + 3,
+    }));
+    for (let index = 0; index < boxes.length; index += 1) {
+      for (let other = index + 1; other < boxes.length; other += 1) {
+        const a = boxes[index];
+        const b = boxes[other];
+        if (!a || !b) continue;
+        expect(a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top).toBe(
+          false,
+        );
+      }
+    }
+  });
+});
 
 const ZONE = ZONES[0];
 const ZONE_CZ = (ZONE.zMin + ZONE.zMax) / 2; // a z inside the committed zone band
@@ -622,6 +660,27 @@ describe('buildOverworldMapModel (pure draw model)', () => {
     expect(
       STABLE_MAP_NAVIGATION_LANDMARKS.filter((landmark) => landmark.kind === 'world-passage'),
     ).toHaveLength(PORTALS.length * 2);
+  });
+
+  it('projects the MIR4 portal for the committed arc zone through the existing map model', () => {
+    const world = makeOverworldWorld('client') as unknown as IWorld & {
+      cfg: IWorld['cfg'];
+      player: IWorld['player'];
+    };
+    world.cfg = { ...world.cfg, gameProfile: 'mir4-gameplay-port' };
+    world.player.pos = { ...world.player.pos, x: 0, z: 190 };
+    const zone = buildMir4ArcWorld(2).zones[0]!;
+    const model = buildOverworldMapModel({
+      ...input(world, 1, [], emptyZoneProps()),
+      zone,
+    });
+    expect(model.navigation).toEqual([
+      expect.objectContaining({
+        kind: 'world-passage',
+        portalId: 'mir4_m01-vila-do-vau_to_m02-trilha-dos-juncos',
+        destinationZoneId: 'mir4_m02-trilha-dos-juncos',
+      }),
+    ]);
   });
 
   it('shows only live Rift portal entities within the inclusive 80-yard disclosure range', () => {

@@ -50,6 +50,7 @@ class WoWClassicEnv(gym.Env):
     def __init__(
         self,
         player_class: str = "warrior",
+        game_profile: str = "woc-classic",
         frame_skip: int = 5,
         max_steps: int = 3000,
         respawn_seconds: float = 15,
@@ -60,6 +61,7 @@ class WoWClassicEnv(gym.Env):
     ) -> None:
         super().__init__()
         self.player_class = player_class
+        self.game_profile = game_profile
         self._config: dict[str, Any] = {
             "frameSkip": frame_skip,
             "maxSteps": max_steps,
@@ -82,7 +84,7 @@ class WoWClassicEnv(gym.Env):
             text=True,
             bufsize=1,
         )
-        meta = self._request({"cmd": "info"})
+        meta = self._request({"cmd": "info", "game_profile": self.game_profile})
         self._obs_size = int(meta["obs_size"])
         self.action_names: list[str] = list(meta["actions"])
         self.observation_space = spaces.Box(-2.0, 2.0, shape=(self._obs_size,), dtype=np.float32)
@@ -113,6 +115,7 @@ class WoWClassicEnv(gym.Env):
             "cmd": "reset",
             "seed": self._episode_seed,
             "player_class": self.player_class,
+            "game_profile": self.game_profile,
             "config": self._config,
         }
         if options and "player_level" in options:

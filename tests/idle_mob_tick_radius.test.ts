@@ -89,8 +89,13 @@ describe('idle-mob distance culling is wired into the production server (#2703)'
   });
 
   it('uses the same invisible-idle-mob throttle in the offline browser game', () => {
-    const main = readFileSync(new URL('../src/main.ts', import.meta.url), 'utf8');
-    expect(main).toContain('idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS');
+    // The offline Sim options live in their own sibling module since the
+    // mir4-gameplay-port foundation extracted them out of main.ts.
+    const opts = readFileSync(
+      new URL('../src/game/offline_sim_options.ts', import.meta.url),
+      'utf8',
+    );
+    expect(opts).toContain('idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS');
   });
 
   it('the render drop radius sits well past the farthest a mob can ever detect a player, so culling never skips a scan that could pull', () => {

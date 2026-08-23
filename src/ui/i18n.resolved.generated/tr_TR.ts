@@ -779,7 +779,391 @@ export const tr_TR: EnTranslations = {
     "questTracker": {
       "count": "({count})",
       "collapseHint": "Görev takipçisini daralt",
-      "expandHint": "Görev takipçisini genişlet"
+      "expandHint": "Görev takipçisini genişlet",
+      "mir4": {
+        "firstTraces": "First Traces",
+        "reachTarek": "Reach Tarek",
+        "inspectClues": "Inspect clues",
+        "returnToTarek": "Return to Tarek",
+        "pausedSuffix": "(auto journey paused by manual control)",
+        "startAutoJourney": "Start auto journey",
+        "stopAutoJourney": "Stop auto journey"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "Meadow Courser",
+          "moss-boar": "Moss Boar",
+          "brook-stag": "Brook Stag",
+          "gray-wolf": "Gray Wolf",
+          "dun-packhorse": "Dun Packhorse",
+          "birch-doe": "Birch Doe",
+          "red-maned-pony": "Red Maned Pony",
+          "lowland-elk": "Lowland Elk",
+          "field-lynx": "Field Lynx",
+          "tawny-mastiff": "Tawny Mastiff",
+          "dune-jackal": "Dune Jackal",
+          "reed-puma": "Reed Puma",
+          "clay-ox": "Clay Ox",
+          "valley-buffalo": "Valley Buffalo",
+          "shaggy-yak": "Shaggy Yak",
+          "creek-lizard": "Creek Lizard",
+          "shellback-tortoise": "Stone-Shell Tortoise",
+          "plains-ostrich": "Plains Ostrich",
+          "dusk-emu": "Dusk Rhea",
+          "copper-ant-carrier": "Copper Ant Carrier",
+          "mist-moose": "Mist Moose",
+          "leaf-panther": "Leaf Panther",
+          "turf-rhino": "Turf Rhino",
+          "valley-monitor": "Valley Monitor",
+          "granite-ibex": "Granite Ibex",
+          "silver-dapple-mare": "Silver Dapple Mare",
+          "marsh-stag": "Marsh Stag",
+          "snow-mane-lion": "Snow-Maned Lion",
+          "ember-fox": "Ember Fox",
+          "striped-hyena": "Striped Hyena",
+          "iron-tusk-boar": "Iron Tusk Boar",
+          "cedar-bear": "Cedar Bear",
+          "swamp-hippo": "Swamp Hippo",
+          "thorn-iguana": "Thorn Iguana",
+          "dryland-crocodile": "Dryland Crocodile",
+          "horned-cassowary": "Horned Cassowary",
+          "bronze-raptor": "Bronze Raptor",
+          "amber-scarab": "Amber Scarab",
+          "dune-scorpion": "Dune Scorpion",
+          "root-golem": "Root Golem",
+          "amber-bear": "Amber Bear",
+          "sunset-tiger": "Sunset Tiger",
+          "root-drake": "Root Drake",
+          "hill-griffin": "Hill Griffin",
+          "obsidian-zebra": "Obsidian Zebra",
+          "stormhorn-ram": "Storm-Horn Ram",
+          "dusk-elk": "Dusk Elk",
+          "frost-warg": "Frost Warg",
+          "basalt-rhino": "Basalt Rhino",
+          "tundra-mammoth": "Tundra Mammoth",
+          "crystal-ankylosaur": "Crystal Ankylosaur",
+          "ember-salamander": "Ember Salamander",
+          "thunder-komodo": "Thunder Komodo",
+          "moon-crocodile": "Moon Crocodile",
+          "razorbeak-strider": "Razor-Beaked Strider",
+          "plume-raptor": "Plume Raptor",
+          "glass-mantis": "Glass Mantis",
+          "thunder-beetle": "Thunder Beetle",
+          "iron-sentinel": "Iron Sentinel",
+          "mossstone-colossus": "Moss-Stone Colossus",
+          "eclipse-lion": "Eclipse Lion",
+          "crimson-wyvern": "Crimson Wyvern",
+          "astral-stag": "Astral Stag",
+          "jade-basilisk": "Jade Basilisk",
+          "solar-wolf": "Solar Wolf",
+          "forest-chimera": "Forest Chimera",
+          "tempest-courser": "Tempest Courser",
+          "thorn-elephant": "Thorn Elephant",
+          "void-spider": "Void Spider",
+          "rune-golem": "Rune Golem",
+          "dawn-phoenix": "Dawn Phoenix",
+          "imperial-griffin": "Imperial Griffin",
+          "stone-leviathan": "Stone Leviathan",
+          "void-unicorn": "Void Unicorn",
+          "golden-manticore": "Golden Manticore",
+          "imperial-tiger": "Imperial Tiger",
+          "dawn-mammoth": "Dawn Mammoth",
+          "magma-drake": "Magma Drake",
+          "crown-scorpion": "Crown Scorpion",
+          "sunforged-colossus": "Sunforged Colossus",
+          "ground-dragon": "Ground Dragon",
+          "eternal-phoenix": "Eternal Phoenix",
+          "celestial-kirin": "Celestial Kirin",
+          "firmament-behemoth": "Firmament Lion",
+          "time-hydra": "Time Hydra"
+        },
+        "spirits": {
+          "spirit-common-01": "Meadow Spark",
+          "spirit-common-02": "Brook Breeze",
+          "spirit-common-03": "Watchful Leaf",
+          "spirit-common-04": "Stone Echo",
+          "spirit-uncommon-01": "Dawn Glow",
+          "spirit-uncommon-02": "Mist Nymph",
+          "spirit-uncommon-03": "Moss Guardian",
+          "spirit-uncommon-04": "Valley Salamander",
+          "spirit-rare-01": "Amber Fox",
+          "spirit-rare-02": "Sunset Owl",
+          "spirit-rare-03": "Root Drake",
+          "spirit-rare-04": "Hills Oracle",
+          "spirit-epic-01": "Eclipse Avatar",
+          "spirit-epic-02": "Crimson Ifrit",
+          "spirit-epic-03": "Astral Stag",
+          "spirit-epic-04": "Jade Sentinel",
+          "spirit-epic-05": "Solar Wolf",
+          "spirit-epic-06": "Ethereal Chimera",
+          "spirit-legendary-01": "Earth Titan",
+          "spirit-legendary-02": "Dawn Phoenix",
+          "spirit-legendary-03": "Imperial Archon",
+          "spirit-legendary-04": "Crystal Leviathan",
+          "spirit-legendary-05": "Void Unicorn",
+          "spirit-legendary-06": "Golden Manticore",
+          "spirit-mythical-01": "Primordial Soul",
+          "spirit-mythical-02": "Eternal Phoenix",
+          "spirit-mythical-03": "Celestial Kirin",
+          "spirit-mythical-04": "Firmament Behemoth",
+          "spirit-mythical-05": "Abyssal Seraph",
+          "spirit-mythical-06": "Time Hydra"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "Wandering Spark",
+          "spirit-skill-1-02": "Dusk Instinct",
+          "spirit-skill-1-03": "Vital Dew",
+          "spirit-skill-1-04": "Mana Breath",
+          "spirit-skill-2-01": "Rising Flare",
+          "spirit-skill-2-02": "Mist Fang",
+          "spirit-skill-2-03": "Restoring Sap",
+          "spirit-skill-2-04": "Arcane Pulse",
+          "spirit-skill-3-01": "Amber Rupture",
+          "spirit-skill-3-02": "Sunset Judgment",
+          "spirit-skill-3-03": "Vital Bond",
+          "spirit-skill-3-04": "Root Spring",
+          "spirit-skill-4-01": "Eclipse Ray",
+          "spirit-skill-4-02": "Crimson Fury",
+          "spirit-skill-4-03": "Astral Grace",
+          "spirit-skill-4-04": "Jade Orb",
+          "spirit-skill-4-05": "Solar Cut",
+          "spirit-skill-4-06": "Ethereal Focus",
+          "spirit-skill-5-01": "Tectonic Impact",
+          "spirit-skill-5-02": "Reborn Flame",
+          "spirit-skill-5-03": "Imperial Verdict",
+          "spirit-skill-5-04": "Crystal Tide",
+          "spirit-skill-5-05": "Void Rift",
+          "spirit-skill-5-06": "Golden Crown",
+          "spirit-skill-6-01": "Genesis",
+          "spirit-skill-6-02": "Eternal Return",
+          "spirit-skill-6-03": "Celestial Mandate",
+          "spirit-skill-6-04": "Weight of the Firmament",
+          "spirit-skill-6-05": "Abyssal Spiral",
+          "spirit-skill-6-06": "Absolute Moment"
+        }
+      },
+      "ultimateGauge": "Ultimate gauge",
+      "ultimateGaugeStatus": "Ultimate gauge: {value} of {max}",
+      "ultimateReadyAnnouncement": "Ultimate ready.",
+      "achievements": {
+        "title": "Achievements",
+        "close": "Close achievements",
+        "summary": "{claimed}/{total} rewards claimed",
+        "balances": "Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}",
+        "levelTitle": "Level {level}",
+        "levelDescription": "Reach level {level}.",
+        "progressAria": "Level progress: {current}/{target}",
+        "progressText": "{current}/{target}",
+        "rewardCopper": "{amount} copper",
+        "rewardDarksteel": "{amount} Darksteel",
+        "rewardEffectPoints": "{amount} Effect Points",
+        "rewardSkillTomes": "{amount} Skill Tomes",
+        "rewards": "Rewards: {rewards}",
+        "claim": "Claim",
+        "claimed": "Claimed",
+        "locked": "Reach level {level}",
+        "previousGrade": "Claim the previous grade first",
+        "claimAria": "Claim the level {level} achievement reward"
+      },
+      "questLog": {
+        "narrative": "Investigate the three clue sites around the ford, then return to Tarek Two Bridges.",
+        "giverName": "Tarek Two Bridges",
+        "emptyHint": "Find Tarek Two Bridges in the M01 settlement, or start auto journey.",
+        "completedHint": "First Traces is complete. The remaining campaign quests are not active yet."
+      },
+      "campaign": {
+        "questTitle": "Campaign {id}",
+        "narrative": "Complete the current campaign objectives for {id}.",
+        "contact": "Campaign contact",
+        "objective": {
+          "returnToContact": "Return to the campaign contact",
+          "talk": "Speak with the campaign contact",
+          "deliver": "Deliver the requested items",
+          "travel": "Travel to the marked objective",
+          "inspect": "Inspect the marked evidence",
+          "gather": "Gather the requested resources",
+          "defend": "Defend the marked objective",
+          "combat": "Defeat the marked enemies",
+          "escort": "Escort the marked ally",
+          "escortSupplies": "Escort the supply group",
+          "dungeon": "Clear the campaign dungeon",
+          "craft": "Craft the requested supplies",
+          "tutorial": "Complete the system lesson",
+          "interact": "Interact with the marked objective",
+          "complete": "Complete the current objective"
+        }
+      },
+      "characterTitle": "Character",
+      "awaitingState": "Waiting for authoritative character data...",
+      "combatPowerLine": "Combat Power {value}",
+      "equipmentVisualShell": "World of ClaudeCraft appearance with MIR4 combat attributes",
+      "equipmentTierGrade": "Tier {tier}, Grade {grade}",
+      "equipmentRequiredLevel": "Requires level {level}",
+      "unequipHint": "Click the X or right-click to unequip.",
+      "unequipAria": "Unequip {item}",
+      "equipHint": "Click to equip.",
+      "equipAria": "Equip {item}",
+      "inventoryEquipment": "Equipment",
+      "inventoryRuntimeItems": "Native World of ClaudeCraft Items",
+      "inventoryCollectionTickets": "Collection Tickets",
+      "inventoryMaterials": "Refinement Materials",
+      "noUnequippedEquipment": "No unequipped equipment.",
+      "materialCount": "Owned: {count}",
+      "mountTicketDawn": "Dawn Mount Ticket",
+      "mountTicketTwilight": "Twilight Mount Ticket",
+      "mountTicketDawnDescription": "Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.",
+      "mountTicketTwilightDescription": "Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.",
+      "redeemMountTicket": "Use {ticket}",
+      "inventoryMounts": "Mounts",
+      "inventoryPendingMounts": "Mounts Awaiting Confirmation",
+      "mountGrade": "Grade {grade}",
+      "mountOwned": "Owned: {count}",
+      "mountEquipped": "Equipped",
+      "mountEquipHint": "Click to equip this Mount and summon its native World of ClaudeCraft visual shell.",
+      "mountUnequipHint": "Click to unequip this Mount and dismount.",
+      "mountConfirmHint": "Click to confirm this Mount and add it to your collection.",
+      "mountConfirmAria": "Confirm {mount}",
+      "mountEffectShell": "Native World of ClaudeCraft model with MIR4 Mount stats",
+      "mountMoveSpeed": "Movement Speed: +{amount}%",
+      "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
+      "mountDefenses": "Physical Defense: +{physical} · Magic Defense: +{magic}",
+      "equippedMountLine": "Mount: {mount} (Grade {grade})",
+      "noEquippedMount": "Mount: none equipped",
+      "inventoryMountCombination": "Mount Combination",
+      "combineMountsAria": "Combine four Grade {grade} Mounts",
+      "combineMountsHint": "Consumes four owned Mounts of this grade. There is a 20% chance to receive one random Mount of the next grade. On failure, you receive one random Mount of the same grade. Epic or higher rewards await confirmation.",
+      "inventorySpirits": "Spirits",
+      "inventoryPendingSpirits": "Spirits Awaiting Confirmation",
+      "spiritTicketDawn": "Dawn Spirit Ticket",
+      "spiritTicketSunset": "Sunset Spirit Ticket",
+      "spiritTicketDawnDescription": "Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.",
+      "spiritTicketSunsetDescription": "Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.",
+      "redeemSpiritTicket": "Summon with {ticket}",
+      "spiritGrade": "Grade {grade}",
+      "spiritOwned": "Owned: {count}",
+      "spiritEquipped": "Equipped",
+      "spiritEquipHint": "Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.",
+      "spiritUnequipHint": "Click to unequip this Spirit.",
+      "spiritConfirmHint": "Click to confirm this Spirit and add it to your collection.",
+      "spiritConfirmAria": "Confirm {spirit}",
+      "spiritEffectShell": "Native World of ClaudeCraft presentation with MIR4 Spirit effects",
+      "equippedSpiritLine": "Spirit: {spirit} (Grade {grade})",
+      "noEquippedSpirit": "Spirit: none equipped",
+      "inventorySpiritCombination": "Spirit Combination",
+      "combineSpiritsAria": "Combine four Grade {grade} Spirits",
+      "combineSpiritsHint": "Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.",
+      "spiritSkillChanceCooldown": "{chance}% chance · {cooldown}s cooldown",
+      "spiritSkillBonusDamage": "Increases the triggering hit's raw damage by {amount}%.",
+      "spiritSkillExecute": "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
+      "spiritSkillLifeSiphon": "Restores {amount}% of maximum Health.",
+      "spiritSkillManaSurge": "Restores {amount}% of maximum Mana.",
+      "spiritSkillArmorRend": "Adds {amount}% Defense Penetration to the triggering hit.",
+      "spiritSkillCriticalFocus": "Forces the triggering hit to be critical.",
+      "equipmentSlots": {
+        "weapon": "Weapon",
+        "necklace": "Necklace",
+        "ring": "Ring",
+        "talisman": "Talisman",
+        "chest": "Chest",
+        "helmet": "Helmet",
+        "gloves": "Gloves",
+        "boots": "Boots"
+      },
+      "stats": {
+        "combatPower": "Combat Power",
+        "maxHp": "Maximum Health",
+        "maxMana": "Maximum Mana",
+        "physicalAttack": "Physical Attack",
+        "magicAttack": "Magic Attack",
+        "physicalDefense": "Physical Defense",
+        "magicDefense": "Magic Defense",
+        "accuracy": "Accuracy",
+        "dodge": "Dodge",
+        "critical": "Critical",
+        "avoidCritical": "Critical Evasion",
+        "criticalOutcome": "Critical Damage",
+        "bossDamage": "Boss Damage",
+        "skillDamage": "Skill Damage",
+        "penetration": "Defense Penetration",
+        "unknown": "Combat Attribute"
+      },
+      "materials": {
+        "sunStone": "Sun Stone",
+        "moonStone": "Moon Stone",
+        "solarScroll": "Solar Scroll",
+        "lunarSeal": "Lunar Seal",
+        "dawnTear": "Dawn Tear",
+        "solarWard": "Solar Ward"
+      },
+      "maps": {
+        "portal": "{zone} Portal",
+        "actWelcome": "{zone} (Act {act}).",
+        "m01": "Ford Village",
+        "m02": "Reed Trail",
+        "m03": "Vale Grove",
+        "m04": "Hillside Ruins",
+        "m05": "Rift Clearing",
+        "m06": "Candle-Stone Crypts",
+        "m07": "Ossuary Galleries",
+        "m08": "Miststone Fortress",
+        "m09": "Lantern Marsh",
+        "m10": "Bog King's Fen",
+        "m11": "Leech Mangrove",
+        "m12": "Reed Harbor",
+        "m13": "Glass Dunes",
+        "m14": "Akhet Necropolis",
+        "m15": "Cinderite Caldera",
+        "m16": "Shattered Sun Forge",
+        "m17": "Howling Tundra",
+        "m18": "Jarl's Pass",
+        "m19": "Night Veil",
+        "m20": "Eclipse Bastille"
+      },
+      "progression": {
+        "title": "Equipment Workshop",
+        "refinement": "Refinement",
+        "enchantment": "Enchantment",
+        "blessing": "Blessing",
+        "crafting": "Crafting",
+        "ownedEquipment": "Owned Equipment",
+        "noEquipment": "No equipment is available for this operation.",
+        "equipped": "Equipped",
+        "enhancementLevel": "Enhancement +{level} of +{max}",
+        "successChance": "Success chance: {chance}%",
+        "safeFailure": "Failure keeps the equipment.",
+        "destructiveFailure": "Failure destroys the equipment above +5.",
+        "wardProtection": "A Solar Ward will be consumed to prevent destruction.",
+        "noWardProtection": "No Solar Ward is available.",
+        "enhanceCost": "Cost: 1 Solar Scroll",
+        "enhance": "Enhance",
+        "maxEnhancement": "Maximum enhancement reached",
+        "currentEffects": "Current Effects",
+        "noCurrentEffects": "No effects applied.",
+        "rollCostEnchantment": "Cost: 1 Lunar Seal",
+        "layerUnsupported": "This item cannot receive {layer} effects.",
+        "rollCostBlessing": "Cost: 1 Dawn Tear",
+        "roll": "Roll Preview",
+        "pendingOtherLayer": "Resolve the pending {layer} preview first.",
+        "preview": "Pending Preview",
+        "acceptPreview": "Apply Preview",
+        "keepCurrent": "Keep Current",
+        "inactiveEffect": "Ported effect (not active in combat yet)",
+        "materialRecipes": "Material Recipes",
+        "campaignProfession": "Campaign Profession Order",
+        "campaignProfessionProgress": "Progress: {current}/{goal}",
+        "campaignProfessionMaterials": "Eligible materials: {held}/{needed}",
+        "campaignProfessionHint": "Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.",
+        "campaignCraft": "Craft Component",
+        "campaignRefine": "Refine Component",
+        "campaignSalvage": "Salvage Gear",
+        "creates": "Creates {count} {material}",
+        "materialCost": "{held}/{needed} {material}",
+        "copperCost": "{amount} copper",
+        "create": "Create",
+        "requestSent": "The server is validating the equipment operation."
+      }
     },
     "interfaceTabs": {
       "general": "Genel",
@@ -866,11 +1250,52 @@ export const tr_TR: EnTranslations = {
       "actionRing": "Savaş eylemleri",
       "actionPageToggle": "İşlem sayfasını değiştir",
       "actionPageIndicator": "Sayfa {page}",
+      "actionRadial": "Action directions",
+      "actionRadialCancel": "Cancel action",
+      "radialCenter": "Centre",
+      "radialUp": "Up",
+      "radialRight": "Right",
+      "radialDown": "Down",
+      "radialLeft": "Left",
+      "consumableSeat": "Consumables",
+      "menuControl": "Menus",
+      "menuControlAria": "Menus. Tap to open chat, or hold and swipe right for mounts, map, bags and more.",
+      "menuControlAriaTap": "Menus. Tap to open the menu row: mounts, map, bags and more. Tap again for chat.",
+      "menuLabel": "Menu",
+      "quickActions": "Quick Actions",
+      "quickActionsAria": "Quick Actions. Tap to open the row of mount, chat, map, bags and more, or hold and swipe right to pick one.",
+      "quickActionsAriaTap": "Quick Actions. Tap to open the row of mount, chat, map, bags and more, then tap an item. Tap the control again to close.",
+      "quickActionsLabel": "Actions",
+      "stanceRadial": "Stances",
+      "stanceAnchorAria": "Stance: {stance}. Tap to open the stance ring, then pick another stance.",
+      "stanceAnchorEmptyAria": "No stance. Tap to open the stance ring, then pick a stance.",
+      "questStripAria": "Tracked quest {position} of {total}: {title}. Activate for the next quest.",
+      "questStripAriaSingle": "Tracked quest: {title}",
+      "questStripCounter": "{position}/{total}",
+      "questStripMore": "+{count} more",
       "targetCycle": "Hedefi değiştir",
       "targetCycleShort": "Hedef",
       "spellbookPageLabel": "Sayfa {page}",
       "hideKeyboard": "Klavyeyi gizle",
-      "chatPlaceholder": "Bir şey söyle..."
+      "chatPlaceholder": "Bir şey söyle...",
+      "barEditor": "Edit Bars",
+      "barEditorAria": "Edit the action bar layout"
+    },
+    "barEditor": {
+      "title": "Edit Action Bar",
+      "close": "Close bar editor",
+      "pages": "Action bar pages",
+      "pageTab": "Page {page}",
+      "buttonHeader": "Button {button}",
+      "cellAria": "Button {button}, {direction}: {action}",
+      "emptyCellAria": "Button {button}, {direction}: empty",
+      "hint": "Tap a slot, then another, to swap them.",
+      "armed": "Tap a slot to place {name}.",
+      "picked": "Tap another slot to swap with {name}.",
+      "locked": "Action bars are locked in Interface options.",
+      "clear": "Clear",
+      "clearAria": "Clear a slot",
+      "clearArmed": "Tap a slot to clear it."
     },
     "tutorial": {
       "moveBodyTouch": "Hareket etmek için hareket çubuğunu kullan ve etrafa bakmak için ekranı sürükle. Başlamak için birkaç adım at.",
@@ -952,6 +1377,22 @@ export const tr_TR: EnTranslations = {
       "closesIn": "{time} içinde kapanır",
       "clockMs": "{minutes}:{seconds}",
       "clockHms": "{hours}:{minutes}:{seconds}"
+    },
+    "lastkeepMap": {
+      "title": "{keep}: {story}",
+      "story": {
+        "undercroft": "Mahzen",
+        "state": "Tören Katı",
+        "residence": "Yaşam Katı",
+        "tower": "Gözetleme Kulesi"
+      }
+    },
+    "dawnholdMap": {
+      "title": "{keep}: {story}",
+      "story": {
+        "ground": "Bahçe Katı",
+        "solar": "Güneş Odası"
+      }
     },
     "compass": {
       "N": "K",
@@ -1386,6 +1827,7 @@ export const tr_TR: EnTranslations = {
       "mouseoverCast": "Grup Çerçevelerinde İmleçle Büyü Yapma",
       "stickyTarget": "Yere Tıklayınca Hedefi Koru",
       "showItemLevel": "Eşya Seviyesini Göster",
+      "showReliquaryTracker": "Show Reliquary Tracker",
       "itemLevelLine": "Eşya Seviyesi {level}",
       "itemScoreLine": "Puan {score}",
       "showSecondaryActionBar": "İkincil Eylem Çubuğunu Göster",
@@ -1398,7 +1840,9 @@ export const tr_TR: EnTranslations = {
       "showAttackButton": "Saldırı Düğmesini Göster",
       "showDailyRewardsChest": "Günlük Ödül Sandığını Göster",
       "mobileCameraJoystick": "Kamera joystick'i",
-      "mobileLeftHanded": "Solak düzen"
+      "mobileLeftHanded": "Solak düzen",
+      "touchTapMenus": "Tap menus",
+      "touchTapMenusNote": "Open the action, consumable and menu controls with a tap instead of a swipe. Tap an item to use it, tap the control again for its usual action, or tap outside to close."
     },
     "talentRows": {
       "tab": "Seçimler",
@@ -1431,9 +1875,29 @@ export const tr_TR: EnTranslations = {
       "buttons": "Tuş Düzeni",
       "resetButtons": "Tuş Düzenini Sıfırla",
       "menuAction": "Oyun Menüsü",
+      "confirmAction": "Confirm / Select",
       "zoomIn": "Yakınlaştır",
       "zoomOut": "Uzaklaştır",
-      "help": "Sol çubuk hareket ettirir, sağ çubuk bakışı yönlendirir. Ekran üzeri işaretçiyi kullanmak için bir pencere açın."
+      "help": "Sol çubuk hareket ettirir, sağ çubuk bakışı yönlendirir. Ekran üzeri işaretçiyi kullanmak için bir pencere açın.",
+      "crossHotbar": "Cross Hotbar",
+      "crossHotbarEnable": "Enable Cross Hotbar",
+      "crossHotbarExpand": "Double Cross Hotbar",
+      "crossHotbarHelp": "Hold a trigger to light eight action-bar slots on the d-pad and face buttons. Tap the other trigger to swap to the second set.",
+      "crossHotbarResetLayout": "Reset Cross Hotbar",
+      "crossHotbarPosition": "{trigger} + {button}",
+      "crossHotbarOwnsButtons": "The triggers and the d-pad belong to the cross hotbar while it is on, so they are set up below rather than here.",
+      "cancelAction": "Cancel / Back",
+      "subcommandsAction": "Subcommands / Map",
+      "cycleHudAction": "Cycle Interface",
+      "cycleSetAction": "Change Hotbar Set",
+      "crossHotbarDisplay": "Bar Display",
+      "crossHotbarDisplayFull": "Full",
+      "crossHotbarDisplayCompact": "Compact",
+      "crossHotbarDisplayMinimal": "Only While Held",
+      "crossHotbarArrangeChord": "{bumper} + {button}",
+      "crossHotbarCarrying": "Carrying {action}: confirm on a cell to place it, cancel to put it back.",
+      "crossHotbarEditHint": "Arranging: confirm picks up from a cell or the spellbook and drops on a cell, cancel clears one.",
+      "crossHotbarEditHelp": "Hold the left bumper and press the top face button to arrange the bar with the controller."
     },
     "perf": {
       "title": "Performans Katmanı",
@@ -1552,6 +2016,7 @@ export const tr_TR: EnTranslations = {
           "render": "işleme  gönderim {submit} ms | dünya {world} ms | varlık {entities} ms",
           "scene": "sahne   {calls} çağrı | {triangles} üçgen | {views} görünüm",
           "hitches": "takılma {hitches} | gölgelendirici {shaders} | yükleme {uploads} | görünüm {views}",
+          "hitchesBuild": "zone builds {zoneBuilds} | off-frame {offFrame} | gc {gc}",
           "gpu": "GPU     {renderer}",
           "waitingValue": "bekleniyor"
         },
@@ -1603,7 +2068,10 @@ export const tr_TR: EnTranslations = {
             "eventCpu": "Olay işleme kareyi tüketiyor",
             "shaderCompile": "Gölgelendiriciler oynanış sırasında derleniyor",
             "textureUpload": "Doku yüklemeleri oynanış takılmalarına neden oluyor",
+            "zoneBuild": "Zone streaming builds are causing hitches",
             "viewCreate": "Varlık görünümü oluşturma takılmalara neden oluyor",
+            "gcHitch": "Garbage collections are running inside long frames",
+            "offFrameHitch": "Long frames come from work outside the render callback",
             "otherHitch": "Nedeni belirlenemeyen uzun kareler kalıyor",
             "assetStartup": "Oyun başlangıcı varlık işi tarafından geciktiriliyor",
             "longTasks": "Uzun tarayıcı görevleri kareleri engelliyor",
@@ -2463,7 +2931,11 @@ export const tr_TR: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "{name} yeteneğini eylem çubuğuna ekle",
-      "removeFromBarAria": "{name} yeteneğini eylem çubuğundan kaldır"
+      "removeFromBarAria": "{name} yeteneğini eylem çubuğundan kaldır",
+      "upgradeRank": "Rank {rank}",
+      "maxRank": "Max rank",
+      "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
+      "assignAria": "Choose a slot for {name}"
     },
     "nameplate": {
       "mobLevel": "{level}",
@@ -2793,7 +3265,8 @@ export const tr_TR: EnTranslations = {
       "tip": "Satış gelirleri veya iade edilen eşyalar Tüccar'da seni bekliyor."
     },
     "noticeboard": {
-      "empty": "Görünüşe göre hiçbir şey asılmamış."
+      "empty": "Görünüşe göre hiçbir şey asılmamış.",
+      "contract": "Contract active: {title}"
     },
     "bank": {
       "title": "Banka",
@@ -3723,6 +4196,9 @@ export const tr_TR: EnTranslations = {
       "pinFull": "Takipçi dolu (en çok {cap} sayfa)",
       "pinAria": "{name} sayfasını arayüz takipçisine sabitle",
       "unpinAria": "{name} sabitlemesini kaldır",
+      "trackerToggleLabel": "HUD tracker",
+      "trackerToggleShowHint": "Show the Reliquary tracker on your screen",
+      "trackerToggleHideHint": "Hide the Reliquary tracker from your screen",
       "rarityLine": "Koleksiyoncuların {percent} kadarı buldu",
       "pageRarityLine": "Koleksiyoncuların {percent} kadarı tezhipledi",
       "cellAriaWithRarity": "{base}, {rarity}",
@@ -4323,6 +4799,7 @@ export const tr_TR: EnTranslations = {
       "ifHighContrastBackground": "Başlangıç ve karakter ekranlarının arkasında daha sade, daha yüksek kontrastlı bir arka plan.",
       "ifInvertLookY": "Fare bakışının yukarı ve aşağı yönünü ters çevirir.",
       "ifShowItemLevel": "Her eşya ipucuna bir eşya seviyesi satırı ekler. Varsayılan olarak kapalıdır, bu da klasik, yalnızca istatistik gösteren ipucunu korur.",
+      "ifShowReliquaryTracker": "Whether the Reliquary tracker (your pinned pages and their progress) sits on your HUD. The Reliquary window has a matching eye button, and pinning a page turns the tracker back on.",
       "ifShowPlaytime": "Karakter sayfanızda ömür boyu oynama sürenizi gösterir. Varsayılan olarak açıktır ve sayfada, cihaz başına bunu değiştiren bir göz düğmesi vardır; yayın yapıyorsanız ya da ekran görüntüsü alıyorsanız işinize yarar. Toplam her iki durumda da sayılmaya devam eder.",
       "ifShowOwnNameplate": "Kendi baş üstü ad levhanızı, tüm süslemeleriyle birlikte diğer oyuncuların gördüğü şekilde çizer. Klasik görünüm için kapatın.",
       "ifShowPlayerNameplates": "Diğer oyuncuların ad levhalarını çizer. Kapatmak kalabalık bir merkezi sadeleştirir, mevcut hedefiniz ise her iki durumda da okunaklı kalır.",
@@ -4754,6 +5231,7 @@ export const tr_TR: EnTranslations = {
       "mageEleJet": "Su Jeti, evcil çubuğunda kendi düğmesiyle durur: bir düşmana dondurucu bir ışın kilitlemek için tıkla, ya da elementalin onu hazır olduğunda kendiliğinden ateşlemesine izin vermek için sağ tıkla (mobilde dokunup basılı tut).",
       "formsHeading": "Şekil Değiştirme",
       "formsNote": "Bir druid, şekil değiştirerek dövüşür. Çoğu druid yeteneği tek bir şekle aittir, bu yüzden içinde bulunduğun form neyi büyüleyebileceğine karar verir, ve şekil değiştirmek biraz mana harcar. İstediğin kadar sık, dövüş içinde ya da dışında şekil değiştirebilirsin.",
+      "formsAutoUnshift": "Formdayken yapılan bir iyileştirme ya da hasar büyüsü seni formdan kendiliğinden çıkarır. Formu bu yolla bırakmak bedavadır ve genel bekleme süreni harcamaz, yani anlık bir büyü tuşa bastığın anda çıkar. Forma geri dönmek sıradan bir yetenektir ve yine mana ile genel bekleme süreni tüketir.",
       "formsMoonwing": "Bir Denge druidi bir şekil daha kazanır: Aykuşu Formu, bu uzmanlığın dövüştüğü büyücü şeklidir. Büyülerini koruyan tek hayvan şeklidir ve değneğin yalnızca bu şekilde ya da normal büyücü şeklinde çalışır.",
       "formLine": {
         "form_bear": "Tank şekli: ağır bir post, mana yerine öfke ve düşmanların sana vurmaya devam etmesini sağlayan ekstra tehdit.",
@@ -7013,6 +7491,10 @@ export const tr_TR: EnTranslations = {
   },
   "classes": {
     "warrior": "Savaşçı",
+    "elementalist": "Elementalist",
+    "taoist": "Taoist",
+    "arbalist": "Arbalist",
+    "lancer": "Lancer",
     "paladin": "Paladin",
     "hunter": "Avcı",
     "rogue": "Hırsız",
@@ -7022,6 +7504,10 @@ export const tr_TR: EnTranslations = {
     "warlock": "Karabüyücü",
     "druid": "Druid",
     "warriorAria": "Savaşçı sınıfı",
+    "elementalistAria": "Elementalist class",
+    "taoistAria": "Taoist class",
+    "arbalistAria": "Arbalist class",
+    "lancerAria": "Lancer class",
     "paladinAria": "Paladin sınıfı",
     "hunterAria": "Avcı sınıfı",
     "rogueAria": "Hırsız sınıfı",
@@ -7171,6 +7657,7 @@ export const tr_TR: EnTranslations = {
       "shopMarksRequired": "{name} satın almak için {marks} Delve Nişanına ihtiyacın var.",
       "shopSealPremiumOnly": "Bu mühür yalnızca bir ustanın eline boyun eğer. Onu yalnızca Premium bedel açabilir.",
       "passageSealed": "Geçit mühürlü.",
+      "enemiesRemain": "Önce kalan düşmanları temizle.",
       "moveCloserPassage": "Geçide yaklaş.",
       "moveCloserChest": "Sandığa yaklaş.",
       "moveCloserReliquary": "Emanetliğe yaklaş.",
@@ -7944,6 +8431,31 @@ export const tr_TR: EnTranslations = {
       "warlock": "Karabüyücüler şeytanlar çağırır, lanetler ve süregelen hasar büyüleri uygular ve dayanmak için düşmanlardan can emer.",
       "druid": "Druidler doğayı yönlendirir; yaraları iyileştirir, düşmanları kıskaca alır ve savunma ya da hasar için hayvan formlarına bürünür."
     },
+    "mir4": {
+      "labels": {
+        "damage": "Damage",
+        "combatRange": "Combat Range",
+        "startingSkills": "Starting Skills"
+      },
+      "damage": {
+        "physical": "Physical",
+        "magic": "Magic"
+      },
+      "range": {
+        "melee": "Melee",
+        "medium": "Medium range",
+        "long": "Long range",
+        "extended": "Extended melee"
+      },
+      "weapons": {
+        "heavySword": "Heavy Sword",
+        "largeStaff": "Large Staff",
+        "shortStaff": "Short Staff",
+        "arbalest": "Arbalest",
+        "spear": "Spear"
+      },
+      "aria": "Class details for {className}: {damage} damage, {range} range, weapon {weapon}, {skills} starting skills."
+    },
     "aria": "{className} sınıf ayrıntıları: rol {role}. Başlangıç nitelikleri: Kuvvet {str}, Çeviklik {agi}, Dayanıklılık {sta}, Zeka {int}, Ruh {spi}.",
     "statBarAria": "{stat}: 25 üzerinden {value}"
   },
@@ -8702,6 +9214,8 @@ export const tr_TR: EnTranslations = {
     "actionBar": {
       "attackName": "Saldırı",
       "attackTooltip": "Hedefine otomatik saldırıyı aç/kapat. Bir düşmana sağ tıklamak da saldırır.",
+      "autoBattleName": "Auto Battle",
+      "autoBattleTooltip": "Toggle automatic target acquisition, movement, and skill rotation around your current position.",
       "attackRemoveHint": "Çubuktan kaldırıp yuvayı serbest bırakmak için sağ tıkla.",
       "emptySlot": "Boş yuva",
       "slotAria": "Eylem yuvası {slot}: {ability}",
@@ -8834,6 +9348,8 @@ export const tr_TR: EnTranslations = {
       "accept": "Kabul Et",
       "decline": "Reddet",
       "continue": "Devam Et",
+      "autoContinue": "Dialogue continues automatically",
+      "skipDialogue": "Skip dialogue",
       "done": "Tamam",
       "completeQuest": "Görevi Tamamla",
       "turnIn": "Teslim Et",
@@ -9148,6 +9664,226 @@ export const tr_TR: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "Void Strike",
+        "description": "Deals {damage} damage to an enemy. Stuns the target for 0.9 sec."
+      },
+      "mir4_skill_1104": {
+        "name": "Lacerating Strike",
+        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
+      },
+      "mir4_skill_1304": {
+        "name": "Tackle",
+        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+      },
+      "mir4_skill_1401": {
+        "name": "Ground Smash",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec."
+      },
+      "mir4_skill_1501": {
+        "name": "Gale Strike",
+        "description": "Affects an enemy. Slows the target by 35% for 3.2 sec."
+      },
+      "mir4_skill_2101": {
+        "name": "Prismatic Beam",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec."
+      },
+      "mir4_skill_2111": {
+        "name": "Ember Spear",
+        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+      },
+      "mir4_skill_2301": {
+        "name": "Smite Seal",
+        "description": "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec."
+      },
+      "mir4_skill_2501": {
+        "name": "Evoked Core",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec."
+      },
+      "mir4_skill_2503": {
+        "name": "Magic Shield",
+        "description": "Reduces damage taken by 22% for 10 sec."
+      },
+      "mir4_skill_3101": {
+        "name": "Seal Sequence",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+      },
+      "mir4_skill_3104": {
+        "name": "Totem 1010",
+        "description": "Affects an enemy. Stuns the target for 1.4 sec."
+      },
+      "mir4_skill_3301": {
+        "name": "Totem Seal II",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec."
+      },
+      "mir4_skill_3503": {
+        "name": "Jade Lotus",
+        "description": "Restores 18% of maximum health."
+      },
+      "mir4_skill_3506": {
+        "name": "Totem Seal I",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec."
+      },
+      "mir4_skill_4101": {
+        "name": "Burst 4101",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec."
+      },
+      "mir4_skill_4102": {
+        "name": "Sequence 4102",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec."
+      },
+      "mir4_skill_4103": {
+        "name": "Twin Echo",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec."
+      },
+      "mir4_skill_4106": {
+        "name": "Charge 4106",
+        "description": "Deals {damage} damage to an enemy. Stuns the target for 2 sec."
+      },
+      "mir4_skill_4107": {
+        "name": "Flare Arrow",
+        "description": "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec."
+      },
+      "mir4_skill_5101": {
+        "name": "Thrust 5101",
+        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1 sec."
+      },
+      "mir4_skill_5104": {
+        "name": "Sweep 5104",
+        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+      },
+      "mir4_skill_5201": {
+        "name": "Strike 5201",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec."
+      },
+      "mir4_skill_5301": {
+        "name": "Chain 5301",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec."
+      },
+      "mir4_skill_5401": {
+        "name": "Raging Storm",
+        "description": "Affects an enemy. Knocks the target down for 1 sec."
+      },
+      "mir4_ultimate_1": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_2": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_3": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_4": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_5": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "Heavy Armor",
+        "description": "Increases maximum health by 8%."
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "Weapon Discipline",
+        "description": "Increases physical attack by 6%."
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "Iron Skin",
+        "description": "Increases physical defense by 8% and magic defense by 6%."
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "Fighting Spirit",
+        "description": "Increases maximum health by 4% and physical attack by 4%."
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "Indomitable Will",
+        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "Mana Well",
+        "description": "Increases maximum mana by 10%."
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "Arcane Acumen",
+        "description": "Increases magic attack by 7%."
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "Elemental Protection",
+        "description": "Increases physical defense by 6% and magic defense by 6%."
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "Channeling",
+        "description": "Increases maximum mana by 5% and magic attack by 4%."
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "Arcane Ascension",
+        "description": "Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%."
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "Spiritual Vessel",
+        "description": "Increases maximum health by 4% and maximum mana by 7%."
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "Twin Paths",
+        "description": "Increases physical attack by 4% and magic attack by 4%."
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "Sacred Guard",
+        "description": "Increases physical defense by 6% and magic defense by 6%."
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "Serene Mind",
+        "description": "Increases maximum health by 4% and maximum mana by 5%."
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "Celestial Harmony",
+        "description": "Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%."
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "Eagle Eye",
+        "description": "Increases physical attack by 3% and accuracy by 5%."
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "Ballistic Mastery",
+        "description": "Increases physical attack by 7%."
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "Nature's Guard",
+        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "Hunter's Instinct",
+        "description": "Increases physical attack by 5% and dodge by 5%."
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "Perfect Shot",
+        "description": "Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%."
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "War Conditioning",
+        "description": "Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%."
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "Spear Mastery",
+        "description": "Increases physical attack by 5% and magic attack by 5%."
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "Vanguard Armor",
+        "description": "Increases physical defense by 6% and magic defense by 6%."
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "Battle Rhythm",
+        "description": "Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%."
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "Dragon's Vanguard",
+        "description": "Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%."
+      },
       "sport_kick": {
         "name": "Vuruş",
         "description": "Topu yerden nişan noktasına doğru gönder."
@@ -9980,7 +10716,7 @@ export const tr_TR: EnTranslations = {
       },
       "fear": {
         "name": "Dehşet",
-        "description": "Düşmanın yüreğine korku salar ve onu 8 saniyeye kadar sinmiş bırakır. Herhangi bir hasar etkiyi bozar."
+        "description": "Düşmanın yüreğine korku salar ve onu 5 saniyeye kadar sinmiş bırakır. Hedefin azami sağlığının toplam %8'i kadar hasar etkiyi bozar."
       },
       "searing_pain": {
         "name": "Dağlama",
@@ -10058,7 +10794,7 @@ export const tr_TR: EnTranslations = {
       "ferocious_bite": {
         "name": "Kanlı Isırık",
         "description": "{damage} veren bitirici hamle. Yalnızca Kurt Formu.",
-        "specNote_feral": "İsabet eden her vuruş 1 Kadim Kan ekler; 3 Kadim Kanda bu düğme Kızıl Hasata dönüşür: kombo puanı başına 70 artı 43 hasar veren, ayrıca Deri Yüzme ve Parçalamanın kalan tüm hasarını anında vuran ve 30 enerji geri kazandıran bir ısırık."
+        "specNote_feral": "İsabet eden her vuruş 1 Kadim Kan ekler; 3 Kadim Kanda bu düğme Kızıl Hasata dönüşür: Kadim Kanı harcayarak daha güçlü bir ısırık gerçekleştirir, ayrıca Deri Yüzme ve Parçalamanın kalan tüm hasarını anında vurur ve enerji geri kazandırır."
       },
       "swipe": {
         "name": "Süpüren Pençeler",
@@ -10121,7 +10857,7 @@ export const tr_TR: EnTranslations = {
       },
       "tigers_fury": {
         "name": "Kurt Kanı",
-        "description": "Saldırı gücünü {duration} saniye boyunca {buff} artırır. Yalnızca Kurt Formu."
+        "description": "Anında {rage} enerji kazandırır ve saldırı gücünü {duration} saniye boyunca {buff} artırır. Yalnızca Kurt Formu."
       },
       "rip": {
         "name": "Kanlı Yarık",
@@ -10226,7 +10962,7 @@ export const tr_TR: EnTranslations = {
       },
       "ossuary_mark": {
         "name": "Kemik Damgası",
-        "description": "Bir düşmanı 12 sn süreyle işaretler, senin ve ölülerinin verdiği hasarın %20'sini depolar. Patlatmak için yeniden oku. İşaretli düşman ölürse, 6 yarda içinde patlar ve 1 Ruh Parçası oluşturur."
+        "description": "Bir düşmanı 15 sn süreyle işaretler, senin ve ölülerinin verdiği hasarın %20'sini depolar. Patlatmak için yeniden oku. İşaretli düşman ölürse, 6 yarda içinde patlar ve 1 Ruh Parçası oluşturur."
       },
       "unholy_command": {
         "name": "Kutsuz Emir",
@@ -10325,8 +11061,8 @@ export const tr_TR: EnTranslations = {
         "description": "Aykuşu formuna girer, geri dönene kadar büyü yapmayı güçlendirirsin. Normal forma dönmek için tekrar kullan. (Denge imzası)"
       },
       "feral_charge": {
-        "name": "Yabani Hücum",
-        "description": "Bir düşmana hücum eder ve onu 1 sn köklersin. 8-25 m menzil. (Yabanilik imzası)"
+        "name": "İlkel Dalga",
+        "description": "İlkel bir dalga salar. Kurt Formunda Enerji yenilenmesi 10 sn boyunca %100 artar. Bruin Formunda anında 50 Öfke üretir. (Yabanilik imzası)"
       },
       "swiftmend": {
         "name": "Hızlı İyileştirme",
@@ -10342,7 +11078,7 @@ export const tr_TR: EnTranslations = {
       },
       "redharvest": {
         "name": "Kızıl Hasat",
-        "description": "3 Kadim Kanı tüketir: {damage} hasarlık bir vuruş yapar, Deri Yüzme ve Parçalamanın hedefe vereceği kalan tüm hasarı anında verir, iki kanamayı da kaldırır ve 30 enerji geri kazandırır. Sıfır combo puanıyla da çalışır."
+        "description": "3 Kadim Kanı tüketir: {damage} hasarlık bir vuruş yapar, Deri Yüzme ve Parçalamanın hedefe vereceği kalan tüm hasarı anında verir, iki kanamayı da kaldırır ve {rage} enerji geri kazandırır. Sıfır combo puanıyla da çalışır."
       },
       "marrowbreak": {
         "name": "İlik Kıran",
@@ -10582,7 +11318,7 @@ export const tr_TR: EnTranslations = {
       },
       "evocation": {
         "name": "Eter Kuyusu",
-        "description": "Restaura manayı rápidamente. (büyücü yeteneği)"
+        "description": "6 sn kanalize eder: her saniye 100 mana yeniler ve 8 Büyü Gücü biriktirir. Bonus kanalize ederken birikir ve 15 sn sürer. (büyücü yeteneği)"
       },
       "flurry_of_knives": {
         "name": "Bıçak Sağanağı",
@@ -10590,7 +11326,7 @@ export const tr_TR: EnTranslations = {
       },
       "frenzied_regeneration": {
         "name": "Yaban Onarımı",
-        "description": "10 sn. boyunca 180 sağlık yeniler. Yalnızca Ayı Formunda kullanılabilir. (Druid yeteneği)"
+        "description": "10 sn. boyunca azami sağlığının %40 kadarını yeniler. Yalnızca Ayı Formunda kullanılabilir. (Druid yeteneği)"
       },
       "frost_trap": {
         "name": "Kırağı Tuzağı",
@@ -10610,11 +11346,11 @@ export const tr_TR: EnTranslations = {
       },
       "howl_of_terror": {
         "name": "Dehşet Uluması",
-        "description": "Yakındaki düşmanları 3 sn. kadar korkutur. Hasar etkiyi bozabilir. (Karabüyücü yeteneği)"
+        "description": "Yakındaki düşmanları 5 sn. kadar korkutur. Hedefin azami sağlığının toplam %8'i kadar hasar korkusunu bozar. (Karabüyücü yeteneği)"
       },
       "ice_block": {
         "name": "Soğuk Tabut",
-        "description": "Te encierra en hielo y absorbe una enorme cantidad de daño durante 8 sn. (büyücü yeteneği)"
+        "description": "Seni 8 sn boyunca katı buzun içine hapseder ve tüm hasara karşı bağışıklık kazandırır. Mevcut sıradan zararlı etkileri kaldırır ve yeni sıradan kontrol etkilerinin uygulanmasını engeller. Sersemlemiş veya polimorfa uğramışken kullanılabilir. Hapsedilmişken eylemde bulunamazsın. İptal etmek için tekrar kullan. (büyücü)"
       },
       "inner_focus": {
         "name": "Dingin Zihin",
@@ -10706,7 +11442,7 @@ export const tr_TR: EnTranslations = {
       },
       "presence_of_mind": {
         "name": "Atılgan Zihin",
-        "description": "Hace instantáneo tu siguiente hechizo con tiempo de lanzamiento. Dura 60 sn. (büyücü yeteneği)"
+        "description": "Büyü yapma süresi olan bir sonraki büyünü anında kullanılır hâle getirir. 60 sn sürer. (büyücü yeteneği)"
       },
       "psychic_scream": {
         "name": "Psişik Çığlık",
@@ -10823,7 +11559,7 @@ export const tr_TR: EnTranslations = {
       },
       "prowl": {
         "name": "Sinsi Sokulma",
-        "description": "Kurt Formundayken gizliliğe geçer ve 50% daha yavaş hareket edersin. Dövüş sırasında kullanılamaz."
+        "description": "Kurt Formundayken gizliliğe geçer ve 5% daha yavaş hareket edersin. Dövüş sırasında kullanılamaz."
       },
       "rake": {
         "name": "Deri Yüzme",
@@ -12378,6 +13114,9 @@ export const tr_TR: EnTranslations = {
       "pristine_claw": {
         "name": "Kusursuz Pençe"
       },
+      "dawnhold_posy": {
+        "name": "Dawnhold Bahçesi Çiçek Demeti"
+      },
       "conjured_water4": {
         "name": "Sihirle Yaratılmış Kaynak Suyu"
       },
@@ -13222,6 +13961,15 @@ export const tr_TR: EnTranslations = {
       },
       "training_dummy": {
         "name": "Antrenman Kuklası"
+      },
+      "friendly_player_dummy": {
+        "name": "Dost Oyuncu Kuklası"
+      },
+      "normal_boss_dummy": {
+        "name": "Normal Boss Kuklası"
+      },
+      "heroic_boss_dummy": {
+        "name": "Kahramanca Boss Kuklası"
       },
       "ridge_stalker": {
         "name": "Sırt Sinsisi"
@@ -16842,6 +17590,11 @@ export const tr_TR: EnTranslations = {
         "enterText": "Hava soğuyor. Aşağıda devasa bir şey nefes alıyor...",
         "leaveText": "Sendeleyerek dağ rüzgarına geri çıkarsın."
       },
+      "campaign_trial_room": {
+        "name": "Campaign Trial",
+        "enterText": "You enter the campaign trial.",
+        "leaveText": "You leave the campaign trial."
+      },
       "nythraxis_crypt": {
         "name": "Terk Edilmiş Mahzen",
         "enterText": "Terk Edilmiş Mahzen'in eşiğini aşarsın.",
@@ -16861,6 +17614,11 @@ export const tr_TR: EnTranslations = {
         "name": "Son Kale",
         "enterText": "Son Kale'nin soğuk, sessiz koridorlarına adım atıyorsun.",
         "leaveText": "Kale kapısını arkandan kapatıp Ejder Topraklarının rüzgarına geri dönüyorsun."
+      },
+      "dawnhold_castle": {
+        "name": "Dawnhold Şatosu",
+        "enterText": "Dawnhold Şatosu'nun sıcak, çiçek kokulu salonlarına adım atıyorsun.",
+        "leaveText": "Güneşli bahçe çimenliğine geri süzülüyorsun."
       },
       "drowned_temple": {
         "name": "Boğulmuş Tapınak",

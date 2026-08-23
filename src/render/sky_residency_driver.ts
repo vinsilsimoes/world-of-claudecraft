@@ -1,9 +1,10 @@
 import type * as THREE from 'three';
-import type { ZoneDef } from '../sim/types';
+import type { BiomePaint, ZoneDef } from '../sim/types';
 import { GFX } from './gfx';
 import {
   currentDomeBiomes,
   ensureSkyBiomeAssets,
+  paintedSkyBiomes,
   pinSkyBiomeAssets,
   readySkyBiomes,
   releaseSkyBiomeAssets,
@@ -33,6 +34,8 @@ export interface SkyResidencyHost {
   preparedZones(): ReadonlySet<string>;
   /** The LIVE world's zones (an editor map's, not the static ZONES table). */
   liveZones(): readonly ZoneDef[];
+  /** Presentation biomes inside those zones, including M03's mixed districts. */
+  liveBiomePaint(): BiomePaint | undefined;
   zoneIdAt(x: number, z: number): string | null;
   prewarmTextureInIdle(texture: THREE.Texture | null): Promise<void>;
   /** ensureEnvironmentBiome as one indivisible unit on the shared GPU queue.
@@ -60,7 +63,10 @@ export class SkyResidencyDriver {
   // residency ensure, not only its keep region.
   private zoneSkyBiomesCache: ReadonlySet<SkyKey> | null = null;
   private zoneSkyBiomes(): ReadonlySet<SkyKey> {
-    this.zoneSkyBiomesCache ??= new Set(this.host.liveZones().map((zone) => zone.biome));
+    this.zoneSkyBiomesCache ??= new Set([
+      ...this.host.liveZones().map((zone) => zone.biome),
+      ...paintedSkyBiomes(this.host.liveBiomePaint()),
+    ]);
     return this.zoneSkyBiomesCache;
   }
   // Derived lazily from the LIVE world's zones, not the static ZONES table: a
@@ -70,7 +76,10 @@ export class SkyResidencyDriver {
   // arrival, forever.
   private skyResidencyRegionListCache: ReturnType<typeof skyResidencyRegions> | null = null;
   private skyResidencyRegionList(): ReturnType<typeof skyResidencyRegions> {
-    this.skyResidencyRegionListCache ??= skyResidencyRegions(this.host.liveZones());
+    this.skyResidencyRegionListCache ??= skyResidencyRegions(
+      this.host.liveZones(),
+      this.host.liveBiomePaint(),
+    );
     return this.skyResidencyRegionListCache;
   }
   private readonly skyResidencyEnsuring = new Set<SkyKey>();

@@ -9,6 +9,7 @@ import {
 import { esc } from './esc';
 import { mechChromaName } from './hud/cosmetics';
 import { formatNumber, t } from './i18n';
+import type { Mir4PreviewArmorLoadout, Mir4PreviewEquipmentOverride } from './mir4_character_view';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 
@@ -35,10 +36,53 @@ export interface CharSkinPainterHost {
     cls: PlayerClass,
     skin: number,
     previewKey?: string,
+    equipmentOverride?: Mir4PreviewEquipmentOverride,
+    visualClass?: PlayerClass,
+    wornOverride?: Mir4PreviewArmorLoadout,
   ): void;
   attachTooltip(el: HTMLElement, html: () => string): void;
   renderBags(): void;
   renderCharIfOpen(): void;
+}
+
+export function paintActiveCharacterPreview(
+  host: CharSkinPainterHost,
+  container: HTMLElement | null,
+  equipmentOverride?: Mir4PreviewEquipmentOverride,
+  visualClass?: PlayerClass,
+  wornOverride?: Mir4PreviewArmorLoadout,
+): void {
+  if (!container) return;
+  const current = () =>
+    activeCharacterAppearancePreview(
+      host.sim.cfg.playerClass,
+      host.sim.player.skin ?? 0,
+      host.sim.player.skinCatalog ?? 'class',
+    );
+  const mount = (): void => {
+    const preview = current();
+    host.mountCharPreview(
+      container,
+      host.sim.cfg.playerClass,
+      preview.skin,
+      preview.visualKey,
+      equipmentOverride,
+      visualClass,
+      wornOverride,
+    );
+  };
+  if (current().visualKey !== 'player_mech') {
+    mount();
+    return;
+  }
+  void host
+    .preloadMechAssets()
+    .then(() => {
+      if ($('#char-window')?.style.display === 'block' && current().visualKey === 'player_mech') {
+        mount();
+      }
+    })
+    .catch((err) => console.error('failed to load mech cosmetic preview:', err));
 }
 
 /** The character-sheet skin (chroma) picker row: renders one swatch per

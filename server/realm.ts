@@ -1,4 +1,6 @@
+import './env';
 import type * as http from 'node:http';
+import { type GameProfile, requireGameProfile } from '../src/sim/game_profile';
 import { DEFAULT_RAID_RESET_TIME_ZONE, isSupportedTimeZone } from './raid_reset';
 
 // The realm (world/shard) this server process serves. In the process-per-realm
@@ -9,6 +11,10 @@ import { DEFAULT_RAID_RESET_TIME_ZONE, isSupportedTimeZone } from './raid_reset'
 // isolated worlds. Defaults to a single realm for local dev / single-shard prod.
 
 export const DEFAULT_REALM_NAME = 'Claudemoon';
+export const GAME_PROFILE: GameProfile = requireGameProfile(
+  process.env.GAME_PROFILE,
+  'GAME_PROFILE',
+);
 
 export function resolveRealm(rawName: string | undefined): string {
   const raw = (rawName ?? '').trim();

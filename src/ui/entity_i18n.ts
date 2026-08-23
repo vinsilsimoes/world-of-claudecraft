@@ -12,6 +12,7 @@ import {
   CLASSES,
   DELVES,
   DUNGEONS,
+  getActiveWorldContent,
   ITEM_SETS,
   ITEMS,
   MOBS,
@@ -19,9 +20,11 @@ import {
   QUESTS,
   ZONES,
 } from '../sim/data';
+import { MIR4_ACTION_ABILITY_DEFS, mir4ActionAbilityDef } from '../sim/mir4/action_abilities';
 import type { ItemDef, PlayerClass } from '../sim/types';
 import {
   en,
+  formatNumber,
   getLanguage,
   hasTranslation,
   type InterpolationValues,
@@ -32,6 +35,7 @@ import {
   tOptional,
 } from './i18n';
 import { ownEntry } from './known_item';
+import { mir4ZoneAct, mir4ZoneNameKey } from './mir4_map_names';
 
 export type EntityTranslationGroup = 'classAbility' | 'item' | 'itemSet' | 'world';
 export type EntityTranslationKind =
@@ -113,8 +117,22 @@ export type EntityTranslationRequest =
       field: 'name' | ItemSetBonusField;
       values?: InterpolationValues;
     }
-  | { kind: 'mob'; id: string; field: 'name'; values?: InterpolationValues }
-  | { kind: 'npc'; id: string; field: 'name' | 'title' | 'greeting'; values?: InterpolationValues }
+  | {
+      kind: 'mob';
+      id: string;
+      field: 'name';
+      /** Canonical runtime fallback for profile-authored dynamic identities. */
+      source?: string;
+      values?: InterpolationValues;
+    }
+  | {
+      kind: 'npc';
+      id: string;
+      field: 'name' | 'title' | 'greeting';
+      /** Canonical runtime fallback for profile-authored dynamic identities. */
+      source?: string;
+      values?: InterpolationValues;
+    }
   | {
       kind: 'quest';
       id: string;
@@ -275,7 +293,7 @@ function canonicalEntityText(request: EntityTranslationRequest): string {
         ? (CLASSES[request.id]?.name ?? request.id)
         : classDescriptionSource(request.id);
     case 'ability': {
-      const ability = ABILITIES[request.id];
+      const ability = ABILITIES[request.id] ?? mir4ActionAbilityDef(request.id) ?? undefined;
       if (!ability) return request.id;
       return request.field === 'name' ? ability.name : ability.description;
     }
@@ -300,10 +318,10 @@ function canonicalEntityText(request: EntityTranslationRequest): string {
       return set.bonuses.find((b) => b.pieces === pieces)?.text ?? request.id;
     }
     case 'mob':
-      return ownEntry(MOBS, request.id)?.name ?? request.id;
+      return ownEntry(MOBS, request.id)?.name ?? request.source ?? request.id;
     case 'npc': {
       const npc = ownEntry(NPCS, request.id);
-      if (!npc) return request.id;
+      if (!npc) return request.source ?? request.id;
       if (request.field === 'title') return npc.title;
       if (request.field === 'greeting') return npc.greeting;
       return npc.name;
@@ -502,11 +520,35 @@ export function classDisplayName(cls: PlayerClass): string {
 }
 
 export function zoneDisplayName(zoneId: string): string {
+  const mir4Key = mir4ZoneNameKey(zoneId);
+  if (mir4Key) return t(mir4Key);
   return tEntity({ kind: 'zone', id: zoneId, field: 'name' });
 }
 
 export function zonePoiLabel(zoneId: string, poiIndex: number): string {
+  const mir4Key = mir4ZoneNameKey(zoneId);
+  if (mir4Key) {
+    const authored = getActiveWorldContent().zones.find((zone) => zone.id === zoneId)?.pois[
+      poiIndex
+    ]?.label;
+    if (authored) return authored;
+    const zone = t(mir4Key);
+    if (poiIndex === 0) return zone;
+    if (poiIndex === 1) return t('hudChrome.mir4.maps.portal', { zone });
+  }
   return tEntity({ kind: 'zonePoi', zoneId, poiIndex, field: 'label' });
+}
+
+export function zoneWelcomeText(zoneId: string): string {
+  const mir4Key = mir4ZoneNameKey(zoneId);
+  const act = mir4ZoneAct(zoneId);
+  if (mir4Key && act !== null) {
+    return t('hudChrome.mir4.maps.actWelcome', {
+      zone: t(mir4Key),
+      act: formatNumber(act, { maximumFractionDigits: 0 }),
+    });
+  }
+  return tEntity({ kind: 'zone', id: zoneId, field: 'welcome' });
 }
 
 export function dungeonDisplayName(dungeonId: string): string {
@@ -548,7 +590,9 @@ export function entityTranslationManifest(): EntityTranslationManifestEntry[] {
       ),
     );
   }
-  for (const ability of Object.values(ABILITIES).sort(compareById)) {
+  for (const ability of [...Object.values(ABILITIES), ...MIR4_ACTION_ABILITY_DEFS].sort(
+    compareById,
+  )) {
     entries.push(
       entry(
         'ability',

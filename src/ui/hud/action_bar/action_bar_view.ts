@@ -31,6 +31,7 @@ import {
   freeCostAuraActive,
   nextCastCheapMultiplierFromAuras,
 } from '../../../sim/combat/empower_next';
+import { willAutoUnshift } from '../../../sim/combat/form_auto_unshift';
 import { frostProcGlowActive } from '../../../sim/combat/frost_mage';
 import { packlordActionGlowActive } from '../../../sim/combat/hunter_packlord';
 import {
@@ -60,6 +61,7 @@ import {
   type ItemDef,
   MELEE_RANGE,
   POTION_COOLDOWN,
+  type ResourceType,
   type Vec3,
 } from '../../../sim/types';
 import type { InterpolationValues, TranslationKey } from '../../i18n';
@@ -170,6 +172,8 @@ export interface ActionBarDescriptor {
  *  spy); names + the slot label are wrapped by the host. */
 export interface ActionBarDeps {
   t(key: TranslationKey, values?: InterpolationValues): string;
+  /** Profile-aware label for the fixed attack-family slot. */
+  attackName?(): string;
   abilityName(def: AbilityDef): string;
   itemName(item: ItemDef): string;
   slotLabel(slotIndex: number): string;
@@ -184,6 +188,14 @@ export interface ActionBarPlayerInput {
   autoAttack: boolean;
   dead: boolean;
   resource: number;
+  /** Which pool the live bar shows. A druid form swaps it to rage or energy and
+   *  parks the real mana pool in savedMana, so it is what tells an in-form bar
+   *  apart from an ordinary caster's. */
+  resourceType: ResourceType | null;
+  /** Mana set aside while shapeshifted (0 when unshifted). The pool an
+   *  auto-unshifting cast is billed against; mirrored online as the self
+   *  snapshot's sparse `sm` key. */
+  savedMana: number;
   cooldowns: { get(id: string): number | undefined };
   gcdRemaining: number;
   /** Shared combat-potion cooldown, remaining seconds (0 when ready). Painted as a
@@ -230,6 +242,10 @@ export interface ActionBarTargetInput {
  *  (the item-slot stack count source). */
 export interface ActionBarWorldInput {
   player: ActionBarPlayerInput;
+  /** Authoritative state of the fixed Attack-family toggle. MIR4 supplies its
+   * profile snapshot here because its automation state is not the classic
+   * white-swing flag mirrored on the player entity. */
+  fixedAttackActive?: boolean;
   target: ActionBarTargetInput | null;
   inventory: readonly { itemId: string; count: number }[];
   /** Aura-derived because the online player entity's local cache is not wired. */
@@ -280,6 +296,9 @@ export interface ActionBarSlotState {
   fateSentenceReady: boolean;
   ariaLabel: string;
   ariaDescription: string;
+  /** Toggle state for the fixed Attack/Auto Battle control. null removes the
+   *  toggle semantic when slot 0 is rebound to an ordinary action. */
+  ariaPressed: 'true' | 'false' | null;
   keybindLabel: string;
 }
 
@@ -295,7 +314,9 @@ export interface ActionBarView {
   tick(world: ActionBarWorldInput): ActionBarState;
 }
 
-function makeSlotState(): ActionBarSlotState {
+/** A blank slot state. Exported so another bar family can hold a fallback cell
+ *  for a position its layout does not fill. */
+export function makeSlotState(): ActionBarSlotState {
   return {
     kind: 'empty',
     abilityId: null,
@@ -319,6 +340,7 @@ function makeSlotState(): ActionBarSlotState {
     fateSentenceReady: false,
     ariaLabel: '',
     ariaDescription: '',
+    ariaPressed: null,
     keybindLabel: '',
   };
 }
@@ -370,7 +392,10 @@ function hasForbiddenReflection(
   return false;
 }
 
-function inventoryCount(
+/** How many of `itemId` the player is carrying, summed across stacks. Exported
+ *  because the consumables seat needs the same number for its tooltip's in-bags
+ *  line, off the same snapshot the bar state is built from. */
+export function inventoryCount(
   inventory: readonly { itemId: string; count: number }[],
   itemId: string,
 ): number {
@@ -439,7 +464,8 @@ export function createActionBarView(
           slot.rechargePercent = 0;
           slot.usable = true;
           slot.outOfRange = tgtDist !== null && tgtDist > MELEE_RANGE;
-          slot.queued = player.autoAttack;
+          const fixedAttackActive = world.fixedAttackActive ?? player.autoAttack;
+          slot.queued = fixedAttackActive;
           slot.procGlow = false;
           slot.empowered = false;
           slot.ascensionSpender = false;
@@ -448,9 +474,10 @@ export function createActionBarView(
           slot.fateSentenceReady = false;
           slot.ariaLabel = deps.t(SLOT_ARIA_KEY, {
             slot: slotLabel,
-            ability: deps.t(ATTACK_NAME_KEY),
+            ability: deps.attackName?.() ?? deps.t(ATTACK_NAME_KEY),
           });
           slot.ariaDescription = '';
+          slot.ariaPressed = fixedAttackActive ? 'true' : 'false';
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }
@@ -481,6 +508,7 @@ export function createActionBarView(
           slot.fateSentenceReady = false;
           slot.ariaLabel = deps.t(EMPTY_SLOT_ARIA_KEY, { slot: slotLabel });
           slot.ariaDescription = '';
+          slot.ariaPressed = null;
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }
@@ -523,6 +551,7 @@ export function createActionBarView(
             ability: deps.itemName(item),
           });
           slot.ariaDescription = '';
+          slot.ariaPressed = null;
           slot.keybindLabel = sd.keybindLabel();
           continue;
         }
@@ -643,8 +672,18 @@ export function createActionBarView(
           dominionReady =
             dominionSummonBlockFromMask(dominionComposition, dominionTemplateId) === null;
         }
+        // A druid pressing a heal or a nuke from Bruin/Wolf Form leaves the form
+        // and casts it, and the cast is billed against the PARKED mana pool, not
+        // the rage or energy bar the button is pressed from (the same predicate
+        // the sim's cast gate asks, so the bar cannot paint a slot unusable while
+        // the cast it refuses to advertise succeeds). Fleet Form never swapped the
+        // bar, so its pool is already the live one.
+        const castingPool =
+          player.resourceType !== 'mana' && willAutoUnshift(player.auras, def)
+            ? player.savedMana
+            : player.resource;
         slot.usable =
-          (!(player.resource < payableCost) || freeByProc || freeBySolarReprisal) &&
+          (!(castingPool < payableCost) || freeByProc || freeBySolarReprisal) &&
           (def.ruinCost ?? 0) <= ruin &&
           soulFragments >= (def.soulFragmentCost ?? 0) &&
           ascensionReady &&
@@ -714,6 +753,7 @@ export function createActionBarView(
             : slot.procGlow
               ? deps.t(PROC_ARIA_KEY)
               : '';
+        slot.ariaPressed = null;
         slot.keybindLabel = sd.keybindLabel();
       }
 

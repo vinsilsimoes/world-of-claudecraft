@@ -463,6 +463,38 @@ describe('handlePickedEntity', () => {
     expect(calls).toEqual([expected]);
   });
 
+  it.each([0, 2])(
+    "does not click another player's physical MIR4 objective with button %i",
+    (button) => {
+      const player = stubEntity({ id: 1, kind: 'player' });
+      const foreignObjective = stubEntity({
+        id: 2,
+        kind: 'object',
+        templateId: 'mir4_objective_9_m01-q01_2_0_2',
+        ownerId: 9,
+        lootable: true,
+        pos: { x: 1, y: 0, z: 0 },
+      });
+      const world = {
+        playerId: 1,
+        player,
+        entities: new Map([
+          [1, player],
+          [2, foreignObjective],
+        ]),
+        targetEntity: vi.fn(),
+        pickUpObject: vi.fn(() => true),
+      } as unknown as Parameters<typeof handlePickedEntity>[0];
+      const hud = {
+        closeContextMenu: vi.fn(),
+        showError: vi.fn(),
+      } as unknown as Parameters<typeof handlePickedEntity>[1];
+
+      expect(handlePickedEntity(world, hud, 2, button, 10, 20)).toBe(false);
+      expect(world.pickUpObject).not.toHaveBeenCalled();
+    },
+  );
+
   it.each([
     [0, 'inside', 3.99, true, 1],
     [0, 'exactly at', 4, true, 1],

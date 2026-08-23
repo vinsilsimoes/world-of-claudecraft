@@ -19,7 +19,6 @@
 // (enforced by tests/architecture.test.ts). threat.ts/types.ts/data are imported
 // directly (already pure); only `entities` + the Nythraxis helpers route via the seam.
 
-import { MOBS } from '../data';
 import { combatProfileForMob } from '../mob_combat';
 import type { SimContext } from '../sim_context';
 import {
@@ -28,8 +27,9 @@ import {
   MELEE_SWITCH_MULT,
   RANGED_SWITCH_MULT,
 } from '../threat';
-import type { Entity } from '../types';
+import type { Entity, MobTemplate } from '../types';
 import { DT, dist2d, MELEE_RANGE } from '../types';
+import { resolveMobTemplate } from './template';
 
 // Classic "trivial con" gap: a wild mob this far below the player's level stops
 // auto-aggroing from proximity. Moved with isTrivialTo (its only reader).
@@ -41,7 +41,7 @@ const MAX_AGGRO_RADIUS = 20;
 
 function mobCanSeeTarget(ctx: SimContext, mob: Entity, target: Entity): boolean {
   if (target.kind !== 'player') return true;
-  const template = MOBS[mob.templateId];
+  const template = resolveMobTemplate(mob.templateId, ctx.mir4RuntimeMobTemplates);
   const baseRadius =
     Math.max(
       4,
@@ -202,8 +202,12 @@ export function updateVossTarget(ctx: SimContext, mob: Entity): void {
 
 // Classic "trivial con": a wild mob far below the player's level stops
 // auto-aggroing from proximity. Elites, rares, and bosses are never trivial.
-export function isTrivialTo(mob: Entity, player: Entity): boolean {
-  const template = MOBS[mob.templateId];
-  if (template.elite || template.rare || template.boss) return false;
+export function isTrivialTo(
+  mob: Entity,
+  player: Entity,
+  runtimeTemplates?: ReadonlyMap<string, MobTemplate>,
+): boolean {
+  const template = resolveMobTemplate(mob.templateId, runtimeTemplates);
+  if (template?.elite || template?.rare || template?.boss) return false;
   return player.level - mob.level >= TRIVIAL_LEVEL_GAP;
 }

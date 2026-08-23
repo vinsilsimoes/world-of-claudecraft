@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {
+  getActiveWorldContent,
   STRIP_MAX_X,
   STRIP_MIN_X,
   WORLD_MAX_X,
@@ -10,7 +11,7 @@ import {
   ZONES,
 } from '../sim/data';
 import type { ZoneDef } from '../sim/types';
-import { waterLevel, waterLevelAt } from '../sim/world';
+import { waterBodies, waterLevel, waterLevelAt } from '../sim/world';
 import { loadTexture } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import {
@@ -22,6 +23,7 @@ import {
 import { activeFarFieldPolicy } from './foliage_impostor';
 import { GFX, type GfxSettings, SUN_DIR } from './gfx';
 import { idleSlot, runIdleQueue } from './idle_queue';
+import { localWaterSurfaceData } from './local_water_surface_core';
 import { waterNormalish, waterNormalMaps } from './textures';
 import {
   bakeSwellGate,
@@ -46,6 +48,7 @@ import {
 } from './water_coverage_core';
 import { WaterSimulation, type WaterWaveUniforms } from './water_simulation';
 import { WATER_TIME_PERIOD, WATER_WAVE_GLSL } from './water_wave_core';
+import { zoneBuildPool } from './zone_build_pool';
 
 // Water for the whole zone strip.
 //
@@ -956,6 +959,38 @@ export function createWaterSurfaceMaterial(
   });
 }
 
+/**
+ * Bakes a sheet's shore attributes on the shared zone-build workers, in place.
+ * Returns false when the caller must bake them on this thread instead (no
+ * module workers, or the job failed): off-thread is a latency optimisation,
+ * never a requirement.
+ *
+ * The vertex COORDINATES travel with the job rather than the rect: sampling the
+ * positions the geometry actually carries is what makes the two paths agree bit
+ * for bit (tests/terrain_chunk_worker.test.ts pins the equivalence).
+ */
+async function fillShoreOffThread(
+  pos: THREE.BufferAttribute,
+  shoreDepth: Float32Array,
+  shoreSlope: Float32Array,
+  seed: number,
+  urgent: boolean,
+): Promise<boolean> {
+  const pool = zoneBuildPool();
+  if (!pool) return false;
+  const x = new Float32Array(pos.count);
+  const z = new Float32Array(pos.count);
+  for (let i = 0; i < pos.count; i++) {
+    x[i] = pos.getX(i);
+    z[i] = pos.getZ(i);
+  }
+  const filled = await pool.fillWater({ x, z, seed }, { urgent });
+  if (!filled) return false;
+  shoreDepth.set(filled.shoreDepth);
+  shoreSlope.set(filled.shoreSlope);
+  return true;
+}
+
 function buildShaderWater(seed: number, renderer?: THREE.WebGLRenderer): WaterView {
   // legacy procedural maps still get generated (unused) to preserve the
   // shared-LCG call order in textures.ts for everything generated after
@@ -1350,13 +1385,20 @@ function buildShaderWater(seed: number, renderer?: THREE.WebGLRenderer): WaterVi
     const fill = (): void => {
       for (const row of WATER_VERTEX_ROWS) fillRow(row);
     };
-    if (idlePace) {
-      await runIdleQueue(WATER_VERTEX_ROWS, fillRow, {
-        batchSize: WATER_ROWS_PER_IDLE_SLICE,
-        timeoutMs: WATER_IDLE_TIMEOUT_MS,
-      });
-    } else {
-      fill();
+    // Off-thread first on BOTH paces: this is the single biggest term in a zone
+    // prepare (32k vertices x shoreDepthAt + shoreSlopeAt, measured at 1.3 to
+    // 1.7 s), and it is pure arithmetic, so it belongs on the shared zone-build
+    // workers. The row slicing below stays for the fallback, which is what runs
+    // wherever module workers are unavailable or the job failed.
+    if (!(await fillShoreOffThread(pos, shoreDepth, shoreSlope, seed, !idlePace))) {
+      if (idlePace) {
+        await runIdleQueue(WATER_VERTEX_ROWS, fillRow, {
+          batchSize: WATER_ROWS_PER_IDLE_SLICE,
+          timeoutMs: WATER_IDLE_TIMEOUT_MS,
+        });
+      } else {
+        fill();
+      }
     }
     geo.setAttribute('aShoreDepth', new THREE.BufferAttribute(shoreDepth, 1));
     geo.setAttribute('aShoreSlope', new THREE.BufferAttribute(shoreSlope, 1));
@@ -1592,7 +1634,10 @@ function buildShaderWater(seed: number, renderer?: THREE.WebGLRenderer): WaterVi
   };
 }
 
-function buildPhongWater(): WaterView {
+function buildPhongWater(
+  localBodies?: readonly { x: number; z: number; radius: number }[],
+  localDryCrossings: readonly { x: number; z: number; radius: number }[] = [],
+): WaterView {
   const tex = waterNormalish();
   const [norm] = waterNormalMaps();
   const mat = new THREE.MeshPhongMaterial({
@@ -1605,17 +1650,36 @@ function buildPhongWater(): WaterView {
     normalMap: norm,
     normalScale: new THREE.Vector2(0.8, 0.8),
   });
-  // low tier gets the same to-the-horizon apron by simply oversizing the
-  // one plane (the tiled texture keeps its density via the repeat bump)
-  const worldDepth = WORLD_MAX_Z - WORLD_MIN_Z + 2400;
-  tex.repeat.set(240, 240);
-  norm.repeat.set(210, 620);
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3000, worldDepth).rotateX(-Math.PI / 2), mat);
-  mesh.position.set(0, waterLevel(), (WORLD_MIN_Z + WORLD_MAX_Z) / 2);
-  const meshes = [mesh];
+  // The classic low tier keeps its to-the-horizon apron. Injected worlds are
+  // finite authored documents: build one local disc per declared lake so a
+  // custom map never inherits the WoC ocean plane on any graphics tier.
+  const meshes = localBodies
+    ? (() => {
+        const data = localWaterSurfaceData(localBodies, localDryCrossings);
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
+        geometry.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
+        geometry.setAttribute('uv', new THREE.BufferAttribute(data.uvs, 2));
+        geometry.computeBoundingSphere();
+        const mesh = new THREE.Mesh(geometry, mat);
+        mesh.position.y = waterLevel();
+        mesh.name = 'custom-world-water-surface';
+        return [mesh];
+      })()
+    : (() => {
+        const worldDepth = WORLD_MAX_Z - WORLD_MIN_Z + 2400;
+        tex.repeat.set(240, 240);
+        norm.repeat.set(210, 620);
+        const mesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(3000, worldDepth).rotateX(-Math.PI / 2),
+          mat,
+        );
+        mesh.position.set(0, waterLevel(), (WORLD_MIN_Z + WORLD_MAX_Z) / 2);
+        return [mesh];
+      })();
   const group = new THREE.Group();
   group.name = 'water';
-  group.add(mesh);
+  group.add(...meshes);
   return {
     group,
     meshes,
@@ -1650,7 +1714,33 @@ function buildPhongWater(): WaterView {
   };
 }
 
+function buildEmptyWater(): WaterView {
+  const group = new THREE.Group();
+  group.name = 'water';
+  return {
+    group,
+    meshes: [],
+    ensureZone: async () => [],
+    isZoneLoaded: () => true,
+    update: () => 0,
+    addSplash: () => {},
+    enterContact: () => {},
+    moveContact: () => {},
+    releaseContact: () => {},
+    setWavesEnabled: () => {},
+    setLevel: () => {},
+    unloadZone: () => {},
+    dispose: () => {},
+  };
+}
+
 export function buildWater(seed: number, renderer?: THREE.WebGLRenderer): WaterView {
+  const content = getActiveWorldContent();
+  if (content.zones.length > 0 && content.zones !== ZONES) {
+    const bodies = waterBodies();
+    if (bodies.length === 0) return buildEmptyWater();
+    return buildPhongWater(bodies, content.dryCrossings ?? []);
+  }
   return GFX.standardMaterials && hasWaterShaderAssets()
     ? buildShaderWater(seed, renderer)
     : buildPhongWater();

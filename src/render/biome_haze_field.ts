@@ -15,7 +15,7 @@
 // horizon both surfaces evaluate identical math on identical uniforms, so
 // there is no ring where one layer hands off to the other.
 //
-// Cost: one RGBA8 texture of about 15k texels (60 KB, one zoneBiomeAt tap per
+// Cost: one RGBA8 texture of about 15k texels (60 KB, one biomeAt tap per
 // texel, roughly 10 ms once per session and memoized across terrain rebuilds),
 // one texture fetch and a handful of ALU per world fragment, and two tiny
 // uniform writes per frame.
@@ -32,6 +32,7 @@ import {
   HAZE_FAR_ONSET,
   HAZE_FAR_REF,
   type HazeFieldLayout,
+  type HazeWorldBounds,
 } from './biome_haze_field_core';
 import { renderLayerDisabled } from './render_dev_flags';
 
@@ -57,9 +58,12 @@ let fieldLayout: HazeFieldLayout | null = null;
  * `?zonehaze=off` keeps the field out entirely, which is the A/B switch back
  * to the uniform camera-zone atmosphere.
  */
-export function ensureBiomeHazeField(presets: Readonly<Record<BiomeId, BiomeHazePreset>>): void {
+export function ensureBiomeHazeField(
+  presets: Readonly<Record<BiomeId, BiomeHazePreset>>,
+  bounds?: HazeWorldBounds,
+): void {
   if (fieldTexture || renderLayerDisabled('zonehaze')) return;
-  const data = buildBiomeHazeFieldData(presets);
+  const data = buildBiomeHazeFieldData(presets, undefined, bounds);
   const tex = new THREE.DataTexture(
     data.rgba,
     data.layout.cols,

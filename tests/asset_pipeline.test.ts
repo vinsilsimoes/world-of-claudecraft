@@ -10,7 +10,15 @@
 // each import is a namespace import behind @ts-expect-error (the same convention
 // as tests/backdrop_filter_survival.test.ts importing scripts/*.mjs).
 // biome-ignore assist/source/organizeImports: glb initializes sharp before @gltf-transform/functions on Windows.
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it, vi } from 'vitest';
@@ -1299,5 +1307,26 @@ describe('asset library registry parsers', () => {
     );
     expect(knight.registration.visualKeys).toContain('player_warrior');
     expect(knight.registration.referenced).toBe(true);
+  });
+
+  it('inventories every shipped GLB found by an independent disk walk', async () => {
+    const library = await libraryImport;
+    const diskPaths: string[] = [];
+    const visit = (directory: string, relativeDirectory: string): void => {
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const relativePath = `${relativeDirectory}/${entry.name}`.replaceAll('\\', '/');
+        if (entry.isDirectory()) visit(join(directory, entry.name), relativePath);
+        else if (entry.isFile() && entry.name.endsWith('.glb')) diskPaths.push(relativePath);
+      }
+    };
+    visit(join(ROOT, 'public/models'), 'models');
+
+    const inventoryPaths = library
+      .collectInventory()
+      .filter((asset: { kind: string }) => asset.kind === 'model')
+      .map((asset: { path: string }) => asset.path)
+      .sort();
+    expect(inventoryPaths).toEqual(diskPaths.sort());
+    expect(inventoryPaths.length).toBeGreaterThan(1_200);
   });
 });

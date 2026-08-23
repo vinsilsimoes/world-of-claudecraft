@@ -117,14 +117,20 @@ describe('coverage: each scenario fires its subsystem', () => {
     // paladin consecration: a ground AoE was pushed (on-cast pulse path).
     expect((rec.sim as any).groundAoEs.length).toBeGreaterThanOrEqual(1);
     // warlock fear: the incapacitate aura landed on the warlock's mob (fear-angle draw).
-    const warlockMob = ents.find((e) => e.id === rec.notes.warlockMobId);
-    expect(warlockMob?.auras?.some((a: Ev) => a.kind === 'incapacitate')).toBe(true);
+    // Harrow is now a 5s fear, so the final snapshot can arrive after expiry.
+    expect(rec.notes.warlockFearApplied).toBe(true);
     // warlock summon_imp: a pet now belongs to the warlock (summonDemon -> summonPet).
     expect(ents.some((e) => e.ownerId === rec.notes.warlockId)).toBe(true);
-    // druid form switch: the LAST form (cat) is active and bear was stripped.
+    // druid form switch: cat replaced bear (exclusive), read at the instant of
+    // the switch because the Second Bloom that follows is a healing spell and
+    // auto-unshifts out of cat (src/sim/combat/form_auto_unshift.ts).
+    expect(rec.notes.druidCatFormActive).toBe(true);
+    expect(rec.notes.druidBearFormStripped).toBe(true);
+    // ...and that auto-unshift is what the closing state pins: no form left,
+    // and the heal-over-time the cast went on to plant.
     const druid = ents.find((e) => e.id === rec.notes.druidId);
-    expect(druid?.auras?.some((a: Ev) => a.kind === 'form_cat')).toBe(true);
-    expect(druid?.auras?.some((a: Ev) => a.kind === 'form_bear')).toBe(false);
+    expect(druid?.auras?.some((a: Ev) => String(a.kind).startsWith('form_'))).toBe(false);
+    expect(druid?.auras?.some((a: Ev) => a.id === 'rejuvenation')).toBe(true);
   });
 
   it('hit_rating_heroic pair: gear changes the threshold, never the RNG draw order', () => {
@@ -657,5 +663,46 @@ describe('coverage: each scenario fires its subsystem', () => {
     expect(rec.notes.respawned).toBe(true);
     const deaths = (rec.allEvents as Ev[]).filter((e) => e.type === 'death');
     expect(deaths.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('mir4_auto_battle_rng: actor AoE fan-out and the following stun keep draw order', () => {
+    const { trace, rec } = record(
+      SCENARIOS.find((scenario) => scenario.name === 'mir4_auto_battle_rng')!,
+    );
+    const events = rec.allEvents as Ev[];
+    const nearIds = rec.notes.nearIds as number[];
+    const retainedId = rec.notes.retainedId as number;
+    const friendlyId = rec.notes.friendlyId as number;
+    const ecoTargets = events
+      .filter((event) => event.type === 'damage' && event.ability === 'Eco Gêmeo')
+      .map((event) => event.targetId);
+
+    expect(ecoTargets).toEqual(nearIds);
+    expect(ecoTargets).not.toContain(retainedId);
+    for (const id of nearIds) {
+      expect(
+        rec.sim.entities
+          .get(id)
+          ?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4103_blind'),
+      ).toBe(true);
+    }
+    const retained = rec.sim.entities.get(retainedId);
+    expect(
+      events.some(
+        (event) =>
+          event.type === 'damage' &&
+          event.targetId === retainedId &&
+          event.ability === 'Investida 4106',
+      ),
+    ).toBe(true);
+    expect(
+      retained?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4106_stun'),
+    ).toBe(true);
+    const friendly = rec.sim.entities.get(friendlyId);
+    expect(friendly?.hp).toBe(friendly?.maxHp);
+    expect(friendly?.mir4Effects?.active ?? []).toHaveLength(0);
+
+    expect(trace.frames.find((frame) => frame.label === 'actor-centered-4103')?.rng.draws).toBe(6);
+    expect(trace.frames.find((frame) => frame.label === 'targeted-4106')?.rng.draws).toBe(9);
   });
 });

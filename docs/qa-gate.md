@@ -49,6 +49,11 @@ fixing a red gate.
 `npm run gate:fast` is a **high-signal subset** for agent and day-to-day loops. It is
 **not** the merge contract and does **not** replace `npm run gate`.
 
+On Windows, the runner transports the potentially large Vitest argument list through
+a versioned temporary JSON manifest. This avoids the platform command-line limit
+without narrowing the selected test set; the manifest is deleted after the child
+process exits.
+
 It runs, in order:
 
 1. Malware gate (`security:gate`, typically a few seconds)
@@ -140,6 +145,27 @@ locally; the pre-merge bar itself is the selective gate (next section). Piping a
 run can hide its exit status, and unconstrained full-suite parallelism can make healthy
 heavy sim tests flake. Day-loop iteration may use `npm run gate:fast`; a green fast path
 alone is never enough to claim done.
+
+The MIR4 persistence and online release proof is intentionally real-engine
+rather than a mock inside the full suite. CI's required `MIR4 PostgreSQL 16
+proof` job starts a disposable PostgreSQL 16 service and runs
+`tests/character_lease_pg_integration.test.ts` plus
+`tests/mir4_save_v2_pg_integration.test.ts` with
+`WOC_REQUIRE_PG_INTEGRATION=1`. Locally those files remain opt-in through
+`TEST_DATABASE_URL`; without it they skip, while setting the require flag without
+the URL fails at module load. The job covers migration fencing, both
+save/takeover lock orders, expiry during a wait, JSONB size, diagnostic WAL and
+the 1,000-session/concurrency-four autosave-cycle budget, including its lease
+heartbeat. It then builds the MIR4 client/server against that same disposable
+database and runs `scripts/mp_integration.mjs` and `scripts/mp_browser.mjs`, so
+the required check also proves the native roster, authoritative owner snapshot,
+reconnect, mutual visibility, movement, chat and existing-HUD profile gates over
+the real HTTP/WebSocket/browser stack. The same job then starts a separate Vite
+development server for the intentionally offline-only browser fixtures and runs
+`scripts/smoke_browser.mjs` plus `scripts/mir4_feature_browser.mjs`. Those scripts
+exercise movement, the five-class action bars, Mouse Camera without a mode chooser,
+skill evolution, equipment progression, Mounts, Spirits and a short dungeon through
+the existing WoC launchers and controls. Production offline mode remains disabled.
 
 ### Selective gate (`gate:select`)
 
@@ -431,6 +457,17 @@ even start): `.github/workflows/ci-stall-rerun.yml` drives `scripts/ci_stall_rer
 to rerun runs killed by that narrow signature, and the driver can be invoked by hand
 for a stalled run. Triage recipes for both classes: the `ci-triage` skill.
 
+One more bounded retry lives inside a SETUP step, not a test leg: the browser jobs'
+Install Chromium step gives `playwright install-deps` one time-bounded try, then
+verifies the capability the suite demonstrably needs (CJK font coverage) directly,
+retries a targeted font install off the primary archive mirror, and fails loudly,
+still setup-class, only when no route produced the fonts (three merge-queue rejections
+on 2026-08-19 were that package-manager half dead at zero mirror throughput, and the
+first split run proved fonts were its one load-bearing effect). It can never touch a
+test result, every try is visible in the job log, and the exact block is pinned by
+`tests/helpers/playwright_install_block.ts` via `tests/ci_workflow.test.ts` and
+`tests/nightly_workflow.test.ts`.
+
 **Evidence it works.** Fault injection, 5/5 caught: a `Math.random()` in `src/sim`, a combat
 constant, a content record, a sim-emitted player string, and a deleted weapon `.glb`. In two
 of those (`Math.random` and the asset deletion) `vitest related` selected **nothing** and
@@ -498,6 +535,7 @@ before reporting readiness.
 | Privacy and security | `privacy-security-review` | `woc_security` |
 | Decisive tests | `test-coverage-auditor` | `woc_test_coverage` |
 | Frontend and graphics | `frontend-seam-reviewer` | `woc_frontend` |
+| GPU preparation | `render-performance-reviewer` | (not yet mirrored) |
 | Release malware | `release-malware-audit` | `woc_release_malware` |
 | Content same-change obligations | `content-obligations-reviewer` | (not yet mirrored) |
 | Gate/CI selection integrity | `gate-integrity-reviewer` | (not yet mirrored) |
@@ -514,7 +552,12 @@ indexes, pool pressure, locks, timeout scope, write amplification, driver/depend
 PostgreSQL engine/resource/configuration/topology changes, and production-scale observability.
 Server-hot-path review owns the non-SQL server budget: tick CPU, broadcast fan-out and
 serialization, cache seams, and retention for anything that grows (the seams in
-`server/CLAUDE.md` "Hot paths"). Dispatch every role whose set of risk applies.
+`server/CLAUDE.md` "Hot paths"). GPU-preparation review owns what the client asks the GPU to
+prepare and when: prewarm homes and twins, compile and reveal gates, program-key moves,
+post-boot lights, secondary GL contexts, the background queue and its admission budget, and
+the stand-in registry (the contract in `src/render/CLAUDE.md` "GPU work: every new producer is
+a client of the scheduler"), where frontend review keeps the presentation seams and tier
+fairness. Dispatch every role whose set of risk applies.
 
 ## Keep the gate current
 

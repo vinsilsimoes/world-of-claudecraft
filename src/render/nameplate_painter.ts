@@ -25,7 +25,13 @@ import { localizeSimAuraName } from '../ui/sim_i18n';
 import { type IWorld, OVERHEAD_EMOTES } from '../world_api';
 
 import { castBarState } from './cast_bar';
-import { mobDisplayName, npcDisplayName, objectDisplayName } from './entity_labels';
+import { anyCharacterRigDrawing, entityHasNoBody } from './entity_gate_stand_in_core';
+import {
+  mobDisplayName,
+  mobEntityDisplayName,
+  npcDisplayName,
+  objectDisplayName,
+} from './entity_labels';
 import {
   createNameplateCanvasState,
   type NameplateCanvasState,
@@ -187,6 +193,17 @@ export class NameplatePainter {
       // The canvas pass draws only what it reaches, so skipping the entity is the
       // whole hide (the removed DOM-era hideNameplate had to clear styles instead).
       if (isQuestGatedEntityHidden(entity, world.questLog)) continue;
+      // A compile gate can leave this entity with no body at all (the arrival
+      // gate hides the whole group). Its plate is then the only thing that says
+      // an enemy is there, so it is forced on over the nameplate toggles for
+      // that window: the stand-in invariant in entity_gate_stand_in_core.ts.
+      // Deliberately AFTER the quest gate above: a quest-gated clutch is meant
+      // to read as inert scenery, and a stand-in would leak it.
+      const standIn = entityHasNoBody(
+        view.compilePending,
+        !!view.visual,
+        anyCharacterRigDrawing(view),
+      );
       // the saddle lift rides the anchor so a mounted player's plate clears the head
       const plan = nameplatePlanInto(
         this.plan,
@@ -196,6 +213,7 @@ export class NameplatePainter {
         showNameplates,
         showOwnNameplate,
         showPlayerNameplates,
+        standIn,
       );
       if (plan.hidden) continue;
 
@@ -421,10 +439,7 @@ export class NameplatePainter {
     state.badges.length = 0;
 
     if (entity.kind === 'npc' || (!entity.hostile && entity.questIds.length > 0)) {
-      state.name =
-        entity.kind === 'npc'
-          ? npcDisplayName(entity.templateId)
-          : tEntity({ kind: 'mob', id: entity.templateId, field: 'name' });
+      state.name = entity.kind === 'npc' ? npcDisplayName(entity) : mobEntityDisplayName(entity);
       state.nameColor = FRIENDLY;
       const questMarker = this.questMarker(entity);
       state.marker = questMarker.marker;
@@ -433,13 +448,15 @@ export class NameplatePainter {
     }
 
     const template = MOBS[entity.templateId];
-    const elite = !!template?.elite;
-    const boss = !!template?.boss;
+    const elite = entity.mobElite ?? !!template?.elite;
+    const boss = entity.mobBoss ?? !!template?.boss;
     state.friendlyPet = isFriendlyPet(entity, this.world.entities, this.isHostilePlayer);
     const mobName =
       entity.ownerId !== null
         ? (localizeSimAuraName(entity.name) ?? entity.name)
-        : mobDisplayName(entity.templateId);
+        : template
+          ? mobDisplayName(entity.templateId)
+          : entity.name;
     state.name = entity.dead ? t('worldContent.corpseName', { name: mobName }) : mobName;
     state.nameColor = '#fff';
     state.level = entity.dead
@@ -449,8 +466,8 @@ export class NameplatePainter {
         });
     state.levelColor = mobNameColor(entity.level - player.level, entity.dead, state.friendlyPet);
     state.hpVisible = !entity.dead;
-    state.marker = entity.lootable ? '$' : elite && !entity.dead ? '◆' : '';
-    state.markerTone = state.marker ? 'loot' : 'none';
+    state.marker = entity.lootable ? 'loot' : elite && !entity.dead ? '◆' : '';
+    state.markerTone = entity.lootable ? 'loot' : 'none';
     state.frame = entity.dead ? '' : boss ? 'boss' : elite ? 'elite' : '';
   }
 

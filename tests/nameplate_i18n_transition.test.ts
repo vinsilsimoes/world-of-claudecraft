@@ -92,4 +92,67 @@ describe('canvas nameplate language-only transitions', () => {
     expect(state.aiLabel).toBe('[AI]');
     expect(state.title).toBe('Veteran');
   }, 30_000);
+
+  it('uses the authoritative identity and rank of a runtime-generated campaign boss', async () => {
+    const [{ NameplatePainter }, { createNameplateCanvasState }] = await Promise.all([
+      import('../src/render/nameplate_painter'),
+      import('../src/render/nameplate_canvas'),
+    ]);
+    const painter = Object.create(NameplatePainter.prototype) as ContentResolver;
+    painter.world = { markerFor: () => null };
+    const me = player({ id: 1, name: 'Me' });
+    const boss = player({
+      id: 2,
+      kind: 'mob',
+      templateId: 'mir4_runtime_arc_boss',
+      name: 'Arc Warden',
+      mobElite: true,
+      mobBoss: true,
+    } as Partial<Entity> & { id: number });
+    const state = createNameplateCanvasState();
+    const plan = {
+      hidden: false,
+      anchorYOffset: 0,
+      urgent: true,
+      hasOverheadEmote: false,
+      threat: false,
+      comboPips: 0,
+    } satisfies NameplatePlan;
+
+    painter.resolveContent(state, boss, me, plan, false, false);
+
+    expect(state.name).toBe('Arc Warden');
+    expect(state.frame).toBe('boss');
+  }, 30_000);
+
+  it('uses the authoritative name of a runtime-generated campaign NPC', async () => {
+    const [{ NameplatePainter }, { createNameplateCanvasState }] = await Promise.all([
+      import('../src/render/nameplate_painter'),
+      import('../src/render/nameplate_canvas'),
+    ]);
+    const painter = Object.create(NameplatePainter.prototype) as ContentResolver;
+    painter.world = { markerFor: () => null };
+    const me = player({ id: 1, name: 'Me' });
+    const npc = player({
+      id: 2,
+      kind: 'npc',
+      templateId: 'mir4_tarek_duas_pontes',
+      name: 'Tarek Duas Pontes',
+      hostile: false,
+      questIds: [],
+    } as Partial<Entity> & { id: number });
+    const state = createNameplateCanvasState();
+    const plan = {
+      hidden: false,
+      anchorYOffset: 0,
+      urgent: true,
+      hasOverheadEmote: false,
+      threat: false,
+      comboPips: 0,
+    } satisfies NameplatePlan;
+
+    painter.resolveContent(state, npc, me, plan, false, false);
+
+    expect(state.name).toBe('Tarek Duas Pontes');
+  }, 30_000);
 });

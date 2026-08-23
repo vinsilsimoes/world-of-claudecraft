@@ -9,6 +9,7 @@ vi.mock('../server/db', async (importOriginal) => {
   return { ...actual, pool: mocks };
 });
 vi.mock('../server/realm', () => ({
+  GAME_PROFILE: 'woc-classic',
   REALM: 'test-realm',
   REALM_DIRECTORY: [{ name: 'test-realm', url: '', type: 'Normal' }],
 }));

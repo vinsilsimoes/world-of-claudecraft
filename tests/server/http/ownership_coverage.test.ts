@@ -154,6 +154,7 @@ function installDenyingMapsAndAssets(): void {
 // missing loader is a clean 200, not an unrelated throw.
 function installFakeRuntime(): void {
   const runtime: CharactersRuntime = {
+    gameProfile: 'woc-classic',
     isCharacterOnline: vi.fn(() => false),
     takeOverCharacter: vi.fn(async () => 'not-online' as const),
     rekeyMarketSeller: vi.fn(() => false),

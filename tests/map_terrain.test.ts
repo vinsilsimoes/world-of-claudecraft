@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
 import {
   STRIP_MAX_X,
   STRIP_MIN_X,
+  setActiveWorldContent,
   WORLD_MAX_X,
   WORLD_MAX_Z,
   WORLD_MIN_X,
@@ -251,5 +253,50 @@ describe('map terrain painter: the plate region', () => {
       expect(r.minZ, `${z.id} south`).toBeGreaterThanOrEqual(WORLD_MIN_Z);
       expect(r.maxZ, `${z.id} north`).toBeLessThanOrEqual(WORLD_MAX_Z);
     }
+  });
+});
+
+describe('map terrain painter: authored custom worlds', () => {
+  it('frames an authored zone in its own coordinate space instead of the built-in world bounds', () => {
+    const world = buildMir4ArcWorld();
+    const zone = world.zones[0];
+    if (!zone) throw new Error('missing authored M01 zone');
+    setActiveWorldContent(world);
+    try {
+      const region = mapZoneRegion(zone);
+      expect(region).toEqual({ minX: 2330, maxX: 2850, minZ: -120, maxZ: 400 });
+      const pixels = renderFull(32, region, 171);
+      const colors = new Set<string>();
+      for (let index = 0; index < pixels.length; index += 4) {
+        colors.add(`${pixels[index]},${pixels[index + 1]},${pixels[index + 2]}`);
+      }
+      expect(colors.size).toBeGreaterThan(8);
+    } finally {
+      setActiveWorldContent(null);
+    }
+  });
+
+  it('draws M03 mixed-biome paint instead of flattening the atlas plate to dusk', () => {
+    const world = buildMir4ArcWorld(3);
+    const zone = world.zones.find((candidate) => candidate.id === 'mir4_m03-bosque-do-vale');
+    if (!zone) throw new Error('missing authored M03 zone');
+    setActiveWorldContent(world);
+    const region = mapZoneRegion(zone);
+    const painted = renderFull(64, region, 171);
+    setActiveWorldContent({ ...world, biomePaint: undefined });
+    const duskOnly = renderFull(64, region, 171);
+
+    let changedPixels = 0;
+    for (let index = 0; index < painted.length; index += 4) {
+      if (
+        painted[index] !== duskOnly[index] ||
+        painted[index + 1] !== duskOnly[index + 1] ||
+        painted[index + 2] !== duskOnly[index + 2]
+      ) {
+        changedPixels++;
+      }
+    }
+    expect(changedPixels).toBeGreaterThan(100);
+    setActiveWorldContent(null);
   });
 });

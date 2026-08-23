@@ -225,7 +225,13 @@ export function moveSpeedMult(e: Entity, extraSpeedPct = 0): number {
   // synced over the wire like skin), so the online self-extrapolator predicts
   // mounted speed in lockstep with the server. Additive with buff_speed like
   // the Fiesta augment below; slows still bite multiplicatively.
-  if (e.mountKey) speed += mountMoveSpeedPct(e.mountKey);
+  // MIR4 keeps the target-native model but replaces its stats: the logical
+  // equipped Mount supplies the source speed, so native shell tuning does not
+  // stack on top. Classic riders retain the native catalog value.
+  if (e.mountKey) {
+    if (e.mir4) speed += e.mir4.mountMoveSpeedBps / 10_000;
+    else speed += mountMoveSpeedPct(e.mountKey);
+  }
   // Fiesta move-speed augments (only ever non-zero inside a Fiesta bout).
   if (extraSpeedPct) speed += extraSpeedPct;
   return slow * speed;

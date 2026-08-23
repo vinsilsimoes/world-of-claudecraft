@@ -779,7 +779,391 @@ export const ko_KR: EnTranslations = {
     "questTracker": {
       "count": "({count})",
       "collapseHint": "퀘스트 추적기 접기",
-      "expandHint": "퀘스트 추적기 펼치기"
+      "expandHint": "퀘스트 추적기 펼치기",
+      "mir4": {
+        "firstTraces": "최초의 흔적",
+        "reachTarek": "타렉에게 이동",
+        "inspectClues": "단서 조사",
+        "returnToTarek": "타렉에게 돌아가기",
+        "pausedSuffix": "(수동 조작으로 자동 이동 일시 중지)",
+        "startAutoJourney": "자동 이동 시작",
+        "stopAutoJourney": "자동 이동 중지"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "초원 준마",
+          "moss-boar": "이끼 멧돼지",
+          "brook-stag": "시냇물 수사슴",
+          "gray-wolf": "회색 늑대",
+          "dun-packhorse": "황갈색 짐말",
+          "birch-doe": "자작나무 암사슴",
+          "red-maned-pony": "붉은 갈기 조랑말",
+          "lowland-elk": "저지대 엘크",
+          "field-lynx": "들판 스라소니",
+          "tawny-mastiff": "황갈색 마스티프",
+          "dune-jackal": "사구 자칼",
+          "reed-puma": "갈대 퓨마",
+          "clay-ox": "점토 황소",
+          "valley-buffalo": "계곡 버팔로",
+          "shaggy-yak": "털북숭이 야크",
+          "creek-lizard": "개울 도마뱀",
+          "shellback-tortoise": "돌등껍질 거북",
+          "plains-ostrich": "평원 타조",
+          "dusk-emu": "황혼 레아",
+          "copper-ant-carrier": "구리 개미 운반수",
+          "mist-moose": "안개 무스",
+          "leaf-panther": "잎 표범",
+          "turf-rhino": "잔디 코뿔소",
+          "valley-monitor": "계곡 왕도마뱀",
+          "granite-ibex": "화강암 아이벡스",
+          "silver-dapple-mare": "은빛 얼룩 암말",
+          "marsh-stag": "습지 수사슴",
+          "snow-mane-lion": "눈갈기 사자",
+          "ember-fox": "잿불 여우",
+          "striped-hyena": "줄무늬 하이에나",
+          "iron-tusk-boar": "철 엄니 멧돼지",
+          "cedar-bear": "삼나무 곰",
+          "swamp-hippo": "늪 하마",
+          "thorn-iguana": "가시 이구아나",
+          "dryland-crocodile": "건조지 악어",
+          "horned-cassowary": "뿔 화식조",
+          "bronze-raptor": "청동 랩터",
+          "amber-scarab": "호박 풍뎅이",
+          "dune-scorpion": "사구 전갈",
+          "root-golem": "뿌리 골렘",
+          "amber-bear": "호박 곰",
+          "sunset-tiger": "노을 호랑이",
+          "root-drake": "뿌리 드레이크",
+          "hill-griffin": "언덕 그리핀",
+          "obsidian-zebra": "흑요석 얼룩말",
+          "stormhorn-ram": "폭풍뿔 숫양",
+          "dusk-elk": "황혼 엘크",
+          "frost-warg": "서리 워그",
+          "basalt-rhino": "현무암 코뿔소",
+          "tundra-mammoth": "툰드라 매머드",
+          "crystal-ankylosaur": "수정 안킬로사우루스",
+          "ember-salamander": "잿불 샐러맨더",
+          "thunder-komodo": "천둥 코모도",
+          "moon-crocodile": "달 악어",
+          "razorbeak-strider": "칼날부리 스트라이더",
+          "plume-raptor": "깃털 랩터",
+          "glass-mantis": "유리 사마귀",
+          "thunder-beetle": "천둥 딱정벌레",
+          "iron-sentinel": "철 파수꾼",
+          "mossstone-colossus": "이끼돌 거상",
+          "eclipse-lion": "일식 사자",
+          "crimson-wyvern": "진홍 와이번",
+          "astral-stag": "별빛 수사슴",
+          "jade-basilisk": "비취 바실리스크",
+          "solar-wolf": "태양 늑대",
+          "forest-chimera": "숲 키메라",
+          "tempest-courser": "폭풍 준마",
+          "thorn-elephant": "가시 코끼리",
+          "void-spider": "공허 거미",
+          "rune-golem": "룬 골렘",
+          "dawn-phoenix": "새벽 불사조",
+          "imperial-griffin": "제국 그리핀",
+          "stone-leviathan": "돌 리바이어던",
+          "void-unicorn": "공허 유니콘",
+          "golden-manticore": "황금 만티코어",
+          "imperial-tiger": "제국 호랑이",
+          "dawn-mammoth": "새벽 매머드",
+          "magma-drake": "마그마 드레이크",
+          "crown-scorpion": "왕관 전갈",
+          "sunforged-colossus": "태양벼림 거상",
+          "ground-dragon": "대지 용",
+          "eternal-phoenix": "영원 불사조",
+          "celestial-kirin": "천상 기린",
+          "firmament-behemoth": "창공의 사자",
+          "time-hydra": "시간 히드라"
+        },
+        "spirits": {
+          "spirit-common-01": "초원 불꽃",
+          "spirit-common-02": "시냇물의 산들바람",
+          "spirit-common-03": "수호의 잎",
+          "spirit-common-04": "돌 메아리",
+          "spirit-uncommon-01": "새벽의 광휘",
+          "spirit-uncommon-02": "안개 님프",
+          "spirit-uncommon-03": "이끼 수호자",
+          "spirit-uncommon-04": "계곡 샐러맨더",
+          "spirit-rare-01": "호박 여우",
+          "spirit-rare-02": "노을 올빼미",
+          "spirit-rare-03": "뿌리 드레이크",
+          "spirit-rare-04": "언덕의 예언자",
+          "spirit-epic-01": "일식 화신",
+          "spirit-epic-02": "진홍 이프리트",
+          "spirit-epic-03": "별빛 수사슴",
+          "spirit-epic-04": "비취 파수꾼",
+          "spirit-epic-05": "태양 늑대",
+          "spirit-epic-06": "에테르 키메라",
+          "spirit-legendary-01": "대지 타이탄",
+          "spirit-legendary-02": "새벽 불사조",
+          "spirit-legendary-03": "제국 집정관",
+          "spirit-legendary-04": "수정 리바이어던",
+          "spirit-legendary-05": "공허 유니콘",
+          "spirit-legendary-06": "황금 만티코어",
+          "spirit-mythical-01": "원초 영혼",
+          "spirit-mythical-02": "영원 불사조",
+          "spirit-mythical-03": "천상 기린",
+          "spirit-mythical-04": "창공의 베히모스",
+          "spirit-mythical-05": "심연 세라핌",
+          "spirit-mythical-06": "시간 히드라"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "방랑 불꽃",
+          "spirit-skill-1-02": "황혼 본능",
+          "spirit-skill-1-03": "생명 이슬",
+          "spirit-skill-1-04": "마나 숨결",
+          "spirit-skill-2-01": "솟는 섬광",
+          "spirit-skill-2-02": "안개 송곳니",
+          "spirit-skill-2-03": "회복 수액",
+          "spirit-skill-2-04": "비전 파동",
+          "spirit-skill-3-01": "호박 파열",
+          "spirit-skill-3-02": "노을 심판",
+          "spirit-skill-3-03": "생명 유대",
+          "spirit-skill-3-04": "뿌리 샘",
+          "spirit-skill-4-01": "일식 광선",
+          "spirit-skill-4-02": "진홍 격노",
+          "spirit-skill-4-03": "별빛 은총",
+          "spirit-skill-4-04": "비취 구슬",
+          "spirit-skill-4-05": "태양 참격",
+          "spirit-skill-4-06": "에테르 집중",
+          "spirit-skill-5-01": "지각 충격",
+          "spirit-skill-5-02": "재생 불꽃",
+          "spirit-skill-5-03": "제국 판결",
+          "spirit-skill-5-04": "수정 물결",
+          "spirit-skill-5-05": "공허 균열",
+          "spirit-skill-5-06": "황금 왕관",
+          "spirit-skill-6-01": "창세",
+          "spirit-skill-6-02": "영원 귀환",
+          "spirit-skill-6-03": "천상 칙령",
+          "spirit-skill-6-04": "창공의 무게",
+          "spirit-skill-6-05": "심연 나선",
+          "spirit-skill-6-06": "절대 순간"
+        }
+      },
+      "ultimateGauge": "궁극기 게이지",
+      "ultimateGaugeStatus": "궁극기 게이지: {value}/{max}",
+      "ultimateReadyAnnouncement": "궁극기 준비 완료.",
+      "achievements": {
+        "title": "업적",
+        "close": "업적 닫기",
+        "summary": "보상 수령: {claimed}/{total}",
+        "balances": "동전 {copper} · 흑철 {darksteel} · 효과 포인트 {effectPoints} · 스킬 비급서 {skillTomes}",
+        "levelTitle": "레벨 {level}",
+        "levelDescription": "레벨 {level}에 도달하세요.",
+        "progressAria": "레벨 진행도: {current}/{target}",
+        "progressText": "{current}/{target}",
+        "rewardCopper": "동전 {amount}",
+        "rewardDarksteel": "흑철 {amount}",
+        "rewardEffectPoints": "효과 포인트 {amount}",
+        "rewardSkillTomes": "스킬 비급서 {amount}개",
+        "rewards": "보상: {rewards}",
+        "claim": "수령",
+        "claimed": "수령 완료",
+        "locked": "레벨 {level} 달성",
+        "previousGrade": "이전 단계 보상을 먼저 수령하세요",
+        "claimAria": "레벨 {level} 업적 보상 수령"
+      },
+      "questLog": {
+        "narrative": "여울 주변의 세 단서 지점을 조사한 뒤 타렉 투 브리지에게 돌아가세요.",
+        "giverName": "타렉 투 브리지",
+        "emptyHint": "M01 정착지에서 타렉 투 브리지를 찾거나 자동 이동을 시작하세요.",
+        "completedHint": "최초의 흔적을 완료했습니다. 나머지 캠페인 퀘스트는 아직 활성화되지 않았습니다."
+      },
+      "campaign": {
+        "questTitle": "캠페인 {id}",
+        "narrative": "{id}의 현재 캠페인 목표를 완료하세요.",
+        "contact": "캠페인 담당자",
+        "objective": {
+          "returnToContact": "캠페인 담당자에게 돌아가기",
+          "talk": "캠페인 담당자와 대화하기",
+          "deliver": "요청받은 아이템 전달하기",
+          "travel": "표시된 목표로 이동하기",
+          "inspect": "표시된 증거 조사하기",
+          "gather": "요청받은 자원 수집하기",
+          "defend": "표시된 목표 방어하기",
+          "combat": "표시된 적 처치하기",
+          "escort": "표시된 아군 호위하기",
+          "escortSupplies": "보급대 호위하기",
+          "dungeon": "캠페인 던전 완료하기",
+          "craft": "요청받은 보급품 제작하기",
+          "tutorial": "시스템 튜토리얼 완료하기",
+          "interact": "표시된 대상과 상호작용하기",
+          "complete": "현재 목표 완료하기"
+        }
+      },
+      "characterTitle": "캐릭터",
+      "awaitingState": "권한 서버의 캐릭터 데이터를 기다리는 중…",
+      "combatPowerLine": "전투력 {value}",
+      "equipmentVisualShell": "World of ClaudeCraft 외형과 MIR4 전투 속성",
+      "equipmentTierGrade": "티어 {tier}, 등급 {grade}",
+      "equipmentRequiredLevel": "필요 레벨: {level}",
+      "unequipHint": "X 또는 오른쪽 클릭으로 장비를 해제합니다.",
+      "unequipAria": "{item} 해제",
+      "equipHint": "클릭하여 장착합니다.",
+      "equipAria": "{item} 장착",
+      "inventoryEquipment": "장비",
+      "inventoryRuntimeItems": "World of ClaudeCraft 기본 아이템",
+      "inventoryCollectionTickets": "수집 소환권",
+      "inventoryMaterials": "제련 재료",
+      "noUnequippedEquipment": "장착하지 않은 장비가 없습니다.",
+      "materialCount": "보유: {count}",
+      "mountTicketDawn": "새벽 탈것 소환권",
+      "mountTicketTwilight": "황혼 탈것 소환권",
+      "mountTicketDawnDescription": "탈것 하나를 소환합니다: 일반 79%, 고급 20%, 희귀 1%. 유효한 소환 시 소환권을 소모합니다. 표시 모델은 World of ClaudeCraft 기본 외형이며, 기재된 MIR4 능력치가 권한 데이터입니다.",
+      "mountTicketTwilightDescription": "탈것 하나를 소환합니다: 희귀 99%, 영웅 1%. 영웅 결과는 확인 후 보유하게 됩니다. 표시 모델은 World of ClaudeCraft 기본 외형입니다.",
+      "redeemMountTicket": "Use {ticket}",
+      "inventoryMounts": "탈것",
+      "inventoryPendingMounts": "확인 대기 중인 탈것",
+      "mountGrade": "등급 {grade}",
+      "mountOwned": "보유: {count}",
+      "mountEquipped": "장착 중",
+      "mountEquipHint": "클릭하여 이 탈것을 장착하고 World of ClaudeCraft 기본 외형을 소환합니다.",
+      "mountUnequipHint": "클릭하여 이 탈것을 해제하고 내립니다.",
+      "mountConfirmHint": "클릭하여 이 탈것을 확인하고 수집품에 추가합니다.",
+      "mountConfirmAria": "{mount} 확인",
+      "mountEffectShell": "World of ClaudeCraft 기본 모델과 MIR4 탈것 능력치",
+      "mountMoveSpeed": "이동 속도: +{amount}%",
+      "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
+      "mountDefenses": "물리 방어: +{physical} · 마법 방어: +{magic}",
+      "equippedMountLine": "탈것: {mount} (등급 {grade})",
+      "noEquippedMount": "탈것: 장착 없음",
+      "inventoryMountCombination": "탈것 합성",
+      "combineMountsAria": "등급 {grade} 탈것 네 마리 합성",
+      "combineMountsHint": "이 등급의 보유 탈것 네 마리를 소모합니다. 20% 확률로 다음 등급의 무작위 탈것 한 마리를 획득합니다. 실패하면 같은 등급의 무작위 탈것 한 마리를 획득합니다. 영웅 이상 보상은 확인을 기다립니다.",
+      "inventorySpirits": "정령",
+      "inventoryPendingSpirits": "확인 대기 중인 정령",
+      "spiritTicketDawn": "새벽 정령 소환권",
+      "spiritTicketSunset": "노을 정령 소환권",
+      "spiritTicketDawnDescription": "정령 하나를 소환합니다: 일반 79%, 고급 20%, 희귀 1%. 유효한 소환 시 소환권을 소모합니다. 아이콘은 World of ClaudeCraft 기본 표현이며, 기재된 MIR4 효과만 적용됩니다.",
+      "spiritTicketSunsetDescription": "정령 하나를 소환합니다: 고급 94.5%, 희귀 5%, 영웅 0.5%. 영웅 결과는 확인 후 보유하게 됩니다. 유효한 소환 시 소환권을 소모합니다.",
+      "redeemSpiritTicket": "{ticket}(으)로 소환",
+      "spiritGrade": "등급 {grade}",
+      "spiritOwned": "보유: {count}",
+      "spiritEquipped": "장착 중",
+      "spiritEquipHint": "클릭하여 이 정령을 장착합니다. 속성과 수집 보너스가 MIR4 능력치에 적용됩니다.",
+      "spiritUnequipHint": "클릭하여 이 정령을 해제합니다.",
+      "spiritConfirmHint": "클릭하여 이 정령을 확인하고 수집품에 추가합니다.",
+      "spiritConfirmAria": "{spirit} 확인",
+      "spiritEffectShell": "World of ClaudeCraft 기본 표현과 MIR4 정령 효과",
+      "equippedSpiritLine": "정령: {spirit} (등급 {grade})",
+      "noEquippedSpirit": "정령: 장착 없음",
+      "inventorySpiritCombination": "정령 합성",
+      "combineSpiritsAria": "등급 {grade} 정령 네 마리 합성",
+      "combineSpiritsHint": "이 등급의 보유 정령 네 마리를 소모합니다. 20% 확률로 다음 등급의 무작위 정령 한 마리를 획득합니다. 실패하면 같은 등급의 무작위 정령 한 마리를 획득합니다. 영웅 이상 보상은 확인을 기다립니다.",
+      "spiritSkillChanceCooldown": "발동 확률 {chance}% · 재사용 대기시간 {cooldown}초",
+      "spiritSkillBonusDamage": "발동 공격의 기본 피해를 {amount}% 증가시킵니다.",
+      "spiritSkillExecute": "대상의 생명력이 {threshold}% 이하일 때 발동 공격의 기본 피해를 {amount}% 증가시킵니다.",
+      "spiritSkillLifeSiphon": "최대 생명력의 {amount}%를 회복합니다.",
+      "spiritSkillManaSurge": "최대 마나의 {amount}%를 회복합니다.",
+      "spiritSkillArmorRend": "발동 공격에 방어 관통 {amount}%를 추가합니다.",
+      "spiritSkillCriticalFocus": "발동 공격이 반드시 치명타가 됩니다.",
+      "equipmentSlots": {
+        "weapon": "무기",
+        "necklace": "목걸이",
+        "ring": "Ring",
+        "talisman": "부적",
+        "chest": "흉갑",
+        "helmet": "투구",
+        "gloves": "장갑",
+        "boots": "장화"
+      },
+      "stats": {
+        "combatPower": "전투력",
+        "maxHp": "최대 생명력",
+        "maxMana": "최대 마나",
+        "physicalAttack": "물리 공격",
+        "magicAttack": "마법 공격",
+        "physicalDefense": "물리 방어",
+        "magicDefense": "마법 방어",
+        "accuracy": "명중",
+        "dodge": "회피",
+        "critical": "치명타",
+        "avoidCritical": "치명타 회피",
+        "criticalOutcome": "치명타 피해",
+        "bossDamage": "보스 피해",
+        "skillDamage": "스킬 피해",
+        "penetration": "방어 관통",
+        "unknown": "전투 속성"
+      },
+      "materials": {
+        "sunStone": "태양석",
+        "moonStone": "월석",
+        "solarScroll": "태양 두루마리",
+        "lunarSeal": "달의 인장",
+        "dawnTear": "Dawn Tear",
+        "solarWard": "태양의 수호부"
+      },
+      "maps": {
+        "portal": "{zone} 차원문",
+        "actWelcome": "{zone} (제{act}막).",
+        "m01": "여울 마을",
+        "m02": "갈대 오솔길",
+        "m03": "계곡 숲",
+        "m04": "비탈 유적",
+        "m05": "균열 공터",
+        "m06": "촛돌 지하묘지",
+        "m07": "납골당 회랑",
+        "m08": "안개돌 요새",
+        "m09": "등불 늪",
+        "m10": "Bog King's Fen",
+        "m11": "거머리 맹그로브",
+        "m12": "갈대 항구",
+        "m13": "유리 사구",
+        "m14": "아케트 네크로폴리스",
+        "m15": "잿돌 칼데라",
+        "m16": "부서진 태양 제련소",
+        "m17": "울부짖는 툰드라",
+        "m18": "Jarl's Pass",
+        "m19": "밤의 장막",
+        "m20": "일식 요새"
+      },
+      "progression": {
+        "title": "장비 공방",
+        "refinement": "제련",
+        "enchantment": "마법 부여",
+        "blessing": "축복",
+        "crafting": "제작",
+        "ownedEquipment": "보유 장비",
+        "noEquipment": "이 작업에 사용할 수 있는 장비가 없습니다.",
+        "equipped": "장착 중",
+        "enhancementLevel": "강화 +{level}/+{max}",
+        "successChance": "성공 확률: {chance}%",
+        "safeFailure": "실패해도 장비가 유지됩니다.",
+        "destructiveFailure": "+5를 초과한 강화 실패 시 장비가 파괴됩니다.",
+        "wardProtection": "파괴를 방지하기 위해 태양의 수호부 1개를 소모합니다.",
+        "noWardProtection": "사용 가능한 태양의 수호부가 없습니다.",
+        "enhanceCost": "비용: 태양 두루마리 1개",
+        "enhance": "강화",
+        "maxEnhancement": "최대 강화에 도달했습니다",
+        "currentEffects": "현재 효과",
+        "noCurrentEffects": "적용된 효과가 없습니다.",
+        "rollCostEnchantment": "비용: 달의 인장 1개",
+        "layerUnsupported": "이 아이템에는 {layer} 효과를 부여할 수 없습니다.",
+        "rollCostBlessing": "Cost: 1 Dawn Tear",
+        "roll": "미리보기 굴리기",
+        "pendingOtherLayer": "먼저 대기 중인 {layer} 미리보기를 결정하세요.",
+        "preview": "대기 중인 미리보기",
+        "acceptPreview": "미리보기 적용",
+        "keepCurrent": "현재 효과 유지",
+        "inactiveEffect": "이식된 효과(아직 전투에서 비활성)",
+        "materialRecipes": "재료 제작법",
+        "campaignProfession": "캠페인 제작 의뢰",
+        "campaignProfessionProgress": "진행도: {current}/{goal}",
+        "campaignProfessionMaterials": "사용 가능 재료: {held}/{needed}",
+        "campaignProfessionHint": "캠페인 제작 지점에서 의뢰를 완료하세요. 서버는 권한 있는 지역 재료만 소모합니다.",
+        "campaignCraft": "부품 제작",
+        "campaignRefine": "부품 제련",
+        "campaignSalvage": "장비 분해",
+        "creates": "{material} {count}개 제작",
+        "materialCost": "{held}/{needed} {material}",
+        "copperCost": "동화 {amount}",
+        "create": "제작",
+        "requestSent": "서버가 장비 작업을 검증하고 있습니다."
+      }
     },
     "interfaceTabs": {
       "general": "일반",
@@ -866,11 +1250,52 @@ export const ko_KR: EnTranslations = {
       "actionRing": "전투 행동",
       "actionPageToggle": "행동 페이지 전환",
       "actionPageIndicator": "{page}페이지",
+      "actionRadial": "액션 방향",
+      "actionRadialCancel": "동작 취소",
+      "radialCenter": "가운데",
+      "radialUp": "Up",
+      "radialRight": "오른쪽",
+      "radialDown": "Down",
+      "radialLeft": "Left",
+      "consumableSeat": "소모품",
+      "menuControl": "메뉴",
+      "menuControlAria": "메뉴. 탭하면 대화창이 열리고, 길게 누른 뒤 오른쪽으로 밀면 탈것, 지도, 가방 등을 열 수 있습니다.",
+      "menuControlAriaTap": "메뉴. 탭하면 탈것, 지도, 가방 등의 메뉴 줄이 열립니다. 다시 탭하면 대화창이 열립니다.",
+      "menuLabel": "Menu",
+      "quickActions": "빠른 실행",
+      "quickActionsAria": "빠른 실행. 탭하면 탈것, 채팅, 지도, 가방 등의 실행 줄이 열리고, 길게 누른 뒤 오른쪽으로 밀면 항목을 선택할 수 있습니다.",
+      "quickActionsAriaTap": "빠른 실행. 탭하면 탈것, 채팅, 지도, 가방 등의 실행 줄이 열리며, 항목을 탭해 선택합니다. 컨트롤을 다시 탭하면 닫힙니다.",
+      "quickActionsLabel": "실행",
+      "stanceRadial": "태세",
+      "stanceAnchorAria": "태세: {stance}. 탭하여 태세 링을 열고 다른 태세를 선택하세요.",
+      "stanceAnchorEmptyAria": "태세 없음. 탭하여 태세 링을 열고 태세를 선택하세요.",
+      "questStripAria": "추적 중인 퀘스트 {total}개 중 {position}번째: {title}. 다음 퀘스트를 보려면 누르십시오.",
+      "questStripAriaSingle": "추적 중인 퀘스트: {title}",
+      "questStripCounter": "{position}/{total}",
+      "questStripMore": "외 {count}개",
       "targetCycle": "대상 전환",
       "targetCycleShort": "대상",
       "spellbookPageLabel": "페이지 {page}",
       "hideKeyboard": "키보드 숨기기",
-      "chatPlaceholder": "메시지 입력... (! 커뮤니티 명령어)"
+      "chatPlaceholder": "메시지 입력... (! 커뮤니티 명령어)",
+      "barEditor": "Edit Bars",
+      "barEditorAria": "행동 단축바 배치 편집"
+    },
+    "barEditor": {
+      "title": "행동 단축바 편집",
+      "close": "행동 단축바 편집 닫기",
+      "pages": "행동 단축바 페이지",
+      "pageTab": "Page {page}",
+      "buttonHeader": "버튼 {button}",
+      "cellAria": "버튼 {button}, {direction}: {action}",
+      "emptyCellAria": "버튼 {button}, {direction}: 비어 있음",
+      "hint": "칸을 누른 뒤 다른 칸을 누르면 서로 바뀝니다.",
+      "armed": "칸을 눌러 {name}을(를) 배치하세요.",
+      "picked": "다른 칸을 눌러 {name}과(와) 바꾸세요.",
+      "locked": "행동 단축바가 인터페이스 설정에서 잠겨 있습니다.",
+      "clear": "비우기",
+      "clearAria": "슬롯 비우기",
+      "clearArmed": "슬롯을 탭하면 비워집니다."
     },
     "tutorial": {
       "moveBodyTouch": "이동 스틱으로 이동하고 화면을 끌어 주위를 둘러보세요. 몇 걸음 움직여 시작하세요.",
@@ -952,6 +1377,22 @@ export const ko_KR: EnTranslations = {
       "closesIn": "균열이 {time} 후 닫힙니다",
       "clockMs": "{minutes}:{seconds}",
       "clockHms": "{hours}:{minutes}:{seconds}"
+    },
+    "lastkeepMap": {
+      "title": "{keep}: {story}",
+      "story": {
+        "undercroft": "지하 저장고",
+        "state": "의전층",
+        "residence": "주거층",
+        "tower": "망루"
+      }
+    },
+    "dawnholdMap": {
+      "title": "{keep}: {story}",
+      "story": {
+        "ground": "정원층",
+        "solar": "일광실"
+      }
     },
     "compass": {
       "N": "북",
@@ -1386,6 +1827,7 @@ export const ko_KR: EnTranslations = {
       "mouseoverCast": "파티 창에서 마우스오버 시전",
       "stickyTarget": "지면 클릭 시 대상 유지",
       "showItemLevel": "아이템 레벨 표시",
+      "showReliquaryTracker": "성물고 추적기 표시",
       "itemLevelLine": "아이템 레벨 {level}",
       "itemScoreLine": "점수 {score}",
       "showSecondaryActionBar": "보조 액션 바 표시",
@@ -1398,7 +1840,9 @@ export const ko_KR: EnTranslations = {
       "showAttackButton": "공격 버튼 표시",
       "showDailyRewardsChest": "일일 보상 보물상자 표시",
       "mobileCameraJoystick": "카메라 조이스틱",
-      "mobileLeftHanded": "왼손잡이 레이아웃"
+      "mobileLeftHanded": "왼손잡이 레이아웃",
+      "touchTapMenus": "탭 메뉴",
+      "touchTapMenusNote": "스와이프 대신 탭으로 행동, 소모품, 메뉴 컨트롤을 엽니다. 항목을 탭하면 사용하고, 컨트롤을 다시 탭하면 기본 동작을 실행하며, 바깥을 탭하면 닫힙니다."
     },
     "talentRows": {
       "tab": "선택",
@@ -1431,9 +1875,29 @@ export const ko_KR: EnTranslations = {
       "buttons": "버튼 배치",
       "resetButtons": "버튼 배치 초기화",
       "menuAction": "게임 메뉴",
+      "confirmAction": "확인 / 선택",
       "zoomIn": "확대",
       "zoomOut": "축소",
-      "help": "왼쪽 스틱으로 이동, 오른쪽 스틱으로 시점 조작. 창을 열면 화면 포인터를 사용할 수 있습니다."
+      "help": "왼쪽 스틱으로 이동, 오른쪽 스틱으로 시점 조작. 창을 열면 화면 포인터를 사용할 수 있습니다.",
+      "crossHotbar": "크로스 핫바",
+      "crossHotbarEnable": "크로스 핫바 사용",
+      "crossHotbarExpand": "더블 크로스 핫바",
+      "crossHotbarHelp": "트리거를 누르고 있으면 방향키와 페이스 버튼에 여덟 개의 액션 바 슬롯이 표시됩니다. 다른 트리거를 짧게 누르면 두 번째 세트로 전환됩니다.",
+      "crossHotbarResetLayout": "크로스 핫바 초기화",
+      "crossHotbarPosition": "{trigger} + {button}",
+      "crossHotbarOwnsButtons": "크로스 핫바가 켜져 있는 동안에는 트리거와 방향키를 크로스 핫바가 사용합니다. 여기가 아니라 아래에서 설정하세요.",
+      "cancelAction": "취소 / 뒤로",
+      "subcommandsAction": "하위 명령 / 지도",
+      "cycleHudAction": "인터페이스 전환",
+      "cycleSetAction": "단축바 세트 전환",
+      "crossHotbarDisplay": "바 표시",
+      "crossHotbarDisplayFull": "전체",
+      "crossHotbarDisplayCompact": "간소",
+      "crossHotbarDisplayMinimal": "누르고 있을 때만",
+      "crossHotbarArrangeChord": "{bumper} + {button}",
+      "crossHotbarCarrying": "{action} 을(를) 들고 있습니다. 칸에서 확인을 누르면 놓고, 취소하면 되돌립니다.",
+      "crossHotbarEditHint": "정렬 중: 확인으로 칸이나 마법서에서 액션을 집어 칸에 놓고, 취소로 칸을 비웁니다.",
+      "crossHotbarEditHelp": "왼쪽 범퍼를 누른 채 위쪽 페이스 버튼을 누르면 컨트롤러로 바를 정렬할 수 있습니다."
     },
     "perf": {
       "title": "성능 오버레이",
@@ -1552,6 +2016,7 @@ export const ko_KR: EnTranslations = {
           "render": "렌더  제출 {submit}밀리초 | 월드 {world}밀리초 | 엔티티 {entities}밀리초",
           "scene": "장면   호출 {calls}회 | 삼각형 {triangles}개 | 뷰 {views}개",
           "hitches": "끊김 {hitches} | 셰이더 {shaders} | 업로드 {uploads} | 뷰 {views}",
+          "hitchesBuild": "구역 빌드 {zoneBuilds} | 프레임 외부 {offFrame} | GC {gc}",
           "gpu": "GPU     {renderer}",
           "waitingValue": "대기 중"
         },
@@ -1603,7 +2068,10 @@ export const ko_KR: EnTranslations = {
             "eventCpu": "이벤트 처리가 프레임 시간을 사용합니다",
             "shaderCompile": "게임 중 셰이더가 컴파일되고 있습니다",
             "textureUpload": "텍스처 업로드가 게임 끊김을 일으킵니다",
+            "zoneBuild": "구역 스트리밍 빌드가 끊김을 일으킵니다",
             "viewCreate": "엔티티 뷰 생성이 끊김을 일으킵니다",
+            "gcHitch": "긴 프레임 안에서 가비지 컬렉션이 실행되고 있습니다",
+            "offFrameHitch": "긴 프레임은 렌더 콜백 외부의 작업에서 발생합니다",
             "otherHitch": "원인을 알 수 없는 긴 프레임이 남아 있습니다",
             "assetStartup": "에셋 작업이 게임 시작을 지연시킵니다",
             "longTasks": "브라우저의 긴 작업이 프레임을 막습니다",
@@ -2463,7 +2931,11 @@ export const ko_KR: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "{name}을(를) 행동 단축바에 추가",
-      "removeFromBarAria": "{name}을(를) 행동 단축바에서 제거"
+      "removeFromBarAria": "{name}을(를) 행동 단축바에서 제거",
+      "upgradeRank": "Rank {rank}",
+      "maxRank": "최대 등급",
+      "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
+      "assignAria": "{name}을(를) 놓을 칸 선택"
     },
     "nameplate": {
       "mobLevel": "{level}",
@@ -2793,7 +3265,8 @@ export const ko_KR: EnTranslations = {
       "tip": "판매 대금이나 반송된 아이템이 상인에게서 수령을 기다리고 있습니다."
     },
     "noticeboard": {
-      "empty": "게시된 내용이 없는 것 같습니다."
+      "empty": "게시된 내용이 없는 것 같습니다.",
+      "contract": "활성 계약: {title}"
     },
     "bank": {
       "title": "은행",
@@ -3723,6 +4196,9 @@ export const ko_KR: EnTranslations = {
       "pinFull": "추적기가 가득 찼습니다 (최대 {cap}개 페이지)",
       "pinAria": "HUD 추적기에 {name} 고정",
       "unpinAria": "{name} 고정 해제",
+      "trackerToggleLabel": "HUD 추적기",
+      "trackerToggleShowHint": "화면에 성물고 추적기 표시",
+      "trackerToggleHideHint": "화면에서 성물고 추적기 숨기기",
       "rarityLine": "수집가 중 {percent} 발견",
       "pageRarityLine": "수집가 중 {percent} 조명",
       "cellAriaWithRarity": "{base}, {rarity}",
@@ -4323,6 +4799,7 @@ export const ko_KR: EnTranslations = {
       "ifHighContrastBackground": "시작 화면과 캐릭터 화면 뒤에 더 단순하고 대비가 높은 배경을 씁니다.",
       "ifInvertLookY": "마우스 시점의 위아래 방향을 뒤집습니다.",
       "ifShowItemLevel": "모든 아이템 툴팁에 아이템 레벨 줄을 더합니다. 기본값은 꺼짐이며, 그러면 능력치만 보여 주는 클래식 툴팁이 유지됩니다.",
+      "ifShowReliquaryTracker": "성물고 추적기(고정한 페이지와 진행도)를 HUD에 표시할지 여부입니다. 성물고 창에 같은 역할의 눈 버튼이 있으며, 페이지를 고정하면 추적기가 다시 켜집니다.",
       "ifShowPlaytime": "캐릭터 정보에 누적 플레이 시간을 표시합니다. 기본값은 켜짐이며, 캐릭터 정보의 눈 버튼으로 기기마다 따로 감출 수 있어 방송을 하거나 스크린샷을 찍을 때 편리합니다. 어느 쪽이든 총합은 계속 쌓입니다.",
       "ifShowOwnNameplate": "다른 플레이어에게 보이는 그대로, 장식까지 그대로 내 머리 위 이름표를 그립니다. 클래식한 화면을 원한다면 꺼 두세요.",
       "ifShowPlayerNameplates": "다른 플레이어의 이름표를 그립니다. 꺼 두면 붐비는 본거지가 한결 깔끔해지며, 어느 쪽이든 현재 대상은 계속 잘 보입니다.",
@@ -4754,6 +5231,7 @@ export const ko_KR: EnTranslations = {
       "mageEleJet": "물 분사는 소환수 바에 자기 버튼으로 따로 자리합니다. 클릭하면 적 하나에게 얼어붙는 물줄기를 집중시키고, 우클릭하면(모바일에서는 길게 누르면) 준비될 때마다 정령이 알아서 쏘게 합니다.",
       "formsHeading": "변신",
       "formsNote": "드루이드는 형태를 바꾸며 싸웁니다. 드루이드의 능력은 대부분 특정 형태에 속하므로, 지금 어떤 형태인지가 무엇을 쓸 수 있는지를 결정하며, 변신에는 약간의 마나가 듭니다. 전투 중이든 아니든 원하는 만큼 자주 변신할 수 있습니다.",
+      "formsAutoUnshift": "변신한 채로 치유 주문이나 공격 주문을 시전하면 형태가 알아서 풀립니다. 이렇게 형태를 벗는 데에는 마나가 들지 않고 공용 재사용 대기시간도 쓰지 않으므로, 즉시 시전 주문은 누른 그 순간에 나갑니다. 다시 변신하는 것은 평범한 능력이라 여전히 마나와 공용 재사용 대기시간이 듭니다.",
       "formsMoonwing": "조화 전문화 드루이드는 형태를 하나 더 얻습니다. 조화 드루이드가 싸울 때 쓰는 시전자 형태인 달빛야수 변신입니다. 주문을 그대로 쓸 수 있는 유일한 동물 형태이며, 마법봉은 이 형태나 평범한 시전자 모습에서만 쓸 수 있습니다.",
       "formLine": {
         "form_bear": "방어를 맡는 형태입니다. 두꺼운 가죽을 두르고, 마나 대신 분노를 쓰며, 위협 수준을 더 쌓아 적이 계속 당신을 때리게 합니다.",
@@ -7013,6 +7491,10 @@ export const ko_KR: EnTranslations = {
   },
   "classes": {
     "warrior": "전사",
+    "elementalist": "원소술사",
+    "taoist": "도사",
+    "arbalist": "석궁사수",
+    "lancer": "창기사",
     "paladin": "성기사",
     "hunter": "사냥꾼",
     "rogue": "도적",
@@ -7022,6 +7504,10 @@ export const ko_KR: EnTranslations = {
     "warlock": "흑마법사",
     "druid": "드루이드",
     "warriorAria": "전사 직업",
+    "elementalistAria": "원소술사 직업",
+    "taoistAria": "도사 직업",
+    "arbalistAria": "석궁사수 직업",
+    "lancerAria": "창기사 직업",
     "paladinAria": "성기사 직업",
     "hunterAria": "사냥꾼 직업",
     "rogueAria": "도적 직업",
@@ -7171,6 +7657,7 @@ export const ko_KR: EnTranslations = {
       "shopMarksRequired": "{name}을(를) 구매하려면 탐굴 증표 {marks}개가 필요합니다.",
       "shopSealPremiumOnly": "이 봉인은 대가의 손에만 응합니다. 최상급 베팅만이 열 수 있습니다.",
       "passageSealed": "통로가 봉인되어 있습니다.",
+      "enemiesRemain": "남은 적을 먼저 처치하세요.",
       "moveCloserPassage": "통로에 더 가까이 다가가세요.",
       "moveCloserChest": "상자에 더 가까이 다가가세요.",
       "moveCloserReliquary": "성물함에 더 가까이 다가가세요.",
@@ -7944,6 +8431,31 @@ export const ko_KR: EnTranslations = {
       "warlock": "흑마법사는 악마를 소환하고 저주와 지속 피해 마법을 걸며 적에게서 생명력을 흡수해 버팁니다.",
       "druid": "드루이드는 자연의 힘으로 치유하고 적을 묶으며 동물 형태로 변신해 방어하거나 피해를 줍니다."
     },
+    "mir4": {
+      "labels": {
+        "damage": "피해",
+        "combatRange": "전투 거리",
+        "startingSkills": "시작 기술"
+      },
+      "damage": {
+        "physical": "물리",
+        "magic": "마법"
+      },
+      "range": {
+        "melee": "근접",
+        "medium": "중거리",
+        "long": "원거리",
+        "extended": "확장 근접"
+      },
+      "weapons": {
+        "heavySword": "대검",
+        "largeStaff": "대형 지팡이",
+        "shortStaff": "단형 지팡이",
+        "arbalest": "석궁",
+        "spear": "창"
+      },
+      "aria": "{className} 직업 정보: {damage} 피해, {range} 거리, 무기 {weapon}, 시작 기술 {skills}개."
+    },
     "aria": "{className} 직업 세부 정보: 역할 {role}. 시작 능력치: 힘 {str}, 민첩 {agi}, 체력 {sta}, 지능 {int}, 정신력 {spi}.",
     "statBarAria": "{stat}: {value}/25"
   },
@@ -8702,6 +9214,8 @@ export const ko_KR: EnTranslations = {
     "actionBar": {
       "attackName": "공격",
       "attackTooltip": "대상에게 자동 공격을 켜거나 끕니다. 적을 우클릭해도 공격합니다.",
+      "autoBattleName": "자동 전투",
+      "autoBattleTooltip": "현재 위치 주변에서 자동 대상 탐색, 이동 및 기술 순환을 전환합니다.",
       "attackRemoveHint": "우클릭하면 바에서 제거하고 칸을 비웁니다.",
       "emptySlot": "빈 칸",
       "slotAria": "행동 칸 {slot}: {ability}",
@@ -8834,6 +9348,8 @@ export const ko_KR: EnTranslations = {
       "accept": "수락",
       "decline": "거절",
       "continue": "계속",
+      "autoContinue": "Dialogue continues automatically",
+      "skipDialogue": "Skip dialogue",
       "done": "완료",
       "completeQuest": "퀘스트 완료",
       "turnIn": "보고",
@@ -9148,6 +9664,226 @@ export const ko_KR: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "공허의 일격",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
+      },
+      "mir4_skill_1104": {
+        "name": "열상 일격",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 1.2초 동안 넘어뜨립니다."
+      },
+      "mir4_skill_1304": {
+        "name": "몸통 박치기",
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 12% 증가시킵니다."
+      },
+      "mir4_skill_1401": {
+        "name": "대지 강타",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.8초 동안 넘어뜨립니다."
+      },
+      "mir4_skill_1501": {
+        "name": "질풍 일격",
+        "description": "적 하나에게 영향을 주고 대상을 3.2초 동안 35% 느려지게 합니다."
+      },
+      "mir4_skill_2101": {
+        "name": "프리즘 광선",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.4초 동안 빙결시킵니다."
+      },
+      "mir4_skill_2111": {
+        "name": "잿불 창",
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 8% 증가시킵니다."
+      },
+      "mir4_skill_2301": {
+        "name": "징벌의 인장",
+        "description": "적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다."
+      },
+      "mir4_skill_2501": {
+        "name": "현현된 핵",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 8미터 안의 다른 적 최대 4명에게 60%의 피해를 주고 대상을 1.8초 동안 빙결시킵니다."
+      },
+      "mir4_skill_2503": {
+        "name": "마법 방패",
+        "description": "10초 동안 받는 피해가 22% 감소합니다."
+      },
+      "mir4_skill_3101": {
+        "name": "인장 연계",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 4초 동안 대상이 받는 피해를 10% 증가시킵니다."
+      },
+      "mir4_skill_3104": {
+        "name": "토템 1010",
+        "description": "적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다."
+      },
+      "mir4_skill_3301": {
+        "name": "토템 인장 II",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다."
+      },
+      "mir4_skill_3503": {
+        "name": "비취 연꽃",
+        "description": "최대 생명력의 18%를 회복합니다."
+      },
+      "mir4_skill_3506": {
+        "name": "토템 인장 I",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 1.6초 동안 이동 불가 상태로 만듭니다."
+      },
+      "mir4_skill_4101": {
+        "name": "폭발 4101",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 3.5초 동안 대상이 주는 피해를 45% 감소시킵니다."
+      },
+      "mir4_skill_4102": {
+        "name": "연계 4102",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.625미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 3.5초 동안 30% 느려지게 합니다."
+      },
+      "mir4_skill_4103": {
+        "name": "Twin Echo",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.5미터 안의 다른 적 최대 4명에게 55%의 피해를 주고 5초 동안 대상이 주는 피해를 60% 감소시킵니다."
+      },
+      "mir4_skill_4106": {
+        "name": "돌진 4106",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 2초 동안 기절시킵니다."
+      },
+      "mir4_skill_4107": {
+        "name": "섬광 화살",
+        "description": "적 하나에게 영향을 주고 3.2초 동안 대상이 주는 피해를 45% 감소시킵니다."
+      },
+      "mir4_skill_5101": {
+        "name": "찌르기 5101",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 1초 동안 넘어뜨립니다."
+      },
+      "mir4_skill_5104": {
+        "name": "휩쓸기 5104",
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 14% 증가시킵니다."
+      },
+      "mir4_skill_5201": {
+        "name": "타격 5201",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.1초 동안 기절시킵니다."
+      },
+      "mir4_skill_5301": {
+        "name": "사슬 5301",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
+      },
+      "mir4_skill_5401": {
+        "name": "격노의 폭풍",
+        "description": "적 하나에게 영향을 주고 대상을 1초 동안 넘어뜨립니다."
+      },
+      "mir4_ultimate_1": {
+        "name": "궁극기",
+        "description": "3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
+      },
+      "mir4_ultimate_2": {
+        "name": "궁극기",
+        "description": "4회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
+      },
+      "mir4_ultimate_3": {
+        "name": "궁극기",
+        "description": "3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
+      },
+      "mir4_ultimate_4": {
+        "name": "궁극기",
+        "description": "3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
+      },
+      "mir4_ultimate_5": {
+        "name": "궁극기",
+        "description": "2회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "중갑",
+        "description": "최대 생명력이 8% 증가합니다."
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "무기 숙련",
+        "description": "물리 공격이 6% 증가합니다."
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "Iron Skin",
+        "description": "물리 방어가 8%, 마법 방어가 6% 증가합니다."
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "투지",
+        "description": "최대 생명력과 물리 공격이 4% 증가합니다."
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "불굴의 의지",
+        "description": "최대 생명력, 물리 방어, 마법 방어가 5% 증가합니다."
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "Mana Well",
+        "description": "최대 마나가 10% 증가합니다."
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "비전 지능",
+        "description": "마법 공격이 7% 증가합니다."
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "원소 보호",
+        "description": "물리 방어와 마법 방어가 6% 증가합니다."
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "집중 시전",
+        "description": "최대 마나가 5%, 마법 공격이 4% 증가합니다."
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "비전 승화",
+        "description": "최대 마나가 5%, 마법 공격이 6%, 물리 방어와 마법 방어가 3% 증가합니다."
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "영혼의 그릇",
+        "description": "최대 생명력이 4%, 최대 마나가 7% 증가합니다."
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "쌍둥이 길",
+        "description": "물리 공격과 마법 공격이 4% 증가합니다."
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "성스러운 수호",
+        "description": "물리 방어와 마법 방어가 6% 증가합니다."
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "고요한 마음",
+        "description": "최대 생명력이 4%, 최대 마나가 5% 증가합니다."
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "천상의 조화",
+        "description": "최대 생명력, 최대 마나, 물리 공격, 마법 공격, 물리 방어, 마법 방어가 4% 증가합니다."
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "독수리의 눈",
+        "description": "물리 공격이 3%, 명중이 5% 증가합니다."
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "탄도 숙련",
+        "description": "물리 공격이 7% 증가합니다."
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "자연의 수호",
+        "description": "최대 생명력, 물리 방어, 마법 방어가 5% 증가합니다."
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "사냥꾼의 본능",
+        "description": "물리 공격과 회피가 5% 증가합니다."
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "완벽한 사격",
+        "description": "최대 생명력이 3%, 물리 공격이 6%, 명중이 5% 증가합니다."
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "전쟁 단련",
+        "description": "최대 생명력이 5%, 물리 공격과 마법 공격이 3% 증가합니다."
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "창 숙련",
+        "description": "물리 공격과 마법 공격이 5% 증가합니다."
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "선봉 갑옷",
+        "description": "물리 방어와 마법 방어가 6% 증가합니다."
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "전투 리듬",
+        "description": "최대 마나, 물리 공격, 마법 공격이 4% 증가합니다."
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "용의 선봉",
+        "description": "최대 생명력이 4%, 물리 공격, 마법 공격, 물리 방어, 마법 방어가 5% 증가합니다."
+      },
       "sport_kick": {
         "name": "킥",
         "description": "조준 지점을 향해 공을 땅볼로 차 보냅니다."
@@ -9980,7 +10716,7 @@ export const ko_KR: EnTranslations = {
       },
       "fear": {
         "name": "번민",
-        "description": "적에게 공포를 심어 최대 8초 동안 떨게 만듭니다. 피해를 받으면 효과가 해제됩니다."
+        "description": "적에게 공포를 심어 최대 5초 동안 떨게 만듭니다. 대상 최대 생명력의 8%에 해당하는 누적 피해를 받으면 효과가 해제됩니다."
       },
       "searing_pain": {
         "name": "지지기",
@@ -10058,7 +10794,7 @@ export const ko_KR: EnTranslations = {
       "ferocious_bite": {
         "name": "유혈 물어뜯기",
         "description": "결정타로 {damage}의 피해를 입힙니다. 늑대 변신 전용.",
-        "specNote_feral": "적중한 공격마다 오랜 피가 1단계 쌓입니다. 오랜 피 3단계에서 이 버튼이 피의 수확으로 변합니다: 91 더하기 연계 점수당 55의 피해를 입히는 물어뜯기로, 자신의 저미기와 피의 균열이 앞으로 입힐 남은 피해를 즉시 모두 입히고 기력 30을 회복합니다."
+        "specNote_feral": "적중한 공격마다 오랜 피가 1단계 쌓입니다. 오랜 피 3단계에서 이 버튼이 피의 수확으로 변합니다: 오랜 피를 소모하는 더 강력한 물어뜯기로, 자신의 저미기와 피의 균열이 앞으로 입힐 남은 피해를 즉시 모두 입히고 기력을 회복합니다."
       },
       "swipe": {
         "name": "휩쓰는 발톱",
@@ -10121,7 +10857,7 @@ export const ko_KR: EnTranslations = {
       },
       "tigers_fury": {
         "name": "늑대의 피",
-        "description": "전투력을 {duration}초 동안 {buff}만큼 증가시킵니다. 늑대 변신 전용."
+        "description": "기력을 {rage}만큼 즉시 회복하고 전투력을 {duration}초 동안 {buff}만큼 증가시킵니다. 늑대 변신 전용."
       },
       "rip": {
         "name": "피의 균열",
@@ -10226,7 +10962,7 @@ export const ko_KR: EnTranslations = {
       },
       "ossuary_mark": {
         "name": "납골 표식",
-        "description": "적에게 12초 동안 표식을 남겨 당신과 당신의 언데드가 입힌 피해의 20%를 저장합니다. 다시 시전하면 표식을 터뜨립니다. 표식이 남은 적이 죽으면 6미터 안에서 폭발하고 영혼 조각 1개를 생성합니다."
+        "description": "적에게 15초 동안 표식을 남겨 당신과 당신의 언데드가 입힌 피해의 20%를 저장합니다. 다시 시전하면 표식을 터뜨립니다. 표식이 남은 적이 죽으면 6야드 안에서 폭발하고 영혼 조각 1개를 생성합니다."
       },
       "unholy_command": {
         "name": "부정한 명령",
@@ -10325,8 +11061,8 @@ export const ko_KR: EnTranslations = {
         "description": "달빛야수 형상을 취해 돌아올 때까지 주문 시전을 강화합니다. 다시 시전하면 일반 형상으로 돌아옵니다. (조화 전문화 상징)"
       },
       "feral_charge": {
-        "name": "야성의 돌진",
-        "description": "적에게 돌진하고 1초 동안 묶습니다. 8-25미터 거리. (야성 전문화 상징)"
+        "name": "원시 쇄도",
+        "description": "원시의 힘을 폭발시킵니다. 늑대 변신 상태에서는 10초 동안 기력 회복 속도가 100% 증가합니다. 큰곰 변신 상태에서는 즉시 분노를 50 생성합니다. (야성 전문화 상징)"
       },
       "swiftmend": {
         "name": "신속한 치유",
@@ -10342,7 +11078,7 @@ export const ko_KR: EnTranslations = {
       },
       "redharvest": {
         "name": "피의 수확",
-        "description": "오랜 피 3단계를 소모합니다: {damage}의 피해를 입히고, 자신의 저미기와 피의 균열이 앞으로 입힐 남은 피해를 즉시 모두 입히며, 두 출혈 효과를 제거하고 기력 30을 회복합니다. 연계 점수가 없어도 사용할 수 있습니다."
+        "description": "오랜 피 3단계를 소모합니다: {damage}의 피해를 입히고, 자신의 저미기와 피의 균열이 앞으로 입힐 남은 피해를 즉시 모두 입히며, 두 출혈 효과를 제거하고 기력을 {rage}만큼 회복합니다. 연계 점수가 없어도 사용할 수 있습니다."
       },
       "marrowbreak": {
         "name": "골수분쇄",
@@ -10582,7 +11318,7 @@ export const ko_KR: EnTranslations = {
       },
       "evocation": {
         "name": "에테르샘",
-        "description": "마나를 빠르게 회복합니다. (마법사 특성)"
+        "description": "6초 동안 정신을 집중합니다. 매초 마나를 100 회복하고 주문력이 8 증가합니다. 이 효과는 정신 집중 중 중첩되며 15초 동안 지속됩니다. (마법사 특성)"
       },
       "flurry_of_knives": {
         "name": "칼날 난무",
@@ -10590,7 +11326,7 @@ export const ko_KR: EnTranslations = {
       },
       "frenzied_regeneration": {
         "name": "야성 치유",
-        "description": "10초에 걸쳐 생명력을 180 회복합니다. 곰 변신 상태에서만 사용할 수 있습니다. (드루이드 특성)"
+        "description": "10초에 걸쳐 최대 생명력의 40%를 회복합니다. 곰 변신 상태에서만 사용할 수 있습니다. (드루이드 특성)"
       },
       "frost_trap": {
         "name": "서리덫",
@@ -10610,11 +11346,11 @@ export const ko_KR: EnTranslations = {
       },
       "howl_of_terror": {
         "name": "공포의 울부짖음",
-        "description": "주위 적을 최대 3초 동안 공포에 빠뜨립니다. 피해를 받으면 효과가 해제될 수 있습니다. (흑마법사 특성)"
+        "description": "주위 적을 최대 5초 동안 공포에 빠뜨립니다. 대상 최대 생명력의 8%에 해당하는 누적 피해를 받으면 공포가 해제됩니다. (흑마법사 특성)"
       },
       "ice_block": {
         "name": "차가운 관",
-        "description": "자신을 얼음 속에 가두어 엄청난 피해를 흡수합니다. 8초 동안 지속됩니다. (마법사 특성)"
+        "description": "8초 동안 단단한 얼음 속에 자신을 가두어 모든 피해에 면역이 됩니다. 이미 활성화된 일반적인 해로운 효과를 제거하고 새로운 일반 제어 효과가 적용되는 것을 방지합니다. 기절 또는 변이 상태에서도 사용할 수 있습니다. 갇힌 동안에는 행동할 수 없습니다. 다시 사용하면 취소됩니다. (마법사)"
       },
       "inner_focus": {
         "name": "고요한 마음",
@@ -10823,7 +11559,7 @@ export const ko_KR: EnTranslations = {
       },
       "prowl": {
         "name": "몰래 접근",
-        "description": "늑대 변신 상태에서 은신하고 이동 속도가 50% 감소합니다. 전투 중에는 사용할 수 없습니다."
+        "description": "늑대 변신 상태에서 은신하고 이동 속도가 5% 감소합니다. 전투 중에는 사용할 수 없습니다."
       },
       "rake": {
         "name": "저미기",
@@ -12378,6 +13114,9 @@ export const ko_KR: EnTranslations = {
       "pristine_claw": {
         "name": "온전한 발톱"
       },
+      "dawnhold_posy": {
+        "name": "던홀드 정원 꽃다발"
+      },
       "conjured_water4": {
         "name": "창조된 샘물"
       },
@@ -13222,6 +13961,15 @@ export const ko_KR: EnTranslations = {
       },
       "training_dummy": {
         "name": "훈련용 허수아비"
+      },
+      "friendly_player_dummy": {
+        "name": "아군 플레이어 허수아비"
+      },
+      "normal_boss_dummy": {
+        "name": "일반 보스 허수아비"
+      },
+      "heroic_boss_dummy": {
+        "name": "영웅 보스 허수아비"
       },
       "ridge_stalker": {
         "name": "산등성이 추적자"
@@ -16842,6 +17590,11 @@ export const ko_KR: EnTranslations = {
         "enterText": "공기가 차가워집니다. 아래에서 거대한 무언가가 숨 쉽니다...",
         "leaveText": "산바람 속으로 비틀거리며 돌아옵니다."
       },
+      "campaign_trial_room": {
+        "name": "캠페인 시련",
+        "enterText": "캠페인 시련에 입장합니다.",
+        "leaveText": "캠페인 시련을 떠납니다."
+      },
       "nythraxis_crypt": {
         "name": "버려진 납골당",
         "enterText": "버려진 납골당의 문턱을 넘습니다.",
@@ -16861,6 +17614,11 @@ export const ko_KR: EnTranslations = {
         "name": "마지막 요새",
         "enterText": "마지막 요새의 차갑고 고요한 회랑에 발을 들입니다.",
         "leaveText": "요새의 문을 닫고 드레이크랜드의 바람 속으로 돌아갑니다."
+      },
+      "dawnhold_castle": {
+        "name": "던홀드 성",
+        "enterText": "꽃향기 가득한 던홀드 성의 따뜻한 홀 안으로 들어섭니다.",
+        "leaveText": "햇살 가득한 정원 잔디밭으로 다시 나옵니다."
       },
       "drowned_temple": {
         "name": "익사한 신전",

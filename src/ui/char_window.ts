@@ -19,11 +19,12 @@
 
 import { audio } from '../game/audio';
 import { ITEMS } from '../sim/data';
-import { type EquipSlot, isMechWearer } from '../sim/types';
+import { type EquipSlot, isMechWearer, type PlayerClass } from '../sim/types';
 import type { IWorld } from '../world_api';
 import { STAT_PANELS } from './char_stats_view';
 import { buildPaperdollView, type PaperdollSlot } from './char_view';
 import { craftNameText } from './craft_name_view';
+import { currencyIconHtml } from './currency_art';
 import { markDialogRoot } from './dialog_root';
 import { classDisplayName, itemDisplayName } from './entity_i18n';
 import { dropRequiredLevel, paperdollDropAction } from './equip_drop_core';
@@ -35,9 +36,17 @@ import { formatNumber, type TranslationKey, t, tPlural } from './i18n';
 import { iconDataUrl, QUALITY_COLOR } from './icons';
 import type { ItemDragState } from './item_drag_state';
 import { wornTooltipInstance } from './item_instance_tooltip';
+import type { Mir4PreviewArmorLoadout } from './mir4_character_view';
+import { paintMir4CharacterWindow } from './mir4_equipment_window_adapter';
 import type { PainterHostPresentation } from './painter_host';
 import { playtimeParts, playtimeShape } from './playtime_view';
-import { hydratePortraits, modularLookFor, portraitChipHtml } from './portrait_chip';
+import {
+  hydratePortraits,
+  isComposedPortraitKey,
+  modularLookFor,
+  onPortraitUpdate,
+  portraitChipHtml,
+} from './portrait_chip';
 import { archetypeImageUrl, professionImageUrl } from './profession_art';
 import { qualityGlowShadow } from './quality_glow';
 import { tSim } from './sim_i18n';
@@ -150,7 +159,11 @@ export interface CharWindowDeps extends PainterHostPresentation {
   /** End a drag-to-unequip: clear the HUD slot and the bags drop-target hint. */
   endUnequipDrag(): void;
   /** Mount the shared 3D turntable into the model panel (HUD-owned lifecycle). */
-  renderPreview(): void;
+  renderPreview(
+    equipmentOverride?: Readonly<Partial<Record<EquipSlot, string | null>>>,
+    visualClass?: PlayerClass,
+    wornOverride?: Mir4PreviewArmorLoadout,
+  ): void;
   /** Paint the cosmetic skin picker into the skin row (HUD-owned cosmetics). */
   renderSkinPicker(): void;
   openPlayerCard(): void;
@@ -186,7 +199,9 @@ const SHARE_GLYPH =
 export class CharWindow {
   private openerFocus: HTMLElement | null = null;
 
-  constructor(private readonly deps: CharWindowDeps) {}
+  constructor(private readonly deps: CharWindowDeps) {
+    this.watchComposedPortrait();
+  }
 
   get isOpen(): boolean {
     return this.deps.root().style.display === 'block';
@@ -216,6 +231,17 @@ export class CharWindow {
     if (this.isOpen) this.render();
   }
 
+  /** The title chip carries the player's own COMPOSED face, and that portrait
+   *  is captured off the frame that asks for it: a miss paints the class crest,
+   *  so the open sheet rebuilds once the real headshot lands. hydratePortraits
+   *  cannot upgrade this one in place (a look does not fit in the chip's data
+   *  attributes, which is why it is marked composed and skipped there). */
+  private watchComposedPortrait(): void {
+    onPortraitUpdate((_visualKey, _skin, key) => {
+      if (isComposedPortraitKey(key)) this.renderIfOpen();
+    });
+  }
+
   render(): void {
     const el = this.deps.root();
     // The 2 Hz staleness latch (Hud.refreshCharSheetIfChanged) makes mid-focus
@@ -234,6 +260,21 @@ export class CharWindow {
     const hadFocus = focusedControl !== null;
     const world = this.deps.world();
     const p = world.player;
+    if (
+      paintMir4CharacterWindow({
+        ...this.deps,
+        root: el,
+        world,
+        close: () => this.close(),
+        focusedAct,
+        hadFocus,
+        afterEquipmentChange: () => {
+          this.deps.renderBags();
+          this.renderIfOpen();
+        },
+      })
+    )
+      return;
     const className = classDisplayName(world.cfg.playerClass);
     const level = formatNumber(p.level, { maximumFractionDigits: 0 });
     // WCAG 2.2 AA: name the focus-trapped root via the character title span.
@@ -248,7 +289,7 @@ export class CharWindow {
       world.hobbyCraft !== null
         ? `<span class="panel-subtitle char-hobby-craft">${esc(t('hudChrome.archetypeTitle.hobbyLabel'))}: ${esc(hobbyCraft)}</span>`
         : '';
-    let html = `<div class="panel-title char-title-portrait">${portraitChipHtml({ cls: world.cfg.playerClass, skin: p.skin ?? 0, name: p.name, variant: 'md', catalog: p.skinCatalog, look: isMechWearer(world.player) ? null : modularLookFor(world.player) })}<span class="char-title-text" id="char-title">${esc(p.name)} <span class="panel-subtitle">${esc(t('itemUi.equipment.levelClass', { level, className }))}</span><span class="panel-subtitle char-archetype-title">${archetypeCrest}${esc(t('hudChrome.archetypeTitle.label'))}: ${esc(archetypeTitle)}</span>${hobbyRow}<span class="panel-subtitle char-honor-balance">${esc(t('hudChrome.warfare.balance', { amount: formatNumber(world.honor, { maximumFractionDigits: 0 }) }))}</span></span><button type="button" class="x-btn" data-close aria-label="${esc(t('hud.options.returnToGame'))}">${svgIcon('close')}</button></div>`;
+    let html = `<div class="panel-title char-title-portrait">${portraitChipHtml({ cls: world.cfg.playerClass, skin: p.skin ?? 0, name: p.name, variant: 'md', catalog: p.skinCatalog, look: isMechWearer(world.player) ? null : modularLookFor(world.player) })}<span class="char-title-text" id="char-title">${esc(p.name)} <span class="panel-subtitle">${esc(t('itemUi.equipment.levelClass', { level, className }))}</span><span class="panel-subtitle char-archetype-title">${archetypeCrest}${esc(t('hudChrome.archetypeTitle.label'))}: ${esc(archetypeTitle)}</span>${hobbyRow}<span class="panel-subtitle char-honor-balance">${currencyIconHtml('honor')}${esc(t('hudChrome.warfare.balance', { amount: formatNumber(world.honor, { maximumFractionDigits: 0 }) }))}</span></span><button type="button" class="x-btn" data-close aria-label="${esc(t('hud.options.returnToGame'))}">${svgIcon('close')}</button></div>`;
     html += `<div class="paperdoll">
       <div class="equip-col" id="equip-col-left"></div>
       <div class="char-model-panel">
@@ -455,7 +496,7 @@ export class CharWindow {
       const unequip = document.createElement('button');
       unequip.type = 'button';
       unequip.className = 'equip-unequip-btn';
-      unequip.textContent = '×';
+      unequip.innerHTML = svgIcon('close');
       unequip.setAttribute(
         'aria-label',
         t('hudChrome.paperdoll.unequipAria', { item: itemDisplayName(item) }),

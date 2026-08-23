@@ -779,7 +779,391 @@ export const de_DE: EnTranslations = {
     "questTracker": {
       "count": "({count})",
       "collapseHint": "Quests einklappen",
-      "expandHint": "Quests ausklappen"
+      "expandHint": "Quests ausklappen",
+      "mir4": {
+        "firstTraces": "First Traces",
+        "reachTarek": "Reach Tarek",
+        "inspectClues": "Inspect clues",
+        "returnToTarek": "Return to Tarek",
+        "pausedSuffix": "(auto journey paused by manual control)",
+        "startAutoJourney": "Start auto journey",
+        "stopAutoJourney": "Stop auto journey"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "Meadow Courser",
+          "moss-boar": "Moss Boar",
+          "brook-stag": "Brook Stag",
+          "gray-wolf": "Gray Wolf",
+          "dun-packhorse": "Dun Packhorse",
+          "birch-doe": "Birch Doe",
+          "red-maned-pony": "Red Maned Pony",
+          "lowland-elk": "Lowland Elk",
+          "field-lynx": "Field Lynx",
+          "tawny-mastiff": "Tawny Mastiff",
+          "dune-jackal": "Dune Jackal",
+          "reed-puma": "Reed Puma",
+          "clay-ox": "Clay Ox",
+          "valley-buffalo": "Valley Buffalo",
+          "shaggy-yak": "Shaggy Yak",
+          "creek-lizard": "Creek Lizard",
+          "shellback-tortoise": "Stone-Shell Tortoise",
+          "plains-ostrich": "Plains Ostrich",
+          "dusk-emu": "Dusk Rhea",
+          "copper-ant-carrier": "Copper Ant Carrier",
+          "mist-moose": "Mist Moose",
+          "leaf-panther": "Leaf Panther",
+          "turf-rhino": "Turf Rhino",
+          "valley-monitor": "Valley Monitor",
+          "granite-ibex": "Granite Ibex",
+          "silver-dapple-mare": "Silver Dapple Mare",
+          "marsh-stag": "Marsh Stag",
+          "snow-mane-lion": "Snow-Maned Lion",
+          "ember-fox": "Ember Fox",
+          "striped-hyena": "Striped Hyena",
+          "iron-tusk-boar": "Iron Tusk Boar",
+          "cedar-bear": "Cedar Bear",
+          "swamp-hippo": "Swamp Hippo",
+          "thorn-iguana": "Thorn Iguana",
+          "dryland-crocodile": "Dryland Crocodile",
+          "horned-cassowary": "Horned Cassowary",
+          "bronze-raptor": "Bronze Raptor",
+          "amber-scarab": "Amber Scarab",
+          "dune-scorpion": "Dune Scorpion",
+          "root-golem": "Root Golem",
+          "amber-bear": "Amber Bear",
+          "sunset-tiger": "Sunset Tiger",
+          "root-drake": "Root Drake",
+          "hill-griffin": "Hill Griffin",
+          "obsidian-zebra": "Obsidian Zebra",
+          "stormhorn-ram": "Storm-Horn Ram",
+          "dusk-elk": "Dusk Elk",
+          "frost-warg": "Frost Warg",
+          "basalt-rhino": "Basalt Rhino",
+          "tundra-mammoth": "Tundra Mammoth",
+          "crystal-ankylosaur": "Crystal Ankylosaur",
+          "ember-salamander": "Ember Salamander",
+          "thunder-komodo": "Thunder Komodo",
+          "moon-crocodile": "Moon Crocodile",
+          "razorbeak-strider": "Razor-Beaked Strider",
+          "plume-raptor": "Plume Raptor",
+          "glass-mantis": "Glass Mantis",
+          "thunder-beetle": "Thunder Beetle",
+          "iron-sentinel": "Iron Sentinel",
+          "mossstone-colossus": "Moss-Stone Colossus",
+          "eclipse-lion": "Eclipse Lion",
+          "crimson-wyvern": "Crimson Wyvern",
+          "astral-stag": "Astral Stag",
+          "jade-basilisk": "Jade Basilisk",
+          "solar-wolf": "Solar Wolf",
+          "forest-chimera": "Forest Chimera",
+          "tempest-courser": "Tempest Courser",
+          "thorn-elephant": "Thorn Elephant",
+          "void-spider": "Void Spider",
+          "rune-golem": "Rune Golem",
+          "dawn-phoenix": "Dawn Phoenix",
+          "imperial-griffin": "Imperial Griffin",
+          "stone-leviathan": "Stone Leviathan",
+          "void-unicorn": "Void Unicorn",
+          "golden-manticore": "Golden Manticore",
+          "imperial-tiger": "Imperial Tiger",
+          "dawn-mammoth": "Dawn Mammoth",
+          "magma-drake": "Magma Drake",
+          "crown-scorpion": "Crown Scorpion",
+          "sunforged-colossus": "Sunforged Colossus",
+          "ground-dragon": "Ground Dragon",
+          "eternal-phoenix": "Eternal Phoenix",
+          "celestial-kirin": "Celestial Kirin",
+          "firmament-behemoth": "Firmament Lion",
+          "time-hydra": "Time Hydra"
+        },
+        "spirits": {
+          "spirit-common-01": "Meadow Spark",
+          "spirit-common-02": "Brook Breeze",
+          "spirit-common-03": "Watchful Leaf",
+          "spirit-common-04": "Stone Echo",
+          "spirit-uncommon-01": "Dawn Glow",
+          "spirit-uncommon-02": "Mist Nymph",
+          "spirit-uncommon-03": "Moss Guardian",
+          "spirit-uncommon-04": "Valley Salamander",
+          "spirit-rare-01": "Amber Fox",
+          "spirit-rare-02": "Sunset Owl",
+          "spirit-rare-03": "Root Drake",
+          "spirit-rare-04": "Hills Oracle",
+          "spirit-epic-01": "Eclipse Avatar",
+          "spirit-epic-02": "Crimson Ifrit",
+          "spirit-epic-03": "Astral Stag",
+          "spirit-epic-04": "Jade Sentinel",
+          "spirit-epic-05": "Solar Wolf",
+          "spirit-epic-06": "Ethereal Chimera",
+          "spirit-legendary-01": "Earth Titan",
+          "spirit-legendary-02": "Dawn Phoenix",
+          "spirit-legendary-03": "Imperial Archon",
+          "spirit-legendary-04": "Crystal Leviathan",
+          "spirit-legendary-05": "Void Unicorn",
+          "spirit-legendary-06": "Golden Manticore",
+          "spirit-mythical-01": "Primordial Soul",
+          "spirit-mythical-02": "Eternal Phoenix",
+          "spirit-mythical-03": "Celestial Kirin",
+          "spirit-mythical-04": "Firmament Behemoth",
+          "spirit-mythical-05": "Abyssal Seraph",
+          "spirit-mythical-06": "Time Hydra"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "Wandering Spark",
+          "spirit-skill-1-02": "Dusk Instinct",
+          "spirit-skill-1-03": "Vital Dew",
+          "spirit-skill-1-04": "Mana Breath",
+          "spirit-skill-2-01": "Rising Flare",
+          "spirit-skill-2-02": "Mist Fang",
+          "spirit-skill-2-03": "Restoring Sap",
+          "spirit-skill-2-04": "Arcane Pulse",
+          "spirit-skill-3-01": "Amber Rupture",
+          "spirit-skill-3-02": "Sunset Judgment",
+          "spirit-skill-3-03": "Vital Bond",
+          "spirit-skill-3-04": "Root Spring",
+          "spirit-skill-4-01": "Eclipse Ray",
+          "spirit-skill-4-02": "Crimson Fury",
+          "spirit-skill-4-03": "Astral Grace",
+          "spirit-skill-4-04": "Jade Orb",
+          "spirit-skill-4-05": "Solar Cut",
+          "spirit-skill-4-06": "Ethereal Focus",
+          "spirit-skill-5-01": "Tectonic Impact",
+          "spirit-skill-5-02": "Reborn Flame",
+          "spirit-skill-5-03": "Imperial Verdict",
+          "spirit-skill-5-04": "Crystal Tide",
+          "spirit-skill-5-05": "Void Rift",
+          "spirit-skill-5-06": "Golden Crown",
+          "spirit-skill-6-01": "Genesis",
+          "spirit-skill-6-02": "Eternal Return",
+          "spirit-skill-6-03": "Celestial Mandate",
+          "spirit-skill-6-04": "Weight of the Firmament",
+          "spirit-skill-6-05": "Abyssal Spiral",
+          "spirit-skill-6-06": "Absolute Moment"
+        }
+      },
+      "ultimateGauge": "Ultimate gauge",
+      "ultimateGaugeStatus": "Ultimate gauge: {value} of {max}",
+      "ultimateReadyAnnouncement": "Ultimate ready.",
+      "achievements": {
+        "title": "Achievements",
+        "close": "Close achievements",
+        "summary": "{claimed}/{total} rewards claimed",
+        "balances": "Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}",
+        "levelTitle": "Level {level}",
+        "levelDescription": "Reach level {level}.",
+        "progressAria": "Level progress: {current}/{target}",
+        "progressText": "{current}/{target}",
+        "rewardCopper": "{amount} copper",
+        "rewardDarksteel": "{amount} Darksteel",
+        "rewardEffectPoints": "{amount} Effect Points",
+        "rewardSkillTomes": "{amount} Skill Tomes",
+        "rewards": "Rewards: {rewards}",
+        "claim": "Claim",
+        "claimed": "Claimed",
+        "locked": "Reach level {level}",
+        "previousGrade": "Claim the previous grade first",
+        "claimAria": "Claim the level {level} achievement reward"
+      },
+      "questLog": {
+        "narrative": "Investigate the three clue sites around the ford, then return to Tarek Two Bridges.",
+        "giverName": "Tarek Two Bridges",
+        "emptyHint": "Find Tarek Two Bridges in the M01 settlement, or start auto journey.",
+        "completedHint": "First Traces is complete. The remaining campaign quests are not active yet."
+      },
+      "campaign": {
+        "questTitle": "Campaign {id}",
+        "narrative": "Complete the current campaign objectives for {id}.",
+        "contact": "Campaign contact",
+        "objective": {
+          "returnToContact": "Return to the campaign contact",
+          "talk": "Speak with the campaign contact",
+          "deliver": "Deliver the requested items",
+          "travel": "Travel to the marked objective",
+          "inspect": "Inspect the marked evidence",
+          "gather": "Gather the requested resources",
+          "defend": "Defend the marked objective",
+          "combat": "Defeat the marked enemies",
+          "escort": "Escort the marked ally",
+          "escortSupplies": "Escort the supply group",
+          "dungeon": "Clear the campaign dungeon",
+          "craft": "Craft the requested supplies",
+          "tutorial": "Complete the system lesson",
+          "interact": "Interact with the marked objective",
+          "complete": "Complete the current objective"
+        }
+      },
+      "characterTitle": "Character",
+      "awaitingState": "Waiting for authoritative character data...",
+      "combatPowerLine": "Combat Power {value}",
+      "equipmentVisualShell": "World of ClaudeCraft appearance with MIR4 combat attributes",
+      "equipmentTierGrade": "Tier {tier}, Grade {grade}",
+      "equipmentRequiredLevel": "Requires level {level}",
+      "unequipHint": "Click the X or right-click to unequip.",
+      "unequipAria": "Unequip {item}",
+      "equipHint": "Click to equip.",
+      "equipAria": "Equip {item}",
+      "inventoryEquipment": "Equipment",
+      "inventoryRuntimeItems": "Native World of ClaudeCraft Items",
+      "inventoryCollectionTickets": "Collection Tickets",
+      "inventoryMaterials": "Refinement Materials",
+      "noUnequippedEquipment": "No unequipped equipment.",
+      "materialCount": "Owned: {count}",
+      "mountTicketDawn": "Dawn Mount Ticket",
+      "mountTicketTwilight": "Twilight Mount Ticket",
+      "mountTicketDawnDescription": "Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.",
+      "mountTicketTwilightDescription": "Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.",
+      "redeemMountTicket": "Use {ticket}",
+      "inventoryMounts": "Mounts",
+      "inventoryPendingMounts": "Mounts Awaiting Confirmation",
+      "mountGrade": "Grade {grade}",
+      "mountOwned": "Owned: {count}",
+      "mountEquipped": "Equipped",
+      "mountEquipHint": "Click to equip this Mount and summon its native World of ClaudeCraft visual shell.",
+      "mountUnequipHint": "Click to unequip this Mount and dismount.",
+      "mountConfirmHint": "Click to confirm this Mount and add it to your collection.",
+      "mountConfirmAria": "Confirm {mount}",
+      "mountEffectShell": "Native World of ClaudeCraft model with MIR4 Mount stats",
+      "mountMoveSpeed": "Movement Speed: +{amount}%",
+      "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
+      "mountDefenses": "Physical Defense: +{physical} · Magic Defense: +{magic}",
+      "equippedMountLine": "Mount: {mount} (Grade {grade})",
+      "noEquippedMount": "Mount: none equipped",
+      "inventoryMountCombination": "Mount Combination",
+      "combineMountsAria": "Combine four Grade {grade} Mounts",
+      "combineMountsHint": "Consumes four owned Mounts of this grade. There is a 20% chance to receive one random Mount of the next grade. On failure, you receive one random Mount of the same grade. Epic or higher rewards await confirmation.",
+      "inventorySpirits": "Spirits",
+      "inventoryPendingSpirits": "Spirits Awaiting Confirmation",
+      "spiritTicketDawn": "Dawn Spirit Ticket",
+      "spiritTicketSunset": "Sunset Spirit Ticket",
+      "spiritTicketDawnDescription": "Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.",
+      "spiritTicketSunsetDescription": "Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.",
+      "redeemSpiritTicket": "Summon with {ticket}",
+      "spiritGrade": "Grade {grade}",
+      "spiritOwned": "Owned: {count}",
+      "spiritEquipped": "Equipped",
+      "spiritEquipHint": "Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.",
+      "spiritUnequipHint": "Click to unequip this Spirit.",
+      "spiritConfirmHint": "Click to confirm this Spirit and add it to your collection.",
+      "spiritConfirmAria": "Confirm {spirit}",
+      "spiritEffectShell": "Native World of ClaudeCraft presentation with MIR4 Spirit effects",
+      "equippedSpiritLine": "Spirit: {spirit} (Grade {grade})",
+      "noEquippedSpirit": "Spirit: none equipped",
+      "inventorySpiritCombination": "Spirit Combination",
+      "combineSpiritsAria": "Combine four Grade {grade} Spirits",
+      "combineSpiritsHint": "Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.",
+      "spiritSkillChanceCooldown": "{chance}% chance · {cooldown}s cooldown",
+      "spiritSkillBonusDamage": "Increases the triggering hit's raw damage by {amount}%.",
+      "spiritSkillExecute": "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
+      "spiritSkillLifeSiphon": "Restores {amount}% of maximum Health.",
+      "spiritSkillManaSurge": "Restores {amount}% of maximum Mana.",
+      "spiritSkillArmorRend": "Adds {amount}% Defense Penetration to the triggering hit.",
+      "spiritSkillCriticalFocus": "Forces the triggering hit to be critical.",
+      "equipmentSlots": {
+        "weapon": "Weapon",
+        "necklace": "Necklace",
+        "ring": "Ring",
+        "talisman": "Talisman",
+        "chest": "Chest",
+        "helmet": "Helmet",
+        "gloves": "Gloves",
+        "boots": "Boots"
+      },
+      "stats": {
+        "combatPower": "Combat Power",
+        "maxHp": "Maximum Health",
+        "maxMana": "Maximum Mana",
+        "physicalAttack": "Physical Attack",
+        "magicAttack": "Magic Attack",
+        "physicalDefense": "Physical Defense",
+        "magicDefense": "Magic Defense",
+        "accuracy": "Accuracy",
+        "dodge": "Dodge",
+        "critical": "Critical",
+        "avoidCritical": "Critical Evasion",
+        "criticalOutcome": "Critical Damage",
+        "bossDamage": "Boss Damage",
+        "skillDamage": "Skill Damage",
+        "penetration": "Defense Penetration",
+        "unknown": "Combat Attribute"
+      },
+      "materials": {
+        "sunStone": "Sun Stone",
+        "moonStone": "Moon Stone",
+        "solarScroll": "Solar Scroll",
+        "lunarSeal": "Lunar Seal",
+        "dawnTear": "Dawn Tear",
+        "solarWard": "Solar Ward"
+      },
+      "maps": {
+        "portal": "{zone} Portal",
+        "actWelcome": "{zone} (Act {act}).",
+        "m01": "Ford Village",
+        "m02": "Reed Trail",
+        "m03": "Vale Grove",
+        "m04": "Hillside Ruins",
+        "m05": "Rift Clearing",
+        "m06": "Candle-Stone Crypts",
+        "m07": "Ossuary Galleries",
+        "m08": "Miststone Fortress",
+        "m09": "Lantern Marsh",
+        "m10": "Bog King's Fen",
+        "m11": "Leech Mangrove",
+        "m12": "Reed Harbor",
+        "m13": "Glass Dunes",
+        "m14": "Akhet Necropolis",
+        "m15": "Cinderite Caldera",
+        "m16": "Shattered Sun Forge",
+        "m17": "Howling Tundra",
+        "m18": "Jarl's Pass",
+        "m19": "Night Veil",
+        "m20": "Eclipse Bastille"
+      },
+      "progression": {
+        "title": "Equipment Workshop",
+        "refinement": "Refinement",
+        "enchantment": "Enchantment",
+        "blessing": "Blessing",
+        "crafting": "Crafting",
+        "ownedEquipment": "Owned Equipment",
+        "noEquipment": "No equipment is available for this operation.",
+        "equipped": "Equipped",
+        "enhancementLevel": "Enhancement +{level} of +{max}",
+        "successChance": "Success chance: {chance}%",
+        "safeFailure": "Failure keeps the equipment.",
+        "destructiveFailure": "Failure destroys the equipment above +5.",
+        "wardProtection": "A Solar Ward will be consumed to prevent destruction.",
+        "noWardProtection": "No Solar Ward is available.",
+        "enhanceCost": "Cost: 1 Solar Scroll",
+        "enhance": "Enhance",
+        "maxEnhancement": "Maximum enhancement reached",
+        "currentEffects": "Current Effects",
+        "noCurrentEffects": "No effects applied.",
+        "rollCostEnchantment": "Cost: 1 Lunar Seal",
+        "layerUnsupported": "This item cannot receive {layer} effects.",
+        "rollCostBlessing": "Cost: 1 Dawn Tear",
+        "roll": "Roll Preview",
+        "pendingOtherLayer": "Resolve the pending {layer} preview first.",
+        "preview": "Pending Preview",
+        "acceptPreview": "Apply Preview",
+        "keepCurrent": "Keep Current",
+        "inactiveEffect": "Ported effect (not active in combat yet)",
+        "materialRecipes": "Material Recipes",
+        "campaignProfession": "Campaign Profession Order",
+        "campaignProfessionProgress": "Progress: {current}/{goal}",
+        "campaignProfessionMaterials": "Eligible materials: {held}/{needed}",
+        "campaignProfessionHint": "Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.",
+        "campaignCraft": "Craft Component",
+        "campaignRefine": "Refine Component",
+        "campaignSalvage": "Salvage Gear",
+        "creates": "Creates {count} {material}",
+        "materialCost": "{held}/{needed} {material}",
+        "copperCost": "{amount} copper",
+        "create": "Create",
+        "requestSent": "The server is validating the equipment operation."
+      }
     },
     "interfaceTabs": {
       "general": "Allgemein",
@@ -866,11 +1250,52 @@ export const de_DE: EnTranslations = {
       "actionRing": "Kampfhandlungen",
       "actionPageToggle": "Aktionsseite wechseln",
       "actionPageIndicator": "Seite {page}",
+      "actionRadial": "Action directions",
+      "actionRadialCancel": "Cancel action",
+      "radialCenter": "Centre",
+      "radialUp": "Up",
+      "radialRight": "Right",
+      "radialDown": "Down",
+      "radialLeft": "Left",
+      "consumableSeat": "Consumables",
+      "menuControl": "Menus",
+      "menuControlAria": "Menus. Tap to open chat, or hold and swipe right for mounts, map, bags and more.",
+      "menuControlAriaTap": "Menus. Tap to open the menu row: mounts, map, bags and more. Tap again for chat.",
+      "menuLabel": "Menu",
+      "quickActions": "Quick Actions",
+      "quickActionsAria": "Quick Actions. Tap to open the row of mount, chat, map, bags and more, or hold and swipe right to pick one.",
+      "quickActionsAriaTap": "Quick Actions. Tap to open the row of mount, chat, map, bags and more, then tap an item. Tap the control again to close.",
+      "quickActionsLabel": "Actions",
+      "stanceRadial": "Stances",
+      "stanceAnchorAria": "Stance: {stance}. Tap to open the stance ring, then pick another stance.",
+      "stanceAnchorEmptyAria": "No stance. Tap to open the stance ring, then pick a stance.",
+      "questStripAria": "Tracked quest {position} of {total}: {title}. Activate for the next quest.",
+      "questStripAriaSingle": "Tracked quest: {title}",
+      "questStripCounter": "{position}/{total}",
+      "questStripMore": "+{count} more",
       "targetCycle": "Ziel tauschen",
       "targetCycleShort": "Ziel",
       "spellbookPageLabel": "Seite {page}",
       "hideKeyboard": "Tastatur ausblenden",
-      "chatPlaceholder": "Sag etwas..."
+      "chatPlaceholder": "Sag etwas...",
+      "barEditor": "Edit Bars",
+      "barEditorAria": "Edit the action bar layout"
+    },
+    "barEditor": {
+      "title": "Edit Action Bar",
+      "close": "Close bar editor",
+      "pages": "Action bar pages",
+      "pageTab": "Page {page}",
+      "buttonHeader": "Button {button}",
+      "cellAria": "Button {button}, {direction}: {action}",
+      "emptyCellAria": "Button {button}, {direction}: empty",
+      "hint": "Tap a slot, then another, to swap them.",
+      "armed": "Tap a slot to place {name}.",
+      "picked": "Tap another slot to swap with {name}.",
+      "locked": "Action bars are locked in Interface options.",
+      "clear": "Clear",
+      "clearAria": "Clear a slot",
+      "clearArmed": "Tap a slot to clear it."
     },
     "tutorial": {
       "moveBodyTouch": "Nutze den Bewegungsstick zum Bewegen und zieh über den Bildschirm, um dich umzusehen. Mach ein paar Schritte, um zu beginnen.",
@@ -952,6 +1377,22 @@ export const de_DE: EnTranslations = {
       "closesIn": "Schließt in {time}",
       "clockMs": "{minutes}:{seconds}",
       "clockHms": "{hours}:{minutes}:{seconds}"
+    },
+    "lastkeepMap": {
+      "title": "{keep}: {story}",
+      "story": {
+        "undercroft": "Das Untergewölbe",
+        "state": "Die Beletage",
+        "residence": "Das Wohngeschoss",
+        "tower": "Der Wachturm"
+      }
+    },
+    "dawnholdMap": {
+      "title": "{keep}: {story}",
+      "story": {
+        "ground": "Das Gartengeschoss",
+        "solar": "Das Sonnengemach"
+      }
     },
     "compass": {
       "N": "N",
@@ -1386,6 +1827,7 @@ export const de_DE: EnTranslations = {
       "mouseoverCast": "Mouseover-Wirken auf Gruppenfenstern",
       "stickyTarget": "Ziel bei Bodenklick behalten",
       "showItemLevel": "Gegenstandsstufe anzeigen",
+      "showReliquaryTracker": "Show Reliquary Tracker",
       "itemLevelLine": "Gegenstandsstufe {level}",
       "itemScoreLine": "Wertung {score}",
       "showSecondaryActionBar": "Zweite Aktionsleiste anzeigen",
@@ -1398,7 +1840,9 @@ export const de_DE: EnTranslations = {
       "showAttackButton": "Angriffs-Schaltflache anzeigen",
       "showDailyRewardsChest": "Truhe der täglichen Belohnungen anzeigen",
       "mobileCameraJoystick": "Kamera-Joystick",
-      "mobileLeftHanded": "Linkshänder-Layout"
+      "mobileLeftHanded": "Linkshänder-Layout",
+      "touchTapMenus": "Tap menus",
+      "touchTapMenusNote": "Open the action, consumable and menu controls with a tap instead of a swipe. Tap an item to use it, tap the control again for its usual action, or tap outside to close."
     },
     "talentRows": {
       "tab": "Auswahl",
@@ -1431,9 +1875,29 @@ export const de_DE: EnTranslations = {
       "buttons": "Tastenbelegung",
       "resetButtons": "Tastenbelegung zurücksetzen",
       "menuAction": "Spielmenü",
+      "confirmAction": "Confirm / Select",
       "zoomIn": "Einzoomen",
       "zoomOut": "Auszoomen",
-      "help": "Linker Stick bewegt, rechter Stick steuert die Kamera. Öffne ein Fenster, um den Bildschirmzeiger zu verwenden."
+      "help": "Linker Stick bewegt, rechter Stick steuert die Kamera. Öffne ein Fenster, um den Bildschirmzeiger zu verwenden.",
+      "crossHotbar": "Cross Hotbar",
+      "crossHotbarEnable": "Enable Cross Hotbar",
+      "crossHotbarExpand": "Double Cross Hotbar",
+      "crossHotbarHelp": "Hold a trigger to light eight action-bar slots on the d-pad and face buttons. Tap the other trigger to swap to the second set.",
+      "crossHotbarResetLayout": "Reset Cross Hotbar",
+      "crossHotbarPosition": "{trigger} + {button}",
+      "crossHotbarOwnsButtons": "The triggers and the d-pad belong to the cross hotbar while it is on, so they are set up below rather than here.",
+      "cancelAction": "Cancel / Back",
+      "subcommandsAction": "Subcommands / Map",
+      "cycleHudAction": "Cycle Interface",
+      "cycleSetAction": "Change Hotbar Set",
+      "crossHotbarDisplay": "Bar Display",
+      "crossHotbarDisplayFull": "Full",
+      "crossHotbarDisplayCompact": "Compact",
+      "crossHotbarDisplayMinimal": "Only While Held",
+      "crossHotbarArrangeChord": "{bumper} + {button}",
+      "crossHotbarCarrying": "Carrying {action}: confirm on a cell to place it, cancel to put it back.",
+      "crossHotbarEditHint": "Arranging: confirm picks up from a cell or the spellbook and drops on a cell, cancel clears one.",
+      "crossHotbarEditHelp": "Hold the left bumper and press the top face button to arrange the bar with the controller."
     },
     "perf": {
       "title": "Leistungsanzeige",
@@ -1552,6 +2016,7 @@ export const de_DE: EnTranslations = {
           "render": "Render  Submit {submit} ms | Welt {world} ms | Entitäten {entities} ms",
           "scene": "Szene   {calls} Aufrufe | {triangles} Tris | {views} Ansichten",
           "hitches": "Ruckler {hitches} | Shader {shaders} | Uploads {uploads} | Ansichten {views}",
+          "hitchesBuild": "zone builds {zoneBuilds} | off-frame {offFrame} | gc {gc}",
           "gpu": "GPU     {renderer}",
           "waitingValue": "wartet"
         },
@@ -1603,7 +2068,10 @@ export const de_DE: EnTranslations = {
             "eventCpu": "Die Ereignisverarbeitung beansprucht den Frame",
             "shaderCompile": "Shader werden während des Spiels kompiliert",
             "textureUpload": "Textur-Uploads verursachen Spielruckler",
+            "zoneBuild": "Zone streaming builds are causing hitches",
             "viewCreate": "Die Erstellung von Entitäts-Ansichten verursacht Ruckler",
+            "gcHitch": "Garbage collections are running inside long frames",
+            "offFrameHitch": "Long frames come from work outside the render callback",
             "otherHitch": "Nicht zugeordnete lange Frames bleiben bestehen",
             "assetStartup": "Der Spielstart wird durch Asset-Arbeit verzögert",
             "longTasks": "Lange Browser-Aufgaben blockieren Frames",
@@ -2463,7 +2931,11 @@ export const de_DE: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "{name} zur Aktionsleiste hinzufügen",
-      "removeFromBarAria": "{name} von der Aktionsleiste entfernen"
+      "removeFromBarAria": "{name} von der Aktionsleiste entfernen",
+      "upgradeRank": "Rank {rank}",
+      "maxRank": "Max rank",
+      "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
+      "assignAria": "Choose a slot for {name}"
     },
     "nameplate": {
       "mobLevel": "{level}",
@@ -2793,7 +3265,8 @@ export const de_DE: EnTranslations = {
       "tip": "Verkaufserlöse oder zurückgegebene Gegenstände warten beim Händler auf dich."
     },
     "noticeboard": {
-      "empty": "Hier scheint nichts ausgehängt zu sein."
+      "empty": "Hier scheint nichts ausgehängt zu sein.",
+      "contract": "Contract active: {title}"
     },
     "bank": {
       "title": "Bank",
@@ -3723,6 +4196,9 @@ export const de_DE: EnTranslations = {
       "pinFull": "Der Verfolger ist voll (bis zu {cap} Seiten)",
       "pinAria": "{name} an den Verfolger der Benutzeroberfläche anheften",
       "unpinAria": "{name} lösen",
+      "trackerToggleLabel": "HUD tracker",
+      "trackerToggleShowHint": "Show the Reliquary tracker on your screen",
+      "trackerToggleHideHint": "Hide the Reliquary tracker from your screen",
       "rarityLine": "Von {percent} der Sammler gefunden",
       "pageRarityLine": "Von {percent} der Sammler illuminiert",
       "cellAriaWithRarity": "{base}, {rarity}",
@@ -4323,6 +4799,7 @@ export const de_DE: EnTranslations = {
       "ifHighContrastBackground": "Ein schlichterer Hintergrund mit höherem Kontrast hinter dem Start- und dem Charakterbildschirm.",
       "ifInvertLookY": "Kehrt die Auf- und Abwärtsrichtung der Mausumsicht um.",
       "ifShowItemLevel": "Fügt jedem Gegenstands-Tooltip eine Zeile mit der Gegenstandsstufe hinzu. Standardmäßig aus, was den klassischen, reinen Werte-Tooltip beibehält.",
+      "ifShowReliquaryTracker": "Whether the Reliquary tracker (your pinned pages and their progress) sits on your HUD. The Reliquary window has a matching eye button, and pinning a page turns the tracker back on.",
       "ifShowPlaytime": "Zeigt Ihre gesamte Spielzeit auf dem Charakterbogen. Standardmäßig an, und der Bogen hat eine Augen-Schaltfläche, die es pro Gerät umschaltet, praktisch, wenn Sie streamen oder Screenshots machen. Die Gesamtzeit läuft so oder so weiter mit.",
       "ifShowOwnNameplate": "Zeichnet Ihre eigene Namensplakette über dem Kopf genau so, wie andere Spieler sie sehen, mit allem Schnickschnack. Schalten Sie sie für die klassische Ansicht aus.",
       "ifShowPlayerNameplates": "Zeichnet die Namensplaketten anderer Spieler. Aus entrümpelt einen überfüllten Hub, und Ihr aktuelles Ziel bleibt so oder so lesbar.",
@@ -4754,6 +5231,7 @@ export const de_DE: EnTranslations = {
       "mageEleJet": "Wasserstrahl sitzt als eigene Schaltfläche auf der Begleiterleiste: Klicke ihn an, um einen kühlenden Strahl auf einen Gegner festzulegen, oder rechtsklicke ihn (auf Mobilgeräten gedrückt halten), damit der Elementar ihn von selbst abfeuert, sobald er bereit ist.",
       "formsHeading": "Gestaltwandel",
       "formsNote": "Ein Druide kämpft, indem er die Gestalt wechselt. Die meisten Druidenfähigkeiten gehören zu einer bestimmten Gestalt, sodass die Form, in der du dich befindest, entscheidet, was du wirken kannst, und der Wechsel kostet etwas Mana. Du kannst innerhalb oder außerhalb des Kampfes wechseln, so oft du willst.",
+      "formsAutoUnshift": "Ein Heilzauber oder ein Schadenszauber, den du in einer Gestalt wirkst, holt dich selbst daraus hervor. Eine Gestalt auf diese Weise zu verlassen ist gratis und verbraucht keine globale Abklingzeit, ein Sofortzauber geht also in dem Moment los, in dem du ihn drückst. Zurückzuwechseln ist eine gewöhnliche Fähigkeit und kostet weiterhin Mana und deine globale Abklingzeit.",
       "formsMoonwing": "Ein Gleichgewichts-Druide erhält eine weitere Gestalt, die Mondkingestalt, die Zaubergestalt, in der er kämpft. Sie ist die einzige Tiergestalt, die deine Zauber behält, und dein Zauberstab funktioniert nur in ihr oder in deiner gewöhnlichen Zaubergestalt.",
       "formLine": {
         "form_bear": "Die Tank-Gestalt: ein dickes Fell, Wut statt Mana und zusätzliche Bedrohung, damit Gegner weiter auf dich einschlagen.",
@@ -7013,6 +7491,10 @@ export const de_DE: EnTranslations = {
   },
   "classes": {
     "warrior": "Krieger",
+    "elementalist": "Elementalist",
+    "taoist": "Taoist",
+    "arbalist": "Arbalist",
+    "lancer": "Lancer",
     "paladin": "Paladin",
     "hunter": "Jäger",
     "rogue": "Schurke",
@@ -7022,6 +7504,10 @@ export const de_DE: EnTranslations = {
     "warlock": "Hexenmeister",
     "druid": "Druide",
     "warriorAria": "Krieger-Klasse",
+    "elementalistAria": "Elementalist class",
+    "taoistAria": "Taoist class",
+    "arbalistAria": "Arbalist class",
+    "lancerAria": "Lancer class",
     "paladinAria": "Paladin-Klasse",
     "hunterAria": "Jäger-Klasse",
     "rogueAria": "Schurke-Klasse",
@@ -7171,6 +7657,7 @@ export const de_DE: EnTranslations = {
       "shopMarksRequired": "Du benötigst {marks} Tiefgang-Marken, um {name} zu kaufen.",
       "shopSealPremiumOnly": "Dieses Siegel weicht nur der Hand eines Meisters: Nur der Erlesene Einsatz kann es öffnen.",
       "passageSealed": "Der Durchgang ist versiegelt.",
+      "enemiesRemain": "Erledige zuerst die verbleibenden Gegner.",
       "moveCloserPassage": "Geh näher an den Durchgang heran.",
       "moveCloserChest": "Geh näher an die Truhe heran.",
       "moveCloserReliquary": "Geh näher an das Reliquiar heran.",
@@ -7944,6 +8431,31 @@ export const de_DE: EnTranslations = {
       "warlock": "Hexenmeister beschwören Dämonen, wirken Flüche und Schaden über Zeit und saugen Gegnern das Leben aus, um durchzuhalten.",
       "druid": "Druiden kanalisieren die Natur, heilen Wunden, fesseln Gegner und wechseln in Tierformen für Verteidigung oder Schaden."
     },
+    "mir4": {
+      "labels": {
+        "damage": "Damage",
+        "combatRange": "Combat Range",
+        "startingSkills": "Starting Skills"
+      },
+      "damage": {
+        "physical": "Physical",
+        "magic": "Magic"
+      },
+      "range": {
+        "melee": "Melee",
+        "medium": "Medium range",
+        "long": "Long range",
+        "extended": "Extended melee"
+      },
+      "weapons": {
+        "heavySword": "Heavy Sword",
+        "largeStaff": "Large Staff",
+        "shortStaff": "Short Staff",
+        "arbalest": "Arbalest",
+        "spear": "Spear"
+      },
+      "aria": "Class details for {className}: {damage} damage, {range} range, weapon {weapon}, {skills} starting skills."
+    },
     "aria": "Klassendetails für {className}: Rolle {role}. Startwerte: Stärke {str}, Beweglichkeit {agi}, Ausdauer {sta}, Intelligenz {int}, Willenskraft {spi}.",
     "statBarAria": "{stat}: {value} von 25"
   },
@@ -8702,6 +9214,8 @@ export const de_DE: EnTranslations = {
     "actionBar": {
       "attackName": "Angreifen",
       "attackTooltip": "Schaltet den automatischen Angriff auf Euer Ziel um. Ein Rechtsklick auf einen Gegner greift ebenfalls an.",
+      "autoBattleName": "Auto Battle",
+      "autoBattleTooltip": "Toggle automatic target acquisition, movement, and skill rotation around your current position.",
       "attackRemoveHint": "Rechtsklick, um es von der Leiste zu entfernen und den Slot freizugeben.",
       "emptySlot": "Leerer Platz",
       "slotAria": "Aktionsplatz {slot}: {ability}",
@@ -8834,6 +9348,8 @@ export const de_DE: EnTranslations = {
       "accept": "Annehmen",
       "decline": "Ablehnen",
       "continue": "Weiter",
+      "autoContinue": "Dialogue continues automatically",
+      "skipDialogue": "Skip dialogue",
       "done": "Fertig",
       "completeQuest": "Quest abschließen",
       "turnIn": "Abgeben",
@@ -9148,6 +9664,226 @@ export const de_DE: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "Void Strike",
+        "description": "Deals {damage} damage to an enemy. Stuns the target for 0.9 sec."
+      },
+      "mir4_skill_1104": {
+        "name": "Lacerating Strike",
+        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
+      },
+      "mir4_skill_1304": {
+        "name": "Tackle",
+        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+      },
+      "mir4_skill_1401": {
+        "name": "Ground Smash",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec."
+      },
+      "mir4_skill_1501": {
+        "name": "Gale Strike",
+        "description": "Affects an enemy. Slows the target by 35% for 3.2 sec."
+      },
+      "mir4_skill_2101": {
+        "name": "Prismatic Beam",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec."
+      },
+      "mir4_skill_2111": {
+        "name": "Ember Spear",
+        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+      },
+      "mir4_skill_2301": {
+        "name": "Smite Seal",
+        "description": "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec."
+      },
+      "mir4_skill_2501": {
+        "name": "Evoked Core",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec."
+      },
+      "mir4_skill_2503": {
+        "name": "Magic Shield",
+        "description": "Reduces damage taken by 22% for 10 sec."
+      },
+      "mir4_skill_3101": {
+        "name": "Seal Sequence",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+      },
+      "mir4_skill_3104": {
+        "name": "Totem 1010",
+        "description": "Affects an enemy. Stuns the target for 1.4 sec."
+      },
+      "mir4_skill_3301": {
+        "name": "Totem Seal II",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec."
+      },
+      "mir4_skill_3503": {
+        "name": "Jade Lotus",
+        "description": "Restores 18% of maximum health."
+      },
+      "mir4_skill_3506": {
+        "name": "Totem Seal I",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec."
+      },
+      "mir4_skill_4101": {
+        "name": "Burst 4101",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec."
+      },
+      "mir4_skill_4102": {
+        "name": "Sequence 4102",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec."
+      },
+      "mir4_skill_4103": {
+        "name": "Twin Echo",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec."
+      },
+      "mir4_skill_4106": {
+        "name": "Charge 4106",
+        "description": "Deals {damage} damage to an enemy. Stuns the target for 2 sec."
+      },
+      "mir4_skill_4107": {
+        "name": "Flare Arrow",
+        "description": "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec."
+      },
+      "mir4_skill_5101": {
+        "name": "Thrust 5101",
+        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1 sec."
+      },
+      "mir4_skill_5104": {
+        "name": "Sweep 5104",
+        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+      },
+      "mir4_skill_5201": {
+        "name": "Strike 5201",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec."
+      },
+      "mir4_skill_5301": {
+        "name": "Chain 5301",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec."
+      },
+      "mir4_skill_5401": {
+        "name": "Raging Storm",
+        "description": "Affects an enemy. Knocks the target down for 1 sec."
+      },
+      "mir4_ultimate_1": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_2": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_3": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_4": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_ultimate_5": {
+        "name": "Ultimate",
+        "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "Heavy Armor",
+        "description": "Increases maximum health by 8%."
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "Weapon Discipline",
+        "description": "Increases physical attack by 6%."
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "Iron Skin",
+        "description": "Increases physical defense by 8% and magic defense by 6%."
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "Fighting Spirit",
+        "description": "Increases maximum health by 4% and physical attack by 4%."
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "Indomitable Will",
+        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "Mana Well",
+        "description": "Increases maximum mana by 10%."
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "Arcane Acumen",
+        "description": "Increases magic attack by 7%."
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "Elemental Protection",
+        "description": "Increases physical defense by 6% and magic defense by 6%."
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "Channeling",
+        "description": "Increases maximum mana by 5% and magic attack by 4%."
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "Arcane Ascension",
+        "description": "Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%."
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "Spiritual Vessel",
+        "description": "Increases maximum health by 4% and maximum mana by 7%."
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "Twin Paths",
+        "description": "Increases physical attack by 4% and magic attack by 4%."
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "Sacred Guard",
+        "description": "Increases physical defense by 6% and magic defense by 6%."
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "Serene Mind",
+        "description": "Increases maximum health by 4% and maximum mana by 5%."
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "Celestial Harmony",
+        "description": "Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%."
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "Eagle Eye",
+        "description": "Increases physical attack by 3% and accuracy by 5%."
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "Ballistic Mastery",
+        "description": "Increases physical attack by 7%."
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "Nature's Guard",
+        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "Hunter's Instinct",
+        "description": "Increases physical attack by 5% and dodge by 5%."
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "Perfect Shot",
+        "description": "Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%."
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "War Conditioning",
+        "description": "Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%."
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "Spear Mastery",
+        "description": "Increases physical attack by 5% and magic attack by 5%."
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "Vanguard Armor",
+        "description": "Increases physical defense by 6% and magic defense by 6%."
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "Battle Rhythm",
+        "description": "Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%."
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "Dragon's Vanguard",
+        "description": "Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%."
+      },
       "sport_kick": {
         "name": "Tritt",
         "description": "Stoß den Ball flach über den Boden zum Zielpunkt."
@@ -9980,7 +10716,7 @@ export const de_DE: EnTranslations = {
       },
       "fear": {
         "name": "Heimsuchung",
-        "description": "Versetzt den Gegner in Schrecken und lässt ihn bis zu 8 Sek. lang kauern. Jeder Schaden bricht den Effekt."
+        "description": "Versetzt den Gegner in Schrecken und lässt ihn bis zu 5 Sek. lang kauern. Schaden in Höhe von insgesamt 8% der maximalen Gesundheit des Ziels bricht den Effekt."
       },
       "searing_pain": {
         "name": "Versengen",
@@ -10058,7 +10794,7 @@ export const de_DE: EnTranslations = {
       "ferocious_bite": {
         "name": "Blutbiss",
         "description": "Finishing-Move, der {damage} verursacht. Nur in Wolfsgestalt.",
-        "specNote_feral": "Jeder Treffer, der landet, fügt 1 Altes Blut hinzu; bei 3 Altem Blut wird diese Taste zu Rote Ernte: ein Biss für 70 plus 43 pro Combopunkt, der außerdem sofort allen Schaden verursacht, den Euer Schinden und Zerfetzen noch verursacht hätten, und 30 Energie wiederherstellt."
+        "specNote_feral": "Jeder Treffer, der landet, fügt 1 Altes Blut hinzu; bei 3 Altem Blut wird diese Taste zu Rote Ernte, die das Alte Blut für einen stärkeren Schlag verbraucht, der außerdem sofort allen Schaden verursacht, den Euer Schinden und Zerfetzen noch verursacht hätten, und Energie wiederherstellt."
       },
       "swipe": {
         "name": "Fegende Klauen",
@@ -10121,7 +10857,7 @@ export const de_DE: EnTranslations = {
       },
       "tigers_fury": {
         "name": "Wolfsblut",
-        "description": "Erhöht die Angriffskraft {duration} Sek. lang um {buff}. Nur in Wolfsgestalt."
+        "description": "Erzeugt sofort {rage} Energie und erhöht die Angriffskraft {duration} Sek. lang um {buff}. Nur in Wolfsgestalt."
       },
       "rip": {
         "name": "Blutriss",
@@ -10226,7 +10962,7 @@ export const de_DE: EnTranslations = {
       },
       "ossuary_mark": {
         "name": "Ossuary Mark",
-        "description": "Markiert einen Gegner 12 Sek. lang und speichert 20% des von Euch und Euren Untoten verursachten Schadens. Erneutes Wirken lässt es detonieren. Stirbt der markierte Gegner, explodiert es im Umkreis von 6 m und erschafft 1 Seelenfragment."
+        "description": "Markiert einen Gegner 15 Sek. lang und speichert 20% des von Euch und Euren Untoten verursachten Schadens. Erneutes Wirken lässt es detonieren. Stirbt der markierte Gegner, explodiert es im Umkreis von 6 Metern und erschafft 1 Seelenfragment."
       },
       "unholy_command": {
         "name": "Unholy Command",
@@ -10325,8 +11061,8 @@ export const de_DE: EnTranslations = {
         "description": "Nehmt Mondkingestalt an und verstärkt Eure Zauber, bis Ihr zurückwechselt. Erneut wirken, um zur normalen Gestalt zurückzukehren. (Gleichgewichts-Signatur)"
       },
       "feral_charge": {
-        "name": "Wilde Attacke",
-        "description": "Stürmt einen Gegner an und wurzelt ihn 1 Sek. lang. 8-25 m Reichweite. (Wildheits-Signatur)"
+        "name": "Urwoge",
+        "description": "Entfesselt eine Urwoge. In Wolfsgestalt wird Eure Energieregeneration 10 Sek. lang um 100% erhöht. In Bruin-Gestalt erhaltet Ihr sofort 50 Wut. (Wildheits-Signatur)"
       },
       "swiftmend": {
         "name": "Rasche Heilung",
@@ -10342,7 +11078,7 @@ export const de_DE: EnTranslations = {
       },
       "redharvest": {
         "name": "Rote Ernte",
-        "description": "Verbraucht 3 Altes Blut: ein Schlag für {damage}, der sofort allen Schaden verursacht, den Euer Schinden und Zerfetzen noch verursacht hätten, beide Blutungen entfernt und 30 Energie wiederherstellt. Funktioniert auch ohne Combopunkte."
+        "description": "Verbraucht 3 Altes Blut: ein Schlag für {damage}, der sofort allen Schaden verursacht, den Euer Schinden und Zerfetzen noch verursacht hätten, beide Blutungen entfernt und {rage} Energie wiederherstellt. Funktioniert auch ohne Combopunkte."
       },
       "marrowbreak": {
         "name": "Markbrecher",
@@ -10582,7 +11318,7 @@ export const de_DE: EnTranslations = {
       },
       "evocation": {
         "name": "Ätherbrunnen",
-        "description": "Restaura Mana rápidamente. (Magier-Talent)"
+        "description": "Kanalisiert 6 Sek. lang: Jede Sekunde werden 100 Mana wiederhergestellt und 8 Zaubermacht aufgebaut. Der Bonus ist während des Kanalisierens stapelbar und hält 15 Sek. lang an. (Magier-Talent)"
       },
       "flurry_of_knives": {
         "name": "Messerhagel",
@@ -10590,7 +11326,7 @@ export const de_DE: EnTranslations = {
       },
       "frenzied_regeneration": {
         "name": "Wilde Heilung",
-        "description": "Stellt im Verlauf von 10 Sek. 180 Gesundheit wieder her. Nur in Bärengestalt. (Druidentalent)"
+        "description": "Stellt im Verlauf von 10 Sek. 40% Eurer maximalen Gesundheit wieder her. Nur in Bärengestalt. (Druidentalent)"
       },
       "frost_trap": {
         "name": "Reifschlinge",
@@ -10610,11 +11346,11 @@ export const de_DE: EnTranslations = {
       },
       "howl_of_terror": {
         "name": "Schreckensheulen",
-        "description": "Versetzt Gegner in der Nähe bis zu 3 Sek. lang in Furcht. Schaden kann den Effekt aufheben. (Hexenmeistertalent)"
+        "description": "Versetzt Gegner in der Nähe bis zu 5 Sek. lang in Furcht. Schaden in Höhe von insgesamt 8% der maximalen Gesundheit eines Ziels bricht seine Furcht. (Hexenmeistertalent)"
       },
       "ice_block": {
         "name": "Kalter Sarg",
-        "description": "Te encierra en hielo y absorbe una enorme cantidad de daño durante 8 Sek.. (Magier-Talent)"
+        "description": "Schließt Euch 8 Sek. lang in festes Eis ein und macht Euch gegen jeglichen Schaden immun. Entfernt bestehende gewöhnliche schädliche Effekte und verhindert neue gewöhnliche Kontroll-Effekte. Kann während Betäubung oder Verwandlung eingesetzt werden. Ihr könnt währenddessen nicht handeln. Erneut wirken, um den Effekt abzubrechen. (Magier)"
       },
       "inner_focus": {
         "name": "Stiller Geist",
@@ -10706,7 +11442,7 @@ export const de_DE: EnTranslations = {
       },
       "presence_of_mind": {
         "name": "Rasender Geist",
-        "description": "Hace instantáneo tu siguiente hechizo con tiempo de lanzamiento. Dura 60 Sek.. (Magier-Talent)"
+        "description": "Macht Euren nächsten Zauber mit Zauberzeit zu einem Spontanzauber. Hält 60 Sek. lang an. (Magier-Talent)"
       },
       "psychic_scream": {
         "name": "Schreckensschrei",
@@ -10823,7 +11559,7 @@ export const de_DE: EnTranslations = {
       },
       "prowl": {
         "name": "Anpirschen",
-        "description": "Geht in Wolfsgestalt in den Schleichmodus über und bewegt Euch 50% langsamer. Im Kampf nicht einsetzbar."
+        "description": "Geht in Wolfsgestalt in den Schleichmodus über und bewegt Euch 5% langsamer. Im Kampf nicht einsetzbar."
       },
       "rake": {
         "name": "Schinden",
@@ -12378,6 +13114,9 @@ export const de_DE: EnTranslations = {
       "pristine_claw": {
         "name": "Unberührte Klaue"
       },
+      "dawnhold_posy": {
+        "name": "Gartensträußchen von Dawnhold"
+      },
       "conjured_water4": {
         "name": "Herbeigezaubertes Quellwasser"
       },
@@ -13222,6 +13961,15 @@ export const de_DE: EnTranslations = {
       },
       "training_dummy": {
         "name": "Trainingspuppe"
+      },
+      "friendly_player_dummy": {
+        "name": "Freundliche Spielerpuppe"
+      },
+      "normal_boss_dummy": {
+        "name": "Normale Bosspuppe"
+      },
+      "heroic_boss_dummy": {
+        "name": "Heroische Bosspuppe"
       },
       "ridge_stalker": {
         "name": "Gratpirscher"
@@ -16842,6 +17590,11 @@ export const de_DE: EnTranslations = {
         "enterText": "Die Luft wird kalt. Etwas Gewaltiges atmet in der Tiefe...",
         "leaveText": "Du taumelst zurück in den Bergwind."
       },
+      "campaign_trial_room": {
+        "name": "Campaign Trial",
+        "enterText": "You enter the campaign trial.",
+        "leaveText": "You leave the campaign trial."
+      },
       "nythraxis_crypt": {
         "name": "Verlassene Krypta",
         "enterText": "Du überschreitest die Schwelle der verlassenen Krypta.",
@@ -16861,6 +17614,11 @@ export const de_DE: EnTranslations = {
         "name": "Die Letzte Feste",
         "enterText": "Du trittst in die kalten, stillen Hallen von Last Keep ein.",
         "leaveText": "Du ziehst die Burgtür zu und trittst zurück in den Wind von Drakelands."
+      },
+      "dawnhold_castle": {
+        "name": "Schloss Dawnhold",
+        "enterText": "Du trittst in die warmen, blumenduftenden Hallen von Schloss Dawnhold ein.",
+        "leaveText": "Du schlüpfst wieder hinaus auf den sonnenbeschienenen Gartenrasen."
       },
       "drowned_temple": {
         "name": "Der Ertränkte Tempel",

@@ -7,6 +7,9 @@ const abilityStringsEn = {
     actionBar: {
       attackName: 'Attack',
       attackTooltip: 'Toggle auto-attack on your target. Right-clicking an enemy also attacks.',
+      autoBattleName: 'Auto Battle',
+      autoBattleTooltip:
+        'Toggle automatic target acquisition, movement, and skill rotation around your current position.',
       // Shown under the Attack tooltip: right-click removes the button from the bar,
       // freeing the slot (and its key) for a normal action. Restored in Options.
       attackRemoveHint: 'Right-click to remove it from the bar and free the slot.',
@@ -610,6 +613,254 @@ function abilityTranslations(
 const classAbilityNamesEn = {
   entities: {
     abilities: abilityTranslations([
+      // mir4-gameplay-port: profile content rendered by the existing spellbook/action bar.
+      [
+        'mir4_skill_1102',
+        'Void Strike',
+        'Deals {damage} damage to an enemy. Stuns the target for 0.9 sec.',
+      ],
+      [
+        'mir4_skill_1104',
+        'Lacerating Strike',
+        'Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec.',
+      ],
+      [
+        'mir4_skill_1304',
+        'Tackle',
+        'Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec.',
+      ],
+      [
+        'mir4_skill_1401',
+        'Ground Smash',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec.',
+      ],
+      ['mir4_skill_1501', 'Gale Strike', 'Affects an enemy. Slows the target by 35% for 3.2 sec.'],
+      [
+        'mir4_skill_2101',
+        'Prismatic Beam',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec.',
+      ],
+      [
+        'mir4_skill_2111',
+        'Ember Spear',
+        'Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec.',
+      ],
+      [
+        'mir4_skill_2301',
+        'Smite Seal',
+        "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec.",
+      ],
+      [
+        'mir4_skill_2501',
+        'Evoked Core',
+        'Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec.',
+      ],
+      ['mir4_skill_2503', 'Magic Shield', 'Reduces damage taken by 22% for 10 sec.'],
+      [
+        'mir4_skill_3101',
+        'Seal Sequence',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec.',
+      ],
+      ['mir4_skill_3104', 'Totem 1010', 'Affects an enemy. Stuns the target for 1.4 sec.'],
+      [
+        'mir4_skill_3301',
+        'Totem Seal II',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec.',
+      ],
+      ['mir4_skill_3503', 'Jade Lotus', 'Restores 18% of maximum health.'],
+      [
+        'mir4_skill_3506',
+        'Totem Seal I',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec.',
+      ],
+      [
+        'mir4_skill_4101',
+        'Burst 4101',
+        "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec.",
+      ],
+      [
+        'mir4_skill_4102',
+        'Sequence 4102',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec.',
+      ],
+      [
+        'mir4_skill_4103',
+        'Twin Echo',
+        "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec.",
+      ],
+      [
+        'mir4_skill_4106',
+        'Charge 4106',
+        'Deals {damage} damage to an enemy. Stuns the target for 2 sec.',
+      ],
+      [
+        'mir4_skill_4107',
+        'Flare Arrow',
+        "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec.",
+      ],
+      [
+        'mir4_skill_5101',
+        'Thrust 5101',
+        'Deals {damage} damage to an enemy. Knocks the target down for 1 sec.',
+      ],
+      [
+        'mir4_skill_5104',
+        'Sweep 5104',
+        'Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec.',
+      ],
+      [
+        'mir4_skill_5201',
+        'Strike 5201',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec.',
+      ],
+      [
+        'mir4_skill_5301',
+        'Chain 5301',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec.',
+      ],
+      ['mir4_skill_5401', 'Raging Storm', 'Affects an enemy. Knocks the target down for 1 sec.'],
+      [
+        'mir4_ultimate_1',
+        'Ultimate',
+        'Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_2',
+        'Ultimate',
+        'Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_3',
+        'Ultimate',
+        'Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_4',
+        'Ultimate',
+        'Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge.',
+      ],
+      [
+        'mir4_ultimate_5',
+        'Ultimate',
+        'Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge.',
+      ],
+      ['mir4_passive_warrior_heavy_armor', 'Heavy Armor', 'Increases maximum health by 8%.'],
+      [
+        'mir4_passive_warrior_weapon_mastery',
+        'Weapon Discipline',
+        'Increases physical attack by 6%.',
+      ],
+      [
+        'mir4_passive_warrior_iron_skin',
+        'Iron Skin',
+        'Increases physical defense by 8% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_warrior_fighting_spirit',
+        'Fighting Spirit',
+        'Increases maximum health by 4% and physical attack by 4%.',
+      ],
+      [
+        'mir4_passive_warrior_indomitable_will',
+        'Indomitable Will',
+        'Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%.',
+      ],
+      ['mir4_passive_elementalist_mana_well', 'Mana Well', 'Increases maximum mana by 10%.'],
+      [
+        'mir4_passive_elementalist_arcane_intellect',
+        'Arcane Acumen',
+        'Increases magic attack by 7%.',
+      ],
+      [
+        'mir4_passive_elementalist_elemental_protection',
+        'Elemental Protection',
+        'Increases physical defense by 6% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_elementalist_channeling',
+        'Channeling',
+        'Increases maximum mana by 5% and magic attack by 4%.',
+      ],
+      [
+        'mir4_passive_elementalist_arcane_ascension',
+        'Arcane Ascension',
+        'Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%.',
+      ],
+      [
+        'mir4_passive_taoist_spiritual_vessel',
+        'Spiritual Vessel',
+        'Increases maximum health by 4% and maximum mana by 7%.',
+      ],
+      [
+        'mir4_passive_taoist_twin_paths',
+        'Twin Paths',
+        'Increases physical attack by 4% and magic attack by 4%.',
+      ],
+      [
+        'mir4_passive_taoist_sacred_guard',
+        'Sacred Guard',
+        'Increases physical defense by 6% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_taoist_serene_mind',
+        'Serene Mind',
+        'Increases maximum health by 4% and maximum mana by 5%.',
+      ],
+      [
+        'mir4_passive_taoist_celestial_harmony',
+        'Celestial Harmony',
+        'Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%.',
+      ],
+      [
+        'mir4_passive_arbalist_eagle_eye',
+        'Eagle Eye',
+        'Increases physical attack by 3% and accuracy by 5%.',
+      ],
+      [
+        'mir4_passive_arbalist_ballistic_mastery',
+        'Ballistic Mastery',
+        'Increases physical attack by 7%.',
+      ],
+      [
+        'mir4_passive_arbalist_nature_guard',
+        "Nature's Guard",
+        'Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%.',
+      ],
+      [
+        'mir4_passive_arbalist_hunter_instinct',
+        "Hunter's Instinct",
+        'Increases physical attack by 5% and dodge by 5%.',
+      ],
+      [
+        'mir4_passive_arbalist_perfect_shot',
+        'Perfect Shot',
+        'Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%.',
+      ],
+      [
+        'mir4_passive_lancer_war_conditioning',
+        'War Conditioning',
+        'Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%.',
+      ],
+      [
+        'mir4_passive_lancer_spear_mastery',
+        'Spear Mastery',
+        'Increases physical attack by 5% and magic attack by 5%.',
+      ],
+      [
+        'mir4_passive_lancer_vanguard_armor',
+        'Vanguard Armor',
+        'Increases physical defense by 6% and magic defense by 6%.',
+      ],
+      [
+        'mir4_passive_lancer_battle_rhythm',
+        'Battle Rhythm',
+        'Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%.',
+      ],
+      [
+        'mir4_passive_lancer_dragon_vanguard',
+        "Dragon's Vanguard",
+        'Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%.',
+      ],
       // The Vale Cup sport kit (docs/prd/vale-cup.md).
       ['sport_kick', 'Kick', 'Knock the ball along the ground toward the aim point.'],
       [
@@ -830,7 +1081,7 @@ const classAbilityNamesEn = {
       [
         'ignition',
         'Ignition',
-        'Passive: your spell critical strikes burn the target for 40% of the damage dealt over 6 sec, stacking. (Fire mastery)',
+        'Passive: your spell critical strikes burn the target for 30% of the damage dealt over 6 sec, stacking. (Fire mastery)',
       ],
       [
         'mass_barrier',
@@ -1483,7 +1734,11 @@ const classAbilityNamesEn = {
         'Gloom Bolt',
         'Sends a shadowy bolt at the enemy for {damage} Shadow damage.',
       ],
-      ['demon_skin', 'Fiendhide', 'Demonic skin increases your armor by {buff} for 30 min.'],
+      [
+        'demon_skin',
+        'Fiendhide',
+        'Demonic skin increases your armor by {buff} for 30 min. Pact Deepened can double this armor and reduce magic damage taken while Fiendhide is active.',
+      ],
       [
         'immolate',
         'Burning Pact',
@@ -1507,7 +1762,7 @@ const classAbilityNamesEn = {
       [
         'needle_of_fate',
         'Needle of Fate',
-        'Pierces the enemy for {damage} Shadow damage and generates 5 Condemnation if it bears your Evil Eye. Each hit on your primary Evil Eye adds a Fate Thread for 12 sec, up to 3. If no Evil Eye exists, the Needle first marks its target.',
+        'Pierces the enemy for {damage} Shadow damage and generates 7 Condemnation on impact if it still bears your Evil Eye. Completing a cast moves your primary Evil Eye to the target and adds a Fate Thread for 12 sec, up to 3. Fate Threads stay with you when the Eye moves or its target dies. Targeting a secondary Coven Eye swaps it with the primary Eye.',
       ],
       [
         'sentence',
@@ -1583,7 +1838,7 @@ const classAbilityNamesEn = {
       [
         'fear',
         'Harrow',
-        'Strikes terror into the enemy, leaving it cowering for up to 8 sec. Any damage breaks the effect.',
+        "Strikes terror into the enemy, leaving it cowering for up to 5 sec. Damage totaling 8% of the target's maximum health breaks the effect.",
       ],
       [
         'searing_pain',
@@ -1682,7 +1937,7 @@ const classAbilityNamesEn = {
         'Finishing move that causes {damage}. Wolf Form only.',
         {
           feral:
-            'Each hit that lands adds 1 Old Blood; at 3 Old Blood this button becomes Redharvest: a bite for 70 plus 43 per combo point that also instantly deals all the damage your Flense and Bloodrift would still have dealt, and restores 30 energy.',
+            'Each hit that lands adds 1 Old Blood; at 3 Old Blood this button becomes Redharvest, which spends the Old Blood for a stronger strike that also instantly deals all the damage your Flense and Bloodrift would still have dealt, and restores energy.',
         },
       ],
       [
@@ -1749,7 +2004,7 @@ const classAbilityNamesEn = {
       [
         'tigers_fury',
         'Wolfsblood',
-        'Increases attack power by {buff} for {duration} sec. Wolf Form only.',
+        'Surges {rage} energy and increases attack power by {buff} for {duration} sec. Wolf Form only.',
       ],
       [
         'rip',
@@ -1800,7 +2055,7 @@ const classAbilityNamesEn = {
       [
         'warspirit_cadence',
         'Warspirit Cadence',
-        'Passive: Dual-wield attacks have no extra miss chance. Every 3rd landed weapon attack triggers 2 Galeheart Echoes for 50% Nature damage and grants Stormcast for 12 sec. Stormcast makes your next Arc Bolt, Jolt, or Mending Waters instant and cost 50% less Mana. Ancestral Strike counts as 2 attacks. (Warspirit)',
+        'Passive: Dual-wield attacks have no extra miss chance. Every 3rd landed weapon attack triggers 2 Galeheart Echoes for 25% Nature damage and grants Stormcast for 12 sec. Stormcast makes your next Arc Bolt, Jolt, or Mending Waters instant and cost 50% less Mana. Ancestral Strike counts as 2 attacks. (Warspirit)',
       ],
       [
         'stormsurge',
@@ -1870,7 +2125,7 @@ const classAbilityNamesEn = {
       [
         'corpse_explosion',
         'Corpse Explosion',
-        'Sacrifices a Bone Mage first, then a Skeletal Warrior, and a Gravewing only as a last resort. Among duplicates it chooses the one with the least remaining duration, then the weakest, to deal {damage} Shadow damage at the chosen location.',
+        'Sacrifices a Skeletal Warrior first, then a Bone Mage, and a Gravewing only as a last resort. Among duplicates it chooses the one with the least remaining duration, then the weakest, to deal {damage} Shadow damage at the chosen location.',
       ],
       [
         'funeral_harvest',
@@ -1880,7 +2135,7 @@ const classAbilityNamesEn = {
       [
         'ossuary_mark',
         'Ossuary Mark',
-        'Marks an enemy for 12 sec, storing 20% of damage dealt by you and your undead. Recast to detonate it. If the marked enemy dies, it explodes within 6 yards and creates 1 Soul Fragment.',
+        'Marks an enemy for 15 sec, storing 20% of damage dealt by you and your undead. Recast to detonate it. If the marked enemy dies, it explodes within 6 yards and creates 1 Soul Fragment.',
       ],
       [
         'unholy_command',
@@ -1890,7 +2145,7 @@ const classAbilityNamesEn = {
       [
         'reaping_command',
         'Reaping Command',
-        'Spends 2 Soul Fragments to command every undead servant to strike in unison. Graveguards taunt and brace, Warriors pin, Bone Mages expose magic defenses, and Gravewing rends all enemies hit.',
+        "Spends 2 Soul Fragments to command every undead servant to strike in unison. Graveguards taunt and brace, Warriors pin, Bone Mages expose magic defenses, and Gravewing rends all enemies hit. Reaping Command ignores and does not reset each servant's own ability cooldown.",
       ],
       [
         'sacrifice_undead',
@@ -2025,7 +2280,7 @@ const classAbilityNamesEn = {
       [
         'redharvest',
         'Redharvest',
-        'Spends your 3 Old Blood: strike for {damage}, instantly deal all the damage your Flense and Bloodrift would still have dealt, remove both bleeds, and restore 30 energy. Works with zero combo points.',
+        'Spends your 3 Old Blood: strike for {damage}, instantly deal all the damage your Flense and Bloodrift would still have dealt, remove both bleeds, and restore {rage} energy. Works with zero combo points.',
       ],
       [
         'marrowbreak',
@@ -2313,7 +2568,7 @@ const classAbilityNamesEn = {
       [
         'evocation',
         'Aetherwell',
-        'Channel for 6 sec: each second restores 100 mana and builds 8 spell power, stacking while you channel. (Mage talent)',
+        'Channel for 6 sec: each second restores 100 mana and builds 8 spell power, stacking while you channel and lasting 15 sec. (Mage talent)',
       ],
       [
         'flurry_of_knives',
@@ -2323,7 +2578,7 @@ const classAbilityNamesEn = {
       [
         'frenzied_regeneration',
         'Savage Mending',
-        'Restores 180 health over 10 sec. Bruin Form only.',
+        'Restores 40% of your maximum health over 10 sec. Bruin Form only.',
       ],
       [
         'frost_trap',
@@ -2348,12 +2603,12 @@ const classAbilityNamesEn = {
       [
         'howl_of_terror',
         'Dread Chorus',
-        'Frightens nearby enemies for up to 3 sec. Damage may break the effect. (Warlock talent)',
+        "Frightens nearby enemies for up to 5 sec. Damage totaling 8% of a target's maximum health breaks its fear. (Warlock talent)",
       ],
       [
         'ice_block',
         'Cold Coffin',
-        'Encases you in ice, absorbing a massive amount of damage for 8 sec. (Mage talent)',
+        'Encases you in solid ice for 8 sec, making you immune to all damage. Removes existing ordinary harmful effects and prevents new ordinary control effects. Usable while stunned or polymorphed. You cannot act while encased. Recast to cancel. (Mage)',
       ],
       [
         'inner_focus',

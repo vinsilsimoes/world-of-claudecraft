@@ -1,0 +1,2345 @@
+{
+  "scenario": "mir4_auto_battle_rng",
+  "seed": 7771,
+  "sampleEvery": 1,
+  "ticks": 2,
+  "coverage": [
+    "MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out",
+    "MIR4 4106 hit/crit/effect draw order on the following real simulation tick",
+    "friendly proximity contributes neither targeting nor combat rng draws"
+  ],
+  "draws": 9,
+  "drawDigest": "36b93436",
+  "frames": [
+    {
+      "tick": 0,
+      "time": 0,
+      "nextId": 45,
+      "state": "5bc471b0",
+      "events": "741638a5",
+      "rng": {
+        "draws": 0,
+        "digest": "811c9dc5"
+      },
+      "label": "init",
+      "players": [],
+      "entities": []
+    },
+    {
+      "tick": 0,
+      "time": 0,
+      "nextId": 51,
+      "state": "f7977271",
+      "events": "741638a5",
+      "rng": {
+        "draws": 0,
+        "digest": "811c9dc5"
+      },
+      "label": "mir4-pack-ready",
+      "players": [
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "autoBattle": {
+            "acquireRadiusYards": 30,
+            "anchorZ": -1000,
+            "mode": "battle"
+          },
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {},
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {},
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 45,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200204000,
+            "5": 301204000
+          },
+          "mir4EquipmentInstances": {
+            "200204000": {
+              "itemId": 200204000
+            },
+            "301204000": {
+              "itemId": 301204000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        },
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {},
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {},
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 50,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200201000,
+            "5": 301201000
+          },
+          "mir4EquipmentInstances": {
+            "200201000": {
+              "itemId": 200201000
+            },
+            "301201000": {
+              "itemId": 301201000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        }
+      ],
+      "entities": [
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3600,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "autoAttack": true,
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "combatTimer": 99,
+          "comboUntil": -1,
+          "cooldowns": [
+            [
+              "4101",
+              10
+            ],
+            [
+              "4102",
+              10
+            ]
+          ],
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "fallStartY": 1.53378,
+          "fiveSecondRule": 99,
+          "hp": 4000,
+          "id": 45,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 4,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 4,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "y": 1.53378,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "resource": 600,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "targetId": 46,
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "combatTimer": 99,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.577216,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 50000,
+          "id": 46,
+          "kind": "mob",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "templateId": "mir4_forest_wolf",
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "combatTimer": 99,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 0.881882,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 50000,
+          "id": 47,
+          "kind": "mob",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "templateId": "mir4_forest_wolf",
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "combatTimer": 99,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.524302,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 50000,
+          "id": 48,
+          "kind": "mob",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "templateId": "mir4_forest_wolf",
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "combatTimer": 99,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.698012,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 50000,
+          "id": 49,
+          "kind": "mob",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "templateId": "mir4_forest_wolf",
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3600,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "combatTimer": 99,
+          "comboUntil": -1,
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "fallStartY": 0.861379,
+          "fiveSecondRule": 99,
+          "hp": 4000,
+          "id": 50,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 1,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 1,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2.5,
+            "y": 0.861379,
+            "z": -998
+          },
+          "potionCooldownUntil": -1,
+          "resource": 600,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        }
+      ]
+    },
+    {
+      "tick": 1,
+      "time": 0.05,
+      "nextId": 51,
+      "state": "9f112e47",
+      "events": "6ba2b46e",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 1,
+      "time": 0.05,
+      "nextId": 51,
+      "state": "9f112e47",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      },
+      "label": "actor-centered-4103",
+      "players": [
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "autoBattle": {
+            "acquireRadiusYards": 30,
+            "anchorZ": -1000,
+            "mode": "battle"
+          },
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {
+            "damageDealt": 601
+          },
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {
+              "damageDealt": 601
+            },
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 45,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200204000,
+            "5": 301204000
+          },
+          "mir4EquipmentInstances": {
+            "200204000": {
+              "itemId": 200204000
+            },
+            "301204000": {
+              "itemId": 301204000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        },
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {},
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {},
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 50,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200201000,
+            "5": 301201000
+          },
+          "mir4EquipmentInstances": {
+            "200201000": {
+              "itemId": 200201000
+            },
+            "301201000": {
+              "itemId": 301201000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        }
+      ],
+      "entities": [
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3599.95,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "autoAttack": true,
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "comboUntil": -1,
+          "cooldowns": [
+            [
+              "4101",
+              9.95
+            ],
+            [
+              "4102",
+              9.95
+            ],
+            [
+              "4103",
+              26
+            ]
+          ],
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "facing": 1.570796,
+          "fallStartY": 1.53378,
+          "fiveSecondRule": 99.05,
+          "gcdRemaining": 1,
+          "hp": 4000,
+          "id": 45,
+          "inCombat": true,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 4,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 4,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "y": 1.53378,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "resource": 558,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "targetId": 46,
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "combatTimer": 99.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.577216,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 50000,
+          "id": 46,
+          "kind": "mob",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "templateId": "mir4_forest_wolf",
+          "wanderTimer": 9998.95,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 50,
+          "aiState": "chase",
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 0.881882,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49843,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.95,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              157
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 50,
+          "aiState": "attack",
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": 0.244979,
+          "fallStartY": 1.524302,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49713,
+          "id": 48,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.95,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9998.95,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              287
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 50,
+          "aiState": "attack",
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -0.165149,
+          "fallStartY": 1.698012,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49843,
+          "id": 49,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.95,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "stats": {},
+          "swingTimer": 9998.95,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              157
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3599.95,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "combatTimer": 99.05,
+          "comboUntil": -1,
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "fallStartY": 0.861379,
+          "fiveSecondRule": 99.05,
+          "hp": 4000,
+          "id": 50,
+          "inCombat": true,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 1,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 1,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2.5,
+            "y": 0.861379,
+            "z": -998
+          },
+          "potionCooldownUntil": -1,
+          "resource": 600,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        }
+      ]
+    },
+    {
+      "tick": 2,
+      "time": 0.1,
+      "nextId": 51,
+      "state": "aee0ccc3",
+      "events": "41cc058d",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 2,
+      "time": 0.1,
+      "nextId": 51,
+      "state": "aee0ccc3",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      },
+      "label": "targeted-4106",
+      "players": [
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "autoBattle": {
+            "acquireRadiusYards": 30,
+            "anchorZ": -1000,
+            "mode": "battle"
+          },
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {
+            "damageDealt": 813
+          },
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {
+              "damageDealt": 813
+            },
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 45,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200204000,
+            "5": 301204000
+          },
+          "mir4EquipmentInstances": {
+            "200204000": {
+              "itemId": 200204000
+            },
+            "301204000": {
+              "itemId": 301204000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        },
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {},
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {},
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 50,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200201000,
+            "5": 301201000
+          },
+          "mir4EquipmentInstances": {
+            "200201000": {
+              "itemId": 200201000
+            },
+            "301201000": {
+              "itemId": 301201000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        }
+      ],
+      "entities": [
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3599.9,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "autoAttack": true,
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "comboUntil": -1,
+          "cooldowns": [
+            [
+              "4101",
+              9.9
+            ],
+            [
+              "4102",
+              9.9
+            ],
+            [
+              "4103",
+              25.95
+            ],
+            [
+              "4106",
+              20
+            ]
+          ],
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "facing": 1.570796,
+          "fallStartY": 1.53378,
+          "fiveSecondRule": 99.1,
+          "gcdRemaining": 1,
+          "hp": 4000,
+          "id": 45,
+          "inCombat": true,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 4,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 4,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "y": 1.53378,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "resource": 547,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "targetId": 46,
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "chase",
+          "auras": [
+            {
+              "duration": 2,
+              "id": "mir4_4106_stun",
+              "kind": "stun",
+              "name": "Investida 4106",
+              "remaining": 2,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.577216,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49788,
+          "id": 46,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 2,
+                "effectId": "mir4_4106_stun",
+                "kind": "stun",
+                "remaining": 1.95,
+                "sourceId": 45
+              }
+            ],
+            "controlImmuneUntil": 2.85,
+            "controlImmunityByEffectId": {
+              "mir4_4106_stun": {
+                "sourceId": 45,
+                "until": 2.85
+              }
+            }
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              213
+            ]
+          ],
+          "wanderTimer": 9998.9,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.892547,
+          "fallStartY": 0.881882,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49843,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.9,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9998.95,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              157
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.570796,
+          "fallStartY": 1.524302,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49713,
+          "id": 48,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.9,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9998.9,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              287
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.249046,
+          "fallStartY": 1.698012,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49843,
+          "id": 49,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.9,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "stats": {},
+          "swingTimer": 9998.9,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              157
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3599.9,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "combatTimer": 99.1,
+          "comboUntil": -1,
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "fallStartY": 0.861379,
+          "fiveSecondRule": 99.1,
+          "hp": 4000,
+          "id": 50,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 1,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 1,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2.5,
+            "y": 0.861379,
+            "z": -998
+          },
+          "potionCooldownUntil": -1,
+          "resource": 600,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        }
+      ]
+    },
+    {
+      "tick": 2,
+      "time": 0.1,
+      "nextId": 51,
+      "state": "aee0ccc3",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      },
+      "label": "final",
+      "players": [
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "autoBattle": {
+            "acquireRadiusYards": 30,
+            "anchorZ": -1000,
+            "mode": "battle"
+          },
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {
+            "damageDealt": 813
+          },
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {
+              "damageDealt": 813
+            },
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 45,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200204000,
+            "5": 301204000
+          },
+          "mir4EquipmentInstances": {
+            "200204000": {
+              "itemId": 200204000
+            },
+            "301204000": {
+              "itemId": 301204000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        },
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {},
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {},
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 50,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4Equipment": {
+            "1": 200201000,
+            "5": 301201000
+          },
+          "mir4EquipmentInstances": {
+            "200201000": {
+              "itemId": 200201000
+            },
+            "301201000": {
+              "itemId": 301201000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        }
+      ],
+      "entities": [
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3599.9,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "autoAttack": true,
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "comboUntil": -1,
+          "cooldowns": [
+            [
+              "4101",
+              9.9
+            ],
+            [
+              "4102",
+              9.9
+            ],
+            [
+              "4103",
+              25.95
+            ],
+            [
+              "4106",
+              20
+            ]
+          ],
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "facing": 1.570796,
+          "fallStartY": 1.53378,
+          "fiveSecondRule": 99.1,
+          "gcdRemaining": 1,
+          "hp": 4000,
+          "id": 45,
+          "inCombat": true,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 4,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 4,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "y": 1.53378,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "resource": 547,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "targetId": 46,
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "chase",
+          "auras": [
+            {
+              "duration": 2,
+              "id": "mir4_4106_stun",
+              "kind": "stun",
+              "name": "Investida 4106",
+              "remaining": 2,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.577216,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49788,
+          "id": 46,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 2,
+                "effectId": "mir4_4106_stun",
+                "kind": "stun",
+                "remaining": 1.95,
+                "sourceId": 45
+              }
+            ],
+            "controlImmuneUntil": 2.85,
+            "controlImmunityByEffectId": {
+              "mir4_4106_stun": {
+                "sourceId": 45,
+                "until": 2.85
+              }
+            }
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              213
+            ]
+          ],
+          "wanderTimer": 9998.9,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.892547,
+          "fallStartY": 0.881882,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49843,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.9,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9998.95,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              157
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.570796,
+          "fallStartY": 1.524302,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49713,
+          "id": 48,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.9,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9998.9,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              287
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.05,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.249046,
+          "fallStartY": 1.698012,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49843,
+          "id": 49,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 4.9,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "stats": {},
+          "swingTimer": 9998.9,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              157
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 9,
+            "min": 6,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "attackPower": 125,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3599.9,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "combatTimer": 99.1,
+          "comboUntil": -1,
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "fallStartY": 0.861379,
+          "fiveSecondRule": 99.1,
+          "hp": 4000,
+          "id": 50,
+          "kind": "player",
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 4000,
+          "maxResource": 600,
+          "mir4": {
+            "accuracy": 5,
+            "classId": 1,
+            "criticalOutcome": 10,
+            "magicDefense": 12,
+            "manaCostStat": 204,
+            "physicalDefense": 12,
+            "skillDamageBps": 10
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 1,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2.5,
+            "y": 0.861379,
+            "z": -998
+          },
+          "potionCooldownUntil": -1,
+          "resource": 600,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        }
+      ]
+    }
+  ]
+}

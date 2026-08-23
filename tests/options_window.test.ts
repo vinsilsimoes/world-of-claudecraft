@@ -628,12 +628,28 @@ describe('options_window: Reset to Defaults is scoped per sub-view (#2341)', () 
     const footer = painter.slice(painter.indexOf('private settingsViewFooter('));
     const body = footer.slice(0, footer.indexOf('\n  }\n'));
     expect(body).toContain('const keys = optionsControlKeys(controls)');
-    // the reset call is scoped, never the bare no-arg full reset
-    expect(body).toContain('hooks.settings.reset(keys)');
+    // the footer hands that scope to the shared reset, never a bare full reset
+    expect(body).toContain('this.resetSettingScope(hooks, keys)');
     expect(body).not.toMatch(/settings\.reset\(\)/);
+
+    const scope = painter.slice(painter.indexOf('private resetSettingScope('));
+    const scopeBody = scope.slice(0, scope.indexOf('\n  }\n'));
+    // the reset call is scoped, never the bare no-arg full reset
+    expect(scopeBody).toContain('hooks.settings.reset(keys)');
+    expect(scopeBody).not.toMatch(/settings\.reset\(\)/);
     // re-apply loop walks only the scoped keys, never settings.all()
-    expect(body).toContain('for (const k of keys)');
-    expect(body).not.toContain('settings.all()');
+    expect(scopeBody).toContain('for (const k of keys)');
+    expect(scopeBody).not.toContain('settings.all()');
+  });
+
+  // The cross-hotbar display picker is painted bespoke (a dropdown beside the bar's
+  // own rows), so the Controller view has to name its key or Reset to Defaults would
+  // walk past the one row the control list cannot see.
+  it('renderController widens its reset scope to the bespoke cross-hotbar display key', () => {
+    const start = painter.indexOf('private renderController(): void {');
+    const rest = painter.slice(start);
+    const body = rest.slice(0, rest.indexOf('\n  }\n'));
+    expect(body).toContain("this.resetSettingScope(hooks, [...keys, 'gamepadCrossHotbarDisplay'])");
   });
 
   it.each([
@@ -724,14 +740,15 @@ describe('options_window: Reset to Defaults is scoped per sub-view (#2341)', () 
 });
 
 // Key Bindings' Reset to Defaults used to reset only the rebindable key-code
-// map (Keybinds.reset()), silently leaving the seven GameSettings toggles the
-// same panel renders (mouse camera, click-to-move + its mouse button, attack
+// map (Keybinds.reset()), silently leaving the six adjustable GameSettings the
+// same panel renders (cursor lock, click-to-move + its mouse button, attack
 // move, left-handed touch, profanity filter) untouched.
 describe('options_window: Key Bindings Reset to Defaults also resets its own toggles', () => {
-  it('names the same seven setting keys the panel renders via settingToggleKeybind/clickMoveMouseButtonRow', () => {
+  it('names the same six adjustable setting keys the panel renders', () => {
     expect(painter).toContain(
-      "const KEYBIND_PANEL_SETTING_KEYS: (keyof GameSettings)[] = [\n  'mouseCamera',\n  'lockCursorOnRotate',\n  'clickToMove',\n  'clickToMoveButton',\n  'attackMove',\n  'leftHandedTouch',\n  'filterProfanity',\n];",
+      "const KEYBIND_PANEL_SETTING_KEYS: (keyof GameSettings)[] = [\n  'lockCursorOnRotate',\n  'clickToMove',\n  'clickToMoveButton',\n  'attackMove',\n  'leftHandedTouch',\n  'filterProfanity',\n];",
     );
+    expect(painter).not.toContain("t('hud.options.mouseCamera'), 'mouseCamera'");
   });
 
   it("renderKeybinds' reset handler resets the keybind map AND the panel's own settings, then re-applies them", () => {

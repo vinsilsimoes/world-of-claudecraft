@@ -83,6 +83,7 @@ import type { IWorldInventory } from './world_api/inventory';
 import type { IWorldLoot } from './world_api/loot';
 import type { IWorldMail } from './world_api/mail';
 import type { IWorldMarket } from './world_api/market';
+import type { IWorldMir4 } from './world_api/mir4';
 import type { IWorldMounts } from './world_api/mounts';
 import type { IWorldParty } from './world_api/party';
 import type { IWorldPet } from './world_api/pet';
@@ -120,9 +121,13 @@ export type {
 // discriminator. Changing the authoritative town layout requires a new epoch:
 // the strict discriminator makes both rolling-deploy directions fail closed
 // before either binary loads a character into a differently shaped world.
-// 6 = the class-overhauls integration layout on top of the v0.35.0 base layout
-// (both sides of the 2026-08 base merge bumped independently: 4 and 5).
-export const ONLINE_WORLD_LAYOUT_VERSION = 6 as const;
+// 8 = the first frame now carries the required game profile. An auth-world-7
+// server would ignore that field and could admit a MIR4 client into the classic
+// world, so both rolling-deploy directions need a new discriminator.
+// 11 = MIR4 regions now have authored topologies, physical terrain limits and
+// relocated campaign anchors. Epoch 10 peers render and collide against the
+// previous geometry, so both rolling-deploy directions must fail closed.
+export const ONLINE_WORLD_LAYOUT_VERSION = 11 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI
@@ -313,7 +318,8 @@ export interface IWorld
     IWorldActionBar,
     IWorldDeeds,
     IWorldReliquary,
-    IWorldMounts {}
+    IWorldMounts,
+    IWorldMir4 {}
 
 // ---------------------------------------------------------------------------
 // Command schema (W0b): the shared wire-token vocabulary.
@@ -614,6 +620,11 @@ export const COMMAND_NAMES = [
   // payload, the sim resolves the previous enemy in the same ordered list Tab
   // walks forward. Appended because wire tokens are never reordered.
   'tabPrev',
+  // The mir4-gameplay-port profile surface: ONE command carrying a sub-action
+  // envelope (m: 'auto' | 'quest' | 'cast' | 'basic' | 'equip' | 'unequip'),
+  // dispatched through server/mir4_commands.ts. The envelope keeps the wire
+  // universe append-only while the profile's verb set grows.
+  'mir4',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -696,7 +707,8 @@ export type WorldFacet =
   | 'IWorldActionBar'
   | 'IWorldDeeds'
   | 'IWorldReliquary'
-  | 'IWorldMounts';
+  | 'IWorldMounts'
+  | 'IWorldMir4';
 
 export const COMMAND_FACETS = {
   // IWorldCombat: ability casts, auto-attack, spirit release.
@@ -935,4 +947,6 @@ export const COMMAND_FACETS = {
   // IWorldActionBar: the debounced action-bar layout upload. takeActionBarLayoutRestore
   // is a login-time read (no send, untagged).
   save_hotbar_layout: 'IWorldActionBar',
+  // IWorldMir4: the mir4 profile surface rides the single 'mir4' envelope.
+  mir4: 'IWorldMir4',
 } as const satisfies Partial<Record<ClientCommand, WorldFacet>>;

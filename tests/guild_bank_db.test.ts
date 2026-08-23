@@ -144,7 +144,7 @@ describe('saveCharacterAndGuildBankState (the game-loop escrow save)', () => {
     );
     expect(seedCalls.map((c) => (c[1] as unknown[])[0])).toEqual([7, 9]);
     const charIndex = sqls.findIndex((s2) => /UPDATE characters/i.test(s2));
-    const lockIndex = sqls.findIndex((s2) => /FOR UPDATE/i.test(s2));
+    const lockIndex = sqls.findIndex((s2) => /FROM guild_banks[\s\S]*FOR UPDATE/i.test(s2));
     expect(charIndex).toBeGreaterThan(0);
     expect(lockIndex).toBeGreaterThan(charIndex);
     // Both books are parameterized upserts on the SAME client, carrying the

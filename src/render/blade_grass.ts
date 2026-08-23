@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { getActiveWorldContent, WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } from '../sim/data';
 import { isInSowfieldShell } from '../sim/vale_cup_layout';
-import { roadDistance, terrainHeight, WATER_LEVEL, zoneBiomeAt } from '../sim/world';
+import { biomeAt, roadDistance, terrainHeight, WATER_LEVEL } from '../sim/world';
 import {
   activateDenseSlot,
   type DenseSlotState,
@@ -248,7 +248,7 @@ export function buildBladeGrass(
       // same soil-noise gate as the card tufts: dense on lush patches,
       // bare between them (squared for hard patch edges)
       const lush = groundLushnessAt(x, z, seed);
-      const biomeDensity = GRASS_BIOME_DENSITY[zoneBiomeAt(x, z)] ?? 1;
+      const biomeDensity = GRASS_BIOME_DENSITY[biomeAt(x, z)] ?? 1;
       // higher floor + gain than the tufts: coverage is the carpet's job,
       // the patch structure just modulates it
       ok = r1 < (0.44 + 1.7 * lush * lush) * 1.05 * Math.min(biomeDensity, 1.2);

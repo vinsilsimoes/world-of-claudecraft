@@ -9,10 +9,11 @@
 // Pure entity-state mutation: it sets aiState/aggroTargetId/leashAnchor and seeds the
 // hate table, and draws NO rng. That keeps the shared draw order unchanged, so the
 // parity goldens are unaffected.
-import { MOBS } from '../data';
 import type { SimContext } from '../sim_context';
 import { addThreat } from '../threat';
 import type { Entity } from '../types';
+import { questGateBlocksAggro } from './quest_gated_aggro';
+import { resolveMobTemplate } from './template';
 
 // A fleeing mob rallies same-family allies within this (small, local) radius. Kept tight
 // so the first cluster it reaches is local, not the whole camp down the escape lane.
@@ -22,7 +23,7 @@ export const FLEE_HELP_RADIUS = 5;
 // mob onto its attacker. Called each tick of the flee; the caller turns the fleer back
 // the moment this returns a non-zero count. Returns the number of allies newly pulled.
 export function rallyFleeingAllies(ctx: SimContext, mob: Entity, target: Entity): number {
-  const family = MOBS[mob.templateId]?.family;
+  const family = resolveMobTemplate(mob.templateId, ctx.mir4RuntimeMobTemplates)?.family;
   if (!family) return 0;
   let pulled = 0;
   ctx.grid.forEachInRadius(mob.pos.x, mob.pos.z, FLEE_HELP_RADIUS, (m, d2) => {
@@ -33,8 +34,11 @@ export function rallyFleeingAllies(ctx: SimContext, mob: Entity, target: Entity)
       m.hostile &&
       m.aiState === 'idle' &&
       m.ownerId === null &&
-      MOBS[m.templateId]?.family === family &&
-      d2 < FLEE_HELP_RADIUS * FLEE_HELP_RADIUS
+      resolveMobTemplate(m.templateId, ctx.mir4RuntimeMobTemplates)?.family === family &&
+      d2 < FLEE_HELP_RADIUS * FLEE_HELP_RADIUS &&
+      // A quest-gated same-family idle mob (e.g. a Broodmother egg beside a fleeing
+      // Mirefen Widow) never joins a rally against a player it cannot legally fight.
+      !questGateBlocksAggro(ctx.players, m, target)
     ) {
       m.aiState = 'chase';
       m.aggroTargetId = target.id;

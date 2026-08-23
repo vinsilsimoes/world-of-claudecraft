@@ -2,6 +2,8 @@
 
 import * as THREE from 'three';
 import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
+import { browserGameProfile } from '../game_profile_runtime';
+import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { loadGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import {
@@ -13,12 +15,29 @@ import {
   fenbridgeSurfaceRoughnessTexture,
 } from './fenbridge_surface_atlas';
 import { GFX, surfaceMat } from './gfx';
+import { markSharedGeometry, markSharedMaterial } from './shared_resource';
 import { applySurfaceDetail, wornFamilyFor } from './worn_stone';
 
 /** Target max height after normalization (~sparkle anchor at 1.35). */
 const TARGET_HEIGHT = 1.35;
 
 const QUEST_OBJECT_URLS: Record<string, string> = {
+  // MIR4 campaign interaction families. These select existing WoC assets;
+  // they are not inventory items and are consumed only by the campaign host.
+  mir4_object_noticeboard_order: '/models/quest/weathered_ledger_page.glb',
+  mir4_object_device_cog: '/models/resources/parts_cog.glb',
+  mir4_object_network_map: '/models/tools/map.glb',
+  mir4_object_shortcut_key: '/models/tools/key_a.glb',
+  mir4_object_waypoint_crystal: '/models/props/hollow_gate_crystal.glb',
+  mir4_object_survey_compass: '/models/tools/compass_base.glb',
+  mir4_object_gather_patch: '/models/resources/gather_herb_cluster.glb',
+  mir4_object_clue_magnifier: '/models/tools/magnifying_glass.glb',
+  mir4_object_service_blueprint: '/models/tools/blueprint.glb',
+  mir4_object_lore_journal: '/models/tools/journal_open.glb',
+  mir4_object_supply_crate: '/models/quest/supply_crate.glb',
+  mir4_object_evidence_ledger: '/models/quest/weathered_ledger_page.glb',
+  mir4_object_repair_wrench: '/models/tools/wrench_a.glb',
+  mir4_object_tracking_map: '/models/tools/map_rolled.glb',
   crypt_ritual_circle: '/models/quest/crypt_ritual_circle.glb',
   supply_crate: '/models/quest/supply_crate.glb',
   lost_caravan_goods: '/models/quest/lost_caravan_goods.glb',
@@ -37,6 +56,13 @@ const QUEST_OBJECT_URLS: Record<string, string> = {
   grave_high_priest_malric: '/models/dungeon/gravestone.glb',
   grave_captain_voss: '/models/dungeon/gravestone.glb',
 };
+
+export function questObjectPreloadUrlsForProfile(profile: GameProfile): string[] {
+  const urls = Object.entries(QUEST_OBJECT_URLS)
+    .filter(([itemId]) => profile === MIR4_GAME_PROFILE || !itemId.startsWith('mir4_object_'))
+    .map(([, url]) => url);
+  return [...new Set(urls)];
+}
 
 const QUEST_OBJECT_HEIGHTS: Record<string, number> = {
   // The Nythraxis soul wardstones are an active raid mechanic — make them a tall,
@@ -67,7 +93,11 @@ interface ScrollStyle {
 }
 
 const SCROLL_STYLES: Record<string, ScrollStyle> = {
-  weathered_ledger_page: { parchmentTint: 0xd4c4a0, ink: 0x3a2818, textLines: 4 },
+  weathered_ledger_page: {
+    parchmentTint: 0xd4c4a0,
+    ink: 0x3a2818,
+    textLines: 4,
+  },
   fen_muster_order: {
     parchmentTint: 0xddd0b0,
     ribbon: 0xc9a227,
@@ -91,7 +121,11 @@ const ITEM_MAT_OVERRIDES: Record<
   gravecaller_sigil: { emissive: 0x6b3fa0, emissiveIntensity: 0.35 },
   gravewyrm_sigil: { emissive: 0x1a4060, emissiveIntensity: 0.45 },
   bastion_ward_stone: { emissive: 0x6b3fa0, emissiveIntensity: 0.3 },
-  soulshard_pillar: { color: 0x6f1b2c, emissive: 0x8f1232, emissiveIntensity: 0.42 },
+  soulshard_pillar: {
+    color: 0x6f1b2c,
+    emissive: 0x8f1232,
+    emissiveIntensity: 0.42,
+  },
   sanctum_key_shard: { emissive: 0x1a4060, emissiveIntensity: 0.5 },
   morthen_grimoire: { emissive: 0x3a1850, emissiveIntensity: 0.12 },
 };
@@ -124,7 +158,7 @@ export const questObjectCacheInternalsForTest = {
 };
 
 if (typeof window !== 'undefined') {
-  const urls = [...new Set(Object.values(QUEST_OBJECT_URLS))];
+  const urls = questObjectPreloadUrlsForProfile(browserGameProfile());
   for (const url of urls) {
     registerDeferredPreload(() =>
       loadGltf(url)
@@ -137,7 +171,12 @@ if (typeof window !== 'undefined') {
 }
 
 function matProps(color: number): Parameters<typeof surfaceMat>[0] {
-  return { color, roughness: 0.9, metalness: 0.05, flatShading: !GFX.standardMaterials };
+  return {
+    color,
+    roughness: 0.9,
+    metalness: 0.05,
+    flatShading: !GFX.standardMaterials,
+  };
 }
 
 function decorateScroll(root: THREE.Object3D, itemId: string): void {
@@ -229,22 +268,26 @@ function convertMaterial(src: THREE.Material, itemId: string): THREE.Material {
           roughnessMap: fenbridgeSurfaceRoughnessTexture(),
         }
       : { normalMap: undefined, roughnessMap: undefined };
+  // The muster order's aged-iron arm packs metalness in the response map's
+  // blue channel. It rides in the OPTIONS, never as a write on the returned
+  // material: surfaceMat dedupes by key and metalnessMap is a program-cache-key
+  // input, so a post-hoc write relinked every other prop sharing that entry.
+  const musterIron = fenbridgePbr.normalMap !== undefined;
   const mat = surfaceMat({
     color: color.getHex(),
     map: fenbridgeAtlas ?? s.map ?? undefined,
     vertexColors: fenbridgeAtlas ? false : s.vertexColors,
     normalMap: fenbridgePbr.normalMap ?? s.normalMap ?? undefined,
     roughnessMap: fenbridgePbr.roughnessMap ?? s.roughnessMap ?? undefined,
+    metalnessMap: musterIron ? fenbridgePbr.roughnessMap : undefined,
     roughness: s.roughness ?? 0.88,
-    metalness: Math.min(s.metalness ?? 0, 0.75),
+    metalness: musterIron ? 1 : Math.min(s.metalness ?? 0, 0.75),
     emissive: ov?.emissive,
     emissiveIntensity: ov?.emissiveIntensity,
     flatShading: !GFX.standardMaterials,
   });
-  if (itemId === 'fen_muster_order' && mat instanceof THREE.MeshStandardMaterial && mat.normalMap) {
+  if (musterIron && mat instanceof THREE.MeshStandardMaterial) {
     mat.normalScale.setScalar(FENBRIDGE_SURFACE_NORMAL_SCALE);
-    mat.metalness = 1;
-    mat.metalnessMap = mat.roughnessMap;
   }
   if (
     !AUTHORED_SCROLL_CUE_IDS.has(itemId) &&
@@ -402,7 +445,7 @@ function buildRitualCircleTemplate(): THREE.Group {
   light.position.set(0, 1.2, 0);
   root.add(light);
 
-  proceduralByItem.set('crypt_ritual_circle', root);
+  proceduralByItem.set('crypt_ritual_circle', markTemplateShared(root));
   return root;
 }
 
@@ -533,7 +576,7 @@ function buildRoyalSealTemplate(): THREE.Group {
   claspStud.position.set(bookWidth * 0.5 + 0.01, bookHeight * 0.5, 0);
   root.add(claspStud);
 
-  proceduralByItem.set('royal_seal', root);
+  proceduralByItem.set('royal_seal', markTemplateShared(root));
   return root;
 }
 
@@ -559,6 +602,22 @@ const PROCEDURAL_ITEM_IDS = new Set([
  */
 const measuredHeightByItem = new Map<string, number>();
 
+/** Tag a forever-cached template's geometry + materials shared BEFORE the
+ * first clone ships. Ground-object clones share both by reference, and the
+ * renderer's terminal teardown traverses views disposing unshared resources;
+ * untagged, the first teardown poisons the template for every renderer built
+ * after it (the WebGL context-recycle path). */
+function markTemplateShared<T extends THREE.Object3D>(root: T): T {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    markSharedGeometry(mesh.geometry);
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) markSharedMaterial(m);
+  });
+  return root;
+}
+
 function prepareItem(itemId: string): THREE.Group | null {
   const cached = preparedByItem.get(itemId);
   if (cached) return cached;
@@ -569,7 +628,7 @@ function prepareItem(itemId: string): THREE.Group | null {
     const template = build();
     const measuredHeight = normalizeRoot(template, QUEST_OBJECT_HEIGHTS[itemId] ?? TARGET_HEIGHT);
     measuredHeightByItem.set(itemId, measuredHeight);
-    preparedByItem.set(itemId, template);
+    preparedByItem.set(itemId, markTemplateShared(template));
     return template;
   }
   const gltf = gltfByUrl.get(url);
@@ -605,7 +664,7 @@ function prepareItem(itemId: string): THREE.Group | null {
   if (SCROLL_ITEM_IDS.has(itemId) && !AUTHORED_SCROLL_CUE_IDS.has(itemId)) {
     decorateScroll(root, itemId);
   }
-  preparedByItem.set(itemId, root);
+  preparedByItem.set(itemId, markTemplateShared(root));
   return root;
 }
 

@@ -24,7 +24,7 @@
 import * as THREE from 'three';
 import { getActiveWorldContent, WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } from '../sim/data';
 import { isInSowfieldShell } from '../sim/vale_cup_layout';
-import { roadDistance, terrainHeight, WATER_LEVEL, zoneBiomeAt } from '../sim/world';
+import { biomeAt, roadDistance, terrainHeight, WATER_LEVEL } from '../sim/world';
 import { clusterGeometry, mulberry32 } from './blade_grass';
 import {
   activateDenseSlot,
@@ -202,7 +202,7 @@ export function buildBladeGrassBand(
     let ok = Math.abs(x) <= WORLD_MAX_X - 16 && z >= WORLD_MIN_Z + 16 && z <= WORLD_MAX_Z - 16;
     if (ok) {
       const lush = groundLushnessAt(x, z, seed);
-      const biomeDensity = GRASS_BIOME_DENSITY[zoneBiomeAt(x, z)] ?? 1;
+      const biomeDensity = GRASS_BIOME_DENSITY[biomeAt(x, z)] ?? 1;
       ok = r1 < (0.44 + 1.7 * lush * lush) * 1.05 * Math.min(biomeDensity, 1.2);
       if (ok) ok = roadDistance(x, z) > 2.4;
       if (ok) ok = !isInSowfieldShell(x, z);

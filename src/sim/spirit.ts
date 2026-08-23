@@ -43,8 +43,9 @@ import {
   SPIRIT_HEALER,
   SPIRIT_HEALER_NPC_ID,
 } from './data';
-import { createNpc, recalcPlayerStats } from './entity';
+import { createNpc } from './entity';
 import { releaseSpiritInDelve } from './entity_roster';
+import { scriptedInstanceReturnAt } from './instances/scripted_return';
 import { restorePetOnOwnerRevive } from './pet/pet_owner_revive';
 import { cancelProfessionSessionOnDisplacement } from './professions/session_teardown';
 import {
@@ -124,6 +125,10 @@ function ghostGraveyard(
   // rule below it.
   const bgMatch = ctx.bgMatches.get(p.id) ?? null;
   if (bgMatch) return bgGraveyardSpot(bgMatch, p.id);
+  const scriptedReturn = scriptedInstanceReturnAt(ctx.instances, p.pos, p.id);
+  if (scriptedReturn) {
+    return nearestOverworldGraveyard(scriptedReturn.x, scriptedReturn.z, graveyards, fallback);
+  }
   const dungeon = dungeonAt(p.pos.x);
   if (dungeon) {
     return nearestOverworldGraveyard(dungeon.doorPos.x, dungeon.doorPos.z, graveyards, fallback);
@@ -277,7 +282,7 @@ function releaseAtNearestGraveyard(
   // cannot be shed by dying. Every other aura clears when the spirit is released.
   p.auras = aurasSurvivingDeath(p.auras);
   p.ccDr.clear();
-  recalcPlayerStats(p, meta.cls, meta.equipment, ctx.playerMods(meta), meta.equipmentInstance);
+  ctx.recalcPlayer(p);
   // A ghost shows a full (greyed) bar even though it is still `dead`. recalc forces
   // hp to 0 while dead, so set the display pools afterward.
   p.hp = p.maxHp;
@@ -410,7 +415,7 @@ function reviveAt(
   // resurrection refreshes The Keeper's Toll to full duration via the apply below.
   p.auras = aurasSurvivingDeath(p.auras);
   p.ccDr.clear();
-  recalcPlayerStats(p, meta.cls, meta.equipment, ctx.playerMods(meta), meta.equipmentInstance);
+  ctx.recalcPlayer(p);
   p.hp = Math.max(1, Math.round(p.maxHp * hpFrac));
   p.resource = p.resourceType === 'mana' ? Math.round(p.maxResource * hpFrac) : 0;
   p.targetId = null;

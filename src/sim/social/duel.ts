@@ -10,6 +10,8 @@
 // here via SimContext; `entityInDungeon` / `hasPendingSocialInvite` likewise stay
 // on Sim and are read through the seam.
 
+import { ownedNecromancyUndead } from '../combat/necromancy';
+import { clearMir4EffectsFromController } from '../mir4/effects';
 import type { DuelState } from '../sim';
 import type { SimContext } from '../sim_context';
 import { DT, dist2d, type Entity } from '../types';
@@ -149,10 +151,19 @@ export function updateDuels(ctx: SimContext): void {
     // carries only `sourceId`, so once a pet despawns nothing can map its dot
     // back to the owner; the clamp meanwhile treats that dot as the opponent's
     // for the whole bout. Recording the id here is what lets the end clear
-    // exactly what the clamp was protecting against.
+    // exactly what the clamp was protecting against. Necromancy temporary
+    // undead are deliberately excluded from petOf (they must never replace or
+    // persist as the owner's primary pet), so they need their own recording
+    // pass here: the clamp already treats their damage as the opponent's
+    // (pvpController resolves ANY owned mob, not just petOf's one), but without
+    // this a dot one of them left behind survives a mid-duel expiry the same
+    // way an unrecorded pet's used to.
     for (const dPid of [duel.a, duel.b]) {
       const pet = ctx.petOf(dPid);
       if (pet) duel.controlled?.get(dPid)?.add(pet.id);
+      for (const undead of ownedNecromancyUndead(ctx, dPid)) {
+        duel.controlled?.get(dPid)?.add(undead.id);
+      }
     }
     // forfeit by running away or dying to something else
     if (dist2d(ea.pos, eb.pos) > DUEL_FORFEIT_DISTANCE) {
@@ -241,6 +252,8 @@ export function endDuel(ctx: SimContext, duel: DuelState, winnerPid: number | nu
   // not disagree about whose doing something was.
   clearAurasFromController(ctx, ea, duel.b, duel.controlled?.get(duel.b));
   clearAurasFromController(ctx, eb, duel.a, duel.controlled?.get(duel.a));
+  clearMir4EffectsFromController(ctx, ea, duel.b, duel.controlled?.get(duel.b));
+  clearMir4EffectsFromController(ctx, eb, duel.a, duel.controlled?.get(duel.a));
   if (winnerPid !== null && aMeta && bMeta) {
     const winner = winnerPid === duel.a ? aMeta : bMeta;
     const loser = winnerPid === duel.a ? bMeta : aMeta;

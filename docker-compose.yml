@@ -39,6 +39,9 @@ services:
         VITE_TURNSTILE_SITEKEY: ${VITE_TURNSTILE_SITEKEY:-}
         VITE_REOWN_PROJECT_ID: ${VITE_REOWN_PROJECT_ID:-}
         VITE_WALLET_DISABLED: ${VITE_WALLET_DISABLED:-}
+        # One profile value builds the browser and boots the server, so the
+        # WebSocket compatibility guard cannot drift inside this stack.
+        VITE_GAME_PROFILE: ${GAME_PROFILE:-woc-classic}
     container_name: eastbrook-game
     restart: unless-stopped
     depends_on:
@@ -47,6 +50,9 @@ services:
     environment:
       DATABASE_URL: postgres://eastbrook:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env. See .env.example.}@postgres:5432/eastbrook
       PORT: "8787"
+      # Gameplay/content profile. The database is bound to its first boot
+      # profile; use a fresh volume/database for mir4-gameplay-port.
+      GAME_PROFILE: ${GAME_PROFILE:-woc-classic}
       # Runtime: node flags for the game process, chiefly the V8 heap ceiling
       # (--max-old-space-size). Node sizes its default old-space from TOTAL SYSTEM
       # memory, not from the container's cgroup limit, so on a box larger than
@@ -106,6 +112,20 @@ services:
       # heartbeat log line (tickHz, per-phase p95/max) plus over-budget stutter
       # traces. Off by default so production logs stay quiet.
       PERF_TICK_LOG: ${PERF_TICK_LOG:-}
+      # Runtime: client perf beacon retention in days for the nightly sweep
+      # (server/http/config.ts, code default 14). The host .env sets a longer
+      # window (90) so device/FPS history spans release cycles; without this
+      # passthrough the container silently runs the code default and discards
+      # the longitudinal data the perf investigations rely on.
+      PERF_REPORT_RETENTION_DAYS: ${PERF_REPORT_RETENTION_DAYS:-}
+      # Runtime: the sibling retention knobs config.ts reads that were missing
+      # the same passthrough, so a host .env override silently fell back to the
+      # code defaults exactly like PERF_REPORT_RETENTION_DAYS did. Empty is
+      # safe: numberOr treats the empty string as absent.
+      CHAT_LOG_RETENTION_DAYS: ${CHAT_LOG_RETENTION_DAYS:-}
+      UNSTUCK_REPORT_RETENTION_DAYS: ${UNSTUCK_REPORT_RETENTION_DAYS:-}
+      DAILY_REWARD_EVENTS_RETENTION_DAYS: ${DAILY_REWARD_EVENTS_RETENTION_DAYS:-}
+      ONLINE_SAMPLES_RETENTION_DAYS: ${ONLINE_SAMPLES_RETENTION_DAYS:-}
       # Runtime: the published OTA bundle manifest POST /api/ota/updates reads
       # (server/ota_updates.ts). Empty (unset) keeps OTA dark: the endpoint
       # answers "no update" and the native apps keep their current bundle. Must

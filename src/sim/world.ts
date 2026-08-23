@@ -1,6 +1,7 @@
 import { bgFieldHeightLocal } from './battleground_field';
 import { beaconSpiralLift } from './beacon_spiral';
 import { BORDER_EDGES } from './border_edges';
+import { bulwarkLift, bulwarkPadTarget, bulwarkPadWeight } from './bulwark_layout';
 import {
   castleLift,
   castlePadTarget,
@@ -10,6 +11,7 @@ import {
 } from './castle_layout';
 import { STABLE_FLAT, STABLE_PADDOCK } from './content/mounts';
 import { PALMREACH_PROPS } from './content/palmreach';
+import { customWorldTerrainHeight, nearCustomWorldRim } from './custom_world_terrain';
 import {
   bgOriginAt,
   CAMPS,
@@ -26,6 +28,7 @@ import {
   STRIP_MAX_X,
   STRIP_MIN_X,
   STRIP_ZONES,
+  setActiveWorldContent,
   WORLD_MAX_X,
   WORLD_MAX_Z,
   WORLD_MIN_X,
@@ -34,9 +37,10 @@ import {
   ZONES,
   zoneAt,
 } from './data';
+import { dawnholdLift, dawnholdPadTarget, dawnholdPadWeight } from './dawnhold_layout';
 import { dockLocalPoint, dockSectionAtLocal, dockSurfaceLine, dockSurfaceYAt } from './dock_layout';
 import { dungeonFloorLift } from './dungeon_floor';
-import { lastKeepLiftAt } from './dungeon_layout';
+import { dawnholdKeepLiftAt, lastKeepLiftAt } from './dungeon_layout';
 import {
   EMBER_FLAT_POOLS,
   EMBER_LAVA_LINKS,
@@ -46,6 +50,7 @@ import {
 import { GALE_DECK_FREEBOARD, galeDeckSurface } from './gale_harbor';
 import { reachDeckClear, reachDeckSurface } from './reach_decks';
 import { fbm2, hash2, noise2 } from './rng';
+import { BIOME_SHAPE } from './terrain_biome_shape';
 import {
   CALM_SKIRT_MAX_WIDTH,
   type CalmProbe,
@@ -62,7 +67,7 @@ import {
   terrainRegionHas,
 } from './terrain_region_index';
 import { cragLayer, highlandMask, reliefBase, ridged2, warpedCoords } from './terrain_relief';
-import type { BiomeId, HeightStamp, ZoneDef } from './types';
+import type { BiomeId, HeightStamp, WorldContent, ZoneDef } from './types';
 import { isInSowfieldShell, SOWFIELD_FLAT, sowfieldStandLift } from './vale_cup_layout';
 import { wildheartFieldHeight } from './wildheart_field';
 
@@ -79,6 +84,22 @@ const DETAIL_SCALE = 0.05;
 
 export const WATER_LEVEL = -4.3;
 
+/** Run a synchronous terrain query against an explicit world and restore the
+ * caller's registry even when the query throws. JavaScript cannot interleave
+ * another task inside this callback, so builders can sample canonical terrain
+ * without inheriting whichever editor or diagnostic world happened to be
+ * active before them. Async callbacks are deliberately rejected by type. */
+export function withWorldTerrainContent<T>(world: WorldContent, sample: () => T): T {
+  const previous = getActiveWorldContent();
+  if (previous === world) return sample();
+  setActiveWorldContent(world);
+  try {
+    return sample();
+  } finally {
+    setActiveWorldContent(previous);
+  }
+}
+
 // The ACTIVE water surface height: the custom map's level if one is loaded, else
 // the built-in constant. Cheap (identity-cached content lookup), safe in hot
 // paths. For the built-in world getActiveWorldContent() has no waterLevel, so
@@ -93,6 +114,13 @@ export function waterLevel(): number {
 // lake actually ends.
 export const LAKE_BLEND_RADIUS_MULT = 1.6;
 
+function isInDryCrossing(x: number, z: number): boolean {
+  for (const crossing of getActiveWorldContent().dryCrossings ?? []) {
+    if ((x - crossing.x) ** 2 + (z - crossing.z) ** 2 < crossing.radius ** 2) return true;
+  }
+  return false;
+}
+
 // True when (x,z) falls inside a declared lake's footprint (any active zone's
 // `lakes` list) or one of the programmatic border waters (the moats, column
 // straits, and row meres where two maps meet: BORDER_WATERS below). Terrain
@@ -102,6 +130,7 @@ export const LAKE_BLEND_RADIUS_MULT = 1.6;
 // footprints. (The open seas are handled separately by the coastal appliers
 // and inHollowOpenSea.)
 export function isInWaterBody(x: number, z: number): boolean {
+  if (isInDryCrossing(x, z)) return false;
   if (inBorderWater(x, z)) return true;
   for (const zone of getActiveWorldContent().zones) {
     for (const lake of zone.lakes) {
@@ -111,6 +140,11 @@ export function isInWaterBody(x: number, z: number): boolean {
     }
   }
   return false;
+}
+
+function usesContentTerrain(content = getActiveWorldContent()): boolean {
+  if (content.terrainModel) return content.terrainModel === 'content';
+  return content.zones.length > 0 && content.zones !== ZONES;
 }
 
 // True where the world's OWN terrain generation (base fields, coasts, lake
@@ -124,6 +158,7 @@ export function isInWaterBody(x: number, z: number): boolean {
 // floors far off-world and never read as sea.
 export function isOpenSeaAt(x: number, z: number, seed: number): boolean {
   if (x > DUNGEON_X_THRESHOLD) return false;
+  if (usesContentTerrain()) return false;
   // Per-cell memo: this runs inside the movement gates several times per
   // entity per tick and the sea test costs a full terrain sample. Sea-ness is
   // stable per 1-yard cell (the same quantization the movement gates already
@@ -204,44 +239,6 @@ export function waterBodies(): { x: number; z: number; radius: number }[] {
   }
   return out;
 }
-
-// Hill amplitude / base elevation / hub plateau height / crag amplitude per
-// biome. `crag` is the ridged-multifractal layer's full-mask height
-// (terrain_relief.ts): how far sharp ridgelines can crown this biome's
-// uplands. 0 keeps a biome exactly as calm as its hills (wetlands, lawns).
-const BIOME_SHAPE: Record<
-  BiomeId,
-  { hill: number; base: number; hubHeight: number; crag: number }
-> = {
-  vale: { hill: 26, base: 0, hubHeight: 1.5, crag: 5 },
-  marsh: { hill: 11, base: -1.0, hubHeight: 1.2, crag: 0 },
-  peaks: { hill: 34, base: 7, hubHeight: 9, crag: 26 },
-  // The Veiled Hollow: a sheltered valley, gentler than the peaks that hide it.
-  dusk: { hill: 14, base: 2, hubHeight: 2.5, crag: 4 },
-  ember: { hill: 16, base: 2.5, hubHeight: 2.5, crag: 8 },
-  frost: { hill: 26, base: 6, hubHeight: 3, crag: 10 },
-  // the Amberfall: rolling autumn weald around the Great Mere
-  amber: { hill: 15, base: 2, hubHeight: 2.5, crag: 4 },
-  // the Willowfen: low, wet, and gentle
-  fen: { hill: 8, base: -0.3, hubHeight: 2, crag: 0 },
-  // the Nightbloom: soft moonlit downs, a touch more rolling than the fen
-  night: { hill: 12, base: 1, hubHeight: 2.5, crag: 4 },
-  // the Wraithwood: low haunted forest floor under the giant canopies
-  haunt: { hill: 13, base: 1.5, hubHeight: 2.5, crag: 5 },
-  // the Palmreach: low tropical relief, the coasts flattened to beach by
-  // the jungle coast applier
-  jungle: { hill: 11, base: 1.2, hubHeight: 2, crag: 4 },
-  // the Evergarden: groomed parkland, gentle as a lawn
-  garden: { hill: 9, base: 1.8, hubHeight: 2, crag: 0 },
-  // the Galecrest: rolling wind-scoured headland downs over sea cliffs
-  gale: { hill: 14, base: 2.4, hubHeight: 2.5, crag: 8 },
-  // Paint-only biomes (the editor's biome brush): never a zone band in the
-  // built-in world, so these rows only shape painted cells on custom maps.
-  beach: { hill: 5, base: -2.4, hubHeight: 0.8, crag: 0 },
-  desert: { hill: 15, base: 2.5, hubHeight: 2, crag: 12 },
-  volcano: { hill: 42, base: 9, hubHeight: 6, crag: 30 },
-  cave: { hill: 9, base: 1, hubHeight: 1, crag: 6 },
-};
 
 // Ridge walls along every shared zone edge, each opened by a road pass. The
 // edge geometry itself (BorderEdge, computeBorderEdges, the derived
@@ -1263,6 +1260,10 @@ const bedGroup = (ax: number, az: number, r: number, sats: [number, number][]): 
   ...sats.map(([x, z]) => ({ x, z, r: 3.25, ax, az })),
 ];
 export const GARDEN_BED_PADS: readonly GardenBedPad[] = [
+  // (Dawnhold's own planting is the flower court's procedural fields, which
+  // stand on the castle pad's dead-flat ground and need no pad of their own.
+  // Every entry below is a MODELED bed, mirrored one-to-one against
+  // PARTERRE_PLOTS and the content decorProps by tests/garden_parterre.)
   ...bedGroup(322, 878, 10, [
     [322, 892.8],
     [322, 863.2],
@@ -1418,6 +1419,12 @@ export const MAZE_Z0 = MAZE_Z1 - MAZE_ROWS * MAZE_CELL;
 // corners/junctions read as crossing pieces. Collision is the union of the
 // same boxes, so the blocked ground IS the modeled hedge's footprint.
 export const MAZE_WALL_DEPTH = 4.2; // yd across a hedge piece (tracks the modeled hedge scale)
+// The piece's drawn size, kept HERE rather than beside the renderer because
+// colliders.ts needs the height for the camera top and src/sim may not import
+// src/render. render/garden_maze_core.ts re-exports all three.
+export const MAZE_WALL_OVERLAP = 0.75; // yd each piece reaches into its neighbor
+export const MAZE_WALL_SCALE = (MAZE_CELL + 2 * MAZE_WALL_OVERLAP) / 0.98; // 10.5 x 6.1 x 4.1
+export const MAZE_WALL_HEIGHT = 0.57 * MAZE_WALL_SCALE; // 6.1yd, the hedges' visual top
 
 /** Inside the maze footprint (small margin), where dressing must not spawn. */
 export function inGardenMaze(x: number, z: number): boolean {
@@ -2435,7 +2442,10 @@ function applyEmberLavaNetwork(x: number, z: number, h: number): number {
   }
   for (const link of EMBER_LAVA_LINKS) {
     const s = emberNearestOnLink(link, x, z);
-    const half = link.w * 0.62; // the channel model overhangs its melt line
+    // the river model now spans exactly link.w across the flow (the
+    // render scales it by its cross extent), so the bed only needs a
+    // shoulder either side rather than the old generous overhang
+    const half = link.w * 0.55;
     if (s.dist < half + 6.5) {
       const w = 1 - smoothstep(half, half + 3.5, s.dist);
       // low banks shouldering the channel, parted at every pool mouth
@@ -2514,6 +2524,14 @@ function applyCastlePad(x: number, z: number, h: number): number {
   return h + (castlePadTarget(x, z) - h) * w;
 }
 
+// The Ashen Bulwark's graded grounds on the Drakelands west headland (the
+// castle pad idiom at barracks scale; the plan lives in bulwark_layout.ts).
+function applyBulwarkPad(x: number, z: number, h: number): number {
+  const w = bulwarkPadWeight(x, z);
+  if (w <= 0) return h;
+  return h + (bulwarkPadTarget() - h) * w;
+}
+
 // The pad's northeast apron meets the Last Spring pool, and the pad yields to
 // the pool over castlePadWeight's own ring: the bailey's level floor ends on an
 // arc about 16yd out from the pool center and the ground then falls to the pool
@@ -2559,6 +2577,14 @@ function applyLastSpringBank(x: number, z: number, h: number): number {
   const w = castleSkirtWeight(x, z) * (1 - smoothstep(b.rim - b.ease, b.rim, d));
   if (w <= 0) return h;
   return h + (target - h) * w;
+}
+
+// Dawnhold Castle's graded grounds in the Evergarden (the same idiom at a
+// smaller scale; the plan lives in dawnhold_layout.ts).
+function applyDawnholdPad(x: number, z: number, h: number): number {
+  const w = dawnholdPadWeight(x, z);
+  if (w <= 0) return h;
+  return h + (dawnholdPadTarget() - h) * w;
 }
 
 // ---------------------------------------------------------------------------
@@ -3920,10 +3946,18 @@ export function groundHeight(x: number, z: number, seed: number): number {
       const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
       return DUNGEON_FLOOR_Y + lastKeepLiftAt(x - origin.x, z - origin.z);
     }
+    if (dungeon?.interior === 'dawnhold') {
+      // Dawnhold Castle's interior rides the same authored-lift idiom as the
+      // Last Keep: the solar story and its stair ramps come from the shared
+      // room plan (src/sim/dungeon_layout.ts).
+      const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
+      return DUNGEON_FLOOR_Y + dawnholdKeepLiftAt(x - origin.x, z - origin.z);
+    }
     // Every other interior is the flat room floor plus the raised boss dais
     // where its room plan stacks one (dungeon_floor.ts).
     return DUNGEON_FLOOR_Y + dungeonFloorLift(x, z);
   }
+  if (usesContentTerrain()) return terrainHeight(x, z, seed);
   // The Vale Cup grandstands are walkable: the ground steps up in seated tiers so
   // players can climb the bleachers (raised WALKABLE ground is the heightfield).
   // This lives in groundHeight, NOT terrainHeight, so the render's flat terrain
@@ -3938,11 +3972,19 @@ export function groundHeight(x: number, z: number, seed: number): number {
   // (castleLift): the wall mass is a sheer riser the climb gate refuses,
   // and its flat top is the wall-walk.
   const terrain =
-    terrainHeight(x, z, seed) + sowfieldStandLift(x, z) + beaconSpiralLift(x, z) + castleLift(x, z);
+    terrainHeight(x, z, seed) +
+    sowfieldStandLift(x, z) +
+    beaconSpiralLift(x, z) +
+    castleLift(x, z) +
+    dawnholdLift(x, z) +
+    bulwarkLift(x, z);
   return Math.max(terrain, dockSurfaceHeight(x, z, seed));
 }
 
 export function terrainHeight(x: number, z: number, seed: number): number {
+  const content = getActiveWorldContent();
+  if (usesContentTerrain(content))
+    return applyEditLayer(x, z, customWorldTerrainHeight(content, x, z, seed));
   return applyTerrainPads(x, z, seed, terrainHeightUnpadded(x, z, seed));
 }
 
@@ -3953,6 +3995,8 @@ export function terrainHeight(x: number, z: number, seed: number): number {
 // (#1518) can never read as sea. For the built-in world (no terrainEdits) it
 // equals terrainHeight exactly.
 export function terrainHeightSansEdits(x: number, z: number, seed: number): number {
+  const content = getActiveWorldContent();
+  if (usesContentTerrain(content)) return customWorldTerrainHeight(content, x, z, seed);
   return applyTerrainPads(x, z, seed, terrainHeightUnpadded(x, z, seed, true));
 }
 
@@ -3975,6 +4019,10 @@ function applyTerrainPads(x: number, z: number, seed: number, h0: number): numbe
   // after the shore grading that forms them (see REACH_POOL_RIM_EASE for the freeze
   // it closes and REACH_POOL_DECK_TIE_IN for the one-way edge it closes).
   h = applyReachPoolWalkwayBed(x, z, h);
+  // Dawnhold Castle's garden pad, same late application.
+  h = applyDawnholdPad(x, z, h);
+  // the Drakelands' headland barracks, graded the same way
+  h = applyBulwarkPad(x, z, h);
   // Level pads under the Evergarden's modeled flower beds, applied over the
   // FINISHED height (the garden seam reshapes the lawn per position, so an
   // early flatten would drift apart again): each bed ensemble sits flush on
@@ -3987,7 +4035,12 @@ function applyTerrainPads(x: number, z: number, seed: number, h0: number): numbe
       const padGate = pad.r + 4;
       if (dx * dx + dz * dz >= padGate * padGate) continue;
       const d = Math.sqrt(dx * dx + dz * dz);
-      const ch = terrainHeightUnpadded(pad.ax, pad.az, seed);
+      // the anchor height honors Dawnhold's castle pad (the courtyard
+      // parterres must sit on the graded bailey, not dig back down to the
+      // raw lawn beneath it); beds outside the pad are unaffected (w 0)
+      let ch = terrainHeightUnpadded(pad.ax, pad.az, seed);
+      const dw = dawnholdPadWeight(pad.ax, pad.az);
+      if (dw > 0) ch = ch + (dawnholdPadTarget() - ch) * dw;
       const blend = smoothstep(pad.r + 1, pad.r + 4, d);
       h = h * blend + ch * (1 - blend);
     }
@@ -4678,6 +4731,8 @@ export function nearSteepWalls(x: number, z: number): boolean {
   // it must opt in before the generic flat-interior early return below.
   if (isBgPos(x)) return true;
   if (x > DUNGEON_X_THRESHOLD) return false; // instanced interiors: flat floors
+  const activeContent = getActiveWorldContent();
+  if (usesContentTerrain(activeContent)) return nearCustomWorldRim(activeContent, x, z);
   if (
     x > WORLD_MAX_X - 40 ||
     x < WORLD_MIN_X + 40 ||
@@ -4966,6 +5021,16 @@ export const BIOME_BY_ID: BiomeId[] = [
   'desert',
   'volcano',
   'cave',
+  'dusk',
+  'ember',
+  'frost',
+  'amber',
+  'fen',
+  'night',
+  'haunt',
+  'jungle',
+  'garden',
+  'gale',
 ];
 
 // The painted biome at (x,z), or null if unpainted / no paint layer. Cheap grid
@@ -5013,6 +5078,31 @@ const DECORATION_Z_START = WORLD_MIN_Z + 14;
 const DECORATION_Z_END = WORLD_MAX_Z - 14;
 const DECORATION_JITTER = DECORATION_STEP / 2;
 
+interface DecorationGridBounds {
+  xStart: number;
+  xEnd: number;
+  zStart: number;
+  zEnd: number;
+}
+
+function activeDecorationGridBounds(): DecorationGridBounds {
+  const zones = getActiveWorldContent().zones;
+  if (zones.length === 0 || zones === ZONES) {
+    return {
+      xStart: DECORATION_X_START,
+      xEnd: DECORATION_X_END,
+      zStart: DECORATION_Z_START,
+      zEnd: DECORATION_Z_END,
+    };
+  }
+  return {
+    xStart: Math.min(...zones.map((zone) => zone.xMin ?? STRIP_MIN_X)) + 14,
+    xEnd: Math.max(...zones.map((zone) => zone.xMax ?? STRIP_MAX_X)) - 14,
+    zStart: Math.min(...zones.map((zone) => zone.zMin)) + 14,
+    zEnd: Math.max(...zones.map((zone) => zone.zMax)) - 14,
+  };
+}
+
 // Evaluate one stable decoration-grid anchor. Keeping every gate in this one
 // function lets the renderer enumerate the whole field while collision asks
 // only for the handful of anchors near a queried spatial cell. The latter is
@@ -5020,6 +5110,10 @@ const DECORATION_JITTER = DECORATION_STEP / 2;
 // entire field in every isolated test worker made the first Sim in each file
 // pay for thousands of terrain samples it never touched.
 function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
+  const content = getActiveWorldContent();
+  const builtinTopology = content.zones.length === 0 || content.zones === ZONES;
+  const zones = content.zones.length > 0 ? content.zones : ZONES;
+  const camps = builtinTopology ? CAMPS : content.camps;
   const r = hash2(Math.round(gx), Math.round(gz), seed + 31);
   const biome = zoneBiomeAt(gx, gz);
   // density gate + kind mix per biome
@@ -5046,14 +5140,20 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
     // no boulders inside the modeled lava network: the melt pads, the river
     // beds, and the shaped basins stay clear (a rock there is also a stray
     // collider standing in the melt)
-    if (gz > 2160 && gz < 2360 && emberLinkDistanceNorm(gx, gz) < 1.1) return null;
+    if (builtinTopology && gz > 2160 && gz < 2360 && emberLinkDistanceNorm(gx, gz) < 1.1)
+      return null;
     // the Last Keep's graded grounds carry no wild scatter
-    if (castlePadWeight(gx, gz) > 0) return null;
-    for (const pool of EMBER_FLAT_POOLS) {
-      if (Math.hypot(gx - pool.x, gz - pool.z) < pool.r * 1.6 + 4) return null;
-    }
-    for (const pool of EMBER_LAVA_POOLS) {
-      if (Math.hypot(gx - pool.x, gz - pool.z) < pool.r * 1.7 + 4) return null;
+    if (builtinTopology && castlePadWeight(gx, gz) > 0) return null;
+    // ...nor the Ashen Bulwark's headland pad (a boulder in the drill yard
+    // is also a stray collider standing in the muster lane)
+    if (builtinTopology && bulwarkPadWeight(gx, gz) > 0) return null;
+    if (builtinTopology) {
+      for (const pool of EMBER_FLAT_POOLS) {
+        if (Math.hypot(gx - pool.x, gz - pool.z) < pool.r * 1.6 + 4) return null;
+      }
+      for (const pool of EMBER_LAVA_POOLS) {
+        if (Math.hypot(gx - pool.x, gz - pool.z) < pool.r * 1.7 + 4) return null;
+      }
     }
   } else if (biome === 'frost') {
     // hardy pines and broken stone on the snow benches
@@ -5083,8 +5183,10 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
     kind = r < 0.1 ? 'tree' : r < 0.5 ? 'tree2' : 'rock';
   } else if (biome === 'garden') {
     // open parkland: sparse specimen trees on the lawns, and the maze
-    // keeps its corridors clear (the hedges are terrain, not dressing)
-    if (inGardenMaze(gx, gz)) return null;
+    // keeps its corridors clear (the hedges are terrain, not dressing);
+    // Dawnhold's graded grounds take no wild scatter either
+    if (builtinTopology && inGardenMaze(gx, gz)) return null;
+    if (builtinTopology && dawnholdPadWeight(gx, gz) > 0) return null;
     if (r > 0.3) return null;
     kind = r < 0.16 ? 'tree' : r < 0.2 ? 'tree2' : 'rock';
   } else if (biome === 'gale') {
@@ -5098,7 +5200,7 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
   }
   // grid cells outside every zone rect are open sea between columns
   let inRect = false;
-  for (const zn of ZONES) {
+  for (const zn of zones) {
     if (gz < zn.zMin || gz >= zn.zMax) continue;
     if (gx < (zn.xMin ?? STRIP_MIN_X) || gx >= (zn.xMax ?? STRIP_MAX_X)) continue;
     inRect = true;
@@ -5109,14 +5211,15 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
   const oz = (hash2(Math.round(gx), Math.round(gz), seed + 91) - 0.5) * DECORATION_STEP;
   const x = gx + ox,
     z = gz + oz;
-  if (isExcludedDecoration(x, z)) return null;
+  if (builtinTopology && isExcludedDecoration(x, z)) return null;
   // The Sowfield stadium footprint grows no trees or rocks (hash-based
   // placement, so skipping here shifts no other decoration or rng draw).
-  if (isInSowfieldShell(x, z)) return null;
+  if (builtinTopology && isInSowfieldShell(x, z)) return null;
   // The Galecrest paddock is a worked yard and race course. Keep the same
   // deterministic decoration field out of its apron so no tree becomes an
   // invisible obstacle across a jump line.
   if (
+    builtinTopology &&
     x > STABLE_PADDOCK.x1 - 1 &&
     x < STABLE_PADDOCK.x2 + 1 &&
     z > STABLE_PADDOCK.z1 - 1 &&
@@ -5125,13 +5228,16 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
     return null;
   }
   // No rock or stunted tree grows up through Wickharbor's boardwalk planks.
-  if (galeDeckSurface(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL) !== -Infinity) {
+  if (
+    builtinTopology &&
+    galeDeckSurface(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL) !== -Infinity
+  ) {
     return null;
   }
-  if (!reachDeckClear(x, z, 1)) return null;
+  if (builtinTopology && !reachDeckClear(x, z, 1)) return null;
   // The Old Beacon's lawn stays clear (nothing crowds the lighthouse stair),
   // and the raider encampments keep trees and rocks off their level pads.
-  {
+  if (builtinTopology) {
     const bdx = x - 498,
       bdz = z - 308;
     if (bdx * bdx + bdz * bdz < 20 * 20) return null;
@@ -5141,14 +5247,14 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
       if (cdx * cdx + cdz * cdz < 13 * 13) return null;
     }
   }
-  for (const zone of ZONES) {
+  for (const zone of zones) {
     const dx = x - zone.hub.x,
       dz = z - zone.hub.z;
     if (Math.sqrt(dx * dx + dz * dz) < zone.hub.radius + 4) return null;
   }
-  if (terrainHeight(x, z, seed) < WATER_LEVEL + 1) return null;
+  if (terrainHeight(x, z, seed) < waterLevel() + 1) return null;
   if (roadDistance(x, z) < 5) return null;
-  for (const c of CAMPS) {
+  for (const c of camps) {
     const dx = x - c.center.x,
       dz = z - c.center.z;
     if (Math.sqrt(dx * dx + dz * dz) < c.radius + 3) return null;
@@ -5175,6 +5281,7 @@ function decorationAnchorCount(start: number, end: number): number {
 function appendDecorationRange(
   out: Decoration[],
   seed: number,
+  grid: DecorationGridBounds,
   xFirst: number,
   xEnd: number,
   zFirst: number,
@@ -5182,9 +5289,9 @@ function appendDecorationRange(
   bounds?: { minX: number; maxX: number; minZ: number; maxZ: number },
 ): void {
   for (let xi = xFirst; xi < xEnd; xi++) {
-    const gx = DECORATION_X_START + xi * DECORATION_STEP;
+    const gx = grid.xStart + xi * DECORATION_STEP;
     for (let zi = zFirst; zi < zEnd; zi++) {
-      const gz = DECORATION_Z_START + zi * DECORATION_STEP;
+      const gz = grid.zStart + zi * DECORATION_STEP;
       const decoration = decorationAt(seed, gx, gz);
       if (!decoration) continue;
       if (
@@ -5212,8 +5319,9 @@ export function generateDecorationsInBounds(
   bounds: { minX: number; maxX: number; minZ: number; maxZ: number },
 ): Decoration[] {
   if (bounds.minX > bounds.maxX || bounds.minZ > bounds.maxZ) return [];
-  const xCount = decorationAnchorCount(DECORATION_X_START, DECORATION_X_END);
-  const zCount = decorationAnchorCount(DECORATION_Z_START, DECORATION_Z_END);
+  const grid = activeDecorationGridBounds();
+  const xCount = decorationAnchorCount(grid.xStart, grid.xEnd);
+  const zCount = decorationAnchorCount(grid.zStart, grid.zEnd);
   const first = (value: number, start: number, count: number): number =>
     Math.max(0, Math.min(count, Math.ceil((value - DECORATION_JITTER - start) / DECORATION_STEP)));
   const end = (value: number, start: number, count: number): number =>
@@ -5221,24 +5329,26 @@ export function generateDecorationsInBounds(
       0,
       Math.min(count, Math.floor((value + DECORATION_JITTER - start) / DECORATION_STEP) + 1),
     );
-  const xFirst = first(bounds.minX, DECORATION_X_START, xCount);
-  const xEnd = end(bounds.maxX, DECORATION_X_START, xCount);
-  const zFirst = first(bounds.minZ, DECORATION_Z_START, zCount);
-  const zEnd = end(bounds.maxZ, DECORATION_Z_START, zCount);
+  const xFirst = first(bounds.minX, grid.xStart, xCount);
+  const xEnd = end(bounds.maxX, grid.xStart, xCount);
+  const zFirst = first(bounds.minZ, grid.zStart, zCount);
+  const zEnd = end(bounds.maxZ, grid.zStart, zCount);
   const out: Decoration[] = [];
-  appendDecorationRange(out, seed, xFirst, xEnd, zFirst, zEnd, bounds);
+  appendDecorationRange(out, seed, grid, xFirst, xEnd, zFirst, zEnd, bounds);
   return out;
 }
 
 export function generateDecorations(seed: number): Decoration[] {
+  const grid = activeDecorationGridBounds();
   const out: Decoration[] = [];
   appendDecorationRange(
     out,
     seed,
+    grid,
     0,
-    decorationAnchorCount(DECORATION_X_START, DECORATION_X_END),
+    decorationAnchorCount(grid.xStart, grid.xEnd),
     0,
-    decorationAnchorCount(DECORATION_Z_START, DECORATION_Z_END),
+    decorationAnchorCount(grid.zStart, grid.zEnd),
   );
   return out;
 }

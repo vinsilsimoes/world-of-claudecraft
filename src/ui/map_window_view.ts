@@ -43,12 +43,13 @@ import type {
 } from '../sim/types';
 import type { Decoration } from '../sim/world';
 import type { FriendInfo, IWorld } from '../world_api';
+import { buildCastlePlanMarkers, type CastlePlanMarker } from './castle_plan_core';
 import { viewerUsableToolTier } from './gathering_view';
 import { overworldDungeonPortals } from './map_dungeon_portals';
 import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
   isNearbyLiveRiftZoneMapEntity,
-  STABLE_MAP_NAVIGATION_LANDMARKS,
+  stableMapNavigationLandmarks,
 } from './map_navigation_landmarks_core';
 import { questNumbersByLog } from './map_quest_list_view';
 
@@ -112,6 +113,77 @@ export interface MapPoiMarker {
   my: number;
   zoneId: string;
   poiIndex: number;
+}
+
+export interface MapPoiLabelInput {
+  mx: number;
+  my: number;
+  width: number;
+}
+
+export interface MapPoiLabelPlacement extends MapPoiLabelInput {
+  labelX: number;
+  labelY: number;
+}
+
+/**
+ * Keep authored POI labels legible without changing their world anchors. Labels
+ * first try their preferred position, then alternate above and below in one
+ * line-height steps. The bounded search is deterministic, clamps to the map
+ * plate and leaves the painter free to draw a short leader back to the POI.
+ */
+export function layoutMapPoiLabels(
+  labels: readonly MapPoiLabelInput[],
+  canvasSize: number,
+  labelHeight: number,
+  gap = 3,
+): MapPoiLabelPlacement[] {
+  const margin = 6;
+  const step = labelHeight + gap;
+  const offsets = [0, -step, step, -step * 2, step * 2, -step * 3, step * 3];
+  const boxes: { left: number; right: number; top: number; bottom: number }[] = [];
+  const output: MapPoiLabelPlacement[] = [];
+  for (const label of labels) {
+    const halfWidth = label.width / 2;
+    let selected: MapPoiLabelPlacement | null = null;
+    for (const offset of offsets) {
+      const labelX = Math.max(
+        margin + halfWidth,
+        Math.min(canvasSize - margin - halfWidth, label.mx),
+      );
+      const labelY = Math.max(
+        margin + labelHeight,
+        Math.min(canvasSize - margin, label.my + offset),
+      );
+      const candidate = {
+        left: labelX - halfWidth - gap,
+        right: labelX + halfWidth + gap,
+        top: labelY - labelHeight - gap,
+        bottom: labelY + gap,
+      };
+      const overlaps = boxes.some(
+        (box) =>
+          candidate.left < box.right &&
+          candidate.right > box.left &&
+          candidate.top < box.bottom &&
+          candidate.bottom > box.top,
+      );
+      if (overlaps) continue;
+      boxes.push(candidate);
+      selected = { ...label, labelX, labelY };
+      break;
+    }
+    if (!selected) {
+      const labelX = Math.max(
+        margin + halfWidth,
+        Math.min(canvasSize - margin - halfWidth, label.mx),
+      );
+      const labelY = Math.max(margin + labelHeight, Math.min(canvasSize - margin, label.my));
+      selected = { ...label, labelX, labelY };
+    }
+    output.push(selected);
+  }
+  return output;
 }
 
 /** A dungeon entrance portal: canvas position + the dungeon id to localize. */
@@ -716,6 +788,10 @@ export interface OverworldMapModel {
   zoneId: string;
   pois: MapPoiMarker[];
   portals: MapPortalMarker[];
+  /** Both castles' curtain plans, drawn at every zone zoom (see
+   *  castle_plan_core: the walls are lift field, so the baked plate that
+   *  paints from terrainHeight never shows them). */
+  castles: CastlePlanMarker[];
   npcs: MapNpcMarker[];
   questAreas: MapQuestAreaMarker[];
   /** Gather nodes in the committed zone (all zoom levels). Empty only when
@@ -936,6 +1012,11 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
     });
   }
 
+  // The castle plans. Drawn like portals at every zone zoom rather than
+  // behind the DETAIL_SPAN gate: a castle is the landmark you navigate by,
+  // and the plate cannot show it at any zoom.
+  const castles = buildCastlePlanMarkers(region, toMap);
+
   // Quest-giver glyphs, resolved from the static NPCS content table (like the
   // quest-area blobs above) rather than world.entities, so the online interest
   // radius never hides a distant giver's '!'/'?' glyph. questsDone and the
@@ -975,7 +1056,7 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
     landmarks.push(placed);
     return placed;
   };
-  for (const site of STABLE_MAP_NAVIGATION_LANDMARKS) {
+  for (const site of stableMapNavigationLandmarks(world.cfg.gameProfile, world.cfg.world)) {
     if (site.zoneId !== zone.id) continue;
     const placed = placeNavigation(site.x, site.z);
     if (!placed) continue;
@@ -1126,6 +1207,7 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
     zoneId: zone.id,
     pois,
     portals,
+    castles,
     npcs,
     questAreas,
     gatherNodes,

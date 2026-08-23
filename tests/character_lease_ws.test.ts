@@ -29,7 +29,12 @@ function fakeWs() {
 }
 
 const authFrame = (character: number) =>
-  JSON.stringify({ t: ONLINE_WORLD_AUTH_TYPE, token: 'tok', character });
+  JSON.stringify({
+    t: ONLINE_WORLD_AUTH_TYPE,
+    token: 'tok',
+    character,
+    gameProfile: 'woc-classic',
+  });
 const fakeReq = () => ({}) as any;
 
 // Build a full WsAuthDeps bag whose cheap checks all pass, so a handshake reaches
@@ -61,6 +66,7 @@ function makeDeps(opts: { joinResult?: any; hasSession?: boolean; acquireResult?
     sources: [] as unknown[],
   }));
   const game = {
+    sim: { cfg: { gameProfile: 'woc-classic' } },
     isIpBlocked: () => false,
     countIpSessions: () => 0,
     hasSessionForCharacter: hasSessionSpy,

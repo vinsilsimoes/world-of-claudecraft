@@ -11,7 +11,6 @@ import { describe, expect, it, vi } from 'vitest';
 function mockGltfLoad(): void {
   vi.doMock('../src/render/assets/loader', () => ({
     loadGltf: vi.fn(() => Promise.resolve({ scene: {}, animations: [] })),
-    loadHdr: vi.fn(() => new Promise(() => undefined)),
     loadTexture: vi.fn(() => new Promise(() => undefined)),
     loadKtx2Texture: vi.fn(() => new Promise(() => undefined)),
     releaseGltf: vi.fn(),
@@ -29,6 +28,23 @@ describe('training dummy lazy preload (v0.27 freeze fix)', () => {
     expect(trainingDummyAssetsReady()).toBe(false);
     await preloadTrainingDummyAssets();
     expect(trainingDummyAssetsReady()).toBe(true);
+  });
+
+  it('defers zone prewarm until the lazy training dummy asset is ready', async () => {
+    vi.resetModules();
+    mockGltfLoad();
+    const { deferLazyMobTemplatePrewarm, pendingLazyCharacterAssets } = await import(
+      '../src/render/characters/lazy_assets'
+    );
+
+    expect(deferLazyMobTemplatePrewarm('forest_wolf')).toBe(false);
+    expect(deferLazyMobTemplatePrewarm('training_dummy')).toBe(true);
+    expect(deferLazyMobTemplatePrewarm('mir4_m03_training_dummy')).toBe(true);
+    expect(deferLazyMobTemplatePrewarm('friendly_player_dummy', 'mob_training_dummy')).toBe(true);
+    const pending = pendingLazyCharacterAssets('mob_training_dummy');
+    expect(pending).not.toBeNull();
+    await pending;
+    expect(deferLazyMobTemplatePrewarm('training_dummy')).toBe(false);
   });
 
   it('memoizes the load: a second call reuses the same in-flight promise', async () => {

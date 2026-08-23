@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import {
   makeWriterFacet,
   type PainterHostWriters,
-  type SingleSlotCache,
+  type SingleSlotEntry,
 } from '../src/ui/painter_host';
 
 // A DOM-free element that records every write the facet performs: textContent, the
@@ -42,15 +42,20 @@ function fakeEl() {
     setAttribute(name: string, value: string): void {
       attrs[name] = value;
     },
+    removeAttribute(name: string): void {
+      delete attrs[name];
+    },
   };
   return { node, props, classes, attrs, el: node as unknown as HTMLElement };
 }
 
 function fakeFacet() {
-  const cache: SingleSlotCache = new Map();
+  // A real Map (assignable to the WeakMap-typed SingleSlotCache) so the test
+  // can spy on set() and assert entry counts, which WeakMap cannot expose.
+  const cache = new Map<HTMLElement, SingleSlotEntry>();
   const stylePropCache = new Map<HTMLElement, Map<string, string>>();
   const classCache = new Map<HTMLElement, Map<string, string>>();
-  const attrCache = new Map<HTMLElement, Map<string, string>>();
+  const attrCache = new Map<HTMLElement, Map<string, string | null>>();
   const counts = { writes: 0, skips: 0 };
   const facet = makeWriterFacet(
     cache,
@@ -207,6 +212,18 @@ describe('makeWriterFacet: setAttr (multi-slot, keyed per (element, attr))', () 
     facet.setAttr(el, 'title', 'x');
     expect(counts).toEqual({ writes: 2, skips: 2 });
   });
+
+  it('removes an optional attribute once and elides a repeated removal', () => {
+    const { facet, counts } = fakeFacet();
+    const { el, attrs } = fakeEl();
+    facet.setAttr(el, 'aria-pressed', 'true');
+    expect(attrs['aria-pressed']).toBe('true');
+    facet.setAttr(el, 'aria-pressed', null);
+    expect(attrs['aria-pressed']).toBeUndefined();
+    expect(counts).toEqual({ writes: 2, skips: 0 });
+    facet.setAttr(el, 'aria-pressed', null);
+    expect(counts).toEqual({ writes: 2, skips: 1 });
+  });
 });
 
 // --- Shared-cache coherence + single/multi-slot independence --------------------
@@ -216,10 +233,12 @@ describe('makeWriterFacet: shared caches keep one skip-rate (HUD + painter coher
     // Hud keeps its own writers AND hands painters a facet built from the SAME
     // caches; the second writer must see the first writer's cache entry so a repeat
     // is elided whichever path wrote it last (one skip-rate across HUD + painters).
-    const cache: SingleSlotCache = new Map();
+    // A real Map (assignable to the WeakMap-typed SingleSlotCache) so the test
+    // can spy on set() and assert entry counts, which WeakMap cannot expose.
+    const cache = new Map<HTMLElement, SingleSlotEntry>();
     const stylePropCache = new Map<HTMLElement, Map<string, string>>();
     const classCache = new Map<HTMLElement, Map<string, string>>();
-    const attrCache = new Map<HTMLElement, Map<string, string>>();
+    const attrCache = new Map<HTMLElement, Map<string, string | null>>();
     const a = { writes: 0, skips: 0 };
     const b = { writes: 0, skips: 0 };
     const facetA = makeWriterFacet(

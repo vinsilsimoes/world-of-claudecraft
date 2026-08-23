@@ -18,6 +18,7 @@
 // NOT expanded via --changed (that re-runs nearly the full suite). Opt in to
 // branch-wide --changed with GATE_FAST_BASE=<ref>.
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,11 +35,13 @@ import {
   parseGateWorkerTier,
   resolveGateWorkerTierCap,
 } from './lib/gate_workers.mjs';
+import { serializeVitestArgvManifest } from './lib/vitest_argv_manifest.mjs';
 
 // npm/npx resolve to .cmd files on Windows, which spawnSync only finds via a shell.
 const shell = process.platform === 'win32';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const vitestManifestRunner = path.join(repoRoot, 'scripts', 'vitest_from_argv_manifest.mjs');
 
 // Resolve the vitest binary directly instead of going through `npx --no-install
 // vitest`: npx still pays a real per-invocation startup cost even when it skips
@@ -78,6 +81,7 @@ const vitestPlan = buildDayLoopVitestPlan({
 });
 
 const guardArgs = buildGuardVitestArgs({ workers });
+let vitestManifest = null;
 
 /** @type {Array<[string, string, string[]]>} */
 const steps = [
@@ -88,7 +92,15 @@ const steps = [
 ];
 
 if (vitestPlan.mode !== 'skip' && vitestPlan.args) {
-  steps.push(['vitest (related / changed tests)', vitestBin, [...vitestPlan.args]]);
+  const tempDir = mkdtempSync(path.join(os.tmpdir(), 'woc-gate-fast-'));
+  const manifestPath = path.join(tempDir, 'vitest-argv.json');
+  writeFileSync(manifestPath, serializeVitestArgvManifest(vitestPlan.args), 'utf8');
+  vitestManifest = { tempDir, manifestPath };
+  steps.push([
+    'vitest (related / changed tests)',
+    process.execPath,
+    [vitestManifestRunner, manifestPath],
+  ]);
 }
 
 console.log('[gate:fast] day-loop path (NOT the merge bar; use `npm run gate` before merge)');
@@ -117,24 +129,49 @@ if (vitestPlan.mode === 'skip') {
   );
 }
 
-for (const [name, cmd, args] of steps) {
-  console.log(`\n[gate:fast] ${name}: ${cmd} ${args.join(' ')}`);
-  const res = spawnSync(cmd, args, { stdio: 'inherit', env: process.env, shell });
-  if (res.status !== 0) {
-    console.error(`\n[gate:fast] FAIL at "${name}" (exit ${res.status ?? 'killed'})`);
-    console.error(
-      '[gate:fast] hint: this path is for day-to-day only. Before merge or "done", run `npm run gate`.',
-    );
-    process.exit(res.status ?? 1);
+let failure = null;
+try {
+  for (const [name, cmd, args] of steps) {
+    console.log(`\n[gate:fast] ${name}: ${cmd} ${args.join(' ')}`);
+    const stepShell = shell && (cmd === 'npm' || cmd.toLowerCase().endsWith('.cmd'));
+    const res = spawnSync(cmd, args, { stdio: 'inherit', env: process.env, shell: stepShell });
+    if (res.status !== 0) {
+      failure = { name, exitCode: res.status ?? 1 };
+      break;
+    }
   }
+} finally {
+  cleanupVitestManifest();
 }
 
-console.log(
-  `\n[gate:fast] PASS: ${steps.length} day-loop steps green (vitest workers: ${workers})`,
-);
-console.log(
-  '[gate:fast] merge contract is still `npm run gate` (full suite + builds + freshness).',
-);
+if (failure) {
+  console.error(`\n[gate:fast] FAIL at "${failure.name}" (exit ${failure.exitCode})`);
+  console.error(
+    '[gate:fast] hint: this path is for day-to-day only. Before merge or "done", run `npm run gate`.',
+  );
+  process.exitCode = failure.exitCode;
+} else {
+  console.log(
+    `\n[gate:fast] PASS: ${steps.length} day-loop steps green (vitest workers: ${workers})`,
+  );
+  console.log(
+    '[gate:fast] merge contract is still `npm run gate` (full suite + builds + freshness).',
+  );
+}
+
+function cleanupVitestManifest() {
+  if (!vitestManifest) return;
+  try {
+    unlinkSync(vitestManifest.manifestPath);
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+  }
+  try {
+    rmdirSync(vitestManifest.tempDir);
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+  }
+}
 
 /**
  * Working-tree changes: unstaged, staged, and untracked (not ignored).

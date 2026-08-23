@@ -159,10 +159,15 @@ export function assignAttackSlotAction(
 }
 
 export function handleMobileAttackTap(
-  state: { autoAttack: boolean; hasLiveHostileTarget: boolean },
+  state: { autoAttack: boolean; hasLiveHostileTarget: boolean; directToggle?: boolean },
   actions: { activateAttack: () => void; attackNearest: (() => void) | null },
 ): void {
-  if (!state.autoAttack && !state.hasLiveHostileTarget && actions.attackNearest) {
+  if (
+    !state.directToggle &&
+    !state.autoAttack &&
+    !state.hasLiveHostileTarget &&
+    actions.attackNearest
+  ) {
     actions.attackNearest();
     return;
   }
@@ -228,19 +233,6 @@ export function placeItemOnSlot(
   if (targetIndex < 0 || targetIndex >= next.length) return next;
   next[targetIndex] = { type: 'item', id: itemId };
   return next;
-}
-
-// Given a completed touch drag (mobile long-press pick-up + drag-to-slot), decide
-// whether it resolves to a swap. `targetIndex` is null when the pointer released
-// outside any slot (cancel); releasing back on the source slot is also a no-op
-// cancel, not a swap-with-itself. Pure so hud.ts's pointer-event finish handler
-// stays a thin call site instead of inlining this branch.
-export function resolveMobileHotbarDrop(
-  sourceIndex: number,
-  targetIndex: number | null,
-): number | null {
-  if (targetIndex === null || targetIndex === sourceIndex) return null;
-  return targetIndex;
 }
 
 export function swapHotbarSlots(

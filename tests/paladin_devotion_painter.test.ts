@@ -47,6 +47,7 @@ describe('PaladinDevotionPainter', () => {
   it('paints a ready Devotion bar without active Ascension charges', () => {
     const calls = paint({
       visible: true,
+      maxValue: 20,
       value: 20,
       fillFrac: 1,
       ready: true,
@@ -56,12 +57,16 @@ describe('PaladinDevotionPainter', () => {
       label: '20 / 20',
       ariaValueText: 'Devotion 20 of 20',
       announcement: '',
+      ariaLabel: 'Devotion',
     });
 
-    expect(calls.slice(0, 9)).toEqual([
+    expect(calls.slice(0, 12)).toEqual([
       { method: 'setDisplay', args: [FRAME, 'flex'] },
       { method: 'setStyleProp', args: [FILL, '--devotion-scale', '1.000'] },
       { method: 'setText', args: [LABEL, '20 / 20'] },
+      { method: 'setAttr', args: [FRAME, 'aria-label', 'Devotion'] },
+      { method: 'setAttr', args: [ROOT, 'aria-label', 'Devotion'] },
+      { method: 'setAttr', args: [ROOT, 'aria-valuemax', '20'] },
       { method: 'setAttr', args: [ROOT, 'aria-valuenow', '20'] },
       { method: 'setAttr', args: [ROOT, 'aria-valuetext', 'Devotion 20 of 20'] },
       { method: 'setText', args: [STATUS, ''] },
@@ -69,7 +74,7 @@ describe('PaladinDevotionPainter', () => {
       { method: 'toggleClass', args: [ROOT, 'ascended', false] },
       { method: 'toggleClass', args: [ROOT, 'last-charge', false] },
     ]);
-    expect(calls.slice(9)).toEqual(
+    expect(calls.slice(12)).toEqual(
       CHARGES_ARRAY.map((charge) => ({
         method: 'toggleClass',
         args: [charge, 'on', false],
@@ -80,6 +85,7 @@ describe('PaladinDevotionPainter', () => {
   it('lights exactly the remaining Ascension charges', () => {
     const calls = paint({
       visible: true,
+      maxValue: 20,
       value: 6,
       fillFrac: 0.3,
       ready: false,
@@ -89,6 +95,7 @@ describe('PaladinDevotionPainter', () => {
       label: '6 / 20',
       ariaValueText: 'Devotion 6 of 20. Ascension 3 charges.',
       announcement: '',
+      ariaLabel: 'Devotion',
     });
 
     expect(calls).toContainEqual({
@@ -96,12 +103,13 @@ describe('PaladinDevotionPainter', () => {
       args: [FILL, '--devotion-scale', '0.300'],
     });
     expect(calls).toContainEqual({ method: 'toggleClass', args: [ROOT, 'ascended', true] });
-    expect(calls.slice(9).map((call) => call.args[2])).toEqual([true, true, true, false, false]);
+    expect(calls.slice(12).map((call) => call.args[2])).toEqual([true, true, true, false, false]);
   });
 
   it('marks the final Ascension charge as a visual warning', () => {
     const calls = paint({
       visible: true,
+      maxValue: 20,
       value: 2,
       fillFrac: 0.1,
       ready: false,
@@ -111,6 +119,7 @@ describe('PaladinDevotionPainter', () => {
       label: '2 / 20',
       ariaValueText: 'Devotion 2 of 20. Ascension final charge.',
       announcement: 'Ascension final charge',
+      ariaLabel: 'Devotion',
     });
 
     expect(calls).toContainEqual({

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PerfMonitor } from '../src/game/perf';
 import type { NetPipelineSummary } from '../src/net/net_pipeline_stats';
 import type { Renderer } from '../src/render/renderer';
@@ -25,6 +25,7 @@ function installBrowserGlobals(search = ''): void {
     },
     createElement: () => ({
       style: {},
+      setAttribute: () => {},
       addEventListener: () => {},
       appendChild: () => {},
     }),
@@ -55,6 +56,53 @@ function netPipelineFixture(): NetPipelineSummary {
     applyMs: { count: 240, p50: 0.9, p95: 2.8, max: 11.2 },
     gapMs: { count: 239, p50: 50, p95: 78, max: 900 },
     snapshotsPerRaf: { r0: 410, r1: 280, r2: 24, r3plus: 6 },
+  };
+}
+
+function sceneCensusFixture(): SceneCensusReport {
+  return {
+    atMs: 123,
+    tier: 'ultra',
+    playerPosition: { x: 1, y: 2, z: 3 },
+    cameraPosition: { x: 1, y: 8, z: -3 },
+    baseline: { calls: 51, triangles: 6404, points: 0, lines: 0 },
+    shadow: { measured: true, calls: 12, triangles: 700, callsShare: 0.235 },
+    rows: [
+      {
+        category: 'props',
+        roots: 3,
+        visibleRoots: 3,
+        calls: 28,
+        triangles: 5000,
+        points: 0,
+        callsShare: 0.549,
+        trianglesShare: 0.781,
+      },
+    ],
+    residual: { calls: 4, triangles: 4 },
+    programs: 42,
+    textures: 7,
+    geometries: 9,
+    renders: 5,
+  };
+}
+
+function fakeRenderer() {
+  return {
+    hitchEnabled: [] as boolean[],
+    setHitchLogEnabled(enabled: boolean) {
+      this.hitchEnabled.push(enabled);
+    },
+    hitchStats: () => ({
+      frames: 100,
+      hitches: 2,
+      byCause: { 'shader-compile': 1, 'texture-upload': 0, 'view-create': 0, other: 1 },
+      programGrowthFrames: 1,
+      programsAdded: 3,
+      recent: [],
+    }),
+    captureSceneCensus: sceneCensusFixture,
+    perfStats: () => null,
   };
 }
 
@@ -94,6 +142,7 @@ describe('hidden present skips', () => {
       const el = {
         style: {},
         textContent: '',
+        setAttribute: () => {},
         addEventListener: () => {},
         appendChild: () => {},
       };
@@ -182,6 +231,124 @@ describe('hidden present skips', () => {
     perf.setFrameSampling(true);
     perf.finishTime('sim', perf.startTime());
     expect(perf.snapshot(2000).mainMs.sim.count).toBe(1);
+  });
+});
+
+describe('perf monitor overlay controls', () => {
+  it('collapses to a small control and restores the diagnostic details', () => {
+    type FakeOverlayElement = {
+      tagName: string;
+      textContent: string;
+      title: string;
+      type?: string;
+      style: Record<string, string>;
+      attributes: Record<string, string>;
+      children: FakeOverlayElement[];
+      listeners: Record<string, (event: { stopPropagation(): void }) => void>;
+      setAttribute(name: string, value: string): void;
+      addEventListener(type: string, listener: (event: { stopPropagation(): void }) => void): void;
+      appendChild(child: FakeOverlayElement): void;
+    };
+
+    const created: FakeOverlayElement[] = [];
+    const mounted: FakeOverlayElement[] = [];
+    installBrowserGlobals('?perfTrace=1');
+    (globalThis as any).document.createElement = (tagName: string) => {
+      const element: FakeOverlayElement = {
+        tagName,
+        textContent: '',
+        title: '',
+        style: {},
+        attributes: {},
+        children: [],
+        listeners: {},
+        setAttribute(name, value) {
+          this.attributes[name] = value;
+        },
+        addEventListener(type, listener) {
+          this.listeners[type] = listener;
+        },
+        appendChild(child) {
+          this.children.push(child);
+        },
+      };
+      created.push(element);
+      return element;
+    };
+    (globalThis as any).document.body.appendChild = (element: FakeOverlayElement) => {
+      mounted.push(element);
+    };
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+
+    const renderer = fakeRenderer();
+    const captureSceneCensus = vi.spyOn(renderer, 'captureSceneCensus');
+    const perf = new PerfMonitor(renderer as unknown as Renderer);
+    expect(perf.enabled).toBe(true);
+    const overlay = mounted[0];
+    const toggle = created.find((element) => element.tagName === 'button');
+    const details = created.find((element) => element.textContent === 'perf: collecting...');
+    const census = created.find((element) => element.textContent === '[run scene census]');
+    expect(overlay).toBeDefined();
+    expect(toggle).toBeDefined();
+    expect(details).toBeDefined();
+    expect(census).toBeDefined();
+    if (!overlay || !toggle || !details || !census) throw new Error('overlay fixture missing');
+
+    expect(toggle.textContent).toBe('Minimize');
+    expect(toggle.title).toBe('Minimize');
+    expect(toggle.attributes['aria-label']).toBe('Minimize');
+    expect(toggle.attributes['aria-expanded']).toBe('true');
+    expect(toggle.style.cssText).toContain('min-width:40px');
+    expect(toggle.style.cssText).toContain('min-height:40px');
+    expect(details.style.display).toBe('block');
+    expect(census.style.display).toBe('block');
+    expect(overlay.style.padding).toBe('8px');
+    expect(toggle.style.marginBottom).toBe('6px');
+
+    const clickChild = (element: FakeOverlayElement): boolean => {
+      let propagationStopped = false;
+      const event = {
+        stopPropagation: () => {
+          propagationStopped = true;
+        },
+      };
+      element.listeners.click?.(event);
+      if (!propagationStopped) overlay.listeners.click?.(event);
+      return propagationStopped;
+    };
+
+    expect(clickChild(toggle)).toBe(true);
+    expect(writeText).not.toHaveBeenCalled();
+    expect(toggle.textContent).toBe('Expand');
+    expect(toggle.title).toBe('Expand');
+    expect(toggle.attributes['aria-label']).toBe('Expand');
+    expect(toggle.attributes['aria-expanded']).toBe('false');
+    expect(details.style.display).toBe('none');
+    expect(census.style.display).toBe('none');
+    expect(overlay.style.minWidth).toBe('0');
+    expect(overlay.style.padding).toBe('4px');
+    expect(toggle.style.marginBottom).toBe('0');
+
+    expect(clickChild(toggle)).toBe(true);
+    expect(toggle.textContent).toBe('Minimize');
+    expect(toggle.attributes['aria-expanded']).toBe('true');
+    expect(details.style.display).toBe('block');
+    expect(census.style.display).toBe('block');
+    expect(overlay.style.minWidth).toBe('210px');
+    expect(overlay.style.padding).toBe('8px');
+    expect(toggle.style.marginBottom).toBe('6px');
+
+    expect(clickChild(census)).toBe(true);
+    expect(captureSceneCensus).toHaveBeenCalledTimes(1);
+    expect(perf.snapshot(1000).census?.baseline.calls).toBe(51);
+    expect(writeText).not.toHaveBeenCalled();
+
+    overlay.listeners.click?.({ stopPropagation: () => {} });
+    expect(writeText).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -362,7 +529,15 @@ describe('perf monitor scene census wiring', () => {
       hitchStats: () => ({
         frames: 100,
         hitches: 2,
-        byCause: { 'shader-compile': 1, 'texture-upload': 0, 'view-create': 0, other: 1 },
+        byCause: {
+          'shader-compile': 1,
+          'texture-upload': 0,
+          'zone-build': 0,
+          'view-create': 0,
+          gc: 0,
+          'off-frame': 0,
+          other: 1,
+        },
         programGrowthFrames: 1,
         programsAdded: 3,
         recent: [],
@@ -399,6 +574,50 @@ describe('perf monitor scene census wiring', () => {
     expect(snap.census?.rows[0]?.category).toBe('props');
     expect(snap.hitches?.hitches).toBe(2);
     expect(snap.hitches?.byCause['shader-compile']).toBe(1);
+  });
+
+  it('renders every hitch cause counter on the overlay hitch line', () => {
+    // The zone-build, gc and off-frame causes are the ones the build ledger,
+    // the heap sample and the frame-gap attribution added: a hitch filed
+    // under them must be readable on the overlay, not only in the JSON report.
+    const created: Array<{ textContent?: string }> = [];
+    installBrowserGlobals('?perf');
+    (globalThis as any).document.createElement = () => {
+      const el = {
+        style: {},
+        textContent: '',
+        addEventListener: () => {},
+        appendChild: () => {},
+        setAttribute: () => {},
+      };
+      created.push(el);
+      return el;
+    };
+    const renderer = fakeRenderer();
+    renderer.hitchStats = () => ({
+      frames: 100,
+      hitches: 21,
+      byCause: {
+        'shader-compile': 1,
+        'texture-upload': 2,
+        'zone-build': 3,
+        'view-create': 4,
+        gc: 5,
+        'off-frame': 6,
+        other: 7,
+      },
+      programGrowthFrames: 1,
+      programsAdded: 8,
+      recent: [],
+    });
+    const perf = new PerfMonitor(renderer as unknown as Renderer);
+    perf.frame(0.016, 100);
+    perf.tick(2000);
+    const overlayText =
+      created.map((el) => el.textContent ?? '').find((text) => text.includes('fps ')) ?? '';
+    expect(overlayText).toContain(
+      'hitch 21 (compile 1 tex 2 zone 3 view 4 gc 5 off 6 other 7)  prog +8',
+    );
   });
 
   it('drops the one self-inflicted frame sample after a census run', () => {

@@ -26,15 +26,22 @@
 // uniforms and the GLSL snippet the consumer shaders splice in) is
 // biome_haze_field.ts.
 
-import { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_X, WORLD_MIN_Z } from '../sim/data';
+import {
+  STRIP_MAX_X,
+  STRIP_MIN_X,
+  WORLD_MAX_X,
+  WORLD_MAX_Z,
+  WORLD_MIN_X,
+  WORLD_MIN_Z,
+} from '../sim/data';
 import type { BiomeId } from '../sim/types';
-import { zoneBiomeAt } from '../sim/world';
+import { biomeAt as worldBiomeAt } from '../sim/world';
 import { FAR_WORLD_MARGIN } from './far_terrain_core';
 import { clamp01 } from './num_clamp';
 
 /** World yards per field texel. Small enough that a zone band (360 yards on
  *  its short axis) is fifteen texels across, large enough that the shipped
- *  world is a 95 x 159 texel, 60 KB texture. The build is one zoneBiomeAt tap
+ *  world is a 95 x 159 texel, 60 KB texture. The build is one biomeAt tap
  *  per texel and costs about 10 ms once per session (measured warm in Node),
  *  which is why it is memoized and never rebuilt on a terrain swap. */
 export const HAZE_FIELD_CELL = 24;
@@ -155,6 +162,41 @@ export interface HazeFieldLayout {
   sizeZ: number;
 }
 
+export interface HazeWorldBounds {
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+}
+
+interface HazeWorldZone {
+  xMin?: number;
+  xMax?: number;
+  zMin: number;
+  zMax: number;
+}
+
+const BUILTIN_HAZE_WORLD_BOUNDS: HazeWorldBounds = {
+  minX: WORLD_MIN_X,
+  maxX: WORLD_MAX_X,
+  minZ: WORLD_MIN_Z,
+  maxZ: WORLD_MAX_Z,
+};
+
+/** Resolve the field rectangle from authored zones without leaking that map
+ * projection into the renderer bootstrap. */
+export function hazeWorldBounds(
+  zones: readonly HazeWorldZone[] | undefined,
+): HazeWorldBounds | undefined {
+  if (!zones?.length) return undefined;
+  return {
+    minX: Math.min(...zones.map((zone) => zone.xMin ?? STRIP_MIN_X)),
+    maxX: Math.max(...zones.map((zone) => zone.xMax ?? STRIP_MAX_X)),
+    minZ: Math.min(...zones.map((zone) => zone.zMin)),
+    maxZ: Math.max(...zones.map((zone) => zone.zMax)),
+  };
+}
+
 export interface BiomeHazeFieldData {
   layout: HazeFieldLayout;
   /** Row-major RGBA8. RGB is the haze colour sRGB-ENCODED (the texture is
@@ -182,12 +224,14 @@ function linearToSrgb(c: number): number {
   return c < 0.0031308 ? c * 12.92 : 1.055 * c ** 0.41666 - 0.055;
 }
 
-/** The field's world rect: the zone bounding box plus the far mesh apron. */
-export function hazeFieldLayout(): HazeFieldLayout {
-  const originX = WORLD_MIN_X - HAZE_FIELD_MARGIN;
-  const originZ = WORLD_MIN_Z - HAZE_FIELD_MARGIN;
-  const cols = Math.ceil((WORLD_MAX_X + HAZE_FIELD_MARGIN - originX) / HAZE_FIELD_CELL);
-  const rows = Math.ceil((WORLD_MAX_Z + HAZE_FIELD_MARGIN - originZ) / HAZE_FIELD_CELL);
+/** The active field's world rect plus the far mesh apron. */
+export function hazeFieldLayout(
+  bounds: HazeWorldBounds = BUILTIN_HAZE_WORLD_BOUNDS,
+): HazeFieldLayout {
+  const originX = bounds.minX - HAZE_FIELD_MARGIN;
+  const originZ = bounds.minZ - HAZE_FIELD_MARGIN;
+  const cols = Math.ceil((bounds.maxX + HAZE_FIELD_MARGIN - originX) / HAZE_FIELD_CELL);
+  const rows = Math.ceil((bounds.maxZ + HAZE_FIELD_MARGIN - originZ) / HAZE_FIELD_CELL);
   return {
     originX,
     originZ,
@@ -259,9 +303,10 @@ export function aerialHazeAmount(distance: number, strength: number): number {
  */
 export function buildBiomeHazeFieldData(
   presets: Readonly<Record<BiomeId, BiomeHazePreset>>,
-  biomeAt: (x: number, z: number) => BiomeId = zoneBiomeAt,
+  biomeAt: (x: number, z: number) => BiomeId = worldBiomeAt,
+  bounds: HazeWorldBounds = BUILTIN_HAZE_WORLD_BOUNDS,
 ): BiomeHazeFieldData {
-  const layout = hazeFieldLayout();
+  const layout = hazeFieldLayout(bounds);
   const { cols, rows, cell, originX, originZ } = layout;
   const n = cols * rows;
   // Four planes rather than an interleaved buffer: the blur below is a

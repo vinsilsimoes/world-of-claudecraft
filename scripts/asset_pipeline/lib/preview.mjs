@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { findBrowserPath } from '../../browser_path_resolve.mjs';
+import { ktx2TranscoderScriptTag } from '../../lib/ktx2_assets.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -38,6 +39,10 @@ async function launchPage() {
     format: 'iife',
     outfile: bundlePath,
     logLevel: 'silent',
+    // three's KTX2Loader constructs default transcoder URLs at module scope.
+    // The preview replaces them with /basis/, but the IIFE still needs a valid
+    // absolute import.meta.url while the loader module initializes.
+    define: { 'import.meta.url': '"http://localhost/"' },
   });
 
   const browser = await puppeteer.launch({
@@ -57,7 +62,7 @@ async function launchPage() {
     if (msg.type() === 'error') console.error('[preview console]', msg.text());
   });
   await page.setContent(
-    `<!doctype html><html><body><script>${readFileSync(bundlePath, 'utf8')}</script></body></html>`,
+    `<!doctype html><html><body>${ktx2TranscoderScriptTag(resolve(__dirname, '../../..'))}<script>${readFileSync(bundlePath, 'utf8')}</script></body></html>`,
   );
   await page.waitForFunction('window.__ready === true', { timeout: 30000 });
   return { browser, page };
@@ -96,7 +101,11 @@ function writeDataUrl(dataUrl, dest) {
 export async function renderPreviews(glbPath, outDir, { size = 512, views, clips } = {}) {
   const b64 = readFileSync(glbPath).toString('base64');
   const shots = await withPage((page) =>
-    page.evaluate((data, opts) => window.renderViews(data, opts), b64, { size, views, clips }),
+    page.evaluate((data, opts) => window.renderViews(data, opts), b64, {
+      size,
+      views,
+      clips,
+    }),
   );
   return shots.map((s) => writeDataUrl(s.dataUrl, join(outDir, `${s.name}.png`)));
 }
@@ -139,7 +148,9 @@ export async function renderScaleCompare(entries, dest, { size = 640 } = {}) {
     label: e.label,
   }));
   const dataUrl = await withPage((page) =>
-    page.evaluate((es, opts) => window.renderScaleCompare(es, opts), payload, { size }),
+    page.evaluate((es, opts) => window.renderScaleCompare(es, opts), payload, {
+      size,
+    }),
   );
   return writeDataUrl(dataUrl, dest);
 }

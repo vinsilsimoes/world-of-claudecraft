@@ -11,6 +11,10 @@ import {
   isTestPath,
   resolveFastChangedBase,
 } from '../scripts/lib/gate_fast_plan.mjs';
+import {
+  parseVitestArgvManifest,
+  serializeVitestArgvManifest,
+} from '../scripts/lib/vitest_argv_manifest.mjs';
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const gateFastSrc = readFileSync(new URL('../scripts/gate_fast.mjs', import.meta.url), 'utf8');
@@ -159,11 +163,38 @@ describe('gate:fast wiring contracts', () => {
     expect(gateFastSrc).toMatch(/npm run gate/);
   });
 
+  it('keeps the selected Vitest argv out of the Windows process command line', () => {
+    expect(gateFastSrc).toContain('vitest_from_argv_manifest.mjs');
+    expect(gateFastSrc).toMatch(/writeFileSync/);
+    expect(gateFastSrc).toMatch(/process\.execPath/);
+    expect(gateFastSrc).toMatch(/cmd === 'npm'.*endsWith\('\.cmd'\)/);
+  });
+
   it('docs keep full gate as the merge contract and name gate:fast as day-loop only', () => {
     expect(qaGate).toMatch(/npm run gate/);
     expect(qaGate).toMatch(/gate:fast/);
     expect(qaGate).toMatch(/merge|pre-merge|ready/i);
     // Full gate section must still exist as a first-class layer.
     expect(qaGate).toMatch(/Full local gate/);
+  });
+});
+
+describe('Vitest argv manifest', () => {
+  it('round-trips a selection larger than the Windows command-line budget', () => {
+    const args = [
+      'related',
+      ...Array.from({ length: 1_500 }, (_, index) => `src/feature-${index}/module.ts`),
+      '--run',
+      '--passWithNoTests',
+      '--maxWorkers=4',
+    ];
+    expect(args.join(' ').length).toBeGreaterThan(32_000);
+    expect(parseVitestArgvManifest(serializeVitestArgvManifest(args))).toEqual(args);
+  });
+
+  it('rejects malformed and version-unknown manifests', () => {
+    expect(() => parseVitestArgvManifest('{')).toThrow(/expected JSON/);
+    expect(() => parseVitestArgvManifest('{"version":2,"args":["run"]}')).toThrow(/version/);
+    expect(() => parseVitestArgvManifest('{"version":1,"args":[1]}')).toThrow(/args/);
   });
 });

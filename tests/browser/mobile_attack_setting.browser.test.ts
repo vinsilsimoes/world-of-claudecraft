@@ -15,6 +15,7 @@ import type {
   ActionBarSlotState,
   ActionBarState,
 } from '../../src/ui/hud/action_bar/action_bar_view';
+import { MOBILE_ACTION_BUTTONS } from '../../src/ui/hud/action_bar/mobile_action_page_view';
 import { MobileActionRingPainter } from '../../src/ui/hud/action_bar/mobile_action_ring_painter';
 import { boolToggleNextValue, buildInterfaceControls } from '../../src/ui/options_view';
 import { makeWriterFacet } from '../../src/ui/painter_host';
@@ -50,6 +51,7 @@ function slot(kind: ActionBarSlotState['kind']): ActionBarSlotState {
     fateSentenceReady: false,
     ariaLabel: kind,
     ariaDescription: '',
+    ariaPressed: kind === 'attack' ? 'false' : null,
     keybindLabel: '',
   };
 }
@@ -76,6 +78,44 @@ afterEach(() => {
 });
 
 describe.each(VIEWPORTS)('mobile Attack setting in $label', ({ width, height }) => {
+  it('exposes and clears the fixed Attack toggle state on the real button', async () => {
+    await page.viewport(width, height);
+    const ring = document.createElement('div');
+    const slots = Array.from({ length: 6 }, (_, index) => ringSlot(index));
+    ring.append(...slots.map((entry) => entry.btn));
+    const painter = new MobileActionRingPainter(
+      makeWriterFacet(
+        new Map(),
+        new Map(),
+        new Map(),
+        new Map(),
+        () => {},
+        () => {},
+      ),
+      {
+        bar: { container: ring, slots },
+        pageToggle: document.createElement('button'),
+        pageIndicator: document.createElement('span'),
+      },
+      () => '',
+      (key) => key,
+    );
+    const state: ActionBarState = {
+      slots: [slot('attack'), ...Array.from({ length: 5 }, () => slot('empty'))],
+      manySpells: false,
+    };
+
+    painter.paint(state, 0, 1);
+    expect(slots[0].btn.getAttribute('aria-pressed')).toBe('false');
+    state.slots[0].queued = true;
+    state.slots[0].ariaPressed = 'true';
+    painter.paint(state, 0, 1);
+    expect(slots[0].btn.getAttribute('aria-pressed')).toBe('true');
+    state.slots[0] = slot('ability');
+    painter.paint(state, 0, 1);
+    expect(slots[0].btn.hasAttribute('aria-pressed')).toBe(false);
+  });
+
   it('hides, persists, and restores the fixed Attack button through the Interface control', async () => {
     await page.viewport(width, height);
     document.body.className = 'mobile-touch game-active';
@@ -95,7 +135,8 @@ describe.each(VIEWPORTS)('mobile Attack setting in $label', ({ width, height }) 
 
     const ring = document.createElement('div');
     ring.id = 'mobile-action-ring';
-    const slots = Array.from({ length: 6 }, (_, index) => ringSlot(index));
+    // The ring is the attack toggle plus MOBILE_ACTION_BUTTONS radial buttons.
+    const slots = Array.from({ length: MOBILE_ACTION_BUTTONS + 1 }, (_, index) => ringSlot(index));
     ring.append(...slots.map((entry) => entry.btn));
     const pageToggle = document.createElement('button');
     const pageIndicator = document.createElement('span');
@@ -116,7 +157,10 @@ describe.each(VIEWPORTS)('mobile Attack setting in $label', ({ width, height }) 
       (key) => key,
     );
     const state: ActionBarState = {
-      slots: [slot('attack'), ...Array.from({ length: 5 }, () => slot('empty'))],
+      slots: [
+        slot('attack'),
+        ...Array.from({ length: MOBILE_ACTION_BUTTONS }, () => slot('empty')),
+      ],
       manySpells: false,
     };
     const paint = () => painter.paint(state, 0, 1, settings.get('showAttackButton'));

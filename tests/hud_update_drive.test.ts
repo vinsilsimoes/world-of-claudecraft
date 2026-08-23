@@ -344,6 +344,14 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
   {
     call: 'this.renderCrafting',
     band: 'slow',
+    gate: "this.sim.cfg.gameProfile === MIR4_GAME_PROFILE && $('#crafting-window').style.display === 'flex'",
+    surface: 'window',
+    guard: { kind: 'callsite' },
+    why: 'keeps the reused Crafting window synchronized with MIR4 material and refinement state while that profile-specific provider is open',
+  },
+  {
+    call: 'this.renderCrafting',
+    band: 'slow',
     gate: "$('#crafting-window').style.display === 'flex' && stationTypesSignature(inRangeStationTypes(sim.stationPlacements, sim.player.pos, sim.activeMobileStationCraft)) !== this.lastCraftingStationSig",
     surface: 'window',
     guard: { kind: 'callsite' },
@@ -416,11 +424,11 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'hides the combo row for non-energy classes, through the elided writer',
   },
   {
-    call: 'this.doomMeter.paint',
+    call: 'this.updateWarlockDoomMeter',
     band: 'frame',
     gate: '',
     surface: 'chrome',
-    why: 'write-elided Warlock Doom meter driven by its own view core',
+    why: 'write-elided Warlock Doom meter driven from the player-owned Fate Thread aura',
   },
   {
     call: 'this.procOverlayPainter.paintNecromancyCharges',
@@ -672,7 +680,7 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     band: 'frame',
     gate: '',
     surface: 'chrome',
-    why: 'the stance/form bar; rebuilds its buttons behind a signature latch',
+    why: 'the stance/form bar, behind the hud/stance seam: the desktop row rebuilds its buttons behind a signature latch, and the touch shape paints the ring anchor through the shared write-elision facet with the icon RESOLVE key-diffed inside the painter',
   },
   {
     call: 'this.flushPendingProcAuraNotes',
@@ -696,9 +704,16 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
   {
     call: 'this.actionBarPainter.paint',
     band: 'frame',
+    gate: '!this.isMobileLayout()',
+    surface: 'chrome',
+    why: 'the desktop action bar, facet-routed; skipped on touch where hud.mobile.css sets #actionbar/#actionbar2/#actionbar3 to display:none the whole time (the mobile action ring below supersedes it), so ticking + painting it was pure waste every frame',
+  },
+  {
+    call: 'this.crossHotbar.paint',
+    band: 'frame',
     gate: '',
     surface: 'chrome',
-    why: 'the desktop action bar, facet-routed',
+    why: 'the controller cross hotbar, facet-routed; it owns its OWN actions and ticks its own view (a pad layout is decoupled from the keyboard hotbar), and a frame with no pad connected stops after one elided display write',
   },
   {
     call: 'this.currentMobileActionPage',
@@ -722,11 +737,11 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the touch action ring; desktop skips the tick and the paint entirely',
   },
   {
-    call: 'this.consumableBarPainter.paint',
+    call: 'this.mobileConsumableSeat.paint',
     band: 'frame',
-    gate: 'this.isMobileLayout() && this.consumablesOpen && this.consumableBarView && this.consumableBarPainter',
+    gate: 'this.isMobileLayout()',
     surface: 'chrome',
-    why: 'the touch consumables quick bar, only while the row is expanded',
+    why: 'the touch consumables seat (the ring arc position showing the first carried consumable) plus the row it opens; desktop skips both',
   },
   {
     call: 'this.xpBarPainter.paint',
@@ -1240,6 +1255,18 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'DELIBERATELY has no isOpen gate: the money-footer backstop (#2373) that converges every copper credit reaching no bags arm',
   },
   {
+    call: 'this.questlogWindow.refreshIfChanged',
+    band: 'slow',
+    gate: 'this.questlogWindow.isOpen',
+    surface: 'window',
+    guard: {
+      kind: 'module',
+      module: 'hud/quest/questlog_window.ts',
+      proof: 'if (signature === this.lastMir4Signature) return;',
+    },
+    why: 'the reused MIR4 Quest Log, converged on authoritative auto-journey and progression snapshot echoes',
+  },
+  {
     call: 'this.deedsWindow.refreshIfChanged',
     band: 'slow',
     gate: 'this.deedsWindow.isOpen',
@@ -1318,6 +1345,13 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     gate: '',
     surface: 'chrome',
     why: 'the always-on Reliquary tracker (not gated on a window): pinned pages fill from normal play and an illuminated page drops off',
+  },
+  {
+    call: 'this.trackerStackAnchor.apply',
+    band: 'slow',
+    gate: '',
+    surface: 'chrome',
+    why: 'seats #right-tracker-stack below the minimap column, whose rendered height moves with the zone label and mobile chrome scale; a bounded layout read, elided write (tracker_stack_anchor.ts owns the cadence contract)',
   },
   {
     call: 'this.calendarWindow.refreshIfChanged',
@@ -1644,7 +1678,10 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // release's own window/chrome churn), so it cannot be reconciled by
       // arithmetic across a merge. The numbers below were set from a suite run
       // on the merged tree, not from either side's narrative.
-    ).toEqual({ window: 47, chrome: 82, none: 17 });
+      // chrome 83 -> 84: the tracker-stack anchor apply (seats the stack below
+      // the minimap column; tracker_stack_anchor.ts).
+      // window 47 -> 49: the MIR4 Quest Log and profile-aware character-sheet latches.
+    ).toEqual({ window: 49, chrome: 84, none: 17 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
@@ -1658,14 +1695,13 @@ describe('Hud.update() drives exactly the registered set, on the registered band
     expect(byKind, 'a guard kind changed: say why in the PR, not only in the table').toEqual({
       // Reliquary cold window (module) + craft-cast single-surface strip (hud)
       // both land on this pin; keep both counts, do not drop either side.
-      // 24 = both sides of the v0.36.0 sync counted 23 alone (the branch's
-      // reliquary module guard vs the release's new module-guarded row).
-      module: 24,
+      // 25 = the merged 24 plus the authoritative MIR4 Quest Log refresh guard.
+      module: 25,
       // 7 = Phase 20's refreshCharSheetIfChanged. Its latch is a HUD field
       // (lastCharSheetSig), like its profession sibling, because the cold
       // char_window painter holds no signature of its own to diff.
       hud: 7,
-      callsite: 12,
+      callsite: 13,
       none: 4,
     });
     // ...and the honest-exception list by NAME, because that is the one that should never
@@ -1715,6 +1751,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'hud.ts: if (sig === this.lastTradeSig) return;',
         'hud/delve/lockpick_window.ts: if (lockpickRenderSig(view) !== this.lastSig) this.renderBoard();',
         'hud/quest/quest_dialog_controller.ts: if (this.introHintVisibleFor(npc) !== this.lastIntroHintVisible || gossipRowSig(this.offerableRows(npc)) !== this.lastGossipRowSig) { this.refresh(); }',
+        'hud/quest/questlog_window.ts: if (signature === this.lastMir4Signature) return;',
         'mailbox_window.ts: if (sig === this.lastSig) return;',
         'market_window.ts: if (sig === this.lastSig) return;',
         'meters.ts: if (!this.isOpen || now - this.lastRender < 250) return;',

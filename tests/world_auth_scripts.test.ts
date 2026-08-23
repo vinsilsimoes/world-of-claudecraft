@@ -8,6 +8,7 @@ import {
   ONLINE_WORLD_INCOMPATIBLE_MESSAGE as SCRIPT_WORLD_INCOMPATIBLE_MESSAGE,
   worldAuthMessage,
 } from '../scripts/lib/world_auth.mjs';
+import { DEFAULT_GAME_PROFILE, GAME_PROFILES } from '../src/game_profile';
 import {
   ONLINE_WORLD_AUTH_TYPE,
   ONLINE_WORLD_INCOMPATIBLE_MESSAGE,
@@ -95,6 +96,11 @@ const AUTHENTICATED_NODE_CLIENTS = [
       'ws.send(JSON.stringify({...worldAuthMessage(this.token,this.characterId),...authExtra})',
   },
   {
+    path: 'scripts/mir4_bot_playtest.mjs',
+    authSend:
+      'this.ws.send(JSON.stringify(worldAuthMessage(this.token, this.characterId, PROFILE)))',
+  },
+  {
     path: 'scripts/mob_stall_repro.mjs',
     authSend: 'ws.send(JSON.stringify(worldAuthMessage(this.token, this.characterId)));',
   },
@@ -161,9 +167,9 @@ function nodeWebSocketSources(dir = SCRIPTS_ROOT): Array<[string, string]> {
 
 describe('standalone world WebSocket auth', () => {
   it('keeps the Node discriminator fresh with the authoritative world layout epoch', () => {
-    expect(ONLINE_WORLD_LAYOUT_VERSION).toBe(6);
+    expect(ONLINE_WORLD_LAYOUT_VERSION).toBe(11);
     expect(ONLINE_WORLD_AUTH_TYPE).toBe(`auth-world-${ONLINE_WORLD_LAYOUT_VERSION}`);
-    expect(SCRIPT_WORLD_AUTH_TYPE).toBe('auth-world-6');
+    expect(SCRIPT_WORLD_AUTH_TYPE).toBe('auth-world-11');
     expect(SCRIPT_WORLD_AUTH_TYPE).toBe(ONLINE_WORLD_AUTH_TYPE);
     expect(readFileSync(join(ROOT, 'scripts/lib/world_auth.d.mts'), 'utf8')).toContain(
       `export const ONLINE_WORLD_AUTH_TYPE: '${ONLINE_WORLD_AUTH_TYPE}';`,
@@ -180,7 +186,9 @@ describe('standalone world WebSocket auth', () => {
       t: ONLINE_WORLD_AUTH_TYPE,
       token: 'token-1',
       character: 42,
+      gameProfile: DEFAULT_GAME_PROFILE,
     });
+    expect(GAME_PROFILES).toEqual(['woc-classic', 'mir4-gameplay-port']);
   });
 
   it('pins every Node WebSocket client and the explicit non-auth security probe', () => {

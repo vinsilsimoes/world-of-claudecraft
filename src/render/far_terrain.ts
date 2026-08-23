@@ -17,7 +17,6 @@
 // pixel.
 
 import * as THREE from 'three';
-import { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_X, WORLD_MIN_Z } from '../sim/data';
 import {
   BIOME_HAZE_DECLARATIONS,
   biomeHazeFragmentGlsl,
@@ -38,6 +37,7 @@ import {
   farGridSide,
   farTileBuildOrder,
   farTileVisible,
+  farWorldBounds,
   planFarTiles,
 } from './far_terrain_core';
 import { GFX } from './gfx';
@@ -294,7 +294,13 @@ export function buildFarTerrain(
     for (const waiter of initialBuildWaiters.splice(0)) waiter();
   };
 
-  const tiles = planFarTiles(WORLD_MIN_X, WORLD_MAX_X, WORLD_MIN_Z, WORLD_MAX_Z);
+  const worldBounds = farWorldBounds();
+  const tiles = planFarTiles(
+    worldBounds.minX,
+    worldBounds.maxX,
+    worldBounds.minZ,
+    worldBounds.maxZ,
+  );
   // Standard, not Lambert: the detail terrain lights with the realm's IBL
   // irradiance (scene.environment), and without the same term the far
   // tiles' shaded faces crush toward black where the near terrain stays

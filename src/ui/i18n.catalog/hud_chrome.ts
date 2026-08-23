@@ -8,6 +8,7 @@
 // own module (no per-locale blocks) so new chrome keys are an English-only add.
 
 import { armoryCollectionStrings, armorySkinStrings } from './armory';
+import { mir4CollectibleStrings } from './mir4_collectibles';
 
 export const hudChromeStrings = {
   warlock: {
@@ -379,6 +380,250 @@ export const hudChromeStrings = {
     count: '({count})',
     collapseHint: 'Collapse quest tracker',
     expandHint: 'Expand quest tracker',
+    mir4: {
+      firstTraces: 'First Traces',
+      reachTarek: 'Reach Tarek',
+      inspectClues: 'Inspect clues',
+      returnToTarek: 'Return to Tarek',
+      pausedSuffix: '(auto journey paused by manual control)',
+      startAutoJourney: 'Start auto journey',
+      stopAutoJourney: 'Stop auto journey',
+    },
+  },
+  mir4: {
+    collectibles: mir4CollectibleStrings,
+    ultimateGauge: 'Ultimate gauge',
+    ultimateGaugeStatus: 'Ultimate gauge: {value} of {max}',
+    ultimateReadyAnnouncement: 'Ultimate ready.',
+    achievements: {
+      title: 'Achievements',
+      close: 'Close achievements',
+      summary: '{claimed}/{total} rewards claimed',
+      balances:
+        'Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}',
+      levelTitle: 'Level {level}',
+      levelDescription: 'Reach level {level}.',
+      progressAria: 'Level progress: {current}/{target}',
+      progressText: '{current}/{target}',
+      rewardCopper: '{amount} copper',
+      rewardDarksteel: '{amount} Darksteel',
+      rewardEffectPoints: '{amount} Effect Points',
+      rewardSkillTomes: '{amount} Skill Tomes',
+      rewards: 'Rewards: {rewards}',
+      claim: 'Claim',
+      claimed: 'Claimed',
+      locked: 'Reach level {level}',
+      previousGrade: 'Claim the previous grade first',
+      claimAria: 'Claim the level {level} achievement reward',
+    },
+    questLog: {
+      narrative:
+        'Investigate the three clue sites around the ford, then return to Tarek Two Bridges.',
+      giverName: 'Tarek Two Bridges',
+      emptyHint: 'Find Tarek Two Bridges in the M01 settlement, or start auto journey.',
+      completedHint: 'First Traces is complete. The remaining campaign quests are not active yet.',
+    },
+    campaign: {
+      questTitle: 'Campaign {id}',
+      narrative: 'Complete the current campaign objectives for {id}.',
+      contact: 'Campaign contact',
+      objective: {
+        returnToContact: 'Return to the campaign contact',
+        talk: 'Speak with the campaign contact',
+        deliver: 'Deliver the requested items',
+        travel: 'Travel to the marked objective',
+        inspect: 'Inspect the marked evidence',
+        gather: 'Gather the requested resources',
+        defend: 'Defend the marked objective',
+        combat: 'Defeat the marked enemies',
+        escort: 'Escort the marked ally',
+        escortSupplies: 'Escort the supply group',
+        dungeon: 'Clear the campaign dungeon',
+        craft: 'Craft the requested supplies',
+        tutorial: 'Complete the system lesson',
+        interact: 'Interact with the marked objective',
+        complete: 'Complete the current objective',
+      },
+    },
+    characterTitle: 'Character',
+    awaitingState: 'Waiting for authoritative character data...',
+    combatPowerLine: 'Combat Power {value}',
+    equipmentVisualShell: 'World of ClaudeCraft appearance with MIR4 combat attributes',
+    equipmentTierGrade: 'Tier {tier}, Grade {grade}',
+    equipmentRequiredLevel: 'Requires level {level}',
+    unequipHint: 'Click the X or right-click to unequip.',
+    unequipAria: 'Unequip {item}',
+    equipHint: 'Click to equip.',
+    equipAria: 'Equip {item}',
+    inventoryEquipment: 'Equipment',
+    inventoryRuntimeItems: 'Native World of ClaudeCraft Items',
+    inventoryCollectionTickets: 'Collection Tickets',
+    inventoryMaterials: 'Refinement Materials',
+    noUnequippedEquipment: 'No unequipped equipment.',
+    materialCount: 'Owned: {count}',
+    mountTicketDawn: 'Dawn Mount Ticket',
+    mountTicketTwilight: 'Twilight Mount Ticket',
+    mountTicketDawnDescription:
+      'Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.',
+    mountTicketTwilightDescription:
+      'Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.',
+    redeemMountTicket: 'Use {ticket}',
+    inventoryMounts: 'Mounts',
+    inventoryPendingMounts: 'Mounts Awaiting Confirmation',
+    mountGrade: 'Grade {grade}',
+    mountOwned: 'Owned: {count}',
+    mountEquipped: 'Equipped',
+    mountEquipHint:
+      'Click to equip this Mount and summon its native World of ClaudeCraft visual shell.',
+    mountUnequipHint: 'Click to unequip this Mount and dismount.',
+    mountConfirmHint: 'Click to confirm this Mount and add it to your collection.',
+    mountConfirmAria: 'Confirm {mount}',
+    mountEffectShell: 'Native World of ClaudeCraft model with MIR4 Mount stats',
+    mountMoveSpeed: 'Movement Speed: +{amount}%',
+    mountBasicAttackSpeed: 'Basic Attack Speed: +{amount}%',
+    mountDefenses: 'Physical Defense: +{physical} · Magic Defense: +{magic}',
+    equippedMountLine: 'Mount: {mount} (Grade {grade})',
+    noEquippedMount: 'Mount: none equipped',
+    inventoryMountCombination: 'Mount Combination',
+    combineMountsAria: 'Combine four Grade {grade} Mounts',
+    combineMountsHint:
+      'Consumes four owned Mounts of this grade. There is a 20% chance to receive one random Mount of the next grade. On failure, you receive one random Mount of the same grade. Epic or higher rewards await confirmation.',
+    inventorySpirits: 'Spirits',
+    inventoryPendingSpirits: 'Spirits Awaiting Confirmation',
+    spiritTicketDawn: 'Dawn Spirit Ticket',
+    spiritTicketSunset: 'Sunset Spirit Ticket',
+    spiritTicketDawnDescription:
+      'Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.',
+    spiritTicketSunsetDescription:
+      'Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.',
+    redeemSpiritTicket: 'Summon with {ticket}',
+    spiritGrade: 'Grade {grade}',
+    spiritOwned: 'Owned: {count}',
+    spiritEquipped: 'Equipped',
+    spiritEquipHint:
+      'Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.',
+    spiritUnequipHint: 'Click to unequip this Spirit.',
+    spiritConfirmHint: 'Click to confirm this Spirit and add it to your collection.',
+    spiritConfirmAria: 'Confirm {spirit}',
+    spiritEffectShell: 'Native World of ClaudeCraft presentation with MIR4 Spirit effects',
+    equippedSpiritLine: 'Spirit: {spirit} (Grade {grade})',
+    noEquippedSpirit: 'Spirit: none equipped',
+    inventorySpiritCombination: 'Spirit Combination',
+    combineSpiritsAria: 'Combine four Grade {grade} Spirits',
+    combineSpiritsHint:
+      'Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.',
+    spiritSkillChanceCooldown: '{chance}% chance · {cooldown}s cooldown',
+    spiritSkillBonusDamage: "Increases the triggering hit's raw damage by {amount}%.",
+    spiritSkillExecute:
+      "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
+    spiritSkillLifeSiphon: 'Restores {amount}% of maximum Health.',
+    spiritSkillManaSurge: 'Restores {amount}% of maximum Mana.',
+    spiritSkillArmorRend: 'Adds {amount}% Defense Penetration to the triggering hit.',
+    spiritSkillCriticalFocus: 'Forces the triggering hit to be critical.',
+    equipmentSlots: {
+      weapon: 'Weapon',
+      necklace: 'Necklace',
+      ring: 'Ring',
+      talisman: 'Talisman',
+      chest: 'Chest',
+      helmet: 'Helmet',
+      gloves: 'Gloves',
+      boots: 'Boots',
+    },
+    stats: {
+      combatPower: 'Combat Power',
+      maxHp: 'Maximum Health',
+      maxMana: 'Maximum Mana',
+      physicalAttack: 'Physical Attack',
+      magicAttack: 'Magic Attack',
+      physicalDefense: 'Physical Defense',
+      magicDefense: 'Magic Defense',
+      accuracy: 'Accuracy',
+      dodge: 'Dodge',
+      critical: 'Critical',
+      avoidCritical: 'Critical Evasion',
+      criticalOutcome: 'Critical Damage',
+      bossDamage: 'Boss Damage',
+      skillDamage: 'Skill Damage',
+      penetration: 'Defense Penetration',
+      unknown: 'Combat Attribute',
+    },
+    materials: {
+      sunStone: 'Sun Stone',
+      moonStone: 'Moon Stone',
+      solarScroll: 'Solar Scroll',
+      lunarSeal: 'Lunar Seal',
+      dawnTear: 'Dawn Tear',
+      solarWard: 'Solar Ward',
+    },
+    maps: {
+      portal: '{zone} Portal',
+      actWelcome: '{zone} (Act {act}).',
+      m01: 'Ford Village',
+      m02: 'Reed Trail',
+      m03: 'Vale Grove',
+      m04: 'Hillside Ruins',
+      m05: 'Rift Clearing',
+      m06: 'Candle-Stone Crypts',
+      m07: 'Ossuary Galleries',
+      m08: 'Miststone Fortress',
+      m09: 'Lantern Marsh',
+      m10: "Bog King's Fen",
+      m11: 'Leech Mangrove',
+      m12: 'Reed Harbor',
+      m13: 'Glass Dunes',
+      m14: 'Akhet Necropolis',
+      m15: 'Cinderite Caldera',
+      m16: 'Shattered Sun Forge',
+      m17: 'Howling Tundra',
+      m18: "Jarl's Pass",
+      m19: 'Night Veil',
+      m20: 'Eclipse Bastille',
+    },
+    progression: {
+      title: 'Equipment Workshop',
+      refinement: 'Refinement',
+      enchantment: 'Enchantment',
+      blessing: 'Blessing',
+      crafting: 'Crafting',
+      ownedEquipment: 'Owned Equipment',
+      noEquipment: 'No equipment is available for this operation.',
+      equipped: 'Equipped',
+      enhancementLevel: 'Enhancement +{level} of +{max}',
+      successChance: 'Success chance: {chance}%',
+      safeFailure: 'Failure keeps the equipment.',
+      destructiveFailure: 'Failure destroys the equipment above +5.',
+      wardProtection: 'A Solar Ward will be consumed to prevent destruction.',
+      noWardProtection: 'No Solar Ward is available.',
+      enhanceCost: 'Cost: 1 Solar Scroll',
+      enhance: 'Enhance',
+      maxEnhancement: 'Maximum enhancement reached',
+      currentEffects: 'Current Effects',
+      noCurrentEffects: 'No effects applied.',
+      rollCostEnchantment: 'Cost: 1 Lunar Seal',
+      layerUnsupported: 'This item cannot receive {layer} effects.',
+      rollCostBlessing: 'Cost: 1 Dawn Tear',
+      roll: 'Roll Preview',
+      pendingOtherLayer: 'Resolve the pending {layer} preview first.',
+      preview: 'Pending Preview',
+      acceptPreview: 'Apply Preview',
+      keepCurrent: 'Keep Current',
+      inactiveEffect: 'Ported effect (not active in combat yet)',
+      materialRecipes: 'Material Recipes',
+      campaignProfession: 'Campaign Profession Order',
+      campaignProfessionProgress: 'Progress: {current}/{goal}',
+      campaignProfessionMaterials: 'Eligible materials: {held}/{needed}',
+      campaignProfessionHint:
+        'Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.',
+      campaignCraft: 'Craft Component',
+      campaignRefine: 'Refine Component',
+      campaignSalvage: 'Salvage Gear',
+      creates: 'Creates {count} {material}',
+      materialCost: '{held}/{needed} {material}',
+      copperCost: '{amount} copper',
+      create: 'Create',
+      requestSent: 'The server is validating the equipment operation.',
+    },
   },
   interfaceTabs: {
     general: 'General',
@@ -548,6 +793,85 @@ export const hudChromeStrings = {
     // count in words. "{page}" is token-only, so it is exempt from the M16
     // non-Latin-fill requirement.
     actionPageIndicator: '{page}',
+    // The radial action gesture (Phase 2): each ring button carries a centre tap
+    // plus four flick directions, and a hold reveals the four petals. The petal
+    // overlay's accessible name, the centre cancel target's name, and the four
+    // direction names the petals' slot aria is built from ("Action slot Up:
+    // Fireball"). The direction words are the accessible label a screen reader
+    // reads for a control the player picks by direction, not by index, so they
+    // are real user-facing strings rather than dev text.
+    actionRadial: 'Action directions',
+    actionRadialCancel: 'Cancel action',
+    radialCenter: 'Centre',
+    radialUp: 'Up',
+    radialRight: 'Right',
+    radialDown: 'Down',
+    radialLeft: 'Left',
+    // The consumables seat (Phase 3): the ring's 5th arc position, showing the
+    // first carried consumable. A tap uses it; a hold or a leftward swipe opens
+    // the row of everything else being carried. One key names three things that
+    // must agree: the row overlay's accessible name, the seat's own slot label
+    // (so a screen reader reads "Consumables: Healing Potion" rather than a slot
+    // number the player never sees), and the group a sticky-mode menu belongs to.
+    // WORDY by M16, so the five non-Latin overlays carry real fills.
+    consumableSeat: 'Consumables',
+    // RETIRED in place: the same control's copy while it was named "Menus" and a
+    // bare tap opened chat. Both facts changed, so the four keys below were
+    // SUPERSEDED by the quickActions* set rather than reworded (the
+    // corpseHarvest.harvestTooltip precedent: an in-place reword leaves every
+    // locale's reviewed fill answering the old sentence). The keys stay, already
+    // filled, per the hud.core.mobileTarget retired-but-translated precedent.
+    menuControl: 'Menus',
+    menuControlAria:
+      'Menus. Tap to open chat, or hold and swipe right for mounts, map, bags and more.',
+    menuControlAriaTap:
+      'Menus. Tap to open the menu row: mounts, map, bags and more. Tap again for chat.',
+    menuLabel: 'Menu',
+    // Quick Actions: ONE seat replacing the five-button row (Chat, Social,
+    // Quests, Settings, More) that sat at top-left, further from either thumb
+    // than anything else in the HUD. quickActions names both the control and the
+    // strip it opens; quickActionsAria is the control's own accessible name,
+    // which has to TEACH the gesture because a touch device has no hover to
+    // discover it with. The ten strip items reuse the accessible names their own
+    // buttons already carry, and the live caption reuses those buttons' label
+    // keys, so no per-item key lives here. All four are WORDY by M16, so the five
+    // non-Latin overlays carry real fills.
+    quickActions: 'Quick Actions',
+    quickActionsAria:
+      'Quick Actions. Tap to open the row of mount, chat, map, bags and more, or hold and swipe right to pick one.',
+    // The SAME control under settings.touchTapMenus, where the row is opened and
+    // chosen from with separate taps rather than one gesture, so the swipe
+    // sentence above would teach something the control does not do;
+    // menu_control_controller.ts swaps the name when the setting flips.
+    quickActionsAriaTap:
+      'Quick Actions. Tap to open the row of mount, chat, map, bags and more, then tap an item. Tap the control again to close.',
+    quickActionsLabel: 'Actions',
+    // The touch stance control: ONE circle on the button row wearing the stance
+    // (or paladin devotion aura) the player is in, with every other known stance
+    // on the radial's four directions. stanceRadial names the petal overlay;
+    // the two anchor names are the control's OWN accessible name and have to
+    // teach the gesture, because a touch device has no hover to discover it
+    // with. {stance} is the worn stance's own ability name, already localized by
+    // its own key, so no stance name lives here. Both anchor names are WORDY by
+    // M16, so the five non-Latin overlays carry real fills.
+    stanceRadial: 'Stances',
+    stanceAnchorAria: 'Stance: {stance}. Tap to open the stance ring, then pick another stance.',
+    stanceAnchorEmptyAria: 'No stance. Tap to open the stance ring, then pick a stance.',
+    // The top-band quest strip (Phase 5): the touch replacement for the
+    // right-anchored quest tracker, showing ONE quest with all of its objectives
+    // instead of a list that grew into the action ring. questStripAria is the
+    // strip's accessible name and has to say what activating it DOES, because
+    // the visible chevrons are a hint rather than buttons; questStripAriaSingle
+    // drops the position when there is nothing to cycle to. The objective lines
+    // reuse questUi.detail.objectiveProgress and the "(Complete)" marker reuses
+    // questUi.tracker.complete, so no key for either lives here.
+    // questStripCounter is token-only and so exempt from the M16 non-Latin fill
+    // requirement; the two aria strings and questStripMore are WORDY, so the
+    // five non-Latin overlays carry real fills.
+    questStripAria: 'Tracked quest {position} of {total}: {title}. Activate for the next quest.',
+    questStripAriaSingle: 'Tracked quest: {title}',
+    questStripCounter: '{position}/{total}',
+    questStripMore: '+{count} more',
     // Target swap (#mobile-target-cycle, replacing the old Target Closest
     // button): a crosshair-icon secondary button that cycles the hostile
     // target via the Tab-target path (acquire-nearest now lives on the ring's
@@ -579,6 +903,41 @@ export const hudChromeStrings = {
     // consecutive-lowercase run), so the five non-Latin overlays carry real fills
     // and the Latin overlays stay pending.
     chatPlaceholder: 'Say something... (! for community commands)',
+    // The More tray's Edit control (#mobile-bar-editor), which opens the bar
+    // editor. Touch-only: desktop binds by dragging onto the visible bars, so the
+    // control never appears there. barEditor is the tiny on-button caption (the
+    // tray's buttons are narrow, so it stays two short words); barEditorAria is
+    // the spoken name. Both WORDY by M16, so the five non-Latin overlays carry
+    // real fills.
+    barEditor: 'Edit Bars',
+    barEditorAria: 'Edit the action bar layout',
+  },
+  // The touch bar editor overlay (Phase 4.5): one action-ring page exploded into
+  // a grid of 4 buttons by 5 directions, with page tabs. It is the ONLY way to
+  // bind a slot on touch, so its copy has to TEACH the two-tap language (place,
+  // then swap) that replaces the long-press drag it retires. Every value here is
+  // WORDY by M16 except pageTab (one short word plus a token), so the rest
+  // carry the five non-Latin fills.
+  barEditor: {
+    title: 'Edit Action Bar',
+    close: 'Close bar editor',
+    // The tab strip's own group name, distinct from the per-tab names below.
+    pages: 'Action bar pages',
+    pageTab: 'Page {page}',
+    buttonHeader: 'Button {button}',
+    // A cell is named by the control it belongs to and the direction the player
+    // flicks to reach it, never by a slot number touch never shows.
+    cellAria: 'Button {button}, {direction}: {action}',
+    emptyCellAria: 'Button {button}, {direction}: empty',
+    hint: 'Tap a slot, then another, to swap them.',
+    armed: 'Tap a slot to place {name}.',
+    picked: 'Tap another slot to swap with {name}.',
+    locked: 'Action bars are locked in Interface options.',
+    // The Clear toggle: touch's only way to EMPTY a slot, since the desktop
+    // clear is shift plus right-click.
+    clear: 'Clear',
+    clearAria: 'Clear a slot',
+    clearArmed: 'Tap a slot to clear it.',
   },
   // New-adventurer tutorial copy for the touch interface. The default tutorial
   // bodies (hud.tutorial.*Body) reference keyboard/mouse ("W/A/S/D", "press F"),
@@ -727,6 +1086,29 @@ export const hudChromeStrings = {
     closesIn: 'Closes in {time}',
     clockMs: '{minutes}:{seconds}',
     clockHms: '{hours}:{minutes}:{seconds}',
+  },
+  // The Last Keep interior map (the castle floor plan the minimap / world map
+  // show inside the instance). The title composes the localized dungeon name
+  // (entities.dungeons.the_last_keep.name, via dungeonDisplayName) with the
+  // story the player currently stands on.
+  lastkeepMap: {
+    title: '{keep}: {story}',
+    story: {
+      undercroft: 'The Undercroft',
+      state: 'The State Floor',
+      residence: 'The Residence',
+      tower: 'The Watch Tower',
+    },
+  },
+  // Dawnhold Castle interior map (the Evergarden garden palace), same shape:
+  // the title composes the localized dungeon name
+  // (entities.dungeons.dawnhold_castle.name) with the current story.
+  dawnholdMap: {
+    title: '{keep}: {story}',
+    story: {
+      ground: 'The Garden Floor',
+      solar: 'The Solar',
+    },
   },
   // Eight-point compass abbreviations as drawn on the heading strip. Each locale
   // overrides with its own established compass abbreviations (e.g. West = "O" in
@@ -1309,7 +1691,7 @@ export const hudChromeStrings = {
     gfxCustomNote:
       'Changing a dial switches the quality preset to Advanced: a custom mix built on the High-quality base, starting from the levels shown for your current preset.',
     gfxEffectsNote:
-      'Ambient Occlusion, Bloom and Anti-Aliasing ride the post-processing chain: with Effects & Lighting on Low the chain is off and they have no effect.',
+      'Ambient Occlusion and Bloom ride the post-processing chain: with Effects & Lighting on Low the chain is off and they have no effect. Anti-Aliasing keeps working there, on a cheaper edge filter built into the final image pass.',
     // Interface Mode control (Graphics panel): desktop keyboard/mouse vs the
     // on-screen touch controls. Auto detects the device; the rest force one.
     interfaceMode: 'Interface Mode',
@@ -1393,6 +1775,10 @@ export const hudChromeStrings = {
     stickyTarget: 'Keep Target on Ground Click',
     // Interface panel toggle + the item-tooltip lines it reveals (off by default).
     showItemLevel: 'Show Item Level',
+    // Interface panel toggle for the on-screen Reliquary tracker (on by
+    // default); shares the persisted switch with the eye toggle inside The
+    // Reliquary window.
+    showReliquaryTracker: 'Show Reliquary Tracker',
     itemLevelLine: 'Item Level {level}',
     itemScoreLine: 'Score {score}',
     // Interface panel toggle that reveals the optional second action bar row (off
@@ -1439,6 +1825,11 @@ export const hudChromeStrings = {
     // for left-thumb-dominant players; the same setting as the Key Bindings
     // panel's leftHandedTouch row, surfaced again here alongside the joystick.
     mobileLeftHanded: 'Left-handed layout',
+    // Touch accessibility toggle (off by default): every gesture menu opens on a
+    // tap instead of a swipe or a hold. The note below is the row's description.
+    touchTapMenus: 'Tap menus',
+    touchTapMenusNote:
+      'Open the action, consumable and menu controls with a tap instead of a swipe. Tap an item to use it, tap the control again for its usual action, or tap outside to close.',
   },
   // Choice-row talents (the rows tab in the talents window). The row OPTION
   // names/descriptions are sim content (English source, localized with the
@@ -1485,9 +1876,36 @@ export const hudChromeStrings = {
     buttons: 'Button Layout',
     resetButtons: 'Reset Button Layout',
     menuAction: 'Game Menu',
+    confirmAction: 'Confirm / Select',
     zoomIn: 'Zoom In',
     zoomOut: 'Zoom Out',
     help: 'Left stick moves, right stick looks. Open a window to use the on-screen pointer.',
+    // Cross hotbar: the trigger-modifier hotbar. The trigger and button names
+    // shown beside each row are hardware glyphs from gamepad_map, so only the
+    // chrome around them is keyed here.
+    crossHotbar: 'Cross Hotbar',
+    crossHotbarEnable: 'Enable Cross Hotbar',
+    crossHotbarExpand: 'Double Cross Hotbar',
+    crossHotbarHelp:
+      'Hold a trigger to light eight action-bar slots on the d-pad and face buttons. Tap the other trigger to swap to the second set.',
+    crossHotbarResetLayout: 'Reset Cross Hotbar',
+    crossHotbarPosition: '{trigger} + {button}',
+    crossHotbarOwnsButtons:
+      'The triggers and the d-pad belong to the cross hotbar while it is on, so they are set up below rather than here.',
+    cancelAction: 'Cancel / Back',
+    subcommandsAction: 'Subcommands / Map',
+    cycleHudAction: 'Cycle Interface',
+    cycleSetAction: 'Change Hotbar Set',
+    crossHotbarDisplay: 'Bar Display',
+    crossHotbarDisplayFull: 'Full',
+    crossHotbarDisplayCompact: 'Compact',
+    crossHotbarDisplayMinimal: 'Only While Held',
+    crossHotbarArrangeChord: '{bumper} + {button}',
+    crossHotbarCarrying: 'Carrying {action}: confirm on a cell to place it, cancel to put it back.',
+    crossHotbarEditHint:
+      'Arranging: confirm picks up from a cell or the spellbook and drops on a cell, cancel clears one.',
+    crossHotbarEditHelp:
+      'Hold the left bumper and press the top face button to arrange the bar with the controller.',
   },
   // Performance overlay (the customizable in-game stats panel + its Options
   // sub-view). Player-facing, so every label is a key here; the live numbers in
@@ -1621,6 +2039,7 @@ export const hudChromeStrings = {
         render: 'render  submit {submit} ms | world {world} ms | entities {entities} ms',
         scene: 'scene   {calls} calls | {triangles} tris | {views} views',
         hitches: 'hitches {hitches} | shaders {shaders} | uploads {uploads} | views {views}',
+        hitchesBuild: 'zone builds {zoneBuilds} | off-frame {offFrame} | gc {gc}',
         gpu: 'GPU     {renderer}',
         waitingValue: 'waiting',
       },
@@ -1675,7 +2094,10 @@ export const hudChromeStrings = {
           eventCpu: 'Event processing is consuming the frame',
           shaderCompile: 'Shaders are compiling during gameplay',
           textureUpload: 'Texture uploads are causing gameplay hitches',
+          zoneBuild: 'Zone streaming builds are causing hitches',
           viewCreate: 'Entity view creation is causing hitches',
+          gcHitch: 'Garbage collections are running inside long frames',
+          offFrameHitch: 'Long frames come from work outside the render callback',
           otherHitch: 'Unattributed long frames remain',
           assetStartup: 'Game startup is delayed by asset work',
           longTasks: 'Long browser tasks are blocking frames',
@@ -2889,6 +3311,15 @@ export const hudChromeStrings = {
   spellbook: {
     addToBarAria: 'Add {name} to action bar',
     removeFromBarAria: 'Remove {name} from action bar',
+    upgradeRank: 'Rank {rank}',
+    maxRank: 'Max rank',
+    evolutionCost: '{copper} · EP {effectPoints} · Tome {skillTomes}',
+    // The touch-only assign control beside the +/- toggle: the + drops a spell on
+    // the FIRST free slot, which is not a choice, and touch has no drag to make
+    // one with. This opens the bar editor with the spell already armed, so the
+    // next tap decides where it goes. WORDY by M16, so the five non-Latin
+    // overlays carry real fills.
+    assignAria: 'Choose a slot for {name}',
   },
   // Live overworld mob nameplate level badge text. Level renders in its own
   // element so con-color styling applies to the badge without recoloring the
@@ -3331,6 +3762,7 @@ export const hudChromeStrings = {
   },
   noticeboard: {
     empty: 'Nothing seems posted.',
+    contract: 'Contract active: {title}',
   },
   // The bank window (the Gilded Strongbox): a pooled deposit box shown while standing
   // at a banker NPC. Plain click withdraws a stack; shift-click withdraws a partial
@@ -4860,6 +5292,15 @@ export const hudChromeStrings = {
     pinFull: 'The tracker is full (up to {cap} pages)',
     pinAria: 'Pin {name} to the HUD tracker',
     unpinAria: 'Unpin {name}',
+    // The summary band's eye toggle for the HUD tracker's master switch
+    // (showReliquaryTracker). The label is the toggle's constant accessible
+    // name (aria-pressed carries the state); each hint is the action the
+    // press performs, rendered through the window's shared tooltip seam
+    // (reliquary_window.ts attachTooltip; that window never sets a native
+    // title, a pinned contract), not a title attribute.
+    trackerToggleLabel: 'HUD tracker',
+    trackerToggleShowHint: 'Show the Reliquary tracker on your screen',
+    trackerToggleHideHint: 'Hide the Reliquary tracker from your screen',
     // Phase 22: realm population rarity (the hudChrome.deeds.rarityLine
     // sibling). {percent} arrives pre-formatted through formatNumber's percent
     // style. "Found" is deliberate over "Owned": the aggregate counts sticky

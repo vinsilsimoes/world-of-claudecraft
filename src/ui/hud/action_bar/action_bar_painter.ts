@@ -28,6 +28,7 @@ import type { ActionBarState } from './action_bar_view';
 const ARIA_LABEL_ATTR = 'aria-label';
 const ARIA_DESCRIPTION_ATTR = 'aria-description';
 const ARIA_DISABLED_ATTR = 'aria-disabled';
+const ARIA_PRESSED_ATTR = 'aria-pressed';
 const BACKGROUND_IMAGE_PROP = 'background-image';
 const HEIGHT_PROP = 'height';
 // Drives the radial cooldown sweep: a CSS custom property the `.cd-overlay`
@@ -35,6 +36,7 @@ const HEIGHT_PROP = 'height';
 // old bottom-up `height` fill so remaining cooldown reads as a classic clock wipe.
 const COOLDOWN_FILL_PROP = '--cd-fill';
 const CLASS_EMPTY = 'empty';
+const CLASS_ABILITY = 'ability';
 const CLASS_UNUSABLE = 'unusable';
 const CLASS_OUT_OF_RANGE = 'oor';
 const CLASS_QUEUED = 'queued';
@@ -107,6 +109,7 @@ export class ActionBarPainter {
       this.writers.setText(el.cdText, s.cdText);
 
       this.writers.toggleClass(el.btn, CLASS_EMPTY, s.kind === 'empty');
+      this.writers.toggleClass(el.btn, CLASS_ABILITY, s.kind === 'ability');
       this.writers.toggleClass(el.btn, CLASS_UNUSABLE, !s.usable);
       this.writers.toggleClass(el.btn, CLASS_OUT_OF_RANGE, s.outOfRange);
       this.writers.toggleClass(el.btn, CLASS_QUEUED, s.queued);
@@ -120,6 +123,7 @@ export class ActionBarPainter {
       this.writers.setAttr(el.btn, ARIA_LABEL_ATTR, s.ariaLabel);
       this.writers.setAttr(el.btn, ARIA_DESCRIPTION_ATTR, s.ariaDescription);
       this.writers.setAttr(el.btn, ARIA_DISABLED_ATTR, s.usable ? 'false' : 'true');
+      this.writers.setAttr(el.btn, ARIA_PRESSED_ATTR, s.ariaPressed);
       this.writers.setText(el.keybindEl, s.keybindLabel);
     }
   }

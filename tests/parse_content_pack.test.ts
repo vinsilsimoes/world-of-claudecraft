@@ -102,7 +102,12 @@ describe.sequential('parse content-pack producer', () => {
     expect(Object.keys(generated.payload.zones).sort()).toEqual(
       ZONES.map((zone) => zone.id).sort(),
     );
-    expect(Object.keys(generated.payload.dungeons).sort()).toEqual(Object.keys(DUNGEONS).sort());
+    const publicDungeonIds = Object.values(DUNGEONS)
+      .filter((dungeon) => dungeon.internalOnly !== true)
+      .map((dungeon) => dungeon.id)
+      .sort();
+    expect(Object.keys(generated.payload.dungeons).sort()).toEqual(publicDungeonIds);
+    expect(generated.payload.dungeons).not.toHaveProperty('campaign_trial_room');
     expect(Object.keys(generated.payload.classes).sort()).toEqual(Object.keys(CLASSES).sort());
 
     for (const [name, id] of Object.entries(generated.payload.abilityNameToId)) {

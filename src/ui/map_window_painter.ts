@@ -40,10 +40,11 @@
 // (cached for the frame, never per-marker); every other literal (font, radius,
 // line width, label offset, triangle geometry) is a named constant.
 
-import { getActiveWorldContent, type ZoneDef } from '../sim/data';
+import { BUILTIN_WORLD, getActiveWorldContent, type ZoneDef } from '../sim/data';
 import type { GatherNodeType, RiftTier } from '../sim/types';
 import { type Decoration, generateDecorationsInBounds } from '../sim/world';
 import type { IWorld } from '../world_api';
+import type { CastlePlanMarker } from './castle_plan_core';
 import { dungeonDisplayName, riftFloorLabel, zoneDisplayName, zonePoiLabel } from './entity_i18n';
 import { formatNumber } from './i18n';
 import {
@@ -61,6 +62,7 @@ import {
 import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
   buildOverworldMapModel,
+  layoutMapPoiLabels,
   type MapAllyMarker,
   type MapDetail,
   type MapGatherNodeMarker,
@@ -99,6 +101,10 @@ const STANDARD_MARKER_PROFILE = (): MapMarkerProfile => 'standard';
 const ALLY_FONT = 'bold 11px Georgia';
 // Building footprint outline width in the detail overlay.
 const BUILDING_LINE_WIDTH = 1;
+// A curtain wall is a few yards thick, which falls under a pixel once the
+// whole zone is framed; hold every plan rect to at least this so a castle
+// never thins out of existence at the default zoom.
+const CASTLE_PLAN_MIN_PX = 2;
 // Dungeon Finder "Show on Map" highlight: a steady double ring (no animation,
 // reduced-motion safe) around the pinged entrance.
 // Active-quest objective area (the translucent quest-POI blob) ring width.
@@ -325,6 +331,9 @@ export const MAP_COLOR_TOKENS = {
   buildingChapel: '--color-map-building-chapel',
   buildingInn: '--color-map-building-inn',
   buildingHouse: '--color-map-building-house',
+  castleWall: '--color-map-castle-wall',
+  castleTower: '--color-map-castle-tower',
+  castleCourt: '--color-map-castle-court',
   well: '--color-map-well',
   stall: '--color-map-stall',
   tent: '--color-map-tent',
@@ -518,7 +527,10 @@ export class MapWindowPainter {
       decorations = generateDecorationsInBounds(world.cfg.seed, opts.zoneBg.region);
       this.decorationsByZone.set(opts.zone.id, decorations);
     }
-    const activeWorld = getActiveWorldContent();
+    // Real hosts always provide cfg.world; the active-content fallback keeps
+    // narrow legacy/test IWorld stubs compatible without putting the shipped
+    // painter back on mutable global authority.
+    const activeWorld = world.cfg.world ?? getActiveWorldContent();
     // Resolve responsive state once. Both pure placement and painted geometry
     // consume the same profile for this complete redraw.
     const profile = this.markerProfile();
@@ -534,7 +546,15 @@ export class MapWindowPainter {
       markerProfile: profile,
     });
     const colors = this.resolveColors();
-    this.draw(ctx, model, opts.zoneBg, opts.canvasSize, colors, profile);
+    this.draw(
+      ctx,
+      model,
+      opts.zoneBg,
+      opts.canvasSize,
+      colors,
+      profile,
+      activeWorld !== BUILTIN_WORLD,
+    );
     return {
       view: model.view,
       cursor: model.cursor,
@@ -559,6 +579,7 @@ export class MapWindowPainter {
     S: number,
     colors: MapColors,
     profile: MapMarkerProfile,
+    authoredCustomMap: boolean,
   ): void {
     // Reclaim any label sprites the last redraws left over the budget, before
     // this redraw asks for its own (never mid-redraw: see text_sprite_cache).
@@ -586,6 +607,9 @@ export class MapWindowPainter {
     }
 
     if (model.detail) this.drawDetail(ctx, model.detail, colors);
+
+    // The castle plans, over the terrain and under the quest / label layers.
+    if (model.castles.length > 0) this.drawCastlePlan(ctx, model.castles, colors);
 
     // Active-quest objective areas: translucent blue blobs (classic quest-POI
     // style) over where each objective's targets live, drawn under the title /
@@ -716,15 +740,58 @@ export class MapWindowPainter {
       lineWidth: geometry.textOutlineWidth,
     });
 
-    // POI labels (the title's outline + label color, one size down).
+    // POI labels (the title's outline + label color, one size down). Authored
+    // custom maps may carry ten named places in one frame, so their labels use
+    // deterministic collision avoidance and a small anchored cartography dot.
+    // The built-in atlas keeps its established pixel layout unchanged.
     const poiLabel: TextSpriteStyle = {
       font: geometry.labelFont,
       fill: colors.label,
       stroke: colors.outline,
       lineWidth: geometry.textOutlineWidth,
     };
-    for (const poi of model.pois) {
-      this.labels.draw(ctx, zonePoiLabel(poi.zoneId, poi.poiIndex), poi.mx, poi.my, poiLabel);
+    const poiRows = model.pois.map((poi) => {
+      const text = zonePoiLabel(poi.zoneId, poi.poiIndex);
+      return { poi, text, width: this.labels.measureAdvance(text, poiLabel) };
+    });
+    const laidOut = authoredCustomMap
+      ? layoutMapPoiLabels(
+          poiRows.map(({ poi, width }) => ({ mx: poi.mx, my: poi.my - 7, width })),
+          S,
+          profile === 'compact' ? 23 : 15,
+        )
+      : poiRows.map(({ poi, width }) => ({
+          mx: poi.mx,
+          my: poi.my,
+          width,
+          labelX: poi.mx,
+          labelY: poi.my,
+        }));
+    if (authoredCustomMap) {
+      ctx.strokeStyle = colors.outline;
+      ctx.fillStyle = colors.label;
+      ctx.lineWidth = 1;
+      for (let index = 0; index < laidOut.length; index++) {
+        const label = laidOut[index];
+        const poi = poiRows[index]?.poi;
+        if (!poi) continue;
+        if (Math.abs(label.labelX - poi.mx) > 0.5 || Math.abs(label.labelY - (poi.my - 7)) > 0.5) {
+          ctx.beginPath();
+          ctx.moveTo(poi.mx, poi.my);
+          ctx.lineTo(label.labelX, label.labelY + 3);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(poi.mx, poi.my, 2.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    for (let index = 0; index < poiRows.length; index++) {
+      const row = poiRows[index];
+      const label = laidOut[index];
+      if (!row || !label) continue;
+      this.labels.draw(ctx, row.text, label.labelX, label.labelY, poiLabel);
     }
 
     // Dungeon entrance portals: a purple dot plus the dungeon name above it. The
@@ -994,6 +1061,38 @@ export class MapWindowPainter {
 
   // Buildings + vegetation overlay for the zoomed-in map, drawn in the same order
   // as the inline site (vegetation, then building footprints, then prop dots).
+  /**
+   * Both castles' curtain plans: courts washed in first, then wall runs and
+   * tower squares filled and outlined. A gate needs no drawing of its own,
+   * because a gate is where the plan has no run.
+   */
+  private drawCastlePlan(
+    ctx: CanvasRenderingContext2D,
+    markers: CastlePlanMarker[],
+    colors: MapColors,
+  ): void {
+    ctx.save();
+    // courts first, so a wall always reads on top of its own yard
+    ctx.fillStyle = colors.castleCourt;
+    for (const m of markers) {
+      if (m.part !== 'court') continue;
+      ctx.fillRect(m.mx, m.my, m.w, m.h);
+    }
+    ctx.strokeStyle = colors.buildingOutline;
+    ctx.lineWidth = BUILDING_LINE_WIDTH;
+    for (const m of markers) {
+      if (m.part === 'court') continue;
+      ctx.fillStyle = m.part === 'tower' ? colors.castleTower : colors.castleWall;
+      // a curtain is a few yards thick, which is sub-pixel when the whole
+      // zone is framed: floor the short side so a wall never vanishes
+      const w = Math.max(m.w, CASTLE_PLAN_MIN_PX);
+      const h = Math.max(m.h, CASTLE_PLAN_MIN_PX);
+      ctx.fillRect(m.mx, m.my, w, h);
+      ctx.strokeRect(m.mx, m.my, w, h);
+    }
+    ctx.restore();
+  }
+
   private drawDetail(ctx: CanvasRenderingContext2D, detail: MapDetail, colors: MapColors): void {
     for (const d of detail.decorations) {
       ctx.fillStyle =

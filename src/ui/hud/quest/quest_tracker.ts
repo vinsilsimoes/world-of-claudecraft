@@ -24,7 +24,23 @@ export interface TrackedQuest {
   title: string;
   /** True when the quest is ready to turn in (the "(Complete)" state). */
   complete: boolean;
+  /** False when no compatible quest-detail provider exists for this profile. */
+  openable?: boolean;
+  /** Toggle state for rows that reuse the tracker as an inline action. */
+  pressed?: boolean;
+  /** Already-localized action hint for an actionable tracker row. */
+  actionHint?: string;
+  tutorial?: TrackedTutorial;
   objectives: readonly TrackedObjective[];
+}
+
+export interface TrackedTutorial {
+  launcherId: string;
+  tab?: string;
+  destination: string;
+  shortcut: string;
+  steps: readonly string[];
+  requirements: readonly string[];
 }
 
 export interface QuestTrackerObjectiveRow extends TrackedObjective {
@@ -36,6 +52,10 @@ export interface QuestTrackerQuestRow {
   number: number;
   title: string;
   complete: boolean;
+  openable: boolean;
+  pressed?: boolean;
+  actionHint?: string;
+  tutorial?: TrackedTutorial;
   objectives: QuestTrackerObjectiveRow[];
 }
 
@@ -64,6 +84,10 @@ export function questTrackerView(
     number: q.number,
     title: q.title,
     complete: q.complete,
+    openable: q.openable !== false,
+    pressed: q.pressed,
+    actionHint: q.actionHint,
+    tutorial: q.tutorial,
     objectives: q.objectives.map((o) => ({ ...o, done: o.current >= o.total })),
   }));
   return { visible: true, collapsed: false, count, quests: questRows };

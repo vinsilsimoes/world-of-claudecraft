@@ -19,6 +19,7 @@ import {
   QUESTS,
   ZONES,
 } from '../src/sim/data';
+import { MIR4_ACTION_ABILITY_DEFS } from '../src/sim/mir4/action_abilities';
 import type { PlayerClass } from '../src/sim/types';
 import { abilityBuffValue } from '../src/ui/ability_damage';
 import {
@@ -800,8 +801,9 @@ describe('i18n Localization Key Coverage', () => {
 
     expect(entityCount('class', 'name')).toBe(Object.keys(CLASSES).length);
     expect(entityCount('class', 'description')).toBe(Object.keys(CLASSES).length);
-    expect(entityCount('ability', 'name')).toBe(Object.keys(ABILITIES).length);
-    expect(entityCount('ability', 'description')).toBe(Object.keys(ABILITIES).length);
+    const abilityCount = Object.keys(ABILITIES).length + MIR4_ACTION_ABILITY_DEFS.length;
+    expect(entityCount('ability', 'name')).toBe(abilityCount);
+    expect(entityCount('ability', 'description')).toBe(abilityCount);
     // Heroic upgraded variants (heroicOf) have no name key: they share the base
     // item name, so they are excluded from the entity manifest.
     expect(entityCount('item', 'name')).toBe(
@@ -874,7 +876,9 @@ describe('i18n Localization Key Coverage', () => {
       0,
     );
     expect(classAbilityEntries).toHaveLength(
-      Object.keys(CLASSES).length * 2 + Object.keys(ABILITIES).length * 2 + specNoteCount,
+      Object.keys(CLASSES).length * 2 +
+        (Object.keys(ABILITIES).length + MIR4_ACTION_ABILITY_DEFS.length) * 2 +
+        specNoteCount,
     );
     const missingClassAbilities = missingEntityTranslationsForGroups(['classAbility']);
     expect(missingClassAbilities, JSON.stringify(missingClassAbilities, null, 2)).toHaveLength(0);
@@ -1638,7 +1642,13 @@ describe('i18n Localization Key Coverage', () => {
     expect(minimapPainterSource).toContain('this.writers.setText(zoneLabelEl, this.localizeZone(');
     expect(hudSource).toContain('zonePoiLabel');
     expect(hudSource).toContain('dungeonDisplayNameFromSource');
-    expect(hudSource).not.toContain('zoneWelcomeText(');
+    expect(hudSource).toContain('zoneWelcomeText(zone.id)');
+    const entityI18nSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/ui/entity_i18n.ts'),
+      'utf8',
+    );
+    expect(entityI18nSource).toContain('mir4ZoneNameKey(zoneId)');
+    expect(entityI18nSource).toContain("tEntity({ kind: 'zone', id: zoneId, field: 'welcome' })");
 
     // The per-entity nameplate content (corpse/mob names) moved into the
     // NameplatePainter; localization is preserved, just relocated (mirrors the
@@ -1880,20 +1890,29 @@ describe('i18n Localization Key Coverage', () => {
     expect(html).not.toContain('data-i18n="hud.core.mobileTarget"');
     expect(html).toContain('data-i18n="hud.core.mobileChat"');
     expect(html).toContain('data-i18n="hud.core.mobileMore"');
-    expect(html).toContain('data-i18n="hud.core.mobileSocial"');
+    // The Social button became an icon-only item in the mobile menu strip; its
+    // title/aria attribute still localizes via hud.keybinds.actions.social
+    // (index.html), but the live drag CAPTION now comes from
+    // hud.core.mobileSocial at its runtime home
+    // (MENU_STRIP_ITEMS.captionKey in menu_strip_core.ts, pinned in
+    // tests/menu_strip_core.test.ts), which is why the key stays in the
+    // catalog but no longer appears as static markup here.
+    expect(html).not.toContain('data-i18n="hud.core.mobileSocial"');
     // The merged PvP window's launcher label (Thornhollow Fields + arenas on one
     // button); the old mobileArena key stays in the catalog like mobileTarget
     // but no longer appears in the markup.
     expect(html).toContain('data-i18n="hudChrome.pvp.mobileLabel"');
     expect(html).not.toContain('data-i18n="hud.core.mobileArena"');
-    // The Settings button (promoted to the bar between Social and More) uses
-    // mobileSettings ("Settings"); the old mobileMenu ("Menu") key stays in the
-    // catalog but, like mobileTarget, no longer appears in the markup.
-    expect(html).toContain('data-i18n="hud.core.mobileSettings"');
+    // The Settings item (like Social) is now an icon-only entry in the swipeable
+    // menu strip with a live caption (menu_strip_core.ts); mobileSettings and the
+    // older mobileMenu key both stay in the catalog but no longer appear in the
+    // markup.
+    expect(html).not.toContain('data-i18n="hud.core.mobileSettings"');
     expect(html).not.toContain('data-i18n="hud.core.mobileMenu"');
-    // The Quests button reuses the tracker's "Quests" label rather than the
-    // longer "Quest Log" title.
-    expect(html).toContain('data-i18n="questUi.tracker.title"');
+    // The Quests strip title is painted at runtime by quest_tracker_controller.ts
+    // (via t('questUi.tracker.title') into #quest-tracker's innerHTML), so the
+    // key never appears as static data-i18n markup in index.html.
+    expect(html).not.toContain('data-i18n="questUi.tracker.title"');
     expect(html).toContain('data-i18n="hud.core.mobileUse"');
     // Note: the v0.7 layout moved damage meters from a mobile tray button to a
     // dedicated #meters-window, so there is no longer a mobile-meters button to

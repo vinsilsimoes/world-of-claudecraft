@@ -51,7 +51,12 @@
 // tests/spellbook_tick_repaint.test.ts.
 
 import { audio } from '../game/audio';
+import { mir4ClassById } from '../sim/content/mir4/classes';
 import { ABILITIES, CLASSES } from '../sim/data';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { mir4ClassIdFromActions, mir4SkillIdFromAction } from '../sim/mir4/action_abilities';
+import { mir4SkillEvolutionFor } from '../sim/mir4/skill_evolution';
+import type { Mir4PlayerUiState } from '../sim/mir4/ui_state';
 import type { ResolvedAbility } from '../sim/sim';
 import type { AbilityDef } from '../sim/types';
 import type { IWorld } from '../world_api';
@@ -65,7 +70,7 @@ import {
   type HotbarAction,
   isAbilityActionBarEligible,
 } from './hud/action_bar/hotbar';
-import { formatNumber, t } from './i18n';
+import { formatMoney, formatNumber, type TranslationKey, t } from './i18n';
 import { iconDataUrl } from './icons';
 import { buildSpellbookView, type SpellbookRow } from './spellbook_view';
 import { svgIcon } from './ui_icons';
@@ -119,6 +124,10 @@ export interface SpellbookWindowDeps {
   resetFormBar(): void;
   setDragAction(action: { type: 'ability'; id: string } | null): void;
   clearActionDropTargets(): void;
+  /** Open the touch bar editor with this spell armed for the next tap. Touch has
+   *  no drag onto the bar, and the +/- toggle only reaches the FIRST free slot,
+   *  so this is how a touch player CHOOSES a slot. */
+  openBarEditor(abilityId: string): void;
 }
 
 /** The ability on a bar slot, or null for an empty slot or an item. */
@@ -301,7 +310,9 @@ export class SpellbookWindow {
     let refocus: string | null = null;
     if (active && root.contains(active)) {
       const id = active.dataset.abilityId;
-      if (id && active.classList.contains('spell-hotbar-toggle'))
+      if (id && active.classList.contains('spell-upgrade-btn'))
+        refocus = `.spell-upgrade-btn[data-ability-id="${id}"]`;
+      else if (id && active.classList.contains('spell-hotbar-toggle'))
         refocus = `.spell-hotbar-toggle[data-ability-id="${id}"]`;
       else if (id && active.classList.contains('spell-row'))
         refocus = `.spell-row[data-ability-id="${id}"]`;
@@ -329,10 +340,11 @@ export class SpellbookWindow {
     // The kit list is the display order, but spec signatures and other talent grants are
     // known WITHOUT being in the base kit (e.g. mortal_strike, chain_heal, stormstrike), so
     // append any known-but-not-in-kit ability so the spellbook shows everything the player has.
-    const kit = cls.abilities;
-    const grantedExtra = world.known
-      .map((k) => k.def.id)
-      .filter((id) => !kit.includes(id) && !!ABILITIES[id]);
+    const mir4Profile = world.cfg.gameProfile === MIR4_GAME_PROFILE;
+    const kit = mir4Profile ? world.known.map((ability) => ability.def.id) : cls.abilities;
+    const grantedExtra = mir4Profile
+      ? []
+      : world.known.map((k) => k.def.id).filter((id) => !kit.includes(id) && !!ABILITIES[id]);
     const view = buildSpellbookView({
       classId,
       abilities: [...kit, ...grantedExtra],
@@ -350,7 +362,10 @@ export class SpellbookWindow {
       spec: world.talentSpec,
       level: world.player.level,
     });
-    const className = classDisplayName(view.classId);
+    const mir4Class = mir4Profile ? mir4ClassById(mir4ClassIdFromActions(world.known) ?? 0) : null;
+    const className = mir4Class
+      ? t(`classes.${mir4Class.key}` as TranslationKey)
+      : classDisplayName(view.classId);
     markDialogRoot(el, { label: t('abilityUi.spellbook.title') });
     // "Reset bar" only applies to classes with per-form bars (druid); other classes
     // have a single bar, so the button is omitted for them.
@@ -363,7 +378,8 @@ export class SpellbookWindow {
     list.setAttribute('role', 'list');
     el.appendChild(list);
     this.appendAttackRow(list, view.attackOnBar);
-    for (const row of view.rows) this.appendRow(list, row);
+    const mir4State = mir4Profile ? world.mir4PlayerState() : null;
+    for (const row of view.rows) this.appendRow(list, row, mir4State, world.copper);
     if (view.empty) {
       const empty = document.createElement('div');
       empty.className = 'spell-sub';
@@ -469,7 +485,7 @@ export class SpellbookWindow {
         attackBtn.setAttribute(
           'aria-label',
           t(onBar ? 'hudChrome.spellbook.removeFromBarAria' : 'hudChrome.spellbook.addToBarAria', {
-            name: t('abilityUi.actionBar.attackName'),
+            name: this.attackName(),
           }),
         );
       }
@@ -490,7 +506,9 @@ export class SpellbookWindow {
         // Keep the accessible name in sync with the toggle state: a spoken
         // action ("Add/Remove {name} to action bar"), not a bare +/- glyph.
         // Same key pair as appendRow.
-        const def = ABILITIES[abilityId];
+        const def =
+          ABILITIES[abilityId] ??
+          this.deps.world().known.find((ability) => ability.def.id === abilityId)?.def;
         if (def)
           btn.setAttribute(
             'aria-label',
@@ -526,8 +544,8 @@ export class SpellbookWindow {
   // existing attackName/attackTooltip keys and the add/remove aria pair; no new
   // player strings.
   private appendAttackRow(list: HTMLElement, onBar: boolean): void {
-    const name = t('abilityUi.actionBar.attackName');
-    const summary = t('abilityUi.actionBar.attackTooltip');
+    const name = this.attackName();
+    const summary = this.attackSummary();
     const el = document.createElement('div');
     el.className = 'spell-row';
     el.tabIndex = 0;
@@ -579,14 +597,36 @@ export class SpellbookWindow {
     this.deps.attachTooltip(
       el,
       () =>
-        `<div class="tt-title">${esc(t('abilityUi.actionBar.attackName'))}</div><div class="tt-sub">${esc(t('abilityUi.actionBar.attackTooltip'))}</div>`,
+        `<div class="tt-title">${esc(this.attackName())}</div><div class="tt-sub">${esc(this.attackSummary())}</div>`,
     );
     list.appendChild(el);
   }
 
-  private appendRow(list: HTMLElement, row: SpellbookRow): void {
-    const def = ABILITIES[row.abilityId];
+  private attackName(): string {
+    return t(
+      this.deps.world().cfg.gameProfile === MIR4_GAME_PROFILE
+        ? 'abilityUi.actionBar.autoBattleName'
+        : 'abilityUi.actionBar.attackName',
+    );
+  }
+
+  private attackSummary(): string {
+    return t(
+      this.deps.world().cfg.gameProfile === MIR4_GAME_PROFILE
+        ? 'abilityUi.actionBar.autoBattleTooltip'
+        : 'abilityUi.actionBar.attackTooltip',
+    );
+  }
+
+  private appendRow(
+    list: HTMLElement,
+    row: SpellbookRow,
+    mir4State: Readonly<Mir4PlayerUiState> | null,
+    copper: number,
+  ): void {
     const known = row.known;
+    const def = ABILITIES[row.abilityId] ?? known?.def;
+    if (!def) return;
     const el = document.createElement('div');
     el.className = `spell-row${known ? '' : ' locked'}`;
     el.tabIndex = 0;
@@ -598,6 +638,18 @@ export class SpellbookWindow {
     const summary = known ? this.deps.abilitySummary(known) : '';
     const name = this.abilityName(def);
     const learnLevel = this.formatAbilityNumber(def.learnLevel);
+    const world = this.deps.world();
+    const mir4SkillId = known ? mir4SkillIdFromAction(known.def.id) : null;
+    const evolution =
+      known && mir4State && mir4SkillId !== null
+        ? mir4SkillEvolutionFor(
+            mir4State.classId,
+            mir4SkillId,
+            known.rank,
+            copper,
+            mir4State.mir4SkillResources,
+          )
+        : null;
     el.setAttribute(
       'aria-label',
       known
@@ -611,6 +663,40 @@ export class SpellbookWindow {
     el.innerHTML = `<div class="spell-icon" style="background-image:url(${iconDataUrl('ability', row.abilityId)})"></div>
         <div class="spell-text"><div class="spell-name">${esc(name)}${known && known.rank > 1 ? ` <span class="spell-rank">${esc(t('abilityUi.tooltip.rank', { rank: this.formatAbilityNumber(known.rank) }))}</span>` : ''}</div>
         <div class="spell-sub">${locked ? esc(t('abilityUi.spellbook.trainableAtLevel', { level: learnLevel })) : esc(summary)}</div></div>`;
+    if (known && evolution) {
+      const controls = document.createElement('div');
+      controls.className = 'spell-evolution';
+      if (evolution.status !== 'maxed') {
+        const cost = document.createElement('div');
+        cost.className = 'spell-evolution-cost';
+        cost.textContent = t('hudChrome.spellbook.evolutionCost', {
+          copper: formatMoney(evolution.costs.copper),
+          effectPoints: this.formatAbilityNumber(evolution.costs.effectPoints),
+          skillTomes: this.formatAbilityNumber(evolution.costs.skillTomes),
+        });
+        controls.appendChild(cost);
+      }
+      const upgrade = document.createElement('button');
+      upgrade.type = 'button';
+      upgrade.className = 'btn spell-upgrade-btn';
+      upgrade.dataset.abilityId = known.def.id;
+      upgrade.textContent =
+        evolution.status === 'maxed'
+          ? t('hudChrome.spellbook.maxRank')
+          : t('hudChrome.spellbook.upgradeRank', {
+              rank: this.formatAbilityNumber(evolution.nextLevel ?? evolution.maxLevel),
+            });
+      upgrade.disabled = !evolution.canUpgrade;
+      upgrade.addEventListener('pointerdown', (event) => event.stopPropagation());
+      upgrade.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        world.mir4UpgradeSkill(evolution.skillId, evolution.currentLevel);
+        audio.click();
+      });
+      controls.appendChild(upgrade);
+      el.appendChild(controls);
+    }
     if (known && isAbilityActionBarEligible(def)) {
       const toggle = document.createElement('button');
       toggle.type = 'button';
@@ -640,6 +726,26 @@ export class SpellbookWindow {
           page: this.formatAbilityNumber(row.mobilePage + 1),
         });
         el.appendChild(pageLabel);
+      }
+      // Touch-only assign control (Phase 4.5). Desktop chooses a slot by dragging
+      // the row onto a visible bar; touch has no drag, and the +/- toggle beside
+      // this one only reaches the FIRST free slot, so without this the 32
+      // directional ring slots could not be bound at all.
+      if (document.body.classList.contains('mobile-touch')) {
+        const assign = document.createElement('button');
+        assign.type = 'button';
+        assign.className = 'spell-hotbar-assign';
+        assign.dataset.abilityId = known.def.id;
+        assign.innerHTML = svgIcon('swap');
+        assign.setAttribute('aria-label', t('hudChrome.spellbook.assignAria', { name }));
+        assign.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+        assign.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          audio.click();
+          this.deps.openBarEditor(known.def.id);
+        });
+        el.appendChild(assign);
       }
       toggle.addEventListener('pointerdown', (ev) => ev.stopPropagation());
       toggle.addEventListener('click', (ev) => {

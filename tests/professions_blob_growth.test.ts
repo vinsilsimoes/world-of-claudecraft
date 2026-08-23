@@ -86,6 +86,7 @@ const NON_PROFESSIONS_BLOB_FIELDS = [
   // here explicitly so the complement pin stays honest about the one key
   // that enters the blob outside the serializer.
   'jail',
+  'gameProfile',
   'contentRevision',
   'level',
   'xp',

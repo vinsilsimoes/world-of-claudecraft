@@ -803,6 +803,64 @@
     outline: 3px solid var(--color-border-focus);
     outline-offset: 2px;
   }
+
+  #quest-dialog.mir4-narrative-dialogue {
+    border-color: color-mix(in srgb, var(--color-gold, #d6ad52) 72%, transparent);
+    box-shadow:
+      0 18px 54px rgb(0 0 0 / 72%),
+      inset 0 0 34px rgb(115 67 25 / 16%);
+  }
+
+  .qd-dialogue-wait {
+    height: 7px;
+    margin: 16px 0 10px;
+    overflow: hidden;
+    border: 1px solid rgb(209 171 94 / 48%);
+    border-radius: 999px;
+    background: rgb(9 7 5 / 78%);
+  }
+
+  .qd-dialogue-wait > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #76411f, #e2ba61 72%, #fff0b3);
+    box-shadow: 0 0 10px rgb(226 186 97 / 52%);
+    animation: mir4-dialogue-reading var(--mir4-dialogue-duration, 6s) linear forwards;
+  }
+
+  .qd-dialogue-skip {
+    min-height: 40px;
+  }
+
+  @keyframes mir4-dialogue-reading {
+    to {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qd-dialogue-wait > span {
+      width: 100% !important;
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    #quest-dialog.mir4-narrative-dialogue {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
+    .qd-dialogue-wait {
+      border-color: CanvasText;
+      background: Canvas;
+    }
+    .qd-dialogue-wait > span {
+      background: Highlight;
+      box-shadow: none;
+      forced-color-adjust: none;
+    }
+  }
   .btn {
     background: linear-gradient(#8a3326, #5a1d12 55%, #471409);
     color: #ffd9a0;
@@ -1396,6 +1454,23 @@
     width: 100% !important;
     height: 100% !important;
   }
+  /* Cold-open stand-in: the class crest (or a cached portrait) covers the still
+     empty canvas while the preview's programs link, so the panel is never a
+     blank box. Built and removed by src/ui/preview_stand_in.ts, never per
+     frame. */
+  .char-model-preview .preview-stand-in {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .char-model-preview .preview-stand-in img {
+    width: 44%;
+    max-width: 112px;
+    opacity: 0.5;
+  }
   .char-skin-row {
     justify-content: center;
     align-items: center;
@@ -1614,6 +1689,29 @@
   }
   .spell-hotbar-toggle {
     display: none;
+  }
+  .spell-evolution {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+    max-width: 104px;
+  }
+  .spell-evolution-cost {
+    color: var(--color-text-muted);
+    font-size: 10px;
+    line-height: 1.15;
+    text-align: center;
+  }
+  .spell-upgrade-btn {
+    min-height: 28px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .spell-upgrade-btn:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
   }
   .panel-title-actions {
     display: flex;
@@ -4863,111 +4961,6 @@
     background: linear-gradient(#8a6a26, #5a4413 55%, #473409);
   }
 
-  /* ---------- first-run camera mode prompt ---------- */
-  .camera-prompt-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: rgba(0, 0, 0, 0.72);
-  }
-  .camera-prompt-dialog {
-    width: min(440px, calc(100vw - 32px));
-    max-width: 100%;
-    padding: 18px;
-    box-sizing: border-box;
-    animation: camera-prompt-in 160ms ease-out;
-  }
-  @keyframes camera-prompt-in {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-  .camera-prompt-title {
-    font-family: var(--title-font);
-    font-size: 19px;
-    color: var(--gold);
-    margin-bottom: 6px;
-  }
-  .camera-prompt-desc {
-    color: var(--color-text-muted);
-    font-size: 13px;
-    line-height: 1.5;
-    margin-bottom: 14px;
-  }
-  .camera-prompt-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .camera-prompt-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px;
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-  }
-  .camera-prompt-option:focus-within {
-    outline: 2px solid var(--color-border-focus);
-    outline-offset: 1px;
-  }
-  .camera-prompt-radio {
-    flex: none;
-    margin-top: 2px;
-    accent-color: var(--gold);
-    width: 18px;
-    height: 18px;
-  }
-  .camera-prompt-option-body {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-  .camera-prompt-option-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--color-text-light);
-    font-weight: 600;
-    font-size: 14px;
-  }
-  .camera-prompt-option-desc {
-    color: var(--color-text-muted);
-    font-size: 12px;
-    line-height: 1.45;
-  }
-  .camera-prompt-note {
-    color: var(--color-text-muted);
-    font-size: 12px;
-    line-height: 1.45;
-    margin-top: 14px;
-  }
-  .camera-prompt-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 14px;
-  }
-  .camera-prompt-confirm {
-    background: linear-gradient(#8a6a26, #5a4413 55%, #473409);
-    color: #ffe6a8;
-    min-width: 120px;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .camera-prompt-dialog {
-      animation: none;
-    }
-  }
-
   /* player card: char-window entry button + share modal */
   .pc-share-row {
     margin-top: 10px;
@@ -6438,6 +6431,14 @@
   #bags .bag-filter-bar {
     flex: none;
   }
+  #bags .mir4-bag-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
   #bags .bag-grid {
     flex: 1 1 auto;
     min-height: 0;
@@ -6445,6 +6446,13 @@
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+  }
+  #bags .mir4-bag-scroll > .bag-grid {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+    touch-action: auto;
+    overscroll-behavior: auto;
   }
   #bags .money {
     flex: none;
@@ -6520,7 +6528,9 @@
     width: 11px;
     height: 11px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #c9a3ff, #6b3fa0);
+    background:
+      url("/ui/currency/woc_token.webp") center / cover no-repeat,
+      radial-gradient(circle at 35% 30%, #c9a3ff, #6b3fa0);
     box-shadow: 0 0 4px rgba(150, 90, 230, 0.5);
   }
   /* WoW-style slot grid: square cells, the item icon fills the cell, quality
@@ -7044,6 +7054,16 @@
     display: inline-flex;
     align-items: center;
   }
+  .currency-inline {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin: 0 4px 0 2px;
+    border-radius: 3px;
+    object-fit: cover;
+    vertical-align: -3px;
+    filter: drop-shadow(0 1px 2px #000a);
+  }
   .coin {
     display: inline-block;
     width: 11px;
@@ -7054,13 +7074,19 @@
     margin-right: 2px;
   }
   .coin.g {
-    background: radial-gradient(circle at 35% 30%, #ffe98a, #b8860b);
+    background:
+      url("/ui/currency/coin_gold.webp") center / cover no-repeat,
+      radial-gradient(circle at 35% 30%, #ffe98a, #b8860b);
   }
   .coin.s {
-    background: radial-gradient(circle at 35% 30%, #e8e8e8, #888);
+    background:
+      url("/ui/currency/coin_silver.webp") center / cover no-repeat,
+      radial-gradient(circle at 35% 30%, #e8e8e8, #888);
   }
   .coin.c {
-    background: radial-gradient(circle at 35% 30%, #e8a87a, #8b4513);
+    background:
+      url("/ui/currency/coin_copper.webp") center / cover no-repeat,
+      radial-gradient(circle at 35% 30%, #e8a87a, #8b4513);
   }
 
   /* ---------- bank ---------- */
@@ -8170,6 +8196,70 @@
     font-size: 11px;
     font-weight: 400;
     color: var(--color-text-muted);
+  }
+  /* The HUD-tracker eye at the summary's right edge: a pressed toggle (the
+     paperdoll helm/playtime eye idiom) whose lit state mirrors the strip
+     being on screen. Pushed to the row's end so the readouts keep their left
+     rhythm; the pin-button chip palette AND radius keep it in the window's
+     family (.reliquary-pin is a 4px chip; DESIGN.md 14 rules out pill
+     buttons, so the toggle is not one either). */
+  .reliquary-tracker-toggle {
+    position: relative;
+    flex: none;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--ui-font);
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #6a5320;
+    background: #241c0c;
+    color: #ffe6a8;
+    cursor: var(--cursor-point);
+    white-space: nowrap;
+  }
+  /* Invisible hit extension over the ~20px visual chip (the char-playtime-eye
+     idiom, DESIGN.md 10.1): 20px plus 8px each way is the 36px desktop hit
+     floor that section names (the WCAG 2.5.8 24px floor is the weaker bound).
+     -9px, not -8px: an absolutely positioned pseudo-element's inset is
+     measured from the host's PADDING edge, so on this 1px-bordered button
+     -9px is 8px beyond the visual edge (-8px measured as a 34px hit box in
+     the browser suite, under the floor; tests/browser/target_size pins the
+     live reach). A plain rectangle on purpose: it paints nothing, and a radius
+     on a hit box only trims corner hit area. Scoped per pointer like the idiom
+     it cites: the mobile arm below sizes the box itself to the 40px floor and
+     zeroes the reach, so the toggle never overreaches the sticky panel-title
+     row on the full-bleed phone layout. */
+  .reliquary-tracker-toggle::after {
+    content: "";
+    position: absolute;
+    inset: -9px;
+  }
+  .reliquary-tracker-toggle .ui-icon {
+    width: 14px;
+    height: 14px;
+    flex: none;
+  }
+  /* Hidden state: the eye-off glyph plus a dimmed chip, so the switch reads
+     at a glance without relying on the icon swap alone. */
+  .reliquary-tracker-toggle[aria-pressed="false"] {
+    color: var(--color-text-muted);
+    border-color: #4a3d1d;
+  }
+  .reliquary-tracker-toggle:hover {
+    filter: brightness(1.12);
+  }
+  .reliquary-tracker-toggle:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 1px;
+  }
+  body.mobile-touch .reliquary-tracker-toggle {
+    min-height: 40px;
+  }
+  body.mobile-touch .reliquary-tracker-toggle::after {
+    inset: 0;
   }
   /* Phase 6: Curator rank seal chrome (cosmetic only; no combat info).
      Phase 14 removed this block's reduced-motion box-shadow suppression on
@@ -13249,6 +13339,10 @@
     outline: 1px solid #000;
     border-radius: 4px;
     touch-action: none;
+  }
+  #map-canvas:focus-visible {
+    outline: 3px solid var(--color-border-focus);
+    outline-offset: 2px;
   }
   /* ---------- options / game menu (Esc) ---------- */
   #options-menu {

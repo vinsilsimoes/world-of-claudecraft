@@ -11,6 +11,8 @@ const store = readFileSync(new URL('../src/ui/daily_rewards_window.ts', import.m
 const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../src/main.ts', import.meta.url), 'utf8');
 const core = readFileSync(new URL('../src/ui/preview_prewarm_core.ts', import.meta.url), 'utf8');
+const renderer = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
+const visual = readFileSync(new URL('../src/render/characters/visual.ts', import.meta.url), 'utf8');
 
 describe('Armory preview lifecycle', () => {
   it('keeps one renderer and parks it instead of disposing on modal close', () => {
@@ -44,6 +46,19 @@ describe('Armory preview lifecycle', () => {
     expect(preview).not.toContain('pendingSelection');
     expect(preview).not.toContain('pendingActive');
     expect(inspect).not.toContain('prewarm');
+  });
+
+  it('heals a selected cold-loaded skin in both the Armory and live world', () => {
+    expect(preview).toContain('onCharacterAssetReady((url) => {');
+    expect(preview).toContain('weaponSkinModelUrl(id) !== url');
+    expect(preview).toContain('rig.refreshWeaponSkin()');
+    expect(preview).toContain('unsubscribeCharacterAssetReady();');
+
+    expect(renderer).toContain('onCharacterAssetReady(this.onCharacterAssetReady);');
+    expect(renderer).toContain('weaponSkinModelUrl(skinId) !== url');
+    expect(renderer).toContain('this.weaponSkinApplies.enqueue(id, skinId);');
+    expect(renderer).toContain('v.visual.refreshWeaponSkin()');
+    expect(visual).toContain('refreshWeaponSkin(): THREE.Object3D[] | null');
   });
 
   it('reaches the Armory stage from a CARD CLICK and from nowhere else', () => {
@@ -123,9 +138,12 @@ describe('Armory preview lifecycle', () => {
     expect(startAt).toBeGreaterThan(revealAt);
   });
 
-  it('warms both portrait framings so Inspect never pays the first PNG capture', () => {
+  it('warms the requested portrait framings; login trims to headshot (body is Inspect-only, built lazily on open)', () => {
     // The plan lives in the pure core; the hud composes it with the real
-    // portrait thunk.
+    // portrait thunk. Which framings warm is now a dep, not a hardcoded pair:
+    // headshots ride the party/raid/target frames unprompted, so login keeps
+    // them; the full-body Inspect portrait is menu-gated and built lazily on
+    // open, so warming it at every entry is deferred cost dropped from login.
     const core = readFileSync(
       new URL('../src/ui/preview_prewarm_core.ts', import.meta.url),
       'utf8',
@@ -133,7 +151,7 @@ describe('Armory preview lifecycle', () => {
     const start = core.indexOf('export function buildPostEntryPreviewPrewarmUnits');
     expect(start).toBeGreaterThan(-1);
     const plan = core.slice(start);
-    expect(plan).toContain("['headshot', 'body'] as const");
+    expect(plan).toContain('for (const framing of deps.portraitFramings)');
     expect(plan).toContain('deps.renderPortrait(portraitClass, skin, framing)');
     const hudStart = hud.indexOf(
       'private postEntryPreviewPrewarmUnits(includeCharFamily: boolean)',
@@ -141,6 +159,8 @@ describe('Armory preview lifecycle', () => {
     expect(hudStart).toBeGreaterThan(-1);
     const compose = hud.slice(hudStart, hud.indexOf('startPostEntryPreviewPrewarm(', hudStart));
     expect(compose).toContain('buildPostEntryPreviewPrewarmUnits');
+    // Login warms headshots only; the body framing is deferred to Inspect open.
+    expect(compose).toContain("portraitFramings: ['headshot']");
     // The prewarm variant, not the sync playerPortraitDataUrl: uploads prepaid
     // in bounded slices and the PNG encode off-thread (the sync capture books
     // 43 to 201 ms per cold portrait); a later sync call is a cache hit.

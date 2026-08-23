@@ -779,7 +779,391 @@ export const zh_TW: EnTranslations = {
     "questTracker": {
       "count": "（{count}）",
       "collapseHint": "收合任務追蹤器",
-      "expandHint": "展開任務追蹤器"
+      "expandHint": "展開任務追蹤器",
+      "mir4": {
+        "firstTraces": "最初的痕跡",
+        "reachTarek": "前往塔雷克處",
+        "inspectClues": "檢查線索",
+        "returnToTarek": "返回塔雷克處",
+        "pausedSuffix": "（自動旅程因手動操作而暫停）",
+        "startAutoJourney": "開始自動旅程",
+        "stopAutoJourney": "停止自動旅程"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "草原駿馬",
+          "moss-boar": "苔藓野猪",
+          "brook-stag": "溪流雄鹿",
+          "gray-wolf": "灰色狼",
+          "dun-packhorse": "褐色馱馬",
+          "birch-doe": "白樺雌鹿",
+          "red-maned-pony": "紅色鬃毛小馬",
+          "lowland-elk": "低地麋鹿",
+          "field-lynx": "原野猞猁",
+          "tawny-mastiff": "黃褐獒犬",
+          "dune-jackal": "沙丘胡狼",
+          "reed-puma": "芦葦美洲獅",
+          "clay-ox": "陶土公牛",
+          "valley-buffalo": "山谷水牛",
+          "shaggy-yak": "長毛犛牛",
+          "creek-lizard": "溪流蜥蜴",
+          "shellback-tortoise": "石甲陸龟",
+          "plains-ostrich": "平原鴕鸟",
+          "dusk-emu": "暮色美洲鴕",
+          "copper-ant-carrier": "銅蚁載獸",
+          "mist-moose": "迷霧驼鹿",
+          "leaf-panther": "葉片黑豹",
+          "turf-rhino": "草皮犀牛",
+          "valley-monitor": "山谷巨蜥",
+          "granite-ibex": "花崗岩岩羊",
+          "silver-dapple-mare": "銀色斑紋母馬",
+          "marsh-stag": "沼澤雄鹿",
+          "snow-mane-lion": "雪鬃雄獅",
+          "ember-fox": "餘烬狐狸",
+          "striped-hyena": "條紋鬣狗",
+          "iron-tusk-boar": "鋼鐵獠牙野猪",
+          "cedar-bear": "雪松熊",
+          "swamp-hippo": "濕地河馬",
+          "thorn-iguana": "荆棘鬣蜥",
+          "dryland-crocodile": "旱地鱷魚",
+          "horned-cassowary": "有角食火雞",
+          "bronze-raptor": "青銅迅猛龍",
+          "amber-scarab": "琥珀圣甲蟲",
+          "dune-scorpion": "沙丘蝎子",
+          "root-golem": "根鬚魔像",
+          "amber-bear": "琥珀熊",
+          "sunset-tiger": "落日猛虎",
+          "root-drake": "根鬚幼龍",
+          "hill-griffin": "山丘獅鷲",
+          "obsidian-zebra": "黑曜石斑馬",
+          "stormhorn-ram": "風暴角公羊",
+          "dusk-elk": "暮色麋鹿",
+          "frost-warg": "寒霜座狼",
+          "basalt-rhino": "玄武岩犀牛",
+          "tundra-mammoth": "凍原猛獁",
+          "crystal-ankylosaur": "水晶甲龍",
+          "ember-salamander": "餘烬火蜥",
+          "thunder-komodo": "雷霆科莫多",
+          "moon-crocodile": "月光鱷魚",
+          "razorbeak-strider": "利刃喙陸行獸",
+          "plume-raptor": "羽冠迅猛龍",
+          "glass-mantis": "玻璃螳螂",
+          "thunder-beetle": "雷霆甲蟲",
+          "iron-sentinel": "鋼鐵哨兵",
+          "mossstone-colossus": "苔石巨像",
+          "eclipse-lion": "日蚀雄獅",
+          "crimson-wyvern": "緋紅雙足飛龍",
+          "astral-stag": "星界雄鹿",
+          "jade-basilisk": "翡翠蛇蜥",
+          "solar-wolf": "太阳狼",
+          "forest-chimera": "森林奇美拉",
+          "tempest-courser": "風暴駿馬",
+          "thorn-elephant": "荆棘巨象",
+          "void-spider": "虛空蜘蛛",
+          "rune-golem": "符文魔像",
+          "dawn-phoenix": "黎明鳳凰",
+          "imperial-griffin": "帝国獅鷲",
+          "stone-leviathan": "岩石利维坦",
+          "void-unicorn": "虛空獨角獸",
+          "golden-manticore": "黃金蝎尾獅",
+          "imperial-tiger": "帝国猛虎",
+          "dawn-mammoth": "黎明猛獁",
+          "magma-drake": "岩浆幼龍",
+          "crown-scorpion": "王冠蝎子",
+          "sunforged-colossus": "日鑄巨像",
+          "ground-dragon": "大地巨龍",
+          "eternal-phoenix": "永恆鳳凰",
+          "celestial-kirin": "天界麒麟",
+          "firmament-behemoth": "苍穹雄獅",
+          "time-hydra": "時間九頭蛇"
+        },
+        "spirits": {
+          "spirit-common-01": "草原火花",
+          "spirit-common-02": "溪流微風",
+          "spirit-common-03": "守望葉片",
+          "spirit-common-04": "岩石回声",
+          "spirit-uncommon-01": "黎明輝光",
+          "spirit-uncommon-02": "迷霧宁芙",
+          "spirit-uncommon-03": "苔藓守衛",
+          "spirit-uncommon-04": "山谷火蜥",
+          "spirit-rare-01": "琥珀狐狸",
+          "spirit-rare-02": "落日貓頭鷹",
+          "spirit-rare-03": "根鬚幼龍",
+          "spirit-rare-04": "山丘神諭者",
+          "spirit-epic-01": "日蚀化身",
+          "spirit-epic-02": "緋紅伊弗利特",
+          "spirit-epic-03": "星界雄鹿",
+          "spirit-epic-04": "翡翠哨兵",
+          "spirit-epic-05": "太阳狼",
+          "spirit-epic-06": "以太奇美拉",
+          "spirit-legendary-01": "大地泰坦",
+          "spirit-legendary-02": "黎明鳳凰",
+          "spirit-legendary-03": "帝国執政官",
+          "spirit-legendary-04": "水晶利维坦",
+          "spirit-legendary-05": "虛空獨角獸",
+          "spirit-legendary-06": "黃金蝎尾獅",
+          "spirit-mythical-01": "原初靈魂",
+          "spirit-mythical-02": "永恆鳳凰",
+          "spirit-mythical-03": "天界麒麟",
+          "spirit-mythical-04": "苍穹巨獸",
+          "spirit-mythical-05": "深淵熾天使",
+          "spirit-mythical-06": "時間九頭蛇"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "游蕩火花",
+          "spirit-skill-1-02": "暮色本能",
+          "spirit-skill-1-03": "生命甘露",
+          "spirit-skill-1-04": "法力吐息",
+          "spirit-skill-2-01": "升騰閃焰",
+          "spirit-skill-2-02": "迷霧尖牙",
+          "spirit-skill-2-03": "復苏树液",
+          "spirit-skill-2-04": "奥術脉衝",
+          "spirit-skill-3-01": "琥珀破裂",
+          "spirit-skill-3-02": "落日審判",
+          "spirit-skill-3-03": "生命羁絆",
+          "spirit-skill-3-04": "根鬚泉湧",
+          "spirit-skill-4-01": "日蚀光束",
+          "spirit-skill-4-02": "緋紅狂怒",
+          "spirit-skill-4-03": "星界恩典",
+          "spirit-skill-4-04": "翡翠寶珠",
+          "spirit-skill-4-05": "太阳斬",
+          "spirit-skill-4-06": "以太專注",
+          "spirit-skill-5-01": "地裂衝击",
+          "spirit-skill-5-02": "重生火焰",
+          "spirit-skill-5-03": "帝国裁決",
+          "spirit-skill-5-04": "水晶潮汐",
+          "spirit-skill-5-05": "虛空裂隙",
+          "spirit-skill-5-06": "黃金王冠",
+          "spirit-skill-6-01": "創世",
+          "spirit-skill-6-02": "永恆回歸",
+          "spirit-skill-6-03": "天界敕令",
+          "spirit-skill-6-04": "苍穹之重",
+          "spirit-skill-6-05": "深淵螺旋",
+          "spirit-skill-6-06": "絕對瞬間"
+        }
+      },
+      "ultimateGauge": "終極技能能量",
+      "ultimateGaugeStatus": "終極技能能量：{value}/{max}",
+      "ultimateReadyAnnouncement": "終極技能已就緒。",
+      "achievements": {
+        "title": "成就",
+        "close": "關閉成就",
+        "summary": "已領取獎勵：{claimed}/{total}",
+        "balances": "銅幣 {copper} · 黑鐵 {darksteel} · 效果點數 {effectPoints} · 技能秘笈 {skillTomes}",
+        "levelTitle": "等級 {level}",
+        "levelDescription": "達到等級 {level}。",
+        "progressAria": "等級進度：{current}/{target}",
+        "progressText": "{current}／{target}",
+        "rewardCopper": "銅幣 {amount}",
+        "rewardDarksteel": "黑鐵 {amount}",
+        "rewardEffectPoints": "效果點數 {amount}",
+        "rewardSkillTomes": "技能秘笈 {amount} 本",
+        "rewards": "獎勵：{rewards}",
+        "claim": "領取",
+        "claimed": "已領取",
+        "locked": "達到等級 {level}",
+        "previousGrade": "請先領取上一階段獎勵",
+        "claimAria": "領取等級 {level} 成就獎勵"
+      },
+      "questLog": {
+        "narrative": "調查渡口周圍的三個線索地點，然後返回塔雷克·雙橋處。",
+        "giverName": "塔雷克·雙橋",
+        "emptyHint": "在 M01 聚落找到塔雷克·雙橋，或開始自動旅程。",
+        "completedHint": "「最初的痕跡」已完成。其餘戰役任務尚未啟用。"
+      },
+      "campaign": {
+        "questTitle": "戰役 {id}",
+        "narrative": "完成 {id} 目前的戰役目標。",
+        "contact": "戰役聯絡人",
+        "objective": {
+          "returnToContact": "返回戰役聯絡人處",
+          "talk": "與戰役聯絡人交談",
+          "deliver": "交付所需物品",
+          "travel": "前往標記的目標",
+          "inspect": "檢查標記的證據",
+          "gather": "收集所需資源",
+          "defend": "守衛標記的目標",
+          "combat": "擊敗標記的敵人",
+          "escort": "護送標記的盟友",
+          "escortSupplies": "護送補給隊",
+          "dungeon": "完成戰役地城",
+          "craft": "製作所需補給",
+          "tutorial": "完成系統教學",
+          "interact": "與標記的目標互動",
+          "complete": "完成目前目標"
+        }
+      },
+      "characterTitle": "角色",
+      "awaitingState": "正在等待權威角色資料……",
+      "combatPowerLine": "戰力 {value}",
+      "equipmentVisualShell": "採用 World of ClaudeCraft 外觀與 MIR4 戰鬥屬性",
+      "equipmentTierGrade": "階層 {tier}，品級 {grade}",
+      "equipmentRequiredLevel": "需要等級 {level}",
+      "unequipHint": "點擊 X 或按右鍵以卸下。",
+      "unequipAria": "卸下 {item}",
+      "equipHint": "點擊裝備。",
+      "equipAria": "裝備 {item}",
+      "inventoryEquipment": "裝備",
+      "inventoryRuntimeItems": "World of ClaudeCraft 原生物品",
+      "inventoryCollectionTickets": "收藏券",
+      "inventoryMaterials": "精煉材料",
+      "noUnequippedEquipment": "沒有未裝備的裝備。",
+      "materialCount": "擁有：{count}",
+      "mountTicketDawn": "晨曦坐騎召喚券",
+      "mountTicketTwilight": "暮光坐騎召喚券",
+      "mountTicketDawnDescription": "召喚一個坐騎：79% 普通、20% 優秀或 1% 稀有。成功召喚時會消耗召喚券。顯示的模型採用 World of ClaudeCraft 原生外觀；列出的 MIR4 屬性為權威資料。",
+      "mountTicketTwilightDescription": "召喚一個坐騎：99% 稀有或 1% 史詩。史詩結果在確認後才歸玩家所有。顯示的模型採用 World of ClaudeCraft 原生外觀。",
+      "redeemMountTicket": "Use {ticket}",
+      "inventoryMounts": "坐騎",
+      "inventoryPendingMounts": "等待確認的坐騎",
+      "mountGrade": "品級 {grade}",
+      "mountOwned": "擁有：{count}",
+      "mountEquipped": "已裝備",
+      "mountEquipHint": "點擊裝備此坐騎並召喚其 World of ClaudeCraft 原生外觀。",
+      "mountUnequipHint": "點擊卸下此坐騎並下騎。",
+      "mountConfirmHint": "點擊確認此坐騎並將其加入收藏。",
+      "mountConfirmAria": "確認 {mount}",
+      "mountEffectShell": "採用 World of ClaudeCraft 原生模型與 MIR4 坐騎屬性",
+      "mountMoveSpeed": "移動速度：+{amount}%",
+      "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
+      "mountDefenses": "物理防禦：+{physical} · 魔法防禦：+{magic}",
+      "equippedMountLine": "坐騎：{mount}（品級 {grade}）",
+      "noEquippedMount": "坐騎：未裝備",
+      "inventoryMountCombination": "坐騎合成",
+      "combineMountsAria": "合成四個品級 {grade} 的坐騎",
+      "combineMountsHint": "消耗四個此品級的已擁有坐騎。有 20% 機率獲得一個下一品級的隨機坐騎。失敗時獲得一個同品級的隨機坐騎。史詩或更高品質的獎勵需要確認。",
+      "inventorySpirits": "精靈",
+      "inventoryPendingSpirits": "等待確認的精靈",
+      "spiritTicketDawn": "晨曦精靈召喚券",
+      "spiritTicketSunset": "落日精靈召喚券",
+      "spiritTicketDawnDescription": "召喚一個精靈：79% 普通、20% 優秀或 1% 稀有。成功召喚時會消耗召喚券。圖示採用 World of ClaudeCraft 原生呈現；只有列出的 MIR4 效果生效。",
+      "spiritTicketSunsetDescription": "召喚一個精靈：94.5% 優秀、5% 稀有或 0.5% 史詩。史詩結果在確認後才歸玩家所有。成功召喚時會消耗召喚券。",
+      "redeemSpiritTicket": "使用 {ticket} 召喚",
+      "spiritGrade": "品級 {grade}",
+      "spiritOwned": "擁有：{count}",
+      "spiritEquipped": "已裝備",
+      "spiritEquipHint": "點擊裝備此精靈。其屬性和收藏加成會套用到你的 MIR4 屬性。",
+      "spiritUnequipHint": "點擊卸下此精靈。",
+      "spiritConfirmHint": "點擊確認此精靈並將其加入收藏。",
+      "spiritConfirmAria": "確認 {spirit}",
+      "spiritEffectShell": "採用 World of ClaudeCraft 原生呈現與 MIR4 精靈效果",
+      "equippedSpiritLine": "精靈：{spirit}（品級 {grade}）",
+      "noEquippedSpirit": "精靈：未裝備",
+      "inventorySpiritCombination": "精靈合成",
+      "combineSpiritsAria": "合成四個品級 {grade} 的精靈",
+      "combineSpiritsHint": "消耗四個此品級的已擁有精靈。有 20% 機率獲得一個下一品級的隨機精靈。失敗時獲得一個同品級的隨機精靈。史詩或更高品質的獎勵需要確認。",
+      "spiritSkillChanceCooldown": "{chance}% 機率 · {cooldown}秒冷卻",
+      "spiritSkillBonusDamage": "使觸發攻擊的原始傷害提高 {amount}%。",
+      "spiritSkillExecute": "目標生命值不高於 {threshold}% 時，使觸發攻擊的原始傷害提高 {amount}%。",
+      "spiritSkillLifeSiphon": "恢復最大生命值的 {amount}%。",
+      "spiritSkillManaSurge": "恢復最大法力值的 {amount}%。",
+      "spiritSkillArmorRend": "使觸發攻擊獲得 {amount}% 防禦穿透。",
+      "spiritSkillCriticalFocus": "使觸發攻擊必定暴擊。",
+      "equipmentSlots": {
+        "weapon": "武器",
+        "necklace": "項鍊",
+        "ring": "Ring",
+        "talisman": "護符",
+        "chest": "胸甲",
+        "helmet": "頭盔",
+        "gloves": "手套",
+        "boots": "靴子"
+      },
+      "stats": {
+        "combatPower": "戰力",
+        "maxHp": "最大生命值",
+        "maxMana": "最大法力值",
+        "physicalAttack": "物理攻擊",
+        "magicAttack": "魔法攻擊",
+        "physicalDefense": "物理防禦",
+        "magicDefense": "魔法防禦",
+        "accuracy": "命中",
+        "dodge": "閃避",
+        "critical": "暴擊",
+        "avoidCritical": "暴擊閃避",
+        "criticalOutcome": "暴擊傷害",
+        "bossDamage": "首領傷害",
+        "skillDamage": "技能傷害",
+        "penetration": "防禦穿透",
+        "unknown": "戰鬥屬性"
+      },
+      "materials": {
+        "sunStone": "太陽石",
+        "moonStone": "月亮石",
+        "solarScroll": "太陽卷軸",
+        "lunarSeal": "月之印",
+        "dawnTear": "Dawn Tear",
+        "solarWard": "太陽護符"
+      },
+      "maps": {
+        "portal": "{zone}傳送門",
+        "actWelcome": "{zone}（第{act}幕）。",
+        "m01": "渡口村",
+        "m02": "蘆葦小徑",
+        "m03": "山谷林地",
+        "m04": "山坡遺跡",
+        "m05": "裂隙林間地",
+        "m06": "燭石墓穴",
+        "m07": "藏骨迴廊",
+        "m08": "霧石要塞",
+        "m09": "燈籠沼澤",
+        "m10": "Bog King's Fen",
+        "m11": "水蛭紅樹林",
+        "m12": "蘆葦港",
+        "m13": "玻璃沙丘",
+        "m14": "阿赫特死靈城",
+        "m15": "燼岩火山口",
+        "m16": "破碎太陽熔爐",
+        "m17": "呼嘯苔原",
+        "m18": "Jarl's Pass",
+        "m19": "夜幕",
+        "m20": "日蝕堡壘"
+      },
+      "progression": {
+        "title": "裝備工坊",
+        "refinement": "精煉",
+        "enchantment": "附魔",
+        "blessing": "祝福",
+        "crafting": "製作",
+        "ownedEquipment": "已擁有裝備",
+        "noEquipment": "此操作沒有可用裝備。",
+        "equipped": "已裝備",
+        "enhancementLevel": "強化 +{level}/+{max}",
+        "successChance": "成功率：{chance}%",
+        "safeFailure": "失敗時保留裝備。",
+        "destructiveFailure": "+5 以上強化失敗會摧毀裝備。",
+        "wardProtection": "將消耗一個太陽護符以防止裝備被摧毀。",
+        "noWardProtection": "沒有可用的太陽護符。",
+        "enhanceCost": "費用：1 個太陽卷軸",
+        "enhance": "強化",
+        "maxEnhancement": "已達到最高強化等級",
+        "currentEffects": "目前效果",
+        "noCurrentEffects": "沒有已套用的效果。",
+        "rollCostEnchantment": "費用：1 個月之印",
+        "layerUnsupported": "此物品無法獲得{layer}效果。",
+        "rollCostBlessing": "Cost: 1 Dawn Tear",
+        "roll": "產生預覽",
+        "pendingOtherLayer": "請先處理待定的{layer}預覽。",
+        "preview": "待定預覽",
+        "acceptPreview": "套用預覽",
+        "keepCurrent": "保留目前效果",
+        "inactiveEffect": "已移植效果（尚未在戰鬥中生效）",
+        "materialRecipes": "材料配方",
+        "campaignProfession": "戰役專業訂單",
+        "campaignProfessionProgress": "進度：{current}/{goal}",
+        "campaignProfessionMaterials": "合格材料：{held}/{needed}",
+        "campaignProfessionHint": "在戰役製作錨點完成此訂單。伺服器只會消耗權威的地區材料。",
+        "campaignCraft": "製作組件",
+        "campaignRefine": "精煉組件",
+        "campaignSalvage": "分解裝備",
+        "creates": "製作 {count} 個{material}",
+        "materialCost": "{held}/{needed} {material}",
+        "copperCost": "{amount} 銅幣",
+        "create": "製作",
+        "requestSent": "伺服器正在驗證裝備操作。"
+      }
     },
     "interfaceTabs": {
       "general": "一般",
@@ -866,11 +1250,52 @@ export const zh_TW: EnTranslations = {
       "actionRing": "戰鬥動作",
       "actionPageToggle": "切換動作頁",
       "actionPageIndicator": "第{page}頁",
+      "actionRadial": "技能方向",
+      "actionRadialCancel": "取消動作",
+      "radialCenter": "中心",
+      "radialUp": "Up",
+      "radialRight": "右",
+      "radialDown": "Down",
+      "radialLeft": "Left",
+      "consumableSeat": "消耗品",
+      "menuControl": "選單",
+      "menuControlAria": "選單。點按開啟聊天，或按住並向右滑動以使用坐騎、地圖、背包等。",
+      "menuControlAriaTap": "選單。點按開啟選單列：坐騎、地圖、背包等。再次點按可開啟聊天。",
+      "menuLabel": "Menu",
+      "quickActions": "快捷操作",
+      "quickActionsAria": "快捷操作。點按開啟坐騎、聊天、地圖、背包等操作列，或按住並向右滑動進行選擇。",
+      "quickActionsAriaTap": "快捷操作。點按開啟坐騎、聊天、地圖、背包等操作列，然後點按其中一項。再次點按此控制項可關閉。",
+      "quickActionsLabel": "操作",
+      "stanceRadial": "姿態",
+      "stanceAnchorAria": "姿態：{stance}。點按開啟姿態環，然後選擇其他姿態。",
+      "stanceAnchorEmptyAria": "無姿態。點按開啟姿態環，然後選擇一種姿態。",
+      "questStripAria": "追蹤任務 {position}/{total}：{title}。點按可切換至下一個任務。",
+      "questStripAriaSingle": "追蹤任務：{title}",
+      "questStripCounter": "{position}/{total}",
+      "questStripMore": "還有 {count} 項",
       "targetCycle": "切換目標",
       "targetCycleShort": "目標",
       "spellbookPageLabel": "頁{page}",
       "hideKeyboard": "隱藏鍵盤",
-      "chatPlaceholder": "說點什麼...（! 顯示社群指令）"
+      "chatPlaceholder": "說點什麼...（! 顯示社群指令）",
+      "barEditor": "Edit Bars",
+      "barEditorAria": "編輯動作列配置"
+    },
+    "barEditor": {
+      "title": "編輯動作列",
+      "close": "關閉動作列編輯器",
+      "pages": "動作列頁面",
+      "pageTab": "Page {page}",
+      "buttonHeader": "按鈕 {button}",
+      "cellAria": "按鈕 {button}，{direction}：{action}",
+      "emptyCellAria": "按鈕 {button}，{direction}：空",
+      "hint": "點按一個欄位，再點按另一個即可交換。",
+      "armed": "點按一個欄位以放置 {name}。",
+      "picked": "點按另一個欄位以與 {name} 交換。",
+      "locked": "動作列已在介面選項中鎖定。",
+      "clear": "清除",
+      "clearAria": "清除一個欄位",
+      "clearArmed": "點擊一個欄位即可清除。"
     },
     "tutorial": {
       "moveBodyTouch": "使用搖桿移動，拖曳螢幕環顧四周。先走幾步開始吧。",
@@ -952,6 +1377,22 @@ export const zh_TW: EnTranslations = {
       "closesIn": "裂隙將在 {time} 後關閉",
       "clockMs": "{minutes}:{seconds}",
       "clockHms": "{hours}:{minutes}:{seconds}"
+    },
+    "lastkeepMap": {
+      "title": "{keep}：{story}",
+      "story": {
+        "undercroft": "地下穹室",
+        "state": "正殿層",
+        "residence": "起居層",
+        "tower": "瞭望塔"
+      }
+    },
+    "dawnholdMap": {
+      "title": "{keep}：{story}",
+      "story": {
+        "ground": "庭園層",
+        "solar": "日光廳"
+      }
     },
     "compass": {
       "N": "北",
@@ -1386,6 +1827,7 @@ export const zh_TW: EnTranslations = {
       "mouseoverCast": "對隊伍框架滑鼠指向施法",
       "stickyTarget": "點擊地面時保留目標",
       "showItemLevel": "顯示物品等級",
+      "showReliquaryTracker": "顯示聖物庫追蹤器",
       "itemLevelLine": "物品等級 {level}",
       "itemScoreLine": "評分 {score}",
       "showSecondaryActionBar": "顯示副動作列",
@@ -1398,7 +1840,9 @@ export const zh_TW: EnTranslations = {
       "showAttackButton": "顯示攻擊按鈕",
       "showDailyRewardsChest": "顯示每日獎勵寶箱",
       "mobileCameraJoystick": "攝影機搖桿",
-      "mobileLeftHanded": "左手配置"
+      "mobileLeftHanded": "左手配置",
+      "touchTapMenus": "點擊選單",
+      "touchTapMenusNote": "用點擊代替滑動來開啟動作、消耗品與選單控制項。點擊項目即可使用，再次點擊控制項執行其一般操作，點擊外部則關閉。"
     },
     "talentRows": {
       "tab": "抉擇",
@@ -1431,9 +1875,29 @@ export const zh_TW: EnTranslations = {
       "buttons": "按鍵配置",
       "resetButtons": "重設按鍵配置",
       "menuAction": "遊戲選單",
+      "confirmAction": "確認 / 選擇",
       "zoomIn": "放大",
       "zoomOut": "縮小",
-      "help": "左搖桿移動，右搖桿控制鏡頭。開啟視窗即可使用螢幕指標。"
+      "help": "左搖桿移動，右搖桿控制鏡頭。開啟視窗即可使用螢幕指標。",
+      "crossHotbar": "十字熱鍵欄",
+      "crossHotbarEnable": "啟用十字熱鍵欄",
+      "crossHotbarExpand": "雙十字熱鍵欄",
+      "crossHotbarHelp": "按住扳機鍵即可點亮方向鍵和面板按鍵上的八個動作條格位。輕按另一個扳機鍵可切換到第二組。",
+      "crossHotbarResetLayout": "重置十字熱鍵欄",
+      "crossHotbarPosition": "{trigger} + {button}",
+      "crossHotbarOwnsButtons": "十字熱鍵欄啟用時，扳機鍵和方向鍵歸它所有，請在下方設定，而非此處。",
+      "cancelAction": "取消 / 返回",
+      "subcommandsAction": "子命令 / 地圖",
+      "cycleHudAction": "切換介面",
+      "cycleSetAction": "切換熱鍵列組",
+      "crossHotbarDisplay": "熱鍵列顯示",
+      "crossHotbarDisplayFull": "完整",
+      "crossHotbarDisplayCompact": "精簡",
+      "crossHotbarDisplayMinimal": "僅按住時顯示",
+      "crossHotbarArrangeChord": "{bumper} + {button}",
+      "crossHotbarCarrying": "正在拿著{action}：在格子上按確認放置，按取消放回。",
+      "crossHotbarEditHint": "整理中：確認鍵可從格子或法術書中拿起技能並放到格子上，取消鍵清空格子。",
+      "crossHotbarEditHelp": "按住左肩鍵並按上方面鍵，即可用手把整理十字熱鍵列。"
     },
     "perf": {
       "title": "效能監視器",
@@ -1552,6 +2016,7 @@ export const zh_TW: EnTranslations = {
           "render": "算繪  提交 {submit} 毫秒 | 世界 {world} 毫秒 | 實體 {entities} 毫秒",
           "scene": "場景   {calls} 次呼叫 | {triangles} 個三角形 | {views} 個視圖",
           "hitches": "卡頓 {hitches} | 著色器 {shaders} | 上傳 {uploads} | 視圖 {views}",
+          "hitchesBuild": "區域建置 {zoneBuilds} | 影格外 {offFrame} | 垃圾回收 {gc}",
           "gpu": "GPU     {renderer}",
           "waitingValue": "等待中"
         },
@@ -1603,7 +2068,10 @@ export const zh_TW: EnTranslations = {
             "eventCpu": "事件處理占用影格時間",
             "shaderCompile": "遊戲過程中正在編譯著色器",
             "textureUpload": "紋理上傳造成遊戲卡頓",
+            "zoneBuild": "區域串流建置造成卡頓",
             "viewCreate": "實體視圖建立造成卡頓",
+            "gcHitch": "垃圾回收正在長影格內執行",
+            "offFrameHitch": "長影格來自渲染回呼之外的工作",
             "otherHitch": "仍有未歸因的長影格",
             "assetStartup": "資源處理延遲了遊戲啟動",
             "longTasks": "瀏覽器長任務正在阻塞影格",
@@ -2463,7 +2931,11 @@ export const zh_TW: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "將 {name} 加入動作列",
-      "removeFromBarAria": "將 {name} 從動作列移除"
+      "removeFromBarAria": "將 {name} 從動作列移除",
+      "upgradeRank": "Rank {rank}",
+      "maxRank": "最高等級",
+      "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
+      "assignAria": "為 {name} 選擇一個欄位"
     },
     "nameplate": {
       "mobLevel": "{level}",
@@ -2793,7 +3265,8 @@ export const zh_TW: EnTranslations = {
       "tip": "銷售收益或退回物品正在商人處等待你領取。"
     },
     "noticeboard": {
-      "empty": "看起來沒有張貼任何內容。"
+      "empty": "看起來沒有張貼任何內容。",
+      "contract": "已啟用契約：{title}"
     },
     "bank": {
       "title": "銀行",
@@ -3723,6 +4196,9 @@ export const zh_TW: EnTranslations = {
       "pinFull": "追蹤器已滿（最多 {cap} 個頁面）",
       "pinAria": "將{name}釘選到介面追蹤器",
       "unpinAria": "取消釘選{name}",
+      "trackerToggleLabel": "介面追蹤器",
+      "trackerToggleShowHint": "在畫面上顯示聖物庫追蹤器",
+      "trackerToggleHideHint": "在畫面上隱藏聖物庫追蹤器",
       "rarityLine": "{percent} 的收藏家已發現",
       "pageRarityLine": "{percent} 的收藏家已點亮",
       "cellAriaWithRarity": "{base}，{rarity}",
@@ -4323,6 +4799,7 @@ export const zh_TW: EnTranslations = {
       "ifHighContrastBackground": "在起始畫面與角色畫面後方使用較樸素、對比較高的背景。",
       "ifInvertLookY": "反轉滑鼠視角的上下方向。",
       "ifShowItemLevel": "在每個物品提示框上加一行裝備等級。預設關閉，以保留經典的純屬性提示框。",
+      "ifShowReliquaryTracker": "控制聖物庫追蹤器（你釘選的書頁及其進度）是否顯示在介面上。聖物庫視窗中有對應的眼睛按鈕，釘選書頁時追蹤器也會重新開啟。",
       "ifShowPlaytime": "在角色面板上顯示你的生涯遊戲時長。預設開啟，而面板上有一個眼睛按鈕可以依裝置切換顯示與否，實況或截圖時很好用。無論如何，總時數都會繼續累計。",
       "ifShowOwnNameplate": "把你自己頭上的名條，完全照別的玩家看到的樣子畫出來，連裝飾都一併呈現。想要經典的視野就把它關掉。",
       "ifShowPlayerNameplates": "畫出其他玩家的名條。關閉能讓擁擠的主據點清爽許多，而無論哪一種，你目前的目標都保持清楚可讀。",
@@ -4754,6 +5231,7 @@ export const zh_TW: EnTranslations = {
       "mageEleJet": "水流噴射在寵物動作列上自成一個按鈕：點擊它可將一道冰寒光束鎖定在單一敵人身上，或是按右鍵（在手機上長按），讓水元素在冷卻結束後自行施放。",
       "formsHeading": "變形",
       "formsNote": "德魯伊靠變換形態作戰。大多數德魯伊技能都隸屬於某一種形態，因此你身處的形態決定了你能施放什麼，而變形本身會消耗少許法力。無論是否在戰鬥中，你都可以隨心所欲地變來變去。",
+      "formsAutoUnshift": "變身時施放治療或傷害法術會自動為你解除變身。以這種方式離開形態不消耗法力，也不占用全域冷卻，因此瞬發法術會在你按下的那一刻釋放。重新變身是普通技能，依然消耗法力並占用全域冷卻。",
       "formsMoonwing": "平衡專精的德魯伊會多獲得一種形態：梟獸形態，那是平衡德魯伊作戰時所處的施法形態。它是唯一保留你法術的動物形態，而你的魔杖也只有在它或你平常的施法形態下才能使用。",
       "formLine": {
         "form_bear": "坦克型態：厚實的皮毛、以怒氣取代法力，還有額外威脅值，好讓敵人繼續朝你揮拳。",
@@ -7013,6 +7491,10 @@ export const zh_TW: EnTranslations = {
   },
   "classes": {
     "warrior": "戰士",
+    "elementalist": "元素師",
+    "taoist": "道士",
+    "arbalist": "弩手",
+    "lancer": "槍騎士",
     "paladin": "聖騎士",
     "hunter": "獵人",
     "rogue": "盜賊",
@@ -7022,6 +7504,10 @@ export const zh_TW: EnTranslations = {
     "warlock": "術士",
     "druid": "德魯伊",
     "warriorAria": "戰士職業",
+    "elementalistAria": "元素師職業",
+    "taoistAria": "道士職業",
+    "arbalistAria": "弩手職業",
+    "lancerAria": "槍騎士職業",
     "paladinAria": "聖騎士職業",
     "hunterAria": "獵人職業",
     "rogueAria": "盜賊職業",
@@ -7171,6 +7657,7 @@ export const zh_TW: EnTranslations = {
       "shopMarksRequired": "購買 {name} 需要 {marks} 枚秘探印記。",
       "shopSealPremiumOnly": "此封印只向大師之手屈服，唯有上等投入方能開啟。",
       "passageSealed": "通道被封住了。",
+      "enemiesRemain": "先清除剩餘的敵人。",
       "moveCloserPassage": "再靠近通道一些。",
       "moveCloserChest": "再靠近寶箱一些。",
       "moveCloserReliquary": "再靠近聖物匣一些。",
@@ -7944,6 +8431,31 @@ export const zh_TW: EnTranslations = {
       "warlock": "術士召喚惡魔，施放詛咒與持續傷害魔法，並從敵人身上汲取生命來支撐自己。",
       "druid": "德魯伊引導自然之力，治療傷口、纏繞敵人，並變形成動物來防禦或輸出。"
     },
+    "mir4": {
+      "labels": {
+        "damage": "傷害",
+        "combatRange": "戰鬥距離",
+        "startingSkills": "初始技能"
+      },
+      "damage": {
+        "physical": "物理",
+        "magic": "魔法"
+      },
+      "range": {
+        "melee": "近戰",
+        "medium": "中距離",
+        "long": "遠距離",
+        "extended": "延伸近戰"
+      },
+      "weapons": {
+        "heavySword": "重劍",
+        "largeStaff": "長法杖",
+        "shortStaff": "短法杖",
+        "arbalest": "弩",
+        "spear": "長槍"
+      },
+      "aria": "{className}職業詳情：{damage}傷害，{range}距離，武器為{weapon}，擁有{skills}個初始技能。"
+    },
     "aria": "{className} 職業詳情：職責 {role}。初始屬性：力量 {str}，敏捷 {agi}，耐力 {sta}，智力 {int}，精神 {spi}。",
     "statBarAria": "{stat}：{value}/25"
   },
@@ -8702,6 +9214,8 @@ export const zh_TW: EnTranslations = {
     "actionBar": {
       "attackName": "攻擊",
       "attackTooltip": "對目標開啟或關閉自動攻擊。右鍵點擊敵人也會發起攻擊。",
+      "autoBattleName": "自動戰鬥",
+      "autoBattleTooltip": "切換目前位置周圍的自動索敵、移動和技能循環。",
       "attackRemoveHint": "右鍵點擊可將其從動作列移除並空出欄位。",
       "emptySlot": "空欄位",
       "slotAria": "動作欄位 {slot}：{ability}",
@@ -8834,6 +9348,8 @@ export const zh_TW: EnTranslations = {
       "accept": "接受",
       "decline": "拒絕",
       "continue": "繼續",
+      "autoContinue": "Dialogue continues automatically",
+      "skipDialogue": "Skip dialogue",
       "done": "完成",
       "completeQuest": "完成任務",
       "turnIn": "交付",
@@ -9148,6 +9664,226 @@ export const zh_TW: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "虛空斬",
+        "description": "對一名敵人造成 {damage} 點傷害。使目標昏迷 0.9 秒。"
+      },
+      "mir4_skill_1104": {
+        "name": "撕裂斬",
+        "description": "對一名敵人造成 {damage} 點傷害。擊倒目標 1.2 秒。"
+      },
+      "mir4_skill_1304": {
+        "name": "衝撞",
+        "description": "對一名敵人造成 {damage} 點傷害。使其受到的傷害提高 12%，持續 4.5 秒。"
+      },
+      "mir4_skill_1401": {
+        "name": "大地重擊",
+        "description": "對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 70% 傷害。擊倒目標 0.8 秒。"
+      },
+      "mir4_skill_1501": {
+        "name": "疾風斬",
+        "description": "影響一名敵人。使目標減速 35%，持續 3.2 秒。"
+      },
+      "mir4_skill_2101": {
+        "name": "稜彩光束",
+        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。凍結目標 1.4 秒。"
+      },
+      "mir4_skill_2111": {
+        "name": "餘燼長槍",
+        "description": "對一名敵人造成 {damage} 點傷害。使其受到的傷害提高 8%，持續 4.5 秒。"
+      },
+      "mir4_skill_2301": {
+        "name": "懲擊之印",
+        "description": "對一名敵人造成 {damage} 點傷害。使目標造成的傷害降低 50%，持續 4 秒。"
+      },
+      "mir4_skill_2501": {
+        "name": "喚出核心",
+        "description": "對一名敵人造成 {damage} 點傷害。8 碼內最多 4 名其他敵人受到 60% 傷害。凍結目標 1.8 秒。"
+      },
+      "mir4_skill_2503": {
+        "name": "魔法護盾",
+        "description": "受到的傷害降低 22%，持續 10 秒。"
+      },
+      "mir4_skill_3101": {
+        "name": "印記連擊",
+        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使其受到的傷害提高 10%，持續 4 秒。"
+      },
+      "mir4_skill_3104": {
+        "name": "圖騰 1010",
+        "description": "影響一名敵人。使目標昏迷 1.4 秒。"
+      },
+      "mir4_skill_3301": {
+        "name": "圖騰之印 II",
+        "description": "對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 60% 傷害。使目標減速 35%，持續 4.2 秒。"
+      },
+      "mir4_skill_3503": {
+        "name": "玉蓮",
+        "description": "恢復最大生命值的 18%。"
+      },
+      "mir4_skill_3506": {
+        "name": "圖騰之印 I",
+        "description": "對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 60% 傷害。定身目標 1.6 秒。"
+      },
+      "mir4_skill_4101": {
+        "name": "爆發 4101",
+        "description": "對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 65% 傷害。使目標造成的傷害降低 45%，持續 3.5 秒。"
+      },
+      "mir4_skill_4102": {
+        "name": "連擊 4102",
+        "description": "對一名敵人造成 {damage} 點傷害。6.625 碼內最多 3 名其他敵人受到 65% 傷害。使目標減速 30%，持續 3.5 秒。"
+      },
+      "mir4_skill_4103": {
+        "name": "Twin Echo",
+        "description": "對一名敵人造成 {damage} 點傷害。7.5 碼內最多 4 名其他敵人受到 55% 傷害。使目標造成的傷害降低 60%，持續 5 秒。"
+      },
+      "mir4_skill_4106": {
+        "name": "衝鋒 4106",
+        "description": "對一名敵人造成 {damage} 點傷害。使目標昏迷 2 秒。"
+      },
+      "mir4_skill_4107": {
+        "name": "閃光箭",
+        "description": "影響一名敵人。使目標造成的傷害降低 45%，持續 3.2 秒。"
+      },
+      "mir4_skill_5101": {
+        "name": "突刺 5101",
+        "description": "對一名敵人造成 {damage} 點傷害。擊倒目標 1 秒。"
+      },
+      "mir4_skill_5104": {
+        "name": "橫掃 5104",
+        "description": "對一名敵人造成 {damage} 點傷害。使其受到的傷害提高 14%，持續 4.5 秒。"
+      },
+      "mir4_skill_5201": {
+        "name": "打擊 5201",
+        "description": "對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 65% 傷害。使目標昏迷 1.1 秒。"
+      },
+      "mir4_skill_5301": {
+        "name": "鎖鏈 5301",
+        "description": "對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 70% 傷害。使目標昏迷 0.9 秒。"
+      },
+      "mir4_skill_5401": {
+        "name": "狂怒風暴",
+        "description": "影響一名敵人。擊倒目標 1 秒。"
+      },
+      "mir4_ultimate_1": {
+        "name": "終極技能",
+        "description": "透過 3 次打擊造成 {damage} 點傷害。需要終極技能能量全滿。"
+      },
+      "mir4_ultimate_2": {
+        "name": "終極技能",
+        "description": "透過 4 次打擊造成 {damage} 點傷害。需要終極技能能量全滿。"
+      },
+      "mir4_ultimate_3": {
+        "name": "終極技能",
+        "description": "透過 3 次打擊造成 {damage} 點傷害。需要終極技能能量全滿。"
+      },
+      "mir4_ultimate_4": {
+        "name": "終極技能",
+        "description": "透過 3 次打擊造成 {damage} 點傷害。需要終極技能能量全滿。"
+      },
+      "mir4_ultimate_5": {
+        "name": "終極技能",
+        "description": "透過 2 次打擊造成 {damage} 點傷害。需要終極技能能量全滿。"
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "重甲",
+        "description": "最大生命值提高 8%。"
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "武器精通",
+        "description": "物理攻擊提高 6%。"
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "Iron Skin",
+        "description": "物理防禦提高 8%，魔法防禦提高 6%。"
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "戰鬥精神",
+        "description": "最大生命值和物理攻擊提高 4%。"
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "不屈意志",
+        "description": "最大生命值、物理防禦和魔法防禦提高 5%。"
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "Mana Well",
+        "description": "最大法力值提高 10%。"
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "奧術智慧",
+        "description": "魔法攻擊提高 7%。"
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "元素防護",
+        "description": "物理防禦和魔法防禦提高 6%。"
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "引導",
+        "description": "最大法力值提高 5%，魔法攻擊提高 4%。"
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "奧術昇華",
+        "description": "最大法力值提高 5%，魔法攻擊提高 6%，物理防禦和魔法防禦提高 3%。"
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "靈性容器",
+        "description": "最大生命值提高 4%，最大法力值提高 7%。"
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "雙生之道",
+        "description": "物理攻擊和魔法攻擊提高 4%。"
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "神聖守護",
+        "description": "物理防禦和魔法防禦提高 6%。"
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "寧靜心境",
+        "description": "最大生命值提高 4%，最大法力值提高 5%。"
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "天人和諧",
+        "description": "最大生命值、最大法力值、物理攻擊、魔法攻擊、物理防禦和魔法防禦提高 4%。"
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "鷹眼",
+        "description": "物理攻擊提高 3%，命中提高 5%。"
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "彈道精通",
+        "description": "物理攻擊提高 7%。"
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "自然守護",
+        "description": "最大生命值、物理防禦和魔法防禦提高 5%。"
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "獵手本能",
+        "description": "物理攻擊和閃避提高 5%。"
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "完美射擊",
+        "description": "最大生命值提高 3%，物理攻擊提高 6%，命中提高 5%。"
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "戰爭淬鍊",
+        "description": "最大生命值提高 5%，物理攻擊和魔法攻擊提高 3%。"
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "長槍精通",
+        "description": "物理攻擊和魔法攻擊提高 5%。"
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "先鋒鎧甲",
+        "description": "物理防禦和魔法防禦提高 6%。"
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "戰鬥節奏",
+        "description": "最大法力值、物理攻擊和魔法攻擊提高 4%。"
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "龍之先鋒",
+        "description": "最大生命值提高 4%，物理攻擊、魔法攻擊、物理防禦和魔法防禦提高 5%。"
+      },
       "sport_kick": {
         "name": "踢球",
         "description": "沿地面把球踢向瞄準點。"
@@ -9980,7 +10716,7 @@ export const zh_TW: EnTranslations = {
       },
       "fear": {
         "name": "折魂",
-        "description": "使敵人陷入恐懼並畏縮，最多持續 8 秒。任何傷害都會打破效果。"
+        "description": "使敵人陷入恐懼並畏縮，最多持續 5 秒。累計達到目標最大生命值 8% 的傷害會打破效果。"
       },
       "searing_pain": {
         "name": "焦灼",
@@ -10058,7 +10794,7 @@ export const zh_TW: EnTranslations = {
       "ferocious_bite": {
         "name": "血噬",
         "description": "終結技，造成 {damage}。僅限狼形態。",
-        "specNote_feral": "每次命中的攻擊累積 1 層古血；古血達 3 層時，此按鈕變為血收：撕咬造成 91 點傷害，每個連擊點額外造成 55 點，並立即引爆你的剮擊與血裂的剩餘傷害，恢復 30 點能量。"
+        "specNote_feral": "每次命中的攻擊累積 1 層古血；古血達 3 層時，此按鈕變為血收：消耗古血發動更強的撕咬，立即引爆你的剮擊與血裂的剩餘傷害，並恢復能量。"
       },
       "swipe": {
         "name": "橫掃利爪",
@@ -10121,7 +10857,7 @@ export const zh_TW: EnTranslations = {
       },
       "tigers_fury": {
         "name": "狼血之力",
-        "description": "使攻擊強度提高 {buff}，持續 {duration} 秒。僅限狼形態。"
+        "description": "湧起{rage}點能量，並使攻擊強度提高 {buff}，持續 {duration} 秒。僅限狼形態。"
       },
       "rip": {
         "name": "血隙",
@@ -10226,7 +10962,7 @@ export const zh_TW: EnTranslations = {
       },
       "ossuary_mark": {
         "name": "骸骨印記",
-        "description": "為敵人標記12秒，儲存你與你的亡靈所造成傷害的20%。再次施放可將其引爆。若被標記的敵人死亡，印記會在6碼內爆炸，並產生1枚靈魂碎片。"
+        "description": "為敵人標記15秒，儲存你與你的亡靈所造成傷害的20%。再次施放可將其引爆。若被標記的敵人死亡，印記會在6碼內爆炸，並產生1枚靈魂碎片。"
       },
       "unholy_command": {
         "name": "邪穢號令",
@@ -10325,8 +11061,8 @@ export const zh_TW: EnTranslations = {
         "description": "進入梟獸形態，強化施法直到你切換回來。再次施放可返回普通形態。（平衡專精招牌）"
       },
       "feral_charge": {
-        "name": "野性衝鋒",
-        "description": "衝向敵人並使其定身1秒。8-25碼距離。（野性專精招牌）"
+        "name": "原始湧動",
+        "description": "釋放一股原始湧動。狼形態下，能量恢復速度提高100%，持續10秒。巨熊形態下，立即產生50點怒氣。（野性專精招牌）"
       },
       "swiftmend": {
         "name": "迅癒",
@@ -10342,7 +11078,7 @@ export const zh_TW: EnTranslations = {
       },
       "redharvest": {
         "name": "血收",
-        "description": "消耗3層古血：造成{damage}點傷害，立即引爆你的剮擊與血裂的剩餘傷害，移除這兩個流血效果，並恢復30點能量。沒有連擊點也能使用。"
+        "description": "消耗3層古血：造成{damage}點傷害，立即引爆你的剮擊與血裂的剩餘傷害，移除這兩個流血效果，並恢復{rage}點能量。沒有連擊點也能使用。"
       },
       "marrowbreak": {
         "name": "碎髓",
@@ -10582,7 +11318,7 @@ export const zh_TW: EnTranslations = {
       },
       "evocation": {
         "name": "乙太之井",
-        "description": "快速恢復法力。（法師天賦）"
+        "description": "引導6秒：每秒恢復100點法力並獲得8點法術強度，效果在引導期間疊加並持續15秒。（法師天賦）"
       },
       "flurry_of_knives": {
         "name": "刀刃亂舞",
@@ -10590,7 +11326,7 @@ export const zh_TW: EnTranslations = {
       },
       "frenzied_regeneration": {
         "name": "野性癒合",
-        "description": "在10秒內恢復180點生命值。只能在熊形態下使用。（德魯伊天賦）"
+        "description": "在10秒內恢復相當於最大生命值40%的生命。只能在熊形態下使用。（德魯伊天賦）"
       },
       "frost_trap": {
         "name": "霜紋陷阱",
@@ -10610,11 +11346,11 @@ export const zh_TW: EnTranslations = {
       },
       "howl_of_terror": {
         "name": "恐懼嚎叫",
-        "description": "使附近的敵人恐懼，最多持續3秒。受到傷害可能打破該效果。（術士天賦）"
+        "description": "使附近的敵人恐懼，最多持續 5 秒。累計達到目標最大生命值 8% 的傷害會打破其恐懼。（術士天賦）"
       },
       "ice_block": {
         "name": "寒冰棺",
-        "description": "將你封入寒冰之中，吸收大量傷害，持續 8 秒。（法師天賦）"
+        "description": "將你封入堅冰8秒，使你免疫所有傷害。移除已存在的一般有害效果，並阻止新的一般控制效果施加於你。可在昏迷或變形狀態下使用。被封凍期間無法行動。再次施放可取消。（法師）"
       },
       "inner_focus": {
         "name": "靜心",
@@ -10823,7 +11559,7 @@ export const zh_TW: EnTranslations = {
       },
       "prowl": {
         "name": "潛獵",
-        "description": "在狼形態下進入隱匿狀態，移動速度降低 50%。無法於戰鬥中使用。"
+        "description": "在狼形態下進入隱匿狀態，移動速度降低 5%。無法於戰鬥中使用。"
       },
       "rake": {
         "name": "剮擊",
@@ -12378,6 +13114,9 @@ export const zh_TW: EnTranslations = {
       "pristine_claw": {
         "name": "完美的爪"
       },
+      "dawnhold_posy": {
+        "name": "晨曦堡花園小花束"
+      },
       "conjured_water4": {
         "name": "魔法泉水"
       },
@@ -13222,6 +13961,15 @@ export const zh_TW: EnTranslations = {
       },
       "training_dummy": {
         "name": "訓練假人"
+      },
+      "friendly_player_dummy": {
+        "name": "友方玩家假人"
+      },
+      "normal_boss_dummy": {
+        "name": "普通首領假人"
+      },
+      "heroic_boss_dummy": {
+        "name": "英雄首領假人"
       },
       "ridge_stalker": {
         "name": "山脊潛獵者"
@@ -16842,6 +17590,11 @@ export const zh_TW: EnTranslations = {
         "enterText": "空氣變得冰冷。下方有龐然之物在呼吸...",
         "leaveText": "你踉蹌回到山風之中。"
       },
+      "campaign_trial_room": {
+        "name": "戰役試煉",
+        "enterText": "你進入了戰役試煉。",
+        "leaveText": "你離開了戰役試煉。"
+      },
       "nythraxis_crypt": {
         "name": "廢棄墓穴",
         "enterText": "你跨過廢棄墓穴的門檻。",
@@ -16861,6 +17614,11 @@ export const zh_TW: EnTranslations = {
         "name": "最後的堡壘",
         "enterText": "你踏入最後的堡壘那冰冷而寂靜的大廳。",
         "leaveText": "你帶上堡門，重新走進龍裔荒原的寒風中。"
+      },
+      "dawnhold_castle": {
+        "name": "晨曦堡",
+        "enterText": "你走進晨曦堡溫暖而花香四溢的廳堂。",
+        "leaveText": "你回到陽光灑落的花園草坪上。"
       },
       "drowned_temple": {
         "name": "溺亡神殿",

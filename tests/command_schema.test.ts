@@ -7,7 +7,7 @@ import { COMMAND_NAMES, type CommandName, DISPATCH_ONLY_COMMANDS } from '../src/
 
 // W0b boundary gate: the command-schema lockstep invariant (00-SHARED-CONVENTIONS
 // #2). Every command ClientWorld sends (`cmd:'X'` through the private cmd()
-// helper in src/net/online.ts) MUST have a matching `case 'X':` in the
+// helper in src/net/online.ts or one of its prototype-owned facets) MUST have a matching `case 'X':` in the
 // server/game.ts dispatchMessage switch. This test pins the CURRENT contract by
 // re-deriving both sets directly from source (not from the brief's numbers) and
 // proving:
@@ -59,8 +59,8 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // auto-merged identical numbers before while the real total was higher; the
 // merged tree carries BOTH sides' pairs. Only the suite says what they really
 // are, and the numbers below were set from a run, not from this narrative.
-const EXPECTED_SEND_COUNT = 199;
-const EXPECTED_DISPATCH_COUNT = 212;
+const EXPECTED_SEND_COUNT = 200;
+const EXPECTED_DISPATCH_COUNT = 213;
 const EXPECTED_DISPATCH_ONLY_COUNT = 13;
 
 // The chat sub-channel routing switch (server/game.ts `switch
@@ -91,13 +91,17 @@ function readSource(relPath: string): string {
   return stripComments(readFileSync(join(repoRoot, relPath), 'utf8'));
 }
 
-// Distinct `cmd:'X'` literals ClientWorld sends. Every send funnels through the
-// single private cmd() helper as an object literal, including the handshake send
-// (`challengeResponse`) outside the IWorld-commands block, so a whole-file scan
-// captures the complete send-set. There is no dynamic/computed cmd value.
-function scanSendSet(src: string): Set<string> {
+// Distinct `cmd:'X'` literals ClientWorld and its prototype-owned facets send.
+// Every send ultimately funnels through the single private cmd() helper,
+// including the handshake send (`challengeResponse`) outside the
+// IWorld-commands block. The facet source is included because its typed payload
+// crosses the sendMir4Command seam before reaching cmd(). There is no
+// dynamic/computed command token.
+function scanSendSet(...sources: string[]): Set<string> {
   const tokens = new Set<string>();
-  for (const m of src.matchAll(/cmd:\s*'([^']+)'/g)) tokens.add(m[1]);
+  for (const src of sources) {
+    for (const m of src.matchAll(/cmd:\s*'([^']+)'/g)) tokens.add(m[1]);
+  }
   return tokens;
 }
 
@@ -125,7 +129,10 @@ function difference<T>(a: Set<T>, b: Set<T>): Set<T> {
   return out;
 }
 
-const sendSet = scanSendSet(readSource('src/net/online.ts'));
+const sendSet = scanSendSet(
+  readSource('src/net/online.ts'),
+  readSource('src/net/mir4_client_facet.ts'),
+);
 const dispatchSet = scanDispatchSet(readSource('server/game.ts'));
 const tableSet = new Set<CommandName>(COMMAND_NAMES);
 const allowlistSet = new Set<CommandName>(DISPATCH_ONLY_COMMANDS);

@@ -245,7 +245,9 @@ describe('bare client integration through the real onMessage path', () => {
     expect(client.netPipeline().summary().gapMs.count).toBe(1);
 
     (client as unknown as { reconnectAttempts: number }).reconnectAttempts = 1;
-    internals.onMessage(JSON.stringify({ t: 'hello', pid: 1, seed: 20061 }));
+    internals.onMessage(
+      JSON.stringify({ t: 'hello', pid: 1, seed: 20061, gameProfile: 'woc-classic' }),
+    );
     internals.onMessage(JSON.stringify({ t: 'snap', ents: [wirePlayer(2, 'Bud')], keep: [] }));
 
     const s = client.netPipeline().summary();

@@ -9,6 +9,8 @@ import { ITEMS, MOBS } from '../../sim/data';
 import { ALL_CLASSES, type Entity, isMechWearer, type PlayerClass } from '../../sim/types';
 import { ITEM_WEAPON_VARIANTS } from '../../ui/weapon_variants';
 import type { OverheadEmoteId } from '../../world_api';
+import { mir4MobVisualKey, mir4NpcVisualKey, mir4PlayerVisualKey } from './mir4_presentation_core';
+import { NPC_PROP_SET_IDS, type NpcPropSet } from './npc_looks';
 
 export interface EmoteClipSpec {
   clips: readonly string[];
@@ -168,8 +170,15 @@ const KAYKIT_EMOTES: Partial<Record<OverheadEmoteId, EmoteClipSpec>> = {
   salute: { clips: ['Spellcast_Raise', 'Block'], timeScale: 1.18 },
   cry: { clips: ['Hit_A', 'Sit_Floor_Down'], timeScale: 0.65 },
   bow: { clips: ['Sit_Floor_Down', 'Spellcast_Raise'], timeScale: 1.35 },
-  clap: { clips: ['1H_Melee_Attack_Slice_Diagonal', 'Cheer'], timeScale: 1.55, repeats: 2 },
-  roar: { clips: ['2H_Melee_Attack_Chop', '1H_Melee_Attack_Chop', 'Cheer'], timeScale: 0.9 },
+  clap: {
+    clips: ['1H_Melee_Attack_Slice_Diagonal', 'Cheer'],
+    timeScale: 1.55,
+    repeats: 2,
+  },
+  roar: {
+    clips: ['2H_Melee_Attack_Chop', '1H_Melee_Attack_Chop', 'Cheer'],
+    timeScale: 0.9,
+  },
   kneel: { clips: ['Sit_Floor_Down'], timeScale: 0.85 },
 };
 
@@ -492,13 +501,27 @@ const ENEMY7: ClipMap = {
   death: 'Death',
 };
 
+// The authored ogre body (the _Mob_Updates artist drop, combined by
+// tmp/ogre_build.mjs): a rigged Tripo donor whose drop authors every slot,
+// Run included (retimed in the build, see the gait numbers on mob_ogre
+// below). Its own constant rather than ENEMY7 because the clip names
+// differ (Hit, not the 2023 pack's HitRecieve pair).
+const OGRE: ClipMap = {
+  idle: 'Idle',
+  walk: 'Walk',
+  run: 'Run',
+  attack: ['Attack'],
+  hit: ['Hit'],
+  death: 'Death',
+};
+
 // The kobold family's own attack (scripts/build_kobold_anims.mjs, issue
-// #2889): ENEMY7's Attack is shared by reference with mob_ogre (a giant
-// twice its height, on giant.glb), so a kobold currently swings the exact
-// same single double-claw chop. This clip is baked off goblin.glb's own
-// donor poses (Attack's own beats re-timed into a two-part combo, plus
-// Jump, a clip goblin.glb ships that ENEMY7 never wires), so only
-// mob_kobold gets it; mob_ogre stays on the shared constant untouched.
+// #2889): ENEMY7's Attack was shared by reference with mob_ogre back when
+// the ogre rendered on giant.glb (it has its own authored body and OGRE
+// ClipMap now), so a kobold then swung the exact same single double-claw
+// chop. This clip is baked off goblin.glb's own donor poses (Attack's own
+// beats re-timed into a two-part combo, plus Jump, a clip goblin.glb ships
+// that ENEMY7 never wires), so only mob_kobold gets it.
 const KOBOLD_ENEMY7: ClipMap = {
   ...ENEMY7,
   attack: ['Kobold_Pounce'],
@@ -1130,7 +1153,11 @@ export const VISUALS: Record<string, VisualDef> = {
         flash_of_light: 'Cast_HolyMend',
         lay_on_hands: 'Cast_HolyMend',
       },
-      attackTimeScaleByAbility: { final_edict: 1, sunward_disc: 1.8, bastion_sweep: 1 },
+      attackTimeScaleByAbility: {
+        final_edict: 1,
+        sunward_disc: 1.8,
+        bastion_sweep: 1,
+      },
     },
     // Ability-specific clips (scripts/build_paladin_ability_anims.mjs): a
     // mesh-free clip donor GLB baked off this rig's own poses.
@@ -1462,7 +1489,11 @@ export const VISUALS: Record<string, VisualDef> = {
     show: [],
     attach: [
       { url: `${WEAPONS}/wand.glb`, bone: 'handslot.r' },
-      { url: `${WEAPONS}/spellbook_open.glb`, bone: 'handslot.l', gripRef: 'Spellbook_open' },
+      {
+        url: `${WEAPONS}/spellbook_open.glb`,
+        bone: 'handslot.l',
+        gripRef: 'Spellbook_open',
+      },
     ],
     weaponSlots: [0], // mainhand (wand) swaps; spellbook offhand stays
     // Faint violet lift only, to tell this apart from the mage/priest models
@@ -1823,7 +1854,10 @@ export const VISUALS: Record<string, VisualDef> = {
     // spread the animal() factory result and override only attack, so the
     // repainted siblings (veiled_stag/gleamstag/veiled_doe/aurelhorn, separate
     // GLB files on the same rig) keep the standing Headbutt/Kick pair.
-    clips: { ...animal(['Attack_Headbutt', 'Attack_Kick']), attack: ['Stag_Attack_Charge'] },
+    clips: {
+      ...animal(['Attack_Headbutt', 'Attack_Kick']),
+      attack: ['Stag_Attack_Charge'],
+    },
     animUrls: [`${CREATURES}/stag_ability_anims.glb`],
     tint: 'entity',
     tintStrength: 0.35,
@@ -1860,9 +1894,9 @@ export const VISUALS: Record<string, VisualDef> = {
   // biped skeleton, KAYKIT_CLIP_PLAN vocabulary. The dummy never casts or
   // jumps (sim's dummy handling holds it stationary and ability-less), so
   // those two clips are stripped from the shipped GLB rather than carried as
-  // dead weight. It appears in exactly one hub (zone3.ts, count: 1, radius:
-  // 0), so it is lazy-preloaded rather than joining every client's eager
-  // boot set.
+  // dead weight. Shared by the whole Highwatch practice row (MOB_VISUALS below
+  // points all four dummy templates here), which is still exactly one hub, so
+  // it stays lazy-preloaded rather than joining every client's eager boot set.
   mob_training_dummy: {
     url: `${CREATURES}/training_dummy.glb`,
     height: 2.3,
@@ -2053,13 +2087,26 @@ export const VISUALS: Record<string, VisualDef> = {
     tint: 'entity',
     tintStrength: 0.12,
   },
+  // The authored ogre body (the _Mob_Updates artist drop, combined by
+  // tmp/ogre_build.mjs), replacing the 2023-pack giant.glb stick rig the
+  // whole family rendered as. Gait refs measured (tmp/ogre_gait_measure.mjs)
+  // at the dominant template scale 1.3 (thornpeak_ogre / ogre_crusher /
+  // rift_stone_ogre; the kobold_digger dominant-population precedent): Walk
+  // natural 2.79 yd/s, and the authored Run cycle measured 4.83, a 1.45x
+  // ask against the family's 7.0 chase, so the build retimes it 1.21x in
+  // place (a 0.60s heavy sprint cadence), natural 5.84, and the chase runs
+  // at ~1.2x with clamp headroom instead of at the 1.6 edge.
   mob_ogre: {
-    url: `${CREATURES}/giant.glb`,
-    animUrls: [`${CREATURES}/giant_hit_variety_anims.glb`],
+    url: `${CREATURES}/ogre.glb`,
     height: 2.8,
-    clips: ENEMY7,
+    clips: OGRE,
+    walkRef: 2.79,
+    runRef: 5.84,
+    // Light wash, the kobold_digger reason: the drop ships an authored brown
+    // hide, and the old 0.2 (sized to keep the giant's flat atlas readable)
+    // would only muddy it. Entity tint still separates the family's mobs.
     tint: 'entity',
-    tintStrength: 0.2, // skin washes pink fast
+    tintStrength: 0.12,
   },
   // Five Wildheart troll silhouettes use the same complete biped vocabulary,
   // but preserve their woven cloth, bone paint, feathers, and jungle palette.
@@ -2588,7 +2635,10 @@ export const VISUALS: Record<string, VisualDef> = {
     // build_skelboss_anims.mjs, issue #2889). Spread the factory result and
     // override only attack, so skel_mage/delve_skel_varric/rift_ritualist stay
     // on the shared swing.
-    clips: { ...skeletonClips(['2H_Melee_Attack_Chop'], 'Taunt'), attack: ['SkelBoss_Attack'] },
+    clips: {
+      ...skeletonClips(['2H_Melee_Attack_Chop'], 'Taunt'),
+      attack: ['SkelBoss_Attack'],
+    },
     animUrls: [
       `${ENEMIES}/skeleton_mage_hit_variety_anims.glb`,
       `${ENEMIES}/skelboss_ability_anims.glb`,
@@ -2787,7 +2837,11 @@ export const VISUALS: Record<string, VisualDef> = {
     show: ['Mage_Hat'],
     attach: [
       { url: `${WEAPONS}/staff.glb`, bone: 'handslot.r' },
-      { url: `${WEAPONS}/spellbook_open.glb`, bone: 'handslot.l', gripRef: 'Spellbook_open' },
+      {
+        url: `${WEAPONS}/spellbook_open.glb`,
+        bone: 'handslot.l',
+        gripRef: 'Spellbook_open',
+      },
     ],
     tint: 'entity',
     tintStrength: 0.55,
@@ -2875,6 +2929,54 @@ export function modularVisualKey(cls: PlayerClass): string {
 }
 
 // ---------------------------------------------------------------------------
+// NPC modular bodies: one `npc_modular_<propSet>` def per held-prop set
+// (npc_looks.ts authors WHICH set each NPC carries; this loop owns the
+// geometry). NPC gear never changes, so every prop is a FIXED attach (no
+// weaponSlots): with none, a composed NPC would inherit the warrior def's
+// default sword through modularKeyFor's class fallback. Clips ride the rogue
+// GLB exactly like npc_villager's fixed rig, so a composed villager idles,
+// walks, sits and dies with the same base clip set the town always used.
+// Driven by NPC_PROP_SET_IDS rather than a local list so a new prop set in
+// npc_looks.ts cannot ship without its def (tests/npc_looks.test.ts pins it).
+// ---------------------------------------------------------------------------
+const NPC_MODULAR_PROP_ATTACH: Record<NpcPropSet, AttachDef[]> = {
+  none: [],
+  staff: [{ url: `${WEAPONS}/staff.glb`, bone: 'handslot.r' }],
+  walking_staff: [{ url: `${WEAPONS}/brasscrown_walking_staff.glb`, bone: 'handslot.r' }],
+  oak_stave: [{ url: `${WEAPONS}/knotted_oak_stave.glb`, bone: 'handslot.r' }],
+  tome: [
+    { url: `${WEAPONS}/staff.glb`, bone: 'handslot.r' },
+    {
+      url: `${WEAPONS}/spellbook_open.glb`,
+      bone: 'handslot.l',
+      gripRef: 'Spellbook_open',
+    },
+  ],
+  crossbow: [{ url: `${WEAPONS}/crossbow_1handed.glb`, bone: 'handslot.r' }],
+  hammer: [{ url: `${WEAPONS}/hammer_a.glb`, bone: 'handslot.r' }],
+  woodaxe: [{ url: `${WEAPONS}/notched_woodaxe.glb`, bone: 'handslot.r' }],
+  sword_shield: [
+    { url: `${WEAPONS}/sword_1handed.glb`, bone: 'handslot.r' },
+    { url: `${WEAPONS}/shield_round.glb`, bone: 'handslot.l' },
+  ],
+  sword: [{ url: `${WEAPONS}/sword_1handed.glb`, bone: 'handslot.r' }],
+  scythe: [{ url: `${WEAPONS}/scythe.glb`, bone: 'handslot.r' }],
+  knife: [{ url: `${WEAPONS}/whittler_s_knife.glb`, bone: 'handslot.r' }],
+  spear: [{ url: `${WEAPONS}/spear_a.glb`, bone: 'handslot.r' }],
+};
+
+for (const propSet of NPC_PROP_SET_IDS) {
+  VISUALS[`npc_modular_${propSet}`] = {
+    url: `${MODULAR}/warrior_modular.glb`,
+    modular: true,
+    height: HUMANOID_H,
+    clips: kaykit(['1H_Melee_Attack_Chop']),
+    animUrls: [`${PLAYERS}/rogue.glb`, `${PLAYERS}/rogue_hit_variety_anims.glb`],
+    attach: NPC_MODULAR_PROP_ATTACH[propSet],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Dispatch: entity -> visual key (mirrors the old buildRigFor selection:
 // e.kind + e.templateId + MOBS[id].family)
 // ---------------------------------------------------------------------------
@@ -2915,7 +3017,14 @@ const MOB_KEYS: Record<string, string> = {
   // Protect Yumi objective cat: the dedicated Meshy familiar
   // (docs/prd/protect-yumi-assets.md item 1, delivered).
   yumi_cat: 'mob_yumi_cat',
+  // The Highwatch practice row (sim/content/practice_dummies.ts) is four
+  // dummies on one body: same GLB, told apart by the entity tint the visual
+  // already applies (tint: 'entity'), so a boss dummy reads as a dummy rather
+  // than as a 3.1-scale dragon standing two yards from the training post.
   training_dummy: 'mob_training_dummy',
+  friendly_player_dummy: 'mob_training_dummy',
+  normal_boss_dummy: 'mob_training_dummy',
+  heroic_boss_dummy: 'mob_training_dummy',
   emberkin: 'mob_emberkin',
   gloomshade: 'mob_gloomshade',
   pyre_colossus: 'mob_pyre_colossus',
@@ -3142,15 +3251,21 @@ const NPC_KEYS: Record<string, string> = {
 export function visualKeyFor(e: Entity): string {
   if (e.kind === 'player') {
     if (isMechWearer(e)) return 'player_mech';
+    const mir4ClassId = e.mir4?.classId ?? e.mir4VisualClassId;
+    if (mir4ClassId !== undefined) return mir4PlayerVisualKey(mir4ClassId);
     return VISUALS[`player_${e.templateId}`] ? `player_${e.templateId}` : 'player_warrior';
   }
   if (e.kind === 'mob') {
+    const mir4Visual = mir4MobVisualKey(e.templateId, e.name);
+    if (mir4Visual) return mir4Visual;
     const override = MOB_KEYS[e.templateId];
     if (override) return override;
     const family = MOBS[e.templateId]?.family;
     return (family && FAMILY_KEYS[family]) || 'mob_bandit';
   }
   // npcs — Brother Aldric recurs in every hub under suffixed ids
+  const mir4Visual = mir4NpcVisualKey(e.templateId, e.name);
+  if (mir4Visual) return mir4Visual;
   if (e.templateId.startsWith('brother_aldric')) return 'npc_aldric';
   return NPC_KEYS[e.templateId] ?? 'npc_villager';
 }

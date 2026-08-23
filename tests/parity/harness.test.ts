@@ -141,6 +141,9 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
       'holderBalance',
       'holderTier',
       'mainhandItemId',
+      'mobBoss', // immutable presentation mirror; spawn template owns gameplay rank
+      'mobElite', // immutable presentation mirror; spawn template owns gameplay rank
+      'mobFamily', // immutable presentation mirror used by render and wire only
       'modularAppearance',
       'name',
       'netInterval',
@@ -201,6 +204,9 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
       'netInterval',
       'holderTier',
       'holderBalance',
+      'mobBoss', // stamped only on mob entities
+      'mobElite', // stamped only on mob entities
+      'mobFamily', // stamped only on mob entities
       'damageHistory', // Rewind's ring; only present after a player takes damage
       'castConsumedEmpower', // set only while a cast that consumed an empower resolves
       'castRadiantResonance', // set only while Dawn's Embrace has reserved the proc

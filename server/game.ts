@@ -5,17 +5,17 @@ import {
   type AccountFlair,
   type ChatSenderFlair,
   EMPTY_ACCOUNT_FLAIR,
-  hasStreamerLink,
   wireStreamerLinks,
 } from '../src/sim/account_flair';
 import { verifyChallenge } from '../src/sim/client_challenge';
 import { isStunned } from '../src/sim/combat/cc';
 import { damageTakenWithin } from '../src/sim/combat/damage_history';
+import { wireParkedMana } from '../src/sim/combat/form_auto_unshift';
 import { rewindHealAmount } from '../src/sim/combat/rewind';
 import { DEEDS } from '../src/sim/content/deeds';
 import { isFinderListingTag, isFinderRole } from '../src/sim/content/dungeon_finder';
 import { RELIQUARY_PAGES_BY_ID } from '../src/sim/content/reliquary';
-import { MECH_CHROMAS, mechChromaItemId, mechChromaSkinIndex } from '../src/sim/content/skins';
+import { MECH_CHROMAS, mechChromaSkinIndex } from '../src/sim/content/skins';
 import { SPORT_ROLES, VC_NATION_IDS } from '../src/sim/content/vale_cup';
 import { withWeaponSkinApplied } from '../src/sim/content/weapon_skin_rules';
 import { isWeaponSkinType, WEAPON_SKINS } from '../src/sim/content/weapon_skins';
@@ -36,6 +36,7 @@ import {
 import { devTierIndexForMergedPrs } from '../src/sim/dev_tier';
 import { parseRelayCommand } from '../src/sim/discord_relay';
 import { specialRoleChatTag } from '../src/sim/discord_roles';
+import { gameProfileAllowsWireCommand } from '../src/sim/game_profile_commands';
 import {
   GUILD_CREATION_FEE_COPPER,
   type GuildBankOpDelta,
@@ -54,6 +55,7 @@ import {
 import type { PickAction } from '../src/sim/lockpick';
 import { lootHasGoneFfa } from '../src/sim/loot/loot_ffa';
 import { type MarketQuery, sanitizeMarketQuery } from '../src/sim/market_query';
+import { mir4CampaignMapIdsForWorld } from '../src/sim/mir4/campaign_availability';
 import { parseMoveInputFrame } from '../src/sim/move_input';
 import {
   partyFrameAbsorb,
@@ -189,7 +191,6 @@ import {
   openPlaySession,
   pool,
   releaseCharacterLease,
-  revokeAccountMechChroma,
   saveCharacterAndGuildBankState,
   saveCharacterAndMarketState,
   saveCharacterState,
@@ -220,7 +221,9 @@ import {
   harvestBandForNode,
   harvestTierForNode,
 } from './economy_telemetry';
+import { appendEntityPresentationDynamic, entityIdentityFields } from './entity_presentation_wire';
 import { isUpdateDue } from './entity_update_cadence';
+import { canObserveOwnerScopedEntity } from './entity_visibility';
 // Imported from the mirror modules DIRECTLY (not the ./steam or ./epic
 // barrels), the same way deeds_records imports onDeedRecorded: the barrels
 // drag routes.ts (and its load-time requireAccount over the db module) into
@@ -280,6 +283,9 @@ import {
   type ListReadGuardState,
 } from './list_read_guard';
 import { type LiveSharedIp, sharedIpsFromLiveSessions } from './live_shared_ips';
+import { EMPTY_ACCOUNT_COSMETICS, reconcileWornMechChromaForJoin } from './mech_chroma_reconcile';
+import { handleMir4Command } from './mir4_commands';
+import { type GameProfile, gameProfileWorldConfig, mir4SelfSnapshotJson } from './mir4_host';
 import {
   applyMobScanTick,
   createMobScanTickStats,
@@ -322,7 +328,7 @@ import { PartyFrameProjectionCache } from './party_frame_projection';
 import { applyBoostKitToPlayer, pbeBoostEnabled } from './pbe_boost';
 import { recordFtueDeath, recordFtueQuest, recordLevelUp } from './progress_events';
 import { nextRaidResetMs, resetDayKey } from './raid_reset';
-import { REALM, REALM_PUBLIC_ORIGIN, REALM_RESET_TIME_ZONE } from './realm';
+import { GAME_PROFILE, REALM, REALM_PUBLIC_ORIGIN, REALM_RESET_TIME_ZONE } from './realm';
 import { createRealmReadoutMemo, realmReadoutJson, realmReadoutObject } from './realm_readout_memo';
 import { RiftAssetCoordinator, riftAssetConfigFromEnv } from './rift_assets';
 import { refusedRiftForgeCommand } from './rift_forge_gate';
@@ -502,6 +508,7 @@ export const SIM_LAP_PHASES = [
   'postOffice',
   'delayedEv',
   'deeds',
+  'mir4.systems',
   'gridRefresh',
   // Per-family mob.update buckets, appended after the base lap names so those
   // stay byte-identical and first. The `sim.${n}` map turns each into the registered
@@ -1355,108 +1362,7 @@ type RememberedChat =
 // entity's first snapshot for a session and again whenever one of them
 // changes. The client treats their absence in a record as "unchanged".
 function identityFields(e: Entity): Record<string, unknown> {
-  const out: Record<string, unknown> = { k: e.kind, tid: e.templateId, nm: e.name, lv: e.level };
-  if (e.skinCatalog === 'mech') out.cat = 'mech';
-  if (e.skin) out.sk = e.skin;
-  // Active rideable mount ('' omitted). This identity field is intentionally
-  // distinct from the self-only persisted pick (`mntSel`): using `mnt` for both
-  // made the appended self delta overwrite the live riding state in JSON.
-  if (e.mountKey) out.mnt = e.mountKey;
-  if (e.mainhandItemId) out.mh = e.mainhandItemId; // equipped mainhand → held weapon model (render-only)
-  if (e.offhandItemId) out.oh = e.offhandItemId; // equipped offhand → held weapon model (render-only)
-  if (e.weaponSkinId) out.wsk = e.weaponSkinId; // active weapon-skin cosmetic (render-only, like mh)
-  // Full worn set, for the inspect-another-player window. Players only and only
-  // when something is equipped; rides the identity record (first appearance +
-  // on change), never the per-tick dynamic fields. Render-only, like `mh`.
-  if (e.kind === 'player') {
-    // The authored modular look (`app`) is NOT built here. It is ~0.6 KB for a
-    // default look (1489 bytes at its hard bound, APPEARANCE_MAX_WIRE_BYTES)
-    // and changes at most once a session, and everything in this record is
-    // JSON.stringify'd once per entity per TICK (wireCacheFor), so composing it
-    // into the object would re-serialize half a kilobyte 20 times a second per
-    // online player to produce the same bytes. It is serialized once per entity
-    // instead (EntityWireCache.appJson) and spliced into the cached identity
-    // JSON; the self record picks it up through the `maybeRaw` delta channel in
-    // bcastSelf, which already exists for heavy, rarely-changing fields.
-    // appearanceWireJson() is the one place that string is minted.
-    const eq = e.equippedItems;
-    for (const _ in eq) {
-      out.eq = eq;
-      break;
-    }
-    // Per-slot ItemInstancePayloads of the worn set (masterwork/enchant rolls),
-    // for the inspect window (Professions 2.0). Same sparse rule as
-    // `eq` above: players only, only when at least one worn piece carries a
-    // payload, riding the identity record (wireCacheFor diffs the identity
-    // JSON, so an equip/unequip of an instanced piece re-emits automatically).
-    // Data minimization: only the cosmetic inspect fields (signer, enchant,
-    // rolled) leave the server; boundTo, charges, and the bindOnTrade
-    // arm are gameplay state no inspecting client needs and never ride this key.
-    // The pub allowlist below (signer/enchant/rolled ONLY) is what enforces this,
-    // so a new non-cosmetic ItemInstancePayload field is excluded by construction;
-    // the owner still sees their own payload in full via the self `inv` mirror.
-    let eqi: Record<string, unknown> | undefined;
-    for (const [slot, inst] of Object.entries(e.equippedInstances)) {
-      if (!inst) continue;
-      const pub: Record<string, unknown> = {};
-      if (inst.signer !== undefined) pub.signer = inst.signer;
-      if (inst.enchant !== undefined) pub.enchant = inst.enchant;
-      if (inst.rolled !== undefined) pub.rolled = inst.rolled;
-      for (const _ in pub) {
-        if (eqi === undefined) eqi = {};
-        eqi[slot] = pub;
-        break;
-      }
-    }
-    if (eqi) out.eqi = eqi;
-  }
-  if (e.holderTier) out.ht = e.holderTier; // $WOC holder-tier flair (cosmetic)
-  if (e.holderBalance) out.hb = Math.round(e.holderBalance); // exact $WOC, for inspect
-  if (e.discordTier) out.dt = e.discordTier; // Discord status-tier flair (cosmetic)
-  if (e.discordAvatar) out.dav = e.discordAvatar; // Discord PFP (linked indicator)
-  if (e.discordName) out.dnm = e.discordName; // Discord handle / nickname (nameplate)
-  if (e.discordJoined) out.dj = e.discordJoined; // Discord join epoch ms (member since)
-  if (e.discordRole) out.dr = e.discordRole; // top staff/special role key (name color + tag)
-  if (e.devTier) out.dvt = e.devTier; // developer-badge tier (cosmetic)
-  if (e.devMergedPrs) out.dvc = e.devMergedPrs; // merged-PR count, for inspect/card
-  if (e.githubLogin) out.dgl = e.githubLogin; // GitHub login (inspect readout + profile link)
-  // Curator standing (cosmetic): rank plus the character-scoped completion pair
-  // behind it, for the inspect card's Reliquary line and the rank-5 sigil.
-  // Sparse like the flair above: refreshCuratorStanding only stamps them for a
-  // ranked character, so an unranked player ships nothing and a full record
-  // with the keys absent resets the mirror. The pair NESTS under the rank so
-  // all-or-nothing is structural at the encoder, not a convention the
-  // refresher must remember.
-  if (e.curatorRank) {
-    out.crk = e.curatorRank; // Curator rank 1-5
-    if (e.relicsOwned) out.cro = e.relicsOwned; // character-scoped relics owned
-    // relicsTotal is the one player-INDEPENDENT number of the three: it is the
-    // character-scoped catalog size, so a client could derive it from its own
-    // content tables and never ask. It rides the wire anyway because a
-    // MIXED-VERSION client must not print a total that disagrees with the
-    // server's catalog: the denominator on the card is whatever the server counted
-    // when it stamped the pair, so an older or newer client shows the server's
-    // completion rather than a locally-derived one that quietly differs.
-    if (e.relicsTotal) out.crt = e.relicsTotal; // character-scoped relic total
-  }
-  if (e.aiAccount) out.ai = 1; // operator-set AI-operated mark (name prefix)
-  // Operator-applied Cheater tag. A bare flag, not the remaining budget: every
-  // nearby client needs to RENDER the tag, but only the wearer needs the
-  // countdown, and the wearer already has it on the mark's own aura.
-  if (e.cheaterMark) out.chm = 1;
-  // Official streamer's platform links (player menu). Already gated by
-  // wireStreamerLinks at the point they were set on the entity, so an account whose
-  // streamer flag is off has none here, whatever is stored against it.
-  if (e.streamerLinks && hasStreamerLink(e.streamerLinks)) out.slk = e.streamerLinks;
-  if (e.guild) out.gd = e.guild;
-  if (e.title) out.title = e.title; // Book of Deeds active title (a deed id; the client localizes)
-  if (e.border) out.border = e.border; // Book of Deeds nameplate border (a deed id; the client resolves the slug)
-  if (e.dungeonId) out.dgn = e.dungeonId;
-  if (e.riftTier) out.rt = e.riftTier; // ranked rift portal badge (render-only)
-  if (e.objectItemId) out.obj = e.objectItemId;
-  if (e.scale !== 1) out.sc = e.scale;
-  if (e.color !== 0xffffff) out.c = e.color;
-  return out;
+  return entityIdentityFields(e);
 }
 
 /**
@@ -1618,6 +1524,7 @@ function dynamicFields(e: Entity, includeAuras = true): Record<string, unknown> 
     if (e.petAutoSkill) out.px = 1;
   }
   if (e.rangedPower) out.rp = e.rangedPower;
+  appendEntityPresentationDynamic(out, e);
   // Remote Paladins need the compact active-charge count so every client can
   // render Ascension's orbiting seals. Self snapshots additionally carry pdev
   // with the exact Devotion value and remaining duration for the local HUD.
@@ -2085,7 +1992,10 @@ export class GameServer {
   private readonly riftUpgrader: RiftUpgradeCoordinator;
   private readonly riftAssets: RiftAssetCoordinator;
 
-  constructor(generalChatQuotaMaxInFlight = GENERAL_CHAT_QUOTA_MAX_IN_FLIGHT) {
+  constructor(
+    generalChatQuotaMaxInFlight = GENERAL_CHAT_QUOTA_MAX_IN_FLIGHT,
+    gameProfile: GameProfile = GAME_PROFILE,
+  ) {
     this.generalChatQuota = new GeneralChatQuotaCoordinator({
       consume: consumeGeneralChatQuota,
       maxInFlight: generalChatQuotaMaxInFlight,
@@ -2095,12 +2005,12 @@ export class GameServer {
     this.sim = new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
+      ...gameProfileWorldConfig(gameProfile),
       noPlayer: true,
       devCommands: process.env.ALLOW_DEV_COMMANDS === '1',
       // Thunzharr is up as soon as the realm boots; subsequent rises keep the
       // normal interval cadence (see src/sim/world_boss.ts).
       worldBossAtBoot: true,
-      // Ranked rift portals spawn on the live realm (dev/test worlds opt in).
       riftPortals: true,
       // Distance-cull idle-mob AI (issue #2703): shouldSkipIdleMobTick skips a
       // wild, unbuffed, out-of-combat mob's per-tick aggro scan and wander
@@ -2974,11 +2884,12 @@ export class GameServer {
     this.saveTimer += dt;
     if (this.saveTimer >= AUTOSAVE_SECONDS) {
       this.saveTimer = 0;
-      void this.saveAll('autosave');
       void this.saveMarket();
       void this.saveMail();
       void this.saveRifts();
-      void heartbeatCharacterLeases().catch((err) => console.error('lease heartbeat failed:', err));
+      void heartbeatCharacterLeases()
+        .catch((err) => console.error('lease heartbeat failed:', err))
+        .then(() => this.saveAll('autosave'));
     }
   }
 
@@ -3658,30 +3569,20 @@ export class GameServer {
       .catch((err) => console.error('failed to grant account weapon skins:', err));
   }
 
+  /** Take a mech chroma off the acting character's own current appearance. The
+   *  account-wide unlock (accountCosmetics.mechChromaIds) is permanent, exactly
+   *  like an owned Season 1 Armory weapon skin: this never revokes it, so any
+   *  character on the account (online or not, now or later) can still take the
+   *  look off, and can freely put it back on via change_skin with no item
+   *  involved. Only the acting character's OWN display changes; every other
+   *  character's independently chosen look is left alone. */
   private unequipAccountMechChroma(session: ClientSession, chromaId: string): void {
     const skin = mechChromaSkinIndex(chromaId);
-    const itemId = mechChromaItemId(chromaId);
-    if (skin < 0 || !itemId || !session.accountCosmetics.mechChromaIds.includes(chromaId)) return;
-    const nextCosmetics = {
-      ...session.accountCosmetics,
-      mechChromaIds: session.accountCosmetics.mechChromaIds.filter((id) => id !== chromaId),
-    };
-    this.replaceLiveAccountCosmetics(session.accountId, nextCosmetics);
-    for (const live of this.clients.values()) {
-      if (live.accountId !== session.accountId) continue;
-      const e = this.sim.entities.get(live.pid);
-      if (e?.skinCatalog === 'mech' && e.skin === skin) {
-        this.sim.setPlayerSkin(live.pid, 0, 'class');
-      }
+    if (skin < 0) return;
+    const e = this.sim.entities.get(session.pid);
+    if (e?.skinCatalog === 'mech' && e.skin === skin) {
+      this.sim.setPlayerSkin(session.pid, 0, 'class');
     }
-    // movement: the sim-side twin of Sim.unequipMechChroma. Unequipping a mech
-    // chroma re-grants the item equipping it consumed, so this relocates a copy
-    // the account already owns. Both arms carry the flag or the offline Sim and
-    // this server would answer the obtain tally differently for one action.
-    this.sim.addItem(itemId, 1, session.pid, { movement: true });
-    void revokeAccountMechChroma(session.accountId, chromaId)
-      .then((cosmetics) => this.replaceLiveAccountCosmetics(session.accountId, cosmetics))
-      .catch((err) => console.error('failed to remove account mech chroma:', err));
   }
 
   /** Apply (skinId set) or detach (skinId null + wtype) a Season 1 Armory weapon
@@ -3755,7 +3656,7 @@ export class GameServer {
     accountId: number,
     characterId: number,
     name: string,
-    cls: import('../src/sim/types').PlayerClass,
+    cls: import('../src/sim/types').PlayableClass,
     state: import('../src/sim/sim').CharacterState | null,
     isGm = false,
     meta: RequestMetadata &
@@ -3854,15 +3755,14 @@ export class GameServer {
         console.error('pbe boost kit top-up failed:', err);
       }
     }
-    const accountCosmetics = this.rememberAccountCosmetics(
-      accountId,
-      meta.accountCosmetics ?? {
-        completedQuestIds: [],
-        mechChromaIds: [],
-        weaponSkinIds: [],
-        weaponSkinLoadout: {},
-      },
-    );
+    const accountCosmetics = reconcileWornMechChromaForJoin({
+      accountCosmetics: meta.accountCosmetics ?? EMPTY_ACCOUNT_COSMETICS,
+      catalog: player?.skinCatalog,
+      skin: player?.skin ?? 0,
+      remember: (cosmetics) => this.rememberAccountCosmetics(accountId, cosmetics),
+      grant: (chromaId) => grantAccountMechChroma(accountId, chromaId),
+      updateLive: (cosmetics) => this.updateLiveAccountCosmetics(accountId, cosmetics),
+    });
     this.applyAccountQuestLockouts(pid, accountCosmetics);
     // Seed the account-wide weapon-skin loadout onto the fresh sim entity so the
     // applied skin shows from the first snapshot (owned skins only).
@@ -4042,6 +3942,7 @@ export class GameServer {
       name,
       cls,
       realm: REALM,
+      gameProfile: this.sim.cfg.gameProfile,
       // Staff advert for admin-gated client surfaces (the /dev Spawns tab).
       // Every gated command is re-checked server-side, so a forged true is inert.
       admin: session.isAdmin,
@@ -4113,7 +4014,7 @@ export class GameServer {
   private resumeSession(
     session: ClientSession,
     ws: WebSocket,
-    cls: import('../src/sim/types').PlayerClass,
+    cls: import('../src/sim/types').PlayableClass,
     meta: Parameters<GameServer['join']>[7] = {},
   ): ClientSession {
     session.ws = ws;
@@ -4205,6 +4106,7 @@ export class GameServer {
       name: session.name,
       cls,
       realm: REALM,
+      gameProfile: this.sim.cfg.gameProfile,
       admin: session.isAdmin,
       softWords: this.chatFilter.softWords(),
       chatMutedUntil: session.chatMutedUntil ?? null,
@@ -6698,6 +6600,11 @@ export class GameServer {
       this.sendCommandOutcome(session, msg, false);
       return;
     }
+    // Reject cross-profile commands before any dirty/re-arm side effect.
+    if (!gameProfileAllowsWireCommand(this.sim.cfg.gameProfile, msg.cmd)) {
+      this.sendCommandOutcome(session, msg, false);
+      return;
+    }
     // The Rift forge trio shipped sim+wire complete with no client UI, so the
     // arms stay closed until the realm explicitly opts in (RIFT_FORGE_ENABLED=1;
     // rationale in server/rift_forge_gate.ts): a crafted frame must not buy
@@ -6732,6 +6639,12 @@ export class GameServer {
       session.lastMailWireTick = -MAIL_WIRE_INTERVAL_TICKS;
     }
     switch (command) {
+      case 'mir4':
+        if (typeof msg.m === 'string') {
+          const succeeded = handleMir4Command(sim, msg, pid);
+          if (succeeded !== undefined) this.sendCommandOutcome(session, msg, succeeded);
+        }
+        break;
       case 'castSlot':
         if (typeof msg.slot === 'number') sim.castAbilityBySlot(msg.slot | 0, pid);
         break;
@@ -8760,6 +8673,7 @@ export class GameServer {
   }
 
   private canObserveEntity(viewer: Entity, e: Entity, d2: number): boolean {
+    if (!canObserveOwnerScopedEntity(viewer, e)) return false;
     if (e.kind !== 'player' || !isStealthed(e)) return true;
     if (this.sim.isHostileTo(viewer, e)) return false;
     const party = this.sim.partyOf(viewer.id);
@@ -8960,6 +8874,11 @@ export class GameServer {
       opRem: round2(Math.max(0, p.overpowerUntil - this.sim.time)),
       ack: session.spectating ? 0 : anchorSession.lastInputSeq,
     });
+    // Parked mana (a druid form runs the live bar on rage or energy and sets the
+    // real pool aside): self-only, and omitted at rest per the omit-when-default
+    // wire convention, so the action bar can price an auto-unshifting cast.
+    // wireParkedMana owns the flooring contract and the reason for it.
+    if (p.resourceType !== 'mana' && p.savedMana > 0) self.sm = wireParkedMana(p.savedMana);
     const json = JSON.stringify(self);
     selfLap?.('self.base');
     // heavy, rarely-changing fields ride along only when their serialized
@@ -9139,6 +9058,14 @@ export class GameServer {
     }
     maybe('stats', p.stats);
     maybe('weapon', p.weapon);
+    const mir4 = mir4SelfSnapshotJson(
+      this.sim.cfg.gameProfile,
+      meta,
+      p.mir4,
+      p.mir4UltGauge,
+      mir4CampaignMapIdsForWorld(this.sim.ctx.worldContent),
+    );
+    if (mir4) maybeRaw('mir4', mir4);
     selfLap?.('self.timers');
     maybe('party', this.partyWire(anchorSession.pid));
     maybe('marks', this.markersWire(anchorSession.pid));

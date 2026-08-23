@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 import {
   ONLINE_WORLD_AUTH_TYPE,
   ONLINE_WORLD_INCOMPATIBLE_MESSAGE,
+  requireGameProfile,
   worldAuthMessage,
 } from '../lib/world_auth.mjs';
 
@@ -60,7 +61,7 @@ export const NOT_AUTHENTICATED_ERROR = 'not authenticated';
  * to learn whether the discriminator itself was accepted.
  */
 export function buildProbeFrame() {
-  return worldAuthMessage('', 0);
+  return worldAuthMessage('', 0, requireGameProfile(process.env.GAME_PROFILE));
 }
 
 /**

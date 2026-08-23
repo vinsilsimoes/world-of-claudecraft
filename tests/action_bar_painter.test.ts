@@ -90,6 +90,7 @@ function slotState(over: Partial<ActionBarSlotState> = {}): ActionBarSlotState {
     fateSentenceReady: false,
     ariaLabel: 'A',
     ariaDescription: '',
+    ariaPressed: null,
     keybindLabel: 'K',
     ...over,
   };
@@ -137,6 +138,7 @@ describe('ActionBarPainter: routes every write through the elided writers', () =
       { m: 'setStyleProp', args: [el.rechargeOverlay, 'height', '25%'] },
       { m: 'setText', args: [el.cdText, '3'] },
       { m: 'toggleClass', args: [el.btn, 'empty', false] },
+      { m: 'toggleClass', args: [el.btn, 'ability', true] },
       { m: 'toggleClass', args: [el.btn, 'unusable', true] },
       { m: 'toggleClass', args: [el.btn, 'oor', true] },
       { m: 'toggleClass', args: [el.btn, 'queued', true] },
@@ -151,8 +153,31 @@ describe('ActionBarPainter: routes every write through the elided writers', () =
       { m: 'setAttr', args: [el.btn, 'aria-label', 'aria1'] },
       { m: 'setAttr', args: [el.btn, 'aria-description', ''] },
       { m: 'setAttr', args: [el.btn, 'aria-disabled', 'true'] },
+      { m: 'setAttr', args: [el.btn, 'aria-pressed', null] },
       { m: 'setText', args: [el.keybindEl, '1'] },
     ]);
+  });
+
+  it('exposes Attack as a toggle and clears the state when the slot becomes a normal action', () => {
+    const { calls, writers } = recordingFacet();
+    const el = slotElements('s0');
+    const painter = new ActionBarPainter(
+      writers,
+      { container: CONTAINER, slots: [el] },
+      (key) => `URL(${key})`,
+    );
+
+    painter.paint({
+      manySpells: false,
+      slots: [slotState({ kind: 'attack', queued: true, ariaPressed: 'true' })],
+    });
+    painter.paint({
+      manySpells: false,
+      slots: [slotState({ kind: 'ability', queued: false, ariaPressed: null })],
+    });
+
+    expect(calls).toContainEqual({ m: 'setAttr', args: [el.btn, 'aria-pressed', 'true'] });
+    expect(calls).toContainEqual({ m: 'setAttr', args: [el.btn, 'aria-pressed', null] });
   });
 
   it('an empty slot toggles the empty class on and writes the cleared icon', () => {
@@ -203,6 +228,7 @@ describe('ActionBarPainter: routes every write through the elided writers', () =
 
 function recordingEl() {
   const setAttrCalls: Array<[string, string]> = [];
+  const removeAttrCalls: string[] = [];
   const node = {
     textContent: '',
     style: {
@@ -214,8 +240,11 @@ function recordingEl() {
     setAttribute(name: string, value: string): void {
       setAttrCalls.push([name, value]);
     },
+    removeAttribute(name: string): void {
+      removeAttrCalls.push(name);
+    },
   };
-  return { setAttrCalls, el: node as unknown as HTMLElement };
+  return { setAttrCalls, removeAttrCalls, el: node as unknown as HTMLElement };
 }
 
 function ability(id: string): ActionBarAbility {
@@ -251,6 +280,8 @@ function idleWorld(): ActionBarWorldInput {
       cooldowns: new Map(),
       gcdRemaining: 0,
       potionCdRemaining: 0,
+      resourceType: 'mana' as const,
+      savedMana: 0,
       queuedOnSwing: null,
       auras: [],
       pos: { x: 0, y: 0, z: 0 },

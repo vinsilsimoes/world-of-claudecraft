@@ -90,11 +90,12 @@ function unique(base, used) {
 
 const usedTitles = new Set();
 const visibleAbilities = Object.entries(ABILITIES).filter(([, ability]) => ability.hiddenFromPlayer !== true);
+const visibleDungeons = DUNGEON_LIST.filter((dungeon) => !dungeon.internalOnly);
 
 for (const [id, cls] of Object.entries(CLASSES)) titleBy.class.set(id, unique(cls.name, usedTitles));
 for (const [id, ability] of visibleAbilities) titleBy.ability.set(id, unique(ability.name + ' (Ability)', usedTitles));
 for (const zone of ZONES) titleBy.zone.set(zone.id, unique(zone.name, usedTitles));
-for (const dungeon of DUNGEON_LIST) titleBy.dungeon.set(dungeon.id, unique(dungeon.name, usedTitles));
+for (const dungeon of visibleDungeons) titleBy.dungeon.set(dungeon.id, unique(dungeon.name, usedTitles));
 for (const [id, npc] of Object.entries(NPCS)) titleBy.npc.set(id, unique(npc.name + ' (NPC)', usedTitles));
 for (const [id, quest] of Object.entries(QUESTS)) titleBy.quest.set(id, unique(quest.name, usedTitles));
 for (const [id, mob] of Object.entries(MOBS)) titleBy.mob.set(id, unique(mob.name + ' (Mob)', usedTitles));
@@ -207,7 +208,7 @@ for (const [name, desc] of systemRows) {
 const portals = [
   ['Zones', ZONES.map((z) => titleBy.zone.get(z.id))],
   ['Classes', Object.keys(CLASSES).map((id) => titleBy.class.get(id))],
-  ['Dungeons', DUNGEON_LIST.map((d) => titleBy.dungeon.get(d.id))],
+  ['Dungeons', visibleDungeons.map((d) => titleBy.dungeon.get(d.id))],
   ['NPCs', Object.keys(NPCS).map((id) => titleBy.npc.get(id))],
   ['Quests', QUEST_ORDER.map((id) => titleBy.quest.get(id)).filter(Boolean)],
   ['Mobs', Object.keys(MOBS).map((id) => titleBy.mob.get(id))],
@@ -234,7 +235,7 @@ for (const [id, cls] of Object.entries(CLASSES)) {
   add(titleBy.class.get(id), section('Overview', cls.name + ' starts with ' + (ITEMS[cls.startWeapon]?.name ?? cls.startWeapon) + ' and uses ' + cls.resourceType + '.') + section('Stats', table(Object.entries(cls.baseStats).map(([k, v]) => [k.toUpperCase(), String(v)]))) + section('Abilities', bullets(abilities)), ['Classes']);
 }
 
-for (const dungeon of DUNGEON_LIST) {
+for (const dungeon of visibleDungeons) {
   const bosses = dungeon.spawns.map((s) => MOBS[s.mobId]).filter((mob) => mob?.boss);
   add(titleBy.dungeon.get(dungeon.id), section('Overview', dungeon.name + ' is a private party instance with ' + dungeon.spawns.length + ' source-defined spawns.') + section('Facts', table([
     ['Interior', dungeon.interior], ['Spawn count', String(dungeon.spawns.length)], ['Door position', dungeon.doorPos.x + ', ' + dungeon.doorPos.z],

@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { isDispellableAura } from '../src/sim/aura_classify';
@@ -71,6 +71,7 @@ import { addThreat } from '../src/sim/threat';
 import { DT, type Entity, type SimEvent } from '../src/sim/types';
 import { UNSTUCK_COUNTDOWN_SECONDS } from '../src/sim/unstuck';
 import { groundHeight } from '../src/sim/world';
+import { tsFilesUnder } from './helpers/ts_files_under';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The staged 5v5 arms (graveyard no-auto-release, the 720s cap, the fairness
@@ -1195,6 +1196,59 @@ describe('Thornhollow Fields: the graveyard rite', () => {
     expect(e.facing).toBe(0);
     expect(e.prevFacing).toBe(e.facing);
     expect(e.auras.some((aura) => aura.id === UNSTUCK_SICKNESS_ID)).toBe(true);
+  });
+
+  it('Unstuck accepts a wall-trapped fighter while movement input is still held', () => {
+    const { sim, pids } = tenInQueue();
+    const match = must(sim.bgMatchFor(pids[0]), 'bg match');
+    toActive(sim, match);
+    const pid = match.teams[0][0];
+    const e = forceIntoBgWallTrap(sim, match, pid);
+    const meta = must(sim.meta(pid), 'player meta');
+    meta.moveInput.forward = true;
+
+    expect(sim.unstuck(pid)).toBe(true);
+    expect(sim.drainEvents()).toContainEqual(
+      expect.objectContaining({ type: 'unstuck', phase: 'started', pid }),
+    );
+
+    const events: SimEvent[] = [];
+    for (let i = 0; i < UNSTUCK_COUNTDOWN_SECONDS * 20; i++) events.push(...sim.tick());
+
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: 'unstuck', phase: 'completed', pid }),
+    );
+    expect(sim.bgMatchFor(pid)).toBe(match);
+    expect(inGraveyard(sim, match, pid, 0)).toBe(true);
+    expectClearPlayerPosition(sim, e);
+    expect(meta.pendingUnstuck).toBeNull();
+  });
+
+  it('Unstuck still refuses ordinary battleground movement input outside wall traps', () => {
+    const { sim, pids } = tenInQueue();
+    const match = must(sim.bgMatchFor(pids[0]), 'bg match');
+    toActive(sim, match);
+    const pid = match.teams[0][0];
+    const e = must(sim.entities.get(pid), 'entity');
+    const meta = must(sim.meta(pid), 'player meta');
+    e.vx = 0;
+    e.vy = 0;
+    e.vz = 0;
+    e.onGround = true;
+    e.jumping = false;
+    meta.moveInput.forward = true;
+    expectClearPlayerPosition(sim, e);
+
+    expect(sim.unstuck(pid)).toBe(false);
+    expect(sim.drainEvents()).toContainEqual(
+      expect.objectContaining({
+        type: 'unstuck',
+        phase: 'blocked',
+        reason: 'moving',
+        pid,
+      }),
+    );
+    expect(sim.meta(pid)?.pendingUnstuck).toBeNull();
   });
 
   it('combat still cancels a battleground wall-trap Unstuck countdown', () => {
@@ -3522,13 +3576,12 @@ describe('the outcome log stays observability-only', () => {
     // at all, so its CONTENTS legitimately differ across the three hosts. That
     // is only safe while nothing gameplay-facing reads it, which no type can
     // express, so the reference set is pinned here.
-    const root = new URL('..', import.meta.url);
-    const hits = execFileSync('grep', ['-rl', 'bgOutcomes', 'src', 'server', 'headless'], {
-      cwd: fileURLToPath(root),
-      encoding: 'utf8',
-    })
-      .split('\n')
-      .filter(Boolean)
+    const hits = ['src', 'server', 'headless']
+      .flatMap((root) =>
+        tsFilesUnder(fileURLToPath(new URL(`../${root}`, import.meta.url)))
+          .filter(({ full }) => readFileSync(full, 'utf8').includes('bgOutcomes'))
+          .map(({ file }) => `${root}/${file}`),
+      )
       .sort();
     expect(hits).toEqual([
       'server/game.ts', // the one host that drains

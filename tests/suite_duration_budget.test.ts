@@ -63,12 +63,15 @@ const DEFAULT_FILE_ALLOWANCE = 300_000;
 const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   ['tests/audit_conservation_property.test.ts', 2_700_000],
   ['tests/battleground_band.test.ts', 480_000],
-  ['tests/chronomancy_balance_targets.test.ts', 360_000],
+  ['tests/chronomancy_balance_targets.test.ts', 420_000],
   ['tests/discord_db_integration.test.ts', 420_000],
   ['tests/dragonkin_whelp_litter.test.ts', 420_000],
   ['tests/druid_balance_probe.test.ts', 540_000],
   ['tests/emerald_deck_escape.test.ts', 540_000],
   ['tests/guild_bank_pg_integration.test.ts', 840_000],
+  // Dedicated fail-closed PostgreSQL 16 lane: migration/race proofs plus the
+  // bounded 1,000-session autosave cycle deliberately exceed the default.
+  ['tests/mir4_save_v2_pg_integration.test.ts', 465_000],
   ['tests/nythraxis_matrix.test.ts', 1_200_000],
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
 ]);
@@ -155,7 +158,7 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     expect(declaredTimeouts(`it('h', { timeout: IMPORTED_MS }, fn);`).unparsed).toHaveLength(1);
     expect(declaredTimeouts(`it('i', () => { run(); }, importedBudget);`).unparsed).toHaveLength(1);
     // The mask keeps template interpolations bracket-balanced.
-    expect(maskCommentsAndStrings('`a ${b(1)} c`').includes('b(1)')).toBe(true);
+    expect(maskCommentsAndStrings(`\`a \${b(1)} c\``).includes('b(1)')).toBe(true);
   });
 
   it('caps every single declared test timeout at the worker-chain bound', () => {

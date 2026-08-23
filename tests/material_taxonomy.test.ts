@@ -9,7 +9,7 @@
 // completeness tripwire that enumerates the ONLY non-poor junk allowed to
 // stay unclassified, so a future junk item must be classified here explicitly
 // instead of drifting in or out silently.
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -35,6 +35,8 @@ import {
 import { NODE_MATERIAL_TABLE } from '../src/sim/professions/gathering';
 import { MATERIAL_GRADES } from '../src/sim/professions/material_grades';
 import { SALVAGE_MATERIAL_BY_QUALITY } from '../src/sim/professions/salvage';
+import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
+import { tsFilesUnder } from './helpers/ts_files_under';
 
 // The ruled material set, exactly (staples in; grey trash and the five oddments
 // out; raw fishing catches IN as junk cooking reagents). A diff here is a
@@ -98,12 +100,14 @@ const HONEST_MATERIALS = [
 ] as const;
 
 // The ONLY non-poor junk allowed outside the material set: four rare-mob
-// trophies plus the placed keep keepsake (Q4 ruled them out of the sweep).
+// trophies plus the two placed castle keepsakes (Q4 ruled them out of the
+// sweep; the Dawnhold garden posy follows the keep signet's ruling).
 // A new junk item landing in this assertion's diff must be classified: either
 // author it into a source table (a node yield, grade, component, specimen,
 // salvage return, or junk-kind reagent) so it derives IN, or add it here as a
 // deliberate non-material with the maintainer's sign-off.
 const ALLOWED_UNCLASSIFIED_JUNK = [
+  'dawnhold_posy',
   'emberwing_cinderscale',
   'gleamstag_charm',
   'guardian_core',
@@ -399,7 +403,7 @@ describe('deriveMaterialItemIds: every source table is actually consulted (injec
 });
 
 describe('completeness tripwire: unclassified non-poor junk', () => {
-  it('is exactly the five allowed oddments, no more and no fewer', () => {
+  it('is exactly the six allowed oddments, no more and no fewer', () => {
     const unclassified = Object.values(ITEMS)
       .filter((d) => d.kind === 'junk' && d.quality !== 'poor' && !MATERIAL_ITEM_IDS.has(d.id))
       .map((d) => d.id)
@@ -483,41 +487,31 @@ describe('no src/sim importer (the module-evaluation hard rule)', () => {
       moduleSelf: join(simRoot, `${name}.ts`),
       offenders: [] as string[],
     }));
-    const scanned: string[] = [];
-    const symlinked: string[] = [];
-    const walk = (dir: string): void => {
-      for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const full = join(dir, entry.name);
-        // A symlinked subtree would silently escape isDirectory(); none exists
-        // under src/sim today, and this trips if one ever lands so the walk is
-        // extended deliberately instead of skipping it.
-        if (entry.isSymbolicLink()) symlinked.push(full);
-        if (entry.isDirectory()) {
-          walk(full);
-        } else if (entry.name.endsWith('.ts')) {
-          scanned.push(full);
-          const source = readFileSync(full, 'utf8');
-          for (const guard of guards) {
-            if (full === guard.moduleSelf) continue;
-            if (guard.re.test(source)) {
-              guard.offenders.push(full);
-            }
-          }
+    const scanned = tsFilesUnder(simRoot);
+    for (const { full } of scanned) {
+      const source = readFileSync(full, 'utf8');
+      for (const guard of guards) {
+        if (full === guard.moduleSelf) continue;
+        if (guard.re.test(source)) {
+          guard.offenders.push(full);
         }
       }
-    };
-    walk(simRoot);
+    }
     // Non-vacuity BOTH ways: the population floor sits ABOVE the flat root
     // count (117 files at the src/sim root, 359 in the whole tree, so a walk
     // that lost recursion cannot clear 300), AND the sweep must have reached
     // the two biggest nested directories by name.
     expect(scanned.length).toBeGreaterThan(300);
-    expect(scanned.some((f) => f.includes(`${join(simRoot, 'professions')}/`))).toBe(true);
-    expect(scanned.some((f) => f.includes(`${join(simRoot, 'content')}/`))).toBe(true);
-    expect(symlinked).toEqual([]);
+    expect(scanned.some(({ file }) => file.startsWith('professions/'))).toBe(true);
+    expect(scanned.some(({ file }) => file.startsWith('content/'))).toBe(true);
+    const scannedPaths = scanned.map(({ full }) => full);
     for (const guard of guards) {
-      expect(scanned, guard.moduleSelf).toContain(guard.moduleSelf);
+      expect(scannedPaths, guard.moduleSelf).toContain(guard.moduleSelf);
       expect(guard.offenders, guard.moduleSelf).toEqual([]);
     }
+  });
+
+  it('routes its recursive corpus through the shared TypeScript walker', () => {
+    expectScansOnlyThroughSharedWalkers(import.meta.url, ['ts_files_under']);
   });
 });

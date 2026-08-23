@@ -538,7 +538,7 @@ describe('efficiency: the solver does bounded work per tick', () => {
   });
 
   it('costs nothing extra on empty ground', () => {
-    setActiveWorldContent(world({}));
+    setActiveWorldContent(BUILTIN_WORLD);
     resetPhysicsStats();
     for (let i = 0; i < 100; i++) {
       moveCharacter(params(), SPOT.x, groundHeight(SPOT.x, SPOT.z, SEED), SPOT.z, 0, 0.35, out);

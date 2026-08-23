@@ -32,7 +32,12 @@ describe('the server literals the probe depends on', () => {
 
 describe('buildProbeFrame', () => {
   it('sends this checkout discriminator with no usable credentials', () => {
-    expect(buildProbeFrame()).toEqual({ t: ONLINE_WORLD_AUTH_TYPE, token: '', character: 0 });
+    expect(buildProbeFrame()).toEqual({
+      t: ONLINE_WORLD_AUTH_TYPE,
+      token: '',
+      character: 0,
+      gameProfile: 'woc-classic',
+    });
     // Load-bearing: an empty token can never authenticate, which is what makes
     // the probe safe to run against production without credentials.
     expect(buildProbeFrame().token).toBe('');

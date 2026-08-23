@@ -15,6 +15,7 @@
 import type { Keybinds } from '../game/keybinds';
 import type { Renderer } from '../render/renderer';
 import { PLAYER_START, QUESTS, ZONES } from '../sim/data';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { dist2d, INTERACT_RANGE } from '../sim/types';
 import type { IWorld } from '../world_api';
 import type { TranslationKey } from './i18n';
@@ -26,6 +27,7 @@ import {
   tutorialNeedsRerender,
   tutorialSlayHintPlan,
 } from './tutorial_copy';
+import { svgIcon } from './ui_icons';
 
 // Starter content the onboarding guides the player toward — all derived from the
 // shipped sim sources so a content rename or a moved spawn can't silently desync
@@ -66,6 +68,10 @@ export interface TutorialSnapshot {
 // window; pre-hello both ids are -1, so `playerId >= 0` rejects it. Offline the
 // player id equals playerId from the first frame, so this is a no-op there.
 export function isFreshCharacter(world: IWorld): boolean {
+  // This overlay is the classic Eastbrook onboarding and resolves classic
+  // quest/NPC ids below. MIR4 onboarding already lives in its authoritative
+  // campaign tracker; never let a fresh profile character engage this card.
+  if (world.cfg?.gameProfile === MIR4_GAME_PROFILE) return false;
   const p = world.player;
   if (!p) return false;
   if (world.playerId < 0 || p.id !== world.playerId) return false;
@@ -267,7 +273,7 @@ export class TutorialOverlay {
     const arrow = document.createElement('div');
     arrow.className = 'tut-arrow';
     arrow.setAttribute('aria-hidden', 'true');
-    arrow.textContent = '➤'; // ➤
+    arrow.innerHTML = svgIcon('next');
     ui.appendChild(arrow);
     this.arrow = arrow;
   }

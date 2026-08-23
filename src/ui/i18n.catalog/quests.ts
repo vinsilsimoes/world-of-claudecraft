@@ -64,6 +64,8 @@ const questStringsEn = {
       accept: 'Accept',
       decline: 'Decline',
       continue: 'Continue',
+      autoContinue: 'Dialogue continues automatically',
+      skipDialogue: 'Skip dialogue',
       done: 'Done',
       completeQuest: 'Complete Quest',
       turnIn: 'Turn In',

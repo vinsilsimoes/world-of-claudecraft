@@ -18,6 +18,8 @@ import {
   charselectLook,
   composedLook,
   inWorldLookFor,
+  mir4InWorldLookFor,
+  mir4VisualClassForEntity,
   modularLookChanged,
 } from '../src/render/characters/player_look_core';
 import { createPlayer } from '../src/sim/entity';
@@ -93,6 +95,44 @@ describe('inWorldLookFor', () => {
     const overridden = inWorldLookFor(e, () => 'barbarian');
     expect(peer?.worn.chest).toBe('mage');
     expect(overridden?.worn.chest).toBe('barbarian');
+  });
+});
+
+describe('mir4InWorldLookFor', () => {
+  it('uses the native class rig and only the equipped WoC armour sockets', () => {
+    const e = playerEntity({
+      modularAppearance: { gender: 'female' },
+      mir4VisualClassId: 4,
+      mir4VisualArmorMask: 1 | 4,
+    });
+    const look = mir4InWorldLookFor(e);
+    expect(mir4VisualClassForEntity(e)).toBe('hunter');
+    expect(look?.app.gender).toBe('female');
+    expect(look?.worn).toEqual({
+      chest: 'ranger',
+      arms: 'ranger',
+      legs: 'ranger',
+      back: 'ranger',
+      hands: 'ranger',
+    });
+  });
+
+  it('uses the native default body for a pre-creator MIR4 character', () => {
+    const e = playerEntity({
+      modularAppearance: null,
+      mir4VisualClassId: 2,
+      mir4VisualArmorMask: 2,
+      helmHidden: true,
+    });
+    expect(mir4InWorldLookFor(e)?.app).toEqual(DEFAULT_APPEARANCE);
+    expect(mir4InWorldLookFor(e)?.worn).toEqual({});
+  });
+
+  it('does not claim classic players or non-player entities', () => {
+    expect(mir4InWorldLookFor(playerEntity())).toBeNull();
+    const mob = playerEntity({ mir4VisualClassId: 1 });
+    mob.kind = 'mob';
+    expect(mir4InWorldLookFor(mob)).toBeNull();
   });
 });
 

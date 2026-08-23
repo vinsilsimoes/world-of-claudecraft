@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -18,10 +18,17 @@ import {
   I18N_ARTIFACTS,
   MANIFEST_ARTIFACTS,
 } from '../scripts/lib/gate_steps.mjs';
+import { PLAYWRIGHT_INSTALL_BLOCK } from './helpers/playwright_install_block';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { stripComments } from './helpers/strip_comments';
 
 const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
+const mpBrowser = readFileSync(new URL('../scripts/mp_browser.mjs', import.meta.url), 'utf8');
+const smokeBrowser = readFileSync(new URL('../scripts/smoke_browser.mjs', import.meta.url), 'utf8');
+const mir4FeatureBrowser = readFileSync(
+  new URL('../scripts/mir4_feature_browser.mjs', import.meta.url),
+  'utf8',
+);
 const detectEntry = readFileSync(
   new URL('../scripts/detect_code_changes.mjs', import.meta.url),
   'utf8',
@@ -260,6 +267,7 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/placeholder-art-completion-2026-08-09/',
       '            /docs/screenshots/r35-admin-professions-inspector/',
       '            /docs/screenshots/release-v036-skill-normalization-2026-08-10/',
+      '            /docs/screenshots/release-v039-icon-art-first-pass-2026-08-16/',
       '            /docs/screenshots/wildheart/',
       '          sparse-checkout-cone-mode: false',
     ].join('\n');
@@ -276,7 +284,13 @@ describe('CI workflow parity', () => {
     ]) {
       expect(jobSource(job).split(SPARSE_CONE), job).toHaveLength(2);
     }
-    for (const job of ['pr-checks', 'browser-gate', 'release-checks', 'release-version-gate']) {
+    for (const job of [
+      'pr-checks',
+      'mir4-postgres',
+      'browser-gate',
+      'release-checks',
+      'release-version-gate',
+    ]) {
       expect(jobSource(job).includes(SPARSE_CONE), job).toBe(false);
     }
     expect(workflow.split(SPARSE_CONE)).toHaveLength(6);
@@ -316,11 +330,15 @@ describe('CI workflow parity', () => {
     ];
     const referenced = new Set<string>();
     {
-      const ls = spawnSync('git', ['ls-files', '-z'], {
-        cwd: fileURLToPath(repoRootUrl),
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-      });
+      const ls = spawnSync(
+        'git',
+        ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+        {
+          cwd: fileURLToPath(repoRootUrl),
+          encoding: 'utf8',
+          maxBuffer: 64 * 1024 * 1024,
+        },
+      );
       expect(ls.status).toBe(0);
       const corpus = ls.stdout
         .split('\0')
@@ -329,8 +347,10 @@ describe('CI workflow parity', () => {
             file.length > 0 &&
             file !== SELF &&
             !file.startsWith('docs/screenshots/') &&
+            existsSync(join(fileURLToPath(repoRootUrl), file)) &&
             REFERENCE_EXTENSIONS.some((ext) => file.endsWith(ext)),
-        );
+        )
+        .sort();
       // Vacuity floor near the real count (about 6,600 tracked
       // reference-carrying files on 2026-08-14): an emptied enumeration
       // cannot green the coupling by scanning nothing.
@@ -350,7 +370,7 @@ describe('CI workflow parity', () => {
     expect([...referenced].sort()).toEqual([...coneDirs].sort());
   });
 
-  it('performs no hand-rolled directory reads (the corpus is the git index)', () => {
+  it('performs no hand-rolled directory reads (the corpus is the git worktree inventory)', () => {
     expectScansOnlyThroughSharedWalkers(import.meta.url, []);
   });
 
@@ -420,14 +440,32 @@ describe('CI workflow parity', () => {
     // gate.mjs and gate_select.mjs share one copy; the pin follows it there and
     // additionally holds gate.mjs to still invoking it, which is what actually
     // makes the resolution reachable.
-    expect(workflow).not.toContain('apt-get');
+    // The blanket apt-get ban became a count pin when browser-gate's font
+    // fallback earned the workflow's ONE sanctioned apt use (the two lines of
+    // the Install Chromium block, pinned whole above): FFmpeg stays banned by
+    // name, and any third apt-get line is new creep this count refuses.
+    expect(workflow).not.toMatch(/apt-get[^\n]*ffmpeg/i);
+    expect(workflow.match(/apt-get/g) ?? []).toHaveLength(2);
     expect(preflightCode).toContain("from '../sfx/ffmpeg_paths.mjs'");
     expect(gateCode).toContain('runGatePreflights');
   });
 
   it('runs the opt-in Chromium browser regressions in their own CI job', () => {
     const browserGate = jobSource('browser-gate');
-    expect(browserGate).toContain('run: npx playwright install --with-deps chromium');
+    // The install is split: the browser download fails hard, while the
+    // package-manager half (playwright install-deps) is bounded and
+    // best-effort by ruling (2026-08-19: three merge-queue rejections died
+    // at zero mirror throughput with the browser cache-hit). The runner
+    // image already ships Chromium's system libraries, and a genuinely
+    // missing one fails at browser launch, and the fonts install-deps alone
+    // provided are verified by capability with a mirror-swapped targeted
+    // fallback. Pinned as the WHOLE block scalar so a step comment cannot
+    // satisfy it, the hard-fail line cannot grow a fallback, and the bounds
+    // cannot drift silently: the degraded path totals about 3.7 minutes,
+    // sized to stay inside the job's 10-minute bound and its
+    // auto-rerunnable setup class.
+    expect(browserGate).toContain(PLAYWRIGHT_INSTALL_BLOCK);
+    expect(browserGate).not.toContain('--with-deps');
     expect(browserGate).toContain('run: npm run test:browser');
     const browser = gateSteps.find((s) => s.name === 'browser regressions');
     expect(browser?.cmd).toBe('npm');
@@ -466,9 +504,9 @@ describe('CI workflow parity', () => {
     );
     expect(browserGate).toContain("require('playwright/package.json').version");
     expect(browserGate.indexOf('Cache Playwright Chromium browsers')).toBeLessThan(
-      browserGate.indexOf('run: npx playwright install --with-deps chromium'),
+      browserGate.indexOf('npx playwright install chromium'),
     );
-    expect(browserGate).toContain('run: npx playwright install --with-deps chromium');
+    expect(browserGate).toContain('npx playwright install chromium');
     // No restore-keys: the key is already exact-version-scoped, so a prefix
     // fallback could only ever restore a PRIOR Playwright version's binaries
     // alongside the new install. actions/cache never evicts an old entry, so
@@ -870,6 +908,86 @@ describe('CI workflow parity', () => {
     const browserIf = browserGate.match(/^\s{4}if: .+$/gm) ?? [];
     expect(browserIf).toEqual(["    if: needs.changes.outputs.code != 'false'"]);
 
+    const mir4Postgres = jobSource('mir4-postgres');
+    expect(mir4Postgres).toMatch(/^\s{4}needs: changes\s*$/m);
+    expect(mir4Postgres.match(/^\s{4}if: .+$/gm) ?? []).toEqual([
+      "    if: needs.changes.outputs.code != 'false' || (github.event_name == 'pull_request' && github.base_ref == 'main' && startsWith(github.head_ref, 'release/'))",
+    ]);
+    expect(mir4Postgres).toContain('image: postgres:16');
+    expect(mir4Postgres).toContain("WOC_REQUIRE_PG_INTEGRATION: '1'");
+    expect(mir4Postgres).toContain(
+      'run: pnpm exec vitest run tests/character_lease_pg_integration.test.ts tests/mir4_save_v2_pg_integration.test.ts --maxWorkers=1',
+    );
+    expect(mir4Postgres).toContain('run: npx playwright install --with-deps chromium');
+    expect(mir4Postgres).toContain('VITE_GAME_PROFILE: mir4-gameplay-port');
+    expect(mir4Postgres).toContain('GAME_PROFILE: mir4-gameplay-port');
+    expect(mir4Postgres).toContain('node scripts/mp_integration.mjs');
+    expect(mir4Postgres).toContain('node scripts/mp_browser.mjs');
+    expect(mir4Postgres).toMatch(
+      /^\s+GAME_URL=http:\/\/127\.0\.0\.1:5174 node scripts\/smoke_browser\.mjs\s*$/m,
+    );
+    expect(mir4Postgres).toMatch(
+      /^\s+GAME_URL=http:\/\/127\.0\.0\.1:5174 node scripts\/mir4_feature_browser\.mjs\s*$/m,
+    );
+    expect(mir4Postgres).toContain('pnpm exec vite --host 127.0.0.1 --port 5174');
+    expect(mir4Postgres).not.toMatch(/scripts\/(?:smoke|mir4_feature)_browser\.mjs.*\|\|\s*true/);
+    expect(mir4Postgres).toContain('tmp/mir4_feature_*.png');
+    expect(mir4Postgres).toContain('tmp/0*.png');
+    expect(mir4Postgres).toContain('tmp/10_bags.png');
+    expect(mpBrowser).toContain("'--no-sandbox'");
+    expect(mpBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(smokeBrowser).toContain("'--no-sandbox'");
+    expect(smokeBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(smokeBrowser).toContain('{ timeout: 15000, polling: 100 }');
+    expect(smokeBrowser).not.toContain('setTimeout(r, 3000)');
+    expect(mir4FeatureBrowser).toContain("'--no-sandbox'");
+    expect(mir4FeatureBrowser).toContain("'--disable-setuid-sandbox'");
+    expect(mpBrowser).toContain('protocolTimeout: 180000');
+    expect(mpBrowser).toContain("const browserA = await launchBrowser('a');");
+    expect(mpBrowser).toContain("const browserB = await launchBrowser('b');");
+    expect(mpBrowser).toContain('graphicsPreset: 1');
+    expect(mpBrowser).toContain('browserEffects: 3');
+    expect(mpBrowser).toContain("document.querySelector('#mobile-preflight-continue')?.click();");
+    expect(mpBrowser).toContain('ENTRY DIAGNOSTICS');
+    expect(mpBrowser).toMatch(/loginAndEnter\(pageA, `duo_\$\{uniq\}`/);
+    expect(mpBrowser).toMatch(/loginAndEnter\(pageB, `duob_\$\{uniq\}`/);
+    expect(mpBrowser).toContain("for (const key of ['w', 's', 'a', 'd'])");
+    expect(mpBrowser).toContain('window.__game.input.debugState()');
+    expect(mpBrowser).toContain("await pageA.type('#chat-input', 'Together online!')");
+    expect(mpBrowser).toContain('attempt < 20 && !bGotChat');
+    expect(mpBrowser).toContain("'#btn-auth-toggle'");
+    expect(mpBrowser).toContain("'#login-panel'");
+    expect(mpBrowser).toContain("document.querySelector('#btn-online')?.click();");
+    expect(mpBrowser).toContain("'#realm-list .realm-row'");
+    expect(mpBrowser).toContain('#charcreate-panel .mini-class[data-class=');
+    expect(mpBrowser).not.toContain("'#btn-register'");
+    expect(mir4FeatureBrowser).toContain('const CLASS_ROWS = [');
+    expect(mir4FeatureBrowser).toContain("['warrior', 1]");
+    expect(mir4FeatureBrowser).toContain("['elementalist', 2]");
+    expect(mir4FeatureBrowser).toContain("['taoist', 3]");
+    expect(mir4FeatureBrowser).toContain("['arbalist', 4]");
+    expect(mir4FeatureBrowser).toContain("['lancer', 5]");
+    expect(mir4FeatureBrowser).toContain("await openHudWindow(page, '#mm-crafting'");
+    expect(mir4FeatureBrowser).toContain('await page.click(selector)');
+    expect(mir4FeatureBrowser).toContain('response.status() >= 400');
+    expect(mir4FeatureBrowser).toContain('isExpectedOfflineDevResponse');
+    expect(mir4FeatureBrowser).toContain('await suppressGpuNotice(page)');
+    expect(mir4FeatureBrowser).toContain("'M04-Q05'");
+    expect(mir4FeatureBrowser).toContain('\'#actionbar .action-btn[data-hotbar-slot="0"]\'');
+    expect(mir4FeatureBrowser).toContain("'.camera-prompt-backdrop'");
+    expect(mir4Postgres).toContain('node dist-server/server.cjs');
+    expect(mir4Postgres).toContain(
+      'export BROWSER_PATH="$(node -e \'process.stdout.write(require("playwright").chromium.executablePath())\')"',
+    );
+    expect(mir4Postgres).toContain('trap cleanup EXIT');
+    expect(mir4Postgres).toContain('kill "$server_pid" || true');
+    expect(mir4Postgres).toContain('if [ -n "$vite_pid" ]; then kill "$vite_pid" || true; fi');
+    expect(mir4Postgres).toContain('uses: actions/upload-artifact@v4');
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: pins literal GitHub Actions syntax.
+    expect(mir4Postgres).toContain('name: mir4-external-proof-${{ github.run_id }}');
+    expect(mir4Postgres).toContain('retention-days: 14');
+    expect(mir4Postgres.match(/\n {6}- name: /g)).toHaveLength(11);
+
     // Aggregator only if branch protection cannot accept skipped checks. This
     // packet does not invent one without evidence (OPEN item 5: skipped release
     // jobs already show as skipping on ordinary PRs without blocking merge).
@@ -999,6 +1117,7 @@ describe('CI workflow parity', () => {
       'PR long sims A',
       'PR long sims B',
       'PR checks',
+      'MIR4 PostgreSQL 16 proof',
       'Lint (changed files)',
       'Browser tests',
     ] as const;
@@ -1027,6 +1146,7 @@ describe('CI workflow parity', () => {
       '`PR long sims A`',
       '`PR long sims B`',
       '`PR checks`',
+      '`MIR4 PostgreSQL 16 proof`',
       '`Lint (changed files)`',
       '`Browser tests`',
     ] as const;
@@ -1104,6 +1224,11 @@ describe('CI workflow parity', () => {
       // moved for their own workloads, deliberately without dragging these.
       ['pr-checks', 20],
       ['release-checks', 20],
+      // The real PG16 proof carries a 30-second in-test save-wave budget, then
+      // reuses the built profile for WebSocket/browser multiplayer. Its setup
+      // is the union of pr-checks and browser-gate; 20 leaves both margins
+      // without weakening that inner acceptance threshold.
+      ['mir4-postgres', 20],
       // release-version-gate and release-i18n are both unsharded jobs whose
       // own work is fast (one small version-surface check; five test files,
       // "seconds long" by the release-i18n job comment): toolchain setup
@@ -1179,6 +1304,7 @@ describe('CI workflow parity', () => {
       'pr-long-sims-a',
       'pr-long-sims-b',
       'pr-checks',
+      'mir4-postgres',
       'lint',
       'browser-gate',
     ];

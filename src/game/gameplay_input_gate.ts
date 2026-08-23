@@ -9,8 +9,6 @@ export interface GameplayInputSurfaces {
   modalOpen: boolean;
   /** A HUD prompt is awaiting an answer (Hud.promptModalOpen). */
   promptModalOpen: boolean;
-  /** The camera prompt is up. It lives outside Hud, so it reports separately. */
-  cameraPromptOpen: boolean;
   /**
    * The chat composer is on screen. Not consulted by the gate; it is passed so the
    * distinction from the focus flag below is explicit at every call site.
@@ -31,7 +29,6 @@ export function isGameplayInputBlocked(surfaces: GameplayInputSurfaces): boolean
     surfaces.graphicsRebuildPaused ||
     surfaces.modalOpen ||
     surfaces.promptModalOpen ||
-    surfaces.cameraPromptOpen ||
     surfaces.chatComposerFocused
   );
 }

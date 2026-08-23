@@ -4,7 +4,7 @@
 // exercised against a real Sim.ctx (so resolve/recalcPlayerStats/groundPos are real).
 
 import { describe, expect, it, vi } from 'vitest';
-import { MOBS } from '../src/sim/data';
+import { BUILTIN_WORLD, MOBS } from '../src/sim/data';
 import { createDeedRuntime } from '../src/sim/deeds';
 import { createMob } from '../src/sim/entity';
 import {
@@ -58,6 +58,12 @@ function makeCtx() {
   const clearEntityMarker = vi.fn();
   const pulseGroundAoE = vi.fn();
   const host: SimContextHost = {
+    gameProfile: 'woc-classic',
+    worldContent: BUILTIN_WORLD,
+    mir4ArcEscortRuns: new Map(),
+    mir4ArcDungeonRuns: new Map(),
+    mir4ArcEncounterRuns: new Map(),
+    mir4RuntimeMobTemplates: new Map(),
     riftCollisionToken: 1,
     naturalRiftPortals: [],
     riftEvents: [],

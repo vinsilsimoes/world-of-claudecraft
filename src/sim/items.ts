@@ -42,6 +42,7 @@ import {
   weaponHand,
 } from './equipment_rules';
 import { formatMoney } from './format_money';
+import { MIR4_GAME_PROFILE } from './game_profile';
 import { throwFirebottleAtNearestHut } from './interactions/firebottle_hut';
 import { moveStackToCell } from './inventory_order';
 import { sortInventoryStacks } from './inventory_sort';
@@ -53,6 +54,8 @@ import {
 import { canStackInstancePayloads, itemInstancePayloadsEqual } from './item_instance_merge';
 import { meetsLevelRequirement, requiredLevelFor } from './item_level_req';
 import { isItemLocked } from './item_lock';
+import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
+import { mir4MountVisualKey } from './mir4/mounts';
 import { mountOwned, summonMountItem } from './mounts';
 import { learnRiding } from './mounts_training';
 import { battlefieldExperienceTrickle } from './professions/battlefield_xp';
@@ -882,6 +885,9 @@ export function useItem(
       color: '#c9f',
       pid: meta.entityId,
     });
+    if (itemId === 'minor_healing_potion') {
+      creditMir4ArcTutorialReceipt(meta, { kind: 'use-health-potion' });
+    }
   } else if (def.kind === 'elixir') {
     // Battle elixir: grant a temporary stat-buff aura. Usable in combat (classic),
     // no shared potion cooldown; re-quaffing refreshes the buff via applyAura.
@@ -924,7 +930,21 @@ export function useItem(
     // slot) summons THAT mount. summonMountItem owns every gate, riding skill
     // first. Reins are never consumed: mountOwned() derives ownership from holding
     // the item, so removing it here would delete the mount.
-    summonMountItem(ctx, meta.entityId, def.mount);
+    if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+      const logicalMountId = meta.mir4Mounts?.equippedMountId;
+      if (!logicalMountId || mir4MountVisualKey(logicalMountId) !== def.mount) {
+        ctx.error(meta.entityId, "You don't have that item.");
+        return;
+      }
+    }
+    const wasMounted = p.mountKey !== '';
+    if (
+      summonMountItem(ctx, meta.entityId, def.mount) &&
+      !wasMounted &&
+      ctx.gameProfile === MIR4_GAME_PROFILE
+    ) {
+      creditMir4ArcTutorialReceipt(meta, { kind: 'summon-mount' });
+    }
   }
 }
 

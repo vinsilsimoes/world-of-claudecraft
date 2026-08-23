@@ -92,6 +92,7 @@ import {
   resetMechanicSpacing,
   tickMechanicSpacing,
 } from './mechanic_spacing';
+import { playerDummyShedHp } from './practice_dummies';
 import {
   impairedZoneFuseMult,
   openRiftEscapeWindow,
@@ -102,6 +103,7 @@ import {
 } from './rift_escape_window';
 import { rallyFleeingAllies } from './social_aggro';
 import { isTrivialTo, retargetMob, tickForcedTarget } from './targeting';
+import { resolveMobTemplate } from './template';
 import { emitMobYell } from './yells';
 
 // This module ENFORCES the aggro ceiling and the wander ring; the numbers themselves live
@@ -129,6 +131,41 @@ const NYTHRAXIS_HEROIC_ADD_IDS = new Set([
   'nythraxis_heroic_priest_add',
   'nythraxis_heroic_rogue_add',
 ]);
+
+/**
+ * Is this dead mob an INSTANCE corpse whose per-tick dead-branch has become a
+ * provable no-op? Instance mobs (dungeon/rift/delve bands) never corpse-decay
+ * or respawn in place (the `!isInstanceMob` gates in updateMob's dead branch),
+ * so once the detonate fuse is spent and the FFA loot window has lapsed, the
+ * only thing the dead branch does is decrement two timers nothing reads. The
+ * Sim idle-cull uses this to stop far-from-player corpse fields (a cleared
+ * rift floor's packs) from paying updateMob every tick for the rest of the
+ * run. Exclusions, each load-bearing:
+ * - owned corpses: pets/demons unravel via their corpseTimer;
+ * - detonate fuses: Death Throes must still burst;
+ * - FFA windows: the owner-lock lapse must still count down;
+ * - auras: the caller would also skip updateAuras (whose dead arm still
+ *   recomputes `stealthed`), and unbreakable-control auras survive death, so
+ *   such corpses simply keep ticking rather than risk frozen aura state;
+ * - a stealth-flagged corpse: the dead updateAuras arm is what clears the
+ *   flag, so it must run at least until the flag settles;
+ * - Nythraxis: onBossDeath drives its death dialogue from the dead branch;
+ * - worldBoss templates: the world-boss scheduler reads boss.corpseTimer to
+ *   reclaim the corpse (none spawn in an instance band today; insurance).
+ */
+export function isInertInstanceCorpse(mob: Entity): boolean {
+  return (
+    mob.dead &&
+    mob.spawnPos.x > DUNGEON_X_THRESHOLD &&
+    mob.ownerId === null &&
+    mob.detonateTimer === Infinity &&
+    mob.lootFfaTimer <= 0 &&
+    mob.auras.length === 0 &&
+    !mob.stealthed &&
+    !mob.nythraxis &&
+    MOBS[mob.templateId]?.worldBoss !== true
+  );
+}
 
 export function updateMob(ctx: SimContext, mob: Entity): void {
   // Summoned quest add (widow hatchling): cancel its out-of-combat despawn while it
@@ -201,11 +238,28 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
 
   mob.combatTimer += DT;
 
-  if (MOBS[mob.templateId]?.dummy) {
+  const dummyTemplate = MOBS[mob.templateId];
+  if (dummyTemplate?.dummy) {
     // Training dummy: stays hostile/attackable so it counts for damage and shows on
     // the meters, but is otherwise inert (never aggros, moves, or fights back). It
     // drops combat and heals to full a few seconds after the last hit, so the player
     // leaves combat while the meter retains the finished encounter's DPS.
+    //
+    // A FRIENDLY dummy is the same target from the other side: nothing ever damages
+    // it, so instead of healing to full it SHEDS healing back toward its resting
+    // mark. That is what keeps it healable, both for the healer working on it (a
+    // full-health target returns nothing but overheal) and for whoever walks up
+    // next. It is never put in combat, so healing it costs the healer no regen.
+    if (dummyTemplate.friendlyPracticeTarget) {
+      mob.inCombat = false;
+      mob.hp = playerDummyShedHp(mob.hp, mob.maxHp, DT);
+      mob.aiState = 'idle';
+      mob.aggroTargetId = null;
+      mob.forcedTargetId = null;
+      mob.forcedTargetTimer = 0;
+      clearThreat(mob);
+      return;
+    }
     if (mob.combatTimer >= DUMMY_RESET_SECONDS) {
       mob.inCombat = false;
       mob.hp = mob.maxHp;
@@ -409,7 +463,11 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
         if (detected) ctx.aggroMob(mob, detected, true);
         return;
       }
-      const template = MOBS[mob.templateId];
+      const template = resolveMobTemplate(mob.templateId, ctx.mir4RuntimeMobTemplates);
+      // Unknown or deliberately non-combat entities stay passive. Generated
+      // MIR4 campaign mobs resolve through their map-scoped catalog and use
+      // the authored regional aggression radius here.
+      if (!template) return;
       let detected: Entity | null = null;
       let detectedD = Infinity;
       // Resolved once per scan, not per candidate (same reason as the boss branch).
@@ -417,7 +475,7 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
       ctx.playerGrid.forEachInRadius(mob.pos.x, mob.pos.z, MAX_AGGRO_RADIUS, (e, d2) => {
         counters.aggroScanPlayerVisits++;
         if (e.dead) return;
-        if (isTrivialTo(mob, e)) return;
+        if (isTrivialTo(mob, e, ctx.mir4RuntimeMobTemplates)) return;
         let radius = Math.max(
           4,
           Math.min(MAX_AGGRO_RADIUS, template.aggroRadius + (mob.level - e.level) * 1.5),

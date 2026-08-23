@@ -779,7 +779,391 @@ export const ja_JP: EnTranslations = {
     "questTracker": {
       "count": "（{count}）",
       "collapseHint": "クエストトラッカーを折りたたむ",
-      "expandHint": "クエストトラッカーを展開する"
+      "expandHint": "クエストトラッカーを展開する",
+      "mir4": {
+        "firstTraces": "最初の痕跡",
+        "reachTarek": "タレクのもとへ向かう",
+        "inspectClues": "手がかりを調べる",
+        "returnToTarek": "タレクのもとへ戻る",
+        "pausedSuffix": "（手動操作により自動移動を一時停止）",
+        "startAutoJourney": "自動移動を開始",
+        "stopAutoJourney": "自動移動を停止"
+      }
+    },
+    "mir4": {
+      "collectibles": {
+        "mounts": {
+          "meadow-courser": "草原駿馬",
+          "moss-boar": "苔猪",
+          "brook-stag": "小川雄鹿",
+          "gray-wolf": "灰色狼",
+          "dun-packhorse": "栗毛荷馬",
+          "birch-doe": "白樺雌鹿",
+          "red-maned-pony": "赤鬣ポニー",
+          "lowland-elk": "低地ヘラジカ",
+          "field-lynx": "野原オオヤマネコ",
+          "tawny-mastiff": "黄褐マスティフ",
+          "dune-jackal": "砂丘ジャッカル",
+          "reed-puma": "葦ピューマ",
+          "clay-ox": "粘土牛",
+          "valley-buffalo": "谷水牛",
+          "shaggy-yak": "毛長ヤク",
+          "creek-lizard": "渓流トカゲ",
+          "shellback-tortoise": "石甲羅リクガメ",
+          "plains-ostrich": "平原ダチョウ",
+          "dusk-emu": "黄昏レア",
+          "copper-ant-carrier": "銅蟻運搬獣",
+          "mist-moose": "霧ヘラジカ",
+          "leaf-panther": "葉豹",
+          "turf-rhino": "芝サイ",
+          "valley-monitor": "谷オオトカゲ",
+          "granite-ibex": "花崗岩アイベックス",
+          "silver-dapple-mare": "銀斑雌馬",
+          "marsh-stag": "沼地雄鹿",
+          "snow-mane-lion": "雪鬣獅子",
+          "ember-fox": "残り火狐",
+          "striped-hyena": "縞ハイエナ",
+          "iron-tusk-boar": "鉄牙猪",
+          "cedar-bear": "杉熊",
+          "swamp-hippo": "湿地カバ",
+          "thorn-iguana": "棘イグアナ",
+          "dryland-crocodile": "乾地ワニ",
+          "horned-cassowary": "角持ちヒクイドリ",
+          "bronze-raptor": "青銅ラプトル",
+          "amber-scarab": "琥珀スカラベ",
+          "dune-scorpion": "砂丘サソリ",
+          "root-golem": "根ゴーレム",
+          "amber-bear": "琥珀熊",
+          "sunset-tiger": "夕焼け虎",
+          "root-drake": "根ドレイク",
+          "hill-griffin": "丘グリフォン",
+          "obsidian-zebra": "黒曜石シマウマ",
+          "stormhorn-ram": "嵐角牡羊",
+          "dusk-elk": "黄昏ヘラジカ",
+          "frost-warg": "霜ワーグ",
+          "basalt-rhino": "玄武岩サイ",
+          "tundra-mammoth": "ツンドラマンモス",
+          "crystal-ankylosaur": "水晶アンキロサウルス",
+          "ember-salamander": "残り火サラマンダー",
+          "thunder-komodo": "雷コモド",
+          "moon-crocodile": "月ワニ",
+          "razorbeak-strider": "刃嘴ストライダー",
+          "plume-raptor": "羽冠ラプトル",
+          "glass-mantis": "硝子カマキリ",
+          "thunder-beetle": "雷甲虫",
+          "iron-sentinel": "鉄番兵",
+          "mossstone-colossus": "苔石巨像",
+          "eclipse-lion": "蝕獅子",
+          "crimson-wyvern": "紅蓮ワイバーン",
+          "astral-stag": "星界雄鹿",
+          "jade-basilisk": "翡翠バジリスク",
+          "solar-wolf": "太陽狼",
+          "forest-chimera": "森キマイラ",
+          "tempest-courser": "嵐駿馬",
+          "thorn-elephant": "棘象",
+          "void-spider": "虚空蜘蛛",
+          "rune-golem": "ルーンゴーレム",
+          "dawn-phoenix": "暁不死鳥",
+          "imperial-griffin": "帝国グリフォン",
+          "stone-leviathan": "石リヴァイアサン",
+          "void-unicorn": "虚空ユニコーン",
+          "golden-manticore": "黄金マンティコア",
+          "imperial-tiger": "帝国虎",
+          "dawn-mammoth": "暁マンモス",
+          "magma-drake": "マグマドレイク",
+          "crown-scorpion": "王冠サソリ",
+          "sunforged-colossus": "陽鍛巨像",
+          "ground-dragon": "大地竜",
+          "eternal-phoenix": "永遠不死鳥",
+          "celestial-kirin": "天界麒麟",
+          "firmament-behemoth": "天穹の獅子",
+          "time-hydra": "時ヒュドラ"
+        },
+        "spirits": {
+          "spirit-common-01": "草原火花",
+          "spirit-common-02": "小川のそよ風",
+          "spirit-common-03": "見張りの葉",
+          "spirit-common-04": "石木霊",
+          "spirit-uncommon-01": "暁の輝き",
+          "spirit-uncommon-02": "霧ニンフ",
+          "spirit-uncommon-03": "苔守護者",
+          "spirit-uncommon-04": "谷サラマンダー",
+          "spirit-rare-01": "琥珀狐",
+          "spirit-rare-02": "夕焼け梟",
+          "spirit-rare-03": "根ドレイク",
+          "spirit-rare-04": "丘の神託者",
+          "spirit-epic-01": "蝕化身",
+          "spirit-epic-02": "紅蓮イフリート",
+          "spirit-epic-03": "星界雄鹿",
+          "spirit-epic-04": "翡翠番兵",
+          "spirit-epic-05": "太陽狼",
+          "spirit-epic-06": "霊妙キマイラ",
+          "spirit-legendary-01": "大地タイタン",
+          "spirit-legendary-02": "暁不死鳥",
+          "spirit-legendary-03": "帝国アルコン",
+          "spirit-legendary-04": "水晶リヴァイアサン",
+          "spirit-legendary-05": "虚空ユニコーン",
+          "spirit-legendary-06": "黄金マンティコア",
+          "spirit-mythical-01": "原初魂",
+          "spirit-mythical-02": "永遠不死鳥",
+          "spirit-mythical-03": "天界麒麟",
+          "spirit-mythical-04": "天穹のベヒーモス",
+          "spirit-mythical-05": "深淵セラフ",
+          "spirit-mythical-06": "時ヒュドラ"
+        },
+        "spiritSkills": {
+          "spirit-skill-1-01": "彷徨う火花",
+          "spirit-skill-1-02": "黄昏本能",
+          "spirit-skill-1-03": "生命露",
+          "spirit-skill-1-04": "マナ息吹",
+          "spirit-skill-2-01": "昇り閃光",
+          "spirit-skill-2-02": "霧牙",
+          "spirit-skill-2-03": "癒やし樹液",
+          "spirit-skill-2-04": "秘術脈動",
+          "spirit-skill-3-01": "琥珀破裂",
+          "spirit-skill-3-02": "夕焼け審判",
+          "spirit-skill-3-03": "生命絆",
+          "spirit-skill-3-04": "根泉",
+          "spirit-skill-4-01": "蝕光線",
+          "spirit-skill-4-02": "紅蓮怒り",
+          "spirit-skill-4-03": "星界恩寵",
+          "spirit-skill-4-04": "翡翠宝珠",
+          "spirit-skill-4-05": "太陽斬",
+          "spirit-skill-4-06": "霊妙集中",
+          "spirit-skill-5-01": "地殻衝撃",
+          "spirit-skill-5-02": "再生炎",
+          "spirit-skill-5-03": "帝国判決",
+          "spirit-skill-5-04": "水晶潮",
+          "spirit-skill-5-05": "虚空裂け目",
+          "spirit-skill-5-06": "黄金王冠",
+          "spirit-skill-6-01": "創世",
+          "spirit-skill-6-02": "永遠帰還",
+          "spirit-skill-6-03": "天界勅命",
+          "spirit-skill-6-04": "天穹の重み",
+          "spirit-skill-6-05": "深淵螺旋",
+          "spirit-skill-6-06": "絶対刹那"
+        }
+      },
+      "ultimateGauge": "アルティメットゲージ",
+      "ultimateGaugeStatus": "アルティメットゲージ：{value}/{max}",
+      "ultimateReadyAnnouncement": "アルティメット使用可能。",
+      "achievements": {
+        "title": "実績",
+        "close": "実績を閉じる",
+        "summary": "報酬受取済み：{claimed}/{total}",
+        "balances": "カッパー {copper} · ダークスティール {darksteel} · EP {effectPoints} · スキル秘伝書 {skillTomes}",
+        "levelTitle": "レベル {level}",
+        "levelDescription": "レベル {level}に到達する。",
+        "progressAria": "レベル進行度：{current}/{target}",
+        "progressText": "{current}／{target}",
+        "rewardCopper": "カッパー {amount}",
+        "rewardDarksteel": "ダークスティール {amount}",
+        "rewardEffectPoints": "エフェクトポイント {amount}",
+        "rewardSkillTomes": "スキル秘伝書 {amount}個",
+        "rewards": "報酬：{rewards}",
+        "claim": "受け取る",
+        "claimed": "受取済み",
+        "locked": "レベル {level}に到達",
+        "previousGrade": "先に前の段階の報酬を受け取ってください",
+        "claimAria": "レベル {level}の実績報酬を受け取る"
+      },
+      "questLog": {
+        "narrative": "渡し場周辺の3か所で手がかりを調べ、タレク・ツーブリッジのもとへ戻る。",
+        "giverName": "タレク・ツーブリッジ",
+        "emptyHint": "M01の集落でタレク・ツーブリッジを探すか、自動移動を開始してください。",
+        "completedHint": "「最初の痕跡」は完了しました。残りのキャンペーンクエストはまだ有効ではありません。"
+      },
+      "campaign": {
+        "questTitle": "キャンペーン {id}",
+        "narrative": "{id}の現在のキャンペーン目標を達成する。",
+        "contact": "キャンペーン担当者",
+        "objective": {
+          "returnToContact": "キャンペーン担当者のもとへ戻る",
+          "talk": "キャンペーン担当者と話す",
+          "deliver": "要求されたアイテムを届ける",
+          "travel": "マークされた目的地へ向かう",
+          "inspect": "マークされた証拠を調べる",
+          "gather": "要求された資源を集める",
+          "defend": "マークされた目標を防衛する",
+          "combat": "マークされた敵を倒す",
+          "escort": "マークされた味方を護衛する",
+          "escortSupplies": "補給隊を護衛する",
+          "dungeon": "キャンペーンダンジョンを攻略する",
+          "craft": "要求された物資を製作する",
+          "tutorial": "システムチュートリアルを完了する",
+          "interact": "マークされた対象を操作する",
+          "complete": "現在の目標を達成する"
+        }
+      },
+      "characterTitle": "キャラクター",
+      "awaitingState": "権威サーバーのキャラクターデータを待機中…",
+      "combatPowerLine": "戦闘力 {value}",
+      "equipmentVisualShell": "World of ClaudeCraftの外観とMIR4の戦闘属性",
+      "equipmentTierGrade": "ティア{tier}、等級{grade}",
+      "equipmentRequiredLevel": "必要レベル：{level}",
+      "unequipHint": "Xまたは右クリックで装備を外します。",
+      "unequipAria": "{item}を外す",
+      "equipHint": "クリックして装備。",
+      "equipAria": "{item}を装備",
+      "inventoryEquipment": "装備",
+      "inventoryRuntimeItems": "World of ClaudeCraftのネイティブアイテム",
+      "inventoryCollectionTickets": "コレクションチケット",
+      "inventoryMaterials": "精錬素材",
+      "noUnequippedEquipment": "未装備の装備品はありません。",
+      "materialCount": "所持数：{count}",
+      "mountTicketDawn": "暁のマウント召喚券",
+      "mountTicketTwilight": "黄昏のマウント召喚券",
+      "mountTicketDawnDescription": "マウントを1体召喚します：コモン79%、アンコモン20%、レア1%。有効な召喚時にチケットを消費します。表示モデルはWorld of ClaudeCraftのネイティブ外観で、記載されたMIR4ステータスが権威データです。",
+      "mountTicketTwilightDescription": "マウントを1体召喚します：レア99%、エピック1%。エピックの結果は確認後に所持品になります。表示モデルはWorld of ClaudeCraftのネイティブ外観です。",
+      "redeemMountTicket": "Use {ticket}",
+      "inventoryMounts": "マウント",
+      "inventoryPendingMounts": "確認待ちのマウント",
+      "mountGrade": "等級 {grade}",
+      "mountOwned": "所持数：{count}",
+      "mountEquipped": "装備中",
+      "mountEquipHint": "クリックしてこのマウントを装備し、World of ClaudeCraftのネイティブ外観を召喚します。",
+      "mountUnequipHint": "クリックしてこのマウントを外し、降ります。",
+      "mountConfirmHint": "クリックしてこのマウントを確定し、コレクションに追加します。",
+      "mountConfirmAria": "{mount}を確定",
+      "mountEffectShell": "World of ClaudeCraftのネイティブモデルとMIR4マウント属性",
+      "mountMoveSpeed": "移動速度：+{amount}%",
+      "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
+      "mountDefenses": "物理防御：+{physical} · 魔法防御：+{magic}",
+      "equippedMountLine": "マウント：{mount}（等級 {grade}）",
+      "noEquippedMount": "マウント：未装備",
+      "inventoryMountCombination": "マウント合成",
+      "combineMountsAria": "等級 {grade} のマウント4体を合成",
+      "combineMountsHint": "この等級の所持マウントを4体消費します。20%の確率で次の等級のランダムなマウントを1体獲得します。失敗時は同じ等級のランダムなマウントを1体獲得します。エピック以上の報酬は確認待ちになります。",
+      "inventorySpirits": "精霊",
+      "inventoryPendingSpirits": "確認待ちの精霊",
+      "spiritTicketDawn": "暁の精霊召喚券",
+      "spiritTicketSunset": "夕日の精霊召喚券",
+      "spiritTicketDawnDescription": "精霊を1体召喚します：コモン79%、アンコモン20%、レア1%。有効な召喚時にチケットを消費します。アイコンはWorld of ClaudeCraftのネイティブ表現で、記載されたMIR4効果のみが適用されます。",
+      "spiritTicketSunsetDescription": "精霊を1体召喚します：アンコモン94.5%、レア5%、エピック0.5%。エピックの結果は確認後に所持品になります。有効な召喚時にチケットを消費します。",
+      "redeemSpiritTicket": "{ticket}で召喚",
+      "spiritGrade": "等級 {grade}",
+      "spiritOwned": "所持数：{count}",
+      "spiritEquipped": "装備中",
+      "spiritEquipHint": "クリックしてこの精霊を装備します。属性とコレクションボーナスがMIR4ステータスに適用されます。",
+      "spiritUnequipHint": "クリックしてこの精霊を外します。",
+      "spiritConfirmHint": "クリックしてこの精霊を確定し、コレクションに追加します。",
+      "spiritConfirmAria": "{spirit}を確定",
+      "spiritEffectShell": "World of ClaudeCraftのネイティブ表現とMIR4精霊効果",
+      "equippedSpiritLine": "精霊：{spirit}（等級 {grade}）",
+      "noEquippedSpirit": "精霊：未装備",
+      "inventorySpiritCombination": "精霊合成",
+      "combineSpiritsAria": "等級 {grade} の精霊4体を合成",
+      "combineSpiritsHint": "この等級の所持精霊を4体消費します。20%の確率で次の等級のランダムな精霊を1体獲得します。失敗時は同じ等級のランダムな精霊を1体獲得します。エピック以上の報酬は確認待ちになります。",
+      "spiritSkillChanceCooldown": "発動率{chance}% · クールダウン{cooldown}秒",
+      "spiritSkillBonusDamage": "発動した攻撃の基礎ダメージを{amount}%増加させます。",
+      "spiritSkillExecute": "対象の体力が{threshold}%以下の間、発動した攻撃の基礎ダメージを{amount}%増加させます。",
+      "spiritSkillLifeSiphon": "最大体力の{amount}%を回復します。",
+      "spiritSkillManaSurge": "最大マナの{amount}%を回復します。",
+      "spiritSkillArmorRend": "発動した攻撃に防御貫通{amount}%を追加します。",
+      "spiritSkillCriticalFocus": "発動した攻撃を必ず会心にします。",
+      "equipmentSlots": {
+        "weapon": "武器",
+        "necklace": "首飾り",
+        "ring": "Ring",
+        "talisman": "護符",
+        "chest": "胸当て",
+        "helmet": "兜",
+        "gloves": "手袋",
+        "boots": "ブーツ"
+      },
+      "stats": {
+        "combatPower": "戦闘力",
+        "maxHp": "最大体力",
+        "maxMana": "最大マナ",
+        "physicalAttack": "物理攻撃",
+        "magicAttack": "魔法攻撃",
+        "physicalDefense": "物理防御",
+        "magicDefense": "魔法防御",
+        "accuracy": "命中",
+        "dodge": "回避",
+        "critical": "会心",
+        "avoidCritical": "会心回避",
+        "criticalOutcome": "会心ダメージ",
+        "bossDamage": "ボスダメージ",
+        "skillDamage": "スキルダメージ",
+        "penetration": "防御貫通",
+        "unknown": "戦闘属性"
+      },
+      "materials": {
+        "sunStone": "太陽石",
+        "moonStone": "月石",
+        "solarScroll": "太陽の巻物",
+        "lunarSeal": "月の印章",
+        "dawnTear": "Dawn Tear",
+        "solarWard": "太陽の護符"
+      },
+      "maps": {
+        "portal": "{zone}のポータル",
+        "actWelcome": "{zone}（第{act}幕）。",
+        "m01": "渡し場の村",
+        "m02": "葦の小道",
+        "m03": "谷の森",
+        "m04": "丘陵の遺跡",
+        "m05": "裂け目の空き地",
+        "m06": "燭石の墓所",
+        "m07": "納骨堂回廊",
+        "m08": "霧石の要塞",
+        "m09": "灯籠沼",
+        "m10": "Bog King's Fen",
+        "m11": "蛭のマングローブ",
+        "m12": "葦の港",
+        "m13": "ガラスの砂丘",
+        "m14": "アケトの死都",
+        "m15": "シンダライト火口",
+        "m16": "砕けた太陽の炉",
+        "m17": "遠吠えのツンドラ",
+        "m18": "Jarl's Pass",
+        "m19": "夜の帳",
+        "m20": "日蝕の砦"
+      },
+      "progression": {
+        "title": "装備工房",
+        "refinement": "精錬",
+        "enchantment": "エンチャント",
+        "blessing": "祝福",
+        "crafting": "製作",
+        "ownedEquipment": "所持装備",
+        "noEquipment": "この操作に使用できる装備がありません。",
+        "equipped": "装備中",
+        "enhancementLevel": "強化 +{level}/+{max}",
+        "successChance": "成功率：{chance}%",
+        "safeFailure": "失敗しても装備は残ります。",
+        "destructiveFailure": "+5を超える強化に失敗すると装備が破壊されます。",
+        "wardProtection": "破壊を防ぐため太陽の護符を1個消費します。",
+        "noWardProtection": "使用できる太陽の護符がありません。",
+        "enhanceCost": "費用：太陽の巻物 1個",
+        "enhance": "強化",
+        "maxEnhancement": "最大強化に到達しました",
+        "currentEffects": "現在の効果",
+        "noCurrentEffects": "適用中の効果はありません。",
+        "rollCostEnchantment": "費用：月の印章 1個",
+        "layerUnsupported": "このアイテムには{layer}効果を付与できません。",
+        "rollCostBlessing": "Cost: 1 Dawn Tear",
+        "roll": "プレビューを抽選",
+        "pendingOtherLayer": "先に保留中の{layer}プレビューを確定してください。",
+        "preview": "保留中のプレビュー",
+        "acceptPreview": "プレビューを適用",
+        "keepCurrent": "現在の効果を維持",
+        "inactiveEffect": "移植済み効果（戦闘ではまだ無効）",
+        "materialRecipes": "素材レシピ",
+        "campaignProfession": "キャンペーン製作依頼",
+        "campaignProfessionProgress": "進行度：{current}/{goal}",
+        "campaignProfessionMaterials": "対象素材：{held}/{needed}",
+        "campaignProfessionHint": "キャンペーンの製作地点で依頼を完了してください。サーバーは権威ある地域素材のみを消費します。",
+        "campaignCraft": "部品を製作",
+        "campaignRefine": "部品を精錬",
+        "campaignSalvage": "装備を分解",
+        "creates": "{material}を{count}個製作",
+        "materialCost": "{held}/{needed} {material}",
+        "copperCost": "銅貨 {amount}",
+        "create": "製作",
+        "requestSent": "サーバーが装備操作を検証しています。"
+      }
     },
     "interfaceTabs": {
       "general": "全般",
@@ -866,11 +1250,52 @@ export const ja_JP: EnTranslations = {
       "actionRing": "戦闘アクション",
       "actionPageToggle": "行動ページ切替",
       "actionPageIndicator": "{page}ページ",
+      "actionRadial": "アクション方向",
+      "actionRadialCancel": "アクションをキャンセル",
+      "radialCenter": "中央",
+      "radialUp": "Up",
+      "radialRight": "右",
+      "radialDown": "Down",
+      "radialLeft": "Left",
+      "consumableSeat": "消耗品",
+      "menuControl": "メニュー",
+      "menuControlAria": "メニュー。タップでチャットを開き、長押しして右にスワイプすると騎乗、地図、バッグなどを開けます。",
+      "menuControlAriaTap": "メニュー。タップでメニュー列（騎乗、地図、バッグなど）を開きます。もう一度タップするとチャットが開きます。",
+      "menuLabel": "Menu",
+      "quickActions": "クイック操作",
+      "quickActionsAria": "クイック操作。タップすると騎乗、チャット、地図、バッグなどの操作列が開きます。長押しして右にスワイプすると項目を選べます。",
+      "quickActionsAriaTap": "クイック操作。タップすると騎乗、チャット、地図、バッグなどの操作列が開き、項目をタップして選びます。もう一度タップすると閉じます。",
+      "quickActionsLabel": "操作",
+      "stanceRadial": "スタンス",
+      "stanceAnchorAria": "スタンス：{stance}。タップしてスタンスリングを開き、別のスタンスを選びます。",
+      "stanceAnchorEmptyAria": "スタンスなし。タップしてスタンスリングを開き、スタンスを選びます。",
+      "questStripAria": "追跡中のクエスト {total} 件中 {position} 件目: {title}。次のクエストを表示するには操作してください。",
+      "questStripAriaSingle": "追跡中のクエスト: {title}",
+      "questStripCounter": "{position}/{total}",
+      "questStripMore": "他 {count} 件",
       "targetCycle": "ターゲット切替",
       "targetCycleShort": "標的",
       "spellbookPageLabel": "ページ{page}",
       "hideKeyboard": "キーボードを隠す",
-      "chatPlaceholder": "発言する... (! でコミュニティコマンド)"
+      "chatPlaceholder": "発言する... (! でコミュニティコマンド)",
+      "barEditor": "Edit Bars",
+      "barEditorAria": "アクションバーの配置を編集"
+    },
+    "barEditor": {
+      "title": "アクションバーの編集",
+      "close": "アクションバー編集を閉じる",
+      "pages": "アクションバーのページ",
+      "pageTab": "Page {page}",
+      "buttonHeader": "ボタン{button}",
+      "cellAria": "ボタン{button}、{direction}：{action}",
+      "emptyCellAria": "ボタン{button}、{direction}：空き",
+      "hint": "スロットをタップし、もう一つタップすると入れ替わります。",
+      "armed": "スロットをタップして{name}を配置します。",
+      "picked": "別のスロットをタップして{name}と入れ替えます。",
+      "locked": "アクションバーはインターフェース設定でロックされています。",
+      "clear": "クリア",
+      "clearAria": "スロットをクリア",
+      "clearArmed": "スロットをタップするとクリアします。"
     },
     "tutorial": {
       "moveBodyTouch": "移動スティックで移動し、画面をドラッグして周囲を見回します。数歩進んで始めましょう。",
@@ -952,6 +1377,22 @@ export const ja_JP: EnTranslations = {
       "closesIn": "リフトは{time}後に閉じます",
       "clockMs": "{minutes}:{seconds}",
       "clockHms": "{hours}:{minutes}:{seconds}"
+    },
+    "lastkeepMap": {
+      "title": "{keep}：{story}",
+      "story": {
+        "undercroft": "地下蔵",
+        "state": "公務の階",
+        "residence": "居住の階",
+        "tower": "見張り塔"
+      }
+    },
+    "dawnholdMap": {
+      "title": "{keep}：{story}",
+      "story": {
+        "ground": "庭園の階",
+        "solar": "日だまりの間"
+      }
     },
     "compass": {
       "N": "北",
@@ -1386,6 +1827,7 @@ export const ja_JP: EnTranslations = {
       "mouseoverCast": "パーティフレームでマウスオーバーキャスト",
       "stickyTarget": "地面クリックでターゲットを維持",
       "showItemLevel": "アイテムレベルを表示",
+      "showReliquaryTracker": "聖遺物庫トラッカーを表示",
       "itemLevelLine": "アイテムレベル {level}",
       "itemScoreLine": "スコア {score}",
       "showSecondaryActionBar": "セカンダリアクションバーを表示",
@@ -1398,7 +1840,9 @@ export const ja_JP: EnTranslations = {
       "showAttackButton": "攻撃ボタンを表示",
       "showDailyRewardsChest": "デイリー報酬の宝箱を表示",
       "mobileCameraJoystick": "カメラスティック",
-      "mobileLeftHanded": "左利き用レイアウト"
+      "mobileLeftHanded": "左利き用レイアウト",
+      "touchTapMenus": "タップメニュー",
+      "touchTapMenusNote": "アクション、消耗品、メニューの各コントロールをスワイプではなくタップで開きます。項目をタップすると使用し、コントロールをもう一度タップすると通常の動作を行い、外側をタップすると閉じます。"
     },
     "talentRows": {
       "tab": "選択",
@@ -1431,9 +1875,29 @@ export const ja_JP: EnTranslations = {
       "buttons": "ボタン配置",
       "resetButtons": "ボタン配置をリセット",
       "menuAction": "ゲームメニュー",
+      "confirmAction": "決定 / 選択",
       "zoomIn": "ズームイン",
       "zoomOut": "ズームアウト",
-      "help": "左スティックで移動、右スティックで視点。ウィンドウを開くと画面ポインターが使えます。"
+      "help": "左スティックで移動、右スティックで視点。ウィンドウを開くと画面ポインターが使えます。",
+      "crossHotbar": "クロスホットバー",
+      "crossHotbarEnable": "クロスホットバーを有効化",
+      "crossHotbarExpand": "ダブルクロスホットバー",
+      "crossHotbarHelp": "トリガーを押している間、方向キーとフェイスボタンに8つのアクションバースロットが表示されます。もう一方のトリガーを軽く押すと、2つ目のセットに切り替わります。",
+      "crossHotbarResetLayout": "クロスホットバーをリセット",
+      "crossHotbarPosition": "{trigger} + {button}",
+      "crossHotbarOwnsButtons": "クロスホットバーが有効な間、トリガーと方向キーはクロスホットバーが使用します。ここではなく下の項目で設定してください。",
+      "cancelAction": "キャンセル / 戻る",
+      "subcommandsAction": "サブコマンド / マップ",
+      "cycleHudAction": "インターフェース切替",
+      "cycleSetAction": "ホットバーセット切替",
+      "crossHotbarDisplay": "バー表示",
+      "crossHotbarDisplayFull": "通常",
+      "crossHotbarDisplayCompact": "コンパクト",
+      "crossHotbarDisplayMinimal": "押している間のみ",
+      "crossHotbarArrangeChord": "{bumper} + {button}",
+      "crossHotbarCarrying": "{action}を持っています。マスで決定を押すと置き、キャンセルで戻します。",
+      "crossHotbarEditHint": "配置変更中：決定でマスまたはスペルブックからアクションを持ち上げてマスに置き、キャンセルでマスを空にします。",
+      "crossHotbarEditHelp": "左バンパーを押しながら上の面ボタンを押すと、コントローラーでバーを配置変更できます。"
     },
     "perf": {
       "title": "パフォーマンスオーバーレイ",
@@ -1552,6 +2016,7 @@ export const ja_JP: EnTranslations = {
           "render": "描画  送信 {submit} ミリ秒 | ワールド {world} ミリ秒 | エンティティ {entities} ミリ秒",
           "scene": "シーン   {calls} 呼び出し | {triangles} 三角形 | {views} ビュー",
           "hitches": "カクつき {hitches} | シェーダー {shaders} | アップロード {uploads} | ビュー {views}",
+          "hitchesBuild": "ゾーン構築 {zoneBuilds} | フレーム外 {offFrame} | GC {gc}",
           "gpu": "GPU     {renderer}",
           "waitingValue": "待機中"
         },
@@ -1603,7 +2068,10 @@ export const ja_JP: EnTranslations = {
             "eventCpu": "イベント処理がフレーム時間を消費しています",
             "shaderCompile": "ゲーム中にシェーダーがコンパイルされています",
             "textureUpload": "テクスチャのアップロードでカクつきが発生しています",
+            "zoneBuild": "ゾーンのストリーミング構築でカクつきが発生しています",
             "viewCreate": "エンティティ表示の作成でカクつきが発生しています",
+            "gcHitch": "長いフレーム内でガベージコレクションが実行されています",
+            "offFrameHitch": "長いフレームはレンダーコールバック外の処理に起因しています",
             "otherHitch": "原因不明の長いフレームが残っています",
             "assetStartup": "アセット処理でゲーム開始が遅れています",
             "longTasks": "ブラウザーの長いタスクがフレームを妨げています",
@@ -2463,7 +2931,11 @@ export const ja_JP: EnTranslations = {
     },
     "spellbook": {
       "addToBarAria": "{name}をアクションバーに追加",
-      "removeFromBarAria": "{name}をアクションバーから削除"
+      "removeFromBarAria": "{name}をアクションバーから削除",
+      "upgradeRank": "Rank {rank}",
+      "maxRank": "最大ランク",
+      "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
+      "assignAria": "{name}を配置するスロットを選択"
     },
     "nameplate": {
       "mobLevel": "{level}",
@@ -2793,7 +3265,8 @@ export const ja_JP: EnTranslations = {
       "tip": "売上金または返品アイテムが商人のもとで受け取りを待っています。"
     },
     "noticeboard": {
-      "empty": "何も貼られていないようだ。"
+      "empty": "何も貼られていないようだ。",
+      "contract": "有効な契約：{title}"
     },
     "bank": {
       "title": "銀行",
@@ -3723,6 +4196,9 @@ export const ja_JP: EnTranslations = {
       "pinFull": "トラッカーが満杯です（最大 {cap} ページ）",
       "pinAria": "{name}をHUDトラッカーにピン留め",
       "unpinAria": "{name}のピン留めを解除",
+      "trackerToggleLabel": "HUDトラッカー",
+      "trackerToggleShowHint": "聖遺物庫トラッカーを画面に表示する",
+      "trackerToggleHideHint": "聖遺物庫トラッカーを画面から隠す",
       "rarityLine": "収集家の{percent}が発見",
       "pageRarityLine": "収集家の{percent}が照耀",
       "cellAriaWithRarity": "{base}、{rarity}",
@@ -4323,6 +4799,7 @@ export const ja_JP: EnTranslations = {
       "ifHighContrastBackground": "スタート画面とキャラクター画面の背景を、より簡素で高コントラストなものにします。",
       "ifInvertLookY": "マウス視点の上下方向を反転します。",
       "ifShowItemLevel": "すべてのアイテムのツールチップにアイテムレベルの行を加えます。初期設定はオフで、ステータスだけの昔ながらのツールチップが保たれます。",
+      "ifShowReliquaryTracker": "聖遺物庫トラッカー（ピン留めしたページとその進行状況）をHUDに表示するかどうか。聖遺物庫ウィンドウにも対応する目のボタンがあり、ページをピン留めするとトラッカーは再び表示されます。",
       "ifShowPlaytime": "キャラクターシートに累計のプレイ時間を表示します。初期設定はオンで、シートには端末ごとに表示を切り替える目のボタンもあるので、配信やスクリーンショットのときに便利です。合計時間はどちらの場合も数え続けられます。",
       "ifShowOwnNameplate": "自分の頭上のネームプレートを、他のプレイヤーに見えているとおりに、飾りも含めて描画します。昔ながらの見た目にしたいならオフにしましょう。",
       "ifShowPlayerNameplates": "他のプレイヤーのネームプレートを描画します。オフにすると混み合った拠点がすっきりしますし、現在のターゲットはどちらでも読み取れるままです。",
@@ -4754,6 +5231,7 @@ export const ja_JP: EnTranslations = {
       "mageEleJet": "ウォータージェットはペットバーに独立したボタンとして並びます。クリックすれば凍てつく光線を敵一体に固定し、右クリック（モバイルでは長押し）すれば、準備が整うたびにエレメンタルが自分の判断で放つようになります。",
       "formsHeading": "変身",
       "formsNote": "ドルイドは姿を変えて戦います。ドルイドのアビリティはほとんどがいずれか一つの姿に属しているので、今どの姿でいるかが何を使えるかを決めます。変身にはわずかなマナがかかります。戦闘中でも戦闘外でも、好きなだけ変身し、また解くことができます。",
+      "formsAutoUnshift": "変身中に回復や攻撃の呪文を唱えると、姿はひとりでに解けます。こうして姿を解くのはマナもかからず、グローバルクールダウンも使いません。ですから即時発動の呪文は押した瞬間に飛びます。もう一度変身するのは普通のアビリティなので、マナもグローバルクールダウンもかかります。",
       "formsMoonwing": "均衡（ムーングローブ）のドルイドは、もう一つの姿、ムーンウィングフォームを得ます。均衡型のドルイドが戦うための術者の姿です。獣の姿でありながら呪文を保てる唯一の形であり、ワンドもこの姿か、通常の術者の姿でしか使えません。",
       "formLine": {
         "form_bear": "タンクの姿です。分厚い毛皮をまとい、マナの代わりにレイジを使い、追加の脅威で敵の矛先を自分に引きつけ続けます。",
@@ -7013,6 +7491,10 @@ export const ja_JP: EnTranslations = {
   },
   "classes": {
     "warrior": "戦士",
+    "elementalist": "エレメンタリスト",
+    "taoist": "道士",
+    "arbalist": "弩使い",
+    "lancer": "ランサー",
     "paladin": "パラディン",
     "hunter": "ハンター",
     "rogue": "ローグ",
@@ -7022,6 +7504,10 @@ export const ja_JP: EnTranslations = {
     "warlock": "ウォーロック",
     "druid": "ドルイド",
     "warriorAria": "戦士クラス",
+    "elementalistAria": "エレメンタリストクラス",
+    "taoistAria": "道士クラス",
+    "arbalistAria": "弩使いクラス",
+    "lancerAria": "ランサークラス",
     "paladinAria": "パラディンクラス",
     "hunterAria": "ハンタークラス",
     "rogueAria": "ローグクラス",
@@ -7171,6 +7657,7 @@ export const ja_JP: EnTranslations = {
       "shopMarksRequired": "{name}を購入するにはデルヴの刻印が{marks}個必要だ。",
       "shopSealPremiumOnly": "この封印は達人の手にのみ応じる。極上の賭けだけが開くことができる。",
       "passageSealed": "通路は封じられている。",
+      "enemiesRemain": "残りの敵を先に倒せ。",
       "moveCloserPassage": "通路にもっと近づけ。",
       "moveCloserChest": "宝箱にもっと近づけ。",
       "moveCloserReliquary": "聖遺物匣にもっと近づけ。",
@@ -7944,6 +8431,31 @@ export const ja_JP: EnTranslations = {
       "warlock": "ウォーロックは悪魔を召喚し、呪いと継続ダメージ魔法をかけ、敵から生命力を吸収して耐えます。",
       "druid": "ドルイドは自然の力を導き、傷を癒やし、敵を絡め取り、動物形態に変身して守りまたは攻めます。"
     },
+    "mir4": {
+      "labels": {
+        "damage": "ダメージ",
+        "combatRange": "戦闘距離",
+        "startingSkills": "初期スキル"
+      },
+      "damage": {
+        "physical": "物理",
+        "magic": "魔法"
+      },
+      "range": {
+        "melee": "近接",
+        "medium": "中距離",
+        "long": "遠距離",
+        "extended": "拡張近接"
+      },
+      "weapons": {
+        "heavySword": "大剣",
+        "largeStaff": "大杖",
+        "shortStaff": "短杖",
+        "arbalest": "弩",
+        "spear": "槍"
+      },
+      "aria": "{className}の詳細：{damage}ダメージ、射程は{range}、武器は{weapon}、初期スキルは{skills}個。"
+    },
     "aria": "{className}のクラス詳細: 役割 {role}。開始ステータス: 筋力 {str}、敏捷性 {agi}、スタミナ {sta}、知力 {int}、精神力 {spi}。",
     "statBarAria": "{stat}: {value}/25"
   },
@@ -8702,6 +9214,8 @@ export const ja_JP: EnTranslations = {
     "actionBar": {
       "attackName": "攻撃",
       "attackTooltip": "対象への自動攻撃を切り替えます。敵を右クリックしても攻撃します。",
+      "autoBattleName": "自動戦闘",
+      "autoBattleTooltip": "現在位置の周囲で、自動索敵、移動、スキルローテーションを切り替えます。",
       "attackRemoveHint": "右クリックでバーから外し、スロットを空けます。",
       "emptySlot": "空きスロット",
       "slotAria": "アクションスロット {slot}: {ability}",
@@ -8834,6 +9348,8 @@ export const ja_JP: EnTranslations = {
       "accept": "受諾",
       "decline": "辞退",
       "continue": "続ける",
+      "autoContinue": "Dialogue continues automatically",
+      "skipDialogue": "Skip dialogue",
       "done": "完了",
       "completeQuest": "クエスト完了",
       "turnIn": "報告",
@@ -9148,6 +9664,226 @@ export const ja_JP: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1102": {
+        "name": "虚空撃",
+        "description": "敵1体に{damage}ダメージを与え、対象を0.9秒間スタンさせます。"
+      },
+      "mir4_skill_1104": {
+        "name": "裂傷撃",
+        "description": "敵1体に{damage}ダメージを与え、対象を1.2秒間ノックダウンします。"
+      },
+      "mir4_skill_1304": {
+        "name": "体当たり",
+        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを12%増加させます。"
+      },
+      "mir4_skill_1401": {
+        "name": "大地砕き",
+        "description": "敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に70%のダメージを与え、対象を0.8秒間ノックダウンします。"
+      },
+      "mir4_skill_1501": {
+        "name": "疾風撃",
+        "description": "敵1体に作用し、対象を3.2秒間35%減速させます。"
+      },
+      "mir4_skill_2101": {
+        "name": "プリズム光線",
+        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.4秒間凍結します。"
+      },
+      "mir4_skill_2111": {
+        "name": "残り火の槍",
+        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを8%増加させます。"
+      },
+      "mir4_skill_2301": {
+        "name": "懲罰の印",
+        "description": "敵1体に{damage}ダメージを与え、4秒間、対象が与えるダメージを50%減少させます。"
+      },
+      "mir4_skill_2501": {
+        "name": "召喚核",
+        "description": "敵1体に{damage}ダメージを与えます。8ヤード以内の他の敵最大4体に60%のダメージを与え、対象を1.8秒間凍結します。"
+      },
+      "mir4_skill_2503": {
+        "name": "魔法障壁",
+        "description": "10秒間、受けるダメージを22%減少させます。"
+      },
+      "mir4_skill_3101": {
+        "name": "印連撃",
+        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、4秒間、対象が受けるダメージを10%増加させます。"
+      },
+      "mir4_skill_3104": {
+        "name": "トーテム 1010",
+        "description": "敵1体に作用し、対象を1.4秒間スタンさせます。"
+      },
+      "mir4_skill_3301": {
+        "name": "トーテムの印 II",
+        "description": "敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に60%のダメージを与え、対象を4.2秒間35%減速させます。"
+      },
+      "mir4_skill_3503": {
+        "name": "翡翠の蓮",
+        "description": "最大体力の18%を回復します。"
+      },
+      "mir4_skill_3506": {
+        "name": "トーテムの印 I",
+        "description": "敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に60%のダメージを与え、対象を1.6秒間移動不能にします。"
+      },
+      "mir4_skill_4101": {
+        "name": "炸裂 4101",
+        "description": "敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に65%のダメージを与え、3.5秒間、対象が与えるダメージを45%減少させます。"
+      },
+      "mir4_skill_4102": {
+        "name": "連撃 4102",
+        "description": "敵1体に{damage}ダメージを与えます。6.625ヤード以内の他の敵最大3体に65%のダメージを与え、対象を3.5秒間30%減速させます。"
+      },
+      "mir4_skill_4103": {
+        "name": "Twin Echo",
+        "description": "敵1体に{damage}ダメージを与えます。7.5ヤード以内の他の敵最大4体に55%のダメージを与え、5秒間、対象が与えるダメージを60%減少させます。"
+      },
+      "mir4_skill_4106": {
+        "name": "突進 4106",
+        "description": "敵1体に{damage}ダメージを与え、対象を2秒間スタンさせます。"
+      },
+      "mir4_skill_4107": {
+        "name": "閃光矢",
+        "description": "敵1体に作用し、3.2秒間、対象が与えるダメージを45%減少させます。"
+      },
+      "mir4_skill_5101": {
+        "name": "突き 5101",
+        "description": "敵1体に{damage}ダメージを与え、対象を1秒間ノックダウンします。"
+      },
+      "mir4_skill_5104": {
+        "name": "薙ぎ払い 5104",
+        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを14%増加させます。"
+      },
+      "mir4_skill_5201": {
+        "name": "強撃 5201",
+        "description": "敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.1秒間スタンさせます。"
+      },
+      "mir4_skill_5301": {
+        "name": "鎖撃 5301",
+        "description": "敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に70%のダメージを与え、対象を0.9秒間スタンさせます。"
+      },
+      "mir4_skill_5401": {
+        "name": "荒れ狂う嵐",
+        "description": "敵1体に作用し、対象を1秒間ノックダウンします。"
+      },
+      "mir4_ultimate_1": {
+        "name": "アルティメット",
+        "description": "3回の攻撃で{damage}ダメージを与えます。アルティメットゲージが満タンである必要があります。"
+      },
+      "mir4_ultimate_2": {
+        "name": "アルティメット",
+        "description": "4回の攻撃で{damage}ダメージを与えます。アルティメットゲージが満タンである必要があります。"
+      },
+      "mir4_ultimate_3": {
+        "name": "アルティメット",
+        "description": "3回の攻撃で{damage}ダメージを与えます。アルティメットゲージが満タンである必要があります。"
+      },
+      "mir4_ultimate_4": {
+        "name": "アルティメット",
+        "description": "3回の攻撃で{damage}ダメージを与えます。アルティメットゲージが満タンである必要があります。"
+      },
+      "mir4_ultimate_5": {
+        "name": "アルティメット",
+        "description": "2回の攻撃で{damage}ダメージを与えます。アルティメットゲージが満タンである必要があります。"
+      },
+      "mir4_passive_warrior_heavy_armor": {
+        "name": "重装甲",
+        "description": "最大体力が8%増加します。"
+      },
+      "mir4_passive_warrior_weapon_mastery": {
+        "name": "武器熟練",
+        "description": "物理攻撃が6%増加します。"
+      },
+      "mir4_passive_warrior_iron_skin": {
+        "name": "Iron Skin",
+        "description": "物理防御が8%、魔法防御が6%増加します。"
+      },
+      "mir4_passive_warrior_fighting_spirit": {
+        "name": "闘志",
+        "description": "最大体力と物理攻撃が4%増加します。"
+      },
+      "mir4_passive_warrior_indomitable_will": {
+        "name": "不屈の意志",
+        "description": "最大体力、物理防御、魔法防御が5%増加します。"
+      },
+      "mir4_passive_elementalist_mana_well": {
+        "name": "Mana Well",
+        "description": "最大マナが10%増加します。"
+      },
+      "mir4_passive_elementalist_arcane_intellect": {
+        "name": "秘術知性",
+        "description": "魔法攻撃が7%増加します。"
+      },
+      "mir4_passive_elementalist_elemental_protection": {
+        "name": "元素防護",
+        "description": "物理防御と魔法防御が6%増加します。"
+      },
+      "mir4_passive_elementalist_channeling": {
+        "name": "詠唱集中",
+        "description": "最大マナが5%、魔法攻撃が4%増加します。"
+      },
+      "mir4_passive_elementalist_arcane_ascension": {
+        "name": "秘術昇華",
+        "description": "最大マナが5%、魔法攻撃が6%、物理防御と魔法防御が3%増加します。"
+      },
+      "mir4_passive_taoist_spiritual_vessel": {
+        "name": "霊の器",
+        "description": "最大体力が4%、最大マナが7%増加します。"
+      },
+      "mir4_passive_taoist_twin_paths": {
+        "name": "双道",
+        "description": "物理攻撃と魔法攻撃が4%増加します。"
+      },
+      "mir4_passive_taoist_sacred_guard": {
+        "name": "聖なる守り",
+        "description": "物理防御と魔法防御が6%増加します。"
+      },
+      "mir4_passive_taoist_serene_mind": {
+        "name": "静穏の心",
+        "description": "最大体力が4%、最大マナが5%増加します。"
+      },
+      "mir4_passive_taoist_celestial_harmony": {
+        "name": "天の調和",
+        "description": "最大体力、最大マナ、物理攻撃、魔法攻撃、物理防御、魔法防御が4%増加します。"
+      },
+      "mir4_passive_arbalist_eagle_eye": {
+        "name": "鷹の目",
+        "description": "物理攻撃が3%、命中が5%増加します。"
+      },
+      "mir4_passive_arbalist_ballistic_mastery": {
+        "name": "弾道熟練",
+        "description": "物理攻撃が7%増加します。"
+      },
+      "mir4_passive_arbalist_nature_guard": {
+        "name": "自然の守り",
+        "description": "最大体力、物理防御、魔法防御が5%増加します。"
+      },
+      "mir4_passive_arbalist_hunter_instinct": {
+        "name": "狩人の本能",
+        "description": "物理攻撃と回避が5%増加します。"
+      },
+      "mir4_passive_arbalist_perfect_shot": {
+        "name": "完璧な一射",
+        "description": "最大体力が3%、物理攻撃が6%、命中が5%増加します。"
+      },
+      "mir4_passive_lancer_war_conditioning": {
+        "name": "戦場鍛錬",
+        "description": "最大体力が5%、物理攻撃と魔法攻撃が3%増加します。"
+      },
+      "mir4_passive_lancer_spear_mastery": {
+        "name": "槍術熟練",
+        "description": "物理攻撃と魔法攻撃が5%増加します。"
+      },
+      "mir4_passive_lancer_vanguard_armor": {
+        "name": "先鋒の鎧",
+        "description": "物理防御と魔法防御が6%増加します。"
+      },
+      "mir4_passive_lancer_battle_rhythm": {
+        "name": "戦闘律動",
+        "description": "最大マナ、物理攻撃、魔法攻撃が4%増加します。"
+      },
+      "mir4_passive_lancer_dragon_vanguard": {
+        "name": "竜の先鋒",
+        "description": "最大体力が4%、物理攻撃、魔法攻撃、物理防御、魔法防御が5%増加します。"
+      },
       "sport_kick": {
         "name": "キック",
         "description": "狙った地点へボールをグラウンダーで蹴り出す。"
@@ -9980,7 +10716,7 @@ export const ja_JP: EnTranslations = {
       },
       "fear": {
         "name": "責め苦",
-        "description": "敵に恐怖を刻み、最大8秒間おびえさせます。ダメージを受けると効果が切れます。"
+        "description": "敵に恐怖を刻み、最大5秒間おびえさせます。対象の最大体力の8%に相当する合計ダメージを受けると効果が切れます。"
       },
       "searing_pain": {
         "name": "灼熱",
@@ -10058,7 +10794,7 @@ export const ja_JP: EnTranslations = {
       "ferocious_bite": {
         "name": "血噛み",
         "description": "{damage}を与えるフィニッシュムーブです。ウルフフォーム専用。",
-        "specNote_feral": "命中した攻撃ごとに古き血を1蓄える。古き血が3のとき、このボタンは血の収穫に変化する：91にコンボポイントごとに55を加えたダメージの噛みつきで、皮剥ぎと血の亀裂が与えるはずだった残りダメージも即座にすべて与え、エネルギーを30回復する。"
+        "specNote_feral": "命中した攻撃ごとに古き血を1蓄える。古き血が3のとき、このボタンは血の収穫に変化する：古き血を消費した強力な噛みつきで、皮剥ぎと血の亀裂が与えるはずだった残りダメージも即座にすべて与え、エネルギーを回復する。"
       },
       "swipe": {
         "name": "薙ぎ払う爪",
@@ -10121,7 +10857,7 @@ export const ja_JP: EnTranslations = {
       },
       "tigers_fury": {
         "name": "狼の血",
-        "description": "攻撃力を{duration}秒間{buff}上昇させます。ウルフフォーム専用。"
+        "description": "エネルギーを{rage}回復し、攻撃力を{duration}秒間{buff}上昇させます。ウルフフォーム専用。"
       },
       "rip": {
         "name": "血裂",
@@ -10226,7 +10962,7 @@ export const ja_JP: EnTranslations = {
       },
       "ossuary_mark": {
         "name": "納骨の印",
-        "description": "敵に12秒間の印を刻み、自分と自分のアンデッドが与えたダメージの20%を蓄積する。もう一度使用すると起爆する。印のついた敵が死亡すると6ヤード以内で爆発し、魂の欠片を1個生成する。"
+        "description": "敵に15秒間の印を刻み、自分と自分のアンデッドが与えたダメージの20%を蓄積する。もう一度使用すると起爆する。印のついた敵が死亡すると6ヤード以内で爆発し、魂の欠片を1個生成する。"
       },
       "unholy_command": {
         "name": "不浄の号令",
@@ -10325,8 +11061,8 @@ export const ja_JP: EnTranslations = {
         "description": "ムーンキンフォームになり、戻るまで呪文詠唱を強化します。再び唱えると通常形態に戻ります。（バランス特性のシグネチャ）"
       },
       "feral_charge": {
-        "name": "フェラルチャージ",
-        "description": "敵に突撃し、1秒間足止めします。射程8-25ヤード。（フェラル特性のシグネチャ）"
+        "name": "原初の奔流",
+        "description": "原初の力を解き放ちます。ウルフフォームでは、10秒間エネルギーの再生速度が100%上昇します。ブルーインフォームでは、即座に怒りを50生成します。（フェラル特性のシグネチャ）"
       },
       "swiftmend": {
         "name": "スウィフトメンド",
@@ -10342,7 +11078,7 @@ export const ja_JP: EnTranslations = {
       },
       "redharvest": {
         "name": "血の収穫",
-        "description": "古き血を3消費する：{damage}のダメージを与え、皮剥ぎと血の亀裂が与えるはずだった残りダメージを即座にすべて与え、両方の出血を除去し、エネルギーを30回復する。コンボポイントが0でも使用できる。"
+        "description": "古き血を3消費する：{damage}のダメージを与え、皮剥ぎと血の亀裂が与えるはずだった残りダメージを即座にすべて与え、両方の出血を除去し、エネルギーを{rage}回復する。コンボポイントが0でも使用できる。"
       },
       "marrowbreak": {
         "name": "骨髄砕き",
@@ -10582,7 +11318,7 @@ export const ja_JP: EnTranslations = {
       },
       "evocation": {
         "name": "エーテルの井戸",
-        "description": "マナを急速に回復する。（メイジタレント）"
+        "description": "6秒間チャネルします。毎秒100マナを回復し、呪文威力が8上昇します。この効果はチャネル中に累積し、15秒間持続します。（メイジタレント）"
       },
       "flurry_of_knives": {
         "name": "短剣乱舞",
@@ -10590,7 +11326,7 @@ export const ja_JP: EnTranslations = {
       },
       "frenzied_regeneration": {
         "name": "野生の癒し",
-        "description": "10秒かけて体力を180回復する。熊形態でのみ使用可能。（ドルイドのタレント）"
+        "description": "10秒かけて最大体力の40%を回復する。熊形態でのみ使用可能。（ドルイドのタレント）"
       },
       "frost_trap": {
         "name": "霧氷の罠",
@@ -10610,11 +11346,11 @@ export const ja_JP: EnTranslations = {
       },
       "howl_of_terror": {
         "name": "恐怖の遠吠え",
-        "description": "周囲の敵を最大3秒間恐怖状態にする。ダメージを受けると解除されることがある。（ウォーロックのタレント）"
+        "description": "周囲の敵を最大5秒間恐怖状態にする。対象の最大体力の8%に相当する合計ダメージを受けると、その恐怖は解除される。（ウォーロックのタレント）"
       },
       "ice_block": {
         "name": "冷たき棺",
-        "description": "自身を氷に封じ、大量のダメージを吸収する。効果時間 8 秒。（メイジタレント）"
+        "description": "8秒間自身を堅い氷に封じ、あらゆるダメージを無効化します。すでにかかっている通常の有害な効果を取り除き、新たな通常の行動阻害効果の付与を防ぎます。スタンまたは変身中でも使用できます。氷の中では行動できません。再使用すると解除します。（メイジ）"
       },
       "inner_focus": {
         "name": "静まる心",
@@ -10823,7 +11559,7 @@ export const ja_JP: EnTranslations = {
       },
       "prowl": {
         "name": "つけ狙い",
-        "description": "ウルフフォーム中にステルス状態に入り、移動速度が50%低下する。戦闘中は使用できない。"
+        "description": "ウルフフォーム中にステルス状態に入り、移動速度が5%低下する。戦闘中は使用できない。"
       },
       "rake": {
         "name": "皮剥ぎ",
@@ -12378,6 +13114,9 @@ export const ja_JP: EnTranslations = {
       "pristine_claw": {
         "name": "無傷の鉤爪"
       },
+      "dawnhold_posy": {
+        "name": "ドーンホールド庭園の小さな花束"
+      },
       "conjured_water4": {
         "name": "魔法の湧き水"
       },
@@ -13222,6 +13961,15 @@ export const ja_JP: EnTranslations = {
       },
       "training_dummy": {
         "name": "訓練用ダミー"
+      },
+      "friendly_player_dummy": {
+        "name": "味方プレイヤーダミー"
+      },
+      "normal_boss_dummy": {
+        "name": "ノーマルボスダミー"
+      },
+      "heroic_boss_dummy": {
+        "name": "ヒロイックボスダミー"
       },
       "ridge_stalker": {
         "name": "尾根の追跡者"
@@ -16842,6 +17590,11 @@ export const ja_JP: EnTranslations = {
         "enterText": "空気が冷たくなります。下で巨大な何かが息をしています...",
         "leaveText": "山風の中へよろめき戻ります。"
       },
+      "campaign_trial_room": {
+        "name": "キャンペーンの試練",
+        "enterText": "キャンペーンの試練に入ります。",
+        "leaveText": "キャンペーンの試練を出ます。"
+      },
       "nythraxis_crypt": {
         "name": "放棄された地下墓所",
         "enterText": "放棄された地下墓所の敷居を越えます。",
@@ -16861,6 +17614,11 @@ export const ja_JP: EnTranslations = {
         "name": "最後の砦",
         "enterText": "最後の砦の冷たく静まり返った広間へ足を踏み入れた。",
         "leaveText": "砦の扉を閉め、ドレイクランドの風の中へ戻った。"
+      },
+      "dawnhold_castle": {
+        "name": "ドーンホールド城",
+        "enterText": "花の香り漂うドーンホールド城の暖かな広間へ足を踏み入れた。",
+        "leaveText": "日差しあふれる庭園の芝生へと戻った。"
       },
       "drowned_temple": {
         "name": "溺れし神殿",

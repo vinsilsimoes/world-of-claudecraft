@@ -145,15 +145,19 @@ describe('versioned static SFX serving', () => {
     writeFileSync(pendingReplacement, 'replacement bytes');
 
     const readSync = fs.readSync;
+    const statSync = fs.statSync;
     let replaced = false;
     const spy = vi.spyOn(fs, 'readSync').mockImplementation(((...args) => {
       const count = Reflect.apply(readSync, fs, args) as number;
       if (count > 0 && !replaced) {
         replaced = true;
-        renameSync(pendingReplacement, asset);
       }
       return count;
     }) as typeof fs.readSync);
+    const statSpy = vi.spyOn(fs, 'statSync').mockImplementation(((path, ...args) => {
+      const resolvedPath = replaced && path === asset ? pendingReplacement : path;
+      return Reflect.apply(statSync, fs, [resolvedPath, ...args]);
+    }) as typeof fs.statSync);
 
     try {
       expect(() => readStaticSfxSnapshot(asset)).toThrow(
@@ -162,6 +166,7 @@ describe('versioned static SFX serving', () => {
       expect(replaced).toBe(true);
     } finally {
       spy.mockRestore();
+      statSpy.mockRestore();
     }
   });
 
