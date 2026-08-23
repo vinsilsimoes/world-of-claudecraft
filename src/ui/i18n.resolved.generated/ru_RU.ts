@@ -781,388 +781,388 @@ export const ru_RU: EnTranslations = {
       "collapseHint": "Свернуть трекер заданий",
       "expandHint": "Развернуть трекер заданий",
       "mir4": {
-        "firstTraces": "First Traces",
-        "reachTarek": "Reach Tarek",
-        "inspectClues": "Inspect clues",
-        "returnToTarek": "Return to Tarek",
-        "pausedSuffix": "(auto journey paused by manual control)",
-        "startAutoJourney": "Start auto journey",
-        "stopAutoJourney": "Stop auto journey"
+        "firstTraces": "Первые следы",
+        "reachTarek": "Доберитесь до Тарека",
+        "inspectClues": "Осмотрите улики",
+        "returnToTarek": "Вернитесь к Тареку",
+        "pausedSuffix": "(автопуть приостановлен ручным управлением)",
+        "startAutoJourney": "Начать автопуть",
+        "stopAutoJourney": "Остановить автопуть"
       }
     },
     "mir4": {
       "collectibles": {
         "mounts": {
-          "meadow-courser": "Meadow Courser",
-          "moss-boar": "Moss Boar",
-          "brook-stag": "Brook Stag",
-          "gray-wolf": "Gray Wolf",
-          "dun-packhorse": "Dun Packhorse",
-          "birch-doe": "Birch Doe",
-          "red-maned-pony": "Red Maned Pony",
-          "lowland-elk": "Lowland Elk",
-          "field-lynx": "Field Lynx",
-          "tawny-mastiff": "Tawny Mastiff",
-          "dune-jackal": "Dune Jackal",
-          "reed-puma": "Reed Puma",
-          "clay-ox": "Clay Ox",
-          "valley-buffalo": "Valley Buffalo",
-          "shaggy-yak": "Shaggy Yak",
-          "creek-lizard": "Creek Lizard",
-          "shellback-tortoise": "Stone-Shell Tortoise",
-          "plains-ostrich": "Plains Ostrich",
-          "dusk-emu": "Dusk Rhea",
-          "copper-ant-carrier": "Copper Ant Carrier",
-          "mist-moose": "Mist Moose",
-          "leaf-panther": "Leaf Panther",
-          "turf-rhino": "Turf Rhino",
-          "valley-monitor": "Valley Monitor",
-          "granite-ibex": "Granite Ibex",
-          "silver-dapple-mare": "Silver Dapple Mare",
-          "marsh-stag": "Marsh Stag",
-          "snow-mane-lion": "Snow-Maned Lion",
-          "ember-fox": "Ember Fox",
-          "striped-hyena": "Striped Hyena",
-          "iron-tusk-boar": "Iron Tusk Boar",
-          "cedar-bear": "Cedar Bear",
-          "swamp-hippo": "Swamp Hippo",
-          "thorn-iguana": "Thorn Iguana",
-          "dryland-crocodile": "Dryland Crocodile",
-          "horned-cassowary": "Horned Cassowary",
-          "bronze-raptor": "Bronze Raptor",
-          "amber-scarab": "Amber Scarab",
-          "dune-scorpion": "Dune Scorpion",
-          "root-golem": "Root Golem",
-          "amber-bear": "Amber Bear",
-          "sunset-tiger": "Sunset Tiger",
-          "root-drake": "Root Drake",
-          "hill-griffin": "Hill Griffin",
-          "obsidian-zebra": "Obsidian Zebra",
-          "stormhorn-ram": "Storm-Horn Ram",
-          "dusk-elk": "Dusk Elk",
-          "frost-warg": "Frost Warg",
-          "basalt-rhino": "Basalt Rhino",
-          "tundra-mammoth": "Tundra Mammoth",
-          "crystal-ankylosaur": "Crystal Ankylosaur",
-          "ember-salamander": "Ember Salamander",
-          "thunder-komodo": "Thunder Komodo",
-          "moon-crocodile": "Moon Crocodile",
-          "razorbeak-strider": "Razor-Beaked Strider",
-          "plume-raptor": "Plume Raptor",
-          "glass-mantis": "Glass Mantis",
-          "thunder-beetle": "Thunder Beetle",
-          "iron-sentinel": "Iron Sentinel",
-          "mossstone-colossus": "Moss-Stone Colossus",
-          "eclipse-lion": "Eclipse Lion",
-          "crimson-wyvern": "Crimson Wyvern",
-          "astral-stag": "Astral Stag",
-          "jade-basilisk": "Jade Basilisk",
-          "solar-wolf": "Solar Wolf",
-          "forest-chimera": "Forest Chimera",
-          "tempest-courser": "Tempest Courser",
-          "thorn-elephant": "Thorn Elephant",
-          "void-spider": "Void Spider",
-          "rune-golem": "Rune Golem",
-          "dawn-phoenix": "Dawn Phoenix",
-          "imperial-griffin": "Imperial Griffin",
-          "stone-leviathan": "Stone Leviathan",
-          "void-unicorn": "Void Unicorn",
-          "golden-manticore": "Golden Manticore",
-          "imperial-tiger": "Imperial Tiger",
-          "dawn-mammoth": "Dawn Mammoth",
-          "magma-drake": "Magma Drake",
-          "crown-scorpion": "Crown Scorpion",
-          "sunforged-colossus": "Sunforged Colossus",
-          "ground-dragon": "Ground Dragon",
-          "eternal-phoenix": "Eternal Phoenix",
-          "celestial-kirin": "Celestial Kirin",
-          "firmament-behemoth": "Firmament Lion",
-          "time-hydra": "Time Hydra"
+          "meadow-courser": "Луговой скакун",
+          "moss-boar": "Мшистый вепрь",
+          "brook-stag": "Ручейный олень",
+          "gray-wolf": "Серый волк",
+          "dun-packhorse": "Буланая вьючная лошадь",
+          "birch-doe": "Берёзовая лань",
+          "red-maned-pony": "Красногривый пони",
+          "lowland-elk": "Низинный лось",
+          "field-lynx": "Полевая рысь",
+          "tawny-mastiff": "Бурый мастиф",
+          "dune-jackal": "Пустынный шакал",
+          "reed-puma": "Тростниковая пума",
+          "clay-ox": "Глиняный вол",
+          "valley-buffalo": "Долинный буйвол",
+          "shaggy-yak": "Косматый як",
+          "creek-lizard": "Ручейная ящерица",
+          "shellback-tortoise": "Камнепанцирная черепаха",
+          "plains-ostrich": "Равнинный страус",
+          "dusk-emu": "Сумеречный нанду",
+          "copper-ant-carrier": "Медный муравей-носильщик",
+          "mist-moose": "Туманный лось",
+          "leaf-panther": "Листовая пантера",
+          "turf-rhino": "Торфяной носорог",
+          "valley-monitor": "Долинный варан",
+          "granite-ibex": "Гранитный козерог",
+          "silver-dapple-mare": "Серебристая пятнистая кобыла",
+          "marsh-stag": "Болотный олень",
+          "snow-mane-lion": "Снежногривый лев",
+          "ember-fox": "Угольная лисица",
+          "striped-hyena": "Полосатая гиена",
+          "iron-tusk-boar": "Железноклыкий вепрь",
+          "cedar-bear": "Кедровый медведь",
+          "swamp-hippo": "Болотный бегемот",
+          "thorn-iguana": "Шипастая игуана",
+          "dryland-crocodile": "Пустынный крокодил",
+          "horned-cassowary": "Рогатый казуар",
+          "bronze-raptor": "Бронзовый раптор",
+          "amber-scarab": "Янтарный скарабей",
+          "dune-scorpion": "Пустынный скорпион",
+          "root-golem": "Корневой голем",
+          "amber-bear": "Янтарный медведь",
+          "sunset-tiger": "Закатный тигр",
+          "root-drake": "Корневой дрейк",
+          "hill-griffin": "Холмовой грифон",
+          "obsidian-zebra": "Обсидиановая зебра",
+          "stormhorn-ram": "Громорогий баран",
+          "dusk-elk": "Сумеречный лось",
+          "frost-warg": "Морозный варг",
+          "basalt-rhino": "Базальтовый носорог",
+          "tundra-mammoth": "Тундровый мамонт",
+          "crystal-ankylosaur": "Кристальный анкилозавр",
+          "ember-salamander": "Угольная саламандра",
+          "thunder-komodo": "Громовой комодский варан",
+          "moon-crocodile": "Лунный крокодил",
+          "razorbeak-strider": "Остроклювый бегун",
+          "plume-raptor": "Пернатый раптор",
+          "glass-mantis": "Стеклянный богомол",
+          "thunder-beetle": "Громовой жук",
+          "iron-sentinel": "Железный страж",
+          "mossstone-colossus": "Мохокаменный колосс",
+          "eclipse-lion": "Лев затмения",
+          "crimson-wyvern": "Багровая виверна",
+          "astral-stag": "Астральный олень",
+          "jade-basilisk": "Нефритовый василиск",
+          "solar-wolf": "Солнечный волк",
+          "forest-chimera": "Лесная химера",
+          "tempest-courser": "Буревой скакун",
+          "thorn-elephant": "Шипастый слон",
+          "void-spider": "Паук пустоты",
+          "rune-golem": "Рунический голем",
+          "dawn-phoenix": "Феникс рассвета",
+          "imperial-griffin": "Имперский грифон",
+          "stone-leviathan": "Каменный левиафан",
+          "void-unicorn": "Единорог пустоты",
+          "golden-manticore": "Золотая мантикора",
+          "imperial-tiger": "Имперский тигр",
+          "dawn-mammoth": "Мамонт рассвета",
+          "magma-drake": "Магмовый дрейк",
+          "crown-scorpion": "Коронный скорпион",
+          "sunforged-colossus": "Солнцекованный колосс",
+          "ground-dragon": "Земляной дракон",
+          "eternal-phoenix": "Вечный феникс",
+          "celestial-kirin": "Небесный кирин",
+          "firmament-behemoth": "Лев небосвода",
+          "time-hydra": "Гидра времени"
         },
         "spirits": {
-          "spirit-common-01": "Meadow Spark",
-          "spirit-common-02": "Brook Breeze",
-          "spirit-common-03": "Watchful Leaf",
-          "spirit-common-04": "Stone Echo",
-          "spirit-uncommon-01": "Dawn Glow",
-          "spirit-uncommon-02": "Mist Nymph",
-          "spirit-uncommon-03": "Moss Guardian",
-          "spirit-uncommon-04": "Valley Salamander",
-          "spirit-rare-01": "Amber Fox",
-          "spirit-rare-02": "Sunset Owl",
-          "spirit-rare-03": "Root Drake",
-          "spirit-rare-04": "Hills Oracle",
-          "spirit-epic-01": "Eclipse Avatar",
-          "spirit-epic-02": "Crimson Ifrit",
-          "spirit-epic-03": "Astral Stag",
-          "spirit-epic-04": "Jade Sentinel",
-          "spirit-epic-05": "Solar Wolf",
-          "spirit-epic-06": "Ethereal Chimera",
-          "spirit-legendary-01": "Earth Titan",
-          "spirit-legendary-02": "Dawn Phoenix",
-          "spirit-legendary-03": "Imperial Archon",
-          "spirit-legendary-04": "Crystal Leviathan",
-          "spirit-legendary-05": "Void Unicorn",
-          "spirit-legendary-06": "Golden Manticore",
-          "spirit-mythical-01": "Primordial Soul",
-          "spirit-mythical-02": "Eternal Phoenix",
-          "spirit-mythical-03": "Celestial Kirin",
-          "spirit-mythical-04": "Firmament Behemoth",
-          "spirit-mythical-05": "Abyssal Seraph",
-          "spirit-mythical-06": "Time Hydra"
+          "spirit-common-01": "Луговая искра",
+          "spirit-common-02": "Ручейный бриз",
+          "spirit-common-03": "Дозорный лист",
+          "spirit-common-04": "Каменное эхо",
+          "spirit-uncommon-01": "Свет рассвета",
+          "spirit-uncommon-02": "Нимфа тумана",
+          "spirit-uncommon-03": "Страж мха",
+          "spirit-uncommon-04": "Долинная саламандра",
+          "spirit-rare-01": "Янтарная лисица",
+          "spirit-rare-02": "Закатная сова",
+          "spirit-rare-03": "Корневой дрейк",
+          "spirit-rare-04": "Оракул холмов",
+          "spirit-epic-01": "Аватар затмения",
+          "spirit-epic-02": "Багровый ифрит",
+          "spirit-epic-03": "Астральный олень",
+          "spirit-epic-04": "Нефритовый страж",
+          "spirit-epic-05": "Солнечный волк",
+          "spirit-epic-06": "Эфирная химера",
+          "spirit-legendary-01": "Титан земли",
+          "spirit-legendary-02": "Феникс рассвета",
+          "spirit-legendary-03": "Имперский архонт",
+          "spirit-legendary-04": "Кристальный левиафан",
+          "spirit-legendary-05": "Единорог пустоты",
+          "spirit-legendary-06": "Золотая мантикора",
+          "spirit-mythical-01": "Изначальная душа",
+          "spirit-mythical-02": "Вечный феникс",
+          "spirit-mythical-03": "Небесный кирин",
+          "spirit-mythical-04": "Исполин небосвода",
+          "spirit-mythical-05": "Бездонный серафим",
+          "spirit-mythical-06": "Гидра времени"
         },
         "spiritSkills": {
-          "spirit-skill-1-01": "Wandering Spark",
-          "spirit-skill-1-02": "Dusk Instinct",
-          "spirit-skill-1-03": "Vital Dew",
-          "spirit-skill-1-04": "Mana Breath",
-          "spirit-skill-2-01": "Rising Flare",
-          "spirit-skill-2-02": "Mist Fang",
-          "spirit-skill-2-03": "Restoring Sap",
-          "spirit-skill-2-04": "Arcane Pulse",
-          "spirit-skill-3-01": "Amber Rupture",
-          "spirit-skill-3-02": "Sunset Judgment",
-          "spirit-skill-3-03": "Vital Bond",
-          "spirit-skill-3-04": "Root Spring",
-          "spirit-skill-4-01": "Eclipse Ray",
-          "spirit-skill-4-02": "Crimson Fury",
-          "spirit-skill-4-03": "Astral Grace",
-          "spirit-skill-4-04": "Jade Orb",
-          "spirit-skill-4-05": "Solar Cut",
-          "spirit-skill-4-06": "Ethereal Focus",
-          "spirit-skill-5-01": "Tectonic Impact",
-          "spirit-skill-5-02": "Reborn Flame",
-          "spirit-skill-5-03": "Imperial Verdict",
-          "spirit-skill-5-04": "Crystal Tide",
-          "spirit-skill-5-05": "Void Rift",
-          "spirit-skill-5-06": "Golden Crown",
-          "spirit-skill-6-01": "Genesis",
-          "spirit-skill-6-02": "Eternal Return",
-          "spirit-skill-6-03": "Celestial Mandate",
-          "spirit-skill-6-04": "Weight of the Firmament",
-          "spirit-skill-6-05": "Abyssal Spiral",
-          "spirit-skill-6-06": "Absolute Moment"
+          "spirit-skill-1-01": "Блуждающая искра",
+          "spirit-skill-1-02": "Инстинкт сумерек",
+          "spirit-skill-1-03": "Живая роса",
+          "spirit-skill-1-04": "Дыхание маны",
+          "spirit-skill-2-01": "Восходящая вспышка",
+          "spirit-skill-2-02": "Клык тумана",
+          "spirit-skill-2-03": "Целительный сок",
+          "spirit-skill-2-04": "Чародейский импульс",
+          "spirit-skill-3-01": "Янтарный разрыв",
+          "spirit-skill-3-02": "Закатный суд",
+          "spirit-skill-3-03": "Жизненная связь",
+          "spirit-skill-3-04": "Корневой источник",
+          "spirit-skill-4-01": "Луч затмения",
+          "spirit-skill-4-02": "Багровая ярость",
+          "spirit-skill-4-03": "Астральная благодать",
+          "spirit-skill-4-04": "Нефритовая сфера",
+          "spirit-skill-4-05": "Солнечный разрез",
+          "spirit-skill-4-06": "Эфирный фокус",
+          "spirit-skill-5-01": "Тектонический удар",
+          "spirit-skill-5-02": "Возрождённое пламя",
+          "spirit-skill-5-03": "Имперский вердикт",
+          "spirit-skill-5-04": "Кристальный прилив",
+          "spirit-skill-5-05": "Разлом пустоты",
+          "spirit-skill-5-06": "Золотая корона",
+          "spirit-skill-6-01": "Генезис",
+          "spirit-skill-6-02": "Вечное возвращение",
+          "spirit-skill-6-03": "Небесный мандат",
+          "spirit-skill-6-04": "Вес небосвода",
+          "spirit-skill-6-05": "Бездонная спираль",
+          "spirit-skill-6-06": "Абсолютное мгновение"
         }
       },
-      "ultimateGauge": "Ultimate gauge",
-      "ultimateGaugeStatus": "Ultimate gauge: {value} of {max}",
-      "ultimateReadyAnnouncement": "Ultimate ready.",
+      "ultimateGauge": "Шкала суперумения",
+      "ultimateGaugeStatus": "Шкала суперумения: {value} из {max}",
+      "ultimateReadyAnnouncement": "Суперумение готово.",
       "achievements": {
-        "title": "Achievements",
-        "close": "Close achievements",
-        "summary": "{claimed}/{total} rewards claimed",
-        "balances": "Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}",
-        "levelTitle": "Level {level}",
-        "levelDescription": "Reach level {level}.",
-        "progressAria": "Level progress: {current}/{target}",
-        "progressText": "{current}/{target}",
-        "rewardCopper": "{amount} copper",
-        "rewardDarksteel": "{amount} Darksteel",
-        "rewardEffectPoints": "{amount} Effect Points",
-        "rewardSkillTomes": "{amount} Skill Tomes",
-        "rewards": "Rewards: {rewards}",
-        "claim": "Claim",
-        "claimed": "Claimed",
-        "locked": "Reach level {level}",
-        "previousGrade": "Claim the previous grade first",
-        "claimAria": "Claim the level {level} achievement reward"
+        "title": "Достижения",
+        "close": "Закрыть достижения",
+        "summary": "Получено наград: {claimed}/{total}",
+        "balances": "Медь {copper} · Тёмная сталь {darksteel} · ОЭ {effectPoints} · Тома навыков: {skillTomes}",
+        "levelTitle": "Уровень {level}",
+        "levelDescription": "Достигните уровня {level}.",
+        "progressAria": "Прогресс уровня: {current}/{target}",
+        "progressText": "{current} / {target}",
+        "rewardCopper": "Медь: {amount}",
+        "rewardDarksteel": "Тёмная сталь: {amount}",
+        "rewardEffectPoints": "Очки эффектов: {amount}",
+        "rewardSkillTomes": "Тома навыков: {amount}",
+        "rewards": "Награды: {rewards}",
+        "claim": "Получить",
+        "claimed": "Получено",
+        "locked": "Достигните уровня {level}",
+        "previousGrade": "Сначала получите награду предыдущего этапа",
+        "claimAria": "Получить награду достижения уровня {level}"
       },
       "questLog": {
-        "narrative": "Investigate the three clue sites around the ford, then return to Tarek Two Bridges.",
-        "giverName": "Tarek Two Bridges",
-        "emptyHint": "Find Tarek Two Bridges in the M01 settlement, or start auto journey.",
-        "completedHint": "First Traces is complete. The remaining campaign quests are not active yet."
+        "narrative": "Исследуйте три места с уликами у брода, затем вернитесь к Тареку Двум Мостам.",
+        "giverName": "Тарек Два Моста",
+        "emptyHint": "Найдите Тарека Два Моста в поселении M01 или запустите автопуть.",
+        "completedHint": "Задание «Первые следы» выполнено. Остальные задания кампании пока не активны."
       },
       "campaign": {
-        "questTitle": "Campaign {id}",
-        "narrative": "Complete the current campaign objectives for {id}.",
-        "contact": "Campaign contact",
+        "questTitle": "Кампания {id}",
+        "narrative": "Выполните текущие цели кампании {id}.",
+        "contact": "Связной кампании",
         "objective": {
-          "returnToContact": "Return to the campaign contact",
-          "talk": "Speak with the campaign contact",
-          "deliver": "Deliver the requested items",
-          "travel": "Travel to the marked objective",
-          "inspect": "Inspect the marked evidence",
-          "gather": "Gather the requested resources",
-          "defend": "Defend the marked objective",
-          "combat": "Defeat the marked enemies",
-          "escort": "Escort the marked ally",
-          "escortSupplies": "Escort the supply group",
-          "dungeon": "Clear the campaign dungeon",
-          "craft": "Craft the requested supplies",
-          "tutorial": "Complete the system lesson",
-          "interact": "Interact with the marked objective",
-          "complete": "Complete the current objective"
+          "returnToContact": "Вернитесь к связному кампании",
+          "talk": "Поговорите со связным кампании",
+          "deliver": "Доставьте требуемые предметы",
+          "travel": "Доберитесь до отмеченной цели",
+          "inspect": "Осмотрите отмеченные улики",
+          "gather": "Соберите требуемые ресурсы",
+          "defend": "Защитите отмеченную цель",
+          "combat": "Победите отмеченных врагов",
+          "escort": "Сопроводите отмеченного союзника",
+          "escortSupplies": "Сопроводите группу снабжения",
+          "dungeon": "Завершите подземелье кампании",
+          "craft": "Изготовьте требуемые припасы",
+          "tutorial": "Завершите обучение системе",
+          "interact": "Взаимодействуйте с отмеченной целью",
+          "complete": "Выполните текущую цель"
         }
       },
-      "characterTitle": "Character",
-      "awaitingState": "Waiting for authoritative character data...",
-      "combatPowerLine": "Combat Power {value}",
-      "equipmentVisualShell": "World of ClaudeCraft appearance with MIR4 combat attributes",
-      "equipmentTierGrade": "Tier {tier}, Grade {grade}",
-      "equipmentRequiredLevel": "Requires level {level}",
-      "unequipHint": "Click the X or right-click to unequip.",
-      "unequipAria": "Unequip {item}",
-      "equipHint": "Click to equip.",
-      "equipAria": "Equip {item}",
-      "inventoryEquipment": "Equipment",
-      "inventoryRuntimeItems": "Native World of ClaudeCraft Items",
-      "inventoryCollectionTickets": "Collection Tickets",
-      "inventoryMaterials": "Refinement Materials",
-      "noUnequippedEquipment": "No unequipped equipment.",
-      "materialCount": "Owned: {count}",
-      "mountTicketDawn": "Dawn Mount Ticket",
-      "mountTicketTwilight": "Twilight Mount Ticket",
-      "mountTicketDawnDescription": "Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.",
-      "mountTicketTwilightDescription": "Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.",
+      "characterTitle": "Персонаж",
+      "awaitingState": "Ожидание подтверждённых данных персонажа…",
+      "combatPowerLine": "Боевая мощь: {value}",
+      "equipmentVisualShell": "Внешний вид World of ClaudeCraft с боевыми параметрами MIR4",
+      "equipmentTierGrade": "Ранг {tier}, качество {grade}",
+      "equipmentRequiredLevel": "Требуется уровень {level}",
+      "unequipHint": "Нажмите X или правую кнопку мыши, чтобы снять.",
+      "unequipAria": "Снять {item}",
+      "equipHint": "Нажмите, чтобы экипировать.",
+      "equipAria": "Экипировать {item}",
+      "inventoryEquipment": "Снаряжение",
+      "inventoryRuntimeItems": "Предметы World of ClaudeCraft",
+      "inventoryCollectionTickets": "Билеты коллекции",
+      "inventoryMaterials": "Материалы улучшения",
+      "noUnequippedEquipment": "Нет снятого снаряжения.",
+      "materialCount": "В наличии: {count}",
+      "mountTicketDawn": "Рассветный билет транспорта",
+      "mountTicketTwilight": "Сумеречный билет транспорта",
+      "mountTicketDawnDescription": "Призывает один транспорт: 79% обычный, 20% необычный или 1% редкий. Билет расходуется при успешном призыве. Показана стандартная модель World of ClaudeCraft; указанные параметры MIR4 являются подтверждёнными.",
+      "mountTicketTwilightDescription": "Призывает один транспорт: 99% редкий или 1% эпический. Эпический результат переходит во владение после подтверждения. Показана стандартная модель World of ClaudeCraft.",
       "redeemMountTicket": "Use {ticket}",
-      "inventoryMounts": "Mounts",
-      "inventoryPendingMounts": "Mounts Awaiting Confirmation",
-      "mountGrade": "Grade {grade}",
-      "mountOwned": "Owned: {count}",
-      "mountEquipped": "Equipped",
-      "mountEquipHint": "Click to equip this Mount and summon its native World of ClaudeCraft visual shell.",
-      "mountUnequipHint": "Click to unequip this Mount and dismount.",
-      "mountConfirmHint": "Click to confirm this Mount and add it to your collection.",
-      "mountConfirmAria": "Confirm {mount}",
-      "mountEffectShell": "Native World of ClaudeCraft model with MIR4 Mount stats",
-      "mountMoveSpeed": "Movement Speed: +{amount}%",
+      "inventoryMounts": "Транспорт",
+      "inventoryPendingMounts": "Транспорт, ожидающий подтверждения",
+      "mountGrade": "Качество {grade}",
+      "mountOwned": "В наличии: {count}",
+      "mountEquipped": "Экипировано",
+      "mountEquipHint": "Нажмите, чтобы экипировать транспорт и призвать его стандартную модель World of ClaudeCraft.",
+      "mountUnequipHint": "Нажмите, чтобы снять транспорт и спешиться.",
+      "mountConfirmHint": "Нажмите, чтобы подтвердить транспорт и добавить его в коллекцию.",
+      "mountConfirmAria": "Подтвердить {mount}",
+      "mountEffectShell": "Стандартная модель World of ClaudeCraft с параметрами транспорта MIR4",
+      "mountMoveSpeed": "Скорость передвижения: +{amount}%",
       "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
-      "mountDefenses": "Physical Defense: +{physical} · Magic Defense: +{magic}",
-      "equippedMountLine": "Mount: {mount} (Grade {grade})",
-      "noEquippedMount": "Mount: none equipped",
-      "inventoryMountCombination": "Mount Combination",
-      "combineMountsAria": "Combine four Grade {grade} Mounts",
-      "combineMountsHint": "Consumes four owned Mounts of this grade. There is a 20% chance to receive one random Mount of the next grade. On failure, you receive one random Mount of the same grade. Epic or higher rewards await confirmation.",
-      "inventorySpirits": "Spirits",
-      "inventoryPendingSpirits": "Spirits Awaiting Confirmation",
-      "spiritTicketDawn": "Dawn Spirit Ticket",
-      "spiritTicketSunset": "Sunset Spirit Ticket",
-      "spiritTicketDawnDescription": "Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.",
-      "spiritTicketSunsetDescription": "Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.",
-      "redeemSpiritTicket": "Summon with {ticket}",
-      "spiritGrade": "Grade {grade}",
-      "spiritOwned": "Owned: {count}",
-      "spiritEquipped": "Equipped",
-      "spiritEquipHint": "Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.",
-      "spiritUnequipHint": "Click to unequip this Spirit.",
-      "spiritConfirmHint": "Click to confirm this Spirit and add it to your collection.",
-      "spiritConfirmAria": "Confirm {spirit}",
-      "spiritEffectShell": "Native World of ClaudeCraft presentation with MIR4 Spirit effects",
-      "equippedSpiritLine": "Spirit: {spirit} (Grade {grade})",
-      "noEquippedSpirit": "Spirit: none equipped",
-      "inventorySpiritCombination": "Spirit Combination",
-      "combineSpiritsAria": "Combine four Grade {grade} Spirits",
-      "combineSpiritsHint": "Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.",
-      "spiritSkillChanceCooldown": "{chance}% chance · {cooldown}s cooldown",
-      "spiritSkillBonusDamage": "Increases the triggering hit's raw damage by {amount}%.",
-      "spiritSkillExecute": "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
-      "spiritSkillLifeSiphon": "Restores {amount}% of maximum Health.",
-      "spiritSkillManaSurge": "Restores {amount}% of maximum Mana.",
-      "spiritSkillArmorRend": "Adds {amount}% Defense Penetration to the triggering hit.",
-      "spiritSkillCriticalFocus": "Forces the triggering hit to be critical.",
+      "mountDefenses": "Физическая защита: +{physical} · Магическая защита: +{magic}",
+      "equippedMountLine": "Транспорт: {mount} (качество {grade})",
+      "noEquippedMount": "Транспорт: не экипирован",
+      "inventoryMountCombination": "Объединение транспорта",
+      "combineMountsAria": "Объединить четыре транспорта качества {grade}",
+      "combineMountsHint": "Расходует четыре принадлежащих вам транспорта этого качества. С вероятностью 20% вы получите случайный транспорт следующего качества. При неудаче вы получите случайный транспорт того же качества. Эпические и более высокие награды ожидают подтверждения.",
+      "inventorySpirits": "Духи",
+      "inventoryPendingSpirits": "Духи, ожидающие подтверждения",
+      "spiritTicketDawn": "Рассветный билет духа",
+      "spiritTicketSunset": "Закатный билет духа",
+      "spiritTicketDawnDescription": "Призывает одного духа: 79% обычный, 20% необычный или 1% редкий. Билет расходуется при успешном призыве. Значок использует стандартное оформление World of ClaudeCraft; действуют только указанные эффекты MIR4.",
+      "spiritTicketSunsetDescription": "Призывает одного духа: 94,5% необычный, 5% редкий или 0,5% эпический. Эпический результат переходит во владение после подтверждения. Билет расходуется при успешном призыве.",
+      "redeemSpiritTicket": "Призвать с помощью {ticket}",
+      "spiritGrade": "Качество {grade}",
+      "spiritOwned": "В наличии: {count}",
+      "spiritEquipped": "Экипирован",
+      "spiritEquipHint": "Нажмите, чтобы экипировать духа. Его параметры и бонусы коллекции применятся к вашим параметрам MIR4.",
+      "spiritUnequipHint": "Нажмите, чтобы снять этого духа.",
+      "spiritConfirmHint": "Нажмите, чтобы подтвердить духа и добавить его в коллекцию.",
+      "spiritConfirmAria": "Подтвердить {spirit}",
+      "spiritEffectShell": "Стандартное оформление World of ClaudeCraft с эффектами духа MIR4",
+      "equippedSpiritLine": "Дух: {spirit} (качество {grade})",
+      "noEquippedSpirit": "Дух: не экипирован",
+      "inventorySpiritCombination": "Объединение духов",
+      "combineSpiritsAria": "Объединить четыре духа качества {grade}",
+      "combineSpiritsHint": "Расходует четырёх принадлежащих вам духов этого качества. С вероятностью 20% вы получите случайного духа следующего качества. При неудаче вы получите случайного духа того же качества. Эпические и более высокие награды ожидают подтверждения.",
+      "spiritSkillChanceCooldown": "Шанс {chance}% · восстановление {cooldown} с",
+      "spiritSkillBonusDamage": "Увеличивает исходный урон вызвавшего эффект удара на {amount}%.",
+      "spiritSkillExecute": "Пока здоровье цели не превышает {threshold}%, увеличивает исходный урон вызвавшего эффект удара на {amount}%.",
+      "spiritSkillLifeSiphon": "Восстанавливает {amount}% максимального здоровья.",
+      "spiritSkillManaSurge": "Восстанавливает {amount}% максимальной маны.",
+      "spiritSkillArmorRend": "Добавляет вызвавшему эффект удару {amount}% пробивания защиты.",
+      "spiritSkillCriticalFocus": "Вызвавший эффект удар гарантированно становится критическим.",
       "equipmentSlots": {
-        "weapon": "Weapon",
-        "necklace": "Necklace",
+        "weapon": "Оружие",
+        "necklace": "Ожерелье",
         "ring": "Ring",
-        "talisman": "Talisman",
-        "chest": "Chest",
-        "helmet": "Helmet",
-        "gloves": "Gloves",
-        "boots": "Boots"
+        "talisman": "Талисман",
+        "chest": "Нагрудник",
+        "helmet": "Шлем",
+        "gloves": "Перчатки",
+        "boots": "Сапоги"
       },
       "stats": {
-        "combatPower": "Combat Power",
-        "maxHp": "Maximum Health",
-        "maxMana": "Maximum Mana",
-        "physicalAttack": "Physical Attack",
-        "magicAttack": "Magic Attack",
-        "physicalDefense": "Physical Defense",
-        "magicDefense": "Magic Defense",
-        "accuracy": "Accuracy",
-        "dodge": "Dodge",
-        "critical": "Critical",
-        "avoidCritical": "Critical Evasion",
-        "criticalOutcome": "Critical Damage",
-        "bossDamage": "Boss Damage",
-        "skillDamage": "Skill Damage",
-        "penetration": "Defense Penetration",
-        "unknown": "Combat Attribute"
+        "combatPower": "Боевая мощь",
+        "maxHp": "Максимум здоровья",
+        "maxMana": "Максимум маны",
+        "physicalAttack": "Физическая атака",
+        "magicAttack": "Магическая атака",
+        "physicalDefense": "Физическая защита",
+        "magicDefense": "Магическая защита",
+        "accuracy": "Меткость",
+        "dodge": "Уклонение",
+        "critical": "Критический удар",
+        "avoidCritical": "Уклонение от критического удара",
+        "criticalOutcome": "Критический урон",
+        "bossDamage": "Урон по боссам",
+        "skillDamage": "Урон навыков",
+        "penetration": "Пробивание защиты",
+        "unknown": "Боевой параметр"
       },
       "materials": {
-        "sunStone": "Sun Stone",
-        "moonStone": "Moon Stone",
-        "solarScroll": "Solar Scroll",
-        "lunarSeal": "Lunar Seal",
+        "sunStone": "Солнечный камень",
+        "moonStone": "Лунный камень",
+        "solarScroll": "Солнечный свиток",
+        "lunarSeal": "Лунная печать",
         "dawnTear": "Dawn Tear",
-        "solarWard": "Solar Ward"
+        "solarWard": "Солнечный оберег"
       },
       "maps": {
-        "portal": "{zone} Portal",
-        "actWelcome": "{zone} (Act {act}).",
-        "m01": "Ford Village",
-        "m02": "Reed Trail",
-        "m03": "Vale Grove",
-        "m04": "Hillside Ruins",
-        "m05": "Rift Clearing",
-        "m06": "Candle-Stone Crypts",
-        "m07": "Ossuary Galleries",
-        "m08": "Miststone Fortress",
-        "m09": "Lantern Marsh",
+        "portal": "Портал: {zone}",
+        "actWelcome": "{zone} (акт {act}).",
+        "m01": "Деревня у брода",
+        "m02": "Тростниковая тропа",
+        "m03": "Долинная роща",
+        "m04": "Руины на склоне",
+        "m05": "Поляна Разлома",
+        "m06": "Склепы Свечного Камня",
+        "m07": "Галереи оссуария",
+        "m08": "Крепость Туманного Камня",
+        "m09": "Фонарная топь",
         "m10": "Bog King's Fen",
-        "m11": "Leech Mangrove",
-        "m12": "Reed Harbor",
-        "m13": "Glass Dunes",
-        "m14": "Akhet Necropolis",
-        "m15": "Cinderite Caldera",
-        "m16": "Shattered Sun Forge",
-        "m17": "Howling Tundra",
+        "m11": "Мангры пиявок",
+        "m12": "Тростниковая гавань",
+        "m13": "Стеклянные дюны",
+        "m14": "Некрополь Ахет",
+        "m15": "Кальдера Пепельника",
+        "m16": "Кузня Расколотого Солнца",
+        "m17": "Воющая тундра",
         "m18": "Jarl's Pass",
-        "m19": "Night Veil",
-        "m20": "Eclipse Bastille"
+        "m19": "Ночная завеса",
+        "m20": "Бастилия Затмения"
       },
       "progression": {
-        "title": "Equipment Workshop",
-        "refinement": "Refinement",
-        "enchantment": "Enchantment",
-        "blessing": "Blessing",
-        "crafting": "Crafting",
-        "ownedEquipment": "Owned Equipment",
-        "noEquipment": "No equipment is available for this operation.",
-        "equipped": "Equipped",
-        "enhancementLevel": "Enhancement +{level} of +{max}",
-        "successChance": "Success chance: {chance}%",
-        "safeFailure": "Failure keeps the equipment.",
-        "destructiveFailure": "Failure destroys the equipment above +5.",
-        "wardProtection": "A Solar Ward will be consumed to prevent destruction.",
-        "noWardProtection": "No Solar Ward is available.",
-        "enhanceCost": "Cost: 1 Solar Scroll",
-        "enhance": "Enhance",
-        "maxEnhancement": "Maximum enhancement reached",
-        "currentEffects": "Current Effects",
-        "noCurrentEffects": "No effects applied.",
-        "rollCostEnchantment": "Cost: 1 Lunar Seal",
-        "layerUnsupported": "This item cannot receive {layer} effects.",
+        "title": "Мастерская снаряжения",
+        "refinement": "Улучшение",
+        "enchantment": "Зачарование",
+        "blessing": "Благословение",
+        "crafting": "Изготовление",
+        "ownedEquipment": "Снаряжение в наличии",
+        "noEquipment": "Для этой операции нет доступного снаряжения.",
+        "equipped": "Экипировано",
+        "enhancementLevel": "Улучшение +{level} из +{max}",
+        "successChance": "Шанс успеха: {chance}%",
+        "safeFailure": "При неудаче снаряжение сохраняется.",
+        "destructiveFailure": "Неудача выше +5 уничтожает снаряжение.",
+        "wardProtection": "Солнечный оберег будет израсходован, чтобы предотвратить уничтожение.",
+        "noWardProtection": "Нет доступного Солнечного оберега.",
+        "enhanceCost": "Стоимость: 1 Солнечный свиток",
+        "enhance": "Улучшить",
+        "maxEnhancement": "Достигнут максимальный уровень улучшения",
+        "currentEffects": "Текущие эффекты",
+        "noCurrentEffects": "Нет применённых эффектов.",
+        "rollCostEnchantment": "Стоимость: 1 Лунная печать",
+        "layerUnsupported": "Этот предмет не может получить эффекты «{layer}».",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
-        "roll": "Roll Preview",
-        "pendingOtherLayer": "Resolve the pending {layer} preview first.",
-        "preview": "Pending Preview",
-        "acceptPreview": "Apply Preview",
-        "keepCurrent": "Keep Current",
-        "inactiveEffect": "Ported effect (not active in combat yet)",
-        "materialRecipes": "Material Recipes",
-        "campaignProfession": "Campaign Profession Order",
-        "campaignProfessionProgress": "Progress: {current}/{goal}",
-        "campaignProfessionMaterials": "Eligible materials: {held}/{needed}",
-        "campaignProfessionHint": "Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.",
-        "campaignCraft": "Craft Component",
-        "campaignRefine": "Refine Component",
-        "campaignSalvage": "Salvage Gear",
-        "creates": "Creates {count} {material}",
+        "roll": "Создать предпросмотр",
+        "pendingOtherLayer": "Сначала разрешите ожидающий предпросмотр слоя «{layer}».",
+        "preview": "Ожидающий предпросмотр",
+        "acceptPreview": "Применить предпросмотр",
+        "keepCurrent": "Оставить текущие эффекты",
+        "inactiveEffect": "Перенесённый эффект (пока не действует в бою)",
+        "materialRecipes": "Рецепты материалов",
+        "campaignProfession": "Ремесленный заказ кампании",
+        "campaignProfessionProgress": "Прогресс: {current}/{goal}",
+        "campaignProfessionMaterials": "Подходящие материалы: {held}/{needed}",
+        "campaignProfessionHint": "Выполните заказ у ремесленной точки кампании. Сервер расходует только подтверждённые региональные материалы.",
+        "campaignCraft": "Изготовить компонент",
+        "campaignRefine": "Улучшить компонент",
+        "campaignSalvage": "Разобрать снаряжение",
+        "creates": "Создаёт: {count} {material}",
         "materialCost": "{held}/{needed} {material}",
-        "copperCost": "{amount} copper",
-        "create": "Create",
-        "requestSent": "The server is validating the equipment operation."
+        "copperCost": "{amount} медных монет",
+        "create": "Создать",
+        "requestSent": "Сервер проверяет операцию со снаряжением."
       }
     },
     "interfaceTabs": {
@@ -2933,7 +2933,7 @@ export const ru_RU: EnTranslations = {
       "addToBarAria": "Добавить {name} на панель действий",
       "removeFromBarAria": "Убрать {name} с панели действий",
       "upgradeRank": "Rank {rank}",
-      "maxRank": "Max rank",
+      "maxRank": "Макс. ранг",
       "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
       "assignAria": "Выберите ячейку для {name}"
     },
@@ -3266,7 +3266,7 @@ export const ru_RU: EnTranslations = {
     },
     "noticeboard": {
       "empty": "Похоже, здесь ничего не опубликовано.",
-      "contract": "Contract active: {title}"
+      "contract": "Активный контракт: {title}"
     },
     "bank": {
       "title": "Банк",
@@ -7491,10 +7491,10 @@ export const ru_RU: EnTranslations = {
   },
   "classes": {
     "warrior": "Воин",
-    "elementalist": "Elementalist",
-    "taoist": "Taoist",
-    "arbalist": "Arbalist",
-    "lancer": "Lancer",
+    "elementalist": "Элементалист",
+    "taoist": "Даос",
+    "arbalist": "Арбалетчик",
+    "lancer": "Копейщик",
     "paladin": "Паладин",
     "hunter": "Охотник",
     "rogue": "Разбойник",
@@ -7504,10 +7504,10 @@ export const ru_RU: EnTranslations = {
     "warlock": "Чернокнижник",
     "druid": "Друид",
     "warriorAria": "Класс Воин",
-    "elementalistAria": "Elementalist class",
-    "taoistAria": "Taoist class",
-    "arbalistAria": "Arbalist class",
-    "lancerAria": "Lancer class",
+    "elementalistAria": "Класс «Элементалист»",
+    "taoistAria": "Класс «Даос»",
+    "arbalistAria": "Класс «Арбалетчик»",
+    "lancerAria": "Класс «Копейщик»",
     "paladinAria": "Класс Паладин",
     "hunterAria": "Класс Охотник",
     "rogueAria": "Класс Разбойник",
@@ -8433,28 +8433,28 @@ export const ru_RU: EnTranslations = {
     },
     "mir4": {
       "labels": {
-        "damage": "Damage",
-        "combatRange": "Combat Range",
-        "startingSkills": "Starting Skills"
+        "damage": "Урон",
+        "combatRange": "Дальность боя",
+        "startingSkills": "Начальные умения"
       },
       "damage": {
-        "physical": "Physical",
-        "magic": "Magic"
+        "physical": "Физический",
+        "magic": "Магический"
       },
       "range": {
-        "melee": "Melee",
-        "medium": "Medium range",
-        "long": "Long range",
-        "extended": "Extended melee"
+        "melee": "Ближний бой",
+        "medium": "Средняя дистанция",
+        "long": "Дальний бой",
+        "extended": "Увеличенная ближняя дистанция"
       },
       "weapons": {
-        "heavySword": "Heavy Sword",
-        "largeStaff": "Large Staff",
-        "shortStaff": "Short Staff",
-        "arbalest": "Arbalest",
-        "spear": "Spear"
+        "heavySword": "Тяжёлый меч",
+        "largeStaff": "Большой посох",
+        "shortStaff": "Короткий посох",
+        "arbalest": "Арбалет",
+        "spear": "Копьё"
       },
-      "aria": "Class details for {className}: {damage} damage, {range} range, weapon {weapon}, {skills} starting skills."
+      "aria": "Сведения о классе {className}: урон — {damage}, дальность — {range}, оружие — {weapon}, начальных умений — {skills}."
     },
     "aria": "Описание класса {className}: роль {role}. Начальные характеристики: Сила {str}, Ловкость {agi}, Выносливость {sta}, Интеллект {int}, Дух {spi}.",
     "statBarAria": "{stat}: {value} из 25"
@@ -9214,8 +9214,8 @@ export const ru_RU: EnTranslations = {
     "actionBar": {
       "attackName": "Атака",
       "attackTooltip": "Включает или выключает автоатаку по вашей цели. Щелчок правой кнопкой по врагу также начинает атаку.",
-      "autoBattleName": "Auto Battle",
-      "autoBattleTooltip": "Toggle automatic target acquisition, movement, and skill rotation around your current position.",
+      "autoBattleName": "Автоматический бой",
+      "autoBattleTooltip": "Включает автоматический поиск целей, движение и применение умений вокруг текущей позиции.",
       "attackRemoveHint": "Щёлкните правой кнопкой, чтобы убрать её с панели и освободить ячейку.",
       "emptySlot": "Пустая ячейка",
       "slotAria": "Ячейка действия {slot}: {ability}",
@@ -9665,224 +9665,224 @@ export const ru_RU: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1102": {
-        "name": "Void Strike",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 0.9 sec."
+        "name": "Удар пустоты",
+        "description": "Наносит врагу {damage} ед. урона. Оглушает цель на 0,9 с."
       },
       "mir4_skill_1104": {
-        "name": "Lacerating Strike",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
+        "name": "Рассечение",
+        "description": "Наносит врагу {damage} ед. урона. Сбивает цель с ног на 1,2 с."
       },
       "mir4_skill_1304": {
-        "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "name": "Таран",
+        "description": "Наносит врагу {damage} ед. урона. На 4,5 с увеличивает получаемый целью урон на 12%."
       },
       "mir4_skill_1401": {
-        "name": "Ground Smash",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec."
+        "name": "Сокрушение земли",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 70% урона. Сбивает цель с ног на 0,8 с."
       },
       "mir4_skill_1501": {
-        "name": "Gale Strike",
-        "description": "Affects an enemy. Slows the target by 35% for 3.2 sec."
+        "name": "Удар ветра",
+        "description": "Воздействует на врага. На 3,2 с замедляет цель на 35%."
       },
       "mir4_skill_2101": {
-        "name": "Prismatic Beam",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec."
+        "name": "Призматический луч",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Замораживает цель на 1,4 с."
       },
       "mir4_skill_2111": {
-        "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "name": "Копьё углей",
+        "description": "Наносит врагу {damage} ед. урона. На 4,5 с увеличивает получаемый целью урон на 8%."
       },
       "mir4_skill_2301": {
-        "name": "Smite Seal",
-        "description": "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec."
+        "name": "Печать кары",
+        "description": "Наносит врагу {damage} ед. урона. На 4 с уменьшает наносимый целью урон на 50%."
       },
       "mir4_skill_2501": {
-        "name": "Evoked Core",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec."
+        "name": "Призванное ядро",
+        "description": "Наносит врагу {damage} ед. урона. До 4 других врагов в радиусе 8 м получают 60% урона. Замораживает цель на 1,8 с."
       },
       "mir4_skill_2503": {
-        "name": "Magic Shield",
-        "description": "Reduces damage taken by 22% for 10 sec."
+        "name": "Магический щит",
+        "description": "На 10 с уменьшает получаемый урон на 22%."
       },
       "mir4_skill_3101": {
-        "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "name": "Серия печатей",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. На 4 с увеличивает получаемый целью урон на 10%."
       },
       "mir4_skill_3104": {
-        "name": "Totem 1010",
-        "description": "Affects an enemy. Stuns the target for 1.4 sec."
+        "name": "Тотем 1010",
+        "description": "Воздействует на врага. Оглушает цель на 1,4 с."
       },
       "mir4_skill_3301": {
-        "name": "Totem Seal II",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec."
+        "name": "Печать тотема II",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7,25 м получают 60% урона. На 4,2 с замедляет цель на 35%."
       },
       "mir4_skill_3503": {
-        "name": "Jade Lotus",
-        "description": "Restores 18% of maximum health."
+        "name": "Нефритовый лотос",
+        "description": "Восстанавливает 18% максимального здоровья."
       },
       "mir4_skill_3506": {
-        "name": "Totem Seal I",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec."
+        "name": "Печать тотема I",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 60% урона. Обездвиживает цель на 1,6 с."
       },
       "mir4_skill_4101": {
-        "name": "Burst 4101",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec."
+        "name": "Вспышка 4101",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 65% урона. На 3,5 с уменьшает наносимый целью урон на 45%."
       },
       "mir4_skill_4102": {
-        "name": "Sequence 4102",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec."
+        "name": "Серия 4102",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,625 м получают 65% урона. На 3,5 с замедляет цель на 30%."
       },
       "mir4_skill_4103": {
         "name": "Twin Echo",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec."
+        "description": "Наносит врагу {damage} ед. урона. До 4 других врагов в радиусе 7,5 м получают 55% урона. На 5 с уменьшает наносимый целью урон на 60%."
       },
       "mir4_skill_4106": {
-        "name": "Charge 4106",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 2 sec."
+        "name": "Рывок 4106",
+        "description": "Наносит врагу {damage} ед. урона. Оглушает цель на 2 с."
       },
       "mir4_skill_4107": {
-        "name": "Flare Arrow",
-        "description": "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec."
+        "name": "Вспышечная стрела",
+        "description": "Воздействует на врага. На 3,2 с уменьшает наносимый целью урон на 45%."
       },
       "mir4_skill_5101": {
-        "name": "Thrust 5101",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1 sec."
+        "name": "Выпад 5101",
+        "description": "Наносит врагу {damage} ед. урона. Сбивает цель с ног на 1 с."
       },
       "mir4_skill_5104": {
-        "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "name": "Размашистый удар 5104",
+        "description": "Наносит врагу {damage} ед. урона. На 4,5 с увеличивает получаемый целью урон на 14%."
       },
       "mir4_skill_5201": {
-        "name": "Strike 5201",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec."
+        "name": "Удар 5201",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 65% урона. Оглушает цель на 1,1 с."
       },
       "mir4_skill_5301": {
-        "name": "Chain 5301",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec."
+        "name": "Цепь 5301",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7,25 м получают 70% урона. Оглушает цель на 0,9 с."
       },
       "mir4_skill_5401": {
-        "name": "Raging Storm",
-        "description": "Affects an enemy. Knocks the target down for 1 sec."
+        "name": "Яростная буря",
+        "description": "Воздействует на врага. Сбивает цель с ног на 1 с."
       },
       "mir4_ultimate_1": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "Суперумение",
+        "description": "Наносит {damage} ед. урона за 3 удара. Требуется полная шкала суперумения."
       },
       "mir4_ultimate_2": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
+        "name": "Суперумение",
+        "description": "Наносит {damage} ед. урона за 4 удара. Требуется полная шкала суперумения."
       },
       "mir4_ultimate_3": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "Суперумение",
+        "description": "Наносит {damage} ед. урона за 3 удара. Требуется полная шкала суперумения."
       },
       "mir4_ultimate_4": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "Суперумение",
+        "description": "Наносит {damage} ед. урона за 3 удара. Требуется полная шкала суперумения."
       },
       "mir4_ultimate_5": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
+        "name": "Суперумение",
+        "description": "Наносит {damage} ед. урона за 2 удара. Требуется полная шкала суперумения."
       },
       "mir4_passive_warrior_heavy_armor": {
-        "name": "Heavy Armor",
-        "description": "Increases maximum health by 8%."
+        "name": "Тяжёлая броня",
+        "description": "Увеличивает максимальное здоровье на 8%."
       },
       "mir4_passive_warrior_weapon_mastery": {
-        "name": "Weapon Discipline",
-        "description": "Increases physical attack by 6%."
+        "name": "Владение оружием",
+        "description": "Увеличивает физическую атаку на 6%."
       },
       "mir4_passive_warrior_iron_skin": {
         "name": "Iron Skin",
-        "description": "Increases physical defense by 8% and magic defense by 6%."
+        "description": "Увеличивает физическую защиту на 8%, а магическую защиту на 6%."
       },
       "mir4_passive_warrior_fighting_spirit": {
-        "name": "Fighting Spirit",
-        "description": "Increases maximum health by 4% and physical attack by 4%."
+        "name": "Боевой дух",
+        "description": "Увеличивает максимальное здоровье и физическую атаку на 4%."
       },
       "mir4_passive_warrior_indomitable_will": {
-        "name": "Indomitable Will",
-        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "Несокрушимая воля",
+        "description": "Увеличивает максимальное здоровье, физическую и магическую защиту на 5%."
       },
       "mir4_passive_elementalist_mana_well": {
         "name": "Mana Well",
-        "description": "Increases maximum mana by 10%."
+        "description": "Увеличивает максимальную ману на 10%."
       },
       "mir4_passive_elementalist_arcane_intellect": {
-        "name": "Arcane Acumen",
-        "description": "Increases magic attack by 7%."
+        "name": "Тайное знание",
+        "description": "Увеличивает магическую атаку на 7%."
       },
       "mir4_passive_elementalist_elemental_protection": {
-        "name": "Elemental Protection",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "Стихийная защита",
+        "description": "Увеличивает физическую и магическую защиту на 6%."
       },
       "mir4_passive_elementalist_channeling": {
-        "name": "Channeling",
-        "description": "Increases maximum mana by 5% and magic attack by 4%."
+        "name": "Сосредоточение",
+        "description": "Увеличивает максимальную ману на 5%, а магическую атаку на 4%."
       },
       "mir4_passive_elementalist_arcane_ascension": {
-        "name": "Arcane Ascension",
-        "description": "Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%."
+        "name": "Тайное вознесение",
+        "description": "Увеличивает максимальную ману на 5%, магическую атаку на 6%, физическую и магическую защиту на 3%."
       },
       "mir4_passive_taoist_spiritual_vessel": {
-        "name": "Spiritual Vessel",
-        "description": "Increases maximum health by 4% and maximum mana by 7%."
+        "name": "Сосуд духа",
+        "description": "Увеличивает максимальное здоровье на 4%, а максимальную ману на 7%."
       },
       "mir4_passive_taoist_twin_paths": {
-        "name": "Twin Paths",
-        "description": "Increases physical attack by 4% and magic attack by 4%."
+        "name": "Два пути",
+        "description": "Увеличивает физическую и магическую атаку на 4%."
       },
       "mir4_passive_taoist_sacred_guard": {
-        "name": "Sacred Guard",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "Священная защита",
+        "description": "Увеличивает физическую и магическую защиту на 6%."
       },
       "mir4_passive_taoist_serene_mind": {
-        "name": "Serene Mind",
-        "description": "Increases maximum health by 4% and maximum mana by 5%."
+        "name": "Безмятежный разум",
+        "description": "Увеличивает максимальное здоровье на 4%, а максимальную ману на 5%."
       },
       "mir4_passive_taoist_celestial_harmony": {
-        "name": "Celestial Harmony",
-        "description": "Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%."
+        "name": "Небесная гармония",
+        "description": "Увеличивает максимальное здоровье, максимальную ману, физическую и магическую атаку, физическую и магическую защиту на 4%."
       },
       "mir4_passive_arbalist_eagle_eye": {
-        "name": "Eagle Eye",
-        "description": "Increases physical attack by 3% and accuracy by 5%."
+        "name": "Орлиный глаз",
+        "description": "Увеличивает физическую атаку на 3%, а меткость на 5%."
       },
       "mir4_passive_arbalist_ballistic_mastery": {
-        "name": "Ballistic Mastery",
-        "description": "Increases physical attack by 7%."
+        "name": "Мастерство баллистики",
+        "description": "Увеличивает физическую атаку на 7%."
       },
       "mir4_passive_arbalist_nature_guard": {
-        "name": "Nature's Guard",
-        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "Защита природы",
+        "description": "Увеличивает максимальное здоровье, физическую и магическую защиту на 5%."
       },
       "mir4_passive_arbalist_hunter_instinct": {
-        "name": "Hunter's Instinct",
-        "description": "Increases physical attack by 5% and dodge by 5%."
+        "name": "Инстинкт охотника",
+        "description": "Увеличивает физическую атаку и уклонение на 5%."
       },
       "mir4_passive_arbalist_perfect_shot": {
-        "name": "Perfect Shot",
-        "description": "Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%."
+        "name": "Идеальный выстрел",
+        "description": "Увеличивает максимальное здоровье на 3%, физическую атаку на 6%, а меткость на 5%."
       },
       "mir4_passive_lancer_war_conditioning": {
-        "name": "War Conditioning",
-        "description": "Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%."
+        "name": "Боевая закалка",
+        "description": "Увеличивает максимальное здоровье на 5%, физическую и магическую атаку на 3%."
       },
       "mir4_passive_lancer_spear_mastery": {
-        "name": "Spear Mastery",
-        "description": "Increases physical attack by 5% and magic attack by 5%."
+        "name": "Владение копьём",
+        "description": "Увеличивает физическую и магическую атаку на 5%."
       },
       "mir4_passive_lancer_vanguard_armor": {
-        "name": "Vanguard Armor",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "Доспех авангарда",
+        "description": "Увеличивает физическую и магическую защиту на 6%."
       },
       "mir4_passive_lancer_battle_rhythm": {
-        "name": "Battle Rhythm",
-        "description": "Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%."
+        "name": "Ритм боя",
+        "description": "Увеличивает максимальную ману, физическую и магическую атаку на 4%."
       },
       "mir4_passive_lancer_dragon_vanguard": {
-        "name": "Dragon's Vanguard",
-        "description": "Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "Авангард дракона",
+        "description": "Увеличивает максимальное здоровье на 4%, физическую и магическую атаку, физическую и магическую защиту на 5%."
       },
       "sport_kick": {
         "name": "Удар",
@@ -17591,9 +17591,9 @@ export const ru_RU: EnTranslations = {
         "leaveText": "Вы пошатываясь выходите на горный ветер."
       },
       "campaign_trial_room": {
-        "name": "Campaign Trial",
-        "enterText": "You enter the campaign trial.",
-        "leaveText": "You leave the campaign trial."
+        "name": "Испытание кампании",
+        "enterText": "Вы входите в испытание кампании.",
+        "leaveText": "Вы покидаете испытание кампании."
       },
       "nythraxis_crypt": {
         "name": "Заброшенный склеп",

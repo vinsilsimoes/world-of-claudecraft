@@ -781,388 +781,388 @@ export const zh_CN: EnTranslations = {
       "collapseHint": "收起任务追踪器",
       "expandHint": "展开任务追踪器",
       "mir4": {
-        "firstTraces": "First Traces",
-        "reachTarek": "Reach Tarek",
-        "inspectClues": "Inspect clues",
-        "returnToTarek": "Return to Tarek",
-        "pausedSuffix": "(auto journey paused by manual control)",
-        "startAutoJourney": "Start auto journey",
-        "stopAutoJourney": "Stop auto journey"
+        "firstTraces": "最初的痕迹",
+        "reachTarek": "前往塔雷克处",
+        "inspectClues": "检查线索",
+        "returnToTarek": "返回塔雷克处",
+        "pausedSuffix": "（自动旅程因手动操作而暂停）",
+        "startAutoJourney": "开始自动旅程",
+        "stopAutoJourney": "停止自动旅程"
       }
     },
     "mir4": {
       "collectibles": {
         "mounts": {
-          "meadow-courser": "Meadow Courser",
-          "moss-boar": "Moss Boar",
-          "brook-stag": "Brook Stag",
-          "gray-wolf": "Gray Wolf",
-          "dun-packhorse": "Dun Packhorse",
-          "birch-doe": "Birch Doe",
-          "red-maned-pony": "Red Maned Pony",
-          "lowland-elk": "Lowland Elk",
-          "field-lynx": "Field Lynx",
-          "tawny-mastiff": "Tawny Mastiff",
-          "dune-jackal": "Dune Jackal",
-          "reed-puma": "Reed Puma",
-          "clay-ox": "Clay Ox",
-          "valley-buffalo": "Valley Buffalo",
-          "shaggy-yak": "Shaggy Yak",
-          "creek-lizard": "Creek Lizard",
-          "shellback-tortoise": "Stone-Shell Tortoise",
-          "plains-ostrich": "Plains Ostrich",
-          "dusk-emu": "Dusk Rhea",
-          "copper-ant-carrier": "Copper Ant Carrier",
-          "mist-moose": "Mist Moose",
-          "leaf-panther": "Leaf Panther",
-          "turf-rhino": "Turf Rhino",
-          "valley-monitor": "Valley Monitor",
-          "granite-ibex": "Granite Ibex",
-          "silver-dapple-mare": "Silver Dapple Mare",
-          "marsh-stag": "Marsh Stag",
-          "snow-mane-lion": "Snow-Maned Lion",
-          "ember-fox": "Ember Fox",
-          "striped-hyena": "Striped Hyena",
-          "iron-tusk-boar": "Iron Tusk Boar",
-          "cedar-bear": "Cedar Bear",
-          "swamp-hippo": "Swamp Hippo",
-          "thorn-iguana": "Thorn Iguana",
-          "dryland-crocodile": "Dryland Crocodile",
-          "horned-cassowary": "Horned Cassowary",
-          "bronze-raptor": "Bronze Raptor",
-          "amber-scarab": "Amber Scarab",
-          "dune-scorpion": "Dune Scorpion",
-          "root-golem": "Root Golem",
-          "amber-bear": "Amber Bear",
-          "sunset-tiger": "Sunset Tiger",
-          "root-drake": "Root Drake",
-          "hill-griffin": "Hill Griffin",
-          "obsidian-zebra": "Obsidian Zebra",
-          "stormhorn-ram": "Storm-Horn Ram",
-          "dusk-elk": "Dusk Elk",
-          "frost-warg": "Frost Warg",
-          "basalt-rhino": "Basalt Rhino",
-          "tundra-mammoth": "Tundra Mammoth",
-          "crystal-ankylosaur": "Crystal Ankylosaur",
-          "ember-salamander": "Ember Salamander",
-          "thunder-komodo": "Thunder Komodo",
-          "moon-crocodile": "Moon Crocodile",
-          "razorbeak-strider": "Razor-Beaked Strider",
-          "plume-raptor": "Plume Raptor",
-          "glass-mantis": "Glass Mantis",
-          "thunder-beetle": "Thunder Beetle",
-          "iron-sentinel": "Iron Sentinel",
-          "mossstone-colossus": "Moss-Stone Colossus",
-          "eclipse-lion": "Eclipse Lion",
-          "crimson-wyvern": "Crimson Wyvern",
-          "astral-stag": "Astral Stag",
-          "jade-basilisk": "Jade Basilisk",
-          "solar-wolf": "Solar Wolf",
-          "forest-chimera": "Forest Chimera",
-          "tempest-courser": "Tempest Courser",
-          "thorn-elephant": "Thorn Elephant",
-          "void-spider": "Void Spider",
-          "rune-golem": "Rune Golem",
-          "dawn-phoenix": "Dawn Phoenix",
-          "imperial-griffin": "Imperial Griffin",
-          "stone-leviathan": "Stone Leviathan",
-          "void-unicorn": "Void Unicorn",
-          "golden-manticore": "Golden Manticore",
-          "imperial-tiger": "Imperial Tiger",
-          "dawn-mammoth": "Dawn Mammoth",
-          "magma-drake": "Magma Drake",
-          "crown-scorpion": "Crown Scorpion",
-          "sunforged-colossus": "Sunforged Colossus",
-          "ground-dragon": "Ground Dragon",
-          "eternal-phoenix": "Eternal Phoenix",
-          "celestial-kirin": "Celestial Kirin",
-          "firmament-behemoth": "Firmament Lion",
-          "time-hydra": "Time Hydra"
+          "meadow-courser": "草原骏马",
+          "moss-boar": "苔藓野猪",
+          "brook-stag": "溪流雄鹿",
+          "gray-wolf": "灰色狼",
+          "dun-packhorse": "褐色驮马",
+          "birch-doe": "白桦雌鹿",
+          "red-maned-pony": "红色鬃毛小马",
+          "lowland-elk": "低地麋鹿",
+          "field-lynx": "原野猞猁",
+          "tawny-mastiff": "黄褐獒犬",
+          "dune-jackal": "沙丘胡狼",
+          "reed-puma": "芦苇美洲狮",
+          "clay-ox": "陶土公牛",
+          "valley-buffalo": "山谷水牛",
+          "shaggy-yak": "长毛牦牛",
+          "creek-lizard": "溪流蜥蜴",
+          "shellback-tortoise": "石甲陆龟",
+          "plains-ostrich": "平原鸵鸟",
+          "dusk-emu": "暮色美洲鸵",
+          "copper-ant-carrier": "铜蚁载兽",
+          "mist-moose": "迷雾驼鹿",
+          "leaf-panther": "叶片黑豹",
+          "turf-rhino": "草皮犀牛",
+          "valley-monitor": "山谷巨蜥",
+          "granite-ibex": "花岗岩岩羊",
+          "silver-dapple-mare": "银色斑纹母马",
+          "marsh-stag": "沼泽雄鹿",
+          "snow-mane-lion": "雪鬃雄狮",
+          "ember-fox": "余烬狐狸",
+          "striped-hyena": "条纹鬣狗",
+          "iron-tusk-boar": "钢铁獠牙野猪",
+          "cedar-bear": "雪松熊",
+          "swamp-hippo": "湿地河马",
+          "thorn-iguana": "荆棘鬣蜥",
+          "dryland-crocodile": "旱地鳄鱼",
+          "horned-cassowary": "有角食火鸡",
+          "bronze-raptor": "青铜迅猛龙",
+          "amber-scarab": "琥珀圣甲虫",
+          "dune-scorpion": "沙丘蝎子",
+          "root-golem": "根须魔像",
+          "amber-bear": "琥珀熊",
+          "sunset-tiger": "落日猛虎",
+          "root-drake": "根须幼龙",
+          "hill-griffin": "山丘狮鹫",
+          "obsidian-zebra": "黑曜石斑马",
+          "stormhorn-ram": "风暴角公羊",
+          "dusk-elk": "暮色麋鹿",
+          "frost-warg": "寒霜座狼",
+          "basalt-rhino": "玄武岩犀牛",
+          "tundra-mammoth": "冻原猛犸",
+          "crystal-ankylosaur": "水晶甲龙",
+          "ember-salamander": "余烬火蜥",
+          "thunder-komodo": "雷霆科莫多",
+          "moon-crocodile": "月光鳄鱼",
+          "razorbeak-strider": "利刃喙陆行兽",
+          "plume-raptor": "羽冠迅猛龙",
+          "glass-mantis": "玻璃螳螂",
+          "thunder-beetle": "雷霆甲虫",
+          "iron-sentinel": "钢铁哨兵",
+          "mossstone-colossus": "苔石巨像",
+          "eclipse-lion": "日蚀雄狮",
+          "crimson-wyvern": "绯红双足飞龙",
+          "astral-stag": "星界雄鹿",
+          "jade-basilisk": "翡翠蛇蜥",
+          "solar-wolf": "太阳狼",
+          "forest-chimera": "森林奇美拉",
+          "tempest-courser": "风暴骏马",
+          "thorn-elephant": "荆棘巨象",
+          "void-spider": "虚空蜘蛛",
+          "rune-golem": "符文魔像",
+          "dawn-phoenix": "黎明凤凰",
+          "imperial-griffin": "帝国狮鹫",
+          "stone-leviathan": "岩石利维坦",
+          "void-unicorn": "虚空独角兽",
+          "golden-manticore": "黄金蝎尾狮",
+          "imperial-tiger": "帝国猛虎",
+          "dawn-mammoth": "黎明猛犸",
+          "magma-drake": "岩浆幼龙",
+          "crown-scorpion": "王冠蝎子",
+          "sunforged-colossus": "日铸巨像",
+          "ground-dragon": "大地巨龙",
+          "eternal-phoenix": "永恒凤凰",
+          "celestial-kirin": "天界麒麟",
+          "firmament-behemoth": "苍穹雄狮",
+          "time-hydra": "时间九头蛇"
         },
         "spirits": {
-          "spirit-common-01": "Meadow Spark",
-          "spirit-common-02": "Brook Breeze",
-          "spirit-common-03": "Watchful Leaf",
-          "spirit-common-04": "Stone Echo",
-          "spirit-uncommon-01": "Dawn Glow",
-          "spirit-uncommon-02": "Mist Nymph",
-          "spirit-uncommon-03": "Moss Guardian",
-          "spirit-uncommon-04": "Valley Salamander",
-          "spirit-rare-01": "Amber Fox",
-          "spirit-rare-02": "Sunset Owl",
-          "spirit-rare-03": "Root Drake",
-          "spirit-rare-04": "Hills Oracle",
-          "spirit-epic-01": "Eclipse Avatar",
-          "spirit-epic-02": "Crimson Ifrit",
-          "spirit-epic-03": "Astral Stag",
-          "spirit-epic-04": "Jade Sentinel",
-          "spirit-epic-05": "Solar Wolf",
-          "spirit-epic-06": "Ethereal Chimera",
-          "spirit-legendary-01": "Earth Titan",
-          "spirit-legendary-02": "Dawn Phoenix",
-          "spirit-legendary-03": "Imperial Archon",
-          "spirit-legendary-04": "Crystal Leviathan",
-          "spirit-legendary-05": "Void Unicorn",
-          "spirit-legendary-06": "Golden Manticore",
-          "spirit-mythical-01": "Primordial Soul",
-          "spirit-mythical-02": "Eternal Phoenix",
-          "spirit-mythical-03": "Celestial Kirin",
-          "spirit-mythical-04": "Firmament Behemoth",
-          "spirit-mythical-05": "Abyssal Seraph",
-          "spirit-mythical-06": "Time Hydra"
+          "spirit-common-01": "草原火花",
+          "spirit-common-02": "溪流微风",
+          "spirit-common-03": "守望叶片",
+          "spirit-common-04": "岩石回声",
+          "spirit-uncommon-01": "黎明辉光",
+          "spirit-uncommon-02": "迷雾宁芙",
+          "spirit-uncommon-03": "苔藓守卫",
+          "spirit-uncommon-04": "山谷火蜥",
+          "spirit-rare-01": "琥珀狐狸",
+          "spirit-rare-02": "落日猫头鹰",
+          "spirit-rare-03": "根须幼龙",
+          "spirit-rare-04": "山丘神谕者",
+          "spirit-epic-01": "日蚀化身",
+          "spirit-epic-02": "绯红伊弗利特",
+          "spirit-epic-03": "星界雄鹿",
+          "spirit-epic-04": "翡翠哨兵",
+          "spirit-epic-05": "太阳狼",
+          "spirit-epic-06": "以太奇美拉",
+          "spirit-legendary-01": "大地泰坦",
+          "spirit-legendary-02": "黎明凤凰",
+          "spirit-legendary-03": "帝国执政官",
+          "spirit-legendary-04": "水晶利维坦",
+          "spirit-legendary-05": "虚空独角兽",
+          "spirit-legendary-06": "黄金蝎尾狮",
+          "spirit-mythical-01": "原初灵魂",
+          "spirit-mythical-02": "永恒凤凰",
+          "spirit-mythical-03": "天界麒麟",
+          "spirit-mythical-04": "苍穹巨兽",
+          "spirit-mythical-05": "深渊炽天使",
+          "spirit-mythical-06": "时间九头蛇"
         },
         "spiritSkills": {
-          "spirit-skill-1-01": "Wandering Spark",
-          "spirit-skill-1-02": "Dusk Instinct",
-          "spirit-skill-1-03": "Vital Dew",
-          "spirit-skill-1-04": "Mana Breath",
-          "spirit-skill-2-01": "Rising Flare",
-          "spirit-skill-2-02": "Mist Fang",
-          "spirit-skill-2-03": "Restoring Sap",
-          "spirit-skill-2-04": "Arcane Pulse",
-          "spirit-skill-3-01": "Amber Rupture",
-          "spirit-skill-3-02": "Sunset Judgment",
-          "spirit-skill-3-03": "Vital Bond",
-          "spirit-skill-3-04": "Root Spring",
-          "spirit-skill-4-01": "Eclipse Ray",
-          "spirit-skill-4-02": "Crimson Fury",
-          "spirit-skill-4-03": "Astral Grace",
-          "spirit-skill-4-04": "Jade Orb",
-          "spirit-skill-4-05": "Solar Cut",
-          "spirit-skill-4-06": "Ethereal Focus",
-          "spirit-skill-5-01": "Tectonic Impact",
-          "spirit-skill-5-02": "Reborn Flame",
-          "spirit-skill-5-03": "Imperial Verdict",
-          "spirit-skill-5-04": "Crystal Tide",
-          "spirit-skill-5-05": "Void Rift",
-          "spirit-skill-5-06": "Golden Crown",
-          "spirit-skill-6-01": "Genesis",
-          "spirit-skill-6-02": "Eternal Return",
-          "spirit-skill-6-03": "Celestial Mandate",
-          "spirit-skill-6-04": "Weight of the Firmament",
-          "spirit-skill-6-05": "Abyssal Spiral",
-          "spirit-skill-6-06": "Absolute Moment"
+          "spirit-skill-1-01": "游荡火花",
+          "spirit-skill-1-02": "暮色本能",
+          "spirit-skill-1-03": "生命甘露",
+          "spirit-skill-1-04": "法力吐息",
+          "spirit-skill-2-01": "升腾闪焰",
+          "spirit-skill-2-02": "迷雾尖牙",
+          "spirit-skill-2-03": "复苏树液",
+          "spirit-skill-2-04": "奥术脉冲",
+          "spirit-skill-3-01": "琥珀破裂",
+          "spirit-skill-3-02": "落日审判",
+          "spirit-skill-3-03": "生命羁绊",
+          "spirit-skill-3-04": "根须泉涌",
+          "spirit-skill-4-01": "日蚀光束",
+          "spirit-skill-4-02": "绯红狂怒",
+          "spirit-skill-4-03": "星界恩典",
+          "spirit-skill-4-04": "翡翠宝珠",
+          "spirit-skill-4-05": "太阳斩",
+          "spirit-skill-4-06": "以太专注",
+          "spirit-skill-5-01": "地裂冲击",
+          "spirit-skill-5-02": "重生火焰",
+          "spirit-skill-5-03": "帝国裁决",
+          "spirit-skill-5-04": "水晶潮汐",
+          "spirit-skill-5-05": "虚空裂隙",
+          "spirit-skill-5-06": "黄金王冠",
+          "spirit-skill-6-01": "创世",
+          "spirit-skill-6-02": "永恒回归",
+          "spirit-skill-6-03": "天界敕令",
+          "spirit-skill-6-04": "苍穹之重",
+          "spirit-skill-6-05": "深渊螺旋",
+          "spirit-skill-6-06": "绝对瞬间"
         }
       },
-      "ultimateGauge": "Ultimate gauge",
-      "ultimateGaugeStatus": "Ultimate gauge: {value} of {max}",
-      "ultimateReadyAnnouncement": "Ultimate ready.",
+      "ultimateGauge": "终极技能能量",
+      "ultimateGaugeStatus": "终极技能能量：{value}/{max}",
+      "ultimateReadyAnnouncement": "终极技能已就绪。",
       "achievements": {
-        "title": "Achievements",
-        "close": "Close achievements",
-        "summary": "{claimed}/{total} rewards claimed",
-        "balances": "Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}",
-        "levelTitle": "Level {level}",
-        "levelDescription": "Reach level {level}.",
-        "progressAria": "Level progress: {current}/{target}",
-        "progressText": "{current}/{target}",
-        "rewardCopper": "{amount} copper",
-        "rewardDarksteel": "{amount} Darksteel",
-        "rewardEffectPoints": "{amount} Effect Points",
-        "rewardSkillTomes": "{amount} Skill Tomes",
-        "rewards": "Rewards: {rewards}",
-        "claim": "Claim",
-        "claimed": "Claimed",
-        "locked": "Reach level {level}",
-        "previousGrade": "Claim the previous grade first",
-        "claimAria": "Claim the level {level} achievement reward"
+        "title": "成就",
+        "close": "关闭成就",
+        "summary": "已领取奖励：{claimed}/{total}",
+        "balances": "铜币 {copper} · 黑铁 {darksteel} · 效果点数 {effectPoints} · 技能秘籍 {skillTomes}",
+        "levelTitle": "等级 {level}",
+        "levelDescription": "达到等级 {level}。",
+        "progressAria": "等级进度：{current}/{target}",
+        "progressText": "{current}／{target}",
+        "rewardCopper": "铜币 {amount}",
+        "rewardDarksteel": "黑铁 {amount}",
+        "rewardEffectPoints": "效果点数 {amount}",
+        "rewardSkillTomes": "技能秘籍 {amount} 本",
+        "rewards": "奖励：{rewards}",
+        "claim": "领取",
+        "claimed": "已领取",
+        "locked": "达到等级 {level}",
+        "previousGrade": "请先领取上一阶段奖励",
+        "claimAria": "领取等级 {level} 成就奖励"
       },
       "questLog": {
-        "narrative": "Investigate the three clue sites around the ford, then return to Tarek Two Bridges.",
-        "giverName": "Tarek Two Bridges",
-        "emptyHint": "Find Tarek Two Bridges in the M01 settlement, or start auto journey.",
-        "completedHint": "First Traces is complete. The remaining campaign quests are not active yet."
+        "narrative": "调查渡口周围的三个线索地点，然后返回塔雷克·双桥处。",
+        "giverName": "塔雷克·双桥",
+        "emptyHint": "在 M01 聚落找到塔雷克·双桥，或开始自动旅程。",
+        "completedHint": "“最初的痕迹”已完成。其余战役任务尚未激活。"
       },
       "campaign": {
-        "questTitle": "Campaign {id}",
-        "narrative": "Complete the current campaign objectives for {id}.",
-        "contact": "Campaign contact",
+        "questTitle": "战役 {id}",
+        "narrative": "完成 {id} 当前的战役目标。",
+        "contact": "战役联系人",
         "objective": {
-          "returnToContact": "Return to the campaign contact",
-          "talk": "Speak with the campaign contact",
-          "deliver": "Deliver the requested items",
-          "travel": "Travel to the marked objective",
-          "inspect": "Inspect the marked evidence",
-          "gather": "Gather the requested resources",
-          "defend": "Defend the marked objective",
-          "combat": "Defeat the marked enemies",
-          "escort": "Escort the marked ally",
-          "escortSupplies": "Escort the supply group",
-          "dungeon": "Clear the campaign dungeon",
-          "craft": "Craft the requested supplies",
-          "tutorial": "Complete the system lesson",
-          "interact": "Interact with the marked objective",
-          "complete": "Complete the current objective"
+          "returnToContact": "返回战役联系人处",
+          "talk": "与战役联系人交谈",
+          "deliver": "交付所需物品",
+          "travel": "前往标记的目标",
+          "inspect": "检查标记的证据",
+          "gather": "收集所需资源",
+          "defend": "守卫标记的目标",
+          "combat": "击败标记的敌人",
+          "escort": "护送标记的盟友",
+          "escortSupplies": "护送补给队",
+          "dungeon": "完成战役地下城",
+          "craft": "制作所需补给",
+          "tutorial": "完成系统教学",
+          "interact": "与标记的目标互动",
+          "complete": "完成当前目标"
         }
       },
-      "characterTitle": "Character",
-      "awaitingState": "Waiting for authoritative character data...",
-      "combatPowerLine": "Combat Power {value}",
-      "equipmentVisualShell": "World of ClaudeCraft appearance with MIR4 combat attributes",
-      "equipmentTierGrade": "Tier {tier}, Grade {grade}",
-      "equipmentRequiredLevel": "Requires level {level}",
-      "unequipHint": "Click the X or right-click to unequip.",
-      "unequipAria": "Unequip {item}",
-      "equipHint": "Click to equip.",
-      "equipAria": "Equip {item}",
-      "inventoryEquipment": "Equipment",
-      "inventoryRuntimeItems": "Native World of ClaudeCraft Items",
-      "inventoryCollectionTickets": "Collection Tickets",
-      "inventoryMaterials": "Refinement Materials",
-      "noUnequippedEquipment": "No unequipped equipment.",
-      "materialCount": "Owned: {count}",
-      "mountTicketDawn": "Dawn Mount Ticket",
-      "mountTicketTwilight": "Twilight Mount Ticket",
-      "mountTicketDawnDescription": "Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.",
-      "mountTicketTwilightDescription": "Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.",
+      "characterTitle": "角色",
+      "awaitingState": "正在等待权威角色数据……",
+      "combatPowerLine": "战力 {value}",
+      "equipmentVisualShell": "采用 World of ClaudeCraft 外观与 MIR4 战斗属性",
+      "equipmentTierGrade": "阶层 {tier}，品级 {grade}",
+      "equipmentRequiredLevel": "需要等级 {level}",
+      "unequipHint": "点击 X 或右键点击以卸下。",
+      "unequipAria": "卸下 {item}",
+      "equipHint": "点击装备。",
+      "equipAria": "装备 {item}",
+      "inventoryEquipment": "装备",
+      "inventoryRuntimeItems": "World of ClaudeCraft 原生物品",
+      "inventoryCollectionTickets": "收藏券",
+      "inventoryMaterials": "精炼材料",
+      "noUnequippedEquipment": "没有未装备的装备。",
+      "materialCount": "拥有：{count}",
+      "mountTicketDawn": "晨曦坐骑召唤券",
+      "mountTicketTwilight": "暮光坐骑召唤券",
+      "mountTicketDawnDescription": "召唤一个坐骑：79% 普通、20% 优秀或 1% 稀有。成功召唤时会消耗召唤券。显示的模型采用 World of ClaudeCraft 原生外观；列出的 MIR4 属性为权威数据。",
+      "mountTicketTwilightDescription": "召唤一个坐骑：99% 稀有或 1% 史诗。史诗结果在确认后才归玩家所有。显示的模型采用 World of ClaudeCraft 原生外观。",
       "redeemMountTicket": "Use {ticket}",
-      "inventoryMounts": "Mounts",
-      "inventoryPendingMounts": "Mounts Awaiting Confirmation",
-      "mountGrade": "Grade {grade}",
-      "mountOwned": "Owned: {count}",
-      "mountEquipped": "Equipped",
-      "mountEquipHint": "Click to equip this Mount and summon its native World of ClaudeCraft visual shell.",
-      "mountUnequipHint": "Click to unequip this Mount and dismount.",
-      "mountConfirmHint": "Click to confirm this Mount and add it to your collection.",
-      "mountConfirmAria": "Confirm {mount}",
-      "mountEffectShell": "Native World of ClaudeCraft model with MIR4 Mount stats",
-      "mountMoveSpeed": "Movement Speed: +{amount}%",
+      "inventoryMounts": "坐骑",
+      "inventoryPendingMounts": "等待确认的坐骑",
+      "mountGrade": "品级 {grade}",
+      "mountOwned": "拥有：{count}",
+      "mountEquipped": "已装备",
+      "mountEquipHint": "点击装备此坐骑并召唤其 World of ClaudeCraft 原生外观。",
+      "mountUnequipHint": "点击卸下此坐骑并下坐骑。",
+      "mountConfirmHint": "点击确认此坐骑并将其加入收藏。",
+      "mountConfirmAria": "确认 {mount}",
+      "mountEffectShell": "采用 World of ClaudeCraft 原生模型与 MIR4 坐骑属性",
+      "mountMoveSpeed": "移动速度：+{amount}%",
       "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
-      "mountDefenses": "Physical Defense: +{physical} · Magic Defense: +{magic}",
-      "equippedMountLine": "Mount: {mount} (Grade {grade})",
-      "noEquippedMount": "Mount: none equipped",
-      "inventoryMountCombination": "Mount Combination",
-      "combineMountsAria": "Combine four Grade {grade} Mounts",
-      "combineMountsHint": "Consumes four owned Mounts of this grade. There is a 20% chance to receive one random Mount of the next grade. On failure, you receive one random Mount of the same grade. Epic or higher rewards await confirmation.",
-      "inventorySpirits": "Spirits",
-      "inventoryPendingSpirits": "Spirits Awaiting Confirmation",
-      "spiritTicketDawn": "Dawn Spirit Ticket",
-      "spiritTicketSunset": "Sunset Spirit Ticket",
-      "spiritTicketDawnDescription": "Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.",
-      "spiritTicketSunsetDescription": "Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.",
-      "redeemSpiritTicket": "Summon with {ticket}",
-      "spiritGrade": "Grade {grade}",
-      "spiritOwned": "Owned: {count}",
-      "spiritEquipped": "Equipped",
-      "spiritEquipHint": "Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.",
-      "spiritUnequipHint": "Click to unequip this Spirit.",
-      "spiritConfirmHint": "Click to confirm this Spirit and add it to your collection.",
-      "spiritConfirmAria": "Confirm {spirit}",
-      "spiritEffectShell": "Native World of ClaudeCraft presentation with MIR4 Spirit effects",
-      "equippedSpiritLine": "Spirit: {spirit} (Grade {grade})",
-      "noEquippedSpirit": "Spirit: none equipped",
-      "inventorySpiritCombination": "Spirit Combination",
-      "combineSpiritsAria": "Combine four Grade {grade} Spirits",
-      "combineSpiritsHint": "Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.",
-      "spiritSkillChanceCooldown": "{chance}% chance · {cooldown}s cooldown",
-      "spiritSkillBonusDamage": "Increases the triggering hit's raw damage by {amount}%.",
-      "spiritSkillExecute": "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
-      "spiritSkillLifeSiphon": "Restores {amount}% of maximum Health.",
-      "spiritSkillManaSurge": "Restores {amount}% of maximum Mana.",
-      "spiritSkillArmorRend": "Adds {amount}% Defense Penetration to the triggering hit.",
-      "spiritSkillCriticalFocus": "Forces the triggering hit to be critical.",
+      "mountDefenses": "物理防御：+{physical} · 魔法防御：+{magic}",
+      "equippedMountLine": "坐骑：{mount}（品级 {grade}）",
+      "noEquippedMount": "坐骑：未装备",
+      "inventoryMountCombination": "坐骑合成",
+      "combineMountsAria": "合成四个品级 {grade} 的坐骑",
+      "combineMountsHint": "消耗四个此品级的已拥有坐骑。有 20% 几率获得一个下一品级的随机坐骑。失败时获得一个同品级的随机坐骑。史诗或更高品质的奖励需要确认。",
+      "inventorySpirits": "精灵",
+      "inventoryPendingSpirits": "等待确认的精灵",
+      "spiritTicketDawn": "晨曦精灵召唤券",
+      "spiritTicketSunset": "落日精灵召唤券",
+      "spiritTicketDawnDescription": "召唤一个精灵：79% 普通、20% 优秀或 1% 稀有。成功召唤时会消耗召唤券。图标采用 World of ClaudeCraft 原生表现；只有列出的 MIR4 效果生效。",
+      "spiritTicketSunsetDescription": "召唤一个精灵：94.5% 优秀、5% 稀有或 0.5% 史诗。史诗结果在确认后才归玩家所有。成功召唤时会消耗召唤券。",
+      "redeemSpiritTicket": "使用 {ticket} 召唤",
+      "spiritGrade": "品级 {grade}",
+      "spiritOwned": "拥有：{count}",
+      "spiritEquipped": "已装备",
+      "spiritEquipHint": "点击装备此精灵。其属性和收藏加成会应用到你的 MIR4 属性。",
+      "spiritUnequipHint": "点击卸下此精灵。",
+      "spiritConfirmHint": "点击确认此精灵并将其加入收藏。",
+      "spiritConfirmAria": "确认 {spirit}",
+      "spiritEffectShell": "采用 World of ClaudeCraft 原生表现与 MIR4 精灵效果",
+      "equippedSpiritLine": "精灵：{spirit}（品级 {grade}）",
+      "noEquippedSpirit": "精灵：未装备",
+      "inventorySpiritCombination": "精灵合成",
+      "combineSpiritsAria": "合成四个品级 {grade} 的精灵",
+      "combineSpiritsHint": "消耗四个此品级的已拥有精灵。有 20% 几率获得一个下一品级的随机精灵。失败时获得一个同品级的随机精灵。史诗或更高品质的奖励需要确认。",
+      "spiritSkillChanceCooldown": "{chance}% 几率 · {cooldown}秒冷却",
+      "spiritSkillBonusDamage": "使触发攻击的原始伤害提高 {amount}%。",
+      "spiritSkillExecute": "目标生命值不高于 {threshold}% 时，使触发攻击的原始伤害提高 {amount}%。",
+      "spiritSkillLifeSiphon": "恢复最大生命值的 {amount}%。",
+      "spiritSkillManaSurge": "恢复最大法力值的 {amount}%。",
+      "spiritSkillArmorRend": "使触发攻击获得 {amount}% 防御穿透。",
+      "spiritSkillCriticalFocus": "使触发攻击必定暴击。",
       "equipmentSlots": {
-        "weapon": "Weapon",
-        "necklace": "Necklace",
+        "weapon": "武器",
+        "necklace": "项链",
         "ring": "Ring",
-        "talisman": "Talisman",
-        "chest": "Chest",
-        "helmet": "Helmet",
-        "gloves": "Gloves",
-        "boots": "Boots"
+        "talisman": "护符",
+        "chest": "胸甲",
+        "helmet": "头盔",
+        "gloves": "手套",
+        "boots": "靴子"
       },
       "stats": {
-        "combatPower": "Combat Power",
-        "maxHp": "Maximum Health",
-        "maxMana": "Maximum Mana",
-        "physicalAttack": "Physical Attack",
-        "magicAttack": "Magic Attack",
-        "physicalDefense": "Physical Defense",
-        "magicDefense": "Magic Defense",
-        "accuracy": "Accuracy",
-        "dodge": "Dodge",
-        "critical": "Critical",
-        "avoidCritical": "Critical Evasion",
-        "criticalOutcome": "Critical Damage",
-        "bossDamage": "Boss Damage",
-        "skillDamage": "Skill Damage",
-        "penetration": "Defense Penetration",
-        "unknown": "Combat Attribute"
+        "combatPower": "战力",
+        "maxHp": "最大生命值",
+        "maxMana": "最大法力值",
+        "physicalAttack": "物理攻击",
+        "magicAttack": "魔法攻击",
+        "physicalDefense": "物理防御",
+        "magicDefense": "魔法防御",
+        "accuracy": "命中",
+        "dodge": "闪避",
+        "critical": "暴击",
+        "avoidCritical": "暴击闪避",
+        "criticalOutcome": "暴击伤害",
+        "bossDamage": "首领伤害",
+        "skillDamage": "技能伤害",
+        "penetration": "防御穿透",
+        "unknown": "战斗属性"
       },
       "materials": {
-        "sunStone": "Sun Stone",
-        "moonStone": "Moon Stone",
-        "solarScroll": "Solar Scroll",
-        "lunarSeal": "Lunar Seal",
+        "sunStone": "太阳石",
+        "moonStone": "月亮石",
+        "solarScroll": "太阳卷轴",
+        "lunarSeal": "月之印",
         "dawnTear": "Dawn Tear",
-        "solarWard": "Solar Ward"
+        "solarWard": "太阳护符"
       },
       "maps": {
-        "portal": "{zone} Portal",
-        "actWelcome": "{zone} (Act {act}).",
-        "m01": "Ford Village",
-        "m02": "Reed Trail",
-        "m03": "Vale Grove",
-        "m04": "Hillside Ruins",
-        "m05": "Rift Clearing",
-        "m06": "Candle-Stone Crypts",
-        "m07": "Ossuary Galleries",
-        "m08": "Miststone Fortress",
-        "m09": "Lantern Marsh",
+        "portal": "{zone}传送门",
+        "actWelcome": "{zone}（第{act}幕）。",
+        "m01": "渡口村",
+        "m02": "芦苇小径",
+        "m03": "山谷林地",
+        "m04": "山坡遗迹",
+        "m05": "裂隙林间地",
+        "m06": "烛石墓穴",
+        "m07": "藏骨回廊",
+        "m08": "雾石要塞",
+        "m09": "灯笼沼泽",
         "m10": "Bog King's Fen",
-        "m11": "Leech Mangrove",
-        "m12": "Reed Harbor",
-        "m13": "Glass Dunes",
-        "m14": "Akhet Necropolis",
-        "m15": "Cinderite Caldera",
-        "m16": "Shattered Sun Forge",
-        "m17": "Howling Tundra",
+        "m11": "水蛭红树林",
+        "m12": "芦苇港",
+        "m13": "玻璃沙丘",
+        "m14": "阿赫特死灵城",
+        "m15": "烬岩火山口",
+        "m16": "破碎太阳熔炉",
+        "m17": "呼啸苔原",
         "m18": "Jarl's Pass",
-        "m19": "Night Veil",
-        "m20": "Eclipse Bastille"
+        "m19": "夜幕",
+        "m20": "日蚀堡垒"
       },
       "progression": {
-        "title": "Equipment Workshop",
-        "refinement": "Refinement",
-        "enchantment": "Enchantment",
-        "blessing": "Blessing",
-        "crafting": "Crafting",
-        "ownedEquipment": "Owned Equipment",
-        "noEquipment": "No equipment is available for this operation.",
-        "equipped": "Equipped",
-        "enhancementLevel": "Enhancement +{level} of +{max}",
-        "successChance": "Success chance: {chance}%",
-        "safeFailure": "Failure keeps the equipment.",
-        "destructiveFailure": "Failure destroys the equipment above +5.",
-        "wardProtection": "A Solar Ward will be consumed to prevent destruction.",
-        "noWardProtection": "No Solar Ward is available.",
-        "enhanceCost": "Cost: 1 Solar Scroll",
-        "enhance": "Enhance",
-        "maxEnhancement": "Maximum enhancement reached",
-        "currentEffects": "Current Effects",
-        "noCurrentEffects": "No effects applied.",
-        "rollCostEnchantment": "Cost: 1 Lunar Seal",
-        "layerUnsupported": "This item cannot receive {layer} effects.",
+        "title": "装备工坊",
+        "refinement": "精炼",
+        "enchantment": "附魔",
+        "blessing": "祝福",
+        "crafting": "制作",
+        "ownedEquipment": "已拥有装备",
+        "noEquipment": "此操作没有可用装备。",
+        "equipped": "已装备",
+        "enhancementLevel": "强化 +{level}/+{max}",
+        "successChance": "成功率：{chance}%",
+        "safeFailure": "失败时保留装备。",
+        "destructiveFailure": "+5 以上强化失败会摧毁装备。",
+        "wardProtection": "将消耗一个太阳护符以防止装备被摧毁。",
+        "noWardProtection": "没有可用的太阳护符。",
+        "enhanceCost": "费用：1 个太阳卷轴",
+        "enhance": "强化",
+        "maxEnhancement": "已达到最高强化等级",
+        "currentEffects": "当前效果",
+        "noCurrentEffects": "没有已应用的效果。",
+        "rollCostEnchantment": "费用：1 个月之印",
+        "layerUnsupported": "此物品无法获得{layer}效果。",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
-        "roll": "Roll Preview",
-        "pendingOtherLayer": "Resolve the pending {layer} preview first.",
-        "preview": "Pending Preview",
-        "acceptPreview": "Apply Preview",
-        "keepCurrent": "Keep Current",
-        "inactiveEffect": "Ported effect (not active in combat yet)",
-        "materialRecipes": "Material Recipes",
-        "campaignProfession": "Campaign Profession Order",
-        "campaignProfessionProgress": "Progress: {current}/{goal}",
-        "campaignProfessionMaterials": "Eligible materials: {held}/{needed}",
-        "campaignProfessionHint": "Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.",
-        "campaignCraft": "Craft Component",
-        "campaignRefine": "Refine Component",
-        "campaignSalvage": "Salvage Gear",
-        "creates": "Creates {count} {material}",
+        "roll": "生成预览",
+        "pendingOtherLayer": "请先处理待定的{layer}预览。",
+        "preview": "待定预览",
+        "acceptPreview": "应用预览",
+        "keepCurrent": "保留当前效果",
+        "inactiveEffect": "已移植效果（尚未在战斗中生效）",
+        "materialRecipes": "材料配方",
+        "campaignProfession": "战役专业订单",
+        "campaignProfessionProgress": "进度：{current}/{goal}",
+        "campaignProfessionMaterials": "合格材料：{held}/{needed}",
+        "campaignProfessionHint": "在战役制作锚点完成此订单。服务器只会消耗权威的地区材料。",
+        "campaignCraft": "制作组件",
+        "campaignRefine": "精炼组件",
+        "campaignSalvage": "分解装备",
+        "creates": "制作 {count} 个{material}",
         "materialCost": "{held}/{needed} {material}",
-        "copperCost": "{amount} copper",
-        "create": "Create",
-        "requestSent": "The server is validating the equipment operation."
+        "copperCost": "{amount} 铜币",
+        "create": "制作",
+        "requestSent": "服务器正在验证装备操作。"
       }
     },
     "interfaceTabs": {
@@ -2933,7 +2933,7 @@ export const zh_CN: EnTranslations = {
       "addToBarAria": "将{name}添加到动作条",
       "removeFromBarAria": "从动作条移除{name}",
       "upgradeRank": "Rank {rank}",
-      "maxRank": "Max rank",
+      "maxRank": "最高等级",
       "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
       "assignAria": "为{name}选择一个栏位"
     },
@@ -3266,7 +3266,7 @@ export const zh_CN: EnTranslations = {
     },
     "noticeboard": {
       "empty": "看起来没有张贴任何内容。",
-      "contract": "Contract active: {title}"
+      "contract": "已激活契约：{title}"
     },
     "bank": {
       "title": "银行",
@@ -7491,10 +7491,10 @@ export const zh_CN: EnTranslations = {
   },
   "classes": {
     "warrior": "战士",
-    "elementalist": "Elementalist",
-    "taoist": "Taoist",
-    "arbalist": "Arbalist",
-    "lancer": "Lancer",
+    "elementalist": "元素师",
+    "taoist": "道士",
+    "arbalist": "弩手",
+    "lancer": "枪骑士",
     "paladin": "圣骑士",
     "hunter": "猎人",
     "rogue": "潜行者",
@@ -7504,10 +7504,10 @@ export const zh_CN: EnTranslations = {
     "warlock": "术士",
     "druid": "德鲁伊",
     "warriorAria": "战士职业",
-    "elementalistAria": "Elementalist class",
-    "taoistAria": "Taoist class",
-    "arbalistAria": "Arbalist class",
-    "lancerAria": "Lancer class",
+    "elementalistAria": "元素师职业",
+    "taoistAria": "道士职业",
+    "arbalistAria": "弩手职业",
+    "lancerAria": "枪骑士职业",
     "paladinAria": "圣骑士职业",
     "hunterAria": "猎人职业",
     "rogueAria": "潜行者职业",
@@ -8433,28 +8433,28 @@ export const zh_CN: EnTranslations = {
     },
     "mir4": {
       "labels": {
-        "damage": "Damage",
-        "combatRange": "Combat Range",
-        "startingSkills": "Starting Skills"
+        "damage": "伤害",
+        "combatRange": "战斗距离",
+        "startingSkills": "初始技能"
       },
       "damage": {
-        "physical": "Physical",
-        "magic": "Magic"
+        "physical": "物理",
+        "magic": "魔法"
       },
       "range": {
-        "melee": "Melee",
-        "medium": "Medium range",
-        "long": "Long range",
-        "extended": "Extended melee"
+        "melee": "近战",
+        "medium": "中距离",
+        "long": "远距离",
+        "extended": "扩展近战"
       },
       "weapons": {
-        "heavySword": "Heavy Sword",
-        "largeStaff": "Large Staff",
-        "shortStaff": "Short Staff",
-        "arbalest": "Arbalest",
-        "spear": "Spear"
+        "heavySword": "重剑",
+        "largeStaff": "长法杖",
+        "shortStaff": "短法杖",
+        "arbalest": "弩",
+        "spear": "长枪"
       },
-      "aria": "Class details for {className}: {damage} damage, {range} range, weapon {weapon}, {skills} starting skills."
+      "aria": "{className}职业详情：{damage}伤害，{range}距离，武器为{weapon}，拥有{skills}个初始技能。"
     },
     "aria": "{className} 职业详情：职责 {role}。初始属性：力量 {str}，敏捷 {agi}，耐力 {sta}，智力 {int}，精神 {spi}。",
     "statBarAria": "{stat}：{value}/25"
@@ -9214,8 +9214,8 @@ export const zh_CN: EnTranslations = {
     "actionBar": {
       "attackName": "攻击",
       "attackTooltip": "对目标开启或关闭自动攻击。右键点击敌人也会发起攻击。",
-      "autoBattleName": "Auto Battle",
-      "autoBattleTooltip": "Toggle automatic target acquisition, movement, and skill rotation around your current position.",
+      "autoBattleName": "自动战斗",
+      "autoBattleTooltip": "切换当前位置周围的自动索敌、移动和技能循环。",
       "attackRemoveHint": "右键点击可将其从动作栏移除并空出栏位。",
       "emptySlot": "空栏位",
       "slotAria": "动作栏位 {slot}：{ability}",
@@ -9665,224 +9665,224 @@ export const zh_CN: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1102": {
-        "name": "Void Strike",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 0.9 sec."
+        "name": "虚空斩",
+        "description": "对一名敌人造成 {damage} 点伤害。使目标昏迷 0.9 秒。"
       },
       "mir4_skill_1104": {
-        "name": "Lacerating Strike",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
+        "name": "撕裂斩",
+        "description": "对一名敌人造成 {damage} 点伤害。击倒目标 1.2 秒。"
       },
       "mir4_skill_1304": {
-        "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "name": "冲撞",
+        "description": "对一名敌人造成 {damage} 点伤害。使其受到的伤害提高 12%，持续 4.5 秒。"
       },
       "mir4_skill_1401": {
-        "name": "Ground Smash",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec."
+        "name": "大地重击",
+        "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 70% 伤害。击倒目标 0.8 秒。"
       },
       "mir4_skill_1501": {
-        "name": "Gale Strike",
-        "description": "Affects an enemy. Slows the target by 35% for 3.2 sec."
+        "name": "疾风斩",
+        "description": "影响一名敌人。使目标减速 35%，持续 3.2 秒。"
       },
       "mir4_skill_2101": {
-        "name": "Prismatic Beam",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec."
+        "name": "棱彩光束",
+        "description": "对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。冻结目标 1.4 秒。"
       },
       "mir4_skill_2111": {
-        "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "name": "余烬长枪",
+        "description": "对一名敌人造成 {damage} 点伤害。使其受到的伤害提高 8%，持续 4.5 秒。"
       },
       "mir4_skill_2301": {
-        "name": "Smite Seal",
-        "description": "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec."
+        "name": "惩击之印",
+        "description": "对一名敌人造成 {damage} 点伤害。使目标造成的伤害降低 50%，持续 4 秒。"
       },
       "mir4_skill_2501": {
-        "name": "Evoked Core",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec."
+        "name": "唤出核心",
+        "description": "对一名敌人造成 {damage} 点伤害。8 码内最多 4 名其他敌人受到 60% 伤害。冻结目标 1.8 秒。"
       },
       "mir4_skill_2503": {
-        "name": "Magic Shield",
-        "description": "Reduces damage taken by 22% for 10 sec."
+        "name": "魔法护盾",
+        "description": "受到的伤害降低 22%，持续 10 秒。"
       },
       "mir4_skill_3101": {
-        "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "name": "印记连击",
+        "description": "对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。使其受到的伤害提高 10%，持续 4 秒。"
       },
       "mir4_skill_3104": {
-        "name": "Totem 1010",
-        "description": "Affects an enemy. Stuns the target for 1.4 sec."
+        "name": "图腾 1010",
+        "description": "影响一名敌人。使目标昏迷 1.4 秒。"
       },
       "mir4_skill_3301": {
-        "name": "Totem Seal II",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec."
+        "name": "图腾之印 II",
+        "description": "对一名敌人造成 {damage} 点伤害。7.25 码内最多 3 名其他敌人受到 60% 伤害。使目标减速 35%，持续 4.2 秒。"
       },
       "mir4_skill_3503": {
-        "name": "Jade Lotus",
-        "description": "Restores 18% of maximum health."
+        "name": "玉莲",
+        "description": "恢复最大生命值的 18%。"
       },
       "mir4_skill_3506": {
-        "name": "Totem Seal I",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec."
+        "name": "图腾之印 I",
+        "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 60% 伤害。定身目标 1.6 秒。"
       },
       "mir4_skill_4101": {
-        "name": "Burst 4101",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec."
+        "name": "爆发 4101",
+        "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 65% 伤害。使目标造成的伤害降低 45%，持续 3.5 秒。"
       },
       "mir4_skill_4102": {
-        "name": "Sequence 4102",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec."
+        "name": "连击 4102",
+        "description": "对一名敌人造成 {damage} 点伤害。6.625 码内最多 3 名其他敌人受到 65% 伤害。使目标减速 30%，持续 3.5 秒。"
       },
       "mir4_skill_4103": {
         "name": "Twin Echo",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec."
+        "description": "对一名敌人造成 {damage} 点伤害。7.5 码内最多 4 名其他敌人受到 55% 伤害。使目标造成的伤害降低 60%，持续 5 秒。"
       },
       "mir4_skill_4106": {
-        "name": "Charge 4106",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 2 sec."
+        "name": "冲锋 4106",
+        "description": "对一名敌人造成 {damage} 点伤害。使目标昏迷 2 秒。"
       },
       "mir4_skill_4107": {
-        "name": "Flare Arrow",
-        "description": "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec."
+        "name": "闪光箭",
+        "description": "影响一名敌人。使目标造成的伤害降低 45%，持续 3.2 秒。"
       },
       "mir4_skill_5101": {
-        "name": "Thrust 5101",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1 sec."
+        "name": "突刺 5101",
+        "description": "对一名敌人造成 {damage} 点伤害。击倒目标 1 秒。"
       },
       "mir4_skill_5104": {
-        "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "name": "横扫 5104",
+        "description": "对一名敌人造成 {damage} 点伤害。使其受到的伤害提高 14%，持续 4.5 秒。"
       },
       "mir4_skill_5201": {
-        "name": "Strike 5201",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec."
+        "name": "打击 5201",
+        "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 65% 伤害。使目标昏迷 1.1 秒。"
       },
       "mir4_skill_5301": {
-        "name": "Chain 5301",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec."
+        "name": "锁链 5301",
+        "description": "对一名敌人造成 {damage} 点伤害。7.25 码内最多 3 名其他敌人受到 70% 伤害。使目标昏迷 0.9 秒。"
       },
       "mir4_skill_5401": {
-        "name": "Raging Storm",
-        "description": "Affects an enemy. Knocks the target down for 1 sec."
+        "name": "狂怒风暴",
+        "description": "影响一名敌人。击倒目标 1 秒。"
       },
       "mir4_ultimate_1": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "终极技能",
+        "description": "通过 3 次打击造成 {damage} 点伤害。需要终极技能能量全满。"
       },
       "mir4_ultimate_2": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
+        "name": "终极技能",
+        "description": "通过 4 次打击造成 {damage} 点伤害。需要终极技能能量全满。"
       },
       "mir4_ultimate_3": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "终极技能",
+        "description": "通过 3 次打击造成 {damage} 点伤害。需要终极技能能量全满。"
       },
       "mir4_ultimate_4": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "终极技能",
+        "description": "通过 3 次打击造成 {damage} 点伤害。需要终极技能能量全满。"
       },
       "mir4_ultimate_5": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
+        "name": "终极技能",
+        "description": "通过 2 次打击造成 {damage} 点伤害。需要终极技能能量全满。"
       },
       "mir4_passive_warrior_heavy_armor": {
-        "name": "Heavy Armor",
-        "description": "Increases maximum health by 8%."
+        "name": "重甲",
+        "description": "最大生命值提高 8%。"
       },
       "mir4_passive_warrior_weapon_mastery": {
-        "name": "Weapon Discipline",
-        "description": "Increases physical attack by 6%."
+        "name": "武器精通",
+        "description": "物理攻击提高 6%。"
       },
       "mir4_passive_warrior_iron_skin": {
         "name": "Iron Skin",
-        "description": "Increases physical defense by 8% and magic defense by 6%."
+        "description": "物理防御提高 8%，魔法防御提高 6%。"
       },
       "mir4_passive_warrior_fighting_spirit": {
-        "name": "Fighting Spirit",
-        "description": "Increases maximum health by 4% and physical attack by 4%."
+        "name": "战斗精神",
+        "description": "最大生命值和物理攻击提高 4%。"
       },
       "mir4_passive_warrior_indomitable_will": {
-        "name": "Indomitable Will",
-        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "不屈意志",
+        "description": "最大生命值、物理防御和魔法防御提高 5%。"
       },
       "mir4_passive_elementalist_mana_well": {
         "name": "Mana Well",
-        "description": "Increases maximum mana by 10%."
+        "description": "最大法力值提高 10%。"
       },
       "mir4_passive_elementalist_arcane_intellect": {
-        "name": "Arcane Acumen",
-        "description": "Increases magic attack by 7%."
+        "name": "奥术智慧",
+        "description": "魔法攻击提高 7%。"
       },
       "mir4_passive_elementalist_elemental_protection": {
-        "name": "Elemental Protection",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "元素防护",
+        "description": "物理防御和魔法防御提高 6%。"
       },
       "mir4_passive_elementalist_channeling": {
-        "name": "Channeling",
-        "description": "Increases maximum mana by 5% and magic attack by 4%."
+        "name": "引导",
+        "description": "最大法力值提高 5%，魔法攻击提高 4%。"
       },
       "mir4_passive_elementalist_arcane_ascension": {
-        "name": "Arcane Ascension",
-        "description": "Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%."
+        "name": "奥术升华",
+        "description": "最大法力值提高 5%，魔法攻击提高 6%，物理防御和魔法防御提高 3%。"
       },
       "mir4_passive_taoist_spiritual_vessel": {
-        "name": "Spiritual Vessel",
-        "description": "Increases maximum health by 4% and maximum mana by 7%."
+        "name": "灵性容器",
+        "description": "最大生命值提高 4%，最大法力值提高 7%。"
       },
       "mir4_passive_taoist_twin_paths": {
-        "name": "Twin Paths",
-        "description": "Increases physical attack by 4% and magic attack by 4%."
+        "name": "双生之道",
+        "description": "物理攻击和魔法攻击提高 4%。"
       },
       "mir4_passive_taoist_sacred_guard": {
-        "name": "Sacred Guard",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "神圣守护",
+        "description": "物理防御和魔法防御提高 6%。"
       },
       "mir4_passive_taoist_serene_mind": {
-        "name": "Serene Mind",
-        "description": "Increases maximum health by 4% and maximum mana by 5%."
+        "name": "宁静心境",
+        "description": "最大生命值提高 4%，最大法力值提高 5%。"
       },
       "mir4_passive_taoist_celestial_harmony": {
-        "name": "Celestial Harmony",
-        "description": "Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%."
+        "name": "天人和谐",
+        "description": "最大生命值、最大法力值、物理攻击、魔法攻击、物理防御和魔法防御提高 4%。"
       },
       "mir4_passive_arbalist_eagle_eye": {
-        "name": "Eagle Eye",
-        "description": "Increases physical attack by 3% and accuracy by 5%."
+        "name": "鹰眼",
+        "description": "物理攻击提高 3%，命中提高 5%。"
       },
       "mir4_passive_arbalist_ballistic_mastery": {
-        "name": "Ballistic Mastery",
-        "description": "Increases physical attack by 7%."
+        "name": "弹道精通",
+        "description": "物理攻击提高 7%。"
       },
       "mir4_passive_arbalist_nature_guard": {
-        "name": "Nature's Guard",
-        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "自然守护",
+        "description": "最大生命值、物理防御和魔法防御提高 5%。"
       },
       "mir4_passive_arbalist_hunter_instinct": {
-        "name": "Hunter's Instinct",
-        "description": "Increases physical attack by 5% and dodge by 5%."
+        "name": "猎手本能",
+        "description": "物理攻击和闪避提高 5%。"
       },
       "mir4_passive_arbalist_perfect_shot": {
-        "name": "Perfect Shot",
-        "description": "Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%."
+        "name": "完美射击",
+        "description": "最大生命值提高 3%，物理攻击提高 6%，命中提高 5%。"
       },
       "mir4_passive_lancer_war_conditioning": {
-        "name": "War Conditioning",
-        "description": "Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%."
+        "name": "战争淬炼",
+        "description": "最大生命值提高 5%，物理攻击和魔法攻击提高 3%。"
       },
       "mir4_passive_lancer_spear_mastery": {
-        "name": "Spear Mastery",
-        "description": "Increases physical attack by 5% and magic attack by 5%."
+        "name": "长枪精通",
+        "description": "物理攻击和魔法攻击提高 5%。"
       },
       "mir4_passive_lancer_vanguard_armor": {
-        "name": "Vanguard Armor",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "先锋铠甲",
+        "description": "物理防御和魔法防御提高 6%。"
       },
       "mir4_passive_lancer_battle_rhythm": {
-        "name": "Battle Rhythm",
-        "description": "Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%."
+        "name": "战斗节奏",
+        "description": "最大法力值、物理攻击和魔法攻击提高 4%。"
       },
       "mir4_passive_lancer_dragon_vanguard": {
-        "name": "Dragon's Vanguard",
-        "description": "Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "龙之先锋",
+        "description": "最大生命值提高 4%，物理攻击、魔法攻击、物理防御和魔法防御提高 5%。"
       },
       "sport_kick": {
         "name": "踢球",
@@ -17591,9 +17591,9 @@ export const zh_CN: EnTranslations = {
         "leaveText": "你踉跄回到山风之中。"
       },
       "campaign_trial_room": {
-        "name": "Campaign Trial",
-        "enterText": "You enter the campaign trial.",
-        "leaveText": "You leave the campaign trial."
+        "name": "战役试炼",
+        "enterText": "你进入了战役试炼。",
+        "leaveText": "你离开了战役试炼。"
       },
       "nythraxis_crypt": {
         "name": "废弃墓穴",

@@ -781,388 +781,388 @@ export const ko_KR: EnTranslations = {
       "collapseHint": "퀘스트 추적기 접기",
       "expandHint": "퀘스트 추적기 펼치기",
       "mir4": {
-        "firstTraces": "First Traces",
-        "reachTarek": "Reach Tarek",
-        "inspectClues": "Inspect clues",
-        "returnToTarek": "Return to Tarek",
-        "pausedSuffix": "(auto journey paused by manual control)",
-        "startAutoJourney": "Start auto journey",
-        "stopAutoJourney": "Stop auto journey"
+        "firstTraces": "최초의 흔적",
+        "reachTarek": "타렉에게 이동",
+        "inspectClues": "단서 조사",
+        "returnToTarek": "타렉에게 돌아가기",
+        "pausedSuffix": "(수동 조작으로 자동 이동 일시 중지)",
+        "startAutoJourney": "자동 이동 시작",
+        "stopAutoJourney": "자동 이동 중지"
       }
     },
     "mir4": {
       "collectibles": {
         "mounts": {
-          "meadow-courser": "Meadow Courser",
-          "moss-boar": "Moss Boar",
-          "brook-stag": "Brook Stag",
-          "gray-wolf": "Gray Wolf",
-          "dun-packhorse": "Dun Packhorse",
-          "birch-doe": "Birch Doe",
-          "red-maned-pony": "Red Maned Pony",
-          "lowland-elk": "Lowland Elk",
-          "field-lynx": "Field Lynx",
-          "tawny-mastiff": "Tawny Mastiff",
-          "dune-jackal": "Dune Jackal",
-          "reed-puma": "Reed Puma",
-          "clay-ox": "Clay Ox",
-          "valley-buffalo": "Valley Buffalo",
-          "shaggy-yak": "Shaggy Yak",
-          "creek-lizard": "Creek Lizard",
-          "shellback-tortoise": "Stone-Shell Tortoise",
-          "plains-ostrich": "Plains Ostrich",
-          "dusk-emu": "Dusk Rhea",
-          "copper-ant-carrier": "Copper Ant Carrier",
-          "mist-moose": "Mist Moose",
-          "leaf-panther": "Leaf Panther",
-          "turf-rhino": "Turf Rhino",
-          "valley-monitor": "Valley Monitor",
-          "granite-ibex": "Granite Ibex",
-          "silver-dapple-mare": "Silver Dapple Mare",
-          "marsh-stag": "Marsh Stag",
-          "snow-mane-lion": "Snow-Maned Lion",
-          "ember-fox": "Ember Fox",
-          "striped-hyena": "Striped Hyena",
-          "iron-tusk-boar": "Iron Tusk Boar",
-          "cedar-bear": "Cedar Bear",
-          "swamp-hippo": "Swamp Hippo",
-          "thorn-iguana": "Thorn Iguana",
-          "dryland-crocodile": "Dryland Crocodile",
-          "horned-cassowary": "Horned Cassowary",
-          "bronze-raptor": "Bronze Raptor",
-          "amber-scarab": "Amber Scarab",
-          "dune-scorpion": "Dune Scorpion",
-          "root-golem": "Root Golem",
-          "amber-bear": "Amber Bear",
-          "sunset-tiger": "Sunset Tiger",
-          "root-drake": "Root Drake",
-          "hill-griffin": "Hill Griffin",
-          "obsidian-zebra": "Obsidian Zebra",
-          "stormhorn-ram": "Storm-Horn Ram",
-          "dusk-elk": "Dusk Elk",
-          "frost-warg": "Frost Warg",
-          "basalt-rhino": "Basalt Rhino",
-          "tundra-mammoth": "Tundra Mammoth",
-          "crystal-ankylosaur": "Crystal Ankylosaur",
-          "ember-salamander": "Ember Salamander",
-          "thunder-komodo": "Thunder Komodo",
-          "moon-crocodile": "Moon Crocodile",
-          "razorbeak-strider": "Razor-Beaked Strider",
-          "plume-raptor": "Plume Raptor",
-          "glass-mantis": "Glass Mantis",
-          "thunder-beetle": "Thunder Beetle",
-          "iron-sentinel": "Iron Sentinel",
-          "mossstone-colossus": "Moss-Stone Colossus",
-          "eclipse-lion": "Eclipse Lion",
-          "crimson-wyvern": "Crimson Wyvern",
-          "astral-stag": "Astral Stag",
-          "jade-basilisk": "Jade Basilisk",
-          "solar-wolf": "Solar Wolf",
-          "forest-chimera": "Forest Chimera",
-          "tempest-courser": "Tempest Courser",
-          "thorn-elephant": "Thorn Elephant",
-          "void-spider": "Void Spider",
-          "rune-golem": "Rune Golem",
-          "dawn-phoenix": "Dawn Phoenix",
-          "imperial-griffin": "Imperial Griffin",
-          "stone-leviathan": "Stone Leviathan",
-          "void-unicorn": "Void Unicorn",
-          "golden-manticore": "Golden Manticore",
-          "imperial-tiger": "Imperial Tiger",
-          "dawn-mammoth": "Dawn Mammoth",
-          "magma-drake": "Magma Drake",
-          "crown-scorpion": "Crown Scorpion",
-          "sunforged-colossus": "Sunforged Colossus",
-          "ground-dragon": "Ground Dragon",
-          "eternal-phoenix": "Eternal Phoenix",
-          "celestial-kirin": "Celestial Kirin",
-          "firmament-behemoth": "Firmament Lion",
-          "time-hydra": "Time Hydra"
+          "meadow-courser": "초원 준마",
+          "moss-boar": "이끼 멧돼지",
+          "brook-stag": "시냇물 수사슴",
+          "gray-wolf": "회색 늑대",
+          "dun-packhorse": "황갈색 짐말",
+          "birch-doe": "자작나무 암사슴",
+          "red-maned-pony": "붉은 갈기 조랑말",
+          "lowland-elk": "저지대 엘크",
+          "field-lynx": "들판 스라소니",
+          "tawny-mastiff": "황갈색 마스티프",
+          "dune-jackal": "사구 자칼",
+          "reed-puma": "갈대 퓨마",
+          "clay-ox": "점토 황소",
+          "valley-buffalo": "계곡 버팔로",
+          "shaggy-yak": "털북숭이 야크",
+          "creek-lizard": "개울 도마뱀",
+          "shellback-tortoise": "돌등껍질 거북",
+          "plains-ostrich": "평원 타조",
+          "dusk-emu": "황혼 레아",
+          "copper-ant-carrier": "구리 개미 운반수",
+          "mist-moose": "안개 무스",
+          "leaf-panther": "잎 표범",
+          "turf-rhino": "잔디 코뿔소",
+          "valley-monitor": "계곡 왕도마뱀",
+          "granite-ibex": "화강암 아이벡스",
+          "silver-dapple-mare": "은빛 얼룩 암말",
+          "marsh-stag": "습지 수사슴",
+          "snow-mane-lion": "눈갈기 사자",
+          "ember-fox": "잿불 여우",
+          "striped-hyena": "줄무늬 하이에나",
+          "iron-tusk-boar": "철 엄니 멧돼지",
+          "cedar-bear": "삼나무 곰",
+          "swamp-hippo": "늪 하마",
+          "thorn-iguana": "가시 이구아나",
+          "dryland-crocodile": "건조지 악어",
+          "horned-cassowary": "뿔 화식조",
+          "bronze-raptor": "청동 랩터",
+          "amber-scarab": "호박 풍뎅이",
+          "dune-scorpion": "사구 전갈",
+          "root-golem": "뿌리 골렘",
+          "amber-bear": "호박 곰",
+          "sunset-tiger": "노을 호랑이",
+          "root-drake": "뿌리 드레이크",
+          "hill-griffin": "언덕 그리핀",
+          "obsidian-zebra": "흑요석 얼룩말",
+          "stormhorn-ram": "폭풍뿔 숫양",
+          "dusk-elk": "황혼 엘크",
+          "frost-warg": "서리 워그",
+          "basalt-rhino": "현무암 코뿔소",
+          "tundra-mammoth": "툰드라 매머드",
+          "crystal-ankylosaur": "수정 안킬로사우루스",
+          "ember-salamander": "잿불 샐러맨더",
+          "thunder-komodo": "천둥 코모도",
+          "moon-crocodile": "달 악어",
+          "razorbeak-strider": "칼날부리 스트라이더",
+          "plume-raptor": "깃털 랩터",
+          "glass-mantis": "유리 사마귀",
+          "thunder-beetle": "천둥 딱정벌레",
+          "iron-sentinel": "철 파수꾼",
+          "mossstone-colossus": "이끼돌 거상",
+          "eclipse-lion": "일식 사자",
+          "crimson-wyvern": "진홍 와이번",
+          "astral-stag": "별빛 수사슴",
+          "jade-basilisk": "비취 바실리스크",
+          "solar-wolf": "태양 늑대",
+          "forest-chimera": "숲 키메라",
+          "tempest-courser": "폭풍 준마",
+          "thorn-elephant": "가시 코끼리",
+          "void-spider": "공허 거미",
+          "rune-golem": "룬 골렘",
+          "dawn-phoenix": "새벽 불사조",
+          "imperial-griffin": "제국 그리핀",
+          "stone-leviathan": "돌 리바이어던",
+          "void-unicorn": "공허 유니콘",
+          "golden-manticore": "황금 만티코어",
+          "imperial-tiger": "제국 호랑이",
+          "dawn-mammoth": "새벽 매머드",
+          "magma-drake": "마그마 드레이크",
+          "crown-scorpion": "왕관 전갈",
+          "sunforged-colossus": "태양벼림 거상",
+          "ground-dragon": "대지 용",
+          "eternal-phoenix": "영원 불사조",
+          "celestial-kirin": "천상 기린",
+          "firmament-behemoth": "창공의 사자",
+          "time-hydra": "시간 히드라"
         },
         "spirits": {
-          "spirit-common-01": "Meadow Spark",
-          "spirit-common-02": "Brook Breeze",
-          "spirit-common-03": "Watchful Leaf",
-          "spirit-common-04": "Stone Echo",
-          "spirit-uncommon-01": "Dawn Glow",
-          "spirit-uncommon-02": "Mist Nymph",
-          "spirit-uncommon-03": "Moss Guardian",
-          "spirit-uncommon-04": "Valley Salamander",
-          "spirit-rare-01": "Amber Fox",
-          "spirit-rare-02": "Sunset Owl",
-          "spirit-rare-03": "Root Drake",
-          "spirit-rare-04": "Hills Oracle",
-          "spirit-epic-01": "Eclipse Avatar",
-          "spirit-epic-02": "Crimson Ifrit",
-          "spirit-epic-03": "Astral Stag",
-          "spirit-epic-04": "Jade Sentinel",
-          "spirit-epic-05": "Solar Wolf",
-          "spirit-epic-06": "Ethereal Chimera",
-          "spirit-legendary-01": "Earth Titan",
-          "spirit-legendary-02": "Dawn Phoenix",
-          "spirit-legendary-03": "Imperial Archon",
-          "spirit-legendary-04": "Crystal Leviathan",
-          "spirit-legendary-05": "Void Unicorn",
-          "spirit-legendary-06": "Golden Manticore",
-          "spirit-mythical-01": "Primordial Soul",
-          "spirit-mythical-02": "Eternal Phoenix",
-          "spirit-mythical-03": "Celestial Kirin",
-          "spirit-mythical-04": "Firmament Behemoth",
-          "spirit-mythical-05": "Abyssal Seraph",
-          "spirit-mythical-06": "Time Hydra"
+          "spirit-common-01": "초원 불꽃",
+          "spirit-common-02": "시냇물의 산들바람",
+          "spirit-common-03": "수호의 잎",
+          "spirit-common-04": "돌 메아리",
+          "spirit-uncommon-01": "새벽의 광휘",
+          "spirit-uncommon-02": "안개 님프",
+          "spirit-uncommon-03": "이끼 수호자",
+          "spirit-uncommon-04": "계곡 샐러맨더",
+          "spirit-rare-01": "호박 여우",
+          "spirit-rare-02": "노을 올빼미",
+          "spirit-rare-03": "뿌리 드레이크",
+          "spirit-rare-04": "언덕의 예언자",
+          "spirit-epic-01": "일식 화신",
+          "spirit-epic-02": "진홍 이프리트",
+          "spirit-epic-03": "별빛 수사슴",
+          "spirit-epic-04": "비취 파수꾼",
+          "spirit-epic-05": "태양 늑대",
+          "spirit-epic-06": "에테르 키메라",
+          "spirit-legendary-01": "대지 타이탄",
+          "spirit-legendary-02": "새벽 불사조",
+          "spirit-legendary-03": "제국 집정관",
+          "spirit-legendary-04": "수정 리바이어던",
+          "spirit-legendary-05": "공허 유니콘",
+          "spirit-legendary-06": "황금 만티코어",
+          "spirit-mythical-01": "원초 영혼",
+          "spirit-mythical-02": "영원 불사조",
+          "spirit-mythical-03": "천상 기린",
+          "spirit-mythical-04": "창공의 베히모스",
+          "spirit-mythical-05": "심연 세라핌",
+          "spirit-mythical-06": "시간 히드라"
         },
         "spiritSkills": {
-          "spirit-skill-1-01": "Wandering Spark",
-          "spirit-skill-1-02": "Dusk Instinct",
-          "spirit-skill-1-03": "Vital Dew",
-          "spirit-skill-1-04": "Mana Breath",
-          "spirit-skill-2-01": "Rising Flare",
-          "spirit-skill-2-02": "Mist Fang",
-          "spirit-skill-2-03": "Restoring Sap",
-          "spirit-skill-2-04": "Arcane Pulse",
-          "spirit-skill-3-01": "Amber Rupture",
-          "spirit-skill-3-02": "Sunset Judgment",
-          "spirit-skill-3-03": "Vital Bond",
-          "spirit-skill-3-04": "Root Spring",
-          "spirit-skill-4-01": "Eclipse Ray",
-          "spirit-skill-4-02": "Crimson Fury",
-          "spirit-skill-4-03": "Astral Grace",
-          "spirit-skill-4-04": "Jade Orb",
-          "spirit-skill-4-05": "Solar Cut",
-          "spirit-skill-4-06": "Ethereal Focus",
-          "spirit-skill-5-01": "Tectonic Impact",
-          "spirit-skill-5-02": "Reborn Flame",
-          "spirit-skill-5-03": "Imperial Verdict",
-          "spirit-skill-5-04": "Crystal Tide",
-          "spirit-skill-5-05": "Void Rift",
-          "spirit-skill-5-06": "Golden Crown",
-          "spirit-skill-6-01": "Genesis",
-          "spirit-skill-6-02": "Eternal Return",
-          "spirit-skill-6-03": "Celestial Mandate",
-          "spirit-skill-6-04": "Weight of the Firmament",
-          "spirit-skill-6-05": "Abyssal Spiral",
-          "spirit-skill-6-06": "Absolute Moment"
+          "spirit-skill-1-01": "방랑 불꽃",
+          "spirit-skill-1-02": "황혼 본능",
+          "spirit-skill-1-03": "생명 이슬",
+          "spirit-skill-1-04": "마나 숨결",
+          "spirit-skill-2-01": "솟는 섬광",
+          "spirit-skill-2-02": "안개 송곳니",
+          "spirit-skill-2-03": "회복 수액",
+          "spirit-skill-2-04": "비전 파동",
+          "spirit-skill-3-01": "호박 파열",
+          "spirit-skill-3-02": "노을 심판",
+          "spirit-skill-3-03": "생명 유대",
+          "spirit-skill-3-04": "뿌리 샘",
+          "spirit-skill-4-01": "일식 광선",
+          "spirit-skill-4-02": "진홍 격노",
+          "spirit-skill-4-03": "별빛 은총",
+          "spirit-skill-4-04": "비취 구슬",
+          "spirit-skill-4-05": "태양 참격",
+          "spirit-skill-4-06": "에테르 집중",
+          "spirit-skill-5-01": "지각 충격",
+          "spirit-skill-5-02": "재생 불꽃",
+          "spirit-skill-5-03": "제국 판결",
+          "spirit-skill-5-04": "수정 물결",
+          "spirit-skill-5-05": "공허 균열",
+          "spirit-skill-5-06": "황금 왕관",
+          "spirit-skill-6-01": "창세",
+          "spirit-skill-6-02": "영원 귀환",
+          "spirit-skill-6-03": "천상 칙령",
+          "spirit-skill-6-04": "창공의 무게",
+          "spirit-skill-6-05": "심연 나선",
+          "spirit-skill-6-06": "절대 순간"
         }
       },
-      "ultimateGauge": "Ultimate gauge",
-      "ultimateGaugeStatus": "Ultimate gauge: {value} of {max}",
-      "ultimateReadyAnnouncement": "Ultimate ready.",
+      "ultimateGauge": "궁극기 게이지",
+      "ultimateGaugeStatus": "궁극기 게이지: {value}/{max}",
+      "ultimateReadyAnnouncement": "궁극기 준비 완료.",
       "achievements": {
-        "title": "Achievements",
-        "close": "Close achievements",
-        "summary": "{claimed}/{total} rewards claimed",
-        "balances": "Copper {copper} · Darksteel {darksteel} · EP {effectPoints} · Skill Tomes {skillTomes}",
-        "levelTitle": "Level {level}",
-        "levelDescription": "Reach level {level}.",
-        "progressAria": "Level progress: {current}/{target}",
+        "title": "업적",
+        "close": "업적 닫기",
+        "summary": "보상 수령: {claimed}/{total}",
+        "balances": "동전 {copper} · 흑철 {darksteel} · 효과 포인트 {effectPoints} · 스킬 비급서 {skillTomes}",
+        "levelTitle": "레벨 {level}",
+        "levelDescription": "레벨 {level}에 도달하세요.",
+        "progressAria": "레벨 진행도: {current}/{target}",
         "progressText": "{current}/{target}",
-        "rewardCopper": "{amount} copper",
-        "rewardDarksteel": "{amount} Darksteel",
-        "rewardEffectPoints": "{amount} Effect Points",
-        "rewardSkillTomes": "{amount} Skill Tomes",
-        "rewards": "Rewards: {rewards}",
-        "claim": "Claim",
-        "claimed": "Claimed",
-        "locked": "Reach level {level}",
-        "previousGrade": "Claim the previous grade first",
-        "claimAria": "Claim the level {level} achievement reward"
+        "rewardCopper": "동전 {amount}",
+        "rewardDarksteel": "흑철 {amount}",
+        "rewardEffectPoints": "효과 포인트 {amount}",
+        "rewardSkillTomes": "스킬 비급서 {amount}개",
+        "rewards": "보상: {rewards}",
+        "claim": "수령",
+        "claimed": "수령 완료",
+        "locked": "레벨 {level} 달성",
+        "previousGrade": "이전 단계 보상을 먼저 수령하세요",
+        "claimAria": "레벨 {level} 업적 보상 수령"
       },
       "questLog": {
-        "narrative": "Investigate the three clue sites around the ford, then return to Tarek Two Bridges.",
-        "giverName": "Tarek Two Bridges",
-        "emptyHint": "Find Tarek Two Bridges in the M01 settlement, or start auto journey.",
-        "completedHint": "First Traces is complete. The remaining campaign quests are not active yet."
+        "narrative": "여울 주변의 세 단서 지점을 조사한 뒤 타렉 투 브리지에게 돌아가세요.",
+        "giverName": "타렉 투 브리지",
+        "emptyHint": "M01 정착지에서 타렉 투 브리지를 찾거나 자동 이동을 시작하세요.",
+        "completedHint": "최초의 흔적을 완료했습니다. 나머지 캠페인 퀘스트는 아직 활성화되지 않았습니다."
       },
       "campaign": {
-        "questTitle": "Campaign {id}",
-        "narrative": "Complete the current campaign objectives for {id}.",
-        "contact": "Campaign contact",
+        "questTitle": "캠페인 {id}",
+        "narrative": "{id}의 현재 캠페인 목표를 완료하세요.",
+        "contact": "캠페인 담당자",
         "objective": {
-          "returnToContact": "Return to the campaign contact",
-          "talk": "Speak with the campaign contact",
-          "deliver": "Deliver the requested items",
-          "travel": "Travel to the marked objective",
-          "inspect": "Inspect the marked evidence",
-          "gather": "Gather the requested resources",
-          "defend": "Defend the marked objective",
-          "combat": "Defeat the marked enemies",
-          "escort": "Escort the marked ally",
-          "escortSupplies": "Escort the supply group",
-          "dungeon": "Clear the campaign dungeon",
-          "craft": "Craft the requested supplies",
-          "tutorial": "Complete the system lesson",
-          "interact": "Interact with the marked objective",
-          "complete": "Complete the current objective"
+          "returnToContact": "캠페인 담당자에게 돌아가기",
+          "talk": "캠페인 담당자와 대화하기",
+          "deliver": "요청받은 아이템 전달하기",
+          "travel": "표시된 목표로 이동하기",
+          "inspect": "표시된 증거 조사하기",
+          "gather": "요청받은 자원 수집하기",
+          "defend": "표시된 목표 방어하기",
+          "combat": "표시된 적 처치하기",
+          "escort": "표시된 아군 호위하기",
+          "escortSupplies": "보급대 호위하기",
+          "dungeon": "캠페인 던전 완료하기",
+          "craft": "요청받은 보급품 제작하기",
+          "tutorial": "시스템 튜토리얼 완료하기",
+          "interact": "표시된 대상과 상호작용하기",
+          "complete": "현재 목표 완료하기"
         }
       },
-      "characterTitle": "Character",
-      "awaitingState": "Waiting for authoritative character data...",
-      "combatPowerLine": "Combat Power {value}",
-      "equipmentVisualShell": "World of ClaudeCraft appearance with MIR4 combat attributes",
-      "equipmentTierGrade": "Tier {tier}, Grade {grade}",
-      "equipmentRequiredLevel": "Requires level {level}",
-      "unequipHint": "Click the X or right-click to unequip.",
-      "unequipAria": "Unequip {item}",
-      "equipHint": "Click to equip.",
-      "equipAria": "Equip {item}",
-      "inventoryEquipment": "Equipment",
-      "inventoryRuntimeItems": "Native World of ClaudeCraft Items",
-      "inventoryCollectionTickets": "Collection Tickets",
-      "inventoryMaterials": "Refinement Materials",
-      "noUnequippedEquipment": "No unequipped equipment.",
-      "materialCount": "Owned: {count}",
-      "mountTicketDawn": "Dawn Mount Ticket",
-      "mountTicketTwilight": "Twilight Mount Ticket",
-      "mountTicketDawnDescription": "Summons one Mount: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The displayed model is a native World of ClaudeCraft visual shell; the listed MIR4 stats are authoritative.",
-      "mountTicketTwilightDescription": "Summons one Mount: 99% Rare or 1% Epic. Epic results wait for confirmation before becoming owned. The displayed model is a native World of ClaudeCraft visual shell.",
+      "characterTitle": "캐릭터",
+      "awaitingState": "권한 서버의 캐릭터 데이터를 기다리는 중…",
+      "combatPowerLine": "전투력 {value}",
+      "equipmentVisualShell": "World of ClaudeCraft 외형과 MIR4 전투 속성",
+      "equipmentTierGrade": "티어 {tier}, 등급 {grade}",
+      "equipmentRequiredLevel": "필요 레벨: {level}",
+      "unequipHint": "X 또는 오른쪽 클릭으로 장비를 해제합니다.",
+      "unequipAria": "{item} 해제",
+      "equipHint": "클릭하여 장착합니다.",
+      "equipAria": "{item} 장착",
+      "inventoryEquipment": "장비",
+      "inventoryRuntimeItems": "World of ClaudeCraft 기본 아이템",
+      "inventoryCollectionTickets": "수집 소환권",
+      "inventoryMaterials": "제련 재료",
+      "noUnequippedEquipment": "장착하지 않은 장비가 없습니다.",
+      "materialCount": "보유: {count}",
+      "mountTicketDawn": "새벽 탈것 소환권",
+      "mountTicketTwilight": "황혼 탈것 소환권",
+      "mountTicketDawnDescription": "탈것 하나를 소환합니다: 일반 79%, 고급 20%, 희귀 1%. 유효한 소환 시 소환권을 소모합니다. 표시 모델은 World of ClaudeCraft 기본 외형이며, 기재된 MIR4 능력치가 권한 데이터입니다.",
+      "mountTicketTwilightDescription": "탈것 하나를 소환합니다: 희귀 99%, 영웅 1%. 영웅 결과는 확인 후 보유하게 됩니다. 표시 모델은 World of ClaudeCraft 기본 외형입니다.",
       "redeemMountTicket": "Use {ticket}",
-      "inventoryMounts": "Mounts",
-      "inventoryPendingMounts": "Mounts Awaiting Confirmation",
-      "mountGrade": "Grade {grade}",
-      "mountOwned": "Owned: {count}",
-      "mountEquipped": "Equipped",
-      "mountEquipHint": "Click to equip this Mount and summon its native World of ClaudeCraft visual shell.",
-      "mountUnequipHint": "Click to unequip this Mount and dismount.",
-      "mountConfirmHint": "Click to confirm this Mount and add it to your collection.",
-      "mountConfirmAria": "Confirm {mount}",
-      "mountEffectShell": "Native World of ClaudeCraft model with MIR4 Mount stats",
-      "mountMoveSpeed": "Movement Speed: +{amount}%",
+      "inventoryMounts": "탈것",
+      "inventoryPendingMounts": "확인 대기 중인 탈것",
+      "mountGrade": "등급 {grade}",
+      "mountOwned": "보유: {count}",
+      "mountEquipped": "장착 중",
+      "mountEquipHint": "클릭하여 이 탈것을 장착하고 World of ClaudeCraft 기본 외형을 소환합니다.",
+      "mountUnequipHint": "클릭하여 이 탈것을 해제하고 내립니다.",
+      "mountConfirmHint": "클릭하여 이 탈것을 확인하고 수집품에 추가합니다.",
+      "mountConfirmAria": "{mount} 확인",
+      "mountEffectShell": "World of ClaudeCraft 기본 모델과 MIR4 탈것 능력치",
+      "mountMoveSpeed": "이동 속도: +{amount}%",
       "mountBasicAttackSpeed": "Basic Attack Speed: +{amount}%",
-      "mountDefenses": "Physical Defense: +{physical} · Magic Defense: +{magic}",
-      "equippedMountLine": "Mount: {mount} (Grade {grade})",
-      "noEquippedMount": "Mount: none equipped",
-      "inventoryMountCombination": "Mount Combination",
-      "combineMountsAria": "Combine four Grade {grade} Mounts",
-      "combineMountsHint": "Consumes four owned Mounts of this grade. There is a 20% chance to receive one random Mount of the next grade. On failure, you receive one random Mount of the same grade. Epic or higher rewards await confirmation.",
-      "inventorySpirits": "Spirits",
-      "inventoryPendingSpirits": "Spirits Awaiting Confirmation",
-      "spiritTicketDawn": "Dawn Spirit Ticket",
-      "spiritTicketSunset": "Sunset Spirit Ticket",
-      "spiritTicketDawnDescription": "Summons one Spirit: 79% Common, 20% Uncommon, or 1% Rare. The ticket is consumed on a valid summon. The icon is native World of ClaudeCraft presentation; only the listed MIR4 effects apply.",
-      "spiritTicketSunsetDescription": "Summons one Spirit: 94.5% Uncommon, 5% Rare, or 0.5% Epic. Epic results wait for confirmation before becoming owned. The ticket is consumed on a valid summon.",
-      "redeemSpiritTicket": "Summon with {ticket}",
-      "spiritGrade": "Grade {grade}",
-      "spiritOwned": "Owned: {count}",
-      "spiritEquipped": "Equipped",
-      "spiritEquipHint": "Click to equip this Spirit. Its attributes and collection bonuses are applied to your MIR4 stats.",
-      "spiritUnequipHint": "Click to unequip this Spirit.",
-      "spiritConfirmHint": "Click to confirm this Spirit and add it to your collection.",
-      "spiritConfirmAria": "Confirm {spirit}",
-      "spiritEffectShell": "Native World of ClaudeCraft presentation with MIR4 Spirit effects",
-      "equippedSpiritLine": "Spirit: {spirit} (Grade {grade})",
-      "noEquippedSpirit": "Spirit: none equipped",
-      "inventorySpiritCombination": "Spirit Combination",
-      "combineSpiritsAria": "Combine four Grade {grade} Spirits",
-      "combineSpiritsHint": "Consumes four owned Spirits of this grade. There is a 20% chance to receive one random Spirit of the next grade. On failure, you receive one random Spirit of the same grade. Epic or higher rewards await confirmation.",
-      "spiritSkillChanceCooldown": "{chance}% chance · {cooldown}s cooldown",
-      "spiritSkillBonusDamage": "Increases the triggering hit's raw damage by {amount}%.",
-      "spiritSkillExecute": "While the target is at or below {threshold}% Health, increases the triggering hit's raw damage by {amount}%.",
-      "spiritSkillLifeSiphon": "Restores {amount}% of maximum Health.",
-      "spiritSkillManaSurge": "Restores {amount}% of maximum Mana.",
-      "spiritSkillArmorRend": "Adds {amount}% Defense Penetration to the triggering hit.",
-      "spiritSkillCriticalFocus": "Forces the triggering hit to be critical.",
+      "mountDefenses": "물리 방어: +{physical} · 마법 방어: +{magic}",
+      "equippedMountLine": "탈것: {mount} (등급 {grade})",
+      "noEquippedMount": "탈것: 장착 없음",
+      "inventoryMountCombination": "탈것 합성",
+      "combineMountsAria": "등급 {grade} 탈것 네 마리 합성",
+      "combineMountsHint": "이 등급의 보유 탈것 네 마리를 소모합니다. 20% 확률로 다음 등급의 무작위 탈것 한 마리를 획득합니다. 실패하면 같은 등급의 무작위 탈것 한 마리를 획득합니다. 영웅 이상 보상은 확인을 기다립니다.",
+      "inventorySpirits": "정령",
+      "inventoryPendingSpirits": "확인 대기 중인 정령",
+      "spiritTicketDawn": "새벽 정령 소환권",
+      "spiritTicketSunset": "노을 정령 소환권",
+      "spiritTicketDawnDescription": "정령 하나를 소환합니다: 일반 79%, 고급 20%, 희귀 1%. 유효한 소환 시 소환권을 소모합니다. 아이콘은 World of ClaudeCraft 기본 표현이며, 기재된 MIR4 효과만 적용됩니다.",
+      "spiritTicketSunsetDescription": "정령 하나를 소환합니다: 고급 94.5%, 희귀 5%, 영웅 0.5%. 영웅 결과는 확인 후 보유하게 됩니다. 유효한 소환 시 소환권을 소모합니다.",
+      "redeemSpiritTicket": "{ticket}(으)로 소환",
+      "spiritGrade": "등급 {grade}",
+      "spiritOwned": "보유: {count}",
+      "spiritEquipped": "장착 중",
+      "spiritEquipHint": "클릭하여 이 정령을 장착합니다. 속성과 수집 보너스가 MIR4 능력치에 적용됩니다.",
+      "spiritUnequipHint": "클릭하여 이 정령을 해제합니다.",
+      "spiritConfirmHint": "클릭하여 이 정령을 확인하고 수집품에 추가합니다.",
+      "spiritConfirmAria": "{spirit} 확인",
+      "spiritEffectShell": "World of ClaudeCraft 기본 표현과 MIR4 정령 효과",
+      "equippedSpiritLine": "정령: {spirit} (등급 {grade})",
+      "noEquippedSpirit": "정령: 장착 없음",
+      "inventorySpiritCombination": "정령 합성",
+      "combineSpiritsAria": "등급 {grade} 정령 네 마리 합성",
+      "combineSpiritsHint": "이 등급의 보유 정령 네 마리를 소모합니다. 20% 확률로 다음 등급의 무작위 정령 한 마리를 획득합니다. 실패하면 같은 등급의 무작위 정령 한 마리를 획득합니다. 영웅 이상 보상은 확인을 기다립니다.",
+      "spiritSkillChanceCooldown": "발동 확률 {chance}% · 재사용 대기시간 {cooldown}초",
+      "spiritSkillBonusDamage": "발동 공격의 기본 피해를 {amount}% 증가시킵니다.",
+      "spiritSkillExecute": "대상의 생명력이 {threshold}% 이하일 때 발동 공격의 기본 피해를 {amount}% 증가시킵니다.",
+      "spiritSkillLifeSiphon": "최대 생명력의 {amount}%를 회복합니다.",
+      "spiritSkillManaSurge": "최대 마나의 {amount}%를 회복합니다.",
+      "spiritSkillArmorRend": "발동 공격에 방어 관통 {amount}%를 추가합니다.",
+      "spiritSkillCriticalFocus": "발동 공격이 반드시 치명타가 됩니다.",
       "equipmentSlots": {
-        "weapon": "Weapon",
-        "necklace": "Necklace",
+        "weapon": "무기",
+        "necklace": "목걸이",
         "ring": "Ring",
-        "talisman": "Talisman",
-        "chest": "Chest",
-        "helmet": "Helmet",
-        "gloves": "Gloves",
-        "boots": "Boots"
+        "talisman": "부적",
+        "chest": "흉갑",
+        "helmet": "투구",
+        "gloves": "장갑",
+        "boots": "장화"
       },
       "stats": {
-        "combatPower": "Combat Power",
-        "maxHp": "Maximum Health",
-        "maxMana": "Maximum Mana",
-        "physicalAttack": "Physical Attack",
-        "magicAttack": "Magic Attack",
-        "physicalDefense": "Physical Defense",
-        "magicDefense": "Magic Defense",
-        "accuracy": "Accuracy",
-        "dodge": "Dodge",
-        "critical": "Critical",
-        "avoidCritical": "Critical Evasion",
-        "criticalOutcome": "Critical Damage",
-        "bossDamage": "Boss Damage",
-        "skillDamage": "Skill Damage",
-        "penetration": "Defense Penetration",
-        "unknown": "Combat Attribute"
+        "combatPower": "전투력",
+        "maxHp": "최대 생명력",
+        "maxMana": "최대 마나",
+        "physicalAttack": "물리 공격",
+        "magicAttack": "마법 공격",
+        "physicalDefense": "물리 방어",
+        "magicDefense": "마법 방어",
+        "accuracy": "명중",
+        "dodge": "회피",
+        "critical": "치명타",
+        "avoidCritical": "치명타 회피",
+        "criticalOutcome": "치명타 피해",
+        "bossDamage": "보스 피해",
+        "skillDamage": "스킬 피해",
+        "penetration": "방어 관통",
+        "unknown": "전투 속성"
       },
       "materials": {
-        "sunStone": "Sun Stone",
-        "moonStone": "Moon Stone",
-        "solarScroll": "Solar Scroll",
-        "lunarSeal": "Lunar Seal",
+        "sunStone": "태양석",
+        "moonStone": "월석",
+        "solarScroll": "태양 두루마리",
+        "lunarSeal": "달의 인장",
         "dawnTear": "Dawn Tear",
-        "solarWard": "Solar Ward"
+        "solarWard": "태양의 수호부"
       },
       "maps": {
-        "portal": "{zone} Portal",
-        "actWelcome": "{zone} (Act {act}).",
-        "m01": "Ford Village",
-        "m02": "Reed Trail",
-        "m03": "Vale Grove",
-        "m04": "Hillside Ruins",
-        "m05": "Rift Clearing",
-        "m06": "Candle-Stone Crypts",
-        "m07": "Ossuary Galleries",
-        "m08": "Miststone Fortress",
-        "m09": "Lantern Marsh",
+        "portal": "{zone} 차원문",
+        "actWelcome": "{zone} (제{act}막).",
+        "m01": "여울 마을",
+        "m02": "갈대 오솔길",
+        "m03": "계곡 숲",
+        "m04": "비탈 유적",
+        "m05": "균열 공터",
+        "m06": "촛돌 지하묘지",
+        "m07": "납골당 회랑",
+        "m08": "안개돌 요새",
+        "m09": "등불 늪",
         "m10": "Bog King's Fen",
-        "m11": "Leech Mangrove",
-        "m12": "Reed Harbor",
-        "m13": "Glass Dunes",
-        "m14": "Akhet Necropolis",
-        "m15": "Cinderite Caldera",
-        "m16": "Shattered Sun Forge",
-        "m17": "Howling Tundra",
+        "m11": "거머리 맹그로브",
+        "m12": "갈대 항구",
+        "m13": "유리 사구",
+        "m14": "아케트 네크로폴리스",
+        "m15": "잿돌 칼데라",
+        "m16": "부서진 태양 제련소",
+        "m17": "울부짖는 툰드라",
         "m18": "Jarl's Pass",
-        "m19": "Night Veil",
-        "m20": "Eclipse Bastille"
+        "m19": "밤의 장막",
+        "m20": "일식 요새"
       },
       "progression": {
-        "title": "Equipment Workshop",
-        "refinement": "Refinement",
-        "enchantment": "Enchantment",
-        "blessing": "Blessing",
-        "crafting": "Crafting",
-        "ownedEquipment": "Owned Equipment",
-        "noEquipment": "No equipment is available for this operation.",
-        "equipped": "Equipped",
-        "enhancementLevel": "Enhancement +{level} of +{max}",
-        "successChance": "Success chance: {chance}%",
-        "safeFailure": "Failure keeps the equipment.",
-        "destructiveFailure": "Failure destroys the equipment above +5.",
-        "wardProtection": "A Solar Ward will be consumed to prevent destruction.",
-        "noWardProtection": "No Solar Ward is available.",
-        "enhanceCost": "Cost: 1 Solar Scroll",
-        "enhance": "Enhance",
-        "maxEnhancement": "Maximum enhancement reached",
-        "currentEffects": "Current Effects",
-        "noCurrentEffects": "No effects applied.",
-        "rollCostEnchantment": "Cost: 1 Lunar Seal",
-        "layerUnsupported": "This item cannot receive {layer} effects.",
+        "title": "장비 공방",
+        "refinement": "제련",
+        "enchantment": "마법 부여",
+        "blessing": "축복",
+        "crafting": "제작",
+        "ownedEquipment": "보유 장비",
+        "noEquipment": "이 작업에 사용할 수 있는 장비가 없습니다.",
+        "equipped": "장착 중",
+        "enhancementLevel": "강화 +{level}/+{max}",
+        "successChance": "성공 확률: {chance}%",
+        "safeFailure": "실패해도 장비가 유지됩니다.",
+        "destructiveFailure": "+5를 초과한 강화 실패 시 장비가 파괴됩니다.",
+        "wardProtection": "파괴를 방지하기 위해 태양의 수호부 1개를 소모합니다.",
+        "noWardProtection": "사용 가능한 태양의 수호부가 없습니다.",
+        "enhanceCost": "비용: 태양 두루마리 1개",
+        "enhance": "강화",
+        "maxEnhancement": "최대 강화에 도달했습니다",
+        "currentEffects": "현재 효과",
+        "noCurrentEffects": "적용된 효과가 없습니다.",
+        "rollCostEnchantment": "비용: 달의 인장 1개",
+        "layerUnsupported": "이 아이템에는 {layer} 효과를 부여할 수 없습니다.",
         "rollCostBlessing": "Cost: 1 Dawn Tear",
-        "roll": "Roll Preview",
-        "pendingOtherLayer": "Resolve the pending {layer} preview first.",
-        "preview": "Pending Preview",
-        "acceptPreview": "Apply Preview",
-        "keepCurrent": "Keep Current",
-        "inactiveEffect": "Ported effect (not active in combat yet)",
-        "materialRecipes": "Material Recipes",
-        "campaignProfession": "Campaign Profession Order",
-        "campaignProfessionProgress": "Progress: {current}/{goal}",
-        "campaignProfessionMaterials": "Eligible materials: {held}/{needed}",
-        "campaignProfessionHint": "Complete this order at its campaign crafting anchor. The server consumes only authoritative regional materials.",
-        "campaignCraft": "Craft Component",
-        "campaignRefine": "Refine Component",
-        "campaignSalvage": "Salvage Gear",
-        "creates": "Creates {count} {material}",
+        "roll": "미리보기 굴리기",
+        "pendingOtherLayer": "먼저 대기 중인 {layer} 미리보기를 결정하세요.",
+        "preview": "대기 중인 미리보기",
+        "acceptPreview": "미리보기 적용",
+        "keepCurrent": "현재 효과 유지",
+        "inactiveEffect": "이식된 효과(아직 전투에서 비활성)",
+        "materialRecipes": "재료 제작법",
+        "campaignProfession": "캠페인 제작 의뢰",
+        "campaignProfessionProgress": "진행도: {current}/{goal}",
+        "campaignProfessionMaterials": "사용 가능 재료: {held}/{needed}",
+        "campaignProfessionHint": "캠페인 제작 지점에서 의뢰를 완료하세요. 서버는 권한 있는 지역 재료만 소모합니다.",
+        "campaignCraft": "부품 제작",
+        "campaignRefine": "부품 제련",
+        "campaignSalvage": "장비 분해",
+        "creates": "{material} {count}개 제작",
         "materialCost": "{held}/{needed} {material}",
-        "copperCost": "{amount} copper",
-        "create": "Create",
-        "requestSent": "The server is validating the equipment operation."
+        "copperCost": "동화 {amount}",
+        "create": "제작",
+        "requestSent": "서버가 장비 작업을 검증하고 있습니다."
       }
     },
     "interfaceTabs": {
@@ -2933,7 +2933,7 @@ export const ko_KR: EnTranslations = {
       "addToBarAria": "{name}을(를) 행동 단축바에 추가",
       "removeFromBarAria": "{name}을(를) 행동 단축바에서 제거",
       "upgradeRank": "Rank {rank}",
-      "maxRank": "Max rank",
+      "maxRank": "최대 등급",
       "evolutionCost": "{copper} · EP {effectPoints} · Tome {skillTomes}",
       "assignAria": "{name}을(를) 놓을 칸 선택"
     },
@@ -3266,7 +3266,7 @@ export const ko_KR: EnTranslations = {
     },
     "noticeboard": {
       "empty": "게시된 내용이 없는 것 같습니다.",
-      "contract": "Contract active: {title}"
+      "contract": "활성 계약: {title}"
     },
     "bank": {
       "title": "은행",
@@ -7491,10 +7491,10 @@ export const ko_KR: EnTranslations = {
   },
   "classes": {
     "warrior": "전사",
-    "elementalist": "Elementalist",
-    "taoist": "Taoist",
-    "arbalist": "Arbalist",
-    "lancer": "Lancer",
+    "elementalist": "원소술사",
+    "taoist": "도사",
+    "arbalist": "석궁사수",
+    "lancer": "창기사",
     "paladin": "성기사",
     "hunter": "사냥꾼",
     "rogue": "도적",
@@ -7504,10 +7504,10 @@ export const ko_KR: EnTranslations = {
     "warlock": "흑마법사",
     "druid": "드루이드",
     "warriorAria": "전사 직업",
-    "elementalistAria": "Elementalist class",
-    "taoistAria": "Taoist class",
-    "arbalistAria": "Arbalist class",
-    "lancerAria": "Lancer class",
+    "elementalistAria": "원소술사 직업",
+    "taoistAria": "도사 직업",
+    "arbalistAria": "석궁사수 직업",
+    "lancerAria": "창기사 직업",
     "paladinAria": "성기사 직업",
     "hunterAria": "사냥꾼 직업",
     "rogueAria": "도적 직업",
@@ -8433,28 +8433,28 @@ export const ko_KR: EnTranslations = {
     },
     "mir4": {
       "labels": {
-        "damage": "Damage",
-        "combatRange": "Combat Range",
-        "startingSkills": "Starting Skills"
+        "damage": "피해",
+        "combatRange": "전투 거리",
+        "startingSkills": "시작 기술"
       },
       "damage": {
-        "physical": "Physical",
-        "magic": "Magic"
+        "physical": "물리",
+        "magic": "마법"
       },
       "range": {
-        "melee": "Melee",
-        "medium": "Medium range",
-        "long": "Long range",
-        "extended": "Extended melee"
+        "melee": "근접",
+        "medium": "중거리",
+        "long": "원거리",
+        "extended": "확장 근접"
       },
       "weapons": {
-        "heavySword": "Heavy Sword",
-        "largeStaff": "Large Staff",
-        "shortStaff": "Short Staff",
-        "arbalest": "Arbalest",
-        "spear": "Spear"
+        "heavySword": "대검",
+        "largeStaff": "대형 지팡이",
+        "shortStaff": "단형 지팡이",
+        "arbalest": "석궁",
+        "spear": "창"
       },
-      "aria": "Class details for {className}: {damage} damage, {range} range, weapon {weapon}, {skills} starting skills."
+      "aria": "{className} 직업 정보: {damage} 피해, {range} 거리, 무기 {weapon}, 시작 기술 {skills}개."
     },
     "aria": "{className} 직업 세부 정보: 역할 {role}. 시작 능력치: 힘 {str}, 민첩 {agi}, 체력 {sta}, 지능 {int}, 정신력 {spi}.",
     "statBarAria": "{stat}: {value}/25"
@@ -9214,8 +9214,8 @@ export const ko_KR: EnTranslations = {
     "actionBar": {
       "attackName": "공격",
       "attackTooltip": "대상에게 자동 공격을 켜거나 끕니다. 적을 우클릭해도 공격합니다.",
-      "autoBattleName": "Auto Battle",
-      "autoBattleTooltip": "Toggle automatic target acquisition, movement, and skill rotation around your current position.",
+      "autoBattleName": "자동 전투",
+      "autoBattleTooltip": "현재 위치 주변에서 자동 대상 탐색, 이동 및 기술 순환을 전환합니다.",
       "attackRemoveHint": "우클릭하면 바에서 제거하고 칸을 비웁니다.",
       "emptySlot": "빈 칸",
       "slotAria": "행동 칸 {slot}: {ability}",
@@ -9665,224 +9665,224 @@ export const ko_KR: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1102": {
-        "name": "Void Strike",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 0.9 sec."
+        "name": "공허의 일격",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
       },
       "mir4_skill_1104": {
-        "name": "Lacerating Strike",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
+        "name": "열상 일격",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 1.2초 동안 넘어뜨립니다."
       },
       "mir4_skill_1304": {
-        "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "name": "몸통 박치기",
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 12% 증가시킵니다."
       },
       "mir4_skill_1401": {
-        "name": "Ground Smash",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec."
+        "name": "대지 강타",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.8초 동안 넘어뜨립니다."
       },
       "mir4_skill_1501": {
-        "name": "Gale Strike",
-        "description": "Affects an enemy. Slows the target by 35% for 3.2 sec."
+        "name": "질풍 일격",
+        "description": "적 하나에게 영향을 주고 대상을 3.2초 동안 35% 느려지게 합니다."
       },
       "mir4_skill_2101": {
-        "name": "Prismatic Beam",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec."
+        "name": "프리즘 광선",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.4초 동안 빙결시킵니다."
       },
       "mir4_skill_2111": {
-        "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "name": "잿불 창",
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 8% 증가시킵니다."
       },
       "mir4_skill_2301": {
-        "name": "Smite Seal",
-        "description": "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec."
+        "name": "징벌의 인장",
+        "description": "적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다."
       },
       "mir4_skill_2501": {
-        "name": "Evoked Core",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec."
+        "name": "현현된 핵",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 8미터 안의 다른 적 최대 4명에게 60%의 피해를 주고 대상을 1.8초 동안 빙결시킵니다."
       },
       "mir4_skill_2503": {
-        "name": "Magic Shield",
-        "description": "Reduces damage taken by 22% for 10 sec."
+        "name": "마법 방패",
+        "description": "10초 동안 받는 피해가 22% 감소합니다."
       },
       "mir4_skill_3101": {
-        "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "name": "인장 연계",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 4초 동안 대상이 받는 피해를 10% 증가시킵니다."
       },
       "mir4_skill_3104": {
-        "name": "Totem 1010",
-        "description": "Affects an enemy. Stuns the target for 1.4 sec."
+        "name": "토템 1010",
+        "description": "적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다."
       },
       "mir4_skill_3301": {
-        "name": "Totem Seal II",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec."
+        "name": "토템 인장 II",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다."
       },
       "mir4_skill_3503": {
-        "name": "Jade Lotus",
-        "description": "Restores 18% of maximum health."
+        "name": "비취 연꽃",
+        "description": "최대 생명력의 18%를 회복합니다."
       },
       "mir4_skill_3506": {
-        "name": "Totem Seal I",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec."
+        "name": "토템 인장 I",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 1.6초 동안 이동 불가 상태로 만듭니다."
       },
       "mir4_skill_4101": {
-        "name": "Burst 4101",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec."
+        "name": "폭발 4101",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 3.5초 동안 대상이 주는 피해를 45% 감소시킵니다."
       },
       "mir4_skill_4102": {
-        "name": "Sequence 4102",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec."
+        "name": "연계 4102",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.625미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 3.5초 동안 30% 느려지게 합니다."
       },
       "mir4_skill_4103": {
         "name": "Twin Echo",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec."
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.5미터 안의 다른 적 최대 4명에게 55%의 피해를 주고 5초 동안 대상이 주는 피해를 60% 감소시킵니다."
       },
       "mir4_skill_4106": {
-        "name": "Charge 4106",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 2 sec."
+        "name": "돌진 4106",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 2초 동안 기절시킵니다."
       },
       "mir4_skill_4107": {
-        "name": "Flare Arrow",
-        "description": "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec."
+        "name": "섬광 화살",
+        "description": "적 하나에게 영향을 주고 3.2초 동안 대상이 주는 피해를 45% 감소시킵니다."
       },
       "mir4_skill_5101": {
-        "name": "Thrust 5101",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1 sec."
+        "name": "찌르기 5101",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 1초 동안 넘어뜨립니다."
       },
       "mir4_skill_5104": {
-        "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "name": "휩쓸기 5104",
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 14% 증가시킵니다."
       },
       "mir4_skill_5201": {
-        "name": "Strike 5201",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec."
+        "name": "타격 5201",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.1초 동안 기절시킵니다."
       },
       "mir4_skill_5301": {
-        "name": "Chain 5301",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec."
+        "name": "사슬 5301",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
       },
       "mir4_skill_5401": {
-        "name": "Raging Storm",
-        "description": "Affects an enemy. Knocks the target down for 1 sec."
+        "name": "격노의 폭풍",
+        "description": "적 하나에게 영향을 주고 대상을 1초 동안 넘어뜨립니다."
       },
       "mir4_ultimate_1": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "궁극기",
+        "description": "3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
       },
       "mir4_ultimate_2": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
+        "name": "궁극기",
+        "description": "4회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
       },
       "mir4_ultimate_3": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "궁극기",
+        "description": "3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
       },
       "mir4_ultimate_4": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "궁극기",
+        "description": "3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
       },
       "mir4_ultimate_5": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
+        "name": "궁극기",
+        "description": "2회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다."
       },
       "mir4_passive_warrior_heavy_armor": {
-        "name": "Heavy Armor",
-        "description": "Increases maximum health by 8%."
+        "name": "중갑",
+        "description": "최대 생명력이 8% 증가합니다."
       },
       "mir4_passive_warrior_weapon_mastery": {
-        "name": "Weapon Discipline",
-        "description": "Increases physical attack by 6%."
+        "name": "무기 숙련",
+        "description": "물리 공격이 6% 증가합니다."
       },
       "mir4_passive_warrior_iron_skin": {
         "name": "Iron Skin",
-        "description": "Increases physical defense by 8% and magic defense by 6%."
+        "description": "물리 방어가 8%, 마법 방어가 6% 증가합니다."
       },
       "mir4_passive_warrior_fighting_spirit": {
-        "name": "Fighting Spirit",
-        "description": "Increases maximum health by 4% and physical attack by 4%."
+        "name": "투지",
+        "description": "최대 생명력과 물리 공격이 4% 증가합니다."
       },
       "mir4_passive_warrior_indomitable_will": {
-        "name": "Indomitable Will",
-        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "불굴의 의지",
+        "description": "최대 생명력, 물리 방어, 마법 방어가 5% 증가합니다."
       },
       "mir4_passive_elementalist_mana_well": {
         "name": "Mana Well",
-        "description": "Increases maximum mana by 10%."
+        "description": "최대 마나가 10% 증가합니다."
       },
       "mir4_passive_elementalist_arcane_intellect": {
-        "name": "Arcane Acumen",
-        "description": "Increases magic attack by 7%."
+        "name": "비전 지능",
+        "description": "마법 공격이 7% 증가합니다."
       },
       "mir4_passive_elementalist_elemental_protection": {
-        "name": "Elemental Protection",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "원소 보호",
+        "description": "물리 방어와 마법 방어가 6% 증가합니다."
       },
       "mir4_passive_elementalist_channeling": {
-        "name": "Channeling",
-        "description": "Increases maximum mana by 5% and magic attack by 4%."
+        "name": "집중 시전",
+        "description": "최대 마나가 5%, 마법 공격이 4% 증가합니다."
       },
       "mir4_passive_elementalist_arcane_ascension": {
-        "name": "Arcane Ascension",
-        "description": "Increases maximum mana by 5%, magic attack by 6%, physical defense by 3%, and magic defense by 3%."
+        "name": "비전 승화",
+        "description": "최대 마나가 5%, 마법 공격이 6%, 물리 방어와 마법 방어가 3% 증가합니다."
       },
       "mir4_passive_taoist_spiritual_vessel": {
-        "name": "Spiritual Vessel",
-        "description": "Increases maximum health by 4% and maximum mana by 7%."
+        "name": "영혼의 그릇",
+        "description": "최대 생명력이 4%, 최대 마나가 7% 증가합니다."
       },
       "mir4_passive_taoist_twin_paths": {
-        "name": "Twin Paths",
-        "description": "Increases physical attack by 4% and magic attack by 4%."
+        "name": "쌍둥이 길",
+        "description": "물리 공격과 마법 공격이 4% 증가합니다."
       },
       "mir4_passive_taoist_sacred_guard": {
-        "name": "Sacred Guard",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "성스러운 수호",
+        "description": "물리 방어와 마법 방어가 6% 증가합니다."
       },
       "mir4_passive_taoist_serene_mind": {
-        "name": "Serene Mind",
-        "description": "Increases maximum health by 4% and maximum mana by 5%."
+        "name": "고요한 마음",
+        "description": "최대 생명력이 4%, 최대 마나가 5% 증가합니다."
       },
       "mir4_passive_taoist_celestial_harmony": {
-        "name": "Celestial Harmony",
-        "description": "Increases maximum health by 4%, maximum mana by 4%, physical attack by 4%, magic attack by 4%, physical defense by 4%, and magic defense by 4%."
+        "name": "천상의 조화",
+        "description": "최대 생명력, 최대 마나, 물리 공격, 마법 공격, 물리 방어, 마법 방어가 4% 증가합니다."
       },
       "mir4_passive_arbalist_eagle_eye": {
-        "name": "Eagle Eye",
-        "description": "Increases physical attack by 3% and accuracy by 5%."
+        "name": "독수리의 눈",
+        "description": "물리 공격이 3%, 명중이 5% 증가합니다."
       },
       "mir4_passive_arbalist_ballistic_mastery": {
-        "name": "Ballistic Mastery",
-        "description": "Increases physical attack by 7%."
+        "name": "탄도 숙련",
+        "description": "물리 공격이 7% 증가합니다."
       },
       "mir4_passive_arbalist_nature_guard": {
-        "name": "Nature's Guard",
-        "description": "Increases maximum health by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "자연의 수호",
+        "description": "최대 생명력, 물리 방어, 마법 방어가 5% 증가합니다."
       },
       "mir4_passive_arbalist_hunter_instinct": {
-        "name": "Hunter's Instinct",
-        "description": "Increases physical attack by 5% and dodge by 5%."
+        "name": "사냥꾼의 본능",
+        "description": "물리 공격과 회피가 5% 증가합니다."
       },
       "mir4_passive_arbalist_perfect_shot": {
-        "name": "Perfect Shot",
-        "description": "Increases maximum health by 3%, physical attack by 6%, and accuracy by 5%."
+        "name": "완벽한 사격",
+        "description": "최대 생명력이 3%, 물리 공격이 6%, 명중이 5% 증가합니다."
       },
       "mir4_passive_lancer_war_conditioning": {
-        "name": "War Conditioning",
-        "description": "Increases maximum health by 5%, physical attack by 3%, and magic attack by 3%."
+        "name": "전쟁 단련",
+        "description": "최대 생명력이 5%, 물리 공격과 마법 공격이 3% 증가합니다."
       },
       "mir4_passive_lancer_spear_mastery": {
-        "name": "Spear Mastery",
-        "description": "Increases physical attack by 5% and magic attack by 5%."
+        "name": "창 숙련",
+        "description": "물리 공격과 마법 공격이 5% 증가합니다."
       },
       "mir4_passive_lancer_vanguard_armor": {
-        "name": "Vanguard Armor",
-        "description": "Increases physical defense by 6% and magic defense by 6%."
+        "name": "선봉 갑옷",
+        "description": "물리 방어와 마법 방어가 6% 증가합니다."
       },
       "mir4_passive_lancer_battle_rhythm": {
-        "name": "Battle Rhythm",
-        "description": "Increases maximum mana by 4%, physical attack by 4%, and magic attack by 4%."
+        "name": "전투 리듬",
+        "description": "최대 마나, 물리 공격, 마법 공격이 4% 증가합니다."
       },
       "mir4_passive_lancer_dragon_vanguard": {
-        "name": "Dragon's Vanguard",
-        "description": "Increases maximum health by 4%, physical attack by 5%, magic attack by 5%, physical defense by 5%, and magic defense by 5%."
+        "name": "용의 선봉",
+        "description": "최대 생명력이 4%, 물리 공격, 마법 공격, 물리 방어, 마법 방어가 5% 증가합니다."
       },
       "sport_kick": {
         "name": "킥",
@@ -17591,9 +17591,9 @@ export const ko_KR: EnTranslations = {
         "leaveText": "산바람 속으로 비틀거리며 돌아옵니다."
       },
       "campaign_trial_room": {
-        "name": "Campaign Trial",
-        "enterText": "You enter the campaign trial.",
-        "leaveText": "You leave the campaign trial."
+        "name": "캠페인 시련",
+        "enterText": "캠페인 시련에 입장합니다.",
+        "leaveText": "캠페인 시련을 떠납니다."
       },
       "nythraxis_crypt": {
         "name": "버려진 납골당",

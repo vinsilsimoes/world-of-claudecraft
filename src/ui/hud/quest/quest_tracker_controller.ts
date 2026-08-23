@@ -160,11 +160,7 @@ export class QuestTrackerController {
       collapsed = false;
     }
     const tutorialActive = quests.some((quest) => quest.tutorial !== undefined);
-    this.deps.writers.toggleClass(
-      this.deps.element,
-      'mir4-tutorial-active',
-      tutorialActive,
-    );
+    this.deps.writers.toggleClass(this.deps.element, 'mir4-tutorial-active', tutorialActive);
     // On touch the strip IS the tracker: the right-anchored markup is hidden in
     // hud.mobile.css, so rendering it would be a string build a phone never sees.
     // MIR4 system tutorials are the exception: their step-by-step guide and
