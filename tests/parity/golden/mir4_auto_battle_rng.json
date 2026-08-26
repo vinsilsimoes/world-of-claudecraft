@@ -2,10 +2,10 @@
   "scenario": "mir4_auto_battle_rng",
   "seed": 7771,
   "sampleEvery": 1,
-  "ticks": 2,
+  "ticks": 29,
   "coverage": [
     "MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out",
-    "MIR4 4106 hit/crit/effect draw order on the following real simulation tick",
+    "MIR4 4106 hit/crit/effect draw order at its authored contact clock",
     "friendly proximity contributes neither targeting nor combat rng draws"
   ],
   "draws": 9,
@@ -29,7 +29,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 51,
-      "state": "f7977271",
+      "state": "254242f5",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -182,7 +182,7 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 125,
+          "attackPower": 392,
           "auras": [
             {
               "duration": 3600,
@@ -194,7 +194,6 @@
               "sourceId": 45
             }
           ],
-          "autoAttack": true,
           "blockChance": 0.05,
           "blockValue": 6,
           "combatTimer": 99,
@@ -214,21 +213,42 @@
           "dodgeChance": 0.06,
           "fallStartY": 1.53378,
           "fiveSecondRule": 99,
-          "hp": 4000,
+          "hp": 10960,
           "id": 45,
           "kind": "player",
-          "level": 1,
+          "level": 30,
           "lootFfaTimer": "Infinity",
-          "maxHp": 4000,
-          "maxResource": 600,
+          "maxHp": 10960,
+          "maxResource": 890,
           "mir4": {
-            "accuracy": 5,
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
             "classId": 4,
             "criticalOutcome": 10,
-            "magicDefense": 12,
-            "manaCostStat": 204,
-            "physicalDefense": 12,
-            "skillDamageBps": 10
+            "dodge": 116,
+            "magicDefense": 157,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "physicalDefense": 157,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 10960,
+              "6": 890,
+              "19": 951,
+              "20": 392,
+              "24": 157,
+              "26": 157,
+              "28": 127,
+              "29": 116,
+              "32": 10,
+              "38": 29,
+              "41": 131,
+              "42": 10,
+              "43": 131,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 4,
@@ -241,7 +261,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 600,
+          "resource": 890,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -299,8 +319,8 @@
           "templateId": "mir4_forest_wolf",
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -339,8 +359,8 @@
           "templateId": "mir4_forest_wolf",
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -379,8 +399,8 @@
           "templateId": "mir4_forest_wolf",
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -419,8 +439,8 @@
           "templateId": "mir4_forest_wolf",
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -460,8 +480,21 @@
             "criticalOutcome": 10,
             "magicDefense": 12,
             "manaCostStat": 204,
+            "monsterDamageReductionBps": 10,
             "physicalDefense": 12,
-            "skillDamageBps": 10
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 4000,
+              "6": 600,
+              "19": 204,
+              "20": 125,
+              "24": 12,
+              "26": 12,
+              "28": 5,
+              "32": 10,
+              "42": 10,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 1,
@@ -503,18 +536,172 @@
       "tick": 1,
       "time": 0.05,
       "nextId": 51,
-      "state": "9f112e47",
-      "events": "6ba2b46e",
+      "state": "95e7b578",
+      "events": "aa2a18eb",
       "rng": {
         "draws": 6,
         "digest": "8ea732dd"
       }
     },
     {
-      "tick": 1,
-      "time": 0.05,
+      "tick": 2,
+      "time": 0.1,
       "nextId": 51,
-      "state": "9f112e47",
+      "state": "d4b6a7e1",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 3,
+      "time": 0.15,
+      "nextId": 51,
+      "state": "e4c55ec1",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 4,
+      "time": 0.2,
+      "nextId": 51,
+      "state": "007ef6b5",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 5,
+      "time": 0.25,
+      "nextId": 51,
+      "state": "0df8a25e",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 6,
+      "time": 0.3,
+      "nextId": 51,
+      "state": "0fdf8558",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 7,
+      "time": 0.35,
+      "nextId": 51,
+      "state": "369e5148",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 8,
+      "time": 0.4,
+      "nextId": 51,
+      "state": "6abb0240",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 9,
+      "time": 0.45,
+      "nextId": 51,
+      "state": "644f2dc4",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 10,
+      "time": 0.5,
+      "nextId": 51,
+      "state": "79ed21f8",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 11,
+      "time": 0.55,
+      "nextId": 51,
+      "state": "fe5fdc1e",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 12,
+      "time": 0.6,
+      "nextId": 51,
+      "state": "082af784",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 13,
+      "time": 0.65,
+      "nextId": 51,
+      "state": "ffb625f7",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 14,
+      "time": 0.7,
+      "nextId": 51,
+      "state": "8b83d85d",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 15,
+      "time": 0.75,
+      "nextId": 51,
+      "state": "1f5a964b",
+      "events": "741638a5",
+      "rng": {
+        "draws": 6,
+        "digest": "8ea732dd"
+      }
+    },
+    {
+      "tick": 15,
+      "time": 0.75,
+      "nextId": 51,
+      "state": "1f5a964b",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -530,7 +717,7 @@
           "autoBattle": {
             "acquireRadiusYards": 30,
             "anchorZ": -1000,
-            "mode": "battle"
+            "mode": "off"
           },
           "bags": [
             null,
@@ -543,12 +730,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 601
+            "damageDealt": 1891
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 601
+              "damageDealt": 1891
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -576,6 +763,9 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -644,6 +834,9 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
           "mir4Equipment": {
             "1": 200201000,
             "5": 301201000
@@ -671,34 +864,34 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 125,
+          "attackPower": 392,
           "auras": [
             {
               "duration": 3600,
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3599.95,
+              "remaining": 3599.25,
               "school": "physical",
               "sourceId": 45
             }
           ],
-          "autoAttack": true,
           "blockChance": 0.05,
           "blockValue": 6,
+          "combatTimer": 0.7,
           "comboUntil": -1,
           "cooldowns": [
             [
               "4101",
-              9.95
+              9.25
             ],
             [
               "4102",
-              9.95
+              9.25
             ],
             [
               "4103",
-              26
+              25.3
             ]
           ],
           "critChance": 0.06,
@@ -706,24 +899,45 @@
           "dodgeChance": 0.06,
           "facing": 1.570796,
           "fallStartY": 1.53378,
-          "fiveSecondRule": 99.05,
-          "gcdRemaining": 1,
-          "hp": 4000,
+          "fiveSecondRule": 99.75,
+          "gcdRemaining": 0.3,
+          "hp": 10960,
           "id": 45,
           "inCombat": true,
           "kind": "player",
-          "level": 1,
+          "level": 30,
           "lootFfaTimer": "Infinity",
-          "maxHp": 4000,
-          "maxResource": 600,
+          "maxHp": 10960,
+          "maxResource": 890,
           "mir4": {
-            "accuracy": 5,
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
             "classId": 4,
             "criticalOutcome": 10,
-            "magicDefense": 12,
-            "manaCostStat": 204,
-            "physicalDefense": 12,
-            "skillDamageBps": 10
+            "dodge": 116,
+            "magicDefense": 157,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "physicalDefense": 157,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 10960,
+              "6": 890,
+              "19": 951,
+              "20": 392,
+              "24": 157,
+              "26": 157,
+              "28": 127,
+              "29": 116,
+              "32": 10,
+              "38": 29,
+              "41": 131,
+              "42": 10,
+              "43": 131,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 4,
@@ -736,7 +950,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 558,
+          "resource": 692.5575,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -761,7 +975,7 @@
         },
         {
           "aiState": "idle",
-          "combatTimer": 99.05,
+          "combatTimer": 99.75,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -792,24 +1006,26 @@
           "stats": {},
           "swingTimer": 9999,
           "templateId": "mir4_forest_wolf",
-          "wanderTimer": 9998.95,
+          "wanderTimer": 9998.25,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
-          "aggroTargetId": 50,
-          "aiState": "chase",
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
+          "facing": -1.892547,
           "fallStartY": 0.881882,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49843,
+          "hp": 49505,
           "id": 47,
           "inCombat": true,
           "kind": "mob",
@@ -828,7 +1044,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.95,
+                "remaining": 4.25,
                 "sourceId": 45
               }
             ]
@@ -848,13 +1064,13 @@
             "z": -999
           },
           "stats": {},
-          "swingTimer": 9999,
+          "swingTimer": 9998.3,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              157
+              495
             ],
             [
               50,
@@ -863,23 +1079,24 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
-          "aggroTargetId": 50,
+          "aggroTargetId": 45,
           "aiState": "attack",
+          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": 0.244979,
+          "facing": -1.570796,
           "fallStartY": 1.524302,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49713,
+          "hp": 49099,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
@@ -898,7 +1115,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.95,
+                "remaining": 4.25,
                 "sourceId": 45
               }
             ]
@@ -918,13 +1135,13 @@
             "z": -1000
           },
           "stats": {},
-          "swingTimer": 9998.95,
+          "swingTimer": 9998.25,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              287
+              901
             ],
             [
               50,
@@ -933,23 +1150,24 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
-          "aggroTargetId": 50,
+          "aggroTargetId": 45,
           "aiState": "attack",
+          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -0.165149,
+          "facing": -1.249046,
           "fallStartY": 1.698012,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49843,
+          "hp": 49505,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
@@ -968,7 +1186,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.95,
+                "remaining": 4.25,
                 "sourceId": 45
               }
             ]
@@ -988,13 +1206,13 @@
             "z": -1001
           },
           "stats": {},
-          "swingTimer": 9998.95,
+          "swingTimer": 9998.25,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              157
+              495
             ],
             [
               50,
@@ -1003,8 +1221,8 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -1017,23 +1235,22 @@
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3599.95,
+              "remaining": 3599.25,
               "school": "physical",
               "sourceId": 50
             }
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 99.05,
+          "combatTimer": 99.75,
           "comboUntil": -1,
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
           "fallStartY": 0.861379,
-          "fiveSecondRule": 99.05,
+          "fiveSecondRule": 99.75,
           "hp": 4000,
           "id": 50,
-          "inCombat": true,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1045,8 +1262,21 @@
             "criticalOutcome": 10,
             "magicDefense": 12,
             "manaCostStat": 204,
+            "monsterDamageReductionBps": 10,
             "physicalDefense": 12,
-            "skillDamageBps": 10
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 4000,
+              "6": 600,
+              "19": 204,
+              "20": 125,
+              "24": 12,
+              "26": 12,
+              "28": 5,
+              "32": 10,
+              "42": 10,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 1,
@@ -1085,21 +1315,164 @@
       ]
     },
     {
-      "tick": 2,
-      "time": 0.1,
+      "tick": 16,
+      "time": 0.8,
       "nextId": 51,
-      "state": "aee0ccc3",
-      "events": "41cc058d",
+      "state": "e5e118a3",
+      "events": "d6c70036",
       "rng": {
         "draws": 9,
         "digest": "36b93436"
       }
     },
     {
-      "tick": 2,
-      "time": 0.1,
+      "tick": 17,
+      "time": 0.85,
       "nextId": 51,
-      "state": "aee0ccc3",
+      "state": "473587e2",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 18,
+      "time": 0.9,
+      "nextId": 51,
+      "state": "268ddcb0",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 19,
+      "time": 0.95,
+      "nextId": 51,
+      "state": "e219cf9a",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 20,
+      "time": 1,
+      "nextId": 51,
+      "state": "fbf9315a",
+      "events": "55188a1f",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 21,
+      "time": 1.05,
+      "nextId": 51,
+      "state": "b5ae0d36",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 22,
+      "time": 1.1,
+      "nextId": 51,
+      "state": "dcf968b6",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 23,
+      "time": 1.15,
+      "nextId": 51,
+      "state": "8f457d36",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 24,
+      "time": 1.2,
+      "nextId": 51,
+      "state": "d22ddc4e",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 25,
+      "time": 1.25,
+      "nextId": 51,
+      "state": "40fdc748",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 26,
+      "time": 1.3,
+      "nextId": 51,
+      "state": "604b0588",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 27,
+      "time": 1.35,
+      "nextId": 51,
+      "state": "c6fcbde2",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 28,
+      "time": 1.4,
+      "nextId": 51,
+      "state": "858db7b5",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 29,
+      "time": 1.45,
+      "nextId": 51,
+      "state": "1f58abc9",
+      "events": "741638a5",
+      "rng": {
+        "draws": 9,
+        "digest": "36b93436"
+      }
+    },
+    {
+      "tick": 29,
+      "time": 1.45,
+      "nextId": 51,
+      "state": "1f58abc9",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1115,7 +1488,7 @@
           "autoBattle": {
             "acquireRadiusYards": 30,
             "anchorZ": -1000,
-            "mode": "battle"
+            "mode": "off"
           },
           "bags": [
             null,
@@ -1128,12 +1501,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 813
+            "damageDealt": 2557
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 813
+              "damageDealt": 2557
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -1161,6 +1534,9 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -1229,6 +1605,9 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
           "mir4Equipment": {
             "1": 200201000,
             "5": 301201000
@@ -1256,38 +1635,38 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 125,
+          "attackPower": 392,
           "auras": [
             {
               "duration": 3600,
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3599.9,
+              "remaining": 3598.55,
               "school": "physical",
               "sourceId": 45
             }
           ],
-          "autoAttack": true,
           "blockChance": 0.05,
           "blockValue": 6,
+          "combatTimer": 0.65,
           "comboUntil": -1,
           "cooldowns": [
             [
               "4101",
-              9.9
+              8.55
             ],
             [
               "4102",
-              9.9
+              8.55
             ],
             [
               "4103",
-              25.95
+              24.6
             ],
             [
               "4106",
-              20
+              19.35
             ]
           ],
           "critChance": 0.06,
@@ -1295,24 +1674,45 @@
           "dodgeChance": 0.06,
           "facing": 1.570796,
           "fallStartY": 1.53378,
-          "fiveSecondRule": 99.1,
-          "gcdRemaining": 1,
-          "hp": 4000,
+          "fiveSecondRule": 100.45,
+          "gcdRemaining": 0.35,
+          "hp": 10960,
           "id": 45,
           "inCombat": true,
           "kind": "player",
-          "level": 1,
+          "level": 30,
           "lootFfaTimer": "Infinity",
-          "maxHp": 4000,
-          "maxResource": 600,
+          "maxHp": 10960,
+          "maxResource": 890,
           "mir4": {
-            "accuracy": 5,
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
             "classId": 4,
             "criticalOutcome": 10,
-            "magicDefense": 12,
-            "manaCostStat": 204,
-            "physicalDefense": 12,
-            "skillDamageBps": 10
+            "dodge": 116,
+            "magicDefense": 157,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "physicalDefense": 157,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 10960,
+              "6": 890,
+              "19": 951,
+              "20": 392,
+              "24": 157,
+              "26": 157,
+              "28": 127,
+              "29": 116,
+              "32": 10,
+              "38": 29,
+              "41": 131,
+              "42": 10,
+              "43": 131,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 4,
@@ -1325,7 +1725,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 547,
+          "resource": 644.44625,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -1357,11 +1757,12 @@
               "id": "mir4_4106_stun",
               "kind": "stun",
               "name": "Investida 4106",
-              "remaining": 2,
+              "remaining": 1.35,
               "school": "physical",
               "sourceId": 45
             }
           ],
+          "combatTimer": 0.65,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -1369,7 +1770,7 @@
           "fallStartY": 1.577216,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49788,
+          "hp": 49334,
           "id": 46,
           "inCombat": true,
           "kind": "mob",
@@ -1387,15 +1788,15 @@
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "kind": "stun",
-                "remaining": 1.95,
+                "remaining": 1.3,
                 "sourceId": 45
               }
             ],
-            "controlImmuneUntil": 2.85,
+            "controlImmuneUntil": 3.55,
             "controlImmunityByEffectId": {
               "mir4_4106_stun": {
                 "sourceId": 45,
-                "until": 2.85
+                "until": 3.55
               }
             }
           },
@@ -1420,20 +1821,20 @@
           "threat": [
             [
               45,
-              213
+              667
             ]
           ],
-          "wanderTimer": 9998.9,
+          "wanderTimer": 9998.2,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 0.05,
+          "combatTimer": 1.4,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -1442,7 +1843,7 @@
           "fallStartY": 0.881882,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49843,
+          "hp": 49505,
           "id": 47,
           "inCombat": true,
           "kind": "mob",
@@ -1461,7 +1862,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.9,
+                "remaining": 3.55,
                 "sourceId": 45
               }
             ]
@@ -1481,13 +1882,13 @@
             "z": -999
           },
           "stats": {},
-          "swingTimer": 9998.95,
+          "swingTimer": 9997.6,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              157
+              495
             ],
             [
               50,
@@ -1496,15 +1897,15 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 0.05,
+          "combatTimer": 1.4,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -1513,7 +1914,7 @@
           "fallStartY": 1.524302,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49713,
+          "hp": 49099,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
@@ -1532,7 +1933,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.9,
+                "remaining": 3.55,
                 "sourceId": 45
               }
             ]
@@ -1552,13 +1953,13 @@
             "z": -1000
           },
           "stats": {},
-          "swingTimer": 9998.9,
+          "swingTimer": 9997.55,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              287
+              901
             ],
             [
               50,
@@ -1567,15 +1968,15 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 0.05,
+          "combatTimer": 1.4,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -1584,7 +1985,7 @@
           "fallStartY": 1.698012,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49843,
+          "hp": 49505,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
@@ -1603,7 +2004,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.9,
+                "remaining": 3.55,
                 "sourceId": 45
               }
             ]
@@ -1623,13 +2024,13 @@
             "z": -1001
           },
           "stats": {},
-          "swingTimer": 9998.9,
+          "swingTimer": 9997.55,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              157
+              495
             ],
             [
               50,
@@ -1638,8 +2039,8 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -1652,20 +2053,20 @@
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3599.9,
+              "remaining": 3598.55,
               "school": "physical",
               "sourceId": 50
             }
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 99.1,
+          "combatTimer": 100.45,
           "comboUntil": -1,
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
           "fallStartY": 0.861379,
-          "fiveSecondRule": 99.1,
+          "fiveSecondRule": 100.45,
           "hp": 4000,
           "id": 50,
           "kind": "player",
@@ -1679,8 +2080,21 @@
             "criticalOutcome": 10,
             "magicDefense": 12,
             "manaCostStat": 204,
+            "monsterDamageReductionBps": 10,
             "physicalDefense": 12,
-            "skillDamageBps": 10
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 4000,
+              "6": 600,
+              "19": 204,
+              "20": 125,
+              "24": 12,
+              "26": 12,
+              "28": 5,
+              "32": 10,
+              "42": 10,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 1,
@@ -1719,10 +2133,10 @@
       ]
     },
     {
-      "tick": 2,
-      "time": 0.1,
+      "tick": 29,
+      "time": 1.45,
       "nextId": 51,
-      "state": "aee0ccc3",
+      "state": "1f58abc9",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1738,7 +2152,7 @@
           "autoBattle": {
             "acquireRadiusYards": 30,
             "anchorZ": -1000,
-            "mode": "battle"
+            "mode": "off"
           },
           "bags": [
             null,
@@ -1751,12 +2165,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 813
+            "damageDealt": 2557
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 813
+              "damageDealt": 2557
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -1784,6 +2198,9 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -1852,6 +2269,9 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
           "mir4Equipment": {
             "1": 200201000,
             "5": 301201000
@@ -1879,38 +2299,38 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 125,
+          "attackPower": 392,
           "auras": [
             {
               "duration": 3600,
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3599.9,
+              "remaining": 3598.55,
               "school": "physical",
               "sourceId": 45
             }
           ],
-          "autoAttack": true,
           "blockChance": 0.05,
           "blockValue": 6,
+          "combatTimer": 0.65,
           "comboUntil": -1,
           "cooldowns": [
             [
               "4101",
-              9.9
+              8.55
             ],
             [
               "4102",
-              9.9
+              8.55
             ],
             [
               "4103",
-              25.95
+              24.6
             ],
             [
               "4106",
-              20
+              19.35
             ]
           ],
           "critChance": 0.06,
@@ -1918,24 +2338,45 @@
           "dodgeChance": 0.06,
           "facing": 1.570796,
           "fallStartY": 1.53378,
-          "fiveSecondRule": 99.1,
-          "gcdRemaining": 1,
-          "hp": 4000,
+          "fiveSecondRule": 100.45,
+          "gcdRemaining": 0.35,
+          "hp": 10960,
           "id": 45,
           "inCombat": true,
           "kind": "player",
-          "level": 1,
+          "level": 30,
           "lootFfaTimer": "Infinity",
-          "maxHp": 4000,
-          "maxResource": 600,
+          "maxHp": 10960,
+          "maxResource": 890,
           "mir4": {
-            "accuracy": 5,
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
             "classId": 4,
             "criticalOutcome": 10,
-            "magicDefense": 12,
-            "manaCostStat": 204,
-            "physicalDefense": 12,
-            "skillDamageBps": 10
+            "dodge": 116,
+            "magicDefense": 157,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "physicalDefense": 157,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 10960,
+              "6": 890,
+              "19": 951,
+              "20": 392,
+              "24": 157,
+              "26": 157,
+              "28": 127,
+              "29": 116,
+              "32": 10,
+              "38": 29,
+              "41": 131,
+              "42": 10,
+              "43": 131,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 4,
@@ -1948,7 +2389,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 547,
+          "resource": 644.44625,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -1980,11 +2421,12 @@
               "id": "mir4_4106_stun",
               "kind": "stun",
               "name": "Investida 4106",
-              "remaining": 2,
+              "remaining": 1.35,
               "school": "physical",
               "sourceId": 45
             }
           ],
+          "combatTimer": 0.65,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -1992,7 +2434,7 @@
           "fallStartY": 1.577216,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49788,
+          "hp": 49334,
           "id": 46,
           "inCombat": true,
           "kind": "mob",
@@ -2010,15 +2452,15 @@
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "kind": "stun",
-                "remaining": 1.95,
+                "remaining": 1.3,
                 "sourceId": 45
               }
             ],
-            "controlImmuneUntil": 2.85,
+            "controlImmuneUntil": 3.55,
             "controlImmunityByEffectId": {
               "mir4_4106_stun": {
                 "sourceId": 45,
-                "until": 2.85
+                "until": 3.55
               }
             }
           },
@@ -2043,20 +2485,20 @@
           "threat": [
             [
               45,
-              213
+              667
             ]
           ],
-          "wanderTimer": 9998.9,
+          "wanderTimer": 9998.2,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 0.05,
+          "combatTimer": 1.4,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -2065,7 +2507,7 @@
           "fallStartY": 0.881882,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49843,
+          "hp": 49505,
           "id": 47,
           "inCombat": true,
           "kind": "mob",
@@ -2084,7 +2526,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.9,
+                "remaining": 3.55,
                 "sourceId": 45
               }
             ]
@@ -2104,13 +2546,13 @@
             "z": -999
           },
           "stats": {},
-          "swingTimer": 9998.95,
+          "swingTimer": 9997.6,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              157
+              495
             ],
             [
               50,
@@ -2119,15 +2561,15 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 0.05,
+          "combatTimer": 1.4,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -2136,7 +2578,7 @@
           "fallStartY": 1.524302,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49713,
+          "hp": 49099,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
@@ -2155,7 +2597,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.9,
+                "remaining": 3.55,
                 "sourceId": 45
               }
             ]
@@ -2175,13 +2617,13 @@
             "z": -1000
           },
           "stats": {},
-          "swingTimer": 9998.9,
+          "swingTimer": 9997.55,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              287
+              901
             ],
             [
               50,
@@ -2190,15 +2632,15 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 0.05,
+          "combatTimer": 1.4,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -2207,7 +2649,7 @@
           "fallStartY": 1.698012,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49843,
+          "hp": 49505,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
@@ -2226,7 +2668,7 @@
                 "effectId": "mir4_4103_blind",
                 "kind": "blind",
                 "magnitude": 0.6,
-                "remaining": 4.9,
+                "remaining": 3.55,
                 "sourceId": 45
               }
             ]
@@ -2246,13 +2688,13 @@
             "z": -1001
           },
           "stats": {},
-          "swingTimer": 9998.9,
+          "swingTimer": 9997.55,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              157
+              495
             ],
             [
               50,
@@ -2261,8 +2703,8 @@
           ],
           "wanderTimer": 9999,
           "weapon": {
-            "max": 9,
-            "min": 6,
+            "max": 300,
+            "min": 192,
             "speed": 2
           }
         },
@@ -2275,20 +2717,20 @@
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3599.9,
+              "remaining": 3598.55,
               "school": "physical",
               "sourceId": 50
             }
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 99.1,
+          "combatTimer": 100.45,
           "comboUntil": -1,
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
           "fallStartY": 0.861379,
-          "fiveSecondRule": 99.1,
+          "fiveSecondRule": 100.45,
           "hp": 4000,
           "id": 50,
           "kind": "player",
@@ -2302,8 +2744,21 @@
             "criticalOutcome": 10,
             "magicDefense": 12,
             "manaCostStat": 204,
+            "monsterDamageReductionBps": 10,
             "physicalDefense": 12,
-            "skillDamageBps": 10
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 4000,
+              "6": 600,
+              "19": 204,
+              "20": 125,
+              "24": 12,
+              "26": 12,
+              "28": 5,
+              "32": 10,
+              "42": 10,
+              "44": 10
+            }
           },
           "mir4VisualArmorMask": 1,
           "mir4VisualClassId": 1,

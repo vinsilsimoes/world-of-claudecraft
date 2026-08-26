@@ -8,8 +8,8 @@
     "hazard ring burn (fiestaRingDamage) outside the closing ring",
     "down + respawn-timer revive (fiestaRevive)"
   ],
-  "draws": 4855,
-  "drawDigest": "a9bdec3b",
+  "draws": 4847,
+  "drawDigest": "8f38723e",
   "frames": [
     {
       "tick": 0,
@@ -527,8 +527,8 @@
       "state": "eebba7c6",
       "events": "bcba3848",
       "rng": {
-        "draws": 3864,
-        "digest": "4f21f1ae"
+        "draws": 3863,
+        "digest": "5fe71662"
       }
     },
     {
@@ -560,8 +560,8 @@
       "state": "4c74c157",
       "events": "7b25d3cb",
       "rng": {
-        "draws": 4110,
-        "digest": "04718b49"
+        "draws": 4107,
+        "digest": "c6ede898"
       }
     },
     {
@@ -571,8 +571,8 @@
       "state": "6e025123",
       "events": "b82428b3",
       "rng": {
-        "draws": 4195,
-        "digest": "212a1509"
+        "draws": 4192,
+        "digest": "6eea16ef"
       }
     },
     {
@@ -582,8 +582,8 @@
       "state": "aaa24994",
       "events": "b82428b3",
       "rng": {
-        "draws": 4273,
-        "digest": "4e342297"
+        "draws": 4271,
+        "digest": "e9d43825"
       }
     },
     {
@@ -593,8 +593,8 @@
       "state": "b599d37e",
       "events": "b82428b3",
       "rng": {
-        "draws": 4381,
-        "digest": "2430973f"
+        "draws": 4378,
+        "digest": "f5008292"
       }
     },
     {
@@ -604,8 +604,8 @@
       "state": "981b276d",
       "events": "cc8edcd4",
       "rng": {
-        "draws": 4451,
-        "digest": "abefcfbb"
+        "draws": 4453,
+        "digest": "ca9e038a"
       }
     },
     {
@@ -626,8 +626,8 @@
       "state": "c0c06ab4",
       "events": "0a6c5a58",
       "rng": {
-        "draws": 4629,
-        "digest": "9029bab5"
+        "draws": 4619,
+        "digest": "a744dee3"
       }
     },
     {
@@ -637,8 +637,8 @@
       "state": "557f49e3",
       "events": "83df4250",
       "rng": {
-        "draws": 4727,
-        "digest": "426f10cf"
+        "draws": 4724,
+        "digest": "d7ca4bc6"
       }
     },
     {
@@ -648,8 +648,8 @@
       "state": "f066ac2f",
       "events": "bcba3848",
       "rng": {
-        "draws": 4818,
-        "digest": "8559d347"
+        "draws": 4821,
+        "digest": "081665dd"
       }
     },
     {
@@ -659,8 +659,8 @@
       "state": "309edacd",
       "events": "741638a5",
       "rng": {
-        "draws": 4855,
-        "digest": "a9bdec3b"
+        "draws": 4847,
+        "digest": "8f38723e"
       },
       "label": "final",
       "players": [

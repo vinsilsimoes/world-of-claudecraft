@@ -9,8 +9,8 @@
     "applyTaunt pet auto-taunt arm (~8110)",
     "applyTaunt pet manual-taunt arm (petTaunt, ~4885)"
   ],
-  "draws": 1902,
-  "drawDigest": "e95d548a",
+  "draws": 1907,
+  "drawDigest": "4eb67681",
   "frames": [
     {
       "tick": 0,
@@ -189,85 +189,85 @@
       "state": "2353a4e5",
       "events": "39ea64d7",
       "rng": {
-        "draws": 487,
-        "digest": "60c31138"
+        "draws": 486,
+        "digest": "bf4b55db"
       }
     },
     {
       "tick": 120,
       "time": 6,
       "nextId": 970,
-      "state": "8dcc0b57",
-      "events": "5df7e477",
+      "state": "ca852c32",
+      "events": "4fd818ce",
       "rng": {
-        "draws": 677,
-        "digest": "55e5f1d8"
+        "draws": 670,
+        "digest": "357feea5"
       }
     },
     {
       "tick": 140,
       "time": 7,
       "nextId": 970,
-      "state": "2cbd3670",
+      "state": "5a32c925",
       "events": "71f1235c",
       "rng": {
-        "draws": 902,
-        "digest": "764eb9c7"
+        "draws": 904,
+        "digest": "8422ca7b"
       }
     },
     {
       "tick": 160,
       "time": 8,
       "nextId": 970,
-      "state": "71f54023",
-      "events": "5374329c",
+      "state": "5c56529c",
+      "events": "87bcd892",
       "rng": {
-        "draws": 1147,
-        "digest": "3f5358b9"
+        "draws": 1153,
+        "digest": "3cb240c0"
       }
     },
     {
       "tick": 180,
       "time": 9,
       "nextId": 970,
-      "state": "2209ab8d",
-      "events": "d67c6fdf",
+      "state": "0f7445f4",
+      "events": "8cea2c2d",
       "rng": {
-        "draws": 1426,
-        "digest": "a8ae3ff6"
+        "draws": 1437,
+        "digest": "9cf79216"
       }
     },
     {
       "tick": 200,
       "time": 10,
       "nextId": 970,
-      "state": "d38d58de",
-      "events": "1147f3ee",
+      "state": "f2cc1a1e",
+      "events": "e2668801",
       "rng": {
-        "draws": 1698,
-        "digest": "9c560168"
+        "draws": 1704,
+        "digest": "3ecbdd72"
       }
     },
     {
       "tick": 220,
       "time": 11,
       "nextId": 970,
-      "state": "b3b9fc11",
+      "state": "ea26e530",
       "events": "8c27baee",
       "rng": {
-        "draws": 1864,
-        "digest": "3d574761"
+        "draws": 1862,
+        "digest": "c0786b4c"
       }
     },
     {
       "tick": 220,
       "time": 11,
       "nextId": 970,
-      "state": "872f1daa",
+      "state": "5448f332",
       "events": "741638a5",
       "rng": {
-        "draws": 1864,
-        "digest": "3d574761"
+        "draws": 1862,
+        "digest": "c0786b4c"
       },
       "label": "pet-taunt",
       "players": [
@@ -288,12 +288,12 @@
           "cls": "warlock",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 18
+            "damageDealt": 19
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 18
+              "damageDealt": 19
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -361,7 +361,7 @@
           "attackPower": 11,
           "autoAttack": true,
           "castTotal": 5,
-          "combatTimer": 0.45,
+          "combatTimer": 0.4,
           "comboUntil": -1,
           "critChance": 0.056,
           "detonateTimer": "Infinity",
@@ -418,10 +418,10 @@
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": 2.077895,
+          "facing": 1.892547,
           "fallStartY": 1.5,
           "fiveSecondRule": 99,
-          "hp": 346,
+          "hp": 355,
           "id": 968,
           "inCombat": true,
           "kind": "mob",
@@ -437,7 +437,7 @@
           "petMode": "aggressive",
           "petTauntTimer": 10,
           "pos": {
-            "x": 4.8,
+            "x": 6,
             "y": 1.5,
             "z": -2
           },
@@ -465,18 +465,18 @@
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -1.063698,
+          "facing": -1.249046,
           "fallStartY": 1.5,
           "fiveSecondRule": 99,
           "forcedTargetId": 968,
           "forcedTargetTimer": 3,
           "hostile": true,
-          "hp": 49962,
+          "hp": 49944,
           "id": 969,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 5.8,
+            "x": 7,
             "y": 1.5,
             "z": -2
           },
@@ -488,7 +488,7 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 5.8,
+            "x": 7,
             "y": 1.5,
             "z": -2
           },
@@ -508,11 +508,11 @@
           "threat": [
             [
               963,
-              19
+              20
             ],
             [
               968,
-              22
+              39
             ]
           ],
           "weapon": {
@@ -527,11 +527,11 @@
       "tick": 224,
       "time": 11.2,
       "nextId": 970,
-      "state": "ea2677b6",
+      "state": "e3f5f13f",
       "events": "8512d13d",
       "rng": {
-        "draws": 1902,
-        "digest": "e95d548a"
+        "draws": 1907,
+        "digest": "4eb67681"
       },
       "label": "final",
       "players": [
@@ -552,12 +552,12 @@
           "cls": "warlock",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 18
+            "damageDealt": 19
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 18
+              "damageDealt": 19
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -625,7 +625,7 @@
           "attackPower": 11,
           "autoAttack": true,
           "castTotal": 5,
-          "combatTimer": 0.65,
+          "combatTimer": 0.6,
           "comboUntil": -1,
           "critChance": 0.056,
           "detonateTimer": "Infinity",
@@ -686,7 +686,7 @@
           "facing": 1.570796,
           "fallStartY": 1.5,
           "fiveSecondRule": 99,
-          "hp": 336,
+          "hp": 345,
           "id": 968,
           "inCombat": true,
           "kind": "mob",
@@ -702,7 +702,7 @@
           "petMode": "aggressive",
           "petTauntTimer": 9.8,
           "pos": {
-            "x": 4.8,
+            "x": 6,
             "y": 1.5,
             "z": -2
           },
@@ -737,12 +737,12 @@
           "forcedTargetId": 968,
           "forcedTargetTimer": 2.8,
           "hostile": true,
-          "hp": 49949,
+          "hp": 49931,
           "id": 969,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 5.8,
+            "x": 7,
             "y": 1.5,
             "z": -2
           },
@@ -754,7 +754,7 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 5.8,
+            "x": 7,
             "y": 1.5,
             "z": -2
           },
@@ -774,11 +774,11 @@
           "threat": [
             [
               963,
-              19
+              20
             ],
             [
               968,
-              35
+              52
             ]
           ],
           "weapon": {

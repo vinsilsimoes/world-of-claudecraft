@@ -15,8 +15,8 @@
     "cancelCast fishing arm via dealDamage (FISHING_CAST_ID, not pushback)",
     "multi-class casters: mage/priest/warlock"
   ],
-  "draws": 2040,
-  "drawDigest": "20934749",
+  "draws": 2029,
+  "drawDigest": "68062230",
   "frames": [
     {
       "tick": 0,
@@ -849,8 +849,8 @@
       "state": "d4e9e641",
       "events": "518db1e0",
       "rng": {
-        "draws": 1249,
-        "digest": "d4829847"
+        "draws": 1250,
+        "digest": "b011b5bd"
       }
     },
     {
@@ -860,8 +860,8 @@
       "state": "37f0e674",
       "events": "741638a5",
       "rng": {
-        "draws": 1311,
-        "digest": "321cbd3d"
+        "draws": 1310,
+        "digest": "e5f674d6"
       }
     },
     {
@@ -871,8 +871,8 @@
       "state": "2631a772",
       "events": "741638a5",
       "rng": {
-        "draws": 1369,
-        "digest": "0f344fa0"
+        "draws": 1367,
+        "digest": "244c7a25"
       }
     },
     {
@@ -893,8 +893,8 @@
       "state": "79993a5c",
       "events": "741638a5",
       "rng": {
-        "draws": 1489,
-        "digest": "2c97e424"
+        "draws": 1490,
+        "digest": "f62cf77c"
       },
       "label": "mage-queued",
       "players": [
@@ -1381,8 +1381,8 @@
       "state": "85a5fb45",
       "events": "741638a5",
       "rng": {
-        "draws": 1495,
-        "digest": "f6b5b7f6"
+        "draws": 1496,
+        "digest": "27fb3470"
       }
     },
     {
@@ -1392,52 +1392,52 @@
       "state": "5f7940ca",
       "events": "741638a5",
       "rng": {
-        "draws": 1559,
-        "digest": "1126d84b"
+        "draws": 1564,
+        "digest": "69421463"
       }
     },
     {
       "tick": 195,
       "time": 9.75,
       "nextId": 971,
-      "state": "18f1c5a1",
-      "events": "2198c57e",
+      "state": "0e8b68bb",
+      "events": "76b64f25",
       "rng": {
-        "draws": 1642,
-        "digest": "6d17198c"
+        "draws": 1651,
+        "digest": "70ff4987"
       }
     },
     {
       "tick": 200,
       "time": 10,
       "nextId": 971,
-      "state": "1c8da99e",
+      "state": "e2a12f5e",
       "events": "741638a5",
       "rng": {
-        "draws": 1697,
-        "digest": "08e8726f"
+        "draws": 1703,
+        "digest": "4610510b"
       }
     },
     {
       "tick": 205,
       "time": 10.25,
       "nextId": 971,
-      "state": "cb4bad46",
-      "events": "acb1da66",
+      "state": "8d93c1b8",
+      "events": "b6abe8af",
       "rng": {
-        "draws": 1734,
-        "digest": "77b34e85"
+        "draws": 1742,
+        "digest": "6e918777"
       }
     },
     {
       "tick": 206,
       "time": 10.3,
       "nextId": 971,
-      "state": "35ffc93d",
+      "state": "8ccccddf",
       "events": "f754d99f",
       "rng": {
-        "draws": 1743,
-        "digest": "4e0302ba"
+        "draws": 1747,
+        "digest": "fcc39a37"
       },
       "label": "priest-silence-cancel",
       "players": [
@@ -1457,13 +1457,13 @@
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 137,
-            "damageTaken": 106
+            "damageDealt": 134,
+            "damageTaken": 96
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 137
+              "damageDealt": 134
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -1685,11 +1685,11 @@
         {
           "aiState": "idle",
           "attackPower": 10,
-          "castRemaining": 2.25,
+          "castRemaining": 1.75,
           "castTargetId": 970,
-          "castTotal": 3,
+          "castTotal": 2.5,
           "castingAbility": "fireball",
-          "combatTimer": 0.2,
+          "combatTimer": 0.65,
           "comboUntil": -1,
           "critChance": 0.056,
           "detonateTimer": "Infinity",
@@ -1698,7 +1698,7 @@
           "fallStartY": -0.371544,
           "fiveSecondRule": 0.8,
           "gcdRemaining": 0.7,
-          "hp": 19894,
+          "hp": 19904,
           "id": 967,
           "inCombat": true,
           "kind": "player",
@@ -1869,7 +1869,7 @@
               "value": 2
             }
           ],
-          "combatTimer": 0.2,
+          "combatTimer": 0.65,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -1878,7 +1878,7 @@
           "fallStartY": -0.371544,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 199863,
+          "hp": 199866,
           "id": 970,
           "inCombat": true,
           "kind": "mob",
@@ -1913,7 +1913,7 @@
           "threat": [
             [
               967,
-              138
+              135
             ]
           ],
           "wanderTarget": {
@@ -1934,55 +1934,55 @@
       "tick": 210,
       "time": 10.5,
       "nextId": 971,
-      "state": "4dbf637e",
+      "state": "40f4b0e0",
       "events": "833d0eba",
       "rng": {
-        "draws": 1779,
-        "digest": "c0ac3000"
+        "draws": 1782,
+        "digest": "aa54944f"
       }
     },
     {
       "tick": 215,
       "time": 10.75,
       "nextId": 971,
-      "state": "7fce42ca",
+      "state": "ebd9f325",
       "events": "79d4e60c",
       "rng": {
-        "draws": 1815,
-        "digest": "7d5d4d6b"
+        "draws": 1825,
+        "digest": "96a30ba3"
       }
     },
     {
       "tick": 220,
       "time": 11,
       "nextId": 971,
-      "state": "f4782cd6",
+      "state": "0b852954",
       "events": "741638a5",
       "rng": {
-        "draws": 1856,
-        "digest": "48b376ae"
+        "draws": 1861,
+        "digest": "70f3518c"
       }
     },
     {
       "tick": 225,
       "time": 11.25,
       "nextId": 971,
-      "state": "97bbb832",
+      "state": "ba2b2935",
       "events": "741638a5",
       "rng": {
-        "draws": 1895,
-        "digest": "1a5ed75c"
+        "draws": 1896,
+        "digest": "a4247de9"
       }
     },
     {
       "tick": 228,
       "time": 11.4,
       "nextId": 971,
-      "state": "51f466c8",
+      "state": "86107586",
       "events": "f010fe63",
       "rng": {
-        "draws": 1912,
-        "digest": "0017e681"
+        "draws": 1914,
+        "digest": "d3af8a53"
       },
       "label": "warlock-channel-pushback",
       "players": [
@@ -2002,13 +2002,13 @@
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 137,
-            "damageTaken": 106
+            "damageDealt": 134,
+            "damageTaken": 96
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 137
+              "damageDealt": 134
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -2235,11 +2235,11 @@
         {
           "aiState": "idle",
           "attackPower": 10,
-          "castRemaining": 1.15,
+          "castRemaining": 0.65,
           "castTargetId": 970,
-          "castTotal": 3,
+          "castTotal": 2.5,
           "castingAbility": "fireball",
-          "combatTimer": 1.3,
+          "combatTimer": 1.75,
           "comboUntil": -1,
           "critChance": 0.056,
           "detonateTimer": "Infinity",
@@ -2247,7 +2247,7 @@
           "facing": 0.530095,
           "fallStartY": -0.371544,
           "fiveSecondRule": 1.9,
-          "hp": 19894,
+          "hp": 19904,
           "id": 967,
           "inCombat": true,
           "kind": "player",
@@ -2437,7 +2437,7 @@
           "fallStartY": -0.371544,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 199848,
+          "hp": 199851,
           "id": 970,
           "inCombat": true,
           "kind": "mob",
@@ -2472,7 +2472,7 @@
           "threat": [
             [
               967,
-              138
+              135
             ],
             [
               969,
@@ -2497,33 +2497,33 @@
       "tick": 230,
       "time": 11.5,
       "nextId": 971,
-      "state": "bc3e3b77",
+      "state": "885c0331",
       "events": "741638a5",
       "rng": {
-        "draws": 1934,
-        "digest": "1b4db02c"
+        "draws": 1939,
+        "digest": "30ca8b06"
       }
     },
     {
       "tick": 235,
       "time": 11.75,
       "nextId": 971,
-      "state": "56ecf44b",
+      "state": "3c140f53",
       "events": "5e7d70e7",
       "rng": {
-        "draws": 1989,
-        "digest": "10c2c909"
+        "draws": 1974,
+        "digest": "ab46e4fd"
       }
     },
     {
       "tick": 236,
       "time": 11.8,
       "nextId": 971,
-      "state": "0265333f",
+      "state": "1a0addbd",
       "events": "046c3b4c",
       "rng": {
-        "draws": 1999,
-        "digest": "40b2b478"
+        "draws": 1984,
+        "digest": "63a244e2"
       },
       "label": "warlock-fishing-cancel",
       "players": [
@@ -2543,13 +2543,13 @@
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 139,
-            "damageTaken": 106
+            "damageDealt": 136,
+            "damageTaken": 96
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 139
+              "damageDealt": 136
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -2776,9 +2776,9 @@
         {
           "aiState": "idle",
           "attackPower": 10,
-          "castRemaining": 0.75,
+          "castRemaining": 0.25,
           "castTargetId": 970,
-          "castTotal": 3,
+          "castTotal": 2.5,
           "castingAbility": "fireball",
           "combatTimer": 0.15,
           "comboUntil": -1,
@@ -2788,7 +2788,7 @@
           "facing": 0.530095,
           "fallStartY": -0.371544,
           "fiveSecondRule": 2.3,
-          "hp": 19894,
+          "hp": 19904,
           "id": 967,
           "inCombat": true,
           "kind": "player",
@@ -2971,7 +2971,7 @@
           "fallStartY": -0.371544,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 199831,
+          "hp": 199834,
           "id": 970,
           "inCombat": true,
           "kind": "mob",
@@ -3006,7 +3006,7 @@
           "threat": [
             [
               967,
-              140
+              137
             ],
             [
               969,
@@ -3031,22 +3031,22 @@
       "tick": 240,
       "time": 12,
       "nextId": 971,
-      "state": "797cd5ba",
+      "state": "c2d1a16e",
       "events": "741638a5",
       "rng": {
-        "draws": 2033,
-        "digest": "655bb8a9"
+        "draws": 2022,
+        "digest": "41c2b5ef"
       }
     },
     {
       "tick": 241,
       "time": 12.05,
       "nextId": 971,
-      "state": "9d9479cc",
-      "events": "741638a5",
+      "state": "564c83f6",
+      "events": "f07c86c5",
       "rng": {
-        "draws": 2040,
-        "digest": "20934749"
+        "draws": 2029,
+        "digest": "68062230"
       },
       "label": "final",
       "players": [
@@ -3066,13 +3066,13 @@
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 139,
-            "damageTaken": 106
+            "damageDealt": 136,
+            "damageTaken": 96
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 139
+              "damageDealt": 136
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -3299,10 +3299,7 @@
         {
           "aiState": "idle",
           "attackPower": 10,
-          "castRemaining": 0.5,
-          "castTargetId": 970,
-          "castTotal": 3,
-          "castingAbility": "fireball",
+          "castTotal": 2.5,
           "combatTimer": 0.4,
           "comboUntil": -1,
           "critChance": 0.056,
@@ -3310,8 +3307,8 @@
           "dodgeChance": 0.056,
           "facing": 0.530095,
           "fallStartY": -0.371544,
-          "fiveSecondRule": 2.55,
-          "hp": 19894,
+          "fiveSecondRule": 0.05,
+          "hp": 19904,
           "id": 967,
           "inCombat": true,
           "kind": "player",
@@ -3329,7 +3326,7 @@
             "z": -45
           },
           "potionCooldownUntil": -1,
-          "resource": 901,
+          "resource": 836,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -3496,7 +3493,7 @@
           "fallStartY": -0.371544,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 199831,
+          "hp": 199834,
           "id": 970,
           "inCombat": true,
           "kind": "mob",
@@ -3531,7 +3528,7 @@
           "threat": [
             [
               967,
-              140
+              137
             ],
             [
               969,
