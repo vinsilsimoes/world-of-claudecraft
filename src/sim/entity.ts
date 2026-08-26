@@ -759,9 +759,10 @@ export function createMob(id: number, template: MobTemplate, level: number, pos:
   // Elite scaling, classic-style: ~2.3x health, ~1.5x damage.
   const hpMult = template.elite ? 2.3 : 1;
   const dmgMult = template.elite ? 1.5 : 1;
-  e.maxHp = Math.round((template.hpBase + template.hpPerLevel * (level - 1)) * hpMult);
+  const statLevelOffset = level - (template.statAnchorLevel ?? 1);
+  e.maxHp = Math.round((template.hpBase + template.hpPerLevel * statLevelOffset) * hpMult);
   e.hp = e.maxHp;
-  const dmg = (template.dmgBase + template.dmgPerLevel * (level - 1)) * dmgMult;
+  const dmg = (template.dmgBase + template.dmgPerLevel * statLevelOffset) * dmgMult;
   e.weapon = {
     min: Math.round(dmg * 0.8),
     max: Math.round(dmg * 1.25),

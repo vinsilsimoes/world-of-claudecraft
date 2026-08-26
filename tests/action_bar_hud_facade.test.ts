@@ -21,7 +21,11 @@ function sliceFunctionBody(source: string, startIndex: number): string {
 }
 
 vi.mock('../src/render/characters', () => ({ CharacterPreview: class {} }));
-vi.mock('../src/render/characters/assets', () => ({ preloadMechAssets: vi.fn() }));
+vi.mock('../src/render/characters/assets', () => ({
+  mountAssetsReady: vi.fn(() => false),
+  preloadMechAssets: vi.fn(),
+  preloadMountAssets: vi.fn(async () => {}),
+}));
 vi.mock('../src/render/characters/portrait', () => ({
   onPortraitsReady: vi.fn(),
   onPortraitUpdate: vi.fn(),
@@ -118,6 +122,16 @@ describe('Hud action-bar facade', () => {
     expect(source).toContain(
       "if (!this.actionBarController.isAssignableAction({ type: 'ability', id: abilityId })) return;",
     );
+  });
+
+  it('synchronizes the action bar immediately when an ability-learning event arrives', () => {
+    const source = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
+    const eventStart = source.indexOf("case 'learnAbility':");
+    const nextCase = source.indexOf("case 'comboPoint':", eventStart);
+    const learnAbilityCase = source.slice(eventStart, nextCase);
+
+    expect(eventStart).toBeGreaterThan(-1);
+    expect(learnAbilityCase).toContain('this.actionBarController.syncKnownAbilities();');
   });
 
   // WAS: 'cancels a mobile drag before exposing a newly loaded form page'. The

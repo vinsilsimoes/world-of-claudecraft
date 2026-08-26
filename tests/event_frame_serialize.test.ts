@@ -259,10 +259,20 @@ describe('routeEvents frame bytes and session mutations', () => {
     fOther.sent.length = 0;
     const spy = vi.spyOn(botDetectorOf(server), 'observeEvent');
 
-    const loot: SimEvent = { type: 'loot', text: 'You loot 5 gold', pid: owner.pid };
+    const loot: SimEvent = {
+      type: 'loot',
+      text: 'You loot 5 gold',
+      pid: owner.pid,
+      lootOrigin: 'monster-drop',
+    };
     routeRaw(server, [loot]);
 
-    const expected = eventsFrame({ type: 'loot', text: 'You loot 5 gold', pid: owner.pid });
+    const expected = eventsFrame({
+      type: 'loot',
+      text: 'You loot 5 gold',
+      pid: owner.pid,
+      lootOrigin: 'monster-drop',
+    });
     expect(fOwner.sent).toEqual([expected]);
     expect(fSpec.sent).toEqual([expected]);
     expect(fOther.sent).toEqual([]);

@@ -364,6 +364,8 @@
     --color-minimap-npc-quest-repeat: #0070dd;
     --color-minimap-portal: #c084ff;
     --color-minimap-object-loot: #ffe97a;
+    --color-minimap-quest-search-fill: rgba(72, 132, 232, 0.2);
+    --color-minimap-quest-search-stroke: rgba(150, 195, 255, 0.9);
     --color-minimap-mob-aggro: #ff8800;
     --color-minimap-mob: #e74c3c;
     --color-minimap-mob-loot: #ffd100;

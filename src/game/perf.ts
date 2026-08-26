@@ -1102,7 +1102,7 @@ export class PerfMonitor {
     this.lastCensus = report;
     this.lastCensusLines = censusTableLines(report);
     this.skipNextFrameSample = true;
-    console.info('World of Claudecraft scene census:', JSON.stringify(report, null, 2));
+    console.info('Aeldrune scene census:', JSON.stringify(report, null, 2));
     if (this.enabled) this.renderOverlay(this.lastSnapshot ?? this.snapshot());
     return report;
   }
@@ -1134,7 +1134,7 @@ export class PerfMonitor {
   copyReport(): void {
     const text = JSON.stringify(this.report(), null, 2);
     void navigator.clipboard?.writeText(text).catch(() => {
-      console.info('World of Claudecraft perf report:', text);
+      console.info('Aeldrune perf report:', text);
     });
   }
 

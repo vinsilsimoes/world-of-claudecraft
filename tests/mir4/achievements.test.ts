@@ -6,6 +6,7 @@ import {
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { claimMir4Achievement } from '../../src/sim/mir4/achievements';
+import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
 import { MIR4_PERSISTED_COUNT_CAP } from '../../src/sim/mir4/persistence';
 import { upgradeMir4Skill } from '../../src/sim/mir4/skill_evolution';
 import { Sim } from '../../src/sim/sim';
@@ -49,7 +50,7 @@ describe('MIR4 source-backed level achievements', () => {
       },
     ]);
     expect(MIR4_ACHIEVEMENT_PORT_BONUSES).toEqual({
-      20102: { skillTomes: 3 },
+      20102: { knowledgeTomeCommon: 1 },
     });
   });
 
@@ -85,7 +86,7 @@ describe('MIR4 source-backed level achievements', () => {
 
     sim.setPlayerLevel(10);
     expect(sim.mir4ClaimAchievement(20102).ok).toBe(true);
-    expect(meta.mir4SkillResources?.skillTomes).toBe(3);
+    expect(meta.mir4Materials?.knowledgeTomeCommon).toBe(1);
   });
 
   it('credits copper, Darksteel and Effect Points exactly once', () => {
@@ -100,7 +101,7 @@ describe('MIR4 source-backed level achievements', () => {
       groupGrade: 1,
     });
     expect(meta.copper).toBe(1_100);
-    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000 });
+    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000, energy: 0 });
     expect(meta.mir4SkillResources).toEqual({ effectPoints: 0, skillTomes: 0 });
     expect(meta.mir4AchievementClears).toEqual({ 201: 1 });
 
@@ -110,8 +111,12 @@ describe('MIR4 source-backed level achievements', () => {
       groupGrade: 2,
     });
     expect(meta.copper).toBe(2_300);
-    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000 });
-    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 3 });
+    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000, energy: 0 });
+    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 0 });
+    expect(meta.mir4Materials).toEqual({
+      ...MIR4_EMPTY_MATERIALS,
+      knowledgeTomeCommon: 1,
+    });
     expect(meta.mir4AchievementClears).toEqual({ 201: 2 });
 
     const snapshot = JSON.stringify(sim.mir4PlayerState());
@@ -122,7 +127,20 @@ describe('MIR4 source-backed level achievements', () => {
     expect(JSON.stringify(sim.mir4PlayerState())).toBe(snapshot);
   });
 
-  it('turns the level-ten port bonus plus gameplay copper into one L2 transition', () => {
+  it('applies reward Copper and Darksteel statuses at the achievement claim boundary', () => {
+    const sim = makeSim();
+    const meta = playerMeta(sim);
+    sim.setPlayerLevel(5);
+    const mir4 = sim.player.mir4!;
+    mir4.statusValues = { ...mir4.statusValues, 85: 1_000, 87: 2_000 };
+    meta.copper = 0;
+
+    expect(sim.mir4ClaimAchievement(20101).ok).toBe(true);
+    expect(meta.copper).toBe(1_210);
+    expect(meta.mir4Currencies).toEqual({ darksteel: 1_200, energy: 0 });
+  });
+
+  it('turns the level-ten port bonus into one L2 transition', () => {
     const sim = makeSim();
     const meta = playerMeta(sim);
     meta.copper = 900;
@@ -131,7 +149,8 @@ describe('MIR4 source-backed level achievements', () => {
     expect(sim.mir4ClaimAchievement(20101).ok).toBe(true);
     expect(sim.mir4ClaimAchievement(20102).ok).toBe(true);
     expect(meta.copper).toBe(3_200);
-    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 3 });
+    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 0 });
+    expect(meta.mir4Materials?.knowledgeTomeCommon).toBe(1);
 
     expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1102, 1)).toEqual({
       ok: true,
@@ -139,8 +158,9 @@ describe('MIR4 source-backed level achievements', () => {
       previousLevel: 1,
       currentLevel: 2,
     });
-    expect(meta.copper).toBe(0);
-    expect(meta.mir4SkillResources).toEqual({ effectPoints: 100, skillTomes: 0 });
+    expect(meta.copper).toBe(3_200);
+    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 0 });
+    expect(meta.mir4Materials?.knowledgeTomeCommon).toBe(0);
   });
 
   it('rejects unknown ids without materializing progression bags', () => {
@@ -181,18 +201,23 @@ describe('MIR4 source-backed level achievements', () => {
     const sim = makeSim();
     sim.setPlayerLevel(10);
     const meta = playerMeta(sim);
-    meta.mir4Currencies = { darksteel: MIR4_PERSISTED_COUNT_CAP - 1 };
+    meta.mir4Currencies = { darksteel: MIR4_PERSISTED_COUNT_CAP - 1, energy: 7 };
     meta.mir4SkillResources = {
       effectPoints: MIR4_PERSISTED_COUNT_CAP - 1,
       skillTomes: MIR4_PERSISTED_COUNT_CAP - 1,
+    };
+    meta.mir4Materials = {
+      ...MIR4_EMPTY_MATERIALS,
+      knowledgeTomeCommon: MIR4_PERSISTED_COUNT_CAP - 1,
     };
     meta.copper = MIR4_PERSISTED_COUNT_CAP + 1;
 
     expect(claimMir4Achievement(sim.ctx, sim.playerId, 20101)).toMatchObject({ ok: true });
     expect(claimMir4Achievement(sim.ctx, sim.playerId, 20102)).toMatchObject({ ok: true });
-    expect(meta.mir4Currencies).toEqual({ darksteel: MIR4_PERSISTED_COUNT_CAP });
+    expect(meta.mir4Currencies).toEqual({ darksteel: MIR4_PERSISTED_COUNT_CAP, energy: 7 });
     expect(meta.mir4SkillResources?.effectPoints).toBe(MIR4_PERSISTED_COUNT_CAP);
-    expect(meta.mir4SkillResources?.skillTomes).toBe(MIR4_PERSISTED_COUNT_CAP);
+    expect(meta.mir4SkillResources?.skillTomes).toBe(MIR4_PERSISTED_COUNT_CAP - 1);
+    expect(meta.mir4Materials?.knowledgeTomeCommon).toBe(MIR4_PERSISTED_COUNT_CAP);
     expect(meta.copper).toBe(MIR4_PERSISTED_COUNT_CAP + 2_301);
 
     const saved = sim.serializeCharacter(sim.playerId)!;
@@ -200,9 +225,10 @@ describe('MIR4 source-backed level achievements', () => {
     restored.addPlayer('warrior', 'Restored', { state: saved });
     const restoredMeta = [...restored.players.values()].at(-1)!;
     expect(restoredMeta.mir4AchievementClears).toEqual({ 201: 2 });
-    expect(restoredMeta.mir4Currencies).toEqual({ darksteel: MIR4_PERSISTED_COUNT_CAP });
+    expect(restoredMeta.mir4Currencies).toEqual({ darksteel: MIR4_PERSISTED_COUNT_CAP, energy: 7 });
     expect(restoredMeta.mir4SkillResources?.effectPoints).toBe(MIR4_PERSISTED_COUNT_CAP);
-    expect(restoredMeta.mir4SkillResources?.skillTomes).toBe(MIR4_PERSISTED_COUNT_CAP);
+    expect(restoredMeta.mir4SkillResources?.skillTomes).toBe(MIR4_PERSISTED_COUNT_CAP - 1);
+    expect(restoredMeta.mir4Materials?.knowledgeTomeCommon).toBe(MIR4_PERSISTED_COUNT_CAP);
     expect(restoredMeta.copper).toBe(MIR4_PERSISTED_COUNT_CAP + 2_301);
   });
 });

@@ -1467,6 +1467,8 @@ export type PetRole = 'melee_tank' | 'ranged_dps';
 // Written by src/sim/mir4/stats.ts; see the Entity.mir4 field comment.
 export interface Mir4PlayerCombatState {
   classId: number;
+  /** Every nonzero official STATUS value after the single derivation funnel. */
+  statusValues: Readonly<Record<number, number>>;
   manaCostStat: number;
   accuracy: number;
   dodge: number;
@@ -1475,8 +1477,18 @@ export interface Mir4PlayerCombatState {
   criticalOutcome: number;
   /** STATUS 41 AddAtkBossDamage on the source's 10,000-point percentage scale. */
   bossDamageBps: number;
+  bossDamageReductionBps: number;
+  pvpDamageBps: number;
+  pvpDamageReductionBps: number;
+  monsterDamageBps: number;
+  monsterDamageReductionBps: number;
   /** STATUS 44 AddSkillDamage on the source's 10,000-point percentage scale. */
   skillDamageBps: number;
+  skillDamageReductionBps: number;
+  allDamageBps: number;
+  allDamageReductionBps: number;
+  stunSuccessBps: number;
+  stunResistanceBps: number;
   physicalDefense: number;
   magicDefense: number;
   penetrationBps: number;
@@ -1518,17 +1530,29 @@ export interface Mir4TargetEffects {
   controlImmunityByEffectId?: Record<string, { sourceId: number; until: number }>;
 }
 
-// A scheduled mir4 impact (basic/ultimate): the damage resolves AT the
-// authored offset (rolls drawn then, matching the source's dueAt clock).
+// A scheduled MIR4 contact: damage and skill effects resolve at the visible
+// contact point, with rolls drawn from the shared stream only when due.
 export interface Mir4PendingImpact {
   dueAt: number;
   sourceId: number;
   targetId: number;
   rawDamage: number;
   channel: 'physical' | 'magic';
+  attackKind?: 'basic' | 'skill';
   name: string | null;
   gaugeGain: number;
   spiritProcEligible?: boolean;
+  skillId?: number;
+  skillLevel?: number;
+  applySkillEffect?: boolean;
+  effectOnly?: boolean;
+  /** Stable per-cast/per-target key. All contacts in the same action share
+   * landed/proc state so the first landed hit, not merely hit zero, owns the
+   * one-shot spirit attempt and damage-gated effect. */
+  actionGroupId?: string;
+  actionLanded?: boolean;
+  spiritProcAttempted?: boolean;
+  requiresLandedImpact?: boolean;
 }
 
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
@@ -1550,8 +1574,13 @@ export interface MobTemplate {
   family: MobFamily;
   hpPerLevel: number;
   hpBase: number;
-  dmgBase: number; // min dmg at level 1
+  dmgBase: number; // min dmg at statAnchorLevel (level 1 by default)
   dmgPerLevel: number;
+  /**
+   * Optional level represented by hpBase/dmgBase. Arc templates are scoped to
+   * late level bands and use their band minimum; legacy templates default to 1.
+   */
+  statAnchorLevel?: number;
   attackSpeed: number;
   armorPerLevel: number;
   moveSpeed: number;
@@ -4766,6 +4795,17 @@ export interface Entity extends ClientMirroredEntityFields {
   runScoped?: boolean;
   respawnTimer: number;
   corpseTimer: number;
+  /** Server-only countdown for the MIR4 corpse model. It is deliberately
+   * independent from `corpseTimer`, whose longer lifetime may be required by
+   * an unresolved need/greed or master-loot roll. */
+  mir4CorpseTimer?: number;
+  /**
+   * MIR4/Aeldrune presentation-only corpse lifetime. Undefined in the classic
+   * profile, true while the ten-second body is present, false after expiry.
+   * Kept separate from `lootable`, which must continue to mean that an actual
+   * corpse-loot interaction is available.
+   */
+  mir4CorpseVisible?: boolean;
   lootFfaTimer: number; // seconds of owner-lock left before tap loot opens to all (FFA); Infinity until rollLoot starts it
   // Profession harvest: single-use, first-come claim on this corpse's componentTags
   // yield. null = unharvested; once set to a player's entity id, every later attempt
@@ -5355,7 +5395,16 @@ export type SimEvent = { pid?: number } & (
   //   link) off its own result event. Without it a profession action printed
   //   two lines for one grant (#2430). Everything else the client does on a
   //   loot event (bag refresh, loot-roll close) still runs.
-  | { type: 'loot'; text: string; silent?: boolean; callerLogs?: boolean }
+  // - lootOrigin marks an acquisition from a defeated monster. The MIR4 HUD
+  //   uses it for combat-drop reward feedback without celebrating purchases,
+  //   mail, trades, crafting, or quest rewards that share this event family.
+  | {
+      type: 'loot';
+      text: string;
+      silent?: boolean;
+      callerLogs?: boolean;
+      lootOrigin?: 'monster-drop';
+    }
   | {
       type: 'lootRoll';
       rollId: number;
@@ -5821,6 +5870,15 @@ export type SimEvent = { pid?: number } & (
   // the START of a petSpell windup so the throw animation leads the release;
   // the 'projectile' for the same throw follows petSpell.windup later).
   | {
+      type: 'mir4AttackStart';
+      sourceId: number;
+      targetId: number;
+      ability?: string;
+      action: 'basic' | 'ultimate';
+      pose: 'weapon' | 'cast';
+      durationMs: number;
+    }
+  | {
       type: 'spellfx';
       sourceId: number;
       targetId: number;
@@ -5927,6 +5985,9 @@ export type SimEvent = { pid?: number } & (
       // Stable presentation discriminator; renderers must not infer a player
       // attack animation from school or an English ability label.
       attackAnimation?: 'ranged-shot';
+      // The body one-shot already began from a MIR4 authoritative action
+      // event. The painter still stages particles but must not restart it.
+      attackAnimationStarted?: true;
       // True for a wand auto-attack projectile, so combat_sfx.ts can pick the
       // dedicated wand_<school> cue instead of the real-spell proj_<school>
       // one: a passive auto-attack must not sound identical to an actual cast.
@@ -6151,6 +6212,48 @@ export type SimEvent = { pid?: number } & (
         | 'already_enchanted'
         | 'same_enchant'
         | 'busy';
+    }
+  // MIR4 profile result feedback. These events carry only authoritative,
+  // text-free facts so offline and online clients present the same outcome.
+  | {
+      type: 'mir4EnhancementResult';
+      itemId: number;
+      outcome: 'success' | 'failure' | 'protected' | 'destroyed' | 'denied';
+      previousLevel: number;
+      targetLevel: number;
+      level: number;
+      chanceBps: number;
+      reason?: 'unknown-item' | 'not-enhanceable' | 'max-level' | 'no-materials';
+    }
+  | {
+      type: 'mir4CollectionResult';
+      collection: 'spirit' | 'mount';
+      ticketId: string;
+      collectionId: string;
+      grade: number;
+      status: 'owned' | 'pending-confirmation';
+      batchCount?: 10 | 100;
+      gradeCounts?: readonly [number, number, number, number, number, number];
+    }
+  | {
+      type: 'mir4CombinationResult';
+      collection: 'spirit' | 'mount';
+      sourceGrade: number;
+      outcome: 'success' | 'failure';
+      collectionId?: string;
+      grade?: number;
+      status: 'owned' | 'pending-confirmation' | 'tutorial-fusion';
+      batchCount?: number;
+      successCount?: number;
+      failureCount?: number;
+    }
+  | {
+      type: 'mir4SolitudeTrainingResult';
+      branchId: number;
+      outcome: 'success' | 'failure' | 'critical-failure';
+      previousLevel: number;
+      level: number;
+      chanceBps: number;
     }
   // Outcome of applying a loadout's saved gear set. TEXT-FREE on purpose: the sim
   // stays language-agnostic and the client renders the copy from a t() key, which
@@ -6926,6 +7029,15 @@ export interface Mir4ArcMapProjection {
     target: { x: number; z: number };
   }[];
   localScale?: number;
+  /** World-specific, author-placed objective anchors. These are already in
+   * target-world coordinates and take precedence over generic projection.
+   * Use them when local gameplay geometry needs deliberately separated,
+   * physically audited interactions. */
+  objectiveAnchors?: readonly {
+    questId: string;
+    stageIndex: number;
+    points: readonly { x: number; z: number }[];
+  }[];
   portalIn?: { x: number; z: number };
   portalInLanding?: { x: number; z: number };
   portalOut?: { x: number; z: number };
@@ -6981,6 +7093,9 @@ export interface WorldContent {
   // use the generic WorldContent heightfield. Tests/tools that clone the built-in
   // world may pin `builtin` so their added lake/edit still exercises WoC borders.
   terrainModel?: 'builtin' | 'content';
+  // Scene-inventory selector. Unlike terrainModel, this also authorizes the
+  // fixed WoC town renderers and their matching gameplay collision inventory.
+  presentationModel?: 'builtin' | 'content';
   // Development comparison seam: maps authored MIR4 campaign coordinates into
   // another world's physical regions. Production MIR4 worlds omit it and keep
   // their authored coordinates byte-identical.

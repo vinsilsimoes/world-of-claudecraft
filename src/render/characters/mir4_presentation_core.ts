@@ -1,15 +1,9 @@
-// Pure presentation-only selection of existing World of ClaudeCraft bodies for the
+// Pure presentation-only selection of existing Aeldrune bodies for the
 // MIR4 profile. Dynamic campaign ids cannot be listed in the classic static
 // registries, so this resolver classifies their authored identity and returns
 // an already-registered VisualDef key. No model is copied or generated here.
 
-const MIR4_PLAYER_VISUALS: Readonly<Record<number, string>> = {
-  1: 'player_warrior',
-  2: 'player_mage',
-  3: 'player_priest',
-  4: 'player_hunter',
-  5: 'player_paladin',
-};
+import { mir4NativeClassPresentation } from '../../sim/mir4/native_class_presentation';
 
 const NPC_ROLE_RULES: readonly [RegExp, readonly string[]][] = [
   [
@@ -186,7 +180,7 @@ function select(keys: readonly string[], identity: string): string {
 }
 
 export function mir4PlayerVisualKey(classId: number): string {
-  return MIR4_PLAYER_VISUALS[classId] ?? 'player_warrior';
+  return `player_${mir4NativeClassPresentation(classId).visualClass}`;
 }
 
 export function mir4NpcVisualKey(templateId: string, name = ''): string | null {

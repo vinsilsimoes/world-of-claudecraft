@@ -125,7 +125,12 @@ describe('mir4InWorldLookFor', () => {
       helmHidden: true,
     });
     expect(mir4InWorldLookFor(e)?.app).toEqual(DEFAULT_APPEARANCE);
-    expect(mir4InWorldLookFor(e)?.worn).toEqual({});
+    expect(mir4InWorldLookFor(e)?.worn).toEqual({
+      chest: 'mage',
+      arms: 'mage',
+      legs: 'mage',
+      back: 'mage',
+    });
   });
 
   it('does not claim classic players or non-player entities', () => {

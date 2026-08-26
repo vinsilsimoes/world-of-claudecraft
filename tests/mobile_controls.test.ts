@@ -575,6 +575,8 @@ function mobileCallbacks() {
     onValeCup: noop,
     onQuestLog: noop,
     onCharacter: noop,
+    onMountCodex: noop,
+    onSpirits: noop,
     onBags: noop,
     onCrafting: noop,
     onSpellbook: noop,

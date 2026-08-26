@@ -11,7 +11,7 @@ import {
 } from '../../src/sim/mir4/action_abilities';
 import { grantMir4Xp } from '../../src/sim/mir4/combat';
 import { Sim } from '../../src/sim/sim';
-import type { Entity, Mir4ClassKey } from '../../src/sim/types';
+import type { Entity, Mir4ClassKey, SimEvent } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 import { abilityDamageBonus } from '../../src/ui/ability_damage';
 import { abilityEffectText } from '../../src/ui/ability_description';
@@ -51,31 +51,49 @@ function spawnTarget(sim: Sim): Entity {
 afterAll(() => setActiveWorldContent(null));
 
 describe('MIR4 skills in the existing ability surface', () => {
-  it('replaces the classic Warrior kit with four native skills plus Ultimate', () => {
+  it('unlocks one active skill every ten levels and reserves Ultimate for level 50', () => {
     for (const cls of ['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer'] as const) {
       const sim = makeSim(cls);
-      expect(sim.known).toHaveLength(5);
-      expect(
-        sim.known.every(
-          (ability) =>
-            ability.def.id.startsWith('mir4_skill_') || ability.def.id.startsWith('mir4_ultimate_'),
-        ),
-      ).toBe(true);
+      const activeIds = () =>
+        sim.known
+          .filter(
+            (ability) =>
+              ability.def.id.startsWith('mir4_skill_') ||
+              ability.def.id.startsWith('mir4_ultimate_'),
+          )
+          .map((ability) => ability.def.id);
+      expect(activeIds()).toHaveLength(1);
       expect(sim.known.some((ability) => ability.def.id === 'heroic_strike')).toBe(false);
-      sim.setPlayerLevel(5);
-      expect(sim.known).toHaveLength(6);
+      for (const [level, count] of [
+        [9, 1],
+        [10, 2],
+        [20, 3],
+        [30, 4],
+        [40, 5],
+        [50, 6],
+      ] as const) {
+        sim.setPlayerLevel(level);
+        expect(activeIds(), `${cls} level ${level}`).toHaveLength(count);
+      }
     }
   });
 
   it('refreshes the offline/headless action kit and reward counter after natural level-ups', () => {
     const sim = makeSim('warrior');
     const meta = sim.players.get(sim.playerId)!;
+    sim.drainEvents();
 
     grantMir4Xp(sim.ctx, 1_000_000, meta);
+    const learnedAbilityIds = sim
+      .drainEvents()
+      .filter((event) => event.type === 'learnAbility')
+      .map((event) => event.abilityId);
 
     expect(sim.player.level).toBeGreaterThanOrEqual(20);
-    expect(sim.known.some((ability) => ability.def.id === mir4ActionId(1501))).toBe(true);
+    expect(sim.known.some((ability) => ability.def.id === mir4ActionId(1304))).toBe(true);
     expect(sim.known.some((ability) => ability.def.passive)).toBe(true);
+    expect(learnedAbilityIds).toContain(mir4ActionId(1104));
+    expect(learnedAbilityIds).toContain(mir4ActionId(1304));
     expect(meta.counters.levelUps).toBe(sim.player.level - 1);
   });
 
@@ -109,6 +127,31 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(mir4ActionAbilities(1, 19, undefined, 204)).not.toContainEqual(passive);
   });
 
+  it('keeps rank-scaled support tooltips aligned with their live effects', () => {
+    const shield = required(
+      mir4ActionAbilities(2, 40, { 2503: 15 }, 204).find(
+        (ability) => ability.def.id === mir4ActionId(2503),
+      ),
+      'rank-15 shield',
+    );
+    const heal = required(
+      mir4ActionAbilities(3, 40, { 3503: 15 }, 204).find(
+        (ability) => ability.def.id === mir4ActionId(3503),
+      ),
+      'rank-15 heal',
+    );
+    const totem = required(
+      mir4ActionAbilities(3, 30, { 3104: 15 }, 204).find(
+        (ability) => ability.def.id === mir4ActionId(3104),
+      ),
+      'rank-15 totem',
+    );
+
+    expect(shield.def.description).toContain('28.2%');
+    expect(heal.def.description).toContain('23.04%');
+    expect(totem.def.description).toContain('1.792 sec');
+  });
+
   it('casts through the ordinary action-bar command and uses the MIR4 cooldown/resource keys', () => {
     const sim = makeSim('warrior');
     const player = required(sim.entities.get(sim.playerId), 'player');
@@ -116,12 +159,91 @@ describe('MIR4 skills in the existing ability surface', () => {
     const hp = target.hp;
     const mp = player.resource;
 
+    sim.drainEvents();
     sim.castAbility(mir4ActionId(1102));
+    const events = sim.drainEvents();
 
     expect(target.hp).toBeLessThan(hp);
     expect(player.resource).toBe(mp - 36);
     expect(player.cooldowns.get('1102')).toBe(25);
     expect(player.cooldowns.has(mir4ActionId(1102))).toBe(false);
+    expect(
+      (player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
+    ).toHaveLength(0);
+    expect(events.some((event) => event.type === 'mir4AttackStart')).toBe(false);
+    const spellfx = events.find(
+      (event) =>
+        event.type === 'spellfx' && event.sourceId === player.id && event.targetId === target.id,
+    );
+    expect(spellfx).toBeDefined();
+    expect(spellfx).not.toHaveProperty('attackAnimationStarted');
+    const damageEvents = events.filter(
+      (event): event is Extract<SimEvent, { type: 'damage' }> =>
+        event.type === 'damage' && event.sourceId === player.id,
+    );
+    expect(damageEvents.every((event) => event.attackAnimationStarted !== true)).toBe(true);
+  });
+
+  it('does not repeat immediate skill damage on later simulation ticks', () => {
+    const sim = makeSim('warrior');
+    const target = spawnTarget(sim);
+    target.maxHp = 10_000;
+    target.hp = target.maxHp;
+    const hp = target.hp;
+
+    sim.castAbility(mir4ActionId(1102));
+    expect(target.hp).toBeLessThan(hp);
+    sim.drainEvents();
+
+    const laterEvents = Array.from({ length: 40 }, () => sim.tick()).flat();
+
+    expect(
+      laterEvents.some((event) => event.type === 'damage' && event.ability === 'Golpe de Vácuo'),
+    ).toBe(false);
+    expect(
+      (sim.player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
+    ).toHaveLength(0);
+  });
+
+  it('keeps an immediate PvE skill committed after line of sight changes', () => {
+    const sim = makeSim('warrior');
+    const target = spawnTarget(sim);
+    target.maxHp = 10_000;
+    target.hp = target.maxHp;
+    const hp = target.hp;
+
+    sim.castAbility(mir4ActionId(1102));
+    expect(target.hp).toBeLessThan(hp);
+    const landedHp = target.hp;
+    sim.ctx.hasLineOfSight = () => false;
+    for (let tick = 0; tick < 40; tick++) sim.tick();
+
+    expect(target.hp).toBe(landedHp);
+  });
+
+  it('drops one cumulative Knowledge Fragment per XP-bearing kill and none from zero-XP mobs', () => {
+    const sim = makeSim('warrior');
+    const first = spawnTarget(sim);
+    first.hp = 1;
+
+    sim.castAbility(mir4ActionId(1102));
+    expect(sim.players.get(sim.playerId)?.mir4Materials?.knowledgeFragment).toBe(1);
+
+    sim.player.cooldowns.clear();
+    sim.player.gcdRemaining = 0;
+    const second = spawnTarget(sim);
+    second.hp = 1;
+    sim.castAbility(mir4ActionId(1102));
+    expect(sim.players.get(sim.playerId)?.mir4Materials?.knowledgeFragment).toBe(2);
+
+    sim.player.cooldowns.clear();
+    sim.player.gcdRemaining = 0;
+    const zeroXp = spawnTarget(sim);
+    zeroXp.templateId = 'knowledge_fragment_zero_xp_fixture';
+    zeroXp.hp = 1;
+    sim.castAbility(mir4ActionId(1102));
+
+    expect(sim.players.get(sim.playerId)?.mir4Materials?.knowledgeFragment).toBe(2);
   });
 
   it('rejects classic talents and abilities without corrupting the MIR4 kit or stats', () => {
@@ -142,6 +264,7 @@ describe('MIR4 skills in the existing ability surface', () => {
 
   it('casts Ultimate through the ordinary action-bar command and spends its gauge', () => {
     const sim = makeSim('warrior');
+    sim.setPlayerLevel(50);
     const player = required(sim.entities.get(sim.playerId), 'player');
     const target = spawnTarget(sim);
     player.mir4UltGauge = 100;
@@ -154,23 +277,25 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(target.hp).toBeGreaterThan(0); // authored impacts resolve on their delayed offsets
   });
 
-  it('reuses the fixed Attack slot as the authoritative auto-battle toggle', () => {
+  it('keeps ordinary Attack independent from the Auto Battle tool', () => {
     const sim = makeSim('warrior');
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('missing player');
+    spawnTarget(sim);
 
     sim.startAutoAttack();
-    expect(sim.mir4AutoBattleActive()).toBe(true);
+    expect(sim.mir4AutoBattleActive()).toBe(false);
     expect(player.autoAttack).toBe(true);
 
+    sim.setMir4AutoBattle(true);
     sim.stopAutoAttack();
-    expect(sim.mir4AutoBattleActive()).toBe(false);
+    expect(sim.mir4AutoBattleActive()).toBe(true);
     expect(player.autoAttack).toBe(false);
   });
 
   it('lets control-only supplemental actions apply their real effect', () => {
     const sim = makeSim('warrior');
-    sim.setPlayerLevel(5);
+    sim.setPlayerLevel(40);
     const target = spawnTarget(sim);
     sim.castAbility(mir4ActionId(1501));
     expect(target.mir4Effects?.active).toContainEqual(
@@ -183,6 +308,7 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(mir4ActionRawDamage(mir4ActionId(1102), 1, 1000, 0, 100)).toBe(2525);
     expect(mir4ActionRawDamage(mir4ActionId(1102), 2, 1000, 0)).toBe(2550);
     expect(mir4ActionRawDamage(mir4ActionId(5201), 1, 50, 50)).toBe(120);
+    expect(mir4ActionRawDamage(mir4ActionId(5201), 15, 50, 50)).toBeGreaterThan(120);
 
     const hybrid = required(
       mir4ActionAbilities(5, 1, undefined, 204).find(

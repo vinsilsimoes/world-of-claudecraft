@@ -145,6 +145,12 @@ describe('the arc band generator', () => {
     expect(Object.keys(one.npcs)).toHaveLength(9);
     const firstGiverId = mir4ArcQuest('M01-Q01')!.giverNpcId;
     expect(one.npcs[firstGiverId]?.id).toBe(mir4ArcNpcTemplateId(firstGiverId));
+    expect(one.npcs['m01-vila-do-vau-sara-das-ervas']?.vendorItems).toEqual([
+      'minor_healing_potion',
+      'minor_mana_potion',
+      'baked_bread',
+      'spring_water',
+    ]);
     expect(one.services?.noticeboards).toHaveLength(1);
     expect(one.services?.noticeboards?.[0]?.assetId).toBe(
       '/models/props/eastbrook_noticeboard.glb',
@@ -184,16 +190,19 @@ describe('the arc band generator', () => {
     expect(hostileMobs.length).toBeGreaterThanOrEqual(7);
     const slain = hostileMobs[0]!;
     sim.dealDamage(null, slain, 99_999, false, 'physical', null, 'hit');
-    expect(slain.respawnTimer).toBe(one.zones[0]!.trashRespawnSeconds);
-    expect(slain.corpseTimer).toBe(slain.respawnTimer);
-    for (let tick = 0; tick < 400; tick++) sim.tick();
+    expect(one.zones[0]!.trashRespawnSeconds).toBe(18);
+    expect(slain.respawnTimer).toBe(9);
+    expect(slain.corpseTimer).toBe(9);
+    for (let tick = 0; tick < 181; tick++) sim.tick();
     expect(slain.dead).toBe(false);
     const sentry = hostileMobs[1]!;
     sim.player.pos = sim.groundPos(sentry.pos.x + 3, sentry.pos.z);
     sim.player.prevPos = { ...sim.player.pos };
     sim.rebucket(sim.player);
     for (let tick = 0; tick < 80; tick++) sim.tick();
-    expect(sentry.aggroTargetId).toBe(sim.playerId);
+    // Auto-retaliation may finish this low-level sentry before the observation
+    // window closes; either a live aggro target or its death proves engagement.
+    expect(sentry.dead || sentry.aggroTargetId === sim.playerId).toBe(true);
     const startZ = sim.player.pos.z;
     sim.player.facing = 0;
     sim.moveInput.forward = true;
@@ -208,6 +217,19 @@ describe('the arc band generator', () => {
     expect(all.camps.reduce((sum, camp) => sum + camp.count, 0)).toBeGreaterThanOrEqual(760);
     expect(all.services?.noticeboards).toHaveLength(20);
     expect(all.services?.graveyards).toHaveLength(20);
+  });
+
+  it('keeps one ordinary potion supplier on the quest route of every chapter', () => {
+    const world = buildMir4ArcWorld(20);
+    for (const map of MIR4_WORLD_ARC) {
+      const suppliers = Object.entries(world.npcs).filter(
+        ([npcId, npc]) =>
+          npcId.startsWith(`${map.mapId}-`) &&
+          npc.vendorItems?.includes('minor_healing_potion') &&
+          npc.vendorItems.includes('minor_mana_potion'),
+      );
+      expect(suppliers, map.mapId).toHaveLength(1);
+    }
   });
 
   it('authors dry playable anchors for every generated map instead of inheriting WoC seas', () => {

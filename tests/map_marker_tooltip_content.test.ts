@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GATHER_NODES } from '../src/sim/data';
 import type { QuestObjectiveRef } from '../src/sim/quest_targets';
+import type { Mir4QuestTrackerEntry } from '../src/sim/mir4/quest_tracker';
 import type { QuestProgress } from '../src/sim/types';
 import { MapMarkerTooltipContent } from '../src/ui/hud/map/map_marker_tooltip_content';
 import { setLanguage } from '../src/ui/i18n';
@@ -19,6 +20,7 @@ function makeWorld(
     questLog?: Map<string, QuestProgress>;
     harvestable?: (nodeId: string) => boolean;
     respawnSeconds?: (nodeId: string) => number | null;
+    mir4Entries?: readonly Mir4QuestTrackerEntry[];
   } = {},
 ): IWorld {
   return {
@@ -28,6 +30,7 @@ function makeWorld(
     toolEffectSlots: [],
     nodeHarvestableByMe: options.harvestable ?? (() => true),
     nodeRespawnSeconds: options.respawnSeconds ?? (() => null),
+    mir4QuestTrackerEntries: () => options.mir4Entries ?? [],
   } as unknown as IWorld;
 }
 
@@ -135,5 +138,26 @@ describe('MapMarkerTooltipContent', () => {
     expect(html).toContain('Wolves at the Door');
     expect(html).toContain('Forest Wolf slain: 8/8');
     expect(html).not.toContain('Stolen Supplies');
+  });
+
+  it('shows the exact MIR4 mission name for a world-map collection circle', () => {
+    const tracker: Mir4QuestTrackerEntry = {
+      id: 'M01-S03',
+      complete: false,
+      autoJourneyActive: false,
+      autoJourneySuspended: false,
+      objective: {
+        kind: 'campaign-stage',
+        stageKind: 'prepare-civilians',
+        stageIndex: 1,
+        current: 0,
+        total: 3,
+      },
+    };
+    const content = new MapMarkerTooltipContent(makeWorld({ mir4Entries: [tracker] }));
+
+    expect(content.questArea([{ questId: 'M01-S03', objectiveIndex: 0 }], 1)).toBe(
+      '<div class="tt-title">Juramento de Vila do Vau</div>',
+    );
   });
 });

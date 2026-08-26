@@ -2,6 +2,7 @@
 // Three seal guards gate an elite boss at the campaign anchor. This preserves
 // source quest semantics without importing rooms, models, VFX or audio.
 
+import { mir4MobTemplateProgression } from '../content/mir4/mobs';
 import { createMob } from '../entity';
 import { enterScriptedDungeon, instanceAt, releaseScriptedDungeon } from '../instances/dungeons';
 import type { InstanceSlot, PlayerMeta } from '../sim';
@@ -168,8 +169,16 @@ function spawnBoss(
   anchor: { x: number; z: number },
   inst: InstanceSlot,
 ): void {
+  const bossProgression = mir4MobTemplateProgression(
+    template.minLevel,
+    template.maxLevel,
+    'guardian',
+    true,
+  );
   const elite: MobTemplate = {
     ...template,
+    ...bossProgression,
+    mir4XpReward: (template.mir4XpReward ?? 0) * 20,
     boss: true,
     mir4BossDamageReductionBps: 500,
     elite: true,

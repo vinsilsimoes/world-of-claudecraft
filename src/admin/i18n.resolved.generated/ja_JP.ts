@@ -12,8 +12,8 @@
 import type { AdminTranslations } from '../i18n.en';
 
 export const ja_JP: AdminTranslations = {
-  "app.title": "World of ClaudeCraft - 管理",
-  "app.shortTitle": "WoC管理者",
+  "app.title": "Aeldrune - 管理",
+  "app.shortTitle": "Aeldrune管理者",
   "auth.username": "ユーザー名",
   "auth.password": "パスワード",
   "auth.signIn": "サインイン",

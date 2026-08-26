@@ -58,6 +58,7 @@ export type FctSpawnSource =
   | { readonly type: 'xp' }
   | { readonly type: 'rested-xp' }
   | { readonly type: 'honor' }
+  | { readonly type: 'loot' }
   | { readonly type: 'self-note' };
 
 /** The discriminator the painter spawns with (the text + target are spread on at the call site). */
@@ -141,6 +142,8 @@ export function fctSpawnShape(src: FctSpawnSource): FctSpawnShape | null {
       return { kind: 'rested-xp', isSelf: true, crit: false };
     case 'honor':
       return { kind: 'honor', isSelf: true, crit: false };
+    case 'loot':
+      return { kind: 'loot', isSelf: true, crit: false };
     case 'self-note':
       return { kind: 'self-note', isSelf: true, crit: false };
   }

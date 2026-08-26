@@ -9,12 +9,15 @@
 // has no rows.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS } from '../src/sim/content/mir4/starter_quest_equipment';
+import { mir4VillageEquipmentOffers } from '../src/sim/content/mir4/village_provisioner';
 import type { ItemDef } from '../src/sim/types';
 import type { VendorBuyOptions } from '../src/sim/vendor_buy_stack';
 import { dismissBuyQuantityPrompts } from '../src/ui/hud/vendor/buy_quantity_prompt_window';
 import type { HeroicShopRow, HeroicShopView } from '../src/ui/hud/vendor/heroic_vendor_view';
 import { renderHeroicVendorWindow } from '../src/ui/hud/vendor/heroic_vendor_window';
+import { buildMir4VillageEquipmentView } from '../src/ui/hud/vendor/mir4_village_equipment_view';
 import type {
   VendorBuybackRow,
   VendorGoodsRow,
@@ -78,6 +81,73 @@ function heroicDeps(overrides: Partial<Parameters<typeof renderHeroicVendorWindo
 }
 
 describe('renderVendorWindow / renderHeroicVendorWindow: dialog root (accessible name, #2808)', () => {
+  it("paints class equipment in Sara's existing vendor window and dispatches its purchase", () => {
+    const firstItem = mir4VillageEquipmentOffers(1)[0]!.item.itemId;
+    const mir4Equipment = buildMir4VillageEquipmentView(
+      'mir4_m01_vila_do_vau_sara_das_ervas',
+      {
+        classId: 1,
+        ultimateGauge: 0,
+        mir4EquipmentInstances: {
+          [firstItem]: { itemId: firstItem, enhancement: 0 },
+        },
+        mir4ArcQuests: Object.fromEntries(
+          MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS.map((questId) => [
+            questId,
+            { questId, stageIndex: 0, stageProgress: 0, state: 'active' as const },
+          ]),
+        ),
+      },
+      1_000,
+    );
+    const onBuyMir4Equipment = vi.fn();
+    const el = document.createElement('div');
+    renderVendorWindow(
+      el,
+      'Sara das Ervas',
+      { goods: [], buyback: [], honorBalance: 0, hasHonorGoods: false, multiple: 1 },
+      deps({ mir4Equipment, onBuyMir4Equipment }),
+    );
+
+    const rows = el.querySelectorAll<HTMLButtonElement>('.mir4-village-equipment');
+    expect(rows).toHaveLength(8);
+    expect(rows[0]?.disabled).toBe(true);
+    rows[1]?.click();
+    expect(onBuyMir4Equipment).toHaveBeenCalledWith(mir4VillageEquipmentOffers(1)[1]!.item.itemId);
+  });
+
+  it('marks unaffordable class equipment with the shared vendor cost state', () => {
+    const mir4Equipment = buildMir4VillageEquipmentView(
+      'mir4_m01_vila_do_vau_sara_das_ervas',
+      {
+        classId: 1,
+        ultimateGauge: 0,
+        mir4ArcQuests: {
+          'M01-Q01': {
+            questId: 'M01-Q01',
+            stageIndex: 0,
+            stageProgress: 0,
+            state: 'active',
+          },
+        },
+      },
+      0,
+    );
+    const el = document.createElement('div');
+
+    renderVendorWindow(
+      el,
+      'Sara das Ervas',
+      { goods: [], buyback: [], honorBalance: 0, hasHonorGoods: false, multiple: 1 },
+      deps({ mir4Equipment, onBuyMir4Equipment: vi.fn() }),
+    );
+
+    const row = el.querySelector<HTMLButtonElement>('.mir4-village-equipment');
+    expect(row?.disabled).toBe(true);
+    expect(row?.classList).toContain('unaffordable');
+    expect(row?.querySelector('.vi-price')?.classList).toContain('unaffordable');
+  });
+
   it('renderVendorWindow marks #vendor-window as a labeled dialog', () => {
     const view: VendorView = {
       goods: [],

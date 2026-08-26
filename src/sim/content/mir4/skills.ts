@@ -73,11 +73,10 @@ export interface Mir4SkillDef {
 export const MIR4_SKILL_GLOBAL_COOLDOWN_MS = 1000;
 
 /**
- * The frozen source skill-level caps (SKILL_LEVEL_CAPS_BY_CLASS): which deck
- * skills may PERSIST level 2. Executing level 2 additionally sits behind the
- * evolution gates (the source's server feature flags); the port carries the
- * state on PlayerMeta.mir4SkillLevels and fail-closes anything beyond these
- * caps. Damage at level 2 uses coefficient + (level-1)*levelUpCoefficient.
+ * Historical source skill-level caps (SKILL_LEVEL_CAPS_BY_CLASS), retained as
+ * extraction provenance and for source-parity fixtures. Aeldrune gameplay no
+ * longer consumes this table: its product rule is rank 1..15 in
+ * sim/mir4/skill_progression.ts.
  */
 export const MIR4_SKILL_LEVEL_CAPS: Readonly<Record<number, Readonly<Record<number, 2>>>> = {
   1: { 1102: 2, 1104: 2, 1304: 2, 1401: 2 },

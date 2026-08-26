@@ -45,6 +45,7 @@ import {
 } from '../mir4/campaign_availability';
 import { beginMir4NarrativeDialogue } from '../mir4/narrative_dialogue';
 import { mir4TalkOrInspect } from '../mir4/quest';
+import { startMir4TargetCombat, stopMir4TargetCombat } from '../mir4/target_combat';
 import { mir4ArcPortalsForWorld, mir4PortalRouteGoal } from '../mir4/travel';
 import { markMir4WireDirty } from '../mir4/wire_revision';
 import type { SimContext } from '../sim_context';
@@ -60,6 +61,12 @@ import { advanceMir4AutoQuestRoute, type Mir4AutoQuestRouteState } from './route
 export type Mir4AutoQuestPhase = 'to-giver' | 'to-site' | 'return' | 'done';
 
 const AUTO_QUEST_ESCORT_START_RANGE = INTERACT_RANGE - 0.5;
+// An escortee advances every tick. Replanning the complete WoC road route for
+// every few inches of motion can snap the next waypoint behind the player and
+// make Journey oscillate while the convoy walks away. Keep following the
+// current physical route until the NPC has moved a meaningful distance or the
+// cached leg is consumed.
+const AUTO_QUEST_MOVING_ESCORT_REPATH_YARDS = 12;
 const AUTO_QUEST_ARC_BANDS = mir4ArcBands();
 
 export interface Mir4AutoQuestState {
@@ -195,9 +202,11 @@ export function setMir4AutoQuest(
   const meta = ctx.players.get(pid);
   if (!meta) return;
   if (!on) {
-    if (!meta.mir4AutoQuest && !meta.mir4NarrativeDialogue) return;
+    const ownsFocusedCombat = meta.mir4TargetCombat?.owner === 'journey';
+    if (!meta.mir4AutoQuest && !meta.mir4NarrativeDialogue && !ownsFocusedCombat) return;
     if (meta.mir4AutoQuest?.battleOwned)
       setMir4AutoBattleMode(ctx, pid, 'off', undefined, 'journey');
+    stopMir4TargetCombat(ctx, pid, 'journey');
     meta.mir4AutoQuest = undefined;
     meta.mir4NarrativeDialogue = undefined;
     markMir4WireDirty(meta);
@@ -210,6 +219,7 @@ export function setMir4AutoQuest(
     if (meta.mir4AutoQuest.battleOwned) {
       setMir4AutoBattleMode(ctx, pid, 'off', undefined, 'journey');
     }
+    stopMir4TargetCombat(ctx, pid, 'journey');
     meta.mir4AutoQuest = undefined;
     meta.mir4NarrativeDialogue = undefined;
     markMir4WireDirty(meta);
@@ -231,6 +241,8 @@ function moveAutoQuestToward(
   p: Entity,
   st: Mir4AutoQuestState,
   destination: { x: number; y: number; z: number },
+  repathGoalDistance?: number,
+  preferAuthoredRoads = true,
 ): void {
   const routeGoal = mir4PortalRouteGoal(
     p.pos,
@@ -238,6 +250,7 @@ function moveAutoQuestToward(
     mir4ArcPortalsForWorld(ctx.worldContent),
     ctx.worldContent.mir4ArcMapProjections,
     ctx.worldContent,
+    mir4ArcQuest(st.questId)?.mapId,
   );
   const next = advanceMir4AutoQuestRoute(
     ctx.cfg.seed,
@@ -246,9 +259,11 @@ function moveAutoQuestToward(
     st.route,
     ctx.riftCollisionToken,
     undefined,
-    true,
+    preferAuthoredRoads,
     ctx.worldContent.roads,
     ctx.worldContent.zones,
+    true,
+    repathGoalDistance,
   );
   st.route = next.route;
   ctx.moveToward(
@@ -318,8 +333,10 @@ export function updateMir4AutoQuest(ctx: SimContext): void {
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
 
-    // Auto Mission never attacks and never enables Auto Battle. This also
-    // heals sessions restored from the older ownership model before any
+    // Auto Mission never enables the separate Auto Battle tool. Explicit
+    // combat objectives may arm focused combat against their one authored
+    // target; ordinary collection hazards still require player intervention.
+    // This also heals sessions restored from the older ownership model before
     // navigation or interaction can resume. A player-owned Auto Battle choice
     // remains independent and is never switched off here.
     releaseLegacyAutoQuestBattle(ctx, p, st);
@@ -330,6 +347,10 @@ export function updateMir4AutoQuest(ctx: SimContext): void {
     if (meta.mir4NarrativeDialogue) {
       continue;
     }
+
+    // A deliberate ordinary Attack temporarily owns selection and movement.
+    // Journey resumes after that exact target dies or the player cancels it.
+    if (p.autoAttack && meta.mir4TargetCombat) continue;
 
     const arcQuest = mir4ArcQuest(st.questId);
     if (
@@ -455,12 +476,15 @@ export function updateMir4AutoQuest(ctx: SimContext): void {
         }
         const target = arcEncounterTarget(ctx, p, arcProgress);
         if (target) {
-          // Journey may select and approach the authored threat, but it never
-          // attacks. The player must fight manually (or explicitly enable the
-          // separate Auto Battle feature) before the quest can advance.
+          // This stage explicitly requires combat, so Journey may arm the
+          // ordinary one-target Attack contract once it reaches the authored
+          // enemy. That contract never acquires a replacement and leaves the
+          // separate Auto Battle tool untouched.
           p.targetId = target.id;
           if (!near(p, target.pos.x, target.pos.z, 4) || !ctx.hasLineOfSight(p, target)) {
             moveAutoQuestToward(ctx, p, st, target.pos);
+          } else {
+            startMir4TargetCombat(ctx, p.id, 'journey');
           }
           continue;
         }
@@ -501,7 +525,14 @@ export function updateMir4AutoQuest(ctx: SimContext): void {
           if (near(p, escortee.pos.x, escortee.pos.z, AUTO_QUEST_ESCORT_START_RANGE)) {
             tryStartMir4ArcEscort(ctx, p, arcProgress.questId, arcProgress.stageIndex);
           } else {
-            moveAutoQuestToward(ctx, p, st, escortee.pos);
+            moveAutoQuestToward(
+              ctx,
+              p,
+              st,
+              escortee.pos,
+              AUTO_QUEST_MOVING_ESCORT_REPATH_YARDS,
+              false,
+            );
           }
         } else {
           // The escort system materializes its native NPC only after the

@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $expectedPnpm = '10.34.5'
-$gameMarker = 'World of ClaudeCraft: Classic-Style Web MMO'
+$gameMarker = 'Aeldrune: Classic-Style Web MMO'
 Set-Location -LiteralPath $repoRoot
 
 $existingListener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
@@ -110,7 +110,7 @@ $server = Start-Process `
   -PassThru
 
 try {
-  Write-Host "Starting World of ClaudeCraft diagnostics on $url"
+  Write-Host "Starting Aeldrune diagnostics on $url"
   $ready = $false
   $deadline = (Get-Date).AddSeconds(90)
   while ((Get-Date) -lt $deadline -and -not $server.HasExited) {

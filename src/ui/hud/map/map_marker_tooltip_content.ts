@@ -19,6 +19,7 @@ import type {
   MapServiceMarker,
   MapStationMarker,
 } from '../../map_window_view';
+import { mir4QuestTitle } from '../../mir4_quest_i18n';
 import { questMarkerTooltipTag } from '../../quest_marker_tags';
 
 function questTitle(questId: string): string {
@@ -103,10 +104,16 @@ export class MapMarkerTooltipContent {
       else byQuest.set(ref.questId, [ref.objectiveIndex]);
     }
     let html = '';
+    const mir4ActiveIds = new Set(this.world.mir4QuestTrackerEntries().map((entry) => entry.id));
     for (const [questId, objectiveIndexes] of byQuest) {
       const quest = QUESTS[questId];
       const progress = this.world.questLog.get(questId);
-      if (!quest || !progress) continue;
+      if (!quest || !progress) {
+        if (mir4ActiveIds.has(questId)) {
+          html += `<div class="tt-title">${esc(mir4QuestTitle(questId))}</div>`;
+        }
+        continue;
+      }
       let lines = '';
       for (const objectiveIndex of objectiveIndexes) {
         const objective = quest.objectives[objectiveIndex];

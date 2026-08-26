@@ -50,10 +50,10 @@ export const DISCORD_CALL_TIMEOUT_MS = 15_000;
  * sync wrote the entry: the nickname PATCH carries the level-on-name reason,
  * the role add/remove pair the status-tier one.
  */
-export const AUDIT_LOG_REASON = 'World of ClaudeCraft level sync';
+export const AUDIT_LOG_REASON = 'Aeldrune level sync';
 
 /** The role add/remove pair's audit-log reason (same D14 bounds). */
-export const ROLE_AUDIT_LOG_REASON = 'World of ClaudeCraft status tier sync';
+export const ROLE_AUDIT_LOG_REASON = 'Aeldrune status tier sync';
 
 /**
  * Discord rejects a reason header that is empty or over 512 characters, and any
@@ -384,7 +384,7 @@ export class DiscordApi {
   }
 
   // Create a guild role (needs MANAGE_ROLES). `color` is a 24-bit RGB int (0 =
-  // no color). Used to auto-provision the WoC status-tier roles on boot.
+  // no color). Used to auto-provision the Aeldrune status-tier roles on boot.
   async createGuildRole(
     guildId: string,
     name: string,

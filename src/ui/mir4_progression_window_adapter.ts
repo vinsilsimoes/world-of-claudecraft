@@ -16,6 +16,7 @@ import {
   mir4EquipmentVisualItem,
   mir4StatusLabel,
 } from './mir4_equipment_window_adapter';
+import { mir4MaterialName } from './mir4_material_i18n';
 import {
   buildMir4ProgressionView,
   type Mir4ProgressionItemView,
@@ -31,14 +32,6 @@ const TAB_KEYS: Readonly<Record<Mir4ProgressionTab, TranslationKey>> = {
   blessing: 'hudChrome.mir4.progression.blessing',
   crafting: 'hudChrome.mir4.progression.crafting',
 };
-const MATERIAL_KEYS = {
-  sunStone: 'hudChrome.mir4.materials.sunStone',
-  moonStone: 'hudChrome.mir4.materials.moonStone',
-  solarScroll: 'hudChrome.mir4.materials.solarScroll',
-  lunarSeal: 'hudChrome.mir4.materials.lunarSeal',
-  dawnTear: 'hudChrome.mir4.materials.dawnTear',
-  solarWard: 'hudChrome.mir4.materials.solarWard',
-} as const satisfies Readonly<Record<string, TranslationKey>>;
 const TABS = Object.keys(TAB_KEYS) as Mir4ProgressionTab[];
 const fmt = (value: number) => formatNumber(value, { maximumFractionDigits: 0 });
 
@@ -81,6 +74,16 @@ function detailsHtml(lines: readonly string[]): string {
   return `<div class="vendor-item"><span class="vi-name">${lines.map((line) => `<span class="vi-sub crafting-reagent-line">${line}</span>`).join('')}</span></div>`;
 }
 
+function enhancementAttributesHtml(view: Mir4ProgressionItemView): string {
+  if (view.enhancementAttributes.length === 0) return '';
+  return `<div class="mir4-enhancement-preview"><b>${esc(t('hudChrome.mir4.progression.attributePreview'))}</b>${view.enhancementAttributes
+    .map(
+      (attribute) =>
+        `<span class="mir4-enhancement-attribute"><span>${esc(mir4StatusLabel(attribute.statusId))}</span><span>${esc(fmt(attribute.current))} <i aria-hidden="true">${svgIcon('next')}</i> <b>${esc(fmt(attribute.next))}</b><small>+${esc(fmt(attribute.delta))}</small></span></span>`,
+    )
+    .join('')}</div>`;
+}
+
 function refinementRow(
   deps: Mir4ProgressionWindowDeps,
   view: Mir4ProgressionItemView,
@@ -108,7 +111,7 @@ function refinementRow(
           esc(t('hudChrome.mir4.progression.enhanceCost')),
         ]),
   ];
-  row.innerHTML = `${itemHeader(deps, view)}${detailsHtml(details)}<button type="button" class="vendor-item crafting-recipe-btn" data-enhance="${view.item.itemId}" data-focus-key="enhance:${view.item.itemId}"${canEnhance ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.enhance'))}</span></button>`;
+  row.innerHTML = `${itemHeader(deps, view)}${detailsHtml(details)}${enhancementAttributesHtml(view)}<button type="button" class="vendor-item crafting-recipe-btn" data-enhance="${view.item.itemId}" data-focus-key="enhance:${view.item.itemId}"${canEnhance ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.enhance'))}</span></button>`;
   deps.attachTooltip(row, () => mir4EquipmentTooltipHtml(view.item));
   row
     .querySelector<HTMLButtonElement>('[data-enhance]')
@@ -187,6 +190,7 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
     state?.mir4Materials,
     state?.mir4ArcQuests,
     state?.mir4ArcRewards?.items,
+    deps.world.player?.mir4?.statusValues,
   ]);
   if (root.dataset.mir4ProgressionSignature === signature) return true;
   root.dataset.mir4ProgressionSignature = signature;
@@ -221,7 +225,11 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
     restoreInteractionState();
     return true;
   }
-  const view = buildMir4ProgressionView(state, deps.world.copper);
+  const view = buildMir4ProgressionView(
+    state,
+    deps.world.copper,
+    deps.world.player?.mir4?.statusValues,
+  );
   if (selected === 'crafting') {
     if (view.campaignProfession) {
       const campaign = view.campaignProfession;
@@ -242,17 +250,21 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
     for (const recipe of view.recipes) {
       const row = root.ownerDocument.createElement('div');
       row.className = 'vendor-item crafting-recipe-item';
-      const output = t(MATERIAL_KEYS[recipe.output]);
+      const output = mir4MaterialName(recipe.output);
       const costs = recipe.materials.map((cost) =>
         t('hudChrome.mir4.progression.materialCost', {
           held: fmt(cost.held),
           needed: fmt(cost.needed),
-          material: t(MATERIAL_KEYS[cost.key]),
+          material: mir4MaterialName(cost.key),
         }),
       );
       if (recipe.copperCost > 0)
         costs.push(t('hudChrome.mir4.progression.copperCost', { amount: fmt(recipe.copperCost) }));
-      row.innerHTML = `<div class="vendor-item"><span class="vi-name"><span class="crafting-recipe-name">${esc(t('hudChrome.mir4.progression.creates', { count: fmt(recipe.outputCount), material: output }))}</span>${costs.map((cost) => `<span class="vi-sub crafting-reagent-line">${esc(cost)}</span>`).join('')}</span></div><button type="button" class="vendor-item crafting-recipe-btn" data-recipe="${esc(recipe.recipeId)}" data-focus-key="recipe:${esc(recipe.recipeId)}"${recipe.affordable ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.create'))}</span></button>`;
+      const creates = t('hudChrome.mir4.progression.creates', {
+        count: fmt(recipe.outputCount),
+        material: output,
+      });
+      row.innerHTML = `<div class="vendor-item"><span class="vi-name"><span class="crafting-recipe-name">${esc(creates)}</span>${costs.map((cost) => `<span class="vi-sub crafting-reagent-line">${esc(cost)}</span>`).join('')}</span></div><button type="button" class="vendor-item crafting-recipe-btn" data-recipe="${esc(recipe.recipeId)}" data-focus-key="recipe:${esc(recipe.recipeId)}" aria-label="${esc(`${t('hudChrome.mir4.progression.create')}: ${creates}`)}"${recipe.affordable ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.create'))}</span></button>`;
       row
         .querySelector<HTMLButtonElement>('[data-recipe]')
         ?.addEventListener('click', () =>

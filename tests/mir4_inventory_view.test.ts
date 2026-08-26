@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MIR4_MOUNTS_CATALOG } from '../src/sim/content/mir4/mounts_catalog';
 import { MIR4_SPIRITS_CATALOG } from '../src/sim/content/mir4/spirits_catalog';
 import { ITEMS } from '../src/sim/data';
+import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
 import {
   buildMir4InventoryView,
   MIR4_SPIRIT_GRADE_VISUAL_ITEMS,
@@ -9,6 +10,20 @@ import {
 } from '../src/ui/mir4_inventory_view';
 
 describe('mir4 inventory view', () => {
+  it('projects Energy and Darksteel as currencies instead of inventory items', () => {
+    const view = buildMir4InventoryView({
+      classId: 1,
+      ultimateGauge: 0,
+      mir4Currencies: { darksteel: 450, energy: 12_500 },
+    });
+
+    expect(view.currencies).toEqual([
+      { key: 'energy', count: 12_500 },
+      { key: 'darksteel', count: 450 },
+    ]);
+    expect(view.nativeItems).toEqual([]);
+  });
+
   it('uses intentional native mystical shells rather than mining or herb placeholders', () => {
     const materialPlaceholders = new Set([
       'copper_ore',
@@ -26,7 +41,7 @@ describe('mir4 inventory view', () => {
     expect(spiritVisuals.every((itemId) => !materialPlaceholders.has(itemId))).toBe(true);
   });
 
-  it('shows owned unequipped instances and the authoritative material wallet', () => {
+  it('shows owned unequipped instances and only materials the character owns', () => {
     const view = buildMir4InventoryView({
       classId: 1,
       ultimateGauge: 0,
@@ -37,6 +52,7 @@ describe('mir4 inventory view', () => {
         991030101: { itemId: 991030101, enhancement: 0, destroyed: true },
       },
       mir4Materials: {
+        ...MIR4_EMPTY_MATERIALS,
         sunStone: 4,
         moonStone: 3,
         solarScroll: 2,
@@ -48,7 +64,13 @@ describe('mir4 inventory view', () => {
 
     expect(view.equipment.map((entry) => entry.itemId)).toEqual([991020101]);
     expect(view.equipment[0]?.enhancement).toBe(3);
-    expect(view.materials.map((entry) => entry.count)).toEqual([4, 3, 2, 1, 0, 5]);
+    expect(view.materials).toEqual([
+      { key: 'sunStone', count: 4 },
+      { key: 'moonStone', count: 3 },
+      { key: 'solarScroll', count: 2 },
+      { key: 'lunarSeal', count: 1 },
+      { key: 'solarWard', count: 5 },
+    ]);
   });
 
   it('shows unequipped starter items with WoC-native inventory shells', () => {
@@ -96,11 +118,35 @@ describe('mir4 inventory view', () => {
       spirits: [],
       pendingSpirits: [],
       spiritCombinations: [],
-      materials: expect.arrayContaining([expect.objectContaining({ count: 0 })]),
+      currencies: [],
+      materials: [],
     });
   });
 
-  it('projects only safe native runtime items and mount tickets into the existing Bags surface', () => {
+  it('omits zero-count native items and legacy equipment tokens from Bags', () => {
+    const view = buildMir4InventoryView(
+      {
+        classId: 1,
+        ultimateGauge: 0,
+        mir4ArcRewards: {
+          items: {
+            '991010101': 0,
+            'material-presa': 0,
+          },
+        },
+      },
+      [
+        { itemId: 'minor_healing_potion', count: 0 },
+        { itemId: 'worn_sword', count: 0 },
+      ],
+    );
+
+    expect(view.equipment).toEqual([]);
+    expect(view.nativeItems).toEqual([]);
+    expect(view.materials).toEqual([]);
+  });
+
+  it('projects every owned native runtime item and mount tickets into the existing Bags surface', () => {
     const view = buildMir4InventoryView(
       {
         classId: 1,
@@ -135,6 +181,7 @@ describe('mir4 inventory view', () => {
     expect(view.nativeItems.map(({ slotIndex, slot }) => [slotIndex, slot.itemId])).toEqual([
       [0, 'minor_healing_potion'],
       [1, 'reins_valorsteed'],
+      [2, 'worn_sword'],
     ]);
     expect(view.mountTickets).toEqual([
       { ticketId: 'mount-ticket-dawn', count: 2, visualItemId: 'reins_valorsteed' },

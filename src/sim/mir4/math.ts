@@ -17,6 +17,27 @@ export const MIR4_BASIS_POINTS = 10_000;
 /** The source's mitigation scale: damage * 100 / (100 + effectiveDefense). */
 export const MIR4_DEFENSE_SCALE = 100;
 
+/**
+ * Rank fallback for the seven reconstructed skills whose extracted rows do not
+ * carry a native level-up coefficient. Native rows continue to use their own
+ * per-component coefficient; these skills gain the same 2% baseline per rank
+ * in both combat and the live tooltip projection.
+ */
+export function mir4AuthorialSkillRankDamage(baseDamage: number, rank: number): number {
+  return mir4SkillRankScaledInteger(baseDamage, rank);
+}
+
+export function mir4SkillRankScaleBasisPoints(rank: number): number {
+  const safeRank = Math.max(1, Math.min(15, Math.floor(rank)));
+  return 10_000 + (safeRank - 1) * 200;
+}
+
+/** Shared +2% per-rank fallback for integer damage, healing, duration, and mitigation values. */
+export function mir4SkillRankScaledInteger(baseValue: number, rank: number): number {
+  const safeBase = Math.max(0, Math.floor(baseValue));
+  return Math.floor((safeBase * mir4SkillRankScaleBasisPoints(rank)) / 10_000);
+}
+
 /** Neutral per-stat defaults: only criticalOutcome has a nonzero floor (10). */
 export const MIR4_NEUTRAL_CRITICAL_OUTCOME = 10;
 
@@ -36,10 +57,27 @@ export const MIR4_STATUS_IDS = Object.freeze({
   critical: 30,
   avoidCritical: 31,
   criticalOutcome: 32,
-  skillDamage: 44,
+  criticalDamageReduction: 33,
   pvpDamage: 38,
+  pvpDamageReduction: 39,
+  monsterDamage: 40,
   bossDamage: 41,
+  monsterDamageReduction: 42,
   bossDamageReduction: 43,
+  skillDamage: 44,
+  skillDamageReduction: 45,
+  allDamage: 46,
+  allDamageReduction: 47,
+  stunSuccess: 48,
+  stunResistance: 49,
+  recoveryPotion: 94,
+  skillCooldownReduction: 95,
+  mpCostReduction: 97,
+  knockdownSuccess: 119,
+  knockdownResistance: 120,
+  basicDamage: 159,
+  basicDamageReduction: 160,
+  huntingExperience: 161,
 });
 
 export interface Mir4CombatStats {
@@ -52,12 +90,21 @@ export interface Mir4CombatStats {
   critical: number;
   avoidCritical: number;
   criticalOutcome: number;
+  criticalDamageReduction: number;
   penetrationBps: number;
   penetrationDefenseBps: number;
   pvpDamageBps: number;
   pvpDamageReductionBps: number;
+  monsterDamageBps: number;
+  monsterDamageReductionBps: number;
   bossDamageBps: number;
   bossDamageReductionBps: number;
+  allDamageBps: number;
+  allDamageReductionBps: number;
+  skillDamageBps: number;
+  skillDamageReductionBps: number;
+  basicDamageBps: number;
+  basicDamageReductionBps: number;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -84,12 +131,21 @@ const MIR4_COMBAT_STAT_KEYS = [
   'critical',
   'avoidCritical',
   'criticalOutcome',
+  'criticalDamageReduction',
   'penetrationBps',
   'penetrationDefenseBps',
   'pvpDamageBps',
   'pvpDamageReductionBps',
+  'monsterDamageBps',
+  'monsterDamageReductionBps',
   'bossDamageBps',
   'bossDamageReductionBps',
+  'allDamageBps',
+  'allDamageReductionBps',
+  'skillDamageBps',
+  'skillDamageReductionBps',
+  'basicDamageBps',
+  'basicDamageReductionBps',
 ] as const satisfies readonly (keyof Mir4CombatStats)[];
 
 /** Clamps a raw stats bag into combat shape (bps fields cap at 10000). */
@@ -130,13 +186,16 @@ export function mir4CriticalChanceBps(critical: number, avoidCritical: number): 
   return clamp(delta * 75, 0, 6000);
 }
 
-/** Crit multiplier in bps: 15000 + criticalOutcome * 100, clamped 15000..25000. */
-export function mir4CriticalMultiplierBps(criticalOutcome = MIR4_NEUTRAL_CRITICAL_OUTCOME): number {
-  return clamp(
-    15_000 + integer(criticalOutcome, MIR4_NEUTRAL_CRITICAL_OUTCOME) * 100,
-    15_000,
-    25_000,
+/** Crit multiplier after STATUS 33 counters STATUS 32, clamped 15000..25000. */
+export function mir4CriticalMultiplierBps(
+  criticalOutcome = MIR4_NEUTRAL_CRITICAL_OUTCOME,
+  criticalDamageReduction = 0,
+): number {
+  const netOutcome = Math.max(
+    0,
+    integer(criticalOutcome, MIR4_NEUTRAL_CRITICAL_OUTCOME) - integer(criticalDamageReduction),
   );
+  return clamp(15_000 + netOutcome * 100, 15_000, 25_000);
 }
 
 export interface Mir4Mitigation {
@@ -179,28 +238,51 @@ export function mir4DamageAfterDefense(
 }
 
 export type Mir4TargetKind = 'monster' | 'player' | 'boss';
+export type Mir4AttackKind = 'basic' | 'skill';
 
-/** Context (PvP/boss) multiplier in bps, clamped 1000..30000; monsters are neutral. */
+/** Target and attack-kind multiplier in bps, clamped 1000..30000. */
 export function mir4ContextualMultiplierBps(
-  attacker: Pick<Mir4CombatStats, 'pvpDamageBps' | 'bossDamageBps'>,
-  defender: Pick<Mir4CombatStats, 'pvpDamageReductionBps' | 'bossDamageReductionBps'>,
+  attacker: Partial<
+    Pick<
+      Mir4CombatStats,
+      | 'pvpDamageBps'
+      | 'monsterDamageBps'
+      | 'bossDamageBps'
+      | 'allDamageBps'
+      | 'skillDamageBps'
+      | 'basicDamageBps'
+    >
+  >,
+  defender: Partial<
+    Pick<
+      Mir4CombatStats,
+      | 'pvpDamageReductionBps'
+      | 'monsterDamageReductionBps'
+      | 'bossDamageReductionBps'
+      | 'allDamageReductionBps'
+      | 'skillDamageReductionBps'
+      | 'basicDamageReductionBps'
+    >
+  >,
   targetKind: Mir4TargetKind,
+  attackKind?: Mir4AttackKind,
 ): number {
+  let addend =
+    integer(attacker.allDamageBps) -
+    integer(defender.allDamageReductionBps) +
+    (attackKind === 'basic'
+      ? integer(attacker.basicDamageBps) - integer(defender.basicDamageReductionBps)
+      : attackKind === 'skill'
+        ? -integer(defender.skillDamageReductionBps)
+        : 0);
   if (targetKind === 'player') {
-    return clamp(
-      MIR4_BASIS_POINTS + attacker.pvpDamageBps - defender.pvpDamageReductionBps,
-      1000,
-      30_000,
-    );
+    addend += integer(attacker.pvpDamageBps) - integer(defender.pvpDamageReductionBps);
+  } else if (targetKind === 'boss') {
+    addend += integer(attacker.bossDamageBps) - integer(defender.bossDamageReductionBps);
+  } else {
+    addend += integer(attacker.monsterDamageBps) - integer(defender.monsterDamageReductionBps);
   }
-  if (targetKind === 'boss') {
-    return clamp(
-      MIR4_BASIS_POINTS + attacker.bossDamageBps - defender.bossDamageReductionBps,
-      1000,
-      30_000,
-    );
-  }
-  return MIR4_BASIS_POINTS;
+  return clamp(MIR4_BASIS_POINTS + addend, 1000, 30_000);
 }
 
 export interface Mir4ResolveDamageInput {
@@ -209,6 +291,7 @@ export interface Mir4ResolveDamageInput {
   attacker: Partial<Mir4CombatStats>;
   defender: Partial<Mir4CombatStats>;
   targetKind?: Mir4TargetKind;
+  attackKind?: Mir4AttackKind;
   /** Caller-drawn 0..9999 rolls; forceHit/forceCritical pin the outcome for tests. */
   hitRoll?: number;
   criticalRoll?: number;
@@ -263,13 +346,21 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
     hit &&
     (input.forceCritical === true ||
       (input.forceCritical !== false && criticalChance > 0 && criticalRoll < criticalChance));
-  const criticalMultiplier = mir4CriticalMultiplierBps(attacker.criticalOutcome);
+  const criticalMultiplier = mir4CriticalMultiplierBps(
+    attacker.criticalOutcome,
+    defender.criticalDamageReduction,
+  );
   const criticalDamage = critical
     ? Math.max(1, Math.floor((rawDamage * criticalMultiplier) / MIR4_BASIS_POINTS))
     : rawDamage;
   const targetKind: Mir4TargetKind =
     input.targetKind === 'player' || input.targetKind === 'boss' ? input.targetKind : 'monster';
-  const contextMultiplier = mir4ContextualMultiplierBps(attacker, defender, targetKind);
+  const contextMultiplier = mir4ContextualMultiplierBps(
+    attacker,
+    defender,
+    targetKind,
+    input.attackKind,
+  );
   const contextualDamage = hit
     ? Math.max(1, Math.floor((criticalDamage * contextMultiplier) / MIR4_BASIS_POINTS))
     : 0;

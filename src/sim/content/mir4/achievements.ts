@@ -23,7 +23,7 @@ export interface Mir4LevelAchievementDef {
  * earnable without a development grant or a source-project asset.
  */
 export interface Mir4AchievementPortBonus {
-  skillTomes: number;
+  knowledgeTomeCommon: number;
 }
 
 export const MIR4_LEVEL_ACHIEVEMENTS = [
@@ -46,7 +46,7 @@ export const MIR4_LEVEL_ACHIEVEMENTS = [
 export const MIR4_ACHIEVEMENT_PORT_BONUSES: Readonly<
   Partial<Record<number, Readonly<Mir4AchievementPortBonus>>>
 > = {
-  20102: { skillTomes: 3 },
+  20102: { knowledgeTomeCommon: 1 },
 };
 
 export function mir4LevelAchievement(achievementId: number): Mir4LevelAchievementDef | null {

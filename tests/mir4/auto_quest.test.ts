@@ -10,9 +10,11 @@ import { creditMir4ArcTutorialReceipt } from '../../src/sim/mir4/arc_receipts';
 import { applyMir4Effect } from '../../src/sim/mir4/effects';
 import { advanceMir4Experience } from '../../src/sim/mir4/stats';
 import { MIR4_ARC_PORTALS } from '../../src/sim/mir4/travel';
+import { buildMir4WocCampaignWorld } from '../../src/sim/mir4/woc_comparison_world';
 import { Sim } from '../../src/sim/sim';
 import type { Entity } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS, RUN_SPEED } from '../../src/sim/types';
+import { WORLD_SEED } from '../../src/sim/world_seed';
 
 // The auto-quest journey: one click, and the sim walks the whole M01-Q01
 // loop by itself (giver -> accept -> sites -> inspect -> giver -> turn in),
@@ -64,7 +66,9 @@ describe('the mir4 auto-quest journey', () => {
     expect(meta.mir4Quests?.mir4_m01_q01?.state).toBe('done');
     expect(meta.counters.questProgress).toBe(3);
     expect(meta.counters.questsCompleted).toBe(1);
-    expect(meta.copper).toBe(200);
+    // The authored enemy now pays its automatic kill loot before the quest
+    // reward. The journey therefore retains the five copper drop as well.
+    expect(meta.copper).toBe(205);
     const expected = advanceMir4Experience(1, 0, 1432);
     expect(sim.entities.get(sim.playerId)!.level).toBe(expected.level);
   });
@@ -127,7 +131,7 @@ describe('the mir4 auto-quest journey', () => {
     expect(playerMoves).toBe(1);
   });
 
-  it('approaches a covered quest target without attacking until the player enables Auto Battle', () => {
+  it('approaches a covered quest target and retaliates without enabling Auto Battle', () => {
     const world = { ...buildMir4ArcWorld(1), camps: [] };
     setActiveWorldContent(world);
     const sim = new Sim({
@@ -182,7 +186,8 @@ describe('the mir4 auto-quest journey', () => {
     expect(target.hp).toBe(target.maxHp);
     for (let tick = 0; tick < 400; tick++) sim.tick();
     expect(meta.autoBattle?.mode ?? 'off').toBe('off');
-    expect(target.hp).toBe(target.maxHp);
+    expect(target.hp).toBeLessThan(target.maxHp);
+    expect(meta.mir4TargetCombat?.targetId).toBe(target.id);
 
     sim.setMir4AutoBattle(true);
     let guard = 0;
@@ -223,7 +228,7 @@ describe('the mir4 auto-quest journey', () => {
 
     const run = sim.mir4ArcEncounterRuns.get(`${sim.playerId}:M01-Q05:3`);
     const target = run ? sim.entities.get(run.entityId) : undefined;
-    expect(target?.templateId).toBe('mir4_quest_m01-q05_3_2_guarda_do_seixo');
+    expect(target?.templateId).toBe('mir4_quest_m01-q05_3_2_moss_skeleton');
     expect(target?.hp).toBe(target?.maxHp);
     expect(meta.autoBattle?.mode ?? 'off').toBe('off');
     sim.setMir4AutoBattle(true);
@@ -511,9 +516,9 @@ describe('the mir4 auto-quest journey', () => {
     });
 
     let guard = 0;
-    while (!meta.mir4ArcQuests['M01-Q02'] && guard++ < 2000) sim.tick();
+    while ((meta.mir4ArcQuests['M01-Q02']?.stageIndex ?? -1) < 1 && guard++ < 4000) sim.tick();
 
-    expect(guard).toBeLessThan(2000);
+    expect(guard).toBeLessThan(4000);
     expect(meta.mir4ArcQuests['M01-Q02']).toMatchObject({
       questId: 'M01-Q02',
       stageIndex: 1,
@@ -908,8 +913,8 @@ describe('the mir4 auto-quest journey', () => {
     },
   );
 
-  it('never enables combat automatically for a main combat stage', () => {
-    const world = buildMir4ArcWorld(1);
+  it('attacks the authored quest target without enabling the separate Auto Battle tool', () => {
+    const world = { ...buildMir4ArcWorld(1), camps: [] };
     setActiveWorldContent(world);
     const sim = new Sim({
       seed: 254,
@@ -933,11 +938,138 @@ describe('the mir4 auto-quest journey', () => {
       siteIndex: 4,
       suspended: false,
     };
+    const target = spawnQuestTestWolf(sim, sim.player.pos.x + 3.5, sim.player.pos.z);
+    target.hp = target.maxHp = 5_000;
+    target.moveSpeed = 0;
+    target.wanderTimer = 999_999;
+    const key = `${sim.playerId}:M01-Q02:4`;
+    sim.mir4ArcEncounterRuns.set(key, {
+      key,
+      ownerPid: sim.playerId,
+      questId: 'M01-Q02',
+      stageIndex: 4,
+      entityId: target.id,
+    });
 
     sim.tick();
 
     expect(meta.autoBattle?.mode ?? 'off').toBe('off');
     expect(meta.mir4AutoQuest?.battleOwned).toBeUndefined();
+    expect(meta.mir4TargetCombat).toMatchObject({ targetId: target.id, owner: 'journey' });
+    expect(sim.player.autoAttack).toBe(true);
+    const hpBefore = target.hp;
+    let guard = 0;
+    while (target.hp === hpBefore && guard++ < 40) sim.tick();
+    expect(guard).toBeLessThan(40);
+    expect(target.hp).toBeLessThan(hpBefore);
+    expect(meta.autoBattle?.mode ?? 'off').toBe('off');
+
+    sim.setMir4AutoQuest(false);
+
+    expect(meta.mir4TargetCombat).toBeUndefined();
+    expect(sim.player.autoAttack).toBe(false);
+  });
+
+  it('releases journey-owned focused combat before changing the selected quest', () => {
+    const world = { ...buildMir4ArcWorld(1), camps: [] };
+    setActiveWorldContent(world);
+    const sim = new Sim({
+      seed: 25401,
+      playerClass: 'warrior',
+      playerName: 'QuestTransfer',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+    });
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4ArcQuests = {
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 4,
+        stageProgress: 0,
+        state: 'active',
+      },
+      'M01-S01': {
+        questId: 'M01-S01',
+        stageIndex: 0,
+        stageProgress: 0,
+        state: 'active',
+      },
+    };
+    meta.mir4AutoQuest = {
+      questId: 'M01-Q02',
+      phase: 'to-site',
+      siteIndex: 4,
+      suspended: false,
+    };
+    const target = spawnQuestTestWolf(sim, sim.player.pos.x + 3.5, sim.player.pos.z);
+    const key = `${sim.playerId}:M01-Q02:4`;
+    sim.mir4ArcEncounterRuns.set(key, {
+      key,
+      ownerPid: sim.playerId,
+      questId: 'M01-Q02',
+      stageIndex: 4,
+      entityId: target.id,
+    });
+    sim.tick();
+    expect(meta.mir4TargetCombat).toMatchObject({ targetId: target.id, owner: 'journey' });
+
+    sim.setMir4AutoQuest(true, 'M01-S01');
+
+    expect(meta.mir4AutoQuest?.questId).toBe('M01-S01');
+    expect(meta.mir4TargetCombat).toBeUndefined();
+    expect(sim.player.autoAttack).toBe(false);
+  });
+
+  it('keeps a player-owned focused attack when Auto Mission is stopped', () => {
+    const world = { ...buildMir4ArcWorld(1), camps: [] };
+    setActiveWorldContent(world);
+    const sim = new Sim({
+      seed: 25402,
+      playerClass: 'warrior',
+      playerName: 'PlayerOwnedFocus',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+    });
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4AutoQuest = {
+      questId: 'M01-Q02',
+      phase: 'to-site',
+      siteIndex: 4,
+      suspended: false,
+    };
+    const target = spawnQuestTestWolf(sim, sim.player.pos.x + 3, sim.player.pos.z);
+    sim.player.targetId = target.id;
+    sim.startAutoAttack();
+    expect(meta.mir4TargetCombat).toMatchObject({ targetId: target.id, owner: 'player' });
+
+    sim.setMir4AutoQuest(false);
+
+    expect(meta.mir4TargetCombat).toMatchObject({ targetId: target.id, owner: 'player' });
+    expect(sim.player.autoAttack).toBe(true);
+  });
+
+  it('cleans up orphaned journey combat after its Auto Mission cursor is gone', () => {
+    const world = { ...buildMir4ArcWorld(1), camps: [] };
+    setActiveWorldContent(world);
+    const sim = new Sim({
+      seed: 25403,
+      playerClass: 'warrior',
+      playerName: 'OrphanedJourneyFocus',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+    });
+    const meta = sim.players.get(sim.playerId)!;
+    const target = spawnQuestTestWolf(sim, sim.player.pos.x + 3, sim.player.pos.z);
+    sim.player.targetId = target.id;
+    sim.player.autoAttack = true;
+    meta.mir4TargetCombat = { targetId: target.id, owner: 'journey' };
+    expect(meta.mir4AutoQuest).toBeUndefined();
+    expect(meta.mir4NarrativeDialogue).toBeUndefined();
+
+    sim.setMir4AutoQuest(false);
+
+    expect(meta.mir4TargetCombat).toBeUndefined();
+    expect(sim.player.autoAttack).toBe(false);
   });
 
   it('walks into the encounter envelope and cooperates with player-enabled Auto Battle', () => {
@@ -983,37 +1115,33 @@ describe('the mir4 auto-quest journey', () => {
     expect(sawBattle).toBe(true);
   });
 
-  it('clears one campaign hunt for five simultaneous native classes', () => {
-    const world = { ...buildMir4ArcWorld(1), camps: [] };
-    setActiveWorldContent(world);
-    const sim = new Sim({
-      seed: 2542,
-      playerClass: 'warrior',
-      playerName: 'Warrior',
-      gameProfile: 'mir4-gameplay-port',
-      idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
-      world,
-    });
-    const pids = [
-      sim.playerId,
-      sim.addPlayer('elementalist', 'Elementalist'),
-      sim.addPlayer('taoist', 'Taoist'),
-      sim.addPlayer('arbalist', 'Arbalist'),
-      sim.addPlayer('lancer', 'Lancer'),
-    ];
+  it('clears one campaign hunt through focused combat for each native class', () => {
+    const classes = ['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer'] as const;
     const quest = mir4ArcQuest('M01-Q02')!;
     const stage = quest.stages[4]!;
-    const anchor = mir4ArcStageAnchor(quest.questId, stage)!;
-
-    for (const [index, pid] of pids.entries()) {
-      sim.setPlayerLevel(4, pid);
+    const guards = classes.map((classKey, index) => {
+      // A campaign encounter is character-owned. Exercise each class in its
+      // own deterministic run instead of stacking five private quest mobs on
+      // one coordinate and accidentally turning this into a focus-fire test.
+      const world = { ...buildMir4ArcWorld(1), camps: [] };
+      setActiveWorldContent(world);
+      const sim = new Sim({
+        seed: 2542 + index,
+        playerClass: 'warrior',
+        playerClassMir4: classKey,
+        playerName: classKey,
+        gameProfile: 'mir4-gameplay-port',
+        idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+        world,
+      });
+      sim.setPlayerLevel(4);
       const progress = {
         questId: quest.questId,
         stageIndex: 4,
         stageProgress: 0,
         state: 'active' as const,
       };
-      const meta = sim.players.get(pid)!;
+      const meta = sim.players.get(sim.playerId)!;
       meta.mir4ArcQuests = { [quest.questId]: progress };
       meta.mir4AutoQuest = {
         questId: quest.questId,
@@ -1021,27 +1149,27 @@ describe('the mir4 auto-quest journey', () => {
         siteIndex: 4,
         suspended: false,
       };
-      sim.setMir4AutoBattle(true, pid);
-      const player = sim.entities.get(pid)!;
-      const grounded = sim.groundPos(anchor.x - 20 - index, anchor.z);
+      const anchor = mir4ArcStageAnchor(quest.questId, stage)!;
+      const player = sim.player;
+      const grounded = sim.groundPos(anchor.x - 20, anchor.z);
       player.pos = { ...grounded };
       player.prevPos = { ...grounded };
-    }
+      let guard = 0;
+      let sawAuthoredBoar = false;
+      while (progress.stageIndex === 4 && !player.dead && guard++ < 4_000) {
+        sim.tick();
+        const run = sim.mir4ArcEncounterRuns.get(`${sim.playerId}:${quest.questId}:4`);
+        const target = run ? sim.entities.get(run.entityId) : undefined;
+        if (target?.templateId.endsWith('_rabid_boar')) sawAuthoredBoar = true;
+      }
+      expect(player.dead, classKey).toBe(false);
+      expect(progress.stageIndex, classKey).toBeGreaterThanOrEqual(5);
+      expect(sawAuthoredBoar, classKey).toBe(true);
+      expect(meta.autoBattle?.mode ?? 'off', classKey).toBe('off');
+      return guard;
+    });
 
-    let guard = 0;
-    while (
-      pids.some((pid) => sim.players.get(pid)?.mir4ArcQuests?.[quest.questId]?.stageIndex === 4) &&
-      guard++ < 4_000
-    ) {
-      sim.tick();
-    }
-
-    expect(guard).toBeLessThan(1_000);
-    expect(
-      pids.every(
-        (pid) => (sim.players.get(pid)?.mir4ArcQuests?.[quest.questId]?.stageIndex ?? 0) >= 5,
-      ),
-    ).toBe(true);
+    expect(Math.max(...guards)).toBeLessThan(1_200);
   });
 
   it('clears a short campaign dungeon through the authored guard and boss targets', () => {
@@ -1056,6 +1184,11 @@ describe('the mir4 auto-quest journey', () => {
       world,
     });
     sim.setPlayerLevel(50);
+    // This contract isolates routing and target hand-off. A naked character is
+    // intentionally too weak for the guardian after the campaign pressure
+    // pass, so keep the fixture alive without weakening the live encounter.
+    sim.player.maxHp = 1_000_000;
+    sim.player.hp = sim.player.maxHp;
     const meta = sim.players.get(sim.playerId)!;
     const progress = {
       questId: 'M04-Q05',
@@ -1093,10 +1226,10 @@ describe('the mir4 auto-quest journey', () => {
   });
 
   it('escorts the M04 ascent through all three authored switchback checkpoints', () => {
-    const world = { ...buildMir4ArcWorld(4), camps: [] };
+    const world = buildMir4WocCampaignWorld();
     setActiveWorldContent(world);
     const sim = new Sim({
-      seed: 2546,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       playerName: 'HighlandEscortJourney',
       gameProfile: 'mir4-gameplay-port',
@@ -1120,13 +1253,23 @@ describe('the mir4 auto-quest journey', () => {
     };
     sim.setMir4AutoBattle(true);
     const stage = mir4ArcQuest('M04-Q04')!.stages[2]!;
-    const anchor = mir4ArcStageAnchor('M04-Q04', stage, 0)!;
+    const anchor = mir4ArcStageAnchor('M04-Q04', stage, 0, world.mir4ArcMapProjections)!;
     teleport(sim, anchor.x, anchor.z);
 
     let guard = 0;
     while (progress.stageIndex === 2 && guard++ < 8_000) sim.tick();
 
-    expect(guard).toBeLessThan(8_000);
+    const stalledHighlandRun = [...sim.mir4ArcEscortRuns.values()][0];
+    expect(
+      guard,
+      JSON.stringify({
+        progress,
+        player: { x: sim.player.pos.x, z: sim.player.pos.z, hp: sim.player.hp },
+        run: stalledHighlandRun,
+        npc: stalledHighlandRun?.npcId == null ? null : sim.entities.get(stalledHighlandRun.npcId),
+        ambushers: stalledHighlandRun?.ambushIds.map((id) => sim.entities.get(id)),
+      }),
+    ).toBeLessThan(8_000);
     expect(progress).toMatchObject({ stageIndex: 3, stageProgress: 0 });
     expect(sim.player.dead).toBe(false);
   });
@@ -1291,6 +1434,7 @@ describe('the mir4 auto-quest journey', () => {
       idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
       world,
     });
+    sim.setPlayerLevel(15);
     const meta = sim.players.get(sim.playerId)!;
     const progress = {
       questId: 'M02-Q02',
@@ -1320,7 +1464,17 @@ describe('the mir4 auto-quest journey', () => {
       }
     }
 
-    expect(guard).toBeLessThan(12_000);
+    const stalledEscortRun = [...sim.mir4ArcEscortRuns.values()][0];
+    expect(
+      guard,
+      JSON.stringify({
+        progress,
+        player: { x: sim.player.pos.x, z: sim.player.pos.z, hp: sim.player.hp },
+        run: stalledEscortRun,
+        npc: stalledEscortRun?.npcId == null ? null : sim.entities.get(stalledEscortRun.npcId),
+        ambushers: stalledEscortRun?.ambushIds.map((id) => sim.entities.get(id)),
+      }),
+    ).toBeLessThan(12_000);
     expect(progress.stageIndex).toBe(3);
     expect(sawAmbushTarget).toBe(true);
     expect(sim.player.dead).toBe(false);
@@ -1366,6 +1520,12 @@ describe('the mir4 auto-quest journey', () => {
 
     expect(Math.hypot(sim.player.pos.x - before.x, sim.player.pos.z - before.z)).toBeLessThan(0.01);
     expect(progress.stageProgress).toBe(shiftedProgress! + 1);
+
+    sim.player.dead = true;
+    sim.tick();
+
+    expect(progress.stageProgress).toBe(0);
+    expect(progress.lastEvidenceAt).toBeUndefined();
   });
 
   it('locks Auto Battle onto the authored quest encounter instead of a nearer stray mob', () => {

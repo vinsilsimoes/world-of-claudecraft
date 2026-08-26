@@ -51,9 +51,11 @@ function makeWorld(opts: {
     confirmMode: 'always' | 'prompt';
     selfCrafted?: boolean;
   }[];
+  gameProfile?: string;
 }): IWorld {
   const proficiency = opts.proficiency ?? {};
   return {
+    cfg: { gameProfile: opts.gameProfile },
     // The full deny-relevant Entity surface the R40 prompt mirror reads
     // (dead, combat, busy, consuming, shapeshift): a partial stub here
     // would read as "consuming" through isConsuming's null contract and
@@ -291,6 +293,23 @@ describe('tool-tier lock dimension', () => {
     );
     // A stale pick after a content change resolves to null, never a throw.
     expect(buildGatherNodeTooltip(makeWorld({}), 'no_such_node_id')).toBeNull();
+  });
+
+  it('exposes authored MIR4 plant and Darksteel yields only on the MIR4 profile', () => {
+    const herb = GATHER_NODES.find(
+      (node) => node.zoneId === 'thornpeak_heights' && node.type === 'herb',
+    );
+    const ore = GATHER_NODES.find((node) => node.zoneId === 'veiled_hollow' && node.type === 'ore');
+    if (!herb || !ore) throw new Error('missing authored MIR4 resource nodes');
+    const mir4 = makeWorld({ gameProfile: 'mir4-gameplay-port' });
+
+    expect(buildGatherNodeTooltip(mir4, herb.id)).toMatchObject({
+      mir4Reward: { kind: 'training-material', material: 'herbRoot', rarity: 'uncommon' },
+    });
+    expect(buildGatherNodeTooltip(mir4, ore.id)).toMatchObject({
+      mir4Reward: { kind: 'darksteel' },
+    });
+    expect(buildGatherNodeTooltip(makeWorld({}), herb.id)).not.toHaveProperty('mir4Reward');
   });
 
   it('carries respawnSeconds exactly when cooling AND the world puts a number on it', () => {

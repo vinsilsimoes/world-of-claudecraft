@@ -51,6 +51,8 @@ import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
   createMinimapMarkers,
   MINIMAP_CLIP_INSET,
+  minimapQuestSearchAt,
+  type MinimapModel,
   type MinimapMarker,
   type MinimapObjectSemantic,
 } from './minimap_markers';
@@ -973,6 +975,8 @@ export const MINIMAP_COLOR_TOKENS = {
   npcQuestRepeat: '--color-minimap-npc-quest-repeat',
   portal: '--color-minimap-portal',
   objectLoot: '--color-minimap-object-loot',
+  questSearchFill: '--color-minimap-quest-search-fill',
+  questSearchStroke: '--color-minimap-quest-search-stroke',
   mobAggro: '--color-minimap-mob-aggro',
   mob: '--color-minimap-mob',
   mobLoot: '--color-minimap-mob-loot',
@@ -1009,6 +1013,7 @@ export type MinimapZoneBg = {
  */
 export class MinimapPainter {
   private readonly markers = createMinimapMarkers();
+  private lastModel: MinimapModel | null = null;
   // The resolved `--color-minimap-*` tokens, cached after the first successful resolve.
   // They are static `:root` tokens (src/styles/tokens.css) with no runtime mutation (no
   // setProperty, no theme / forced-colors / media-query redefinition), so re-reading them
@@ -1080,6 +1085,7 @@ export class MinimapPainter {
     const pxPerYard = MINIMAP_BASE_SCALE * zoom;
     const profile = this.markerProfile();
     const model = this.markers.build(world, S, pxPerYard, profile);
+    this.lastModel = model;
     // The one DOM write this Canvas painter routes through the write-elision facet.
     // In a rift, show the generated floor name + rank instead of the overworld zone.
     if (model.rift) {
@@ -1141,6 +1147,7 @@ export class MinimapPainter {
     const pxPerYard = MINIMAP_BASE_SCALE * zoom;
     const profile = this.markerProfile();
     const model = this.markers.build(world, S, pxPerYard, profile);
+    this.lastModel = model;
     this.writers.setText(zoneLabelEl, label);
     const colors = this.resolveColors();
     const p = world.player;
@@ -1210,6 +1217,7 @@ export class MinimapPainter {
     const pxPerYard = MINIMAP_BASE_SCALE * zoom;
     const profile = this.markerProfile();
     const model = this.markers.build(world, S, pxPerYard, profile);
+    this.lastModel = model;
     this.writers.setText(zoneLabelEl, this.battlegroundName());
     const p = world.player;
     const o = bgOriginAt(p.pos.z);
@@ -1312,6 +1320,15 @@ export class MinimapPainter {
     const geometry = MINIMAP_PAINT_GEOMETRY[profile];
     for (const m of markers) {
       switch (m.kind) {
+        case 'quest-search-area':
+          ctx.fillStyle = colors.questSearchFill;
+          ctx.strokeStyle = colors.questSearchStroke;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(m.mx, m.my, m.radius, 0, FULL_CIRCLE);
+          ctx.fill();
+          ctx.stroke();
+          break;
         case 'ally':
           ctx.fillStyle = m.ally === 'friend' ? colors.allyFriend : colors.allyGuild;
           ctx.strokeStyle = colors.outline;
@@ -1681,5 +1698,9 @@ export class MinimapPainter {
         }
       }
     }
+  }
+
+  questSearchAt(mx: number, my: number): string | null {
+    return this.lastModel ? minimapQuestSearchAt(this.lastModel.markers, mx, my) : null;
   }
 }

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, it, vi } from 'vitest';
+import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
 import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import { paintMir4ProgressionWindow } from '../src/ui/mir4_progression_window_adapter';
 import type { IWorld } from '../src/world_api';
@@ -12,6 +13,7 @@ function harness() {
     mir4Equipment: { 1: 991010101 },
     mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 5 } },
     mir4Materials: {
+      ...MIR4_EMPTY_MATERIALS,
       sunStone: 1,
       moonStone: 5,
       solarScroll: 1,
@@ -59,6 +61,8 @@ describe('MIR4 existing Crafting-window adapter', () => {
     expect(root.style.display).toBe('flex');
     expect(root.textContent).toContain('Equipment Workshop');
     expect(root.textContent).toContain('Failure destroys the equipment above +5.');
+    expect(root.textContent).toContain('Attribute preview');
+    expect(root.querySelectorAll('.mir4-enhancement-attribute')).not.toHaveLength(0);
     root.querySelector<HTMLButtonElement>('[data-enhance]')?.click();
     expect(methods.mir4EnhanceItem).toHaveBeenCalledWith(991010101);
   });
@@ -101,7 +105,9 @@ describe('MIR4 existing Crafting-window adapter', () => {
     );
 
     root.querySelector<HTMLButtonElement>('[data-tab="crafting"]')?.click();
-    root.querySelector<HTMLButtonElement>('[data-recipe="solar-scroll"]')?.click();
+    const recipe = root.querySelector<HTMLButtonElement>('[data-recipe="solar-scroll"]');
+    expect(recipe?.getAttribute('aria-label')).toContain('Solar Scroll');
+    recipe?.click();
     expect(methods.mir4CraftMaterial).toHaveBeenCalledWith('solar-scroll');
   });
 

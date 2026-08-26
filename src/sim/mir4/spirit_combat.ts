@@ -6,6 +6,7 @@
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import {
+  type Mir4AttackKind,
   type Mir4CombatStats,
   type Mir4ResolvedDamage,
   type Mir4TargetKind,
@@ -32,6 +33,7 @@ export function resolveMir4PlayerDamageWithSpirit(
     attacker: Partial<Mir4CombatStats>;
     defender: Partial<Mir4CombatStats>;
     targetKind?: Mir4TargetKind;
+    attackKind?: Mir4AttackKind;
     hitRoll: number;
     criticalRoll: number;
     allowSpiritProc: boolean;
@@ -67,17 +69,18 @@ export function resolveMir4PlayerDamageWithSpirit(
   const healthBefore = player.hp;
   const manaBefore = player.resource;
   meta.mir4SpiritSkillReadyAt = ctx.time + skill.cooldownMs / 1_000;
-  if ((skill.healMaxHpBps ?? 0) > 0) {
+  const healMaxHpBps = skill.healMaxHpBps ?? 0;
+  const restoreMaxMpBps = skill.restoreMaxMpBps ?? 0;
+  if (healMaxHpBps > 0) {
     player.hp = Math.min(
       player.maxHp,
-      player.hp + Math.max(1, Math.floor((player.maxHp * skill.healMaxHpBps!) / 10_000)),
+      player.hp + Math.max(1, Math.floor((player.maxHp * healMaxHpBps) / 10_000)),
     );
   }
-  if ((skill.restoreMaxMpBps ?? 0) > 0) {
+  if (restoreMaxMpBps > 0) {
     player.resource = Math.min(
       player.maxResource,
-      player.resource +
-        Math.max(1, Math.floor((player.maxResource * skill.restoreMaxMpBps!) / 10_000)),
+      player.resource + Math.max(1, Math.floor((player.maxResource * restoreMaxMpBps) / 10_000)),
     );
   }
   const resolved = mir4ResolveDamage({

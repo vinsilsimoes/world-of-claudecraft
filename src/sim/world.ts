@@ -48,6 +48,7 @@ import {
   emberNearestOnLink,
 } from './ember_lava_layout';
 import { GALE_DECK_FREEBOARD, galeDeckSurface } from './gale_harbor';
+import { applyGlacierTarnExtensions } from './glacier_tarn_ramps';
 import { reachDeckClear, reachDeckSurface } from './reach_decks';
 import { fbm2, hash2, noise2 } from './rng';
 import { BIOME_SHAPE } from './terrain_biome_shape';
@@ -70,6 +71,12 @@ import { cragLayer, highlandMask, reliefBase, ridged2, warpedCoords } from './te
 import type { BiomeId, HeightStamp, WorldContent, ZoneDef } from './types';
 import { isInSowfieldShell, SOWFIELD_FLAT, sowfieldStandLift } from './vale_cup_layout';
 import { wildheartFieldHeight } from './wildheart_field';
+
+export {
+  GLACIER_TARN_ICEMANTLE_APPROACH,
+  GLACIER_TARN_ICEMANTLE_RAMP,
+  GLACIER_TARN_RIM_SWITCHBACK,
+} from './glacier_tarn_ramps';
 
 // Terrain is a pure function of (x, z, seed): both the sim (ground clamping)
 // and the renderer (mesh) sample the same heightfield, so they always agree.
@@ -142,7 +149,7 @@ export function isInWaterBody(x: number, z: number): boolean {
   return false;
 }
 
-function usesContentTerrain(content = getActiveWorldContent()): boolean {
+export function usesContentTerrain(content = getActiveWorldContent()): boolean {
   if (content.terrainModel) return content.terrainModel === 'content';
   return content.zones.length > 0 && content.zones !== ZONES;
 }
@@ -234,7 +241,11 @@ export function waterBodies(): { x: number; z: number; radius: number }[] {
   const out: { x: number; z: number; radius: number }[] = [];
   for (const zone of getActiveWorldContent().zones) {
     for (const lake of zone.lakes) {
-      out.push({ x: lake.x, z: lake.z, radius: lake.radius * LAKE_BLEND_RADIUS_MULT });
+      out.push({
+        x: lake.x,
+        z: lake.z,
+        radius: lake.radius * LAKE_BLEND_RADIUS_MULT,
+      });
     }
   }
   return out;
@@ -246,7 +257,11 @@ export function waterBodies(): { x: number; z: number; radius: number }[] {
 // wall) lives in the border_edges.ts leaf; re-exported here so existing
 // consumers (colliders.ts, the border/grid tests) need no changes.
 export type { BorderEdge } from './border_edges';
-export { computeBorderEdges, crossesSealedBorder, SEALED_BORDERS } from './border_edges';
+export {
+  computeBorderEdges,
+  crossesSealedBorder,
+  SEALED_BORDERS,
+} from './border_edges';
 
 // Low, broad border ranges: steep enough to read as a border, gentle
 // enough that ANY land contact between two maps is walkable over (the
@@ -1797,9 +1812,23 @@ function applyIsleCoast(x: number, z: number, h: number): number {
 const COLUMN_STRAITS = [
   // east: the Hollow's moat running north into the Reach's flank, crossed
   // only by the Snowline's isthmus at the fire and ice border
-  { borderX: STRIP_MAX_X, passZ: 1890, zLo: 900, zHi: 1960, lakeLo: 940, lakeHi: 1925 },
+  {
+    borderX: STRIP_MAX_X,
+    passZ: 1890,
+    zLo: 900,
+    zHi: 1960,
+    lakeLo: 940,
+    lakeHi: 1925,
+  },
   // west: the same moat mirrored, crossed by the Goldmelt's isthmus
-  { borderX: STRIP_MIN_X, passZ: 1890, zLo: 900, zHi: 1960, lakeLo: 940, lakeHi: 1925 },
+  {
+    borderX: STRIP_MIN_X,
+    passZ: 1890,
+    zLo: 900,
+    zHi: 1960,
+    lakeLo: 940,
+    lakeHi: 1925,
+  },
 ] as const;
 function applyColumnStraits(x: number, z: number, h: number): number {
   let out = h;
@@ -2770,7 +2799,12 @@ export function inBorderLake(x: number, z: number): boolean {
 // shore grading. Generous bounds are safe because every consumer self-gates
 // on the real carved depth: a dry isthmus or bank inside a rect never swims,
 // never clamps a slope, and never blocks a walker.
-const BORDER_WATERS: readonly { x0: number; x1: number; z0: number; z1: number }[] = [
+const BORDER_WATERS: readonly {
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+}[] = [
   ...BORDER_LAKES,
   // half-width 48 covers the channel, the Hollow-side scallop coves, and the
   // full beach-ramp aprons (borderBankRamp releases by ~40yd), so both banks
@@ -2783,7 +2817,12 @@ const BORDER_WATERS: readonly { x0: number; x1: number; z0: number; z1: number }
   })),
   // z half-width 20: the carve wets |z - borderZ| <= ~10 and the beach ramp
   // can hold water to ~19, so both banks stay fully inside
-  ...ROW_MERES.map((m) => ({ x0: m.xLo, x1: m.xHi, z0: m.borderZ - 20, z1: m.borderZ + 20 })),
+  ...ROW_MERES.map((m) => ({
+    x0: m.xLo,
+    x1: m.xHi,
+    z0: m.borderZ - 20,
+    z1: m.borderZ + 20,
+  })),
 ];
 
 // The border ridges break only over the water they actually cross: the moat
@@ -2792,7 +2831,12 @@ const BORDER_WATERS: readonly { x0: number; x1: number; z0: number; z1: number }
 // its full range: the Hollow's authored headland fixtures (ruin rings, POIs)
 // stand on that ridge, and the scallop coves between them are the designed
 // inner exits.
-const RIDGE_BREAK_WATERS: readonly { x0: number; x1: number; z0: number; z1: number }[] = [
+const RIDGE_BREAK_WATERS: readonly {
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+}[] = [
   ...BORDER_LAKES,
   // inner reach 14 opens the inner lip for entry, EXCEPT across the two
   // Tablecrag mesa guards (z windows below): their foot-approach ramps are
@@ -2822,7 +2866,12 @@ const RIDGE_BREAK_WATERS: readonly { x0: number; x1: number; z0: number; z1: num
       rect(1230, st.lakeHi + 4, 14),
     ];
   }),
-  ...ROW_MERES.map((m) => ({ x0: m.xLo, x1: m.xHi, z0: m.borderZ - 20, z1: m.borderZ + 20 })),
+  ...ROW_MERES.map((m) => ({
+    x0: m.xLo,
+    x1: m.xHi,
+    z0: m.borderZ - 20,
+    z1: m.borderZ + 20,
+  })),
 ];
 
 // Distance to the nearest rect of a border-water list: 0 inside one, the
@@ -2860,7 +2909,12 @@ export function inBorderWater(x: number, z: number): boolean {
 // fatigue turnback ("a place you arrive at on purpose, not by drifting",
 // pinned by tests/world_grid.test.ts), and a cove landing from the channel
 // is a few seconds' swim, inside the fatigue grace.
-const FATIGUE_FREE_WATERS: readonly { x0: number; x1: number; z0: number; z1: number }[] = [
+const FATIGUE_FREE_WATERS: readonly {
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+}[] = [
   ...BORDER_LAKES,
   ...COLUMN_STRAITS.map((st) => ({
     x0: st.borderX > 0 ? st.borderX - 14 : st.borderX - 48,
@@ -2868,7 +2922,12 @@ const FATIGUE_FREE_WATERS: readonly { x0: number; x1: number; z0: number; z1: nu
     z0: st.lakeLo - 4,
     z1: st.lakeHi + 4,
   })),
-  ...ROW_MERES.map((m) => ({ x0: m.xLo, x1: m.xHi, z0: m.borderZ - 20, z1: m.borderZ + 20 })),
+  ...ROW_MERES.map((m) => ({
+    x0: m.xLo,
+    x1: m.xHi,
+    z0: m.borderZ - 20,
+    z1: m.borderZ + 20,
+  })),
 ];
 
 export function inFatigueFreeWater(x: number, z: number): boolean {
@@ -4627,6 +4686,7 @@ function terrainHeightUnpadded(x: number, z: number, seed: number, skipEdits = f
   // pond and its top meets the road bench with no seam at either end.
   if (terrainRegionHas(region, TERRAIN_APPLIER.glacierTarnRamp)) {
     h = applyGlacierTarnRamp(x, z, h);
+    h = applyGlacierTarnExtensions(x, z, h);
   }
   const sow = terrainRegionHas(region, TERRAIN_APPLIER.sowfieldFlatten)
     ? sowfieldFlattenWeight(x, z)

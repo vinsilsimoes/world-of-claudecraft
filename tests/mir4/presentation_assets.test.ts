@@ -31,7 +31,7 @@ describe('MIR4 presentation reuses the native WoC asset inventory', () => {
     expect(keys).toEqual([
       'player_warrior',
       'player_mage',
-      'player_priest',
+      'player_shaman',
       'player_hunter',
       'player_paladin',
     ]);

@@ -143,6 +143,7 @@ export interface AbilityVfxSpellfxEvent {
   fx: string;
   ability?: string;
   attackAnimation?: 'ranged-shot';
+  attackAnimationStarted?: true;
 }
 
 // Structural slice of the point-anchored SimEvent member ('spellfxAt').
@@ -540,13 +541,14 @@ export class AbilityVfx {
     this.spawned = 0;
     // Spin specs whirl the rig (Bladestorm); the one-shot is cheap, so it
     // survives every degrade tier.
-    if (plan.whirl) this.deps.triggerAttack(ev.sourceId, ev.ability);
+    if (plan.whirl && !ev.attackAnimationStarted)
+      this.deps.triggerAttack(ev.sourceId, ev.ability);
     switch (ev.fx) {
       case 'projectile':
       case 'heavyBolt': {
         // A player ranged shot's draw animation rides the projectile launch
         // cue; keep it when this painter claims the event.
-        if (ev.attackAnimation === 'ranged-shot' && !plan.whirl)
+        if (ev.attackAnimation === 'ranged-shot' && !plan.whirl && !ev.attackAnimationStarted)
           this.deps.triggerAttack(ev.sourceId);
         const scale = ev.fx === 'heavyBolt' ? Math.max(plan.projScale, 2) : plan.projScale;
         if (tier < 2 && full?.bolt) {
@@ -602,7 +604,7 @@ export class AbilityVfx {
         }
         if (!plan.whirl && ev.attackAnimation !== 'ranged-shot') {
           this.mobThrowFallback(ev.sourceId, ev.ability);
-          this.playerGestureRelease(ev.sourceId, ev.ability);
+          if (!ev.attackAnimationStarted) this.playerGestureRelease(ev.sourceId, ev.ability);
         }
         break;
       }
@@ -617,7 +619,7 @@ export class AbilityVfx {
         }
         if (!plan.whirl) {
           this.mobThrowFallback(ev.sourceId, ev.ability);
-          this.playerGestureRelease(ev.sourceId, ev.ability);
+          if (!ev.attackAnimationStarted) this.playerGestureRelease(ev.sourceId, ev.ability);
         }
         break;
       case 'beam':
@@ -633,7 +635,8 @@ export class AbilityVfx {
         break;
       case 'windup':
         // The generic windup arm's whole job is the throw animation: keep it.
-        if (!plan.whirl) this.deps.triggerAttack(ev.sourceId, ev.ability);
+        if (!plan.whirl && !ev.attackAnimationStarted)
+          this.deps.triggerAttack(ev.sourceId, ev.ability);
         this.spawned++;
         break;
       case 'shout': {
@@ -670,7 +673,8 @@ export class AbilityVfx {
           this.spawned++;
         }
         this.spawnRing(ev.targetId, plan, ev.school);
-        if (!plan.whirl) this.playerGestureRelease(ev.sourceId, ev.ability);
+        if (!plan.whirl && !ev.attackAnimationStarted)
+          this.playerGestureRelease(ev.sourceId, ev.ability);
         break;
       }
       case 'tick':
@@ -714,13 +718,19 @@ export class AbilityVfx {
         // (attackByAbility picks the authored clip - Jawcrack's bare-fist
         // punch), on every client that sees the cue. Burst zaps and shouts
         // carry no swing.
-        if (contact && !plan.whirl) this.deps.triggerAttack(ev.sourceId, ev.ability);
+        if (contact && !plan.whirl && !ev.attackAnimationStarted)
+          this.deps.triggerAttack(ev.sourceId, ev.ability);
         // Ceremonial cast gesture (Lingering Grace's one-hand blessing): a
         // non-contact cue whose rig authors a per-ability clip plays it on the
         // caster - on every client that sees the cue, so the gesture reads for
         // spectators too. The authored-clip gate keeps this data-driven and
         // means an un-authored ceremony changes nothing.
-        if (!contact && !plan.whirl && this.deps.hasGestureClip?.(ev.sourceId, ev.ability)) {
+        if (
+          !contact &&
+          !plan.whirl &&
+          !ev.attackAnimationStarted &&
+          this.deps.hasGestureClip?.(ev.sourceId, ev.ability)
+        ) {
           this.deps.triggerAttack(ev.sourceId, ev.ability);
         }
         // A shout barks from the caster whether it is a targeted taunt (Menace)
@@ -765,6 +775,7 @@ export class AbilityVfx {
       ev.fx !== 'windup' &&
       ev.fx !== 'selfCast' &&
       !plan.whirl &&
+      !ev.attackAnimationStarted &&
       ev.attackAnimation !== 'ranged-shot' &&
       this.deps.localPlayerId?.() === ev.sourceId
     ) {

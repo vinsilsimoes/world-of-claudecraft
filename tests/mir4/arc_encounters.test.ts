@@ -1,7 +1,9 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { isBlocked } from '../../src/sim/colliders';
+import { MIR4_QUESTS_MAIN, MIR4_QUESTS_SIDE } from '../../src/sim/content/mir4/arc_campaign';
+import { mir4ArcNormalXp } from '../../src/sim/content/mir4/arc_mobs';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
-import { MIR4_QUESTS_MAIN } from '../../src/sim/content/mir4/quests_arc';
+import { MIR4_WORLD_ARC_BY_MAP } from '../../src/sim/content/mir4/world_arc';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { updateMir4ArcDungeonEncounters } from '../../src/sim/mir4/arc_dungeons';
 import {
@@ -16,7 +18,11 @@ import {
   mir4CreditQuestKill,
   mir4QuestCurrentStage,
 } from '../../src/sim/mir4/arc_quests';
-import { MIR4_ARC_COMBAT_STAGE_KINDS } from '../../src/sim/mir4/arc_stage_kinds';
+import {
+  MIR4_ARC_COMBAT_STAGE_KINDS,
+  mir4ArcEncounterGrade,
+  mir4ArcEncounterXpMultiplier,
+} from '../../src/sim/mir4/arc_stage_kinds';
 import { mir4WireRevision } from '../../src/sim/mir4/wire_revision';
 import { resolveMobTemplate } from '../../src/sim/mob/template';
 import { PLAYER_BODY_RADIUS } from '../../src/sim/pathfind';
@@ -57,7 +63,7 @@ function placePlayerAtStage(sim: Sim, pid: number, progress: Mir4ArcQuestProgres
   player.prevPos = { ...player.pos };
 }
 
-const MAIN_COMBAT_KILL_CASES = MIR4_QUESTS_MAIN.flatMap((quest) =>
+const COMBAT_KILL_CASES = [...MIR4_QUESTS_MAIN, ...MIR4_QUESTS_SIDE].flatMap((quest) =>
   quest.stages.flatMap((stage, stageIndex) => {
     if (!MIR4_ARC_COMBAT_STAGE_KINDS.has(stage.kind)) return [];
     const goal = mir4ArcStageGoal(stage);
@@ -72,16 +78,44 @@ const MAIN_COMBAT_KILL_CASES = MIR4_QUESTS_MAIN.flatMap((quest) =>
 );
 
 describe('MIR4 campaign encounter materializer', () => {
-  it('enumerates every authored Main combat kill receipt', () => {
-    expect(
-      new Set(
-        MAIN_COMBAT_KILL_CASES.map(({ quest, stageIndex }) => `${quest.questId}:${stageIndex}`),
-      ).size,
-    ).toBe(113);
-    expect(MAIN_COMBAT_KILL_CASES).toHaveLength(301);
+  it('pays the live normal, elite, and boss XP multipliers', () => {
+    expect(encounterTemplate('M03-Q04', 3, 0, 'dire_wolf')?.mir4XpReward).toBe(343);
+    expect(encounterTemplate('M03-S03', 3, 0, 'Presa de Casca')?.mir4XpReward).toBe(1_715);
+    expect(encounterTemplate('M03-Q06', 3, 0, 'dire_wolf_matriarch')?.mir4XpReward).toBe(6_860);
+    expect(encounterTemplate('M03-Q04', 3, 0, 'explicit_boss', true)).toMatchObject({
+      boss: true,
+      elite: false,
+      mir4XpReward: 6_860,
+    });
+    const bridgeStage = MIR4_QUESTS_MAIN.find((quest) => quest.questId === 'M01-Q05')!.stages[3]!;
+    expect(stageMobSource(bridgeStage, 0)).toBe('thorn_imp');
+    expect(stageMobSource(bridgeStage, 1)).toBe('briar_guard');
+    expect(stageMobSource(bridgeStage, 2)).toBe('moss_skeleton');
+    expect(new Set([0, 1, 2].map((wave) => stageMobSource(bridgeStage, wave))).size).toBe(3);
+    expect(stageMobSource(bridgeStage, 0)).not.toBe(bridgeStage.guardian);
+    expect(encounterTemplate('M01-Q05', 3, 0, 'thorn_imp')).toMatchObject({
+      boss: false,
+      elite: false,
+      mir4XpReward: 34,
+    });
+    expect(encounterTemplate('M01-R02', 0, 0, 'inspect-and-resolve-elite')).toMatchObject({
+      boss: false,
+      elite: true,
+      mir4XpReward: 170,
+    });
+    expect(encounterTemplate('M11-S03', 3, 0, 'Quebra-Palafita')?.elite).toBe(true);
+    expect(encounterTemplate('M12-S03', 3, 0, 'Guarda-Coroa')?.elite).toBe(true);
   });
 
-  it.each(MAIN_COMBAT_KILL_CASES)(
+  it('enumerates every authored Main and side-quest combat kill receipt', () => {
+    expect(
+      new Set(COMBAT_KILL_CASES.map(({ quest, stageIndex }) => `${quest.questId}:${stageIndex}`))
+        .size,
+    ).toBe(153);
+    expect(COMBAT_KILL_CASES).toHaveLength(361);
+  });
+
+  it.each(COMBAT_KILL_CASES)(
     'credits $quest.questId stage $stageIndex attempt $attempt from $source',
     ({ quest, stage, stageIndex, attempt, source }) => {
       const progress: Mir4ArcQuestProgress = {
@@ -92,8 +126,16 @@ describe('MIR4 campaign encounter materializer', () => {
       };
       const template = encounterTemplate(quest.questId, stageIndex, attempt, source);
       expect(template).not.toBeNull();
+      const grade = mir4ArcEncounterGrade(stage);
+      const map = MIR4_WORLD_ARC_BY_MAP.get(quest.mapId);
+      if (!template || !map) throw new Error(`missing encounter evidence for ${quest.questId}`);
+      expect(template.boss === true).toBe(grade === 'guardian');
+      expect(template.elite === true).toBe(grade === 'veteran');
+      expect(template.mir4XpReward).toBe(
+        mir4ArcNormalXp(map.sequence) * mir4ArcEncounterXpMultiplier(grade),
+      );
 
-      const result = mir4CreditQuestKill(progress, template!.id);
+      const result = mir4CreditQuestKill(progress, template.id);
 
       const completesStage = attempt + 1 === mir4ArcStageGoal(stage);
       expect(result).toBe(
@@ -161,6 +203,17 @@ describe('MIR4 campaign encounter materializer', () => {
     for (let tick = 0; tick < 100; tick++) sim.tick();
     expect(guardian.aggroTargetId).toBe(sim.playerId);
     expect(sim.player.hp).toBeLessThan(startingHp);
+
+    sim.dealDamage(sim.player, guardian, guardian.hp + 1, false, 'physical', null, 'hit');
+    updateMir4ArcEncounters(sim.ctx);
+    updateMir4ArcEncounters(sim.ctx);
+
+    expect(sim.mir4ArcEncounterRuns.get(`${sim.playerId}:M04-Q03:4`)?.entityId).toBe(guardian.id);
+    expect(
+      [...sim.entities.values()].filter(
+        (entity) => !entity.dead && entity.templateId.startsWith('mir4_quest_m04-q03_4_'),
+      ),
+    ).toHaveLength(0);
   });
 
   it('requires a physical owner-only pickup for collect-quest-wallet kills', () => {
@@ -268,23 +321,27 @@ describe('MIR4 campaign encounter materializer', () => {
     updateMir4ArcEncounters(sim.ctx);
 
     const run = sim.mir4ArcEncounterRuns.get(`${sim.playerId}:M01-Q05:3`)!;
-    const guardian = sim.entities.get(run.entityId)!;
+    const waveThreat = sim.entities.get(run.entityId)!;
     expect(sim.mir4ArcEncounterRuns.size).toBe(1);
     expect(run).toMatchObject({
       ownerPid: sim.playerId,
       questId: 'M01-Q05',
       stageIndex: 3,
     });
-    expect(guardian.templateId).toBe('mir4_quest_m01-q05_3_2_guarda_do_seixo');
+    expect(waveThreat.templateId).toBe('mir4_quest_m01-q05_3_2_moss_skeleton');
     expect(
-      [...sim.entities.values()].filter((entity) => entity.templateId === guardian.templateId),
+      [...sim.entities.values()].filter((entity) => entity.templateId === waveThreat.templateId),
     ).toHaveLength(1);
-    expect(guardian.pos).toMatchObject(authoredSpawn);
-    expect(guardian.spawnPos).toEqual(guardian.pos);
+    expect(waveThreat.name).toBe('moss skeleton');
+    expect(waveThreat.mobBoss).toBe(false);
+    expect(waveThreat.pos).toMatchObject(authoredSpawn);
+    expect(waveThreat.spawnPos).toEqual(waveThreat.pos);
     expect(
-      Math.hypot(guardian.pos.x - authoredSpawn.x, guardian.pos.z - authoredSpawn.z),
+      Math.hypot(waveThreat.pos.x - authoredSpawn.x, waveThreat.pos.z - authoredSpawn.z),
     ).toBeLessThan(1);
-    expect(isBlocked(WORLD_SEED, guardian.pos.x, guardian.pos.z, PLAYER_BODY_RADIUS)).toBe(false);
+    expect(isBlocked(WORLD_SEED, waveThreat.pos.x, waveThreat.pos.z, PLAYER_BODY_RADIUS)).toBe(
+      false,
+    );
   });
 
   it('credits every accented ritual guardian death before materializing the next focus', () => {
@@ -335,18 +392,34 @@ describe('MIR4 campaign encounter materializer', () => {
         entity.templateId.endsWith('_campaign_dungeon_m04_root_crypt_v1'),
       ),
     ).toBe(false);
+    const xpBeforeGuards = sim.players.get(sim.playerId)!.xp;
+    const guardTemplate = sim.mir4RuntimeMobTemplates.get(guards[0]!.templateId)!;
+    const guardRawDamage =
+      guardTemplate.dmgBase +
+      guardTemplate.dmgPerLevel * (guards[0]!.level - (guardTemplate.statAnchorLevel ?? 1));
     for (const guard of guards) {
       sim.dealDamage(sim.player, guard, guard.hp + 1, false, 'physical', null, 'hit');
     }
+    expect(sim.players.get(sim.playerId)!.xp).toBe(xpBeforeGuards);
     expect(progress.stageIndex).toBe(5);
     updateMir4ArcDungeonEncounters(sim.ctx);
     const boss = [...sim.entities.values()].find((entity) =>
       entity.templateId.endsWith('_campaign_dungeon_m04_root_crypt_v1'),
     )!;
+    const bossTemplate = sim.mir4RuntimeMobTemplates.get(boss.templateId)!;
+    const bossRawDamage =
+      bossTemplate.dmgBase +
+      bossTemplate.dmgPerLevel * (boss.level - (bossTemplate.statAnchorLevel ?? 1));
     expect(boss).toMatchObject({ hostile: true, runScoped: true, mobBoss: true });
-    expect(sim.mir4RuntimeMobTemplates.get(boss.templateId)?.mir4BossDamageReductionBps).toBe(500);
-    expect(boss.maxHp).toBeGreaterThan(guards[0]!.maxHp);
+    expect(bossTemplate.mir4BossDamageReductionBps).toBe(500);
+    expect(bossTemplate.mir4XpReward).toBe(20_520);
+    expect(boss.maxHp / guards[0]!.maxHp).toBeGreaterThanOrEqual(6.9);
+    expect(boss.maxHp / guards[0]!.maxHp).toBeLessThanOrEqual(7.1);
+    expect(bossRawDamage / guardRawDamage).toBeGreaterThanOrEqual(1.79);
+    expect(bossRawDamage / guardRawDamage).toBeLessThanOrEqual(1.81);
+    const xpBeforeBoss = sim.players.get(sim.playerId)!.xp;
     sim.dealDamage(sim.player, boss, boss.hp + 1, false, 'physical', null, 'hit');
+    expect(sim.players.get(sim.playerId)!.xp - xpBeforeBoss).toBe(20_520);
     expect(progress.stageIndex).toBe(6);
   });
 

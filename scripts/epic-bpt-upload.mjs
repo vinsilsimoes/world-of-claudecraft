@@ -50,8 +50,8 @@ export const DEFAULT_BUILD_ROOTS = {
  * productName; callers may override with EPIC_BPT_APP_LAUNCH after first pack.
  */
 export const DEFAULT_APP_LAUNCH = {
-  win: 'World of ClaudeCraft.exe',
-  mac: path.join('World of ClaudeCraft.app', 'Contents', 'MacOS', 'World of ClaudeCraft'),
+  win: 'Aeldrune.exe',
+  mac: path.join('Aeldrune.app', 'Contents', 'MacOS', 'Aeldrune'),
 };
 
 /** Env keys required for a non-dry-run upload (names are ops-only; not D15 server keys). */

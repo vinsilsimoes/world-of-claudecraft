@@ -16,9 +16,15 @@ import { esc } from '../../esc';
 import { focusedWithin, restoreFirstEnabled } from '../../focus_restore';
 import { gatheringProfessionNameKey } from '../../gathering_profession_name';
 import { formatMoney as formatLocalizedMoney, formatNumber, t } from '../../i18n';
+import {
+  mir4EquipmentDisplayName,
+  mir4EquipmentTooltipHtml,
+  mir4EquipmentVisualItem,
+} from '../../mir4_equipment_window_adapter';
 import type { PainterHostPresentation } from '../../painter_host';
 import { svgIcon } from '../../ui_icons';
 import { showBuyQuantityPrompt } from './buy_quantity_prompt_window';
+import type { Mir4VillageEquipmentView } from './mir4_village_equipment_view';
 import {
   VENDOR_MULTIPLES,
   type VendorGoodsRow,
@@ -56,6 +62,8 @@ export interface VendorWindowDeps extends PainterHostPresentation {
     craftedRecipeId: string | undefined,
   ): void;
   onSellJunk(): void;
+  mir4Equipment?: Mir4VillageEquipmentView | null;
+  onBuyMir4Equipment?(itemId: number): void;
   onClose(): void;
   sellJunk: {
     enabled: boolean;
@@ -314,6 +322,46 @@ export function renderVendorWindow(
     }
   }
   if (view.goods.length > 0) el.appendChild(goodsGrid);
+
+  if (deps.mir4Equipment && deps.onBuyMir4Equipment) {
+    const title = document.createElement('div');
+    title.className = 'vendor-section-title';
+    title.textContent = t('hudChrome.mir4.inventoryEquipment');
+    el.appendChild(title);
+    const equipmentGrid = document.createElement('div');
+    equipmentGrid.className = 'vendor-goods-grid mir4-village-equipment-grid';
+    equipmentGrid.dataset.grid = 'mir4-equipment';
+    for (const offer of deps.mir4Equipment.rows) {
+      const visual = mir4EquipmentVisualItem(offer.item);
+      if (!visual) continue;
+      const name = mir4EquipmentDisplayName(offer.item);
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'vendor-item mir4-village-equipment';
+      row.disabled = offer.owned || !offer.affordable;
+      if (!offer.owned && !offer.affordable) row.classList.add('unaffordable');
+      const status = offer.equipped
+        ? t('hudChrome.mir4.spiritCodex.equipped')
+        : offer.owned
+          ? t('hudChrome.mir4.spiritCodex.owned')
+          : formatLocalizedMoney(offer.copper);
+      if (!offer.owned) {
+        row.setAttribute(
+          'aria-label',
+          t('itemUi.vendor.buyAria', {
+            item: name,
+            price: formatLocalizedMoney(offer.copper),
+          }),
+        );
+      }
+      row.innerHTML = `${deps.itemIcon(visual)}<span class="vi-name">${esc(name)}</span><span class="vi-price${!offer.owned && !offer.affordable ? ' unaffordable' : ''}">${offer.owned ? esc(status) : deps.moneyHtml(offer.copper)}</span>`;
+      row.dataset.focusKey = `buy-mir4:${offer.item.itemId}`;
+      row.addEventListener('click', () => deps.onBuyMir4Equipment?.(offer.item.itemId));
+      deps.attachTooltip(row, () => mir4EquipmentTooltipHtml(offer.item));
+      equipmentGrid.appendChild(row);
+    }
+    el.appendChild(equipmentGrid);
+  }
 
   const sellJunk = document.createElement('button');
   sellJunk.type = 'button';

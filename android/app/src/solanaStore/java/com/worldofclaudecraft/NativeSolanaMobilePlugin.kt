@@ -32,7 +32,7 @@ class NativeSolanaMobilePlugin : Plugin() {
         connectionIdentity = ConnectionIdentity(
             identityUri = Uri.parse("https://worldofclaudecraft.com"),
             iconUri = Uri.parse("favicon.ico"),
-            identityName = "World of ClaudeCraft",
+            identityName = "Aeldrune",
         ),
     )
 

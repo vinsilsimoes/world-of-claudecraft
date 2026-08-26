@@ -44,14 +44,14 @@ afterAll(() => {
 });
 
 describe('the mob->player pipeline', () => {
-  it('a wolf swing lands exactly 7 against zero defenses (0/0 = always hit)', () => {
+  it('a tutorial wolf swing lands for 6% HP against zero defenses (0/0 = always hit)', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim();
     const p = sim.entities.get(sim.playerId)!;
     const wolf = spawnWolf(sim);
     const hp = p.hp;
     sim.mobSwing(wolf, p);
-    expect(hp - p.hp).toBe(7); // the spawn formula's attack value, unmitigated
+    expect(hp - p.hp).toBe(240); // live level-1 tutorial pressure, unmitigated
   });
   it('the magic shield shaves 22% off what lands', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -61,7 +61,7 @@ describe('the mob->player pipeline', () => {
     p.mir4Shield = { remaining: 10, magnitude: 0.22 };
     const hp = p.hp;
     sim.mobSwing(wolf, p);
-    expect(hp - p.hp).toBe(Math.max(1, Math.floor(7 * (1 - 0.22)))); // floor(5.46) = 5
+    expect(hp - p.hp).toBe(Math.floor(240 * (1 - 0.22))); // 187
   });
   it('blind on the mob cuts its outgoing attack by the magnitude', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -78,7 +78,7 @@ describe('the mob->player pipeline', () => {
     });
     const hp = p.hp;
     sim.mobSwing(wolf, p);
-    expect(hp - p.hp).toBe(Math.floor(7 * 0.5)); // 3
+    expect(hp - p.hp).toBe(Math.floor(240 * 0.5)); // 120
   });
   it('the level-40 warrior passive set mitigates through the table defense', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -92,7 +92,7 @@ describe('the mob->player pipeline', () => {
     const wolf = spawnWolf(sim);
     const hp = p.hp;
     sim.mobSwing(wolf, p);
-    expect(hp - p.hp).toBe(Math.max(1, Math.floor((7 * 100) / (100 + def))));
+    expect(hp - p.hp).toBe(Math.floor((240 * 100) / (100 + def))); // 77
   });
   it('wolf kills pay the m01 map model: 34 per normal kill', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -100,11 +100,12 @@ describe('the mob->player pipeline', () => {
     const wolf = spawnWolf(sim);
     const p = sim.entities.get(sim.playerId)!;
     p.mir4!.accuracy = 3000; // deterministic land for the finisher
-    sim.mir4CastSkill(1102, wolf.id); // 125 of 127 (facet order: pid defaults)
+    sim.mir4CastSkill(1102, wolf.id); // facet order: pid defaults
     for (let t = 0; t < 21; t++) sim.tick(); // clear the 1s GCD
-    sim.mir4BasicAttack(wolf.id); // scheduled 30: lethal
-    let guard = 0;
-    while (!wolf.dead && guard++ < 40) sim.tick();
+    for (let hit = 0; hit < 10 && !wolf.dead; hit += 1) {
+      sim.mir4BasicAttack(wolf.id);
+      for (let tick = 0; tick < 21; tick += 1) sim.tick();
+    }
     expect(wolf.dead).toBe(true);
     expect(sim.players.get(sim.playerId)?.xp).toBe(34);
   });

@@ -32,6 +32,7 @@ import {
   npcDisplayName,
   objectDisplayName,
 } from './entity_labels';
+import { entityViewBodyVisible } from './entity_view_policy_core';
 import {
   createNameplateCanvasState,
   type NameplateCanvasState,
@@ -188,6 +189,11 @@ export class NameplatePainter {
     for (const [id, view] of this.views) {
       const entity = world.entities.get(id);
       if (!entity) continue;
+      // The renderer keeps a dead MIR4 mob entity/view around until its normal
+      // respawn bookkeeping finishes, but the ten-second presentation marker
+      // owns the whole corpse presentation. Hide the canvas nameplate together
+      // with the body so neither the corpse label nor loot marker lingers alone.
+      if (!entityViewBodyVisible(entity, world.cfg.gameProfile)) continue;
       // Quest-gated mobs (Broodmother eggs): no nameplate or hp bar for players not
       // on the gating quest, so the clutch reads as inert scenery until you have it.
       // The canvas pass draws only what it reaches, so skipping the entity is the

@@ -42,6 +42,8 @@ describe('mir4CriticalChanceBps / mir4CriticalMultiplierBps', () => {
     expect(mir4CriticalMultiplierBps(MIR4_NEUTRAL_CRITICAL_OUTCOME)).toBe(16_000);
     expect(mir4CriticalMultiplierBps(100)).toBe(25_000);
     expect(mir4CriticalMultiplierBps(200)).toBe(25_000);
+    expect(mir4CriticalMultiplierBps(30, 20)).toBe(16_000);
+    expect(mir4CriticalMultiplierBps(10, 100)).toBe(15_000);
   });
 });
 
@@ -74,6 +76,28 @@ describe('mir4ContextualMultiplierBps', () => {
         'monster',
       ),
     ).toBe(10_000);
+  });
+  it('applies monster, all-damage and attack-kind modifiers without leaking lanes', () => {
+    expect(
+      mir4ContextualMultiplierBps(
+        { monsterDamageBps: 2_000, allDamageBps: 500, basicDamageBps: 300 },
+        {
+          monsterDamageReductionBps: 1_000,
+          allDamageReductionBps: 200,
+          basicDamageReductionBps: 100,
+        },
+        'monster',
+        'basic',
+      ),
+    ).toBe(11_500);
+    expect(
+      mir4ContextualMultiplierBps(
+        { monsterDamageBps: 2_000, skillDamageBps: 800 },
+        { monsterDamageReductionBps: 500, skillDamageReductionBps: 300 },
+        'player',
+        'skill',
+      ),
+    ).toBe(9_700);
   });
   it('player and boss lanes add attack and subtract reduction, clamped 1000..30000', () => {
     expect(

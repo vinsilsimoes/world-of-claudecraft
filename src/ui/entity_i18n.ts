@@ -526,16 +526,17 @@ export function zoneDisplayName(zoneId: string): string {
 }
 
 export function zonePoiLabel(zoneId: string, poiIndex: number): string {
+  const active = getActiveWorldContent().zones.find((zone) => zone.id === zoneId)?.pois[poiIndex]
+    ?.label;
   const mir4Key = mir4ZoneNameKey(zoneId);
   if (mir4Key) {
-    const authored = getActiveWorldContent().zones.find((zone) => zone.id === zoneId)?.pois[
-      poiIndex
-    ]?.label;
-    if (authored) return authored;
+    if (active) return active;
     const zone = t(mir4Key);
     if (poiIndex === 0) return zone;
     if (poiIndex === 1) return t('hudChrome.mir4.maps.portal', { zone });
   }
+  const canonical = ZONES.find((zone) => zone.id === zoneId)?.pois[poiIndex]?.label;
+  if (active && active !== canonical) return active;
   return tEntity({ kind: 'zonePoi', zoneId, poiIndex, field: 'label' });
 }
 

@@ -1,5 +1,5 @@
 // Structured guidance for every campaign stage that teaches a system. The
-// destination ids point to existing World of ClaudeCraft HUD launchers; no
+// destination ids point to existing Aeldrune HUD launchers; no
 // parallel MIR4 window is introduced.
 
 export type Mir4TutorialShortcutAction =
@@ -8,6 +8,7 @@ export type Mir4TutorialShortcutAction =
   | 'crafting'
   | 'dfinder'
   | 'map'
+  | 'mounts'
   | 'questlog';
 
 export interface Mir4TutorialRequirement {
@@ -44,6 +45,10 @@ const QUEST_LOG = {
   shortcutAction: 'questlog',
 } as const;
 const CHARACTER = { launcherId: 'mm-char', shortcutAction: 'char' } as const;
+const MOUNTS = {
+  launcherId: 'mm-mount-codex',
+  shortcutAction: 'mounts',
+} as const;
 
 export const MIR4_ARC_TUTORIAL_GUIDANCE: readonly Mir4ArcTutorialGuidance[] = [
   guide('M01-Q01', {
@@ -57,6 +62,7 @@ export const MIR4_ARC_TUTORIAL_GUIDANCE: readonly Mir4ArcTutorialGuidance[] = [
   guide('M01-Q02', {
     ...BAGS,
     steps: [
+      'Fale com Sara das Ervas e abra Mercadorias para ver poções, artigos gerais e equipamento inicial da sua classe.',
       'Abra as Bolsas e localize as 3 Poções Menores recebidas com a missão.',
       'Coloque uma poção no atalho e use-a depois de sofrer dano durante a coleta.',
     ],
@@ -140,9 +146,9 @@ export const MIR4_ARC_TUTORIAL_GUIDANCE: readonly Mir4ArcTutorialGuidance[] = [
     requirements: [{ kind: 'action', id: 'stableBell', quantity: 1 }],
   }),
   guide('M03-Q04', {
-    ...BAGS,
+    ...MOUNTS,
     steps: [
-      'Abra as Bolsas, use o Bilhete de Montaria e confirme a montaria invocada.',
+      'Abra o Santuário de Montarias, use o Bilhete de Montaria e confirme a montaria invocada.',
       'Equipe a montaria e atravesse os três marcos indicados sem desmontar.',
     ],
     requirements: [
@@ -212,10 +218,10 @@ export const MIR4_ARC_TUTORIAL_GUIDANCE: readonly Mir4ArcTutorialGuidance[] = [
   guide('M09-Q04', {
     ...MAP,
     steps: [
-      'Sincronize as cinco luzes marcadas e saia de combate.',
-      'Abra o mapa e use o retorno regional nos dois sentidos para validar a rede.',
+      'Localize no mapa o marco de retorno ao lado da Palafita das Luzes.',
+      'Saia de combate, siga até o marco indicado e atravesse o portal uma vez.',
     ],
-    requirements: [{ kind: 'action', id: 'regionalLight', quantity: 5 }],
+    requirements: [{ kind: 'action', id: 'portalTravel', quantity: 1 }],
   }),
   guide('M10-Q03', {
     ...BAGS,

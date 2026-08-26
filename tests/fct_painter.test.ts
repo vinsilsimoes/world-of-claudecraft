@@ -14,7 +14,11 @@ import {
   DAMAGE_FCT_KINDS,
   FCT_ANCHOR_HEAD_OFFSET,
   FCT_JITTER_RANGE,
+  FCT_LOOT_LANE_GAP_PX,
+  FCT_LOOT_LANE_ROWS,
+  FCT_LOOT_LANE_X_PX,
   FCT_TTL_MS,
+  FCT_XP_TTL_MS,
   type FctEvent,
   type FctKind,
 } from '../src/ui/fct_core';
@@ -67,6 +71,7 @@ interface FakeEl {
   parentNode: FakeEl | null;
   childNodes: FakeEl[];
   offsetWidth: number;
+  offsetWidthReads: number;
   [k: string]: unknown;
   appendChild(kid: FakeEl): FakeEl;
   _detach(kid: FakeEl): void;
@@ -81,7 +86,7 @@ function fakeEl(tag: string): FakeEl {
     className: '',
     parentNode: null as FakeEl | null,
     childNodes: [] as FakeEl[],
-    offsetWidth: 0,
+    offsetWidthReads: 0,
     attrs: {} as Record<string, string>,
     setAttribute(name: string, value: string) {
       el.attrs[name] = value;
@@ -103,6 +108,12 @@ function fakeEl(tag: string): FakeEl {
       el.parentNode = null;
     },
   } as unknown as FakeEl;
+  Object.defineProperty(el, 'offsetWidth', {
+    get() {
+      el.offsetWidthReads++;
+      return 0;
+    },
+  });
   return el;
 }
 
@@ -317,6 +328,80 @@ describe('FctPainter: pooled ring over the elided writers', () => {
         .at(-1)?.args[1];
       expect(left).toBe(expected);
     }
+  });
+
+  it('keeps XP centered while loot uses a separate stacked side lane', () => {
+    const painter = makePainter({
+      project: () => ({ x: 300, y: 200, behind: false }),
+      scale: 2,
+      jitter: 0,
+    });
+    painter.spawn(evt({ kind: 'xp', text: '+34 XP' }), 0);
+    painter.spawn(evt({ kind: 'loot', text: 'You loot 7c.' }), 0);
+    painter.spawn(evt({ kind: 'damage-done-auto', text: '22' }), 0);
+    painter.spawn(evt({ kind: 'loot', text: 'You receive: Wolf Fang.' }), 0);
+
+    const nodeFor = (text: string) => liveNodes().find((node) => lastText(calls, node) === text);
+    const styleFor = (node: FakeEl | undefined, prop: string) =>
+      calls
+        .filter((call) => call.m === 'setStyleProp' && call.el === node && call.args[0] === prop)
+        .at(-1)?.args[1];
+    const xp = nodeFor('+34 XP');
+    const firstLoot = nodeFor('You loot 7c.');
+    const secondLoot = nodeFor('You receive: Wolf Fang.');
+
+    // XP keeps the ordinary injected jitter; loot ignores it and moves to the side lane.
+    expect(styleFor(xp, 'left')).toBe(`${(300 - FCT_JITTER_RANGE / 2) / 2}px`);
+    expect(styleFor(firstLoot, 'left')).toBe(`${(300 + FCT_LOOT_LANE_X_PX) / 2}px`);
+    expect(styleFor(secondLoot, 'left')).toBe(`${(300 + FCT_LOOT_LANE_X_PX) / 2}px`);
+    // Interleaved XP/damage do not consume loot rows; only the previous loot entry does.
+    expect(styleFor(firstLoot, 'top')).toBe('100px');
+    expect(styleFor(secondLoot, 'top')).toBe(`${(200 + FCT_LOOT_LANE_GAP_PX) / 2}px`);
+  });
+
+  it('reuses an actually free loot row after expiry without overlapping a survivor', () => {
+    const painter = makePainter({
+      project: () => ({ x: 100, y: 200, behind: false }),
+      cap: 8,
+      jitter: 0.5,
+    });
+    painter.spawn(evt({ kind: 'loot', text: 'A' }), 0);
+    painter.spawn(evt({ kind: 'loot', text: 'B' }), 100);
+    painter.step(FCT_XP_TTL_MS);
+    painter.spawn(evt({ kind: 'loot', text: 'C' }), FCT_XP_TTL_MS);
+
+    const topFor = (text: string) => {
+      const node = liveNodes().find((entry) => lastText(calls, entry) === text);
+      return calls
+        .filter((call) => call.m === 'setStyleProp' && call.el === node && call.args[0] === 'top')
+        .at(-1)?.args[1];
+    };
+    expect(topFor('B')).toBe(`${200 + FCT_LOOT_LANE_GAP_PX}px`);
+    expect(topFor('C')).toBe('200px');
+  });
+
+  it('bounds a reward burst to four stable rows and preserves unrelated XP', () => {
+    const painter = makePainter({
+      project: () => ({ x: 100, y: 200, behind: false }),
+      cap: 12,
+      jitter: 0.5,
+    });
+    painter.spawn(evt({ kind: 'xp', text: '+34 XP' }), 0);
+    for (let i = 0; i < FCT_LOOT_LANE_ROWS + 4; i++) {
+      painter.spawn(evt({ kind: 'loot', text: `Loot ${i}` }), i);
+    }
+
+    expect(painter.liveCount()).toBe(FCT_LOOT_LANE_ROWS + 1);
+    const visibleText = liveNodes()
+      .map((node) => lastText(calls, node))
+      .filter((text): text is string => text !== undefined);
+    expect(visibleText).toContain('+34 XP');
+    expect(visibleText.filter((text) => text.startsWith('Loot '))).toHaveLength(FCT_LOOT_LANE_ROWS);
+    expect(visibleText).not.toContain('Loot 0');
+    expect(visibleText).not.toContain('Loot 3');
+    for (const text of ['Loot 4', 'Loot 5', 'Loot 6', 'Loot 7'])
+      expect(visibleText).toContain(text);
+    expect(liveNodes().reduce((sum, node) => sum + node.offsetWidthReads, 0)).toBe(0);
   });
 
   it('behind-culls at spawn (no slot wasted): a number behind the camera spawns nothing', () => {

@@ -19,12 +19,21 @@ describe('MIR4 equipment client commands', () => {
     client.mir4ResolveItemLayer(991010101, 'enchantment', 'roll-1', true);
     client.mir4CraftMaterial('solar-scroll');
     client.mir4RedeemTicket('mount-ticket-dawn');
+    client.mir4RedeemTicket('mount-ticket-dawn', 10);
+    client.mir4RedeemTicket('mount-ticket-dawn', 100);
+    client.mir4RedeemTicket('spirit-ticket-dawn', 10);
+    client.mir4RedeemTicket('spirit-ticket-dawn', 100);
+    client.mir4RedeemTicket('spirit-ticket-dawn', 0);
     client.mir4ConfirmMount('mount-1');
+    client.mir4ConfirmAllMounts();
     client.mir4EquipMount('meadow-courser');
     client.mir4CombineMounts(1);
+    client.mir4CombineMounts(2, true);
     client.mir4ConfirmSpirit('spirit-1');
+    client.mir4ConfirmAllSpirits();
     client.mir4EquipSpirit('ember-wisp');
     client.mir4CombineSpirits(1);
+    client.mir4CombineSpirits(2, true);
     client.mir4CampaignProfession();
     client.mir4AcknowledgeTutorial('M01-Q01');
     client.mir4UpgradeSkill(1102, 1);
@@ -44,12 +53,21 @@ describe('MIR4 equipment client commands', () => {
       },
       { cmd: 'mir4', m: 'craftMaterial', recipeId: 'solar-scroll' },
       { cmd: 'mir4', m: 'redeemTicket', ticketId: 'mount-ticket-dawn' },
+      { cmd: 'mir4', m: 'redeemTicket', ticketId: 'mount-ticket-dawn', count: 10 },
+      { cmd: 'mir4', m: 'redeemTicket', ticketId: 'mount-ticket-dawn', count: 100 },
+      { cmd: 'mir4', m: 'redeemTicket', ticketId: 'spirit-ticket-dawn', count: 10 },
+      { cmd: 'mir4', m: 'redeemTicket', ticketId: 'spirit-ticket-dawn', count: 100 },
+      { cmd: 'mir4', m: 'redeemTicket', ticketId: 'spirit-ticket-dawn', count: 0 },
       { cmd: 'mir4', m: 'confirmMount', pendingId: 'mount-1' },
+      { cmd: 'mir4', m: 'confirmAllMounts' },
       { cmd: 'mir4', m: 'equipMount', mountId: 'meadow-courser' },
       { cmd: 'mir4', m: 'combineMounts', grade: 1 },
+      { cmd: 'mir4', m: 'combineMounts', grade: 2, all: true },
       { cmd: 'mir4', m: 'confirmSpirit', pendingId: 'spirit-1' },
+      { cmd: 'mir4', m: 'confirmAllSpirits' },
       { cmd: 'mir4', m: 'equipSpirit', spiritId: 'ember-wisp' },
       { cmd: 'mir4', m: 'combineSpirits', grade: 1 },
+      { cmd: 'mir4', m: 'combineSpirits', grade: 2, all: true },
       { cmd: 'mir4', m: 'campaignProfession' },
       { cmd: 'mir4', m: 'ackTutorial', questId: 'M01-Q01' },
       { cmd: 'mir4', m: 'upgradeSkill', skillId: 1102, expectedCurrentLevel: 1 },

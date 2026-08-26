@@ -1,6 +1,6 @@
 // Presentation adapter for MIR4 skills. Mechanics and ids remain MIR4, while
 // every rendered particle, rig gesture and sound palette is selected from an
-// existing World of ClaudeCraft ability cue. No source-project asset is used.
+// existing Aeldrune ability cue. No source-project asset is used.
 
 import type { Mir4SkillDef } from '../content/mir4';
 import type { SimEvent } from '../types';

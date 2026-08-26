@@ -11,6 +11,29 @@ const GRIND_COUNT_MULTIPLIER = 2;
 const GRIND_MIN_PER_CAMP = 6;
 const GRIND_MIN_RADIUS = 6;
 const GRIND_MAX_RADIUS = 30;
+const OBJECTIVE_INTERACTION_CLEAR_RADIUS = 4;
+const OBJECTIVE_GUARD_MAX_COUNT = 6;
+
+// Chapter-strengthening quests must be offered before the danger they prepare
+// the player to face. Ulf used to inherit Icemantle's southern seat, behind the
+// two Glacier Tarn grind camps that block an underpowered M17 character.
+const CAMPAIGN_NPC_SEAT_OVERRIDES: Readonly<Record<string, Readonly<{ x: number; z: number }>>> = {
+  'm17-tundra-dos-uivos-rastreador-ulf': { x: 40, z: 1700 },
+  'm17-tundra-dos-uivos-edda-aurora': { x: 32, z: 1720 },
+  'm17-tundra-dos-uivos-ferreira-yrsa': { x: 27, z: 1738 },
+  // Lumen inherited the lodge's interior Hearthkeeper seat. Interaction was
+  // possible through the wall, but the player then could not leave for Q03.
+  'm18-passo-do-jarl-astrid-aurora': { x: -10, z: 1580 },
+  'm18-passo-do-jarl-abade-lumen': { x: 0, z: 1590 },
+  'm18-passo-do-jarl-ferreira-svala': { x: -120, z: 1860 },
+  // M07 and M19 share Nightbloom physically, but not chronologically. Keep
+  // the Ossuary cast on the northern burial roads; the native southern seats
+  // put M07 turn-ins through a level-140 M19 camp at (-320, 1446).
+  'm07-galerias-do-ossario-vigia-sino': { x: -364, z: 1584 },
+  'm07-galerias-do-ossario-arquivista-nomes': { x: -376, z: 1620 },
+  'm07-galerias-do-ossario-ossia-da-centelha': { x: -380, z: 1700 },
+  'm07-galerias-do-ossario-mestra-ossa': { x: -330, z: 1740 },
+};
 
 function zoneContains(zone: Readonly<ZoneDef>, point: Readonly<{ x: number; z: number }>): boolean {
   const xMin = zone.xMin ?? -180;
@@ -79,7 +102,9 @@ export function seatMir4NpcsOnWocWorld(
   roads: readonly (readonly { x: number; z: number }[])[],
 ): Record<string, NpcDef> {
   const result: Record<string, NpcDef> = {};
-  const used = new Set<string>();
+  // Reserve authored campaign seats so an earlier projected actor cannot take
+  // one through the generic nearest-road fallback.
+  const used = new Set(Object.values(CAMPAIGN_NPC_SEAT_OVERRIDES).map(pointKey));
   const nativeSeats = Object.values(wocNpcs)
     .filter((npc) => !npc.dynamic)
     .map((npc) => npc.pos);
@@ -90,12 +115,14 @@ export function seatMir4NpcsOnWocWorld(
       result[key] = { ...npc };
       continue;
     }
+    const campaignSeat = CAMPAIGN_NPC_SEAT_OVERRIDES[key];
     const zoneNativeSeats = nativeSeats.filter((seat) => zoneContains(zone, seat));
-    const nativeSeat = nearestUnusedPoint(npc.pos, zoneNativeSeats, used);
-    const roadSeat = nativeSeat
-      ? null
-      : nearestUnusedPoint(npc.pos, spacedRoadPoints(roads, zone), used);
-    const pos = nativeSeat ?? roadSeat ?? { x: npc.pos.x, z: npc.pos.z };
+    const nativeSeat = campaignSeat ? null : nearestUnusedPoint(npc.pos, zoneNativeSeats, used);
+    const roadSeat =
+      (campaignSeat ?? nativeSeat)
+        ? null
+        : nearestUnusedPoint(npc.pos, spacedRoadPoints(roads, zone), used);
+    const pos = campaignSeat ?? nativeSeat ?? roadSeat ?? { x: npc.pos.x, z: npc.pos.z };
     used.add(pointKey(pos));
     result[key] = { ...npc, pos };
   }
@@ -143,6 +170,7 @@ export function buildMir4GrindPopulation(
   protectedServices: readonly Readonly<{ x: number; z: number }>[],
   dungeonDoors: readonly Readonly<{ x: number; z: number }>[],
   isPlayableAnchor: (point: Readonly<{ x: number; z: number }>) => boolean = () => true,
+  interactionSites: readonly Readonly<{ x: number; z: number; clearRadius?: number }>[] = [],
 ): CampDef[] {
   const protectedActors = [...Object.values(storyNpcs).map((npc) => npc.pos), ...protectedServices];
   const candidatesByZone = new Map<string, CampDef[]>();
@@ -156,6 +184,7 @@ export function buildMir4GrindPopulation(
 
   const result: CampDef[] = [];
   const usedCenters = new Set<string>();
+  const guardedInteractionSites = new Set<number>();
   for (const anchor of wocCamps) {
     if (!isCombatAnchor(wocMobTemplates[anchor.mobId])) continue;
     if (!isPlayableAnchor(anchor.center)) continue;
@@ -182,11 +211,27 @@ export function buildMir4GrindPopulation(
       maximumSafeFootprintRadius(anchor.center, protectedActors, dungeonDoors),
     );
     if (radius < GRIND_MIN_RADIUS) continue;
+    const overlappingInteractionSites = interactionSites.flatMap((site, index) =>
+      distance(anchor.center, site) <=
+      radius + (site.clearRadius ?? OBJECTIVE_INTERACTION_CLEAR_RADIUS)
+        ? [index]
+        : [],
+    );
+    // A mission object may be guarded, but not by several doubled WoC camps
+    // whose aggregate kill time exceeds the 60-second trash respawn. Keep one
+    // six-creature guard pack: weak players still must intervene, while a
+    // successful clear creates a real two/five-second interaction window.
+    if (overlappingInteractionSites.some((index) => guardedInteractionSites.has(index))) continue;
+    overlappingInteractionSites.forEach((index) => {
+      guardedInteractionSites.add(index);
+    });
+    const count = Math.max(GRIND_MIN_PER_CAMP, Math.ceil(anchor.count * GRIND_COUNT_MULTIPLIER));
     result.push({
       ...source,
       center: { x: anchor.center.x, z: anchor.center.z },
       radius,
-      count: Math.max(GRIND_MIN_PER_CAMP, Math.ceil(anchor.count * GRIND_COUNT_MULTIPLIER)),
+      count:
+        overlappingInteractionSites.length > 0 ? Math.min(OBJECTIVE_GUARD_MAX_COUNT, count) : count,
       offStream: true,
     });
   }
@@ -202,4 +247,6 @@ export const MIR4_WOC_POPULATION_RULES = Object.freeze({
   grindMinPerCamp: GRIND_MIN_PER_CAMP,
   grindMinRadius: GRIND_MIN_RADIUS,
   grindMaxRadius: GRIND_MAX_RADIUS,
+  objectiveInteractionClearRadius: OBJECTIVE_INTERACTION_CLEAR_RADIUS,
+  objectiveGuardMaxCount: OBJECTIVE_GUARD_MAX_COUNT,
 });

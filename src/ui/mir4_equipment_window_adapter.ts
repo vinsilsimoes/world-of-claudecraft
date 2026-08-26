@@ -1,11 +1,11 @@
 // Profile adapter for the existing #char-window and #bags roots. It paints
-// authoritative MIR4 stats/effects over World of ClaudeCraft equipment visuals;
+// authoritative MIR4 stats/effects over Aeldrune equipment visuals;
 // no source-project image, model, texture, or parallel window is introduced.
 
 import { audio } from '../game/audio';
 import { ITEMS } from '../sim/data';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
-import type { EquipSlot, PlayerClass } from '../sim/types';
+import type { EquipSlot, ItemDef, PlayerClass } from '../sim/types';
 import type { IWorld } from '../world_api';
 import { markDialogRoot } from './dialog_root';
 import { itemDisplayName } from './entity_i18n';
@@ -21,21 +21,14 @@ import {
   type Mir4PaperdollSlotView,
   type Mir4PreviewArmorLoadout,
 } from './mir4_character_view';
-import {
-  mir4MountDisplayName,
-  mir4SpiritDisplayName,
-  mir4SpiritSkillDisplayName,
-} from './mir4_collectible_i18n';
+import { mir4MountDisplayName, mir4SpiritDisplayName } from './mir4_collectible_i18n';
 import {
   buildMir4InventoryView,
+  type Mir4CurrencyKey,
+  type Mir4CurrencyView,
   type Mir4MaterialView,
-  type Mir4MountTicketView,
-  type Mir4MountView,
-  type Mir4PendingMountView,
-  type Mir4PendingSpiritView,
-  type Mir4SpiritTicketView,
-  type Mir4SpiritView,
 } from './mir4_inventory_view';
+import { mir4MaterialName } from './mir4_material_i18n';
 import type { PainterHostPresentation } from './painter_host';
 import { hydratePortraits, modularLookFor, portraitChipHtml } from './portrait_chip';
 import { svgIcon } from './ui_icons';
@@ -63,21 +56,32 @@ const STATUS_KEYS: Readonly<Record<number, TranslationKey>> = {
   30: 'hudChrome.mir4.stats.critical',
   31: 'hudChrome.mir4.stats.avoidCritical',
   32: 'hudChrome.mir4.stats.criticalOutcome',
+  33: 'hudChrome.mir4.stats.criticalDamageReduction',
+  38: 'hudChrome.mir4.stats.pvpDamage',
+  39: 'hudChrome.mir4.stats.pvpDamageReduction',
+  40: 'hudChrome.mir4.stats.monsterDamage',
   41: 'hudChrome.mir4.stats.bossDamage',
+  42: 'hudChrome.mir4.stats.monsterDamageReduction',
+  43: 'hudChrome.mir4.stats.bossDamageReduction',
   44: 'hudChrome.mir4.stats.skillDamage',
-};
-
-const MATERIAL_KEYS: Readonly<Record<Mir4MaterialView['key'], TranslationKey>> = {
-  sunStone: 'hudChrome.mir4.materials.sunStone',
-  moonStone: 'hudChrome.mir4.materials.moonStone',
-  solarScroll: 'hudChrome.mir4.materials.solarScroll',
-  lunarSeal: 'hudChrome.mir4.materials.lunarSeal',
-  dawnTear: 'hudChrome.mir4.materials.dawnTear',
-  solarWard: 'hudChrome.mir4.materials.solarWard',
+  45: 'hudChrome.mir4.stats.skillDamageReduction',
+  46: 'hudChrome.mir4.stats.allDamage',
+  47: 'hudChrome.mir4.stats.allDamageReduction',
+  48: 'hudChrome.mir4.stats.stunSuccess',
+  49: 'hudChrome.mir4.stats.stunResistance',
+  82: 'hudChrome.mir4.stats.huntingXp',
+  83: 'hudChrome.mir4.stats.rewardXp',
+  86: 'hudChrome.mir4.stats.energyGain',
+  88: 'hudChrome.mir4.stats.dropChance',
+  92: 'hudChrome.mir4.stats.energyGathering',
+  94: 'hudChrome.mir4.stats.recoveryPotion',
+  95: 'hudChrome.mir4.stats.skillCooldown',
+  97: 'hudChrome.mir4.stats.mpCostReduction',
+  161: 'hudChrome.mir4.stats.huntingXp',
 };
 
 // MIR4 material balances keep their native semantic keys, while the UI uses
-// existing World of ClaudeCraft reagent art as the visual shell.
+// existing Aeldrune reagent art as the visual shell.
 const MATERIAL_VISUAL_ITEM_IDS: Readonly<Record<Mir4MaterialView['key'], keyof typeof ITEMS>> = {
   sunStone: 'thorium_ore',
   moonStone: 'copper_ore',
@@ -85,11 +89,118 @@ const MATERIAL_VISUAL_ITEM_IDS: Readonly<Record<Mir4MaterialView['key'], keyof t
   lunarSeal: 'ironbark_log',
   dawnTear: 'silverleaf_herb',
   solarWard: 'goldleaf_herb',
+  knowledgeFragment: 'ghostly_essence',
+  knowledgeTomeCommon: 'morthen_grimoire',
+  knowledgeTomeRare: 'morthen_grimoire',
+  knowledgeTomeEpic: 'morthen_grimoire',
+  knowledgeTomeLegendary: 'morthen_grimoire',
+  herbLeaf: 'silverleaf_herb',
+  reishi: 'goldleaf_herb',
+  herbRoot: 'sunpetal_herb',
+  unihornSlice: 'bone_fragments',
+  flowerOil: 'sunpetal_herb',
+  centuryFruit: 'goldleaf_herb',
+  etherealShard: 'ghostly_essence',
+  lunarShard: 'arcane_essence',
+  solarShard: 'soul_stone',
+  boundlessShard: 'wraithfire_orb',
+  greaterYangPill: 'minor_healing_potion',
+  greaterYinPill: 'minor_mana_potion',
+  lesserYangPill: 'minor_healing_potion',
+  lesserYinPill: 'minor_mana_potion',
+  noirsoulHerbRare: 'sunpetal_herb',
+  noirsoulHerbEpic: 'sunpetal_herb',
+  noirsoulHerbLegendary: 'sunpetal_herb',
+  unihornRare: 'bone_fragments',
+  unihornEpic: 'bone_fragments',
+  unihornLegendary: 'bone_fragments',
+  flowerOilRare: 'sunpetal_herb',
+  flowerOilEpic: 'sunpetal_herb',
+  flowerOilLegendary: 'sunpetal_herb',
+  centuryFruitRare: 'goldleaf_herb',
+  centuryFruitEpic: 'goldleaf_herb',
+  centuryFruitLegendary: 'goldleaf_herb',
+  greaterYangPillRare: 'minor_healing_potion',
+  greaterYangPillEpic: 'minor_healing_potion',
+  greaterYangPillLegendary: 'minor_healing_potion',
+  greaterYinPillRare: 'minor_mana_potion',
+  greaterYinPillEpic: 'minor_mana_potion',
+  greaterYinPillLegendary: 'minor_mana_potion',
+  lesserYangPillRare: 'minor_healing_potion',
+  lesserYangPillEpic: 'minor_healing_potion',
+  lesserYangPillLegendary: 'minor_healing_potion',
+  lesserYinPillRare: 'minor_mana_potion',
+  lesserYinPillEpic: 'minor_mana_potion',
+  lesserYinPillLegendary: 'minor_mana_potion',
+};
+
+const MATERIAL_QUALITY: Readonly<Record<Mir4MaterialView['key'], NonNullable<ItemDef['quality']>>> =
+  {
+    sunStone: 'common',
+    moonStone: 'common',
+    solarScroll: 'common',
+    lunarSeal: 'common',
+    dawnTear: 'common',
+    solarWard: 'common',
+    knowledgeFragment: 'common',
+    knowledgeTomeCommon: 'common',
+    knowledgeTomeRare: 'rare',
+    knowledgeTomeEpic: 'epic',
+    knowledgeTomeLegendary: 'legendary',
+    herbLeaf: 'common',
+    reishi: 'common',
+    herbRoot: 'uncommon',
+    unihornSlice: 'common',
+    flowerOil: 'rare',
+    centuryFruit: 'epic',
+    etherealShard: 'uncommon',
+    lunarShard: 'uncommon',
+    solarShard: 'uncommon',
+    boundlessShard: 'uncommon',
+    greaterYangPill: 'common',
+    greaterYinPill: 'common',
+    lesserYangPill: 'common',
+    lesserYinPill: 'common',
+    noirsoulHerbRare: 'rare',
+    noirsoulHerbEpic: 'epic',
+    noirsoulHerbLegendary: 'legendary',
+    unihornRare: 'rare',
+    unihornEpic: 'epic',
+    unihornLegendary: 'legendary',
+    flowerOilRare: 'rare',
+    flowerOilEpic: 'epic',
+    flowerOilLegendary: 'legendary',
+    centuryFruitRare: 'rare',
+    centuryFruitEpic: 'epic',
+    centuryFruitLegendary: 'legendary',
+    greaterYangPillRare: 'rare',
+    greaterYangPillEpic: 'epic',
+    greaterYangPillLegendary: 'legendary',
+    greaterYinPillRare: 'rare',
+    greaterYinPillEpic: 'epic',
+    greaterYinPillLegendary: 'legendary',
+    lesserYangPillRare: 'rare',
+    lesserYangPillEpic: 'epic',
+    lesserYangPillLegendary: 'legendary',
+    lesserYinPillRare: 'rare',
+    lesserYinPillEpic: 'epic',
+    lesserYinPillLegendary: 'legendary',
+  };
+
+const CURRENCY_VISUAL_ITEM_IDS: Readonly<Record<Mir4CurrencyKey, keyof typeof ITEMS>> = {
+  energy: 'soul_stone',
+  darksteel: 'thorium_ore',
+};
+
+const CURRENCY_KEYS: Readonly<Record<Mir4CurrencyKey, TranslationKey>> = {
+  energy: 'hudChrome.mir4.currencies.energy',
+  darksteel: 'hudChrome.mir4.currencies.darksteel',
 };
 
 const LEFT_SLOTS = new Set<Mir4EquipmentSlotId>([6, 2, 5, 7]);
 const fmt = (value: number) => formatNumber(value, { maximumFractionDigits: 0 });
-const fmtBps = (value: number) => `${formatNumber(value / 100, { maximumFractionDigits: 2 })}%`;
+const fmtBps = (value: number) =>
+  formatNumber(value / 10_000, { style: 'percent', maximumFractionDigits: 2 });
 const labelValue = (label: string, value: string): string =>
   t('itemUi.market.filterValueAria', { label, value });
 
@@ -98,7 +209,9 @@ export function mir4StatusLabel(statusId: number): string {
 }
 
 function mir4StatusValue(statusId: number, value: number): string {
-  return statusId === 41 || statusId === 44 ? fmtBps(value) : fmt(value);
+  return (statusId >= 32 && statusId <= 53) || (statusId >= 119 && statusId <= 163)
+    ? fmtBps(value)
+    : fmt(value);
 }
 
 export function mir4EquipmentVisualItem(item: Mir4PaperdollItemView) {
@@ -152,14 +265,41 @@ function statsHtml(view: NonNullable<ReturnType<typeof buildMir4CharacterView>>)
     statCell('hudChrome.mir4.stats.criticalOutcome', s.criticalOutcome),
     statCellValue('hudChrome.mir4.stats.bossDamage', fmtBps(s.bossDamageBps)),
     statCellValue('hudChrome.mir4.stats.skillDamage', fmtBps(s.skillDamageBps)),
+    statCellValue('hudChrome.mir4.stats.pvpDamage', fmtBps(s.pvpDamageBps)),
+    statCellValue('hudChrome.mir4.stats.monsterDamage', fmtBps(s.monsterDamageBps)),
+    statCellValue('hudChrome.mir4.stats.allDamage', fmtBps(s.allDamageBps)),
+    statCellValue('hudChrome.mir4.stats.stunSuccess', fmtBps(s.stunSuccessBps)),
   ].join('');
   const defense = [
     statCell('hudChrome.mir4.stats.physicalDefense', s.physicalDefense),
     statCell('hudChrome.mir4.stats.magicDefense', s.magicDefense),
     statCell('hudChrome.mir4.stats.dodge', s.dodge),
     statCell('hudChrome.mir4.stats.avoidCritical', s.avoidCritical),
+    statCellValue('hudChrome.mir4.stats.criticalDamageReduction', fmtBps(s.statusValues[33] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.pvpDamageReduction', fmtBps(s.pvpDamageReductionBps)),
+    statCellValue(
+      'hudChrome.mir4.stats.monsterDamageReduction',
+      fmtBps(s.monsterDamageReductionBps),
+    ),
+    statCellValue('hudChrome.mir4.stats.bossDamageReduction', fmtBps(s.bossDamageReductionBps)),
+    statCellValue('hudChrome.mir4.stats.skillDamageReduction', fmtBps(s.skillDamageReductionBps)),
+    statCellValue('hudChrome.mir4.stats.allDamageReduction', fmtBps(s.allDamageReductionBps)),
+    statCellValue('hudChrome.mir4.stats.stunResistance', fmtBps(s.stunResistanceBps)),
   ].join('');
-  return `<div class="stat-panels"><div class="stat-panel attrs-tiles">${tiles}</div><div class="stat-panel"><div class="sp-title">${esc(t('hudChrome.charSheet.offense'))}</div>${offense}</div><div class="stat-panel"><div class="sp-title">${esc(t('hudChrome.charSheet.defense'))}</div>${defense}</div></div>`;
+  const utility = [
+    statCellValue('hudChrome.mir4.stats.recoveryPotion', fmtBps(s.statusValues[94] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.skillCooldown', fmtBps(s.statusValues[95] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.mpCostReduction', fmtBps(s.statusValues[97] ?? 0)),
+    statCellValue(
+      'hudChrome.mir4.stats.huntingXp',
+      fmtBps((s.statusValues[82] ?? 0) + (s.statusValues[161] ?? 0)),
+    ),
+    statCellValue('hudChrome.mir4.stats.rewardXp', fmtBps(s.statusValues[83] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.dropChance', fmtBps(s.statusValues[88] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.energyGain', fmtBps(s.statusValues[86] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.energyGathering', fmtBps(s.statusValues[92] ?? 0)),
+  ].join('');
+  return `<div class="stat-panels"><div class="stat-panel attrs-tiles">${tiles}</div><div class="stat-panel"><div class="sp-title">${esc(t('hudChrome.charSheet.offense'))}</div>${offense}</div><div class="stat-panel"><div class="sp-title">${esc(t('hudChrome.charSheet.defense'))}</div>${defense}</div><div class="stat-panel"><div class="sp-title">${esc(t('hudChrome.mir4.stats.utility'))}</div>${utility}</div></div>`;
 }
 
 interface CharacterPainterDeps extends PainterHostPresentation {
@@ -269,132 +409,34 @@ interface InventoryPainterDeps extends PainterHostPresentation {
 }
 
 function materialTooltip(material: Mir4MaterialView): string {
-  const name = t(MATERIAL_KEYS[material.key]);
+  const name = mir4MaterialName(material.key);
   return `<div class="tt-title">${esc(name)}</div><div>${esc(t('hudChrome.mir4.materialCount', { count: fmt(material.count) }))}</div>`;
 }
 
-const MOUNT_TICKET_NAME_KEYS: Readonly<Record<Mir4MountTicketView['ticketId'], TranslationKey>> = {
-  'mount-ticket-dawn': 'hudChrome.mir4.mountTicketDawn',
-  'mount-ticket-twilight': 'hudChrome.mir4.mountTicketTwilight',
-};
-
-const MOUNT_TICKET_DESCRIPTION_KEYS: Readonly<
-  Record<Mir4MountTicketView['ticketId'], TranslationKey>
-> = {
-  'mount-ticket-dawn': 'hudChrome.mir4.mountTicketDawnDescription',
-  'mount-ticket-twilight': 'hudChrome.mir4.mountTicketTwilightDescription',
-};
-
-function mountTicketTooltip(ticket: Mir4MountTicketView): string {
-  return `<div class="tt-title">${esc(t(MOUNT_TICKET_NAME_KEYS[ticket.ticketId]))}</div><div>${esc(
-    t(MOUNT_TICKET_DESCRIPTION_KEYS[ticket.ticketId]),
-  )}</div><div class="tt-sub">${esc(t('hudChrome.mir4.materialCount', { count: fmt(ticket.count) }))}</div>`;
+function currencyName(key: Mir4CurrencyKey): string {
+  return t(CURRENCY_KEYS[key]);
 }
 
-function mountTooltip(mount: Mir4MountView | Mir4PendingMountView): string {
-  const count =
-    'count' in mount
-      ? `<div class="tt-sub">${esc(t('hudChrome.mir4.mountOwned', { count: fmt(mount.count) }))}</div>`
-      : '';
-  return `<div class="tt-title">${esc(mir4MountDisplayName(mount.mountId))}</div><div>${esc(
-    t('hudChrome.mir4.mountGrade', { grade: fmt(mount.grade) }),
-  )}</div><div class="tt-sub">${esc(t('hudChrome.mir4.mountEffectShell'))}</div><div>${esc(
-    t('hudChrome.mir4.mountMoveSpeed', {
-      amount: formatNumber(mount.stats.moveSpeedBps / 100, { maximumFractionDigits: 2 }),
-    }),
-  )}</div><div>${esc(
-    t('hudChrome.mir4.mountBasicAttackSpeed', {
-      amount: formatNumber(mount.stats.basicAttackSpeedBps / 100, { maximumFractionDigits: 2 }),
-    }),
-  )}</div><div>${esc(
-    t('hudChrome.mir4.mountDefenses', {
-      physical: fmt(mount.stats.physicalDefense),
-      magic: fmt(mount.stats.magicDefense),
-    }),
-  )}</div>${count}`;
-}
-
-const SPIRIT_TICKET_NAME_KEYS: Readonly<Record<Mir4SpiritTicketView['ticketId'], TranslationKey>> =
-  {
-    'spirit-ticket-dawn': 'hudChrome.mir4.spiritTicketDawn',
-    'spirit-ticket-sunset': 'hudChrome.mir4.spiritTicketSunset',
-  };
-
-const SPIRIT_TICKET_DESCRIPTION_KEYS: Readonly<
-  Record<Mir4SpiritTicketView['ticketId'], TranslationKey>
-> = {
-  'spirit-ticket-dawn': 'hudChrome.mir4.spiritTicketDawnDescription',
-  'spirit-ticket-sunset': 'hudChrome.mir4.spiritTicketSunsetDescription',
-};
-
-function spiritTicketTooltip(ticket: Mir4SpiritTicketView): string {
-  return `<div class="tt-title">${esc(t(SPIRIT_TICKET_NAME_KEYS[ticket.ticketId]))}</div><div>${esc(
-    t(SPIRIT_TICKET_DESCRIPTION_KEYS[ticket.ticketId]),
-  )}</div><div class="tt-sub">${esc(t('hudChrome.mir4.materialCount', { count: fmt(ticket.count) }))}</div>`;
-}
-
-const SPIRIT_STAT_KEYS: Readonly<Record<string, TranslationKey>> = {
-  physicalAttack: 'hudChrome.mir4.stats.physicalAttack',
-  magicAttack: 'hudChrome.mir4.stats.magicAttack',
-  physicalDefense: 'hudChrome.mir4.stats.physicalDefense',
-  magicDefense: 'hudChrome.mir4.stats.magicDefense',
-  accuracy: 'hudChrome.mir4.stats.accuracy',
-  critical: 'hudChrome.mir4.stats.critical',
-  penetrationBps: 'hudChrome.mir4.stats.penetration',
-};
-
-function spiritTooltip(spirit: Mir4SpiritView | Mir4PendingSpiritView): string {
-  const attributes = Object.entries(spirit.stats)
-    .filter(([, value]) => value > 0)
-    .map(([key, value]) => {
-      const label = t(SPIRIT_STAT_KEYS[key] ?? 'hudChrome.mir4.stats.unknown');
-      const rendered =
-        key === 'penetrationBps'
-          ? `${formatNumber(value / 100, { maximumFractionDigits: 2 })}%`
-          : `+${fmt(value)}`;
-      return `<div>${esc(label)}: <b>${esc(rendered)}</b></div>`;
-    })
-    .join('');
-  const count =
-    'count' in spirit
-      ? `<div class="tt-sub">${esc(t('hudChrome.mir4.spiritOwned', { count: fmt(spirit.count) }))}</div>`
-      : '';
-  const skill = spirit.skill;
-  const percent = (bps: number) => formatNumber(bps / 100, { maximumFractionDigits: 2 });
-  const effect =
-    skill.kind === 'bonus-damage'
-      ? t('hudChrome.mir4.spiritSkillBonusDamage', { amount: percent(skill.bonusDamageBps ?? 0) })
-      : skill.kind === 'execute'
-        ? t('hudChrome.mir4.spiritSkillExecute', {
-            threshold: percent(skill.targetHpThresholdBps ?? 0),
-            amount: percent(skill.bonusDamageBps ?? 0),
-          })
-        : skill.kind === 'life-siphon'
-          ? t('hudChrome.mir4.spiritSkillLifeSiphon', { amount: percent(skill.healMaxHpBps ?? 0) })
-          : skill.kind === 'mana-surge'
-            ? t('hudChrome.mir4.spiritSkillManaSurge', {
-                amount: percent(skill.restoreMaxMpBps ?? 0),
-              })
-            : skill.kind === 'armor-rend'
-              ? t('hudChrome.mir4.spiritSkillArmorRend', {
-                  amount: percent(skill.penetrationBps ?? 0),
-                })
-              : t('hudChrome.mir4.spiritSkillCriticalFocus');
-  const skillHtml = `<div class="tt-title">${esc(mir4SpiritSkillDisplayName(skill.id))}</div><div>${esc(
-    t('hudChrome.mir4.spiritSkillChanceCooldown', {
-      chance: percent(skill.chanceBps),
-      cooldown: formatNumber(skill.cooldownMs / 1_000, { maximumFractionDigits: 2 }),
-    }),
-  )}</div><div>${esc(effect)}</div>`;
-  return `<div class="tt-title">${esc(mir4SpiritDisplayName(spirit.spiritId))}</div><div>${esc(
-    t('hudChrome.mir4.spiritGrade', { grade: fmt(spirit.grade) }),
-  )}</div><div class="tt-sub">${esc(t('hudChrome.mir4.spiritEffectShell'))}</div>${attributes}${skillHtml}${count}`;
+function currencyTooltip(currency: Mir4CurrencyView): string {
+  return `<div class="tt-title">${esc(currencyName(currency.key))}</div><div>${esc(t('hudChrome.mir4.currencyCount', { count: fmt(currency.count) }))}</div>`;
 }
 
 export function paintMir4InventoryWindow(deps: InventoryPainterDeps): boolean {
   if (deps.world.cfg?.gameProfile !== MIR4_GAME_PROFILE) return false;
   const root = deps.root;
   const state = deps.world.mir4PlayerState();
+  const signature = JSON.stringify([
+    t('itemUi.bags.title'),
+    state?.mir4Equipment,
+    state?.mir4EquipmentInstances,
+    state?.mir4ArcRewards?.items,
+    state?.mir4Materials,
+    state?.mir4Currencies,
+    deps.world.inventory,
+    deps.world.copper,
+  ]);
+  if (root.dataset.mir4InventorySignature === signature) return true;
+  root.dataset.mir4InventorySignature = signature;
   const focusKey = captureFocusKey(root);
   const previousScroll = root.querySelector('.mir4-bag-scroll')?.scrollTop ?? 0;
   markDialogRoot(root, { label: t('itemUi.bags.title') });
@@ -411,46 +453,42 @@ export function paintMir4InventoryWindow(deps: InventoryPainterDeps): boolean {
   scrollRoot.className = 'mir4-bag-scroll';
   root.appendChild(scrollRoot);
   const view = buildMir4InventoryView(state, deps.world.inventory);
-  const equipmentHeader = root.ownerDocument.createElement('div');
-  equipmentHeader.className = 'bag-section-header';
-  equipmentHeader.textContent = t('hudChrome.mir4.inventoryEquipment');
-  scrollRoot.appendChild(equipmentHeader);
-  const grid = root.ownerDocument.createElement('div');
-  grid.className = 'bag-grid';
-  for (const item of view.equipment) {
-    const visual = mir4EquipmentVisualItem(item);
-    if (!visual) continue;
-    const button = root.ownerDocument.createElement('button');
-    button.type = 'button';
-    button.className = `bag-item q-${visual.quality ?? 'common'}`;
-    button.dataset.focusKey = `mir4-item:${item.itemId}`;
-    button.style.setProperty(
-      '--bag-slot-quality',
-      QUALITY_COLOR[visual.quality ?? 'common'] ?? 'var(--color-quality-default)',
-    );
-    const name = mir4EquipmentDisplayName(item);
-    button.setAttribute('aria-label', t('hudChrome.mir4.equipAria', { item: name }));
-    button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${item.enhancement > 0 ? esc(`+${fmt(item.enhancement)}`) : ''}</span>`;
-    deps.attachTooltip(
-      button,
-      () =>
-        `${mir4EquipmentTooltipHtml(item)}<div class="tt-sub">${esc(t('hudChrome.mir4.equipHint'))}</div>`,
-    );
-    button.addEventListener('click', () => {
-      deps.world.mir4EquipItem(item.itemId);
-      audio.click();
-      deps.hideTooltip();
-      deps.afterEquipmentChange();
-    });
-    grid.appendChild(button);
+  if (view.equipment.length > 0) {
+    const equipmentHeader = root.ownerDocument.createElement('div');
+    equipmentHeader.className = 'bag-section-header';
+    equipmentHeader.textContent = t('hudChrome.mir4.inventoryEquipment');
+    scrollRoot.appendChild(equipmentHeader);
+    const grid = root.ownerDocument.createElement('div');
+    grid.className = 'bag-grid';
+    for (const item of view.equipment) {
+      const visual = mir4EquipmentVisualItem(item);
+      if (!visual) continue;
+      const button = root.ownerDocument.createElement('button');
+      button.type = 'button';
+      button.className = `bag-item q-${visual.quality ?? 'common'} mir4-equip-ready`;
+      button.dataset.focusKey = `mir4-item:${item.itemId}`;
+      button.style.setProperty(
+        '--bag-slot-quality',
+        QUALITY_COLOR[visual.quality ?? 'common'] ?? 'var(--color-quality-default)',
+      );
+      const name = mir4EquipmentDisplayName(item);
+      button.setAttribute('aria-label', t('hudChrome.mir4.equipAria', { item: name }));
+      button.innerHTML = `${deps.itemIcon(visual)}<span class="mir4-equip-ready-mark" aria-hidden="true">${svgIcon('promote')}</span><span class="bi-count">${item.enhancement > 0 ? esc(`+${fmt(item.enhancement)}`) : ''}</span>`;
+      deps.attachTooltip(
+        button,
+        () =>
+          `${mir4EquipmentTooltipHtml(item)}<div class="tt-sub">${esc(t('hudChrome.mir4.equipHint'))}</div>`,
+      );
+      button.addEventListener('click', () => {
+        deps.world.mir4EquipItem(item.itemId);
+        audio.click();
+        deps.hideTooltip();
+        deps.afterEquipmentChange();
+      });
+      grid.appendChild(button);
+    }
+    scrollRoot.appendChild(grid);
   }
-  if (view.equipment.length === 0) {
-    grid.insertAdjacentHTML(
-      'beforeend',
-      `<div class="empty-state">${esc(t('hudChrome.mir4.noUnequippedEquipment'))}</div>`,
-    );
-  }
-  scrollRoot.appendChild(grid);
   if (view.nativeItems.length > 0) {
     const runtimeHeader = root.ownerDocument.createElement('div');
     runtimeHeader.className = 'bag-section-header';
@@ -482,299 +520,64 @@ export function paintMir4InventoryWindow(deps: InventoryPainterDeps): boolean {
     }
     scrollRoot.appendChild(runtimeItems);
   }
-  if (view.mountTickets.length > 0) {
-    const ticketsHeader = root.ownerDocument.createElement('div');
-    ticketsHeader.className = 'bag-section-header';
-    ticketsHeader.textContent = t('hudChrome.mir4.inventoryCollectionTickets');
-    scrollRoot.appendChild(ticketsHeader);
-    const tickets = root.ownerDocument.createElement('div');
-    tickets.className = 'bag-grid';
-    for (const ticket of view.mountTickets) {
-      const visual = ITEMS[ticket.visualItemId];
-      if (!visual) continue;
-      const name = t(MOUNT_TICKET_NAME_KEYS[ticket.ticketId]);
+  if (view.currencies.length > 0) {
+    const currencyHeader = root.ownerDocument.createElement('div');
+    currencyHeader.className = 'bag-section-header';
+    currencyHeader.textContent = t('hudChrome.mir4.inventoryCurrencies');
+    scrollRoot.appendChild(currencyHeader);
+    const currencies = root.ownerDocument.createElement('div');
+    currencies.className = 'bag-grid';
+    for (const currency of view.currencies) {
+      const visual = ITEMS[CURRENCY_VISUAL_ITEM_IDS[currency.key]];
       const button = root.ownerDocument.createElement('button');
       button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-ticket:${ticket.ticketId}`;
-      button.style.setProperty(
-        '--bag-slot-quality',
-        QUALITY_COLOR[visual.quality ?? 'common'] ?? 'var(--color-quality-default)',
-      );
-      button.setAttribute('aria-label', t('hudChrome.mir4.redeemMountTicket', { ticket: name }));
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${esc(fmt(ticket.count))}</span>`;
-      deps.attachTooltip(button, () => mountTicketTooltip(ticket));
-      button.addEventListener('click', () => {
-        deps.world.mir4RedeemTicket(ticket.ticketId);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      tickets.appendChild(button);
-    }
-    scrollRoot.appendChild(tickets);
-  }
-  if (view.mounts.length > 0) {
-    const header = root.ownerDocument.createElement('div');
-    header.className = 'bag-section-header';
-    header.textContent = t('hudChrome.mir4.inventoryMounts');
-    scrollRoot.appendChild(header);
-    const mounts = root.ownerDocument.createElement('div');
-    mounts.className = 'bag-grid';
-    for (const mount of view.mounts) {
-      const visual = ITEMS[mount.visualItemId];
-      if (!visual) continue;
-      const button = root.ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-mount:${mount.mountId}`;
-      button.setAttribute('aria-pressed', String(mount.equipped));
-      button.setAttribute('aria-label', mir4MountDisplayName(mount.mountId));
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${mount.equipped ? esc(t('hudChrome.mir4.mountEquipped')) : esc(fmt(mount.count))}</span>`;
-      deps.attachTooltip(
-        button,
-        () =>
-          `${mountTooltip(mount)}<div class="tt-sub">${esc(
-            t(mount.equipped ? 'hudChrome.mir4.mountUnequipHint' : 'hudChrome.mir4.mountEquipHint'),
-          )}</div>`,
-      );
-      button.addEventListener('click', () => {
-        deps.world.mir4EquipMount(mount.equipped ? null : mount.mountId);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      mounts.appendChild(button);
-    }
-    scrollRoot.appendChild(mounts);
-  }
-  if (view.pendingMounts.length > 0) {
-    const header = root.ownerDocument.createElement('div');
-    header.className = 'bag-section-header';
-    header.textContent = t('hudChrome.mir4.inventoryPendingMounts');
-    scrollRoot.appendChild(header);
-    const pending = root.ownerDocument.createElement('div');
-    pending.className = 'bag-grid';
-    for (const mount of view.pendingMounts) {
-      const visual = ITEMS[mount.visualItemId];
-      if (!visual) continue;
-      const button = root.ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-mount-pending:${mount.pendingId}`;
+      button.className = 'bag-item q-common';
+      button.dataset.mir4Currency = currency.key;
+      button.setAttribute('aria-disabled', 'true');
       button.setAttribute(
         'aria-label',
-        t('hudChrome.mir4.mountConfirmAria', {
-          mount: mir4MountDisplayName(mount.mountId),
-        }),
+        labelValue(currencyName(currency.key), fmt(currency.count)),
       );
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">!</span>`;
-      deps.attachTooltip(
-        button,
-        () =>
-          `${mountTooltip(mount)}<div class="tt-sub">${esc(t('hudChrome.mir4.mountConfirmHint'))}</div>`,
-      );
-      button.addEventListener('click', () => {
-        deps.world.mir4ConfirmMount(mount.pendingId);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      pending.appendChild(button);
+      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${esc(fmt(currency.count))}</span>`;
+      deps.attachTooltip(button, () => currencyTooltip(currency));
+      currencies.appendChild(button);
     }
-    scrollRoot.appendChild(pending);
+    scrollRoot.appendChild(currencies);
   }
-  if (view.mountCombinations.length > 0) {
-    const header = root.ownerDocument.createElement('div');
-    header.className = 'bag-section-header';
-    header.textContent = t('hudChrome.mir4.inventoryMountCombination');
-    scrollRoot.appendChild(header);
-    const combinations = root.ownerDocument.createElement('div');
-    combinations.className = 'bag-grid';
-    for (const combination of view.mountCombinations) {
-      const visual = ITEMS[combination.visualItemId];
-      if (!visual) continue;
+  if (view.materials.length > 0) {
+    const materialHeader = root.ownerDocument.createElement('div');
+    materialHeader.className = 'bag-section-header';
+    materialHeader.textContent = t('hudChrome.mir4.inventoryMaterials');
+    scrollRoot.appendChild(materialHeader);
+    const materials = root.ownerDocument.createElement('div');
+    materials.className = 'bag-grid';
+    for (const material of view.materials) {
+      const visual = ITEMS[MATERIAL_VISUAL_ITEM_IDS[material.key]];
       const button = root.ownerDocument.createElement('button');
       button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-mount-combine:${combination.grade}`;
+      button.className = `bag-item q-${MATERIAL_QUALITY[material.key]}`;
+      button.setAttribute('aria-disabled', 'true');
       button.setAttribute(
         'aria-label',
-        t('hudChrome.mir4.combineMountsAria', { grade: fmt(combination.grade) }),
+        labelValue(mir4MaterialName(material.key), fmt(material.count)),
       );
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">4→1</span>`;
-      deps.attachTooltip(
-        button,
-        () =>
-          `<div class="tt-title">${esc(t('hudChrome.mir4.inventoryMountCombination'))}</div><div>${esc(t('hudChrome.mir4.mountGrade', { grade: fmt(combination.grade) }))}</div><div>${esc(t('hudChrome.mir4.combineMountsHint'))}</div><div class="tt-sub">${esc(t('hudChrome.mir4.mountOwned', { count: fmt(combination.owned) }))}</div>`,
-      );
-      button.addEventListener('click', () => {
-        deps.world.mir4CombineMounts(combination.grade);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      combinations.appendChild(button);
+      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${esc(fmt(material.count))}</span>`;
+      deps.attachTooltip(button, () => materialTooltip(material));
+      materials.appendChild(button);
     }
-    scrollRoot.appendChild(combinations);
+    scrollRoot.appendChild(materials);
   }
-  if (view.spiritTickets.length > 0) {
-    const ticketsHeader = root.ownerDocument.createElement('div');
-    ticketsHeader.className = 'bag-section-header';
-    ticketsHeader.textContent = t('hudChrome.mir4.inventoryCollectionTickets');
-    scrollRoot.appendChild(ticketsHeader);
-    const tickets = root.ownerDocument.createElement('div');
-    tickets.className = 'bag-grid';
-    for (const ticket of view.spiritTickets) {
-      const visual = ITEMS[ticket.visualItemId];
-      if (!visual) continue;
-      const name = t(SPIRIT_TICKET_NAME_KEYS[ticket.ticketId]);
-      const button = root.ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-ticket:${ticket.ticketId}`;
-      button.setAttribute('aria-label', t('hudChrome.mir4.redeemSpiritTicket', { ticket: name }));
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${esc(fmt(ticket.count))}</span>`;
-      deps.attachTooltip(button, () => spiritTicketTooltip(ticket));
-      button.addEventListener('click', () => {
-        deps.world.mir4RedeemTicket(ticket.ticketId);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      tickets.appendChild(button);
-    }
-    scrollRoot.appendChild(tickets);
-  }
-  if (view.spirits.length > 0) {
-    const spiritsHeader = root.ownerDocument.createElement('div');
-    spiritsHeader.className = 'bag-section-header';
-    spiritsHeader.textContent = t('hudChrome.mir4.inventorySpirits');
-    scrollRoot.appendChild(spiritsHeader);
-    const spirits = root.ownerDocument.createElement('div');
-    spirits.className = 'bag-grid';
-    for (const spirit of view.spirits) {
-      const visual = ITEMS[spirit.visualItemId];
-      if (!visual) continue;
-      const button = root.ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-spirit:${spirit.spiritId}`;
-      button.setAttribute('aria-pressed', String(spirit.equipped));
-      button.setAttribute('aria-label', mir4SpiritDisplayName(spirit.spiritId));
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${spirit.equipped ? esc(t('hudChrome.mir4.spiritEquipped')) : esc(fmt(spirit.count))}</span>`;
-      deps.attachTooltip(
-        button,
-        () =>
-          `${spiritTooltip(spirit)}<div class="tt-sub">${esc(
-            t(
-              spirit.equipped
-                ? 'hudChrome.mir4.spiritUnequipHint'
-                : 'hudChrome.mir4.spiritEquipHint',
-            ),
-          )}</div>`,
-      );
-      button.addEventListener('click', () => {
-        deps.world.mir4EquipSpirit(spirit.equipped ? null : spirit.spiritId);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      spirits.appendChild(button);
-    }
-    scrollRoot.appendChild(spirits);
-  }
-  if (view.pendingSpirits.length > 0) {
-    const pendingHeader = root.ownerDocument.createElement('div');
-    pendingHeader.className = 'bag-section-header';
-    pendingHeader.textContent = t('hudChrome.mir4.inventoryPendingSpirits');
-    scrollRoot.appendChild(pendingHeader);
-    const pending = root.ownerDocument.createElement('div');
-    pending.className = 'bag-grid';
-    for (const spirit of view.pendingSpirits) {
-      const visual = ITEMS[spirit.visualItemId];
-      if (!visual) continue;
-      const button = root.ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-spirit-pending:${spirit.pendingId}`;
-      button.setAttribute(
-        'aria-label',
-        t('hudChrome.mir4.spiritConfirmAria', {
-          spirit: mir4SpiritDisplayName(spirit.spiritId),
-        }),
-      );
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">!</span>`;
-      deps.attachTooltip(
-        button,
-        () =>
-          `${spiritTooltip(spirit)}<div class="tt-sub">${esc(t('hudChrome.mir4.spiritConfirmHint'))}</div>`,
-      );
-      button.addEventListener('click', () => {
-        deps.world.mir4ConfirmSpirit(spirit.pendingId);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      pending.appendChild(button);
-    }
-    scrollRoot.appendChild(pending);
-  }
-  if (view.spiritCombinations.length > 0) {
-    const combineHeader = root.ownerDocument.createElement('div');
-    combineHeader.className = 'bag-section-header';
-    combineHeader.textContent = t('hudChrome.mir4.inventorySpiritCombination');
-    scrollRoot.appendChild(combineHeader);
-    const combinations = root.ownerDocument.createElement('div');
-    combinations.className = 'bag-grid';
-    for (const combination of view.spiritCombinations) {
-      const visual = ITEMS[combination.visualItemId];
-      if (!visual) continue;
-      const button = root.ownerDocument.createElement('button');
-      button.type = 'button';
-      button.className = `bag-item q-${visual.quality ?? 'common'}`;
-      button.dataset.focusKey = `mir4-spirit-combine:${combination.grade}`;
-      button.setAttribute(
-        'aria-label',
-        t('hudChrome.mir4.combineSpiritsAria', { grade: fmt(combination.grade) }),
-      );
-      button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">4→1</span>`;
-      deps.attachTooltip(
-        button,
-        () =>
-          `<div class="tt-title">${esc(t('hudChrome.mir4.inventorySpiritCombination'))}</div><div>${esc(t('hudChrome.mir4.spiritGrade', { grade: fmt(combination.grade) }))}</div><div>${esc(t('hudChrome.mir4.combineSpiritsHint'))}</div><div class="tt-sub">${esc(t('hudChrome.mir4.spiritOwned', { count: fmt(combination.owned) }))}</div>`,
-      );
-      button.addEventListener('click', () => {
-        deps.world.mir4CombineSpirits(combination.grade);
-        audio.click();
-        deps.hideTooltip();
-        deps.afterEquipmentChange();
-      });
-      combinations.appendChild(button);
-    }
-    scrollRoot.appendChild(combinations);
-  }
-  const materialHeader = root.ownerDocument.createElement('div');
-  materialHeader.className = 'bag-section-header';
-  materialHeader.textContent = t('hudChrome.mir4.inventoryMaterials');
-  scrollRoot.appendChild(materialHeader);
-  const materials = root.ownerDocument.createElement('div');
-  materials.className = 'bag-grid';
-  for (const material of view.materials) {
-    const visual = ITEMS[MATERIAL_VISUAL_ITEM_IDS[material.key]];
-    const button = root.ownerDocument.createElement('button');
-    button.type = 'button';
-    button.className = 'bag-item q-common';
-    button.setAttribute('aria-disabled', 'true');
-    button.setAttribute(
-      'aria-label',
-      labelValue(t(MATERIAL_KEYS[material.key]), fmt(material.count)),
+  if (
+    view.equipment.length === 0 &&
+    view.nativeItems.length === 0 &&
+    view.currencies.length === 0 &&
+    view.materials.length === 0
+  ) {
+    scrollRoot.insertAdjacentHTML(
+      'beforeend',
+      `<div class="bag-empty">${esc(t('itemUi.bags.empty'))}</div>`,
     );
-    button.innerHTML = `${deps.itemIcon(visual)}<span class="bi-count">${esc(fmt(material.count))}</span>`;
-    deps.attachTooltip(button, () => materialTooltip(material));
-    materials.appendChild(button);
   }
-  scrollRoot.appendChild(materials);
   const money = root.ownerDocument.createElement('div');
   money.className = 'money';
   money.innerHTML = deps.moneyHtml(deps.world.copper);

@@ -7,7 +7,7 @@ import { mir4ArcRegionLayout } from '../content/mir4/arc_world_layout';
 import { MIR4_WORLD_ARC } from '../content/mir4/world_arc';
 import type { Mir4ArcMapProjection, PortalDef, WorldContent } from '../types';
 import { mir4CampaignMapIdsForWorld } from './campaign_availability';
-import { isMir4WocTutorialPortal } from './woc_campaign_portals';
+import { isMir4WocCampaignTransitPortal, isMir4WocTutorialPortal } from './woc_campaign_portals';
 
 const LANDING_OFFSET = 6;
 const MIR4_PORTAL_RADIUS = 3;
@@ -125,6 +125,7 @@ export function mir4PortalRouteGoal(
   availablePortals: readonly PortalDef[] = MIR4_ARC_PORTALS,
   projections?: readonly Mir4ArcMapProjection[],
   world?: WorldContent,
+  destinationMapId?: string,
 ): { x: number; z: number } {
   if (world?.travelPortals) {
     const zoneAt = (point: Readonly<{ x: number; z: number }>) =>
@@ -141,10 +142,74 @@ export function mir4PortalRouteGoal(
       return { x: destination.x, z: destination.z };
     }
     for (const portal of availablePortals) {
-      if (isMir4WocTutorialPortal(portal)) continue;
       const aZone = zoneAt(portal.a);
       const bZone = zoneAt(portal.b);
       if (!aZone || !bZone) continue;
+      if (isMir4WocTutorialPortal(portal)) {
+        if (fromZone.id === aZone.id && destinationZone.id === bZone.id) {
+          return { x: portal.a.x, z: portal.a.z };
+        }
+        if (fromZone.id === bZone.id && destinationZone.id === aZone.id) {
+          return { x: portal.b.x, z: portal.b.z };
+        }
+        continue;
+      }
+      if (isMir4WocCampaignTransitPortal(portal)) {
+        const chapterPair = /^mir4_woc_(m\d{2})_(m\d{2})_/.exec(portal.id);
+        if (
+          destinationMapId &&
+          chapterPair &&
+          !destinationMapId.startsWith(`${chapterPair[1]}-`) &&
+          !destinationMapId.startsWith(`${chapterPair[2]}-`)
+        ) {
+          // Several MIR4 chapters intentionally reuse one physical WoC zone.
+          // Zone equality alone would route M19 through the M06-M07 and
+          // M13-M14 gates merely because their exits share Nightbloom's or
+          // Wraithwood's geometry. A chapter waypoint is valid only for the
+          // chapter pair named by that visible gate.
+          continue;
+        }
+        // A strengthening quest can leave the character in any earlier zone.
+        // Route that return through the authored campaign gateway whenever the
+        // destination is the gateway's later chapter. If another visible
+        // waypoint directly connects the current zone to the gateway's entry
+        // zone, use that first; plotting a road to the second portal can cross
+        // precisely the later-chapter ecology these links are meant to avoid.
+        // Restrict the reverse case to the exact paired zone so leaving that
+        // later chapter for the next one cannot accidentally send the player
+        // backwards.
+        if (destinationZone.id === bZone.id && fromZone.id !== bZone.id) {
+          if (fromZone.id !== aZone.id) {
+            for (const accessPortal of availablePortals) {
+              if (
+                !isMir4WocTutorialPortal(accessPortal) &&
+                !isMir4WocCampaignTransitPortal(accessPortal)
+              ) {
+                continue;
+              }
+              const accessAZone = zoneAt(accessPortal.a);
+              const accessBZone = zoneAt(accessPortal.b);
+              if (!accessAZone || !accessBZone) continue;
+              if (accessAZone.id === fromZone.id && accessBZone.id === aZone.id) {
+                return { x: accessPortal.a.x, z: accessPortal.a.z };
+              }
+              if (accessBZone.id === fromZone.id && accessAZone.id === aZone.id) {
+                return { x: accessPortal.b.x, z: accessPortal.b.z };
+              }
+            }
+            // This gateway is not reachable in one authored hop from the
+            // current zone. Do not aim a continent-long road at its entry;
+            // another transition may own this pair, and direct travel remains
+            // safer than silently crossing every intervening ecology.
+            continue;
+          }
+          return { x: portal.a.x, z: portal.a.z };
+        }
+        if (fromZone.id === bZone.id && destinationZone.id === aZone.id) {
+          return { x: portal.b.x, z: portal.b.z };
+        }
+        continue;
+      }
       if (destinationZone.id === bZone.id && fromZone.id !== bZone.id) {
         return { x: portal.a.x, z: portal.a.z };
       }

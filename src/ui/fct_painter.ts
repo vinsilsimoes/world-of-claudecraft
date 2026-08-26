@@ -70,7 +70,15 @@
 
 import type { UiEffectsTier } from '../game/ui_effects_profile';
 import { fctMaxConcurrent, fctTtlScale } from '../game/ui_tier_knobs';
-import { describeFct, type FctColorToken, type FctDescriptor, type FctEvent } from './fct_core';
+import {
+  describeFct,
+  FCT_LOOT_LANE_GAP_PX,
+  FCT_LOOT_LANE_ROWS,
+  type FctColorToken,
+  type FctDescriptor,
+  type FctEvent,
+  type FctLane,
+} from './fct_core';
 import type { PainterHostWriters } from './painter_host';
 
 /**
@@ -123,6 +131,8 @@ interface FctSlot {
   colorClass: string | null;
   bornAt: number;
   ttlMs: number;
+  lane: FctLane | null;
+  laneRow: number | null;
 }
 
 export class FctPainter {
@@ -174,7 +184,7 @@ export class FctPainter {
       // once at build so the raw per-hit numbers never leak into the a11y tree; the
       // coalesced summary belongs to the #combat-live region, not these nodes.
       node.setAttribute('aria-hidden', 'true');
-      this.free.push({ node, colorClass: null, bornAt: 0, ttlMs: 0 });
+      this.free.push({ node, colorClass: null, bornAt: 0, ttlMs: 0, lane: null, laneRow: null });
     }
   }
 
@@ -203,27 +213,81 @@ export class FctPainter {
     // cap is reached the free list is already empty and this is byte-identical to the
     // pre-tiering "free.pop() ?? live.shift()" pool-full eviction.
     const maxConcurrent = fctMaxConcurrent(tier, this.cap);
-    let slot: FctSlot;
-    let evicted: boolean;
-    if (this.live.length >= maxConcurrent) {
-      slot = this.live.shift() as FctSlot;
-      evicted = true;
-    } else {
-      const freeSlot = this.free.pop();
-      if (freeSlot !== undefined) {
-        slot = freeSlot;
-        evicted = false;
-      } else {
+    let slot: FctSlot | undefined;
+    let evicted = false;
+    if (d.lane === 'loot') {
+      let lootCount = 0;
+      let oldestLootIndex = -1;
+      for (let i = 0; i < this.live.length; i++) {
+        if (this.live[i].lane !== 'loot') continue;
+        if (oldestLootIndex < 0) oldestLootIndex = i;
+        lootCount++;
+      }
+      // Keep the reward feed within four readable rows. Evict only its oldest chip,
+      // never an unrelated XP or combat floater, when a burst exceeds the lane cap.
+      if (lootCount >= FCT_LOOT_LANE_ROWS && oldestLootIndex >= 0) {
+        const [oldestLoot] = this.live.splice(oldestLootIndex, 1);
+        const detachedSlot = this.free.pop();
+        if (detachedSlot !== undefined) {
+          // Prefer a node that was already detached, so a normal reward burst restarts
+          // naturally and never pays restartAnimation's synchronous layout read. Keep the
+          // just-removed node at the far end of the free queue so a same-tick next drop does
+          // not immediately reclaim it before the browser can observe its detach.
+          oldestLoot.node.remove();
+          this.free.unshift(oldestLoot);
+          slot = detachedSlot;
+        } else {
+          // Only a globally exhausted pool must recycle the still-attached chip immediately.
+          slot = oldestLoot;
+          evicted = true;
+        }
+      }
+    }
+    if (slot === undefined) {
+      if (this.live.length >= maxConcurrent) {
         slot = this.live.shift() as FctSlot;
         evicted = true;
+      } else {
+        const freeSlot = this.free.pop();
+        if (freeSlot !== undefined) {
+          slot = freeSlot;
+        } else {
+          slot = this.live.shift() as FctSlot;
+          evicted = true;
+        }
       }
     }
     slot.bornAt = now;
     // Low shortens the lifetime so floaters clear faster (lower live count, less eviction
     // pressure); the full tier scale is exactly 1, so 1250 * 1 = 1250 is byte-identical.
     slot.ttlMs = d.ttlMs * fctTtlScale(tier);
+    // Compute after eviction: the evicted slot is no longer live and must not reserve a row.
+    // Only loot participates, so XP and damage never push rewards down (or vice versa).
+    let laneIndex = 0;
+    if (d.lane === 'loot') {
+      // Reuse the first genuinely free row. Counting live entries is insufficient:
+      // after row 0 expires while row 1 survives, the count is 1 but row 1 is occupied.
+      for (; laneIndex < FCT_LOOT_LANE_ROWS; laneIndex++) {
+        let occupied = false;
+        for (const entry of this.live) {
+          if (entry.lane === 'loot' && entry.laneRow === laneIndex) {
+            occupied = true;
+            break;
+          }
+        }
+        if (!occupied) break;
+      }
+    }
+    slot.lane = d.lane;
+    slot.laneRow = d.lane === 'loot' ? laneIndex : null;
     this.applyContent(slot, d);
-    this.position(slot.node, v, d.jitterOffset, this.getScale());
+    this.position(
+      slot.node,
+      v,
+      d.jitterOffset + d.laneOffsetX,
+      laneIndex * FCT_LOOT_LANE_GAP_PX,
+      this.getScale(),
+    );
     this.mount.appendChild(slot.node); // a detached node becomes visible on attach...
     if (evicted) this.restartAnimation(slot.node); // ...an evicted (attached) one needs the restart.
     this.live.push(slot);
@@ -277,11 +341,12 @@ export class FctPainter {
   private position(
     node: HTMLElement,
     v: { x: number; y: number },
-    jitterOffset: number,
+    horizontalOffset: number,
+    verticalOffset: number,
     scale: number,
   ): void {
-    this.writers.setStyleProp(node, LEFT_PROP, `${(v.x + jitterOffset) / scale}px`);
-    this.writers.setStyleProp(node, TOP_PROP, `${v.y / scale}px`);
+    this.writers.setStyleProp(node, LEFT_PROP, `${(v.x + horizontalOffset) / scale}px`);
+    this.writers.setStyleProp(node, TOP_PROP, `${(v.y + verticalOffset) / scale}px`);
   }
 
   /** Replay the CSS rise on a same-tick EVICTED (still-attached) node. A same-tick detach +

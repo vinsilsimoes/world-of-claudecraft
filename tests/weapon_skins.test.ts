@@ -575,8 +575,8 @@ describe('bow skin attack animation (hunter draw instead of crossbow aim)', () =
     // the substitute unconditionally.
     const src = readFileSync(join(ROOT, 'src/render/characters/visual.ts'), 'utf8');
     const playAttack = src.slice(
-      src.indexOf('playAttack(abilityId?: string)'),
-      src.indexOf('playWhirl()'),
+      src.indexOf('playAttack(abilityId?: string, durationMs?: number)'),
+      src.indexOf('playWhirl(durationMs?: number)'),
     );
     expect(playAttack).toContain('pickSkinAttackClips(');
     expect(playAttack).toContain('this.action(');
@@ -699,7 +699,10 @@ describe('bow skin attack animation (hunter draw instead of crossbow aim)', () =
     await charactersReady();
     const { createCharacterVisual } = await import('../src/render/characters/index');
     const { CharacterVisual } = await import('../src/render/characters/visual');
-    type ActionPeek = { current: { getClip(): { name: string } } | null };
+    type ActionPeek = {
+      current: { getClip(): { name: string; duration: number }; timeScale: number } | null;
+      spinOnceTimer: number;
+    };
 
     const hunterEntity = {
       kind: 'player',
@@ -741,6 +744,20 @@ describe('bow skin attack animation (hunter draw instead of crossbow aim)', () =
     expect((visual as unknown as ActionPeek).current?.getClip().name).toBe('Spellcast_Raise');
     visual.playAttack('rapid_fire');
     expect((visual as unknown as ActionPeek).current?.getClip().name).toBe('Spellcast_Raise');
+
+    // MIR4's authoritative start event supplies a full action window. The
+    // live AnimationAction, not only a pure helper, must consume it so contact
+    // fractions remain aligned after the rig chooses its actual native clip.
+    visual.playAttack('aimed_shot', 500);
+    const timedAttack = (visual as unknown as ActionPeek).current;
+    expect(timedAttack?.timeScale).toBeCloseTo((timedAttack?.getClip().duration ?? 0) / 0.5);
+    visual.playCastAction(undefined, 800);
+    const timedCast = (visual as unknown as ActionPeek).current;
+    expect(timedCast?.timeScale).toBeCloseTo((timedCast?.getClip().duration ?? 0) / 0.8);
+    visual.playWhirl(2_050);
+    expect((visual as unknown as ActionPeek).spinOnceTimer).toBeCloseTo(2.05);
+    const timedWhirl = (visual as unknown as ActionPeek).current;
+    expect(timedWhirl?.timeScale).toBeCloseTo((timedWhirl?.getClip().duration ?? 0) / 2.05);
     // A full charactersReady() reload pulls in this branch's much larger
     // manifest (release/v0.35.0's own content growth), so this single test's
     // real preload pass runs well past the 20s default under host load.

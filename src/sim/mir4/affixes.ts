@@ -266,6 +266,9 @@ export function mir4ResolveLayer(
           meta.mir4EquipmentInstances,
           meta.mir4Spirits,
           meta.mir4Mounts,
+          meta.mir4Codex,
+          meta.mir4ArcRewards?.items,
+          meta.mir4Training,
         );
     }
   }

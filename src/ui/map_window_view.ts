@@ -26,6 +26,8 @@ import {
   STRIP_MIN_X,
   type ZoneDef,
 } from '../sim/data';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { mir4QuestSearchAreas } from '../sim/mir4/quest_search_areas';
 import { NODE_HARVEST_TABLE } from '../sim/professions/gathering';
 import { canGatherTier } from '../sim/professions/tools';
 import {
@@ -59,6 +61,12 @@ import { questNumbersByLog } from './map_quest_list_view';
 export const MAP_MAX_ZOOM = 6;
 // Open with the complete current zone visible.
 export const MAP_OPEN_ZOOM = 1;
+// MIR4 objectives often use a compact six-yard interaction envelope. On the
+// full-zone map that projects to only a handful of pixels and disappears under
+// POI/resource glyphs, even though the world-space search area is correct. Keep
+// only the map visualization large enough to see and hover; navigation and
+// interaction continue to use the authored world-space radius.
+export const MIR4_WORLD_MAP_SEARCH_MIN_RADIUS_PX = 18;
 // Below this visible span (world units across the view) the POI / NPC / ally
 // labels draw; wider zone frames suppress them so the map is not a wall of
 // overlapping text.
@@ -969,6 +977,23 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
     numbers.sort((a, b) => a - b);
     const { mx, my } = toMap(area.center.x, area.center.z);
     questAreas.push({ mx, my, radius: (area.radius / spanX) * S, objectives, numbers });
+  }
+  const mir4Entries =
+    world.cfg.gameProfile === MIR4_GAME_PROFILE &&
+    typeof world.mir4QuestTrackerEntries === 'function'
+      ? world.mir4QuestTrackerEntries()
+      : [];
+  const mir4Projections = world.cfg.world?.mir4ArcMapProjections;
+  for (const area of mir4QuestSearchAreas(mir4Entries, mir4Projections)) {
+    if (!inZone(area.center.x, area.center.z) || !inView(area.center.x, area.center.z)) continue;
+    const { mx, my } = toMap(area.center.x, area.center.z);
+    questAreas.push({
+      mx,
+      my,
+      radius: Math.max(MIR4_WORLD_MAP_SEARCH_MIN_RADIUS_PX, (area.radius / spanX) * S),
+      objectives: [{ questId: area.questId, objectiveIndex: 0 }],
+      numbers: [],
+    });
   }
 
   // Dungeon portals owned by the current zone (shown at every zoom).

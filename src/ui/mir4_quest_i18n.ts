@@ -74,12 +74,18 @@ export function mir4QuestTurnInName(questId?: string): string {
   );
 }
 
+function mir4ReturnToNamedContact(questId: string): string {
+  return t('questUi.log.returnTo', {
+    name: mir4QuestTurnInName(questId),
+  });
+}
+
 export function mir4QuestObjectiveLabel(input: Mir4QuestObjectiveTextInput): string {
   if (input.kind === 'inspect-clues') return t('hudChrome.questTracker.mir4.inspectClues');
   if (input.kind === 'return-giver')
     return FIRST_TRACES_IDS.has(input.questId)
       ? t('hudChrome.questTracker.mir4.returnToTarek')
-      : `${t('hudChrome.mir4.campaign.objective.returnToContact')}: ${mir4QuestTurnInName(input.questId)}`;
+      : mir4ReturnToNamedContact(input.questId);
   if (input.kind === 'reach-giver') {
     if (FIRST_TRACES_IDS.has(input.questId)) return t('hudChrome.questTracker.mir4.reachTarek');
     const giverId = mir4ArcQuest(input.questId)?.giverNpcId;
@@ -88,8 +94,7 @@ export function mir4QuestObjectiveLabel(input: Mir4QuestObjectiveTextInput): str
       ? `${t('hudChrome.mir4.campaign.objective.travel')}: ${giverName}`
       : t('hudChrome.mir4.campaign.objective.travel');
   }
-  if (input.ready)
-    return `${t('hudChrome.mir4.campaign.objective.returnToContact')}: ${mir4QuestTurnInName(input.questId)}`;
+  if (input.ready) return mir4ReturnToNamedContact(input.questId);
   const stage = mir4ArcQuest(input.questId)?.stages[input.stageIndex ?? -1];
   if (stage?.text) return stage.text;
   return t(

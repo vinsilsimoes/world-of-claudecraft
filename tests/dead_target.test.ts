@@ -33,6 +33,13 @@ describe('deadTargetSelectable', () => {
     expect(deadTargetSelectable(ent({ id: 10, dead: true, lootable: true }), 1)).toBe(true);
   });
 
+  it('allows only the active MIR4 body window without advertising loot', () => {
+    const corpse = ent({ id: 11, dead: true, lootable: false, mir4CorpseVisible: true });
+    expect(deadTargetSelectable(corpse, 1)).toBe(true);
+    corpse.mir4CorpseVisible = false;
+    expect(deadTargetSelectable(corpse, 1)).toBe(false);
+  });
+
   it("allows the viewer's own pet", () => {
     const pet = ent({ id: 20, dead: true, ownerId: 1, hostile: false });
     expect(deadTargetSelectable(pet, 1)).toBe(true);

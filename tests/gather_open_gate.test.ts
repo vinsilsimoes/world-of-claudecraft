@@ -92,6 +92,14 @@ describe('handlePickedEntity default arm (both buttons)', () => {
     expect(hud.openLoot).not.toHaveBeenCalled();
   });
 
+  it('opens a MIR4 marker-only body for profession harvesting after loot auto-transfer', () => {
+    const body = corpse({ lootable: false, mir4CorpseVisible: true });
+    const { world, hud } = rig(playerAt(0), body);
+
+    expect(handlePickedEntity(world, hud, body.id, 0, 10, 20)).toBe(true);
+    expect(hud.openLoot).toHaveBeenCalledWith(body.id, 10, 20);
+  });
+
   it.each([0, 2])(
     'never opens a grace-frozen boundary corpse at interest-radius distance with button %i',
     (button) => {
@@ -132,6 +140,15 @@ describe('shouldApproachPickedEntity default arm', () => {
   it('never approaches a claimed harvest-only corpse (nothing to open on arrival)', () => {
     const far = corpse({ pos: { x: 20, y: 0, z: 0 }, harvestClaimedBy: 9 });
     expect(shouldApproachPickedEntity(playerAt(0), far, false)).toBe(false);
+  });
+
+  it('approaches a distant MIR4 marker-only body while its harvest is unclaimed', () => {
+    const body = corpse({
+      lootable: false,
+      mir4CorpseVisible: true,
+      pos: { x: 20, y: 0, z: 0 },
+    });
+    expect(shouldApproachPickedEntity(playerAt(0), body, false)).toBe(true);
   });
 });
 
@@ -267,6 +284,17 @@ describe('tryNearbyInteraction default arm', () => {
     expect(harvestCorpse).toHaveBeenCalledWith(2);
     expect(lootCorpse).not.toHaveBeenCalled();
     expect(hud.showError).not.toHaveBeenCalled();
+  });
+
+  it('dispatches harvest for a MIR4 marker-only body and never asks for corpse loot', () => {
+    const body = corpse({ lootable: false, mir4CorpseVisible: true });
+    const { world, hud, lootCorpse, harvestCorpse } = nearbyRig(body);
+
+    expect(
+      tryNearbyInteraction(world, hud, [], null, 'far', 'notReady', 'escortAway', 'nothing'),
+    ).toBe(true);
+    expect(harvestCorpse).toHaveBeenCalledWith(body.id);
+    expect(lootCorpse).not.toHaveBeenCalled();
   });
 
   it('lets an overlapped node win when the corpse has no loot or harvest for this player', () => {

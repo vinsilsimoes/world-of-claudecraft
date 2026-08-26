@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 
+import { mir4ArcQuest } from '../../src/sim/content/mir4/arc_campaign';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import {
@@ -10,7 +11,10 @@ import {
 } from '../../src/sim/mir4/arc_escorts';
 import { mir4ArcStageAnchor } from '../../src/sim/mir4/arc_quest_runtime';
 import { mir4QuestCurrentStage } from '../../src/sim/mir4/arc_quests';
+import { buildMir4WocCampaignWorld } from '../../src/sim/mir4/woc_comparison_world';
 import { Sim } from '../../src/sim/sim';
+import { terrainHeight, waterLevelAt } from '../../src/sim/world';
+import { WORLD_SEED } from '../../src/sim/world_seed';
 
 function makeEscortSim(): Sim {
   const world = buildMir4ArcWorld(9);
@@ -66,6 +70,87 @@ function makeSupplyEscortSim(): Sim {
 afterAll(() => setActiveWorldContent(null));
 
 describe('MIR4 native-runtime campaign escorts', () => {
+  it('authors Caminho Seguro as a named escort along three distinct dry-road checkpoints', () => {
+    const world = buildMir4WocCampaignWorld();
+    setActiveWorldContent(world);
+    const quest = mir4ArcQuest('M02-Q02');
+    if (!quest) throw new Error('M02-Q02 is required');
+    const approach = quest.stages[1];
+    const escort = quest.stages[2];
+    const guardian = quest.stages[3];
+    const evidence = quest.stages[4];
+    if (!approach || !escort || !guardian || !evidence)
+      throw new Error('Caminho Seguro stages are required');
+
+    const approachAnchor = mir4ArcStageAnchor(
+      quest.questId,
+      approach,
+      0,
+      world.mir4ArcMapProjections,
+    );
+    const checkpoints = [0, 1, 2].map((index) =>
+      mir4ArcStageAnchor(quest.questId, escort, index, world.mir4ArcMapProjections),
+    );
+    const guardianAnchor = mir4ArcStageAnchor(
+      quest.questId,
+      guardian,
+      0,
+      world.mir4ArcMapProjections,
+    );
+    const evidenceAnchor = mir4ArcStageAnchor(
+      quest.questId,
+      evidence,
+      0,
+      world.mir4ArcMapProjections,
+    );
+
+    expect(approachAnchor).toEqual({ x: -398, z: 292 });
+    expect(checkpoints).toEqual([
+      { x: -390, z: 300 },
+      { x: -360, z: 324 },
+      { x: -360, z: 362 },
+    ]);
+    expect(guardianAnchor).toEqual({ x: -360, z: 362 });
+    expect(evidenceAnchor).toEqual({ x: -360, z: 362 });
+    expect(approach.text).toContain('Ivo Juncofirme');
+    expect(approach.text).toContain('margem seca');
+    expect(escort.text).toContain('Ivo Juncofirme');
+    expect(escort.text).toContain('estrada seca');
+    expect(escort.text).not.toMatch(/escolha a rota|reparad/iu);
+    expect(guardian.text).toContain('Posto das Duas Pontes');
+    expect(evidence.text).toContain('cada parada da patrulha');
+    const dialogue = quest.dialogue.map((line) => (typeof line === 'string' ? line : line.text));
+    expect(dialogue).toHaveLength(3);
+    expect(dialogue[0]).toContain('Ivo Juncofirme');
+    expect(dialogue[1]).toContain('três pontos da emboscada');
+    expect(dialogue[2]).toContain('Ivo chegou vivo');
+    expect(quest.dialogue).toContainEqual(
+      expect.objectContaining({ speaker: 'Neris da Centelha' }),
+    );
+
+    const route = [approachAnchor, ...checkpoints].filter(
+      (point): point is { x: number; z: number } => point !== null,
+    );
+    for (let leg = 1; leg < route.length; leg += 1) {
+      const from = route[leg - 1];
+      const to = route[leg];
+      if (!from || !to) throw new Error(`Caminho Seguro route leg ${leg} is incomplete`);
+      expect(Math.hypot(to.x - from.x, to.z - from.z)).toBeGreaterThan(10);
+      const samples = Math.ceil(Math.hypot(to.x - from.x, to.z - from.z) * 2);
+      for (let sample = 0; sample <= samples; sample += 1) {
+        const ratio = sample / samples;
+        const x = from.x + (to.x - from.x) * ratio;
+        const z = from.z + (to.z - from.z) * ratio;
+        const water = waterLevelAt(x, z, WORLD_SEED);
+        if (!Number.isFinite(water)) continue;
+        expect(
+          terrainHeight(x, z, WORLD_SEED),
+          `dry escort route leg ${leg} at ${x.toFixed(2)},${z.toFixed(2)}`,
+        ).toBeGreaterThanOrEqual(water + 0.2);
+      }
+    }
+  });
+
   it('walks a visible native mob through three guarded checkpoints before credit', () => {
     const sim = makeEscortSim();
     const meta = sim.players.get(sim.playerId)!;
@@ -78,6 +163,8 @@ describe('MIR4 native-runtime campaign escorts', () => {
 
     const npc = escortee(sim)!;
     expect(npc).toMatchObject({ kind: 'mob', hostile: false, questIds: ['M02-Q02'] });
+    expect(npc.name).toBe('Ivo Juncofirme');
+    expect(sim.mir4RuntimeMobTemplates.get(npc.templateId)?.canSwim).toBe(false);
     sim.player.pos = { ...npc.pos };
     expect(tryStartMir4ArcEscort(sim.ctx, sim.player)).toBe(true);
 
@@ -89,7 +176,7 @@ describe('MIR4 native-runtime campaign escorts', () => {
       const ambushers = [...sim.entities.values()].filter((entity) =>
         entity.templateId.startsWith(`mir4_escort_ambush_m02-q02_2_${checkpoint}`),
       );
-      expect(ambushers).toHaveLength(2);
+      expect(ambushers).toHaveLength(1);
       expect(ambushers.every((entity) => entity.hostile && entity.runScoped)).toBe(true);
       for (const ambusher of ambushers) ambusher.dead = true;
       updateMir4ArcEscorts(sim.ctx);
@@ -111,9 +198,14 @@ describe('MIR4 native-runtime campaign escorts', () => {
     expect(tryStartMir4ArcEscort(sim.ctx, sim.player)).toBe(true);
 
     const reached: number[] = [];
+    let previousNpcPosition = { ...npc.pos };
     for (let tick = 0; tick < 5_000 && progress.stageIndex === 2; tick++) {
       sim.player.pos = { ...npc.pos };
       updateMir4ArcEscorts(sim.ctx);
+      expect(
+        Math.hypot(npc.pos.x - previousNpcPosition.x, npc.pos.z - previousNpcPosition.z),
+      ).toBeLessThan(1);
+      previousNpcPosition = { ...npc.pos };
       const run = [...sim.mir4ArcEscortRuns.values()][0];
       if (!run?.waitingCheckpoint || reached.includes(run.checkpoint)) continue;
       reached.push(run.checkpoint);
@@ -126,6 +218,66 @@ describe('MIR4 native-runtime campaign escorts', () => {
     expect(reached).toEqual([0, 1, 2]);
     expect(progress).toMatchObject({ stageIndex: 3, stageProgress: 0, state: 'active' });
     expect(sim.entities.has(npc.id)).toBe(false);
+  });
+
+  it('navigates every projected checkpoint on the original WoC map without a straight-line wedge', () => {
+    const world = buildMir4WocCampaignWorld();
+    setActiveWorldContent(world);
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      playerClassMir4: 'elementalist',
+      playerName: 'WoC Escort Tester',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+    });
+    sim.setPlayerLevel(15);
+    const progress = {
+      questId: 'M02-Q02',
+      stageIndex: 2,
+      stageProgress: 0,
+      state: 'active' as const,
+    };
+    sim.players.get(sim.playerId)!.mir4ArcQuests = { 'M02-Q02': progress };
+    const stage = mir4QuestCurrentStage(progress)!;
+    const first = mir4ArcStageAnchor(progress.questId, stage, 0, world.mir4ArcMapProjections)!;
+    sim.player.pos = sim.groundPos(first.x, first.z);
+    updateMir4ArcEscorts(sim.ctx);
+    const npc = escortee(sim)!;
+    sim.player.pos = { ...npc.pos };
+    expect(tryStartMir4ArcEscort(sim.ctx, sim.player)).toBe(true);
+
+    let guard = 0;
+    while (progress.stageIndex === 2 && guard++ < 5_000) {
+      const run = [...sim.mir4ArcEscortRuns.values()][0];
+      const liveNpc = run?.npcId == null ? null : sim.entities.get(run.npcId);
+      if (liveNpc) {
+        const water = waterLevelAt(liveNpc.pos.x, liveNpc.pos.z, WORLD_SEED);
+        if (Number.isFinite(water)) {
+          expect(
+            terrainHeight(liveNpc.pos.x, liveNpc.pos.z, WORLD_SEED),
+            `escort entered water at ${liveNpc.pos.x.toFixed(2)},${liveNpc.pos.z.toFixed(2)}`,
+          ).toBeGreaterThanOrEqual(water + 0.2);
+        }
+        sim.player.pos = { ...liveNpc.pos };
+      }
+      for (const id of run?.ambushIds ?? []) {
+        const ambusher = sim.entities.get(id);
+        if (ambusher) ambusher.dead = true;
+      }
+      updateMir4ArcEscorts(sim.ctx);
+    }
+
+    const stalledRun = [...sim.mir4ArcEscortRuns.values()][0];
+    const stalledNpc = stalledRun?.npcId == null ? null : sim.entities.get(stalledRun.npcId);
+    expect(
+      guard,
+      JSON.stringify({
+        checkpoint: stalledRun?.checkpoint,
+        npc: stalledNpc ? { x: stalledNpc.pos.x, z: stalledNpc.pos.z } : null,
+      }),
+    ).toBeLessThan(5_000);
+    expect(progress).toMatchObject({ stageIndex: 3, stageProgress: 0 });
   });
 
   it('restarts the current stage after the escortee dies', () => {
@@ -150,6 +302,26 @@ describe('MIR4 native-runtime campaign escorts', () => {
     sim.time += 1;
     updateMir4ArcEscorts(sim.ctx);
     expect(escortee(sim)).toMatchObject({ hostile: false });
+  });
+
+  it('gives the player a reasonable reaction window before ambushers can kill the escortee', () => {
+    const sim = makeEscortSim();
+    const progress = sim.players.get(sim.playerId)!.mir4ArcQuests!['M02-Q02']!;
+    const stage = mir4QuestCurrentStage(progress)!;
+    const first = mir4ArcStageAnchor(progress.questId, stage, 0)!;
+    sim.player.pos = sim.groundPos(first.x, first.z);
+    updateMir4ArcEscorts(sim.ctx);
+    const npc = escortee(sim)!;
+    sim.player.pos = { ...npc.pos };
+    expect(tryStartMir4ArcEscort(sim.ctx, sim.player)).toBe(true);
+    npc.pos = sim.groundPos(first.x, first.z);
+    updateMir4ArcEscorts(sim.ctx);
+    expect([...sim.mir4ArcEscortRuns.values()][0]?.ambushIds).toHaveLength(1);
+
+    for (let tick = 0; tick < 160; tick++) sim.tick();
+
+    expect(npc.dead).toBe(false);
+    expect(npc.hp).toBeGreaterThan(0);
   });
 
   it('keeps a started escortee friendly through mob upkeep and Auto Battle targeting', () => {
@@ -225,8 +397,9 @@ describe('MIR4 native-runtime campaign escorts', () => {
     expect(progress.stageProgress).toBe(1);
   });
 
-  it('selects the nearest living escort ambusher with an entity-id tie break', () => {
+  it('selects the living escort ambusher and rejects it after death', () => {
     const sim = makeEscortSim();
+    sim.setPlayerLevel(21);
     const progress = sim.players.get(sim.playerId)!.mir4ArcQuests!['M02-Q02']!;
     const stage = mir4QuestCurrentStage(progress)!;
     const first = mir4ArcStageAnchor(progress.questId, stage, 0)!;
@@ -240,24 +413,18 @@ describe('MIR4 native-runtime campaign escorts', () => {
     updateMir4ArcEscorts(sim.ctx);
     const run = [...sim.mir4ArcEscortRuns.values()][0]!;
     const ambushers = run.ambushIds.map((id) => sim.entities.get(id)!);
-    expect(ambushers).toHaveLength(2);
+    expect(ambushers).toHaveLength(1);
 
     expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)?.id).toBe(
-      Math.min(...ambushers.map((ambusher) => ambusher.id)),
+      ambushers[0]!.id,
     );
-    const higherId = ambushers.reduce((best, candidate) =>
-      candidate.id > best.id ? candidate : best,
-    );
-    higherId.pos = sim.groundPos(sim.player.pos.x + 1, sim.player.pos.z);
-    expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)?.id).toBe(higherId.id);
-    higherId.dead = true;
-    expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)?.id).not.toBe(
-      higherId.id,
-    );
+    ambushers[0]!.dead = true;
+    expect(mir4ArcEscortTargetForPlayer(sim.ctx, sim.playerId, 'M02-Q02', 2)).toBeNull();
   });
 
   it('scopes escortee, start and ambush selection to the exact quest stage', () => {
     const sim = makeEscortSim();
+    sim.setPlayerLevel(21);
     const meta = sim.players.get(sim.playerId)!;
     const main = meta.mir4ArcQuests!['M02-Q02']!;
     const side = {
@@ -293,7 +460,7 @@ describe('MIR4 native-runtime campaign escorts', () => {
     updateMir4ArcEscorts(sim.ctx);
     const mainRun = sim.mir4ArcEscortRuns.get(`${sim.playerId}:M02-Q02:2`)!;
     const sideRun = sim.mir4ArcEscortRuns.get(`${sim.playerId}:M01-R01:0`)!;
-    expect(mainRun.ambushIds).toHaveLength(2);
+    expect(mainRun.ambushIds).toHaveLength(1);
     expect(sideRun.ambushIds).toHaveLength(1);
     expect(
       mainRun.ambushIds.includes(

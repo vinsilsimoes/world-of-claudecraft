@@ -21,6 +21,27 @@ export function resolveMobTemplate(
   );
 }
 
+/** Movement's hot path must resolve both static WoC and session-only MIR4
+ * templates without teaching the Sim coordinator a second lookup order. */
+export function mobPhases(
+  templateId: string,
+  runtimeTemplates?: ReadonlyMap<string, MobTemplate>,
+): boolean {
+  return resolveMobTemplate(templateId, runtimeTemplates)?.phasesThroughObstacles === true;
+}
+
+export function mobSwims(
+  templateId: string,
+  runtimeTemplates?: ReadonlyMap<string, MobTemplate>,
+): boolean {
+  // Preserve the legacy WoC rule (every static MOBS entry swims) while
+  // requiring ported/session-only templates to opt in explicitly.
+  return (
+    MOBS[templateId] !== undefined ||
+    resolveMobTemplate(templateId, runtimeTemplates)?.canSwim === true
+  );
+}
+
 export function rollCampMobLevel(template: MobTemplate, camp: CampDef, rng: Rng): number {
   const min = Math.max(template.minLevel, camp.minLevel ?? template.minLevel);
   const max = Math.max(min, Math.min(template.maxLevel, camp.maxLevel ?? template.maxLevel));

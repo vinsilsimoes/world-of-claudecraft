@@ -52,6 +52,9 @@ export interface ActionBarControllerDeps {
   hasAura(kind: string): boolean;
   isInSportMatch(): boolean;
   showAttackButton(): boolean;
+  /** Profiles with combat tools instead of a fixed Attack use slot 0 as their
+   * first ordinary action seat. */
+  preferFirstSeatAction?(): boolean;
   // The persistence seam: called after a user-driven layout change (never during
   // initial load) with the FULL captured layout. Offline it is a no-op
   // (localStorage is the store); online the ClientWorld debounces a wire save.
@@ -83,6 +86,7 @@ export class ActionBarController {
   init(): void {
     this.loadActions();
     this.loadAttackAction();
+    this.promoteFirstSeatAction();
     this.ready = true;
   }
 
@@ -93,6 +97,7 @@ export class ActionBarController {
     this.ready = false;
     this.loadActions();
     this.loadAttackAction();
+    this.promoteFirstSeatAction();
     this.ready = true;
   }
 
@@ -158,6 +163,7 @@ export class ActionBarController {
     this.activeFormState = next;
     this.loadActions();
     this.loadAttackAction();
+    this.promoteFirstSeatAction();
     return true;
   }
 
@@ -175,6 +181,7 @@ export class ActionBarController {
     const talentSpec = this.deps.talentSpec();
     const playerLevel = this.deps.playerLevel();
     if (this.trySeedOwnedSpecDefault(knownAbilityIds, talentSpec, playerLevel)) {
+      this.promoteFirstSeatAction();
       this.knownAbilityIdsAtLastSync = new Set(knownAbilityIds);
       this.talentSpecAtLastSync = talentSpec;
       this.playerLevelAtLastSync = playerLevel;
@@ -219,6 +226,14 @@ export class ActionBarController {
     );
     this.actionState = synced.actions;
     if (synced.changed) this.saveActions();
+    if (
+      this.attackActionState?.type === 'ability' &&
+      !knownAbilityIdSet.has(this.attackActionState.id)
+    ) {
+      this.attackActionState = null;
+      this.saveAttackAction();
+    }
+    this.promoteFirstSeatAction();
     this.knownAbilityIdsAtLastSync = knownAbilityIdSet;
     this.talentSpecAtLastSync = talentSpec;
     this.playerLevelAtLastSync = playerLevel;
@@ -270,8 +285,16 @@ export class ActionBarController {
     // A passive is never castable: reject a manual drag/spellbook add so it
     // cannot occupy a dead action slot (auto-place already skips passives).
     if (!this.isAbilityPlacementAllowed(abilityId)) return false;
-    if (this.actionState.some((action) => action?.type === 'ability' && action.id === abilityId)) {
+    if (
+      (this.attackActionState?.type === 'ability' && this.attackActionState.id === abilityId) ||
+      this.actionState.some((action) => action?.type === 'ability' && action.id === abilityId)
+    ) {
       return false;
+    }
+    if (this.prefersFirstSeatAction() && this.attackActionState === null) {
+      this.attackActionState = { type: 'ability', id: abilityId };
+      this.saveAttackAction();
+      return true;
     }
     const target = this.actionState.indexOf(null);
     if (target === -1) return false;
@@ -281,10 +304,18 @@ export class ActionBarController {
   }
 
   hasFreeSlot(): boolean {
-    return this.actionState.includes(null);
+    return (
+      (this.prefersFirstSeatAction() && this.attackActionState === null) ||
+      this.actionState.includes(null)
+    );
   }
 
   removeAbility(abilityId: string): boolean {
+    if (this.attackActionState?.type === 'ability' && this.attackActionState.id === abilityId) {
+      this.attackActionState = null;
+      this.saveAttackAction();
+      return true;
+    }
     const target = this.actionState.findIndex(
       (action) => action?.type === 'ability' && action.id === abilityId,
     );
@@ -309,9 +340,30 @@ export class ActionBarController {
       ownedSpecDefault ?? this.formKitAbilityIds(this.activeFormState),
       ACTION_BAR_ABILITY_SLOTS,
     );
+    if (this.prefersFirstSeatAction()) {
+      this.attackActionState = null;
+      this.saveAttackAction();
+    }
     this.knownAbilityIdsAtLastSync = new Set(knownAbilityIds);
     this.markFormBarSeeded();
     this.saveActions();
+    this.promoteFirstSeatAction();
+  }
+
+  private prefersFirstSeatAction(): boolean {
+    return this.deps.preferFirstSeatAction?.() === true;
+  }
+
+  /** Move the first configured action into the profile's visible seat 1. */
+  private promoteFirstSeatAction(): boolean {
+    if (!this.prefersFirstSeatAction() || this.attackActionState !== null) return false;
+    const sourceIndex = this.actionState.findIndex((action) => action !== null);
+    if (sourceIndex === -1) return false;
+    this.attackActionState = this.actionState[sourceIndex];
+    this.actionState = clearHotbarSlot(this.actionState, sourceIndex);
+    this.saveActions();
+    this.saveAttackAction();
+    return true;
   }
 
   formKitAbilityIds(form: HotbarForm): string[] {

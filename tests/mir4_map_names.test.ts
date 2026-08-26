@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
 import { setActiveWorldContent } from '../src/sim/data';
+import { buildMir4WocCampaignWorld } from '../src/sim/mir4/woc_comparison_world';
 import { zoneDisplayName, zonePoiLabel, zoneWelcomeText } from '../src/ui/entity_i18n';
 import { setLanguage } from '../src/ui/i18n';
 
@@ -31,5 +32,13 @@ describe('MIR4 map presentation through the existing WoC map UI', () => {
     expect(zonePoiLabel(zoneId, 0)).toBe('Vila do Vau');
     expect(zonePoiLabel(zoneId, 1)).toBe('Clareira dos Rastros');
     expect(zonePoiLabel(zoneId, 2)).toBe('Campos Pisoteados');
+  });
+
+  it('uses campaign landmark names over the unchanged WoC map artwork', () => {
+    const world = buildMir4WocCampaignWorld(2);
+    setActiveWorldContent(world);
+
+    expect(zonePoiLabel('willowfen', 0)).toBe('Posto das Duas Pontes');
+    expect(zonePoiLabel('willowfen', 1)).toBe('Juncal das Três Chamas');
   });
 });

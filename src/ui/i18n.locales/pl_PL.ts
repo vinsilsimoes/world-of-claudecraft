@@ -690,7 +690,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perf.diagnostics.metrics.waitingHitch': 'przypisanie zacięć: aktywowane po wejściu do świata',
   'hudChrome.perf.diagnostics.metrics.waitingRenderer': 'renderer: oczekiwanie',
   'hudChrome.perf.diagnostics.metrics.waitingValue': 'oczekiwanie',
-  'hudChrome.perf.diagnostics.panelAria': 'Diagnostyka wydajności World of ClaudeCraft',
+  'hudChrome.perf.diagnostics.panelAria': 'Diagnostyka wydajności Aeldrune',
   'hudChrome.perf.diagnostics.report.capturedLine': 'Przechwycono: {captured}',
   'hudChrome.perf.diagnostics.report.findingHeading': '{index}. {title}',
   'hudChrome.perf.diagnostics.report.findingMeta': 'Ważność: {severity}. Pewność: {confidence}.',
@@ -706,7 +706,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perf.diagnostics.report.status.needsAttention': 'wymaga uwagi',
   'hudChrome.perf.diagnostics.report.statusLine': 'Stan: {status} ({score}/100)',
   'hudChrome.perf.diagnostics.report.summaryLine': 'Podsumowanie: {summary}',
-  'hudChrome.perf.diagnostics.report.title': 'Diagnoza wydajności World of ClaudeCraft',
+  'hudChrome.perf.diagnostics.report.title': 'Diagnoza wydajności Aeldrune',
   'hudChrome.perf.diagnostics.report.topFindingLine': 'Najważniejsze ustalenie: {finding}',
   'hudChrome.perf.diagnostics.scoreHeadline': '{score}/100: {headline}',
   'hudChrome.perf.diagnostics.sections.codeFix': 'Poprawka kodu',
@@ -727,7 +727,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perf.diagnostics.status.waitingWorld': 'Oczekiwanie na świat gry. Wybierz Graj offline lub wejdź postacią online.',
   'hudChrome.perf.diagnostics.status.worldLoaded': 'Świat załadowany. Oczekiwanie na pierwszą grywalną klatkę.',
   'hudChrome.perf.diagnostics.subtitle': 'Skanowanie dopasowane do gry, z dowodami i poprawkami na poziomie kodu.',
-  'hudChrome.perf.diagnostics.title': 'ClaudeCraft: Doktor Wydajności',
+  'hudChrome.perf.diagnostics.title': 'Aeldrune: Doktor Wydajności',
   'hudChrome.plurals.playtimeDays.few': '{count} dni',
   'hudChrome.plurals.playtimeDays.many': '{count} dni',
   'hudChrome.plurals.playtimeDays.one': '{count} dzień',
@@ -750,7 +750,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.talents.gearRestored': 'Przywrócono {n} części ekwipunku z tego builda.',
   'hudChrome.talents.gearTakenByOtherSlot': '{n} zapisanych części wymaga innej kopii, której nie posiadasz.',
   'hudChrome.talents.newBuildWithGear': 'Nowy build (zapisz też ekwipunek)',
-  'hudChrome.wiki.confirmBody': 'To otwiera wiki World of ClaudeCraft w twojej przeglądarce. Gra nadal działa w tle.',
+  'hudChrome.wiki.confirmBody': 'To otwiera wiki Aeldrune w twojej przeglądarce. Gra nadal działa w tle.',
   'hudChrome.wiki.confirmCancel': 'Anuluj',
   'hudChrome.wiki.confirmOpen': 'Otwórz Wiki',
   'hudChrome.wiki.confirmTitle': 'Otworzyć Wiki?',
@@ -2294,7 +2294,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.specPanel.specUnlockHint': 'Naciśnij N, aby wybrać swoją specjalizację.',
   'hudChrome.wocStore.wallet.connect': 'Podłącz portfel',
   'hudChrome.wocStore.wallet.connectedUnlinked':
-    'Aplikacja portfela jest podłączona do tej przeglądarki, lecz jej publiczny adres nie jest jeszcze powiązany z twoim kontem WoC.',
+    'Aplikacja portfela jest podłączona do tej przeglądarki, lecz jej publiczny adres nie jest jeszcze powiązany z twoim kontem Aeldrune.',
   'hudChrome.wocStore.wallet.linkedConnected':
     'Twój powiązany portfel jest podłączony i gotowy do zakupów za SOL lub WOC.',
   'hudChrome.wocStore.wallet.linkedDisconnected':
@@ -2305,12 +2305,12 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.wocStore.wallet.reconnect': 'Podłącz ponownie portfel',
   'hudChrome.wocStore.wallet.title': 'Portfel Solana',
   'hudChrome.wocStore.wallet.unlinked':
-    'Podłącz aplikację portfela, a następnie podpisz raz, aby powiązać jej publiczny adres z twoim kontem WoC. Nigdy nie otrzymujemy twojej frazy odzyskiwania ani klucza prywatnego.',
+    'Podłącz aplikację portfela, a następnie podpisz raz, aby powiązać jej publiczny adres z twoim kontem Aeldrune. Nigdy nie otrzymujemy twojej frazy odzyskiwania ani klucza prywatnego.',
   'hudChrome.wocStore.wallet.verify': 'Zweryfikuj i powiąż',
   'wallet.bagConnect': 'Powiąż portfel',
   'wallet.bagLink': 'Zweryfikuj portfel',
   'wallet.bagReconnect': 'Podłącz ponownie portfel',
-  'wallet.browser.completeBody': 'Możesz wrócić do aplikacji desktopowej World of ClaudeCraft.',
+  'wallet.browser.completeBody': 'Możesz wrócić do aplikacji desktopowej Aeldrune.',
   'wallet.browser.completeTitle': 'Autoryzacja portfela zakończona',
   'wallet.browser.continueWith': 'Kontynuuj z {wallet}',
   'wallet.browser.extensionHelp':
@@ -2328,12 +2328,12 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
     'Postępuj zgodnie z monitem od {wallet}. Pozostaw tę stronę przeglądarki otwartą.',
   'wallet.browser.reviewTitle': 'Sprawdź w swoim portfelu',
   'wallet.browser.safety':
-    'World of ClaudeCraft nigdy nie prosi o frazę odzyskiwania ani klucz prywatny.',
+    'Aeldrune nigdy nie prosi o frazę odzyskiwania ani klucz prywatny.',
   'wallet.browser.title': 'Podłącz portfel Solana',
   'wallet.manualReturnBrowserHelp':
     'Po zatwierdzeniu wróć do tej karty gry. Jeśli iOS otworzy inną przeglądarkę, zamknij ją i wróć ręcznie do oryginalnej przeglądarki.',
   'wallet.manualReturnStandaloneHelp':
-    'Po zatwierdzeniu wróć do World of ClaudeCraft z ekranu głównego. Jeśli iOS otworzy przeglądarkę, zamknij ją i ręcznie otwórz ponownie aplikację z ekranu głównego.',
+    'Po zatwierdzeniu wróć do Aeldrune z ekranu głównego. Jeśli iOS otworzy przeglądarkę, zamknij ją i ręcznie otwórz ponownie aplikację z ekranu głównego.',
   'wallet.mobileAppHelp':
     'Wybierz Phantom lub Solflare. Aplikacja portfela poprosi o zatwierdzenie. Pozostaw tę grę otwartą i wróć do niej po zakończeniu.',
   'wallet.openAppButton': 'Otwórz {wallet}',
@@ -2342,7 +2342,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'wallet.openAppTitle': 'Kontynuuj w {wallet}',
   'wallet.preparingAppButton': 'Przygotowywanie {wallet}...',
   'wallet.standaloneAppHelp':
-    'Połączenia z portfelami nie są jeszcze dostępne w aplikacji z ekranu głównego. Otwórz World of ClaudeCraft w Safari lub Chrome, aby używać Phantom lub Solflare.',
+    'Połączenia z portfelami nie są jeszcze dostępne w aplikacji z ekranu głównego. Otwórz Aeldrune w Safari lub Chrome, aby używać Phantom lub Solflare.',
   'wallet.walletAppUnavailable':
     'Nie udało się przygotować {wallet}. Zamknij to okno i spróbuj ponownie.',
   'entities.abilities.primal_reflexes.description':
@@ -3260,7 +3260,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'editor.confirm.discardBody': 'Masz niezapisane zmiany w "{name}". Odrzucić je?',
   'editor.confirm.discardTitle': 'Odrzucić zmiany?',
   'editor.confirm.ok': 'OK',
-  'editor.docTitle': 'Edytor map - World of ClaudeCraft',
+  'editor.docTitle': 'Edytor map - Aeldrune',
   'editor.eraseTool.blockerHint':
     'Kliknięcie w pobliżu ściany blokującej usuwa zamiast tego tę ścianę.',
   'editor.eraseTool.hint':
@@ -3916,9 +3916,9 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.statInfo.sources.header': 'Składa się z:',
   'hudChrome.statInfo.sources.talents': 'Talenty i efekty: {value}',
   'a11y.characterActions': 'Akcje postaci',
-  'a11y.discordCommunity': 'Dołącz do społeczności Discord World of ClaudeCraft',
-  'a11y.donateProject': 'Wesprzyj World of ClaudeCraft datkiem',
-  'a11y.githubProject': 'Otwórz projekt World of ClaudeCraft na GitHubie',
+  'a11y.discordCommunity': 'Dołącz do społeczności Discord Aeldrune',
+  'a11y.donateProject': 'Wesprzyj Aeldrune datkiem',
+  'a11y.githubProject': 'Otwórz projekt Aeldrune na GitHubie',
   'a11y.goHome': 'Przejdź do strony głównej',
   'a11y.languageSelection': 'Wybór języka',
   'a11y.mainNavigation': 'Nawigacja główna',
@@ -6057,7 +6057,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'fiesta.word.shutdown': 'POWSTRZYMANY!',
   'fiesta.word.spree': '{n}× SERIA!',
   'fiesta.word.wave': 'ULEPSZENIA!',
-  'footer.copyright': '2026 World of ClaudeCraft',
+  'footer.copyright': '2026 Aeldrune',
   'footer.discordLabel': 'Dołącz do Discorda',
   'footer.githubLabel': 'Projekt open source',
   'footer.githubLink': 'https://github.com/levy-street/world-of-claudecraft',
@@ -6306,8 +6306,8 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'guide.bestiary.levelsSame': 'Poziom {min}',
   'guide.bestiary.notedLabel': 'Warte uwagi',
   'guide.bestiary.rare': 'Rzadki',
-  'guide.brand': 'World of ClaudeCraft',
-  'guide.brandShort': 'ClaudeCraft',
+  'guide.brand': 'Aeldrune',
+  'guide.brandShort': 'Aeldrune',
   'guide.breadcrumb.home': 'Przewodnik',
   'guide.breadcrumb.label': 'Ścieżka nawigacji',
   'guide.chooser.clear': 'Wyczyść',
@@ -6562,7 +6562,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'guide.footer.discord': 'Dołącz do Discorda',
   'guide.footer.github': 'Źródło na GitHubie',
   'guide.footer.playNow': 'Zagraj teraz',
-  'guide.footer.rights': 'World of ClaudeCraft',
+  'guide.footer.rights': 'Aeldrune',
   'guide.gear.consumablesElixirs': 'Eliksiry dają tymczasowe wzmocnienie, gdy jesteś w drodze, małą przewagę, która pomaga, gdy chcesz przycisnąć trochę dalej. Nie dzielą czasu odnowienia mikstur, więc możesz wypić jeden i mimo to trzymać miksturę leczniczą w zapasie. Dwa eliksiry na tę samą cechę nie sumują się, a zostaje ten, który wypiłeś jako ostatni.',
   'guide.gear.consumablesFood':
     'Jedzenie i napoje regenerują cię, gdy siedzisz i odpoczywasz między walkami. Jedzenie przywraca zdrowie, picie przywraca manę, a odpoczynek w ten sposób jest darmowy. Usiądź na kilka sekund po ciężkiej walce, zamiast wbiegać w następną wyleczony tylko do połowy.',
@@ -6722,7 +6722,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
     'Świat da się przejść w pojedynkę, ale najlepszy łup czeka na dobrą drużynę.',
   'guide.home.subtitle':
     'Wykonuj zadania, zbieraj drużynę i odkrywaj ręcznie tworzony świat, za darmo w przeglądarce.',
-  'guide.home.title': 'World of ClaudeCraft',
+  'guide.home.title': 'Aeldrune',
   'guide.home.what.heading': 'Klasyczne MMO, stworzone, by od razu w nie zagrać',
   'guide.home.what.pillarClassesBody':
     'Tankuj, lecz albo zadawaj obrażenia. Każda klasa gra się tak, jak powinien jej archetyp, a talenty czynią ją twoją.',
@@ -7125,7 +7125,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'guide.worldPage.gladeTitle': 'Cichy zakątek: Brightwood Glade',
   'guide.worldPage.heading': 'Świat',
   'guide.worldPage.hub': 'Baza wypadowa',
-  'guide.worldPage.intro': 'World of ClaudeCraft to jedna ciągła kraina, którą przemierzasz pieszo. Stary trakt biegnie z południa na północ przez startową dolinę, bagno i szczyty, i wspina się dalej za nie, w kotlinę i śnieżny kraj u góry mapy. Kolumna wyższych królestw otwiera się od tego traktu na zachód, a druga na wschód, u wschodniego wybrzeża Doliny zaś leży wyspa. Nie ma szybkiej podróży, tras lotniczych ani dyliżansów: każdą drogę pokonuje się pieszo albo wierzchem, więc dotarcie na miejsce jest częścią przygody.\n\nKraina odmierza też czas. Cykl dnia i nocy biegnie na prawdziwym zegarze dzielonym przez wszystkich w twoim świecie, więc niebo przechodzi od świtu przez południe ku zmierzchowi i ciemności dla was wszystkich naraz, księżyc przychodzi i odchodzi przez swoje fazy, a światło na ziemi zmienia się razem z nim. Tarcza wokół twojej minimapy to miejsce, w którym odczytujesz godzinę.',
+  'guide.worldPage.intro': 'Aeldrune to jedna ciągła kraina, którą przemierzasz pieszo. Stary trakt biegnie z południa na północ przez startową dolinę, bagno i szczyty, i wspina się dalej za nie, w kotlinę i śnieżny kraj u góry mapy. Kolumna wyższych królestw otwiera się od tego traktu na zachód, a druga na wschód, u wschodniego wybrzeża Doliny zaś leży wyspa. Nie ma szybkiej podróży, tras lotniczych ani dyliżansów: każdą drogę pokonuje się pieszo albo wierzchem, więc dotarcie na miejsce jest częścią przygody.\n\nKraina odmierza też czas. Cykl dnia i nocy biegnie na prawdziwym zegarze dzielonym przez wszystkich w twoim świecie, więc niebo przechodzi od świtu przez południe ku zmierzchowi i ciemności dla was wszystkich naraz, księżyc przychodzi i odchodzi przez swoje fazy, a światło na ziemi zmienia się razem z nim. Tarcza wokół twojej minimapy to miejsce, w którym odczytujesz godzinę.',
   'guide.worldPage.mapHeading': 'Trakt i królestwa za nim',
   'guide.worldPage.mapSub': 'Szlak zadań biegnie z południa na północ środkiem mapy: dolina, bagno, szczyty i dalej za nie, w kotlinę i śnieg. Pozostałe królestwa otwierają się wzdłuż tego traktu, a nie za nim, przez bramy na wschód i na zachód od bagiennej drogi, natomiast wyspę Farshore osiąga się od wschodniego wybrzeża Doliny. Tym, co trzyma cię z dala od dalekich królestw, są ich pasma poziomów, nie marsz: pięć z nich dzieli najwyższe pasmo, więc gdy będziesz gotów, możesz brać je w dowolnej kolejności. Farshore jest wyjątkiem, to kraina niskiego poziomu, którą możesz odwiedzić wcześnie.',
   'guide.worldPage.marshBlurb':
@@ -8569,7 +8569,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
     'Aby uzyskać tryb pełnoekranowy na Androidzie, najpierw zainstaluj tę stronę lub dodaj ją do ekranu głównego.',
   'mobilePreflight.androidInstallStep':
     'W Chrome dotknij menu, a następnie Zainstaluj aplikację lub Dodaj do ekranu głównego.',
-  'mobilePreflight.androidOpenStep': 'Otwórz World of ClaudeCraft z nowej ikony.',
+  'mobilePreflight.androidOpenStep': 'Otwórz Aeldrune z nowej ikony.',
   'mobilePreflight.androidStandaloneDetail':
     'Jesteś w trybie pełnoekranowej aplikacji. Trzymaj urządzenie w orientacji poziomej.',
   'mobilePreflight.baseLandscape':
@@ -8579,7 +8579,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'mobilePreflight.continue': 'Przejdź do gry',
   'mobilePreflight.iosInstallDetail':
     'Aby uzyskać prawdziwy tryb pełnoekranowy na iPhonie lub iPadzie, najpierw zainstaluj tę stronę na ekranie głównym.',
-  'mobilePreflight.iosOpenStep': 'Otwórz World of ClaudeCraft z nowej ikony na ekranie głównym.',
+  'mobilePreflight.iosOpenStep': 'Otwórz Aeldrune z nowej ikony na ekranie głównym.',
   'mobilePreflight.iosShareStep':
     'W Safari dotknij Udostępnij, a następnie Dodaj do ekranu głównego.',
   'mobilePreflight.iosStandaloneDetail':
@@ -8604,7 +8604,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
     'Zaloguj się do świata. Twoje postacie żyją na serwerze, a świat dzielisz ze wszystkimi innymi, którzy są online.',
   'mode.onlineTitle': 'Graj online',
   'mode.play': 'Graj',
-  'mode.playAria': 'Zagraj w World of ClaudeCraft',
+  'mode.playAria': 'Zagraj w Aeldrune',
   'mode.serverAria': 'Wybierz świat: online lub offline',
   'mode.serverLabel': 'Wybierz swój świat',
   'mode.serverOffline': 'Offline',
@@ -8637,16 +8637,16 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'playerCard.actionShareNative': 'Udostępnij...',
   'playerCard.actionShareX': 'Udostępnij na X',
   'playerCard.arenaStat': 'Arena',
-  'playerCard.brandWordmark': 'WORLD OF CLAUDECRAFT',
+  'playerCard.brandWordmark': 'AELDRUNE',
   'playerCard.close': 'Zamknij kartę gracza',
-  'playerCard.defaultRealm': 'World of ClaudeCraft',
+  'playerCard.defaultRealm': 'Aeldrune',
   'playerCard.fileNameFallback': 'gracz',
   'playerCard.footerCta': 'Wykuj swą legendę: {siteUrl}',
   'playerCard.footerHandle': '@{handle}',
   'playerCard.footerHandleWithRecruits': '@{handle} - {recruited}',
   'playerCard.levelClass': 'Poziom {level} - {className}',
   'playerCard.loading': 'Wykuwanie twojej karty...',
-  'playerCard.nativeShareTitle': 'World of ClaudeCraft',
+  'playerCard.nativeShareTitle': 'Aeldrune',
   'playerCard.poseBattle': 'Bitwa',
   'playerCard.poseGroup': 'Poza',
   'playerCard.poseHero': 'Bohater',
@@ -8660,7 +8660,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'playerCard.renderFailedStatus': 'Renderowanie karty nie powiodło się.',
   'playerCard.shareButton': 'Udostępnij kartę gracza',
   'playerCard.shareText':
-    'Wykuwam swą legendę w World of ClaudeCraft: {className} na poziomie {level}{tierBit}. Dołącz do mojego świata:',
+    'Wykuwam swą legendę w Aeldrune: {className} na poziomie {level}{tierBit}. Dołącz do mojego świata:',
   'playerCard.shareTierBit': ', posiadacz $WOC rangi {tier}',
   'playerCard.statusDownloaded': 'Karta pobrana.',
   'playerCard.statusGenericError': 'Coś poszło nie tak.',
@@ -8765,21 +8765,21 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'realmTypes.rpPvp': 'RP-PvP',
   'seo.applicationCategory': 'Gra',
   'seo.description':
-    'Wyrusz na epicką przygodę w World of ClaudeCraft, klasycznym mikro-MMO grywalnym bezpośrednio w przeglądarce. Dołącz do trwałego wspólnego świata, rozwijaj klasy postaci i pokonuj wrogów!',
+    'Wyrusz na epicką przygodę w Aeldrune, klasycznym mikro-MMO grywalnym bezpośrednio w przeglądarce. Dołącz do trwałego wspólnego świata, rozwijaj klasy postaci i pokonuj wrogów!',
   'seo.genre': 'MMORPG',
   'seo.officialBody':
     'worldofclaudecraft.com to oficjalne, darmowe przeglądarkowe MMO dla świata Claudemoon. Graj online z trwałą postacią, eksploruj solo w trybie offline, czytaj wiki i śledź zweryfikowane linki społeczności z tej strony.',
-  'seo.officialLabel': 'Oficjalna strona World of ClaudeCraft',
+  'seo.officialLabel': 'Oficjalna strona Aeldrune',
   'seo.operatingSystem': 'Przeglądarka internetowa',
   'seo.playMode': 'Wieloosobowy',
-  'seo.title': 'World of ClaudeCraft: klasyczne przeglądarkowe MMO',
+  'seo.title': 'Aeldrune: klasyczne przeglądarkowe MMO',
   'serverUnavailable.body':
     'Ponownie uruchamiamy usługę gry i spodziewamy się, że Claudemoon wkrótce wróci. Ta strona będzie automatycznie sprawdzać stan.',
   'serverUnavailable.eyebrow': 'Konserwacja świata',
   'serverUnavailable.heading': 'Świat jest tymczasowo niedostępny.',
-  'serverUnavailable.logoAlt': 'World of ClaudeCraft',
+  'serverUnavailable.logoAlt': 'Aeldrune',
   'serverUnavailable.status': 'Niedługo wracamy',
-  'serverUnavailable.title': 'World of ClaudeCraft - Świat niedostępny',
+  'serverUnavailable.title': 'Aeldrune - Świat niedostępny',
   'settings.languageLoadFailed': 'Nie udało się wczytać tego języka. Zachowano obecny język.',
   'settings.languageLoadUnavailable': 'Ten język jest niedostępny.',
   'settings.languageLoading': 'Wczytywanie języka...',
@@ -9195,7 +9195,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.leaderboard.guildXp': 'Łączne XP',
   'hudChrome.leaderboard.guildEmpty': 'Brak sklasyfikowanych gildii.',
   'hudChrome.discord.title': 'Discord',
-  'hudChrome.discord.panelTitle': 'World of ClaudeCraft',
+  'hudChrome.discord.panelTitle': 'Aeldrune',
   'hudChrome.discord.open': 'Discord',
   'hudChrome.discord.close': 'Zamknij',
   'hudChrome.discord.keybind': 'Panel Discorda',
@@ -9316,10 +9316,10 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'errors.api.desktopCodeInvalid':
     'Kod logowania do aplikacji jest nieprawidłowy lub wygasł. Spróbuj ponownie.',
   'desktop.crash.body': 'Widok gry przestał działać. Załadować ponownie?',
-  'desktop.crash.fatalBody': 'World of ClaudeCraft napotkał nieoczekiwany błąd i musi się zamknąć.',
+  'desktop.crash.fatalBody': 'Aeldrune napotkał nieoczekiwany błąd i musi się zamknąć.',
   'desktop.crash.quit': 'Zakończ',
   'desktop.crash.reload': 'Załaduj ponownie',
-  'desktop.crash.title': 'World of ClaudeCraft',
+  'desktop.crash.title': 'Aeldrune',
   'desktop.update.downloadingTitle': 'Pobieranie aktualizacji {version}...',
   'desktop.update.later': 'Później',
   'desktop.update.readyTitle': 'Aktualizacja {version} jest gotowa',
@@ -9373,9 +9373,9 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
     'Wycena WOC jest obecnie niedostępna. Sprawdź ponownie za chwilę.',
   'hudChrome.dailyRewards.walletValue': 'Wartość portfela (WOC)',
   'hudChrome.nativeUpdate.body':
-    'Dostępna jest nowa wersja World of ClaudeCraft. Zaktualizuj teraz, aby uzyskać najnowsze poprawki i ulepszenia.',
+    'Dostępna jest nowa wersja Aeldrune. Zaktualizuj teraz, aby uzyskać najnowsze poprawki i ulepszenia.',
   'hudChrome.nativeUpdate.bodyWithVersion':
-    'Dostępna jest wersja {version} World of ClaudeCraft. Zaktualizuj teraz, aby uzyskać najnowsze poprawki i ulepszenia.',
+    'Dostępna jest wersja {version} Aeldrune. Zaktualizuj teraz, aby uzyskać najnowsze poprawki i ulepszenia.',
   'hudChrome.nativeUpdate.notNow': 'Nie teraz',
   'hudChrome.nativeUpdate.title': 'Dostępna aktualizacja',
   'hudChrome.nativeUpdate.update': 'Aktualizuj',
@@ -13302,7 +13302,7 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'hudChrome.options.forceHighPerfGpuNote': 'Domyślnie włączone: aplikacja desktopowa prosi ten komputer o użycie dedykowanej karty graficznej do gier. Wyłącz tę opcję, jeśli gra się nie uruchamia, otwiera się na czarnym ekranie lub ekran laptopa gaśnie. Zmiana zacznie obowiązywać przy następnym uruchomieniu gry.',
   'desktop.notify.partyInviteBody': '{name} zaprasza cię do swojej drużyny.',
   'desktop.notify.partyInviteTitle': 'Zaproszenie do drużyny',
-  'desktop.notify.updateReadyBody': 'Uruchom ponownie World of ClaudeCraft, aby zastosować aktualizację.',
+  'desktop.notify.updateReadyBody': 'Uruchom ponownie Aeldrune, aby zastosować aktualizację.',
   'desktop.notify.updateReadyTitle': 'Aktualizacja {version} jest gotowa',
   'desktop.notify.updateReadyTitleNoVersion': 'Aktualizacja jest gotowa',
   'desktop.update.whatsNew': 'Zobacz w przeglądarce, co się zmieniło.',

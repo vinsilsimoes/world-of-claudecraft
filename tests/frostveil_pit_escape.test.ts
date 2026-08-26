@@ -9,11 +9,14 @@
 // shore" waypoint, and this suite walks a real player out of the reported
 // stranding spot, back down again, and checks nobody re-sharpened the ramp.
 
-import { describe, expect, it } from 'vitest';
-import { BUILTIN_WORLD } from '../src/sim/data';
-import { Sim } from '../src/sim/sim';
-import type { WorldContent } from '../src/sim/types';
+import { describe, expect, it } from "vitest";
+import { BUILTIN_WORLD } from "../src/sim/data";
+import { FROSTVEIL_ROADS } from "../src/sim/content/frostveil";
+import { Sim } from "../src/sim/sim";
+import type { WorldContent } from "../src/sim/types";
 import {
+  GLACIER_TARN_ICEMANTLE_APPROACH,
+  GLACIER_TARN_ICEMANTLE_RAMP,
   GLACIER_TARN_RAMP,
   groundHeight,
   isInWaterBody,
@@ -21,8 +24,8 @@ import {
   terrainSteepnessAt,
   WATER_LEVEL,
   waterLevelAt,
-} from '../src/sim/world';
-import { expectDefined } from './helpers/defined';
+} from "../src/sim/world";
+import { expectDefined } from "./helpers/defined";
 
 // The production seed: the report is seed-pinned world geometry.
 const SEED = 20061;
@@ -41,9 +44,13 @@ const SEED = 20061;
 const FROSTVEIL_ESCAPE_TEST_WORLD: WorldContent = {
   ...BUILTIN_WORLD,
   camps: BUILTIN_WORLD.camps.filter((camp) =>
-    ['snowdrift_wolf', 'ice_wisp', 'rime_elemental', 'fen_sprite', 'frostmane_yeti'].includes(
-      camp.mobId,
-    ),
+    [
+      "snowdrift_wolf",
+      "ice_wisp",
+      "rime_elemental",
+      "fen_sprite",
+      "frostmane_yeti",
+    ].includes(camp.mobId),
   ),
   npcs: {},
   groundObjects: [],
@@ -66,16 +73,18 @@ function onRim(x: number, z: number): boolean {
 function makeWalker(spot: { x: number; z: number }) {
   const sim = new Sim({
     seed: SEED,
-    playerClass: 'warrior',
+    playerClass: "warrior",
     autoEquip: true,
     world: FROSTVEIL_ESCAPE_TEST_WORLD,
   });
   sim.setPlayerLevel(20);
   const p = sim.player;
   const meta = expectDefined(
-    (sim as unknown as { players: Map<number, { moveInput: { forward: boolean } }> }).players.get(
-      (sim as unknown as { playerId: number }).playerId,
-    ),
+    (
+      sim as unknown as {
+        players: Map<number, { moveInput: { forward: boolean } }>;
+      }
+    ).players.get((sim as unknown as { playerId: number }).playerId),
   );
   p.pos.x = spot.x;
   p.pos.z = spot.z;
@@ -106,13 +115,17 @@ function walkHeading(
 
 // Sixteen-azimuth sweep out of the bowl. Returns the headings (in degrees,
 // atan2(dx, dz) convention) that reached the rim.
-function escapeHeadings(spot: { x: number; z: number }, seconds: number): number[] {
+function escapeHeadings(
+  spot: { x: number; z: number },
+  seconds: number,
+): number[] {
   const out: number[] = [];
   for (let k = 0; k < 16; k++) {
     const facing = (k * Math.PI) / 8;
     const end = walkHeading(spot, facing, seconds);
     const moved = Math.hypot(end.x - spot.x, end.z - spot.z);
-    if (moved > 8 && onRim(end.x, end.z)) out.push(Math.round((facing * 180) / Math.PI));
+    if (moved > 8 && onRim(end.x, end.z))
+      out.push(Math.round((facing * 180) / Math.PI));
   }
   return out;
 }
@@ -122,90 +135,182 @@ const r = GLACIER_TARN_RAMP;
 const UP_THE_RAMP = Math.atan2(r.bx - r.ax, r.bz - r.az);
 const DOWN_THE_RAMP = Math.atan2(r.ax - r.bx, r.az - r.bz);
 
-describe('the Glacier Tarn bowl is leavable on foot', () => {
-  it('walks out of the reported stranding spot', { timeout: 90_000 }, () => {
+describe("the Glacier Tarn bowl is leavable on foot", () => {
+  it("walks out of the reported stranding spot", { timeout: 90_000 }, () => {
     const headings = escapeHeadings(STRANDED, 12);
-    expect(headings.length, 'no heading out of the pond floor reaches the rim').toBeGreaterThan(0);
-  });
-
-  it('leaves by the authored ramp, straight up the west flank', { timeout: 60_000 }, () => {
-    const end = walkHeading(STRANDED, UP_THE_RAMP, 12);
     expect(
-      Math.hypot(end.x - STRANDED.x, end.z - STRANDED.z),
-      'the ramp walker must actually travel',
-    ).toBeGreaterThan(8);
-    expect(onRim(end.x, end.z), `ramp walk ended at (${end.x}, ${end.z})`).toBe(true);
+      headings.length,
+      "no heading out of the pond floor reaches the rim",
+    ).toBeGreaterThan(0);
   });
 
-  it('walks back down the ramp into the bowl without a fall', { timeout: 60_000 }, () => {
-    // start on the bench above the ramp top and walk down to the water,
-    // stopping AT arrival: a fixed-length walk overshoots once the descent
-    // is smooth, swimming clear across the tarn onto the far shore's
-    // elemental beach (whose aggro is that camp working as authored, not a
-    // ramp defect)
-    const top = { x: r.bx - 4, z: r.bz };
-    const { sim, p, meta } = makeWalker(top);
-    let airborneTicks = 0;
-    const fallDamage: number[] = [];
-    for (let i = 0; i < 20 * 20; i++) {
-      meta.moveInput.forward = true;
-      p.facing = DOWN_THE_RAMP;
-      // Heal through the Rime Elementals camped in the bowl, the idiom the sweep
-      // walkers above use: their swings land on the way down and must never be
-      // read as the terrain hurting the walker (nor stop him by killing him).
-      p.hp = p.maxHp;
-      (p as unknown as { dead: boolean }).dead = false;
-      for (const e of sim.tick()) {
-        if (e.type === 'damage' && e.targetId === p.id && e.ability === 'Falling') {
-          fallDamage.push(e.amount);
+  it(
+    "leaves by the authored ramp, straight up the west flank",
+    { timeout: 60_000 },
+    () => {
+      const end = walkHeading(STRANDED, UP_THE_RAMP, 12);
+      expect(
+        Math.hypot(end.x - STRANDED.x, end.z - STRANDED.z),
+        "the ramp walker must actually travel",
+      ).toBeGreaterThan(8);
+      expect(
+        onRim(end.x, end.z),
+        `ramp walk ended at (${end.x}, ${end.z})`,
+      ).toBe(true);
+    },
+  );
+
+  it(
+    "walks back down the ramp into the bowl without a fall",
+    { timeout: 60_000 },
+    () => {
+      // start on the bench above the ramp top and walk down to the water,
+      // stopping AT arrival: a fixed-length walk overshoots once the descent
+      // is smooth, swimming clear across the tarn onto the far shore's
+      // elemental beach (whose aggro is that camp working as authored, not a
+      // ramp defect)
+      const top = { x: r.bx - 4, z: r.bz };
+      const { sim, p, meta } = makeWalker(top);
+      let airborneTicks = 0;
+      const fallDamage: number[] = [];
+      for (let i = 0; i < 20 * 20; i++) {
+        meta.moveInput.forward = true;
+        p.facing = DOWN_THE_RAMP;
+        // Heal through the Rime Elementals camped in the bowl, the idiom the sweep
+        // walkers above use: their swings land on the way down and must never be
+        // read as the terrain hurting the walker (nor stop him by killing him).
+        p.hp = p.maxHp;
+        (p as unknown as { dead: boolean }).dead = false;
+        for (const e of sim.tick()) {
+          if (
+            e.type === "damage" &&
+            e.targetId === p.id &&
+            e.ability === "Falling"
+          ) {
+            fallDamage.push(e.amount);
+          }
         }
+        if (!p.onGround) airborneTicks++;
+        if (isInWaterBody(p.pos.x, p.pos.z) && p.pos.y < WATER_LEVEL + 1.5)
+          break;
       }
-      if (!p.onGround) airborneTicks++;
-      if (isInWaterBody(p.pos.x, p.pos.z) && p.pos.y < WATER_LEVEL + 1.5) break;
-    }
-    meta.moveInput.forward = false;
-    // a slope no steeper than the climb gate is snapped down, never fallen
-    // off (player_motion maxStepDown), so the descent must never go airborne
-    expect(airborneTicks, 'the descent must never enter free fall').toBe(0);
-    // and the drop must never be billed to the walker: 'Falling' is the label
-    // player_motion puts on the environmental fall hit it deals on landing
-    expect(fallDamage, 'the descent must cost no health').toEqual([]);
-    // and it must actually arrive in the bowl, at the pond
-    expect(isInWaterBody(p.pos.x, p.pos.z), `ended at (${p.pos.x}, ${p.pos.z})`).toBe(true);
-    expect(p.pos.y, 'the walker must end down at the pond, not on the rim').toBeLessThan(
-      WATER_LEVEL + 1.5,
+      meta.moveInput.forward = false;
+      // a slope no steeper than the climb gate is snapped down, never fallen
+      // off (player_motion maxStepDown), so the descent must never go airborne
+      expect(airborneTicks, "the descent must never enter free fall").toBe(0);
+      // and the drop must never be billed to the walker: 'Falling' is the label
+      // player_motion puts on the environmental fall hit it deals on landing
+      expect(fallDamage, "the descent must cost no health").toEqual([]);
+      // and it must actually arrive in the bowl, at the pond
+      expect(
+        isInWaterBody(p.pos.x, p.pos.z),
+        `ended at (${p.pos.x}, ${p.pos.z})`,
+      ).toBe(true);
+      expect(
+        p.pos.y,
+        "the walker must end down at the pond, not on the rim",
+      ).toBeLessThan(WATER_LEVEL + 1.5);
+    },
+  );
+});
+
+describe("the Snowline road stays on its physical grade", () => {
+  it("does not route through the impassable frost shelf at (120, 1840)", () => {
+    const snowline = FROSTVEIL_ROADS.find(
+      (road) =>
+        road.some((point) => point.x === 130 && point.z === 1760) &&
+        road.some((point) => point.x === 176 && point.z === 1888),
     );
+
+    expect(snowline).toContainEqual({ x: 132, z: 1792 });
+    expect(snowline).toContainEqual({ x: 168, z: 1880 });
+    expect(snowline).not.toContainEqual({ x: 120, z: 1840 });
+  });
+
+  it("connects the legacy shelf to both sides with an authored switchback", () => {
+    const switchback = FROSTVEIL_ROADS.find(
+      (road) =>
+        road.some((point) => point.x === 90 && point.z === 1830) &&
+        road.some((point) => point.x === 120 && point.z === 1840) &&
+        road.some((point) => point.x === 176 && point.z === 1888),
+    );
+
+    expect(switchback).toBeDefined();
+    expect(switchback).toContainEqual({ x: 108, z: 1836 });
+    expect(switchback).toContainEqual({ x: 132, z: 1855 });
   });
 });
 
-describe('the Glacier Tarn ramp keeps the tarn intact', () => {
-  it('meets the water at a swimmable foot', () => {
-    expect(isInWaterBody(r.ax, r.az), 'the ramp foot must sit inside the tarn').toBe(true);
+describe("the Glacier Tarn ramp keeps the tarn intact", () => {
+  it("meets the water at a swimmable foot", () => {
+    expect(
+      isInWaterBody(r.ax, r.az),
+      "the ramp foot must sit inside the tarn",
+    ).toBe(true);
     expect(
       groundHeight(r.ax, r.az, SEED),
-      'the ramp foot must start under the waterline',
+      "the ramp foot must start under the waterline",
     ).toBeLessThan(WATER_LEVEL);
   });
 
-  it('holds water in both tarn lakes', () => {
+  it("keeps the road flight from the tarn bench to Icemantle climbable", () => {
+    const road = GLACIER_TARN_ICEMANTLE_RAMP;
+    const dx = road.bx - road.ax;
+    const dz = road.bz - road.az;
+    const length = Math.hypot(dx, dz);
+    let previous = groundHeight(road.ax, road.az, SEED);
+    for (let distance = 0.35; distance <= length; distance += 0.35) {
+      const ratio = distance / length;
+      const x = road.ax + dx * ratio;
+      const z = road.az + dz * ratio;
+      const height = groundHeight(x, z, SEED);
+      expect(Math.abs(height - previous) / 0.35).toBeLessThanOrEqual(1.5);
+      expect(terrainSteepnessAt(x, z, SEED)).toBeLessThan(1.5);
+      previous = height;
+    }
+  });
+
+  it("keeps the visible road continuation physically reversible", () => {
+    const road = GLACIER_TARN_ICEMANTLE_APPROACH;
+    const dx = road.bx - road.ax;
+    const dz = road.bz - road.az;
+    const length = Math.hypot(dx, dz);
+    let previous = groundHeight(road.ax, road.az, SEED);
+    for (let distance = 0.35; distance <= length; distance += 0.35) {
+      const ratio = distance / length;
+      const x = road.ax + dx * ratio;
+      const z = road.az + dz * ratio;
+      const height = groundHeight(x, z, SEED);
+      expect(Math.abs(height - previous) / 0.35).toBeLessThanOrEqual(1.5);
+      expect(terrainSteepnessAt(x, z, SEED)).toBeLessThan(1.5);
+      previous = height;
+    }
+
+    const reportedStall = { x: 39.02974689570823, z: 1623.2974723907755 };
+    expect(terrainSteepnessAt(reportedStall.x, reportedStall.z, SEED)).toBeLessThan(1.5);
+  });
+
+  it("holds water in both tarn lakes", () => {
     for (const lake of [TARN, TARN_FINGER]) {
       expect(waterLevelAt(lake.x, lake.z, SEED)).toBe(WATER_LEVEL);
-      expect(terrainHeight(lake.x, lake.z, SEED), 'the basin must stay under water').toBeLessThan(
-        WATER_LEVEL,
-      );
+      expect(
+        terrainHeight(lake.x, lake.z, SEED),
+        "the basin must stay under water",
+      ).toBeLessThan(WATER_LEVEL);
       // the whole footprint is still declared water, not just the pin point
       for (let a = 0; a < 360; a += 45) {
         const rad = (a * Math.PI) / 180;
         const x = lake.x + Math.sin(rad) * lake.radius * 0.6;
         const z = lake.z + Math.cos(rad) * lake.radius * 0.6;
-        expect(waterLevelAt(x, z, SEED), `water at ${a}deg of (${lake.x}, ${lake.z})`).toBe(
-          WATER_LEVEL,
-        );
+        expect(
+          waterLevelAt(x, z, SEED),
+          `water at ${a}deg of (${lake.x}, ${lake.z})`,
+        ).toBe(WATER_LEVEL);
       }
     }
   });
 
-  it('leaves the pond bed unreshaped away from the ramp', () => {
+  it("leaves the pond bed unreshaped away from the ramp", () => {
     // pre-fix bed heights, pinned to literals: the ramp is a cut through the
     // WEST FLANK and must not lift or dig the pond it runs down into. (The
     // east shallow at (60, 1630.4) is the tarn's own organic shore wobble,
@@ -223,16 +328,21 @@ describe('the Glacier Tarn ramp keeps the tarn intact', () => {
       [42.6, 1652, -7.204025313789661],
     ];
     for (const [x, z, h] of bed) {
-      expect(terrainHeight(x, z, SEED), `pond bed at (${x}, ${z})`).toBeCloseTo(h, 10);
+      expect(terrainHeight(x, z, SEED), `pond bed at (${x}, ${z})`).toBeCloseTo(
+        h,
+        10,
+      );
     }
   });
 
-  it('keeps the ramp foot submerged, so the tarn is never bridged', () => {
+  it("keeps the ramp foot submerged, so the tarn is never bridged", () => {
     // the ramp foot fills the west shallows a little (a slipway shelf) on its
     // way down to meet the bed; the shoreline it hands over to must not march
     // out into the pond, so the whole pond end of the channel stays wet
     for (const x of [46, 47, 48.5, 50, 52]) {
-      expect(groundHeight(x, r.az, SEED), `ramp axis at x=${x}`).toBeLessThan(WATER_LEVEL);
+      expect(groundHeight(x, r.az, SEED), `ramp axis at x=${x}`).toBeLessThan(
+        WATER_LEVEL,
+      );
     }
     // and the channel's shoulders, where the cut eases back onto the flank,
     // stay wet too: the ramp may nudge the bed, never lift it out of the pond
@@ -241,17 +351,20 @@ describe('the Glacier Tarn ramp keeps the tarn intact', () => {
       [50, 1648],
       [50, 1636],
     ]) {
-      expect(groundHeight(x, z, SEED), `ramp shoulder at (${x}, ${z})`).toBeLessThan(WATER_LEVEL);
+      expect(
+        groundHeight(x, z, SEED),
+        `ramp shoulder at (${x}, ${z})`,
+      ).toBeLessThan(WATER_LEVEL);
     }
   });
 
-  it('leaves the Rime Elemental camp ground untouched', () => {
+  it("leaves the Rime Elemental camp ground untouched", () => {
     // the camp center's pre-fix height, pinned to the literal: the ramp is on
     // the far (west) flank and must never reshape the elementals' beach
     expect(terrainHeight(66, 1622, SEED)).toBeCloseTo(-3.8278704295586854, 10);
   });
 
-  it('never re-sharpens the ramp centerline past the climb gate', () => {
+  it("never re-sharpens the ramp centerline past the climb gate", () => {
     // walk the segment (plus a yard of run-out at each end) in movement-tick
     // steps: a step past 1.5 rise/run is a wall the movement kernel refuses
     const dx = r.bx - r.ax;
@@ -265,12 +378,16 @@ describe('the Glacier Tarn ramp keeps the tarn intact', () => {
       const x = r.ax + ux * s;
       const z = r.az + uz * s;
       const h = groundHeight(x, z, SEED);
-      expect(Math.abs(h - prev) / step, `ramp step at s=${s.toFixed(2)}`).toBeLessThanOrEqual(1.5);
+      expect(
+        Math.abs(h - prev) / step,
+        `ramp step at s=${s.toFixed(2)}`,
+      ).toBeLessThanOrEqual(1.5);
       // the true local gradient too, so an approach at an angle cannot be
       // walled where the straight line reads clean
-      expect(terrainSteepnessAt(x, z, SEED), `ramp gradient at s=${s.toFixed(2)}`).toBeLessThan(
-        1.5,
-      );
+      expect(
+        terrainSteepnessAt(x, z, SEED),
+        `ramp gradient at s=${s.toFixed(2)}`,
+      ).toBeLessThan(1.5);
       prev = h;
     }
   });

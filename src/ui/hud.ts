@@ -304,7 +304,7 @@ import {
 import { entityDisplayName, entityMobFamily, entityTargetRank } from './entity_presentation_view';
 import { ERROR_LOG_CHAN, ERROR_LOG_COLOR, shouldMirrorErrorToast } from './error_toast_log';
 import { esc } from './esc';
-import { blockFctAmountText } from './fct_core';
+import { blockFctAmountText, compactLootFctText } from './fct_core';
 import { fctSpawnShape } from './fct_event';
 import { FctPainter } from './fct_painter';
 import { FocusManager, type FocusTrapHandle } from './focus_manager';
@@ -403,20 +403,28 @@ import {
 import {
   applyLoadoutBar as applyLoadoutBarActions,
   assignAttackSlotAction,
-  attackDragDisposition,
   clearHotbarSlot,
-  encodeHotbarAction,
-  HOTBAR_ACTION_MIME,
   type HotbarAction,
-  handleMobileAttackTap,
   isAbilityActionBarEligible,
   loadoutKnownAbilityIds,
-  parseHotbarAction,
   placeAbilityOnSlot,
   placeItemOnSlot,
+  profileUsesFixedAttackSlot,
+  readHotbarActionTransfer,
+  swapAttackSlotWithHotbar,
   swapHotbarSlots,
+  writeHotbarActionTransfer,
 } from './hud/action_bar/hotbar';
+import { flashActionButton, handleAttackMarkerDrag } from './hud/action_bar/hotbar_drag_controller';
 import { itemInBagsLine } from './hud/action_bar/item_bags_line_core';
+import {
+  buildMir4ActionTools,
+  type Mir4ActionToolsController,
+} from './hud/action_bar/mir4_action_tools_controller';
+import {
+  buildMir4AutoSkillToggleController,
+  type Mir4AutoSkillToggleController,
+} from './hud/action_bar/mir4_auto_skill_toggle_controller';
 import {
   clampMobilePage,
   mobileActionSourceSlotCount,
@@ -484,6 +492,7 @@ import { RiftMapPainter } from './hud/rift';
 import { RiftFloorTrackerController } from './hud/rift/rift_floor_tracker_controller';
 import { StanceBarController } from './hud/stance';
 import { closeOpenTouchMenu } from './hud/tap_menu';
+import { buildMir4VillageEquipmentView } from './hud/vendor';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildHeroicVendorView } from './hud/vendor/heroic_vendor_view';
 import { renderHeroicVendorWindow } from './hud/vendor/heroic_vendor_window';
@@ -570,6 +579,7 @@ import { materialProfessionHintText } from './material_profession_hint_view';
 import { Meters } from './meters';
 import { minimapMode } from './minimap_markers';
 import { MINIMAP_SIZE, MinimapPainter } from './minimap_painter';
+import { MinimapQuestSearchController } from './minimap_quest_search_controller';
 import {
   clampMinimapZoom,
   isMaxMinimapZoom,
@@ -583,8 +593,9 @@ import {
   type Mir4PreviewEquipmentOverride,
   resolveMir4PreviewHands,
 } from './mir4_character_view';
+import { Mir4HudSystems } from './mir4_hud_systems';
 import { paintMir4ProgressionWindow } from './mir4_progression_window_adapter';
-import { mir4NoticeboardMessage } from './mir4_quest_i18n';
+import { mir4NoticeboardMessage, mir4QuestTitle } from './mir4_quest_i18n';
 import {
   type IdleBarkCandidate,
   isIdleBarkCandidate,
@@ -707,7 +718,7 @@ import { curatorRankNameKey, ReliquaryWindow } from './reliquary_window';
 import { restView } from './rest_indicator';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
 import { localizeServerText } from './server_i18n';
-import { localizeSimAuraName, localizeSimText, tSim } from './sim_i18n';
+import { localizeSimText, tSim } from './sim_i18n';
 import { openSimpleMenu } from './simple_context_menu';
 import {
   advanceSkillLevelObservation,
@@ -1329,6 +1340,29 @@ export class Hud {
   // opens, built behind the action_bar seam. Stays undefined on a build without
   // the markup, exactly like the ring.
   private mobileConsumableSeat: MobileConsumableSeat | undefined;
+  private mir4ActionTools: Mir4ActionToolsController | undefined;
+  private mir4AutoSkillToggles: Mir4AutoSkillToggleController | undefined;
+  private readonly mir4Systems = new Mir4HudSystems(document, {
+    world: () => this.sim,
+    closeOthers: (selector) => this.closeOtherWindows(selector),
+    windowFocus: (selector) => this.windowFocus(selector),
+    confirm: (title, body, onAccept) =>
+      this.confirmDialog(title, body, t('editor.confirm.ok'), t('editor.confirm.cancel'), onAccept),
+    mountSharedPreview: (container, visualKey) =>
+      this.mountSharedPreview(container, {
+        cls: 'druid',
+        skin: 0,
+        previewKey: visualKey,
+        mainhand: null,
+        offhand: null,
+        weaponSkinId: null,
+        framing: 'inspect',
+      }),
+    restoreCharacterPreview: () => {
+      if (this.charWindow.isOpen) this.renderCharIfOpen();
+    },
+    syncWindowState: () => this.syncAnyWindowOpenState(),
+  });
   /** Ring button refs so castSlot's used-flash can hit the ring too (the
    *  desktop bar is display:none under body.mobile-touch). */
   private mobileRingAttackBtn: HTMLButtonElement | null = null;
@@ -2127,7 +2161,12 @@ export class Hud {
         const match = this.sim.cupInfo?.match;
         return !!match && match.team !== null;
       },
-      showAttackButton: () => this.optionsHooks?.settings.get('showAttackButton') ?? true,
+      showAttackButton: () =>
+        profileUsesFixedAttackSlot(
+          this.sim.cfg.gameProfile,
+          this.optionsHooks?.settings.get('showAttackButton') ?? true,
+        ),
+      preferFirstSeatAction: () => this.sim.cfg.gameProfile === MIR4_GAME_PROFILE,
       // Persistence seam: online, the ClientWorld debounces a per-character wire
       // save; offline, Sim.saveActionBarLayout is a no-op (localStorage is the
       // store). The controller always writes the localStorage mirror itself.
@@ -2487,8 +2526,19 @@ export class Hud {
       }
     }
     mm.style.cursor = 'var(--cursor-point)';
-    mm.title = t('controls.worldMap');
     mm.addEventListener('click', () => this.toggleMap());
+    new MinimapQuestSearchController({
+      canvas: mm,
+      questAt: (x, y) =>
+        minimapMode(this.sim) === 'overworld' ? this.minimapPainter.questSearchAt(x, y) : null,
+      questTitle: (questId) => mir4QuestTitle(questId),
+      showTooltip: (html, clientX, clientY) => {
+        const size = this.paintTooltipAt(html, clientX, clientY);
+        return (nextClientX, nextClientY) =>
+          this.positionTooltipAt(nextClientX, nextClientY, size.w, size.h);
+      },
+      hideTooltip: () => this.hideTooltip(),
+    });
     window.addEventListener('pointermove', (ev) => {
       if (this.emoteWheelOpen) this.updateEmoteWheelPointer(ev.clientX, ev.clientY);
     });
@@ -2674,6 +2724,10 @@ export class Hud {
       ignoreSelector: 'button, #buff-bar, #debuff-bar',
     });
     $('#mm-char').addEventListener('click', () => this.toggleChar());
+    $('#mm-mount-codex')?.addEventListener('click', () => this.toggleMir4Mounts());
+    $('#mm-spirit')?.addEventListener('click', () => this.toggleMir4Spirits());
+    $('#mm-codex')?.addEventListener('click', () => this.toggleMir4Codex());
+    $('#mm-training')?.addEventListener('click', () => this.toggleMir4Training());
     $('#mm-spell').addEventListener('click', () => this.toggleSpellbook());
     $('#mm-talents')?.addEventListener('click', () => this.toggleTalents());
     $('#mm-town-focus')?.addEventListener('click', () => this.toggleTownFocus());
@@ -3381,6 +3435,7 @@ export class Hud {
   private closeManagedWindow(el: HTMLElement): void {
     this.windowDragController?.cancel(el);
     delete el.dataset.windowOpen;
+    if (this.mir4Systems.closeByRootId(el.id)) return;
     switch (el.id) {
       case 'confirm-dialog':
         this.confirmTrap?.release();
@@ -5292,6 +5347,7 @@ export class Hud {
     // first one every frame the window was open, allocating 34 arrays each time.
     // The window derives both views itself now, at render time (#2519).
     barActions: () => this.hotbarActions,
+    firstAction: () => (this.attackSlotIsAttack() ? null : this.attackSlotAction),
     hasFreeSlot: () => this.actionBarController.hasFreeSlot(),
     attackOnBar: () => this.attackSlotIsAttack(),
     // Routes through the Interface showAttackButton setting, the same state the
@@ -5757,9 +5813,19 @@ export class Hud {
     const z = getUiScale();
     const tw = this.tooltipEl.offsetWidth,
       th = this.tooltipEl.offsetHeight;
-    this.tooltipEl.style.left = `${Math.max(8, Math.min(window.innerWidth / z - tw - 8, x / z + 14))}px`;
-    this.tooltipEl.style.top = `${Math.max(8, y / z - th - 10)}px`;
+    this.positionTooltipAt(x, y, tw, th, z);
     return { w: tw, h: th };
+  }
+
+  private positionTooltipAt(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    scale = getUiScale(),
+  ): void {
+    this.tooltipEl.style.left = `${Math.max(8, Math.min(window.innerWidth / scale - width - 8, x / scale + 14))}px`;
+    this.tooltipEl.style.top = `${Math.max(8, y / scale - height - 10)}px`;
   }
 
   // Anchors the mob-hover tooltip to a fixed viewport corner instead of the
@@ -6404,6 +6470,8 @@ export class Hud {
   }
 
   private refreshLocalizedDynamicUi(): void {
+    this.mir4ActionTools?.relocalize();
+    this.mir4Systems.relocalize();
     this.doomMeter.relocalize();
     // The player unit frame's hp/resource text is memoized on the raw value,
     // which does not change on a locale switch, so clear the memo to force
@@ -6723,7 +6791,9 @@ export class Hud {
   }
 
   private attackSlotIsAttack(): boolean {
-    return this.actionBarController.isAttackSlotFixed();
+    return (
+      this.sim.cfg.gameProfile !== MIR4_GAME_PROFILE && this.actionBarController.isAttackSlotFixed()
+    );
   }
 
   private saveAttackSlotAction(): void {
@@ -7026,9 +7096,7 @@ export class Hud {
       this.flashActionSlot(0);
       return;
     }
-    if (this.sim.cfg.gameProfile === MIR4_GAME_PROFILE)
-      this.sim.setMir4AutoBattle(!this.sim.mir4AutoBattleActive());
-    else if (this.sim.player.autoAttack) this.sim.stopAutoAttack();
+    if (this.sim.player.autoAttack) this.sim.stopAutoAttack();
     else this.sim.startAutoAttack();
     this.flashActionSlot(0);
   }
@@ -7218,13 +7286,13 @@ export class Hud {
 
   private flashActionSlot(barSlot: number): void {
     const btn = this.abilityButtons[barSlot]?.btn;
-    if (btn) this.flashActionButton(btn);
+    if (btn) flashActionButton(btn);
     // Mirror the used-flash onto the mobile ring (the desktop bar is
     // display:none under body.mobile-touch, so without this a ring cast gave
     // no visual acknowledgment at all). barSlot 0 is the attack toggle; the 4
     // radial buttons cover 5 slots each on the CURRENT page.
     if (barSlot === 0 && this.mobileRingAttackBtn) {
-      this.flashActionButton(this.mobileRingAttackBtn);
+      flashActionButton(this.mobileRingAttackBtn);
       return;
     }
     for (let i = 0; i < this.mobileRingSlotBtns.length; i++) {
@@ -7233,62 +7301,30 @@ export class Hud {
       // no visual acknowledgment at all.
       for (const direction of RADIAL_DIRECTIONS) {
         if (this.mobileSourceSlotForButton(i, direction) !== barSlot) continue;
-        this.flashActionButton(this.mobileRingSlotBtns[i]);
+        flashActionButton(this.mobileRingSlotBtns[i]);
         return;
       }
     }
   }
 
-  private flashActionButton(btn: HTMLButtonElement): void {
-    btn.classList.remove('used');
-    void btn.offsetWidth;
-    btn.classList.add('used');
-    window.setTimeout(() => btn.classList.remove('used'), 180);
-  }
-
-  private writeDraggedAction(dt: DataTransfer | null, action: Exclude<HotbarAction, null>): void {
-    if (!dt) return;
-    dt.setData(HOTBAR_ACTION_MIME, encodeHotbarAction(action));
-    dt.setData('text/plain', action.id);
-  }
-
   private readDraggedAction(dt: DataTransfer | null): Exclude<HotbarAction, null> | null {
-    if (!dt) return null;
-    const raw = dt.getData(HOTBAR_ACTION_MIME);
-    if (!raw) return null;
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return null;
-    }
-    return parseHotbarAction(
-      parsed,
+    return readHotbarActionTransfer(
+      dt,
       (id) => this.sim.known.some((k) => k.def.id === id),
       (id) => this.isHotbarItemId(id),
     );
   }
 
-  // Attack is accepted only by slot 0, its fixed destination. The pure disposition
-  // keeps that behavior testable and lets every other slot reject the drag truthfully.
   private tryAcceptAttackDrag(
     e: DragEvent,
     btn: HTMLButtonElement,
     slot: number,
     phase: 'over' | 'drop',
   ): boolean {
-    const disposition = attackDragDisposition(e.dataTransfer?.types, slot, phase);
-    if (disposition === 'ignore') return false;
-    e.preventDefault();
-    if (phase === 'over') {
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      btn.classList.toggle('drop-target', disposition === 'highlight');
-    } else {
-      btn.classList.remove('drop-target');
+    return handleAttackMarkerDrag(e, btn, slot, phase, () => {
       this.optionsHooks?.settings.set('showAttackButton', true);
       this.hideTooltip();
-    }
-    return true;
+    });
   }
 
   private actionBarsLocked(): boolean {
@@ -7397,7 +7433,7 @@ export class Hud {
             return;
           }
           this.dragAction = { action, sourceIndex: slot - 1 };
-          this.writeDraggedAction(e.dataTransfer, action);
+          writeHotbarActionTransfer(e.dataTransfer, action);
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
           this.hideTooltip();
         });
@@ -7433,7 +7469,16 @@ export class Hud {
           const action = dragged.action;
           if (!action) return;
           if (!this.actionBarController.isAssignableAction(action)) return;
-          if (dragged.sourceIndex !== null)
+          if (dragged.sourceAttackSlot) {
+            const swapped = swapAttackSlotWithHotbar(
+              this.attackSlotAction,
+              this.hotbarActions,
+              slot - 1,
+            );
+            this.attackSlotAction = swapped.attackAction;
+            this.hotbarActions = swapped.actions;
+            this.saveAttackSlotAction();
+          } else if (dragged.sourceIndex !== null)
             this.hotbarActions = swapHotbarSlots(this.hotbarActions, dragged.sourceIndex, slot - 1);
           else if (
             action.type === 'ability' &&
@@ -7442,10 +7487,6 @@ export class Hud {
             this.hotbarActions = placeAbilityOnSlot(this.hotbarActions, action.id, slot - 1);
           } else if (action.type === 'item' && this.isHotbarItemId(action.id)) {
             this.hotbarActions = placeItemOnSlot(this.hotbarActions, action.id, slot - 1);
-          }
-          if (dragged.sourceAttackSlot) {
-            this.attackSlotAction = null;
-            this.saveAttackSlotAction();
           }
           this.saveSlotMap();
           // The drop rearranged this slot's contents, but a drop that ends with the
@@ -7499,7 +7540,7 @@ export class Hud {
             sourceIndex: null,
             sourceAttackSlot: true,
           };
-          this.writeDraggedAction(e.dataTransfer, action);
+          writeHotbarActionTransfer(e.dataTransfer, action);
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
           this.hideTooltip();
         });
@@ -7530,14 +7571,19 @@ export class Hud {
           if (!dragged.action) return;
           if (!this.actionBarController.isAssignableAction(dragged.action)) return;
           const assigned = assignAttackSlotAction(dragged.action, dragged.sourceIndex);
-          this.attackSlotAction = assigned.action;
-          this.saveAttackSlotAction();
-          // A drag from another bar slot MOVES the action there (the attack slot
-          // holds nothing to swap back); spellbook/bag drags simply assign.
           if (assigned.clearSourceIndex !== null) {
-            this.hotbarActions = clearHotbarSlot(this.hotbarActions, assigned.clearSourceIndex);
+            const swapped = swapAttackSlotWithHotbar(
+              this.attackSlotAction,
+              this.hotbarActions,
+              assigned.clearSourceIndex,
+            );
+            this.attackSlotAction = assigned.action;
+            this.hotbarActions = swapped.actions;
             this.saveSlotMap();
+          } else {
+            this.attackSlotAction = assigned.action;
           }
+          this.saveAttackSlotAction();
           this.dragAction = null;
           this.hideTooltip();
         });
@@ -7605,12 +7651,42 @@ export class Hud {
       },
       (iconKey) => this.actionBarIconBg(iconKey),
     );
+    this.mir4AutoSkillToggles = buildMir4AutoSkillToggleController({
+      writers: this.writerFacet,
+      world: this.sim,
+      slots: this.abilityButtons.map((slot) => ({
+        button: slot.btn,
+      })),
+      abilityName: (abilityId) => {
+        const known = this.sim.known.find((entry) => entry.def.id === abilityId);
+        return known ? abilityDisplayName(known.def) : abilityId;
+      },
+      attachTooltip: (el, html) => this.attachTooltip(el, html),
+      hideTooltip: () => this.hideTooltip(),
+    });
 
     this.crossHotbar = CrossHotbarController.create(
       this.writerFacet,
       (k) => this.actionBarIconBg(k),
       crossHotbarResolvers(this.sim, ITEMS, abilityDisplayName, itemDisplayName),
     );
+    this.mir4ActionTools = buildMir4ActionTools({
+      writers: this.writerFacet,
+      actionBar: this.actionbarEl,
+      world: this.sim,
+      autoCollectActive: () => this.optionsHooks?.settings.get('walkByAutoloot') ?? false,
+      setAutoCollect: (on) => this.optionsHooks?.onSettingChange('walkByAutoloot', on),
+      keyCap: (actionId) => keyCapLabel(this.keybinds.primaryLabel(actionId)),
+      iconBackground: (iconKey) => this.actionBarIconBg(iconKey),
+      canUseItem: () => !this.tradeOpen,
+      afterUseItem: () => {
+        if ($('#bags').style.display !== 'none') this.renderBags();
+      },
+      flash: flashActionButton,
+      attachTooltip: (el, html) => this.attachTooltip(el, html),
+      itemTooltip: (item) => this.itemTooltip(item),
+      hideTooltip: () => this.hideTooltip(),
+    });
     this.buildMobileActionRing();
     this.buildMobileConsumableSeat();
     this.buildStanceBar();
@@ -7683,7 +7759,6 @@ export class Hud {
         return {
           autoAttack: p.autoAttack,
           hasLiveHostileTarget: !!target && !target.dead && target.hostile,
-          directToggle: this.sim.cfg.gameProfile === MIR4_GAME_PROFILE,
         };
       },
       hideTooltip: () => this.hideTooltip(),
@@ -7715,7 +7790,7 @@ export class Hud {
           if ($('#bags').style.display !== 'none') this.renderBags();
           return true;
         },
-        flash: (btn) => this.flashActionButton(btn),
+        flash: flashActionButton,
         attachTooltip: (el, html) => this.attachTooltip(el, html),
         itemTooltip: (item) => this.itemTooltip(item),
         hideTooltip: () => this.hideTooltip(),
@@ -9066,8 +9141,7 @@ export class Hud {
     let actionBarWorld = this.actionBarWorldInput;
     if (actionBarWorld) {
       actionBarWorld.player = p;
-      actionBarWorld.fixedAttackActive =
-        sim.cfg.gameProfile === MIR4_GAME_PROFILE ? sim.mir4AutoBattleActive() : undefined;
+      actionBarWorld.fixedAttackActive = p.autoAttack;
       actionBarWorld.target = target ?? null;
       actionBarWorld.inventory = sim.inventory;
       actionBarWorld.stealthed = stealthed;
@@ -9077,8 +9151,7 @@ export class Hud {
     } else {
       actionBarWorld = {
         player: p,
-        fixedAttackActive:
-          sim.cfg.gameProfile === MIR4_GAME_PROFILE ? sim.mir4AutoBattleActive() : undefined,
+        fixedAttackActive: p.autoAttack,
         target: target ?? null,
         inventory: sim.inventory,
         stealthed,
@@ -9092,8 +9165,14 @@ export class Hud {
     this.renderStanceBar();
     this.flushPendingProcAuraNotes();
     if (this.spellbookWindow.isOpen) this.spellbookWindow.tickOpen();
-    if (!this.isMobileLayout())
-      this.actionBarPainter.paint(this.actionBarView.tick(actionBarWorld));
+    if (!this.isMobileLayout()) {
+      const actionBarState = this.actionBarView.tick(actionBarWorld);
+      this.actionBarPainter.paint(actionBarState);
+      this.mir4AutoSkillToggles?.paint(actionBarState);
+    }
+    // The desktop dock is CSS-hidden on touch, but its painter also owns the
+    // dedicated mobile Auto Collect toggle. Keep both profiles on one state path.
+    this.mir4ActionTools?.paint(actionBarWorld);
     // Painted whatever the desktop bar did: the cross hotbar owns its OWN ticked
     // state, so it is not a re-presentation of the row above and does not follow
     // that row's mobile gate.
@@ -9110,7 +9189,7 @@ export class Hud {
         mobileActionPage,
         mobilePageCount(mobileActionSourceSlotCount),
         mobileActionSourceSlotCount,
-        this.attackSlotIsAttack(),
+        this.sim.cfg.gameProfile === MIR4_GAME_PROFILE || this.attackSlotIsAttack(),
       );
     }
 
@@ -9381,6 +9460,7 @@ export class Hud {
     // copper), so this is the backstop that converges them all (#2373). Online the
     // ClientWorld gets there first; this latch repaints only its .money footer.
     if (slowHud) this.bagsWindow.refreshIfChanged();
+    if (slowHud) this.mir4Systems.refreshIfChanged();
     if (slowHud && this.questlogWindow.isOpen) this.questlogWindow.refreshIfChanged();
     if (slowHud && this.deedsWindow.isOpen) this.deedsWindow.refreshIfChanged();
     if (slowHud && this.reliquaryWindow.isOpen) this.reliquaryWindow.refreshIfChanged();
@@ -11119,6 +11199,7 @@ export class Hud {
       this.renderer.handleEvent(ev);
       this.playEventSfx(ev); // positional sound for nearby combat/creatures
       this.meters.onEvent(ev);
+      this.mir4Systems.handleEvent(ev);
       if (this.isNythraxisEvent(ev)) this.lastNythraxisCombatEventAt = performance.now();
       switch (ev.type) {
         case 'damage': {
@@ -11481,9 +11562,12 @@ export class Hud {
         }
         case 'learnAbility':
           // A newly granted ability (level-up or spec signature) must appear in
-          // an open spellbook right away, not on the next manual reopen.
+          // the first available action slot and in an open spellbook right away.
+          // syncKnownAbilities owns duplicate, passive, dedicated-stance and
+          // full-bar handling, so rank-up events never re-add a removed action.
+          this.actionBarController.syncKnownAbilities();
           if (this.spellbookWindow.isOpen) this.spellbookWindow.render();
-          break; // logged by sim
+          break;
         case 'comboPoint':
           break;
         case 'loot': {
@@ -11495,7 +11579,34 @@ export class Hud {
           // (#2430). Everything else in this arm still runs for those grants:
           // the loot-roll close below, the bag refresh, and the independent
           // audio guard.
-          if (!ev.callerLogs) this.log(this.localizeLootText(ev.text), '#7fdc4f');
+          if (!ev.callerLogs) {
+            const localizedLootText = this.localizeLootText(ev.text);
+            this.log(localizedLootText, '#7fdc4f');
+            // MIR4 kill rewards float over the player using the existing pooled
+            // combat-text layer. Arc monsters commonly drop only copper, so both
+            // money and item lines participate in the reward feedback. Caller-owned
+            // profession results keep their richer celebration without a duplicate.
+            if (
+              this.sim.cfg.gameProfile === MIR4_GAME_PROFILE &&
+              ev.lootOrigin === 'monster-drop' &&
+              /^(?:You receive:|You loot) .+\.$/.test(ev.text)
+            ) {
+              const lootShape = fctSpawnShape({ type: 'loot' });
+              if (lootShape) {
+                const compactLootText = compactLootFctText(ev.text, itemStackDisplayName, (money) =>
+                  this.localizeSimMoney(money),
+                );
+                this.fctPainter.spawn(
+                  {
+                    ...lootShape,
+                    text: compactLootText ?? localizedLootText,
+                    target: this.sim.player,
+                  },
+                  now,
+                );
+              }
+            }
+          }
           if (
             / wins .+ \(\d+\)$/.test(ev.text) ||
             /^Everyone passed on .+\.$/.test(ev.text) ||
@@ -15177,6 +15288,13 @@ export class Hud {
         onBuyBack: (itemId, index, instance, craftedRecipeId) =>
           buyAndRefresh(() => this.sim.buyBackItem(itemId, index, instance, craftedRecipeId)),
         onSellJunk: () => buyAndRefresh(() => this.sim.sellAllJunk()),
+        mir4Equipment: buildMir4VillageEquipmentView(
+          npc.templateId,
+          this.sim.mir4PlayerState(),
+          this.sim.copper,
+        ),
+        onBuyMir4Equipment: (itemId) =>
+          buyAndRefresh(() => this.sim.mir4BuyVillageEquipment(npc.id, itemId)),
         onClose: () => this.closeVendor(),
         sellJunk: sellJunkState,
       },
@@ -16217,6 +16335,22 @@ export class Hud {
   }
 
   // -------------------------------------------------------------------------
+  toggleMir4Mounts(): void {
+    this.mir4Systems.toggle('mount');
+  }
+
+  toggleMir4Spirits(): void {
+    this.mir4Systems.toggle('spirit');
+  }
+
+  toggleMir4Codex(): void {
+    this.mir4Systems.toggle('codex');
+  }
+
+  toggleMir4Training(): void {
+    this.mir4Systems.toggle('training');
+  }
+
   // Bags
   // -------------------------------------------------------------------------
 
@@ -16403,7 +16537,8 @@ export class Hud {
   private isCharPreviewSurfaceVisible(): boolean {
     return (
       this.charWindow.isOpen ||
-      ($('#inspect-window') as HTMLElement | null)?.style.display === 'block'
+      ($('#inspect-window') as HTMLElement | null)?.style.display === 'block' ||
+      this.mir4Systems.collectionPreviewOpen
     );
   }
 

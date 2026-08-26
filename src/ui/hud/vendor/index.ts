@@ -1,6 +1,7 @@
 export * from './buy_quantity_prompt_window';
 export * from './heroic_vendor_view';
 export * from './heroic_vendor_window';
+export * from './mir4_village_equipment_view';
 export * from './train_learn_core';
 export * from './train_view';
 export * from './train_window';

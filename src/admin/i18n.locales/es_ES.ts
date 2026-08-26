@@ -7,8 +7,8 @@
 // (tests/i18n_admin_catalog.test.ts).
 
 export const es_ES: Record<string, string> = {
-  'app.title': 'World of ClaudeCraft - Administración',
-  'app.shortTitle': 'Administrador de WoC',
+  'app.title': 'Aeldrune - Administración',
+  'app.shortTitle': 'Administrador de Aeldrune',
   'auth.username': 'Usuario',
   'auth.password': 'Contraseña',
   'auth.signIn': 'Iniciar sesión',

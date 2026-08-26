@@ -1,6 +1,6 @@
 // Source-backed logical starter equipment. Only ids, class/slot rules and
 // attributes cross the migration boundary; presentation is resolved through
-// World of ClaudeCraft's native equipment registry in native_equipment_visuals.ts.
+// Aeldrune's native equipment registry in native_equipment_visuals.ts.
 
 import type { Mir4ClassId } from './classes';
 import { type Mir4EquipmentItemDef, mir4EquipmentItem } from './equipment_catalog';

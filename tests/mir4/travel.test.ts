@@ -138,7 +138,7 @@ describe('MIR4 arc travel through the existing portal runtime', () => {
     expect(mir4PortalRouteGoal(bands[3]!.hub, local)).toEqual(local);
   });
 
-  it('does not execute classic World of ClaudeCraft portals in the MIR4 profile', () => {
+  it('does not execute classic Aeldrune portals in the MIR4 profile', () => {
     const sim = makeWorld();
     const classic = PORTALS[0];
     if (!classic) throw new Error('Classic world must expose its first portal');

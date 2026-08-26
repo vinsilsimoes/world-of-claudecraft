@@ -27,7 +27,7 @@ function rewardText(rewards: {
   copper: number;
   darksteel: number;
   effectPoints: number;
-  skillTomes: number;
+  knowledgeTomeCommon: number;
 }): string {
   const parts: string[] = [];
   if (rewards.copper > 0) {
@@ -45,10 +45,10 @@ function rewardText(rewards: {
       }),
     );
   }
-  if (rewards.skillTomes > 0) {
+  if (rewards.knowledgeTomeCommon > 0) {
     parts.push(
       t('hudChrome.mir4.achievements.rewardSkillTomes', {
-        amount: fmt(rewards.skillTomes),
+        amount: fmt(rewards.knowledgeTomeCommon),
       }),
     );
   }
@@ -139,7 +139,7 @@ export function paintMir4AchievementsWindow(deps: Mir4AchievementsWindowDeps): v
     `<div class="panel-title"><span>${esc(title)}</span>` +
     `<button type="button" class="x-btn" data-close aria-label="${esc(t('hudChrome.mir4.achievements.close'))}">${svgIcon('close')}</button></div>` +
     `<div class="deeds-summary"><span><b>${esc(t('hudChrome.mir4.achievements.summary', { claimed: fmt(summary.claimed), total: fmt(summary.total) }))}</b></span>` +
-    `<span>${esc(t('hudChrome.mir4.achievements.balances', { copper: fmt(summary.copper), darksteel: fmt(summary.darksteel), effectPoints: fmt(summary.effectPoints), skillTomes: fmt(summary.skillTomes) }))}</span></div>` +
+    `<span>${esc(t('hudChrome.mir4.achievements.balances', { copper: fmt(summary.copper), darksteel: fmt(summary.darksteel), effectPoints: fmt(summary.effectPoints), skillTomes: fmt(summary.knowledgeTomeCommon) }))}</span></div>` +
     `<div class="deeds-body"><div class="deeds-scroll"><div class="deeds-list">${cards}</div></div></div>`;
 
   root.querySelector('[data-close]')?.addEventListener('click', deps.close);

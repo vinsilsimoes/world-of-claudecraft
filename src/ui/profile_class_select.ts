@@ -1,6 +1,8 @@
 import { MIR4_CLASSES, mir4ClassByKey } from '../sim/content/mir4/classes';
+import { mir4SkillsForClass } from '../sim/content/mir4/skills';
 import type { GameProfile } from '../sim/game_profile';
 import { classesForGameProfile } from '../sim/game_profile_roster';
+import { mir4SkillUnlockLevel } from '../sim/mir4/skill_progression';
 import { mir4ShellClassFor } from '../sim/mir4/stats';
 import type { Mir4ClassKey, PlayableClass, PlayerClass } from '../sim/types';
 import type { TranslationKey } from './i18n';
@@ -49,6 +51,8 @@ export function mir4ClassDetailsView(key: Mir4ClassKey): Mir4ClassDetailsView {
     rangeKey,
     weaponKey: `classDetails.mir4.weapons.${def.weapon}` as TranslationKey,
     rangeYards: def.rangeTiles * 2,
-    startingSkills: def.initialSkillIds.length,
+    startingSkills: mir4SkillsForClass(def.classId).filter(
+      (skill) => mir4SkillUnlockLevel(skill.slot) <= 1,
+    ).length,
   };
 }

@@ -12,6 +12,7 @@ export interface Mir4AutoBattlePursuitMemory {
   lastX: number;
   lastZ: number;
   stalledTicks: number;
+  bestDistanceToTarget?: number;
 }
 
 export interface Mir4AutoBattleTargetMemory {
@@ -23,6 +24,7 @@ export function observeMir4AutoBattlePursuit(
   previous: Mir4AutoBattlePursuitMemory | undefined,
   targetId: number,
   current: { x: number; z: number },
+  distanceToTarget?: number,
 ): { pursuit: Mir4AutoBattlePursuitMemory; stalled: boolean } {
   if (!previous || previous.targetId !== targetId) {
     return {
@@ -31,18 +33,27 @@ export function observeMir4AutoBattlePursuit(
         lastX: current.x,
         lastZ: current.z,
         stalledTicks: 0,
+        bestDistanceToTarget: distanceToTarget,
       },
       stalled: false,
     };
   }
+  const hasDistance = Number.isFinite(distanceToTarget);
+  const previousBest = previous.bestDistanceToTarget;
   const moved = Math.hypot(current.x - previous.lastX, current.z - previous.lastZ);
-  const stalledTicks = moved < 0.01 ? previous.stalledTicks + 1 : 0;
+  const madeProgress = hasDistance
+    ? previousBest === undefined || distanceToTarget! < previousBest - 0.05
+    : moved >= 0.01;
+  const stalledTicks = madeProgress ? 0 : previous.stalledTicks + 1;
   return {
     pursuit: {
       targetId,
       lastX: current.x,
       lastZ: current.z,
       stalledTicks,
+      bestDistanceToTarget: hasDistance
+        ? Math.min(previousBest ?? distanceToTarget!, distanceToTarget!)
+        : previousBest,
     },
     stalled: stalledTicks >= MIR4_AUTO_BATTLE_STALL_TICKS,
   };

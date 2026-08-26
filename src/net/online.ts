@@ -3206,6 +3206,10 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
       e.dead = nowDead;
       e.ghost = !!w.gh; // released spirit: rendered translucent, runs faster
       e.lootable = !!w.loot;
+      // MIR4 body presentation is independent from loot actionability. Absent
+      // resets an expired marker; classic entities leave the optional field
+      // untouched for rolling compatibility with their established semantics.
+      if (this.cfg.gameProfile === 'mir4-gameplay-port') e.mir4CorpseVisible = !!w.mcv;
       e.hostile = !!w.h;
       e.castingAbility = w.cast ?? null;
       e.castRemaining = w.castRem ?? 0;
@@ -3395,7 +3399,7 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
       // every authoritative self entity record. The decoder preserves the
       // previous payload when `mir4` is omitted while refreshing that derived
       // level, so level-gated main quests unlock on the exact level-up frame.
-      this.applyMir4Snapshot(s.mir4, e);
+      this.applyMir4Snapshot(s.mir4, e, s.mir4Codex);
       // delta fields: the server omits them while unchanged, so only the
       // snapshots that carry them rebuild the local structures
       // corpse position while a ghost (null once resurrected). Delta-guarded: kept

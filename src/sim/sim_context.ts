@@ -798,6 +798,8 @@ export interface SimContextCallbacks {
   // opts.movement: also Sim.addItem's, same contract (this grant relocates or
   // re-mints copies somebody already held, so it never bumps a Reliquary
   // obtain count; discovery still fires).
+  // opts.lootOrigin is reserved for the loot-distribution module so clients
+  // can distinguish defeated-monster drops from other inventory grants.
   addItem(
     itemId: string,
     count: number,
@@ -807,6 +809,7 @@ export interface SimContextCallbacks {
       callerLogs?: boolean;
       craftedRecipeId?: string;
       movement?: boolean;
+      lootOrigin?: 'monster-drop';
     }>,
   ): void;
   // Equip passthroughs for the /dev kit presets (src/sim/dev_kit.ts), which equip
@@ -830,6 +833,7 @@ export interface SimContextCallbacks {
       callerLogs?: boolean;
       craftedRecipeId?: string;
       movement?: boolean;
+      lootOrigin?: 'monster-drop';
     }>,
   ): void;
   // L2 World Market escrow (marketList) also consumes removeItem; it is declared once

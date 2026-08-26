@@ -45,7 +45,7 @@ describe('spellbook_window: WCAG chrome (rows + toggles + focus-return)', () => 
   it('reuses the same rows for the MIR4 profile instead of exposing the classic Warrior kit', () => {
     expect(code).toContain('world.cfg.gameProfile === MIR4_GAME_PROFILE');
     expect(code).toContain('world.known.map((ability) => ability.def.id)');
-    expect(code).toContain('ABILITIES[row.abilityId] ?? known?.def');
+    expect(code).toContain('mir4ActionAbilityDef(row.abilityId) ?? known?.def');
   });
 
   it('keeps the reset-bar button gated on the form-bars flag', () => {
@@ -70,12 +70,10 @@ describe('spellbook_window: WCAG chrome (rows + toggles + focus-return)', () => 
 });
 
 describe('spellbook_window: the pinned Attack row', () => {
-  it('renders the Attack row first, from the pure view attackOnBar state', () => {
-    expect(code).toContain('this.appendAttackRow(list, view.attackOnBar)');
+  it('renders the Attack row first for classic, but never presents MIR4 automation as a skill', () => {
+    expect(code).toContain('if (!mir4Profile) this.appendAttackRow(list, view.attackOnBar)');
     expect(code.indexOf('this.appendAttackRow(list')).toBeLessThan(
-      code.indexOf(
-        'for (const row of view.rows) this.appendRow(list, row, mir4State, world.copper)',
-      ),
+      code.indexOf('for (const row of view.rows) this.appendRow(list, row, mir4State)'),
     );
     // The Attack state reaches the view through the latch takeControlChange() fills at
     // the top of render(), not a second deps.attackOnBar() read (#2519).
@@ -83,7 +81,7 @@ describe('spellbook_window: the pinned Attack row', () => {
     expect(code).toContain('const attackOnBar = this.deps.attackOnBar()');
   });
 
-  it('adapts the same row copy for classic Attack and MIR4 Auto Battle', () => {
+  it('keeps the shared profile copy available to non-spellbook attack surfaces', () => {
     expect(code).toContain("'abilityUi.actionBar.attackName'");
     expect(code).toContain("'abilityUi.actionBar.attackTooltip'");
     expect(code).toContain("'abilityUi.actionBar.autoBattleName'");
@@ -247,7 +245,8 @@ describe('spellbook_window: tooltip/summary reflect talent changes (tooltip pari
     // talent dropping Wicked Slash cost 45 -> 40) rebuilds the row summaries; an
     // unchanged frame falls through to the gated toggle refresh.
     expect(code).toContain('tickOpen()');
-    expect(code).toContain('if (this.knownChanged(this.deps.world().known)) {');
+    expect(code).toContain('const world = this.deps.world();');
+    expect(code).toContain('if (this.knownChanged(world.known)) {');
     expect(code).toContain('this.captureKnown(world.known)');
     // The comparison carries every number a row summary paints, so a cost/cooldown
     // change flips it (a bare id/rank check would miss a same-rank talent cost cut).

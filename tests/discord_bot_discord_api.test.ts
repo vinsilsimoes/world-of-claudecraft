@@ -205,7 +205,7 @@ describe('DiscordApi request envelope', () => {
     const reads: string[] = [];
     const { impl } = recordingFetch([fakeResponse({ status: 204, reads })]);
 
-    expect(await new DiscordApi('tok', impl).createGuildRole('g1', 'WoC Initiate')).toBe(null);
+    expect(await new DiscordApi('tok', impl).createGuildRole('g1', 'Aeldrune Initiate')).toBe(null);
     expect(reads).toEqual([]);
   });
 
@@ -213,7 +213,7 @@ describe('DiscordApi request envelope', () => {
     // Cloudflare and Discord both answer with HTML on some errors; the parse
     // guard is what stops that from throwing an unexpected shape at the caller.
     const { impl } = recordingFetch([fakeResponse({ jsonThrows: true })]);
-    expect(await new DiscordApi('tok', impl).createGuildRole('g1', 'WoC Initiate')).toBe(null);
+    expect(await new DiscordApi('tok', impl).createGuildRole('g1', 'Aeldrune Initiate')).toBe(null);
   });
 
   it('throws with the status and the response text TRUNCATED to 200 characters', async () => {
@@ -302,19 +302,19 @@ describe('DiscordApi per-method call envelopes', () => {
     },
     {
       name: 'createGuildRole (default color)',
-      drive: (api) => api.createGuildRole('g1', 'WoC Initiate'),
+      drive: (api) => api.createGuildRole('g1', 'Aeldrune Initiate'),
       method: 'POST',
       path: '/guilds/g1/roles',
       // color 0 means "no color"; hoist/mentionable false keep the tier roles
       // out of the member sidebar and out of @-mention range.
-      body: '{"name":"WoC Initiate","color":0,"mentionable":false,"hoist":false}',
+      body: '{"name":"Aeldrune Initiate","color":0,"mentionable":false,"hoist":false}',
     },
     {
       name: 'createGuildRole (explicit color)',
-      drive: (api) => api.createGuildRole('g1', 'WoC Champion', 0xff8800),
+      drive: (api) => api.createGuildRole('g1', 'Aeldrune Champion', 0xff8800),
       method: 'POST',
       path: '/guilds/g1/roles',
-      body: '{"name":"WoC Champion","color":16746496,"mentionable":false,"hoist":false}',
+      body: '{"name":"Aeldrune Champion","color":16746496,"mentionable":false,"hoist":false}',
     },
     {
       name: 'addMemberRole',
@@ -369,11 +369,11 @@ describe('DiscordApi 429 handling through the governor', () => {
     const { governor, slept } = testGovernor();
     const { calls, impl } = recordingFetch([
       fakeResponse({ status: 429, body: { retry_after: 60 } }),
-      fakeResponse({ body: [{ id: 'r1', name: 'WoC Initiate' }] }),
+      fakeResponse({ body: [{ id: 'r1', name: 'Aeldrune Initiate' }] }),
     ]);
 
     expect(await new DiscordApi('tok', impl, governor).guildRoles('g1')).toEqual([
-      { id: 'r1', name: 'WoC Initiate' },
+      { id: 'r1', name: 'Aeldrune Initiate' },
     ]);
 
     expect(slept).toEqual([60_000]);

@@ -23,5 +23,13 @@ export function buildHeadlessEpisodeInfo(sim: Sim, stepCount: number): object {
     darksteel: meta?.mir4Currencies?.darksteel ?? 0,
     effect_points: meta?.mir4SkillResources?.effectPoints ?? 0,
     skill_tomes: meta?.mir4SkillResources?.skillTomes ?? 0,
+    knowledge_fragments: meta?.mir4Materials?.knowledgeFragment ?? 0,
+    knowledge_tomes: {
+      common: meta?.mir4Materials?.knowledgeTomeCommon ?? 0,
+      rare: meta?.mir4Materials?.knowledgeTomeRare ?? 0,
+      epic: meta?.mir4Materials?.knowledgeTomeEpic ?? 0,
+      legendary: meta?.mir4Materials?.knowledgeTomeLegendary ?? 0,
+    },
+    skill_levels: { ...meta?.mir4SkillLevels },
   };
 }

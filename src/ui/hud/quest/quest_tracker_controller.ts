@@ -49,6 +49,7 @@ const TUTORIAL_DESTINATION_KEYS: Readonly<Record<string, TranslationKey>> = {
   crafting: 'hudChrome.crafting.title',
   dfinder: 'hudChrome.finder.title',
   map: 'hud.keybinds.actions.map',
+  mounts: 'hudChrome.mir4.mountCodex.title',
   questlog: 'questUi.log.title',
 };
 
@@ -63,13 +64,23 @@ const TUTORIAL_REQUIREMENT_KEYS: Readonly<Record<string, TranslationKey>> = {
   'spirit-ticket-dawn': 'hudChrome.mir4.spiritTicketDawn',
 };
 
+const MOBILE_TUTORIAL_LAUNCHER_IDS: Readonly<Record<string, string>> = {
+  'mm-bag': 'mobile-bags',
+  'mm-char': 'mobile-char',
+  'mm-crafting': 'mobile-crafting',
+  'mm-dfinder': 'mobile-dfinder',
+  'mm-map': 'mobile-map',
+  'mm-mount-codex': 'mobile-mount-codex',
+  'mm-quest': 'mobile-quest',
+};
+
 /** Owns quest tracker projection, collapse persistence, and elided DOM updates.
  *  The projection has TWO presentations: this right-anchored tracker on desktop,
  *  and the top-band strip on touch, which is handed the same TrackedQuest[]
  *  rather than projecting the log a second time. */
 export class QuestTrackerController {
   private readonly strip: QuestStripController | null;
-  private tutorialLauncher: HTMLElement | null = null;
+  private tutorialLaunchers: HTMLElement[] = [];
   /** The last frame time Hud handed down. The collapse toggle re-renders off a
    *  user gesture rather than a frame, so it reuses it instead of minting a
    *  clock here; the strip's grace is measured in seconds and cannot see the
@@ -300,11 +311,23 @@ export class QuestTrackerController {
   }
 
   private highlightTutorialLauncher(launcherId: string | null): void {
-    const next = launcherId ? this.deps.document.getElementById(launcherId) : null;
-    if (next === this.tutorialLauncher) return;
-    this.tutorialLauncher?.classList.remove('mir4-tutorial-target');
-    next?.classList.add('mir4-tutorial-target');
-    this.tutorialLauncher = next;
+    const ids = launcherId
+      ? [launcherId, MOBILE_TUTORIAL_LAUNCHER_IDS[launcherId]].filter(
+          (id): id is string => id !== undefined,
+        )
+      : [];
+    const next = ids
+      .map((id) => this.deps.document.getElementById(id))
+      .filter((element): element is HTMLElement => element !== null);
+    if (
+      next.length === this.tutorialLaunchers.length &&
+      next.every((element, index) => element === this.tutorialLaunchers[index])
+    )
+      return;
+    for (const launcher of this.tutorialLaunchers)
+      launcher.classList.remove('mir4-tutorial-target');
+    for (const launcher of next) launcher.classList.add('mir4-tutorial-target');
+    this.tutorialLaunchers = next;
   }
 
   private number(value: number): string {

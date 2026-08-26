@@ -6,6 +6,7 @@ import {
   MIR4_DIALOGUE_MAX_SECONDS,
   MIR4_DIALOGUE_MIN_SECONDS,
   mir4DialogueReadingSeconds,
+  mir4NarrativeDialogueLines,
 } from '../../src/sim/mir4/narrative_dialogue';
 import { Sim } from '../../src/sim/sim';
 
@@ -24,6 +25,35 @@ function makeSim(): Sim {
 afterAll(() => setActiveWorldContent(null));
 
 describe('MIR4 narrative dialogue gate', () => {
+  it('extracts and canonicalizes speakers embedded in legacy side-quest dialogue', () => {
+    const quest = mir4ArcQuest('M01-S02');
+    if (!quest) throw new Error('M01-S02 not found');
+
+    expect(mir4NarrativeDialogueLines(quest, 'accept', quest.title, 'Tarek Duas Pontes')).toEqual([
+      {
+        speaker: 'Tarek Duas Pontes',
+        text: 'Monstros voltam. Uma rota salva fica. Desenhe algo que sobreviva a nós.',
+      },
+      {
+        speaker: 'Ilyra da Centelha',
+        text: 'O mapa preserva espaços; a Rede preserva o significado deles.',
+      },
+    ]);
+  });
+
+  it('uses the interacting NPC when a legacy dialogue line has no speaker prefix', () => {
+    const authoredQuest = mir4ArcQuest('M01-S02');
+    if (!authoredQuest) throw new Error('M01-S02 not found');
+    const quest = {
+      ...authoredQuest,
+      dialogue: ['Uma fala sem identificação explícita.'],
+    };
+
+    expect(mir4NarrativeDialogueLines(quest, 'accept', quest.title, 'Tarek Duas Pontes')).toEqual([
+      { speaker: 'Tarek Duas Pontes', text: 'Uma fala sem identificação explícita.' },
+    ]);
+  });
+
   it('derives a bounded reading window from the authored dialogue', () => {
     const short = mir4DialogueReadingSeconds([{ speaker: 'Llyra', text: 'Venha comigo.' }]);
     const long = mir4DialogueReadingSeconds([

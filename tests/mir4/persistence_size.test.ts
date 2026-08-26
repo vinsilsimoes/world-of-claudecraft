@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { MIR4_CODEX_COLLECTIONS } from '../../src/sim/content/mir4/codex';
 import { MIR4_EQUIPMENT_CATALOG } from '../../src/sim/content/mir4/equipment_catalog';
 import { MIR4_AFFIXES } from '../../src/sim/mir4/affixes';
+import { MIR4_MOUNT_PENDING_LIMIT } from '../../src/sim/mir4/mounts';
+import { MIR4_SPIRIT_PENDING_LIMIT } from '../../src/sim/mir4/spirits';
 import { buildMaxMir4PersistedState } from '../helpers/mir4_max_persisted_state';
 
 function expectBoundedEntropy(values: readonly string[], length: number): void {
@@ -11,6 +14,8 @@ function expectBoundedEntropy(values: readonly string[], length: number): void {
 
 describe('MIR4 persisted JSONB size budget', () => {
   it('keeps the maximum MIR4 profile projection on a fresh character below 128 KiB', () => {
+    expect(MIR4_SPIRIT_PENDING_LIMIT).toBe(256);
+    expect(MIR4_MOUNT_PENDING_LIMIT).toBe(128);
     const {
       state,
       ownerSnapshot,
@@ -23,6 +28,7 @@ describe('MIR4 persisted JSONB size budget', () => {
     } = buildMaxMir4PersistedState();
     const bytes = Buffer.byteLength(JSON.stringify(state), 'utf8');
     const ownerSnapshotBytes = Buffer.byteLength(JSON.stringify(ownerSnapshot), 'utf8');
+    const codexBytes = Buffer.byteLength(JSON.stringify(state.mir4Codex), 'utf8');
 
     expect(Object.keys(state.mir4EquipmentInstances ?? {})).toHaveLength(classItemCount);
     expect(classItemCounts).toEqual({ 1: 48, 2: 48, 3: 48, 4: 48, 5: 48 });
@@ -30,9 +36,27 @@ describe('MIR4 persisted JSONB size budget', () => {
     expect(classItemCount).toBe(classItemCounts[selectedClassId]);
     expect(Object.keys(state.mir4ArcQuests ?? {})).toHaveLength(arcQuestCount);
     expect(Object.keys(state.mir4Mounts?.owned ?? {})).toHaveLength(mountCount);
-    expect(state.mir4Mounts?.pending).toHaveLength(64);
+    expect(state.mir4Mounts?.pending).toHaveLength(MIR4_MOUNT_PENDING_LIMIT);
     expect(Object.keys(state.mir4Spirits?.owned ?? {})).toHaveLength(spiritCount);
-    expect(state.mir4Spirits?.pending).toHaveLength(64);
+    expect(state.mir4Spirits?.pending).toHaveLength(MIR4_SPIRIT_PENDING_LIMIT);
+    expect(new Set(Object.values(state.mir4Materials ?? {}))).toEqual(new Set([1_000_000_000]));
+    expect(state.mir4Training?.solitude?.conceptionVessel).toEqual([
+      10, 10, 10, 10, 10, 10, 10, 10,
+    ]);
+    const maximumManualCodex = Object.fromEntries(
+      MIR4_CODEX_COLLECTIONS.filter((collection) => collection.registration === 'manual').map(
+        (collection) => [
+          collection.id,
+          Object.fromEntries(
+            collection.requirements
+              .filter((requirement) => requirement.kind === 'material')
+              .map((requirement) => [requirement.id, requirement.requiredCount]),
+          ),
+        ],
+      ),
+    );
+    expect(state.mir4Codex).toEqual({ version: 1, registered: maximumManualCodex });
+    expect(codexBytes).toBeLessThanOrEqual(4 * 1024);
     const instances = Object.values(state.mir4EquipmentInstances ?? {});
     const equippedItemIds = new Set(Object.values(state.mir4Equipment ?? {}));
     expect(equippedItemIds.size).toBe(8);

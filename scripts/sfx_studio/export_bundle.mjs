@@ -319,7 +319,7 @@ echo "Activated SFX bundle ${runtimeBundleId} in $target_sfx"
 }
 
 function readme(bundleId) {
-  return Buffer.from(`World of ClaudeCraft SFX production bundle
+  return Buffer.from(`Aeldrune SFX production bundle
 
 Bundle: ${bundleId}
 

@@ -31,6 +31,7 @@ interface MutableState {
   auras: string[];
   sportTeam: number | null | undefined;
   showAttackButton: boolean;
+  preferFirstSeatAction: boolean;
 }
 
 interface Harness {
@@ -59,6 +60,7 @@ function makeHarness(
     auras: [],
     sportTeam: undefined,
     showAttackButton: true,
+    preferFirstSeatAction: false,
   };
   const controller = new ActionBarController({
     storage,
@@ -70,6 +72,7 @@ function makeHarness(
     hasAura: (kind) => state.auras.includes(kind),
     isInSportMatch: () => state.sportTeam !== undefined && state.sportTeam !== null,
     showAttackButton: () => state.showAttackButton,
+    preferFirstSeatAction: () => state.preferFirstSeatAction,
   });
   controller.replaceActions(initialBar);
   return { controller, state, storage };
@@ -554,6 +557,45 @@ describe('ActionBarController owned-class level 20 defaults', () => {
 });
 
 describe('ActionBarController attack slot', () => {
+  it('places a newly unlocked MIR4 ability in the first available visible slot', () => {
+    const harness = makeHarness('warrior', ['mir4_skill_1102'], bar('mir4_skill_1102'));
+    harness.state.showAttackButton = false;
+    harness.state.preferFirstSeatAction = true;
+    harness.controller.syncKnownAbilities();
+
+    harness.state.known.push('mir4_skill_1104');
+    harness.controller.syncKnownAbilities();
+
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'mir4_skill_1102',
+    });
+    expect(harness.controller.actionForSlot(1)).toEqual({
+      type: 'ability',
+      id: 'mir4_skill_1104',
+    });
+    expect(
+      [harness.controller.actionForSlot(0), ...harness.controller.actions].filter(
+        (action) => action?.type === 'ability' && action.id === 'mir4_skill_1104',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('promotes the first MIR4 action into visible slot 1 and keeps add/remove coherent', () => {
+    const harness = makeHarness('warrior', ['strike'], bar('strike'));
+    harness.state.showAttackButton = false;
+    harness.state.preferFirstSeatAction = true;
+
+    harness.controller.syncKnownAbilities();
+
+    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'strike' });
+    expect(harness.controller.actions[0]).toBeNull();
+    expect(harness.controller.removeAbility('strike')).toBe(true);
+    expect(harness.controller.actionForSlot(0)).toBeNull();
+    expect(harness.controller.addAbility('strike')).toBe(true);
+    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'strike' });
+  });
+
   it('loads, hides, exposes, and removes the persisted freed-slot action', () => {
     const storage = new MemoryStorage();
     storage.setItem(

@@ -27,9 +27,9 @@
 // `src/sim`-pure: no DOM/Three, no Math.random/Date.now; all randomness is the shared
 // `ctx.rng` stream, drawn in the exact pre-move positions.
 
-import { setMir4AutoBattleMode } from '../auto_battle/core';
 import { isArenaPos, MOBS } from '../data';
 import { MIR4_GAME_PROFILE } from '../game_profile';
+import { startMir4TargetCombat, stopMir4TargetCombat } from '../mir4/target_combat';
 import { questGateBlocksAggro } from '../mob/quest_gated_aggro';
 import { forceDismount } from '../mounts';
 import { grantDevotionFromBlock } from '../paladin_devotion';
@@ -125,8 +125,7 @@ export function startAutoAttack(ctx: SimContext, pid?: number): void {
   if (!r) return;
   const p = r.e;
   if (ctx.gameProfile === MIR4_GAME_PROFILE) {
-    setMir4AutoBattleMode(ctx, p.id, 'battle');
-    r.meta.lastActiveTick = ctx.tickCount;
+    startMir4TargetCombat(ctx, p.id);
     return;
   }
   if (p.dead) return;
@@ -194,7 +193,7 @@ export function startAutoAttack(ctx: SimContext, pid?: number): void {
 export function stopAutoAttack(ctx: SimContext, pid?: number): void {
   const r = ctx.resolve(pid);
   if (!r) return;
-  if (ctx.gameProfile === MIR4_GAME_PROFILE) setMir4AutoBattleMode(ctx, r.e.id, 'off');
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) stopMir4TargetCombat(ctx, r.e.id);
   else r.e.autoAttack = false;
 }
 

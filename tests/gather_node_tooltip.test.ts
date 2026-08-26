@@ -102,6 +102,25 @@ describe('gatherNodeTooltipHtml', () => {
     expect(absent).not.toContain('fine grade');
   });
 
+  it('names MIR4 Training plants and Darksteel on the shared world and map tooltip', () => {
+    expect(
+      gatherNodeTooltipHtml(
+        model({
+          type: 'herb',
+          professionId: 'herbalism',
+          mir4Reward: {
+            kind: 'training-material',
+            material: 'herbRoot',
+            rarity: 'uncommon',
+          },
+        }),
+      ),
+    ).toContain('Training: Herb Root (Uncommon)');
+    expect(gatherNodeTooltipHtml(model({ mir4Reward: { kind: 'darksteel' } }))).toContain(
+      'Darksteel',
+    );
+  });
+
   it('each node family resolves its own name key', () => {
     expect(gatherNodeTooltipHtml(model({ type: 'wood', professionId: 'logging' }))).toContain(
       'Timber Stand',

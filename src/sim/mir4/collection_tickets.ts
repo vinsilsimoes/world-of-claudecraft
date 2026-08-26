@@ -7,9 +7,21 @@ import type { Mir4MountTicketId } from './mounts';
 import { type Mir4SpiritCommandResult, summonMir4Spirit } from './spirit_commands';
 import { isMir4SpiritTicketId } from './spirits';
 
-export { combineMir4Mounts, confirmMir4Mount, equipMir4Mount } from './mount_commands';
+export {
+  combineAllMir4Mounts,
+  combineMir4Mounts,
+  confirmAllMir4Mounts,
+  confirmMir4Mount,
+  equipMir4Mount,
+} from './mount_commands';
 export type { Mir4MountTicketId } from './mounts';
-export { combineMir4Spirits, confirmMir4Spirit, equipMir4Spirit } from './spirit_commands';
+export {
+  combineAllMir4Spirits,
+  combineMir4Spirits,
+  confirmAllMir4Spirits,
+  confirmMir4Spirit,
+  equipMir4Spirit,
+} from './spirit_commands';
 
 export const MIR4_MOUNT_TICKET_VISUAL_ITEMS: Readonly<Record<Mir4MountTicketId, string>> = {
   'mount-ticket-dawn': 'reins_valorsteed',

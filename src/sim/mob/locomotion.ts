@@ -39,6 +39,7 @@ import * as deedsMod from '../deeds';
 import { resetDrownedLitanyBossEncounter } from '../delves/drowned_litany_boss';
 import { clearDelveRaiseDeadChannel } from '../delves/runs';
 import { isEscortNpcTemplate } from '../escort';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import { PLAYER_BODY_RADIUS, PLAYER_SWIM_DEPTH } from '../pathfind';
 import { noteMatchPetUnravelled } from '../pet/pet_match_return';
 import { notePetUnravelledOnOwnerDeath } from '../pet/pet_owner_revive';
@@ -183,6 +184,27 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
       return;
     mob.corpseTimer -= DT;
     mob.respawnTimer -= DT;
+    // MIR4 loot is already in the eligible players' bags. The dedicated
+    // presentation marker lasts ten seconds without advertising an empty loot
+    // interaction, then clears while the spawn waits for its respawn cadence.
+    if (ctx.gameProfile === MIR4_GAME_PROFILE && mob.ownerId === null && mob.mir4CorpseVisible) {
+      mob.mir4CorpseTimer = Math.max(0, (mob.mir4CorpseTimer ?? 0) - DT);
+    }
+    if (
+      ctx.gameProfile === MIR4_GAME_PROFILE &&
+      mob.ownerId === null &&
+      mob.mir4CorpseVisible &&
+      (mob.mir4CorpseTimer ?? 0) <= 0
+    ) {
+      mob.mir4CorpseVisible = false;
+      mob.mir4CorpseTimer = 0;
+      // A corpse selected for profession harvesting must not leave a target
+      // frame pointing at an invisible entity after its body expires.
+      for (const meta of ctx.players.values()) {
+        const player = ctx.entities.get(meta.entityId);
+        if (player?.targetId === mob.id) player.targetId = null;
+      }
+    }
     if (mob.lootFfaTimer > 0) mob.lootFfaTimer -= DT; // owner-lock lapses, then loot goes FFA
     // Death Throes: a volatile corpse counts down its fuse, then detonates once.
     if (mob.detonateTimer !== Infinity) {
@@ -230,7 +252,13 @@ export function updateMob(ctx: SimContext, mob: Entity): void {
     // tapping player thus gets the full bounded window (corpseTimer, default
     // CORPSE_DURATION, capped by any fixed respawnSeconds) to loot; un-looted
     // drops then decay with the corpse and are never lost before the window ends.
-    if (!isInstanceMob && mob.respawnTimer <= 0 && (mob.corpseTimer <= 0 || !mob.lootable)) {
+    if (
+      !isInstanceMob &&
+      mob.respawnTimer <= 0 &&
+      (ctx.gameProfile === MIR4_GAME_PROFILE
+        ? mob.corpseTimer <= 0
+        : mob.corpseTimer <= 0 || !mob.lootable)
+    ) {
       ctx.respawnMob(mob);
     }
     return;

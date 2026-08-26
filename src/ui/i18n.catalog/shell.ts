@@ -9,14 +9,14 @@
 export const shellStrings = {
   en: {
     seo: {
-      title: 'World of ClaudeCraft: Classic-Style Web MMO',
+      title: 'Aeldrune: Classic-Style Web MMO',
       description:
-        'Embark on an epic adventure in World of ClaudeCraft, a classic-style micro-MMO playable directly in your browser. Join a persistent shared world, level up classes, and defeat enemies!',
+        'Embark on an epic adventure in Aeldrune, a classic-style micro-MMO playable directly in your browser. Join a persistent shared world, level up classes, and defeat enemies!',
       genre: 'MMORPG',
       playMode: 'Multiplayer',
       applicationCategory: 'Game',
       operatingSystem: 'Web browser',
-      officialLabel: 'Official World of ClaudeCraft website',
+      officialLabel: 'Official Aeldrune website',
       officialBody:
         'worldofclaudecraft.com is the official free browser MMO for the Claudemoon world. Play online with a persistent character, explore solo offline, read the wiki, and follow verified community links from this site.',
     },
@@ -26,9 +26,9 @@ export const shellStrings = {
       mainNavigation: 'Main navigation',
       languageSelection: 'Language selection',
       characterActions: 'Character actions',
-      githubProject: 'Open the World of ClaudeCraft GitHub project',
-      discordCommunity: 'Join the World of ClaudeCraft Discord community',
-      donateProject: 'Donate to support World of ClaudeCraft',
+      githubProject: 'Open the Aeldrune GitHub project',
+      discordCommunity: 'Join the Aeldrune Discord community',
+      donateProject: 'Donate to support Aeldrune',
     },
     entryGuard: {
       title: 'Graphics lowered',
@@ -145,16 +145,16 @@ export const shellStrings = {
         // the update core deliberately supports): rendering '' through the
         // {version} slot above would read "Update  is ready".
         updateReadyTitleNoVersion: 'Update is ready',
-        updateReadyBody: 'Restart World of ClaudeCraft to apply the update.',
+        updateReadyBody: 'Restart Aeldrune to apply the update.',
         partyInviteTitle: 'Party invite',
         partyInviteBody: '{name} invited you to a party.',
       },
       crash: {
-        title: 'World of ClaudeCraft',
+        title: 'Aeldrune',
         body: 'The game view stopped working. Reload it?',
         reload: 'Reload',
         quit: 'Quit',
-        fatalBody: 'World of ClaudeCraft hit an unexpected error and needs to close.',
+        fatalBody: 'Aeldrune hit an unexpected error and needs to close.',
       },
     },
     // Software-rendering notice (src/ui/gpu_notice_toast.ts): shown once when
@@ -368,19 +368,19 @@ export const shellStrings = {
       iosInstallDetail:
         'For true fullscreen on iPhone or iPad, install this page to your Home Screen first.',
       iosShareStep: 'In Safari, tap Share, then Add to Home Screen.',
-      iosOpenStep: 'Open World of ClaudeCraft from the new Home Screen icon.',
+      iosOpenStep: 'Open Aeldrune from the new Home Screen icon.',
       androidStandaloneDetail: 'You are in fullscreen app mode. Keep the device in landscape.',
       androidInstallDetail:
         'For fullscreen on Android, install this page or add it to your Home screen first.',
       androidInstallStep: 'In Chrome, tap the menu, then Install app or Add to Home screen.',
-      androidOpenStep: 'Open World of ClaudeCraft from the new icon.',
+      androidOpenStep: 'Open Aeldrune from the new icon.',
       otherStandaloneDetail: 'Keep your device in landscape fullscreen.',
       otherInstallDetail:
         'Install or add this page to your Home screen for the best fullscreen mobile experience.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - World Unavailable',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - World Unavailable',
+      logoAlt: 'Aeldrune',
       eyebrow: 'World maintenance',
       heading: 'The world is temporarily unavailable.',
       body: 'We are restarting the game service and expect Claudemoon to return shortly. This page will keep checking automatically.',
@@ -389,9 +389,9 @@ export const shellStrings = {
   },
   es: {
     seo: {
-      title: 'World of ClaudeCraft: MMO web de estilo clásico',
+      title: 'Aeldrune: MMO web de estilo clásico',
       description:
-        'Emprende una aventura épica en World of ClaudeCraft, un micro-MMO de estilo clásico que se juega directamente en el navegador. Entra a un reino compartido, sube de nivel y derrota enemigos.',
+        'Emprende una aventura épica en Aeldrune, un micro-MMO de estilo clásico que se juega directamente en el navegador. Entra a un reino compartido, sube de nivel y derrota enemigos.',
       genre: 'MMORPG',
       playMode: 'Multijugador',
       applicationCategory: 'Juego',
@@ -403,9 +403,9 @@ export const shellStrings = {
       mainNavigation: 'Navegación principal',
       languageSelection: 'Selección de idioma',
       characterActions: 'Acciones de personaje',
-      githubProject: 'Abrir el proyecto de World of ClaudeCraft en GitHub',
-      discordCommunity: 'Unirse a la comunidad de World of ClaudeCraft en Discord',
-      donateProject: 'Donar para apoyar World of ClaudeCraft',
+      githubProject: 'Abrir el proyecto de Aeldrune en GitHub',
+      discordCommunity: 'Unirse a la comunidad de Aeldrune en Discord',
+      donateProject: 'Donar para apoyar Aeldrune',
     },
     loading: {
       world: 'Cargando mundo...',
@@ -570,21 +570,21 @@ export const shellStrings = {
       iosInstallDetail:
         'Para pantalla completa real en iPhone o iPad, instala esta página en tu pantalla de inicio primero.',
       iosShareStep: 'En Safari, toca Compartir y luego Agregar a pantalla de inicio.',
-      iosOpenStep: 'Abre World of ClaudeCraft desde el nuevo icono de la pantalla de inicio.',
+      iosOpenStep: 'Abre Aeldrune desde el nuevo icono de la pantalla de inicio.',
       androidStandaloneDetail:
         'Estás en modo de aplicación a pantalla completa. Mantén el dispositivo en horizontal.',
       androidInstallDetail:
         'Para pantalla completa en Android, instala esta página o agrégala a la pantalla de inicio primero.',
       androidInstallStep:
         'En Chrome, toca el menú y luego Instalar app o Agregar a pantalla de inicio.',
-      androidOpenStep: 'Abre World of ClaudeCraft desde el nuevo icono.',
+      androidOpenStep: 'Abre Aeldrune desde el nuevo icono.',
       otherStandaloneDetail: 'Mantén el dispositivo en pantalla completa horizontal.',
       otherInstallDetail:
         'Instala o agrega esta página a la pantalla de inicio para la mejor experiencia móvil a pantalla completa.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Reino no disponible',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Reino no disponible',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Mantenimiento del reino',
       heading: 'El reino no está disponible temporalmente.',
       body: 'Estamos reiniciando el servicio del juego y esperamos que Claudemoon vuelva pronto. Esta página seguirá comprobándolo automáticamente.',
@@ -593,9 +593,9 @@ export const shellStrings = {
   },
   es_ES: {
     seo: {
-      title: 'World of ClaudeCraft: MMO web de estilo clásico',
+      title: 'Aeldrune: MMO web de estilo clásico',
       description:
-        'Emprende una aventura épica en World of ClaudeCraft, un micro-MMO de estilo clásico jugable directamente en el navegador. Únete a un reino compartido, sube clases de nivel y derrota enemigos.',
+        'Emprende una aventura épica en Aeldrune, un micro-MMO de estilo clásico jugable directamente en el navegador. Únete a un reino compartido, sube clases de nivel y derrota enemigos.',
       genre: 'MMORPG',
       playMode: 'Multijugador',
       applicationCategory: 'Juego',
@@ -607,9 +607,9 @@ export const shellStrings = {
       mainNavigation: 'Navegación principal',
       languageSelection: 'Selección de idioma',
       characterActions: 'Acciones del personaje',
-      githubProject: 'Abrir el proyecto World of ClaudeCraft en GitHub',
-      discordCommunity: 'Unirse a la comunidad de World of ClaudeCraft en Discord',
-      donateProject: 'Donar para apoyar World of ClaudeCraft',
+      githubProject: 'Abrir el proyecto Aeldrune en GitHub',
+      discordCommunity: 'Unirse a la comunidad de Aeldrune en Discord',
+      donateProject: 'Donar para apoyar Aeldrune',
     },
     loading: {
       world: 'Cargando mundo...',
@@ -774,21 +774,21 @@ export const shellStrings = {
       iosInstallDetail:
         'Para pantalla completa real en iPhone o iPad, instala primero esta página en tu pantalla de inicio.',
       iosShareStep: 'En Safari, toca Compartir y luego Añadir a pantalla de inicio.',
-      iosOpenStep: 'Abre World of ClaudeCraft desde el nuevo icono de la pantalla de inicio.',
+      iosOpenStep: 'Abre Aeldrune desde el nuevo icono de la pantalla de inicio.',
       androidStandaloneDetail:
         'Estás en modo de app a pantalla completa. Mantén el dispositivo en horizontal.',
       androidInstallDetail:
         'Para pantalla completa en Android, instala esta página o añádela a la pantalla de inicio primero.',
       androidInstallStep:
         'En Chrome, toca el menú y luego Instalar app o Añadir a pantalla de inicio.',
-      androidOpenStep: 'Abre World of ClaudeCraft desde el nuevo icono.',
+      androidOpenStep: 'Abre Aeldrune desde el nuevo icono.',
       otherStandaloneDetail: 'Mantén el dispositivo en pantalla completa horizontal.',
       otherInstallDetail:
         'Instala o añade esta página a la pantalla de inicio para la mejor experiencia móvil a pantalla completa.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Reino no disponible',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Reino no disponible',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Mantenimiento del reino',
       heading: 'El reino no está disponible temporalmente.',
       body: 'Estamos reiniciando el servicio del juego y esperamos que Claudemoon vuelva pronto. Esta página seguirá comprobándolo automáticamente.',
@@ -797,9 +797,9 @@ export const shellStrings = {
   },
   fr_FR: {
     seo: {
-      title: 'World of ClaudeCraft: MMO web de style classique',
+      title: 'Aeldrune: MMO web de style classique',
       description:
-        'Partez pour une aventure épique dans World of ClaudeCraft, un micro-MMO au style classique jouable directement dans votre navigateur. Rejoignez un royaume persistant, progressez en classe et terrassez vos ennemis.',
+        'Partez pour une aventure épique dans Aeldrune, un micro-MMO au style classique jouable directement dans votre navigateur. Rejoignez un royaume persistant, progressez en classe et terrassez vos ennemis.',
       genre: 'MMORPG',
       playMode: 'Multijoueur',
       applicationCategory: 'Jeu',
@@ -811,9 +811,9 @@ export const shellStrings = {
       mainNavigation: 'Navigation principale',
       languageSelection: 'Sélection de la langue',
       characterActions: 'Actions de personnage',
-      githubProject: 'Ouvrir le projet World of ClaudeCraft sur GitHub',
-      discordCommunity: 'Rejoindre la communauté World of ClaudeCraft sur Discord',
-      donateProject: 'Faire un don pour soutenir World of ClaudeCraft',
+      githubProject: 'Ouvrir le projet Aeldrune sur GitHub',
+      discordCommunity: 'Rejoindre la communauté Aeldrune sur Discord',
+      donateProject: 'Faire un don pour soutenir Aeldrune',
     },
     loading: {
       world: 'Chargement du monde...',
@@ -979,21 +979,21 @@ export const shellStrings = {
       iosInstallDetail:
         "Pour un vrai plein écran sur iPhone ou iPad, ajoutez d'abord cette page à l'écran d'accueil.",
       iosShareStep: "Dans Safari, touchez Partager, puis Ajouter à l'écran d'accueil.",
-      iosOpenStep: "Ouvrez World of ClaudeCraft depuis la nouvelle icône de l'écran d'accueil.",
+      iosOpenStep: "Ouvrez Aeldrune depuis la nouvelle icône de l'écran d'accueil.",
       androidStandaloneDetail:
         "Vous êtes en mode application plein écran. Gardez l'appareil en paysage.",
       androidInstallDetail:
         "Pour le plein écran sur Android, installez cette page ou ajoutez-la à l'écran d'accueil.",
       androidInstallStep:
         "Dans Chrome, ouvrez le menu, puis Installer l'application ou Ajouter à l'écran d'accueil.",
-      androidOpenStep: 'Ouvrez World of ClaudeCraft depuis la nouvelle icône.',
+      androidOpenStep: 'Ouvrez Aeldrune depuis la nouvelle icône.',
       otherStandaloneDetail: 'Gardez votre appareil en plein écran paysage.',
       otherInstallDetail:
         "Installez ou ajoutez cette page à votre écran d'accueil pour la meilleure expérience mobile plein écran.",
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Royaume indisponible',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Royaume indisponible',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Maintenance du royaume',
       heading: 'Le royaume est temporairement indisponible.',
       body: 'Nous redémarrons le service de jeu et Claudemoon devrait revenir bientôt. Cette page continuera de vérifier automatiquement.',
@@ -1002,9 +1002,9 @@ export const shellStrings = {
   },
   fr_CA: {
     seo: {
-      title: 'World of ClaudeCraft: MMO Web de style classique',
+      title: 'Aeldrune: MMO Web de style classique',
       description:
-        "Partez à l'aventure dans World of ClaudeCraft, un micro-MMO de style classique jouable directement dans votre navigateur. Rejoignez un royaume partagé, faites progresser vos classes et terrassez des ennemis.",
+        "Partez à l'aventure dans Aeldrune, un micro-MMO de style classique jouable directement dans votre navigateur. Rejoignez un royaume partagé, faites progresser vos classes et terrassez des ennemis.",
       genre: 'MMORPG',
       playMode: 'Multijoueur',
       applicationCategory: 'Jeu',
@@ -1016,9 +1016,9 @@ export const shellStrings = {
       mainNavigation: 'Navigation principale',
       languageSelection: 'Sélection de la langue',
       characterActions: 'Actions de personnage',
-      githubProject: 'Ouvrir le projet World of ClaudeCraft sur GitHub',
-      discordCommunity: 'Rejoindre la communauté World of ClaudeCraft sur Discord',
-      donateProject: 'Faire un don pour soutenir World of ClaudeCraft',
+      githubProject: 'Ouvrir le projet Aeldrune sur GitHub',
+      discordCommunity: 'Rejoindre la communauté Aeldrune sur Discord',
+      donateProject: 'Faire un don pour soutenir Aeldrune',
     },
     loading: {
       world: 'Chargement du monde...',
@@ -1184,21 +1184,21 @@ export const shellStrings = {
       iosInstallDetail:
         "Pour le vrai plein écran sur iPhone ou iPad, ajoutez d'abord cette page à l'écran d'accueil.",
       iosShareStep: "Dans Safari, touchez Partager, puis Ajouter à l'écran d'accueil.",
-      iosOpenStep: "Ouvrez World of ClaudeCraft depuis la nouvelle icône de l'écran d'accueil.",
+      iosOpenStep: "Ouvrez Aeldrune depuis la nouvelle icône de l'écran d'accueil.",
       androidStandaloneDetail:
         "Vous êtes en mode application plein écran. Gardez l'appareil en paysage.",
       androidInstallDetail:
         "Pour le plein écran sur Android, installez cette page ou ajoutez-la à l'écran d'accueil.",
       androidInstallStep:
         "Dans Chrome, touchez le menu, puis Installer l'application ou Ajouter à l'écran d'accueil.",
-      androidOpenStep: 'Ouvrez World of ClaudeCraft depuis la nouvelle icône.',
+      androidOpenStep: 'Ouvrez Aeldrune depuis la nouvelle icône.',
       otherStandaloneDetail: 'Gardez votre appareil en plein écran paysage.',
       otherInstallDetail:
         "Installez ou ajoutez cette page à votre écran d'accueil pour la meilleure expérience mobile plein écran.",
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Royaume indisponible',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Royaume indisponible',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Maintenance du royaume',
       heading: 'Le royaume est temporairement indisponible.',
       body: 'Nous redémarrons le service de jeu et Claudemoon devrait revenir sous peu. Cette page continuera de vérifier automatiquement.',
@@ -1207,9 +1207,9 @@ export const shellStrings = {
   },
   en_CA: {
     seo: {
-      title: 'World of ClaudeCraft: Classic-Style Web MMO',
+      title: 'Aeldrune: Classic-Style Web MMO',
       description:
-        'Embark on an epic adventure in World of ClaudeCraft, a classic-style micro-MMO playable directly in your browser. Join a persistent shared realm, level up classes, and defeat enemies!',
+        'Embark on an epic adventure in Aeldrune, a classic-style micro-MMO playable directly in your browser. Join a persistent shared realm, level up classes, and defeat enemies!',
       genre: 'MMORPG',
       playMode: 'Multiplayer',
       applicationCategory: 'Game',
@@ -1221,9 +1221,9 @@ export const shellStrings = {
       mainNavigation: 'Main navigation',
       languageSelection: 'Language selection',
       characterActions: 'Character actions',
-      githubProject: 'Open the World of ClaudeCraft GitHub project',
-      discordCommunity: 'Join the World of ClaudeCraft Discord community',
-      donateProject: 'Donate to support World of ClaudeCraft',
+      githubProject: 'Open the Aeldrune GitHub project',
+      discordCommunity: 'Join the Aeldrune Discord community',
+      donateProject: 'Donate to support Aeldrune',
     },
     loading: {
       world: 'Loading world...',
@@ -1400,19 +1400,19 @@ export const shellStrings = {
       iosInstallDetail:
         'For true fullscreen on iPhone or iPad, install this page to your Home Screen first.',
       iosShareStep: 'In Safari, tap Share, then Add to Home Screen.',
-      iosOpenStep: 'Open World of ClaudeCraft from the new Home Screen icon.',
+      iosOpenStep: 'Open Aeldrune from the new Home Screen icon.',
       androidStandaloneDetail: 'You are in fullscreen app mode. Keep the device in landscape.',
       androidInstallDetail:
         'For fullscreen on Android, install this page or add it to your Home screen first.',
       androidInstallStep: 'In Chrome, tap the menu, then Install app or Add to Home screen.',
-      androidOpenStep: 'Open World of ClaudeCraft from the new icon.',
+      androidOpenStep: 'Open Aeldrune from the new icon.',
       otherStandaloneDetail: 'Keep your device in landscape fullscreen.',
       otherInstallDetail:
         'Install or add this page to your Home screen for the best fullscreen mobile experience.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Realm Unavailable',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Realm Unavailable',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Realm maintenance',
       heading: 'The realm is temporarily unavailable.',
       body: 'We are restarting the game service and expect Claudemoon to return shortly. This page will keep checking automatically.',
@@ -1421,9 +1421,9 @@ export const shellStrings = {
   },
   it_IT: {
     seo: {
-      title: 'World of ClaudeCraft: MMO web in stile classico',
+      title: 'Aeldrune: MMO web in stile classico',
       description:
-        "Parti per un'avventura epica in World of ClaudeCraft, un micro-MMO in stile classico giocabile direttamente dal browser. Entra in un reame condiviso, fai crescere le classi e sconfiggi i nemici.",
+        "Parti per un'avventura epica in Aeldrune, un micro-MMO in stile classico giocabile direttamente dal browser. Entra in un reame condiviso, fai crescere le classi e sconfiggi i nemici.",
       genre: 'MMORPG',
       playMode: 'Multigiocatore',
       applicationCategory: 'Gioco',
@@ -1435,9 +1435,9 @@ export const shellStrings = {
       mainNavigation: 'Navigazione principale',
       languageSelection: 'Selezione lingua',
       characterActions: 'Azioni personaggio',
-      githubProject: 'Apri il progetto World of ClaudeCraft su GitHub',
-      discordCommunity: 'Entra nella community Discord di World of ClaudeCraft',
-      donateProject: 'Fai una donazione per sostenere World of ClaudeCraft',
+      githubProject: 'Apri il progetto Aeldrune su GitHub',
+      discordCommunity: 'Entra nella community Discord di Aeldrune',
+      donateProject: 'Fai una donazione per sostenere Aeldrune',
     },
     loading: {
       world: 'Caricamento del mondo...',
@@ -1604,21 +1604,21 @@ export const shellStrings = {
       iosInstallDetail:
         'Per il vero schermo intero su iPhone o iPad, installa prima questa pagina nella schermata Home.',
       iosShareStep: 'In Safari, tocca Condividi e poi Aggiungi alla schermata Home.',
-      iosOpenStep: 'Apri World of ClaudeCraft dalla nuova icona nella schermata Home.',
+      iosOpenStep: 'Apri Aeldrune dalla nuova icona nella schermata Home.',
       androidStandaloneDetail:
         'Sei in modalità app a schermo intero. Mantieni il dispositivo in orizzontale.',
       androidInstallDetail:
         'Per lo schermo intero su Android, installa questa pagina o aggiungila alla schermata Home.',
       androidInstallStep:
         'In Chrome, tocca il menu e poi Installa app o Aggiungi alla schermata Home.',
-      androidOpenStep: 'Apri World of ClaudeCraft dalla nuova icona.',
+      androidOpenStep: 'Apri Aeldrune dalla nuova icona.',
       otherStandaloneDetail: 'Mantieni il dispositivo in schermo intero orizzontale.',
       otherInstallDetail:
         'Installa o aggiungi questa pagina alla schermata Home per la migliore esperienza mobile a schermo intero.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Reame non disponibile',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Reame non disponibile',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Manutenzione del reame',
       heading: 'Il reame è temporaneamente non disponibile.',
       body: 'Stiamo riavviando il servizio di gioco e prevediamo che Claudemoon torni a breve. Questa pagina continuerà a controllare automaticamente.',
@@ -1627,9 +1627,9 @@ export const shellStrings = {
   },
   de_DE: {
     seo: {
-      title: 'World of ClaudeCraft: Klassisches Web-MMO',
+      title: 'Aeldrune: Klassisches Web-MMO',
       description:
-        'Begib dich in World of ClaudeCraft auf ein episches Abenteuer, ein Micro-MMO im klassischen Stil direkt im Browser. Betritt einen gemeinsamen Realm, steigere Klassen und besiege Gegner.',
+        'Begib dich in Aeldrune auf ein episches Abenteuer, ein Micro-MMO im klassischen Stil direkt im Browser. Betritt einen gemeinsamen Realm, steigere Klassen und besiege Gegner.',
       genre: 'MMORPG',
       playMode: 'Mehrspieler',
       applicationCategory: 'Spiel',
@@ -1641,9 +1641,9 @@ export const shellStrings = {
       mainNavigation: 'Hauptnavigation',
       languageSelection: 'Sprachauswahl',
       characterActions: 'Charakteraktionen',
-      githubProject: 'World of ClaudeCraft-Projekt auf GitHub öffnen',
-      discordCommunity: 'Der World of ClaudeCraft-Community auf Discord beitreten',
-      donateProject: 'Spenden, um World of ClaudeCraft zu unterstützen',
+      githubProject: 'Aeldrune-Projekt auf GitHub öffnen',
+      discordCommunity: 'Der Aeldrune-Community auf Discord beitreten',
+      donateProject: 'Spenden, um Aeldrune zu unterstützen',
     },
     loading: {
       world: 'Welt wird geladen...',
@@ -1809,20 +1809,20 @@ export const shellStrings = {
       iosInstallDetail:
         'Für echtes Vollbild auf iPhone oder iPad füge diese Seite zuerst zum Home-Bildschirm hinzu.',
       iosShareStep: 'Tippe in Safari auf Teilen und dann auf Zum Home-Bildschirm.',
-      iosOpenStep: 'Öffne World of ClaudeCraft über das neue Symbol auf dem Home-Bildschirm.',
+      iosOpenStep: 'Öffne Aeldrune über das neue Symbol auf dem Home-Bildschirm.',
       androidStandaloneDetail: 'Du bist im Vollbild-App-Modus. Halte das Gerät im Querformat.',
       androidInstallDetail:
         'Installiere diese Seite auf Android oder füge sie zum Startbildschirm hinzu, um Vollbild zu nutzen.',
       androidInstallStep:
         'Tippe in Chrome auf das Menü und dann auf App installieren oder Zum Startbildschirm hinzufügen.',
-      androidOpenStep: 'Öffne World of ClaudeCraft über das neue Symbol.',
+      androidOpenStep: 'Öffne Aeldrune über das neue Symbol.',
       otherStandaloneDetail: 'Halte dein Gerät im Vollbild-Querformat.',
       otherInstallDetail:
         'Installiere diese Seite oder füge sie zum Startbildschirm hinzu, um das beste mobile Vollbild-Erlebnis zu erhalten.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Realm nicht verfügbar',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Realm nicht verfügbar',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Realmwartung',
       heading: 'Der Realm ist vorübergehend nicht verfügbar.',
       body: 'Wir starten den Spieldienst neu und erwarten, dass Claudemoon bald zurückkehrt. Diese Seite prüft automatisch weiter.',
@@ -1831,9 +1831,9 @@ export const shellStrings = {
   },
   zh_CN: {
     seo: {
-      title: 'World of ClaudeCraft：经典风格网页 MMO',
+      title: 'Aeldrune：经典风格网页 MMO',
       description:
-        '在 World of ClaudeCraft 展开史诗冒险。这是一款可直接在浏览器中游玩的经典风格微型 MMO。加入持续共享的服务器，提升职业等级，击败敌人。',
+        '在 Aeldrune 展开史诗冒险。这是一款可直接在浏览器中游玩的经典风格微型 MMO。加入持续共享的服务器，提升职业等级，击败敌人。',
       genre: 'MMORPG',
       playMode: '多人游戏',
       applicationCategory: '游戏',
@@ -1845,9 +1845,9 @@ export const shellStrings = {
       mainNavigation: '主导航',
       languageSelection: '语言选择',
       characterActions: '角色操作',
-      githubProject: '打开 World of ClaudeCraft 的 GitHub 项目',
-      discordCommunity: '加入 World of ClaudeCraft 的 Discord 社区',
-      donateProject: '捐赠支持 World of ClaudeCraft',
+      githubProject: '打开 Aeldrune 的 GitHub 项目',
+      discordCommunity: '加入 Aeldrune 的 Discord 社区',
+      donateProject: '捐赠支持 Aeldrune',
     },
     loading: {
       world: '正在加载世界...',
@@ -2001,17 +2001,17 @@ export const shellStrings = {
       iosStandaloneDetail: '你正在从主屏幕以全屏模式运行。请保持横屏。',
       iosInstallDetail: '若要在 iPhone 或 iPad 上获得真正全屏，请先将此页面添加到主屏幕。',
       iosShareStep: '在 Safari 中点击分享，然后选择添加到主屏幕。',
-      iosOpenStep: '从新的主屏幕图标打开 World of ClaudeCraft。',
+      iosOpenStep: '从新的主屏幕图标打开 Aeldrune。',
       androidStandaloneDetail: '你正在全屏应用模式中。请保持横屏。',
       androidInstallDetail: '若要在 Android 上全屏，请先安装此页面或将其添加到主屏幕。',
       androidInstallStep: '在 Chrome 中点击菜单，然后选择安装应用或添加到主屏幕。',
-      androidOpenStep: '从新图标打开 World of ClaudeCraft。',
+      androidOpenStep: '从新图标打开 Aeldrune。',
       otherStandaloneDetail: '请保持设备处于横屏全屏。',
       otherInstallDetail: '安装此页面或将其添加到主屏幕，以获得最佳移动端全屏体验。',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - 服务器不可用',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - 服务器不可用',
+      logoAlt: 'Aeldrune',
       eyebrow: '服务器维护',
       heading: '服务器暂时不可用。',
       body: '我们正在重启游戏服务，Claudemoon 应会很快恢复。此页面会自动继续检查。',
@@ -2020,9 +2020,9 @@ export const shellStrings = {
   },
   zh_TW: {
     seo: {
-      title: 'World of ClaudeCraft：經典風格網頁 MMO',
+      title: 'Aeldrune：經典風格網頁 MMO',
       description:
-        '在 World of ClaudeCraft 展開史詩冒險。這是一款可直接在瀏覽器中遊玩的經典風格微型 MMO。加入持續共享的伺服器，提升職業等級並擊敗敵人。',
+        '在 Aeldrune 展開史詩冒險。這是一款可直接在瀏覽器中遊玩的經典風格微型 MMO。加入持續共享的伺服器，提升職業等級並擊敗敵人。',
       genre: 'MMORPG',
       playMode: '多人遊戲',
       applicationCategory: '遊戲',
@@ -2034,9 +2034,9 @@ export const shellStrings = {
       mainNavigation: '主導覽',
       languageSelection: '語言選擇',
       characterActions: '角色操作',
-      githubProject: '開啟 World of ClaudeCraft 的 GitHub 專案',
-      discordCommunity: '加入 World of ClaudeCraft 的 Discord 社群',
-      donateProject: '捐贈支持 World of ClaudeCraft',
+      githubProject: '開啟 Aeldrune 的 GitHub 專案',
+      discordCommunity: '加入 Aeldrune 的 Discord 社群',
+      donateProject: '捐贈支持 Aeldrune',
     },
     loading: {
       world: '正在載入世界...',
@@ -2190,17 +2190,17 @@ export const shellStrings = {
       iosStandaloneDetail: '你正在從主畫面以全螢幕模式執行。請保持橫向。',
       iosInstallDetail: '若要在 iPhone 或 iPad 上取得真正全螢幕，請先將此頁面加入主畫面。',
       iosShareStep: '在 Safari 中點一下分享，然後選擇加入主畫面。',
-      iosOpenStep: '從新的主畫面圖示開啟 World of ClaudeCraft。',
+      iosOpenStep: '從新的主畫面圖示開啟 Aeldrune。',
       androidStandaloneDetail: '你正在全螢幕應用模式中。請保持橫向。',
       androidInstallDetail: '若要在 Android 上全螢幕，請先安裝此頁面或加入主畫面。',
       androidInstallStep: '在 Chrome 中點選選單，然後選擇安裝應用程式或加入主畫面。',
-      androidOpenStep: '從新圖示開啟 World of ClaudeCraft。',
+      androidOpenStep: '從新圖示開啟 Aeldrune。',
       otherStandaloneDetail: '請保持裝置為橫向全螢幕。',
       otherInstallDetail: '安裝此頁面或將其加入主畫面，以獲得最佳行動裝置全螢幕體驗。',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - 伺服器不可用',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - 伺服器不可用',
+      logoAlt: 'Aeldrune',
       eyebrow: '伺服器維護',
       heading: '伺服器暫時不可用。',
       body: '我們正在重新啟動遊戲服務，Claudemoon 應會很快恢復。此頁面會自動持續檢查。',
@@ -2209,9 +2209,9 @@ export const shellStrings = {
   },
   ko_KR: {
     seo: {
-      title: 'World of ClaudeCraft: 클래식 스타일 웹 MMO',
+      title: 'Aeldrune: 클래식 스타일 웹 MMO',
       description:
-        '브라우저에서 바로 즐기는 클래식 스타일 마이크로 MMO, World of ClaudeCraft에서 장대한 모험을 시작하세요. 지속되는 공유 렐름에 접속해 직업을 성장시키고 적을 물리치세요.',
+        '브라우저에서 바로 즐기는 클래식 스타일 마이크로 MMO, Aeldrune에서 장대한 모험을 시작하세요. 지속되는 공유 렐름에 접속해 직업을 성장시키고 적을 물리치세요.',
       genre: 'MMORPG',
       playMode: '멀티플레이어',
       applicationCategory: '게임',
@@ -2223,9 +2223,9 @@ export const shellStrings = {
       mainNavigation: '기본 탐색',
       languageSelection: '언어 선택',
       characterActions: '캐릭터 작업',
-      githubProject: 'GitHub에서 World of ClaudeCraft 프로젝트 열기',
-      discordCommunity: 'World of ClaudeCraft Discord 커뮤니티 참여',
-      donateProject: 'World of ClaudeCraft 후원하기',
+      githubProject: 'GitHub에서 Aeldrune 프로젝트 열기',
+      discordCommunity: 'Aeldrune Discord 커뮤니티 참여',
+      donateProject: 'Aeldrune 후원하기',
     },
     loading: {
       world: '세계 불러오는 중...',
@@ -2389,19 +2389,19 @@ export const shellStrings = {
       iosInstallDetail:
         'iPhone 또는 iPad에서 진짜 전체 화면을 사용하려면 먼저 이 페이지를 홈 화면에 추가하세요.',
       iosShareStep: 'Safari에서 공유를 누른 뒤 홈 화면에 추가를 선택하세요.',
-      iosOpenStep: '새 홈 화면 아이콘에서 World of ClaudeCraft를 여세요.',
+      iosOpenStep: '새 홈 화면 아이콘에서 Aeldrune를 여세요.',
       androidStandaloneDetail: '전체 화면 앱 모드입니다. 기기를 가로로 유지하세요.',
       androidInstallDetail:
         'Android에서 전체 화면을 사용하려면 이 페이지를 설치하거나 홈 화면에 추가하세요.',
       androidInstallStep: 'Chrome에서 메뉴를 누른 뒤 앱 설치 또는 홈 화면에 추가를 선택하세요.',
-      androidOpenStep: '새 아이콘에서 World of ClaudeCraft를 여세요.',
+      androidOpenStep: '새 아이콘에서 Aeldrune를 여세요.',
       otherStandaloneDetail: '기기를 가로 전체 화면으로 유지하세요.',
       otherInstallDetail:
         '최상의 모바일 전체 화면 경험을 위해 이 페이지를 설치하거나 홈 화면에 추가하세요.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - 렐름 이용 불가',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - 렐름 이용 불가',
+      logoAlt: 'Aeldrune',
       eyebrow: '렐름 점검',
       heading: '렐름을 일시적으로 이용할 수 없습니다.',
       body: '게임 서비스를 재시작하고 있으며 Claudemoon은 곧 돌아올 예정입니다. 이 페이지는 자동으로 계속 확인합니다.',
@@ -2410,9 +2410,9 @@ export const shellStrings = {
   },
   ja_JP: {
     seo: {
-      title: 'World of ClaudeCraft: クラシック風Web MMO',
+      title: 'Aeldrune: クラシック風Web MMO',
       description:
-        'ブラウザで直接遊べるクラシック風マイクロMMO、World of ClaudeCraft で壮大な冒険に出ましょう。永続的な共有レルムに参加し、クラスを育て、敵を倒してください。',
+        'ブラウザで直接遊べるクラシック風マイクロMMO、Aeldrune で壮大な冒険に出ましょう。永続的な共有レルムに参加し、クラスを育て、敵を倒してください。',
       genre: 'MMORPG',
       playMode: 'マルチプレイヤー',
       applicationCategory: 'ゲーム',
@@ -2424,9 +2424,9 @@ export const shellStrings = {
       mainNavigation: 'メインナビゲーション',
       languageSelection: '言語選択',
       characterActions: 'キャラクター操作',
-      githubProject: 'GitHubでWorld of ClaudeCraftプロジェクトを開く',
-      discordCommunity: 'World of ClaudeCraftのDiscordコミュニティに参加',
-      donateProject: 'World of ClaudeCraftを支援するために寄付',
+      githubProject: 'GitHubでAeldruneプロジェクトを開く',
+      discordCommunity: 'AeldruneのDiscordコミュニティに参加',
+      donateProject: 'Aeldruneを支援するために寄付',
     },
     loading: {
       world: '世界を読み込み中...',
@@ -2587,20 +2587,20 @@ export const shellStrings = {
       iosInstallDetail:
         'iPhoneまたはiPadで本当の全画面を使うには、先にこのページをホーム画面に追加してください。',
       iosShareStep: 'Safariで共有をタップし、ホーム画面に追加を選びます。',
-      iosOpenStep: '新しいホーム画面アイコンからWorld of ClaudeCraftを開きます。',
+      iosOpenStep: '新しいホーム画面アイコンからAeldruneを開きます。',
       androidStandaloneDetail: '全画面アプリモードです。端末を横向きに保ってください。',
       androidInstallDetail:
         'Androidで全画面にするには、このページをインストールするかホーム画面に追加してください。',
       androidInstallStep:
         'Chromeでメニューを開き、アプリをインストールまたはホーム画面に追加を選びます。',
-      androidOpenStep: '新しいアイコンからWorld of ClaudeCraftを開きます。',
+      androidOpenStep: '新しいアイコンからAeldruneを開きます。',
       otherStandaloneDetail: '端末を横向き全画面に保ってください。',
       otherInstallDetail:
         '最高のモバイル全画面体験のため、このページをインストールするかホーム画面に追加してください。',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - レルム利用不可',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - レルム利用不可',
+      logoAlt: 'Aeldrune',
       eyebrow: 'レルムメンテナンス',
       heading: 'レルムは一時的に利用できません。',
       body: 'ゲームサービスを再起動しています。Claudemoonはまもなく戻る予定です。このページは自動的に確認を続けます。',
@@ -2609,9 +2609,9 @@ export const shellStrings = {
   },
   pt_BR: {
     seo: {
-      title: 'World of ClaudeCraft: MMO web em estilo clássico',
+      title: 'Aeldrune: MMO web em estilo clássico',
       description:
-        'Embarque em uma aventura épica em World of ClaudeCraft, um micro-MMO de estilo clássico jogável diretamente no navegador. Entre em um reino compartilhado, evolua classes e derrote inimigos.',
+        'Embarque em uma aventura épica em Aeldrune, um micro-MMO de estilo clássico jogável diretamente no navegador. Entre em um reino compartilhado, evolua classes e derrote inimigos.',
       genre: 'MMORPG',
       playMode: 'Multijogador',
       applicationCategory: 'Jogo',
@@ -2623,9 +2623,9 @@ export const shellStrings = {
       mainNavigation: 'Navegação principal',
       languageSelection: 'Seleção de idioma',
       characterActions: 'Ações de personagem',
-      githubProject: 'Abrir o projeto World of ClaudeCraft no GitHub',
-      discordCommunity: 'Entrar na comunidade World of ClaudeCraft no Discord',
-      donateProject: 'Doar para apoiar World of ClaudeCraft',
+      githubProject: 'Abrir o projeto Aeldrune no GitHub',
+      discordCommunity: 'Entrar na comunidade Aeldrune no Discord',
+      donateProject: 'Doar para apoiar Aeldrune',
     },
     loading: {
       world: 'Carregando mundo...',
@@ -2790,21 +2790,21 @@ export const shellStrings = {
       iosInstallDetail:
         'Para tela cheia real no iPhone ou iPad, adicione esta página à tela inicial primeiro.',
       iosShareStep: 'No Safari, toque em Compartilhar e depois em Adicionar à Tela de Início.',
-      iosOpenStep: 'Abra World of ClaudeCraft pelo novo ícone na tela inicial.',
+      iosOpenStep: 'Abra Aeldrune pelo novo ícone na tela inicial.',
       androidStandaloneDetail:
         'Você está no modo de app em tela cheia. Mantenha o dispositivo na horizontal.',
       androidInstallDetail:
         'Para tela cheia no Android, instale esta página ou adicione-a à tela inicial primeiro.',
       androidInstallStep:
         'No Chrome, toque no menu e depois em Instalar app ou Adicionar à tela inicial.',
-      androidOpenStep: 'Abra World of ClaudeCraft pelo novo ícone.',
+      androidOpenStep: 'Abra Aeldrune pelo novo ícone.',
       otherStandaloneDetail: 'Mantenha o dispositivo em tela cheia horizontal.',
       otherInstallDetail:
         'Instale ou adicione esta página à tela inicial para a melhor experiência móvel em tela cheia.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - Reino indisponível',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - Reino indisponível',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Manutenção do reino',
       heading: 'O reino está temporariamente indisponível.',
       body: 'Estamos reiniciando o serviço do jogo e esperamos que Claudemoon volte em breve. Esta página continuará verificando automaticamente.',
@@ -2813,9 +2813,9 @@ export const shellStrings = {
   },
   ru_RU: {
     seo: {
-      title: 'World of ClaudeCraft: веб-MMO в классическом стиле',
+      title: 'Aeldrune: веб-MMO в классическом стиле',
       description:
-        'Отправьтесь в эпическое приключение в World of ClaudeCraft, микро-MMO в классическом стиле прямо в браузере. Присоединяйтесь к общему миру, развивайте классы и побеждайте врагов.',
+        'Отправьтесь в эпическое приключение в Aeldrune, микро-MMO в классическом стиле прямо в браузере. Присоединяйтесь к общему миру, развивайте классы и побеждайте врагов.',
       genre: 'MMORPG',
       playMode: 'Многопользовательская игра',
       applicationCategory: 'Игра',
@@ -2827,9 +2827,9 @@ export const shellStrings = {
       mainNavigation: 'Основная навигация',
       languageSelection: 'Выбор языка',
       characterActions: 'Действия персонажа',
-      githubProject: 'Открыть проект World of ClaudeCraft на GitHub',
-      discordCommunity: 'Присоединиться к Discord-сообществу World of ClaudeCraft',
-      donateProject: 'Пожертвовать на поддержку World of ClaudeCraft',
+      githubProject: 'Открыть проект Aeldrune на GitHub',
+      discordCommunity: 'Присоединиться к Discord-сообществу Aeldrune',
+      donateProject: 'Пожертвовать на поддержку Aeldrune',
     },
     loading: {
       world: 'Загрузка мира...',
@@ -2993,21 +2993,21 @@ export const shellStrings = {
       iosInstallDetail:
         'Для настоящего полноэкранного режима на iPhone или iPad сначала добавьте эту страницу на домашний экран.',
       iosShareStep: 'В Safari нажмите Поделиться, затем На экран Домой.',
-      iosOpenStep: 'Откройте World of ClaudeCraft через новый значок на домашнем экране.',
+      iosOpenStep: 'Откройте Aeldrune через новый значок на домашнем экране.',
       androidStandaloneDetail:
         'Вы в полноэкранном режиме приложения. Держите устройство горизонтально.',
       androidInstallDetail:
         'Для полноэкранного режима на Android установите эту страницу или добавьте ее на главный экран.',
       androidInstallStep:
         'В Chrome откройте меню, затем выберите Установить приложение или Добавить на главный экран.',
-      androidOpenStep: 'Откройте World of ClaudeCraft через новый значок.',
+      androidOpenStep: 'Откройте Aeldrune через новый значок.',
       otherStandaloneDetail: 'Держите устройство в полноэкранном альбомном режиме.',
       otherInstallDetail:
         'Установите эту страницу или добавьте ее на главный экран для лучшего мобильного полноэкранного опыта.',
     },
     serverUnavailable: {
-      title: 'World of ClaudeCraft - мир недоступен',
-      logoAlt: 'World of ClaudeCraft',
+      title: 'Aeldrune - мир недоступен',
+      logoAlt: 'Aeldrune',
       eyebrow: 'Технические работы',
       heading: 'Мир временно недоступен.',
       body: 'Мы перезапускаем игровой сервис и ожидаем, что Claudemoon скоро вернется. Эта страница продолжит проверку автоматически.',

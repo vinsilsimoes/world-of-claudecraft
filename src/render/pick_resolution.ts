@@ -1,9 +1,10 @@
+import { corpseInteractionPresent } from '../sim/corpse_presence';
 import type { Entity } from '../sim/types';
 
-type PickEntity = Pick<Entity, 'id' | 'kind' | 'dead' | 'lootable'>;
+type PickEntity = Pick<Entity, 'id' | 'kind' | 'dead' | 'lootable' | 'mir4CorpseVisible'>;
 
 function lootableCorpse(e: PickEntity): boolean {
-  return e.kind === 'mob' && e.dead && e.lootable;
+  return corpseInteractionPresent(e);
 }
 
 // A live, selectable creature: a mob or player still standing. Excludes
@@ -28,7 +29,7 @@ export function resolveDirectPickEntityId(
     const e = entities.get(id);
     if (!e) continue;
     if (e.kind === 'object' && !e.lootable) return null;
-    if (e.kind === 'mob' && e.dead && !e.lootable) continue;
+    if (e.kind === 'mob' && e.dead && !corpseInteractionPresent(e)) continue;
     ordered.push(e);
   }
   if (ordered.length === 0) return null;

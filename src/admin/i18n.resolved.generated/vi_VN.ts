@@ -12,8 +12,8 @@
 import type { AdminTranslations } from '../i18n.en';
 
 export const vi_VN: AdminTranslations = {
-  "app.title": "World of ClaudeCraft - Quản trị",
-  "app.shortTitle": "Quản trị viên WoC",
+  "app.title": "Aeldrune - Quản trị",
+  "app.shortTitle": "Quản trị viên Aeldrune",
   "auth.username": "Tên đăng nhập",
   "auth.password": "Mật khẩu",
   "auth.signIn": "Đăng nhập",

@@ -4,6 +4,11 @@
 // wiring (Phase 2+) consumes it. Never spread into ../data.ts classic tables.
 
 export {
+  MIR4_ARC_ESCORT_PROFILES,
+  type Mir4ArcEscortProfile,
+  mir4ArcEscortProfile,
+} from './arc_escort_profiles';
+export {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   type Mir4AuthorialDamagePolicy,
   type Mir4AuthorialSkillPolicy,
@@ -51,3 +56,10 @@ export {
   mir4SkillById,
   mir4SkillsForClass,
 } from './skills';
+export {
+  MIR4_STATUS_REGISTRY,
+  type Mir4StatusCategory,
+  type Mir4StatusDefinition,
+  type Mir4StatusValueFormat,
+  mir4StatusDefinition,
+} from './statuses';

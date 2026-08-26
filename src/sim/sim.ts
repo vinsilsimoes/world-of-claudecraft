@@ -366,7 +366,7 @@ import {
   retargetMob as retargetMobFn,
   updateMobTarget as updateMobTargetFn,
 } from './mob/targeting';
-import { rollCampMobLevel } from './mob/template';
+import { mobPhases, mobSwims, rollCampMobLevel } from './mob/template';
 import { emitMobYell } from './mob/yells';
 import type { MobCombatProfile } from './mob_combat';
 import * as moderationMod from './moderation';
@@ -2037,6 +2037,7 @@ export class Sim {
   declare mir4AutoBattleActive: Mir4SimFacade['mir4AutoBattleActive'];
   declare mir4PlayerState: Mir4SimFacade['mir4PlayerState'];
   declare setMir4AutoBattle: Mir4SimFacade['setMir4AutoBattle'];
+  declare setMir4AutoSkillEnabled: Mir4SimFacade['setMir4AutoSkillEnabled'];
   declare mir4AutoQuestActive: Mir4SimFacade['mir4AutoQuestActive'];
   declare mir4QuestStatusText: Mir4SimFacade['mir4QuestStatusText'];
   declare mir4QuestTrackerEntries: Mir4SimFacade['mir4QuestTrackerEntries'];
@@ -2048,6 +2049,7 @@ export class Sim {
   declare mir4EquipStarterWeapon: Mir4SimFacade['mir4EquipStarterWeapon'];
   declare mir4UnequipWeapon: Mir4SimFacade['mir4UnequipWeapon'];
   declare mir4EquipItem: Mir4SimFacade['mir4EquipItem'];
+  declare mir4BuyVillageEquipment: Mir4SimFacade['mir4BuyVillageEquipment'];
   declare mir4UnequipSlot: Mir4SimFacade['mir4UnequipSlot'];
   declare mir4EnhanceItem: Mir4SimFacade['mir4EnhanceItem'];
   declare mir4RollItemLayer: Mir4SimFacade['mir4RollItemLayer'];
@@ -2055,17 +2057,21 @@ export class Sim {
   declare mir4CraftMaterial: Mir4SimFacade['mir4CraftMaterial'];
   declare mir4RedeemTicket: Mir4SimFacade['mir4RedeemTicket'];
   declare mir4ConfirmMount: Mir4SimFacade['mir4ConfirmMount'];
+  declare mir4ConfirmAllMounts: Mir4SimFacade['mir4ConfirmAllMounts'];
   declare mir4EquipMount: Mir4SimFacade['mir4EquipMount'];
   declare mir4CombineMounts: Mir4SimFacade['mir4CombineMounts'];
   declare mir4ConfirmSpirit: Mir4SimFacade['mir4ConfirmSpirit'];
+  declare mir4ConfirmAllSpirits: Mir4SimFacade['mir4ConfirmAllSpirits'];
   declare mir4EquipSpirit: Mir4SimFacade['mir4EquipSpirit'];
   declare mir4CombineSpirits: Mir4SimFacade['mir4CombineSpirits'];
   declare mir4CampaignProfession: Mir4SimFacade['mir4CampaignProfession'];
   declare mir4UltimateCast: Mir4SimFacade['mir4UltimateCast'];
+  declare mir4TrainConstitution: Mir4SimFacade['mir4TrainConstitution'];
+  declare mir4TrainInnerForce: Mir4SimFacade['mir4TrainInnerForce'];
+  declare mir4TrainSolitude: Mir4SimFacade['mir4TrainSolitude'];
   // Offline/local Sim always has the implementation bundled with its HUD.
   readonly petSpecialCommandsSupported = true;
-  // `world` stays optional (a custom map for play-test, else undefined for the
-  // built-in world); everything else is defaulted to a concrete value below.
+  // `world` stays optional; the other config fields receive concrete defaults below.
   cfg: Required<
     Omit<SimConfig, 'noPlayer' | 'world' | 'perfLap' | 'respawnSeconds' | 'playerClassMir4'>
   > &
@@ -3001,6 +3007,17 @@ export class Sim {
     const startPos = savedPos
       ? this.groundPos(savedPos.x, savedPos.z)
       : this.groundPos(playerStart.x, playerStart.z);
+    // Living characters are intentionally ejected from a stale instance on
+    // relog, but an unreleased death still needs its corpse marker at the
+    // actual death spot. Preserve only current dungeon-band positions here;
+    // legacy instance coordinates continue through the migration above.
+    const unreleasedDungeonDeathPos =
+      savedState?.dead &&
+      !savedState.ghost &&
+      savedState.pos.x >= INSTANCE_X_BASE &&
+      dungeonAt(savedState.pos.x)
+        ? this.groundPos(savedState.pos.x, savedState.pos.z)
+        : null;
     const savedArena1v1: ArenaStanding = {
       rating: savedState?.arena1v1Rating ?? savedState?.arenaRating ?? arenaMod.ARENA_BASE_RATING,
       wins: savedState?.arena1v1Wins ?? savedState?.arenaWins ?? 0,
@@ -3700,7 +3717,7 @@ export class Sim {
       // graveyard nearest the door) cannot drift from spirit.ts. Delve, arena,
       // and fiesta deaths keep their own bounded respawn rules and never enter
       // the ghost loop, so those positions load exactly as before.
-      player.pos = { ...startPos };
+      player.pos = { ...(unreleasedDungeonDeathPos ?? startPos) };
       player.prevPos = { ...player.pos };
       this.rebucket(player);
       player.dead = true;
@@ -6527,7 +6544,14 @@ export class Sim {
       // frozen fields are two timers nothing serializes, and any change to
       // that must re-check this exception. Dead mobs draw no rng, so the skip
       // cannot shift the shared draw order.
-      if (!isInertInstanceCorpse(mob)) return false;
+      // An Aeldrune corpse still inside its ten-second presentation window is
+      // not inert: its timer must advance even outside every player's interest
+      // radius, otherwise returning to a dungeon can resurrect a stale body.
+      if (
+        (this.cfg.gameProfile === MIR4_GAME_PROFILE && mob.mir4CorpseVisible) ||
+        !isInertInstanceCorpse(mob)
+      )
+        return false;
     } else if (
       mob.ownerId !== null ||
       mob.aiState !== 'idle' ||
@@ -8296,13 +8320,18 @@ export class Sim {
   // templates flagged `phasesThroughObstacles` (mountain-sized world bosses
   // that must never wedge on a collider mid-chase). Returns true on arrival.
   private moveToward(e: Entity, dest: Vec3, speed: number, ignoreObstacles = false): boolean {
-    if (!ignoreObstacles && MOBS[e.templateId]?.phasesThroughObstacles) ignoreObstacles = true;
+    if (!ignoreObstacles && mobPhases(e.templateId, this.mir4RuntimeMobTemplates))
+      ignoreObstacles = true;
     const d = dist2d(e.pos, dest);
     if (d < 0.3) return true;
     const desired = angleTo(e.pos, dest);
     e.facing = desired;
     const step = Math.min(speed * DT, d);
-    const canSwim = this.mobCanSwim(MOBS[e.templateId]);
+    // Players always use the world's swimming rules. Auto Mission, Auto
+    // Battle return movement and fear all share this low-level mover; treating
+    // a player as an unconfigured mob made those systems stop permanently at
+    // swim-depth water even though ordinary keyboard movement could cross it.
+    const canSwim = e.kind === 'player' || mobSwims(e.templateId, this.mir4RuntimeMobTemplates);
 
     if (ignoreObstacles) {
       const nx = e.pos.x + Math.sin(desired) * step;
@@ -8929,6 +8958,8 @@ export class Sim {
   // add new grant sites here (Phase 4 rare-event jackpot yields, Phase 13's
   // disenchant UI wiring): pass the same opts from those too, or the new
   // grants will double-ding and double-log the way the original ones did.
+  // opts.lootOrigin is set only by the loot-distribution module. It preserves
+  // the shared grant hub while giving the HUD a structured monster-drop signal.
   // opts.movement: this grant RELOCATES or re-mints copies the player already
   // holds, or hands over copies another player held (trade, mail, market, an
   // enchant re-mint, an unbind stack split, a returned commission order,
@@ -8954,6 +8985,7 @@ export class Sim {
       callerLogs?: boolean;
       craftedRecipeId?: string;
       movement?: boolean;
+      lootOrigin?: 'monster-drop';
     }>,
   ): void {
     const r = this.resolve(pid);
@@ -8990,6 +9022,7 @@ export class Sim {
       // dragging goldens with no professions content into every regen.
       ...(opts?.silent ? { silent: true } : {}),
       ...(opts?.callerLogs ? { callerLogs: true } : {}),
+      ...(opts?.lootOrigin ? { lootOrigin: opts.lootOrigin } : {}),
     });
     this.ctx.onInventoryChangedForQuests(meta);
     if (
@@ -9022,6 +9055,7 @@ export class Sim {
       callerLogs?: boolean;
       craftedRecipeId?: string;
       movement?: boolean;
+      lootOrigin?: 'monster-drop';
     }>,
   ): void {
     const r = this.resolve(pid);
@@ -9073,6 +9107,7 @@ export class Sim {
       // Conditional, see the matching comment in addItem above.
       ...(opts?.silent ? { silent: true } : {}),
       ...(opts?.callerLogs ? { callerLogs: true } : {}),
+      ...(opts?.lootOrigin ? { lootOrigin: opts.lootOrigin } : {}),
     });
     this.ctx.onInventoryChangedForQuests(meta);
   }

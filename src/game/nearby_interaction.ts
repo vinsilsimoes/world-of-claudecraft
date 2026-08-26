@@ -1,3 +1,4 @@
+import { corpseInteractionPresent } from '../sim/corpse_presence';
 import { mir4ArcObjectiveVisibleTo } from '../sim/mir4/arc_objectives';
 import { isQuestGatedGroundObjectHidden } from '../sim/quest_gated_entity';
 import {
@@ -111,9 +112,7 @@ export function tryNearbyInteraction(
     const distance = dist2d(player.pos, entity.pos);
     if (
       !player.dead &&
-      entity.kind === 'mob' &&
-      entity.dead &&
-      entity.lootable &&
+      corpseInteractionPresent(entity) &&
       corpseLootAvailability(entity, playerId, harvestStateReliable, partyIds).canOpen &&
       distance < bestCorpseDistance
     ) {

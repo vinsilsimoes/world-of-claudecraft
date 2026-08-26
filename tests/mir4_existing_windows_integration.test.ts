@@ -11,6 +11,7 @@ vi.mock('../src/ui/portrait_chip', () => ({
 }));
 
 import { mir4ActionAbilities } from '../src/sim/mir4/action_abilities';
+import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
 import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import { BagsWindow, type BagsWindowDeps } from '../src/ui/bags_window';
 import { CharWindow, type CharWindowDeps } from '../src/ui/char_window';
@@ -146,11 +147,12 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,stub');
 });
 
-describe('MIR4 content reaches the existing World of ClaudeCraft windows', () => {
+describe('MIR4 content reaches the existing Aeldrune windows', () => {
   it('routes the existing BagsWindow root and its item click to IWorldMir4', () => {
     const state: Mir4PlayerUiState = {
       classId: 1,
       ultimateGauge: 0,
+      mir4Currencies: { darksteel: 450, energy: 12_500 },
       mir4EquipmentInstances: {
         991020101: { itemId: 991020101, enhancement: 2 },
       },
@@ -164,6 +166,21 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
 
     expect(root.querySelector('.mir4-bag-scroll')).not.toBeNull();
     expect(root.querySelector('.bag-filter-bar')).toBeNull();
+    expect(
+      [...root.querySelectorAll('.bag-section-header')].some(
+        (header) => header.textContent === 'Currencies',
+      ),
+    ).toBe(true);
+    expect(root.textContent).toContain('12,500');
+    const energy = root.querySelector<HTMLElement>('[data-mir4-currency="energy"]');
+    expect(energy).not.toBeNull();
+    expect(energy?.getAttribute('aria-label')).toContain('Energy');
+    expect(energy?.getAttribute('aria-label')).toContain('12,500');
+    const energyTooltip = presentation.attachTooltip.mock.calls.find(
+      ([element]) => element === energy,
+    )?.[1];
+    expect(energyTooltip?.()).toContain('Energy');
+    expect(energyTooltip?.()).toContain('12,500');
     root.querySelector<HTMLButtonElement>('[data-focus-key="mir4-item:991020101"]')?.click();
     expect(commands.mir4EquipItem).toHaveBeenCalledWith(991020101);
   });
@@ -285,11 +302,13 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
   });
 
   it('routes the existing SpellbookWindow skill controls to the MIR4 facet and shared action bar', () => {
-    const { world, commands } = makeWorld({
+    const state: Mir4PlayerUiState = {
       classId: 1,
       ultimateGauge: 0,
       mir4SkillResources: { effectPoints: 800, skillTomes: 6 },
-    });
+      mir4Materials: { ...MIR4_EMPTY_MATERIALS, knowledgeTomeCommon: 1 },
+    };
+    const { world, commands } = makeWorld(state);
     (world as { copper: number }).copper = 10_000;
     const root = document.createElement('section');
     root.id = 'spellbook';
@@ -323,16 +342,27 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
 
     const abilityRows = [...root.querySelectorAll<HTMLElement>('.spell-row[data-ability-id]')];
     expect(root.style.display).toBe('block');
-    expect(root.textContent).toContain('Auto Battle');
+    expect(root.textContent).not.toContain('Auto Battle');
     expect(abilityRows.length).toBeGreaterThan(0);
     expect(abilityRows.every((row) => row.dataset.abilityId?.startsWith('mir4_'))).toBe(true);
     expect(root.textContent).not.toContain('Heroic Strike');
-    expect(root.querySelectorAll('.spell-upgrade-btn')).toHaveLength(4);
+    expect(root.querySelectorAll('.spell-upgrade-btn')).toHaveLength(2);
+    expect(root.textContent).toContain('Trainable at level 20');
+    expect(root.textContent).toContain('Common Tome of Knowledge: 1/1');
     const upgrade = abilityRows[0]?.querySelector<HTMLButtonElement>('.spell-upgrade-btn');
     expect(upgrade?.disabled).toBe(false);
     expect(upgrade?.textContent).toContain('Rank 2');
+    expect(upgrade?.getAttribute('aria-label')).toContain('Void Strike');
     upgrade?.click();
     expect(commands.mir4UpgradeSkill).toHaveBeenCalledWith(1102, 1);
+    state.mir4Materials = { ...MIR4_EMPTY_MATERIALS };
+    const clock = vi.spyOn(performance, 'now').mockReturnValue(1_000_000);
+    window.tickOpen();
+    clock.mockRestore();
+    expect(
+      root.querySelector<HTMLButtonElement>('.spell-upgrade-btn[data-ability-id="mir4_skill_1102"]')
+        ?.disabled,
+    ).toBe(true);
     abilityRows[0]?.querySelector<HTMLButtonElement>('.spell-hotbar-toggle')?.click();
     expect(addToBar).toHaveBeenCalledWith(abilityRows[0]?.dataset.abilityId);
   });
@@ -342,8 +372,9 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
       classId: 1,
       ultimateGauge: 0,
       mir4AchievementClears: {},
-      mir4Currencies: { darksteel: 0 },
+      mir4Currencies: { darksteel: 0, energy: 0 },
       mir4SkillResources: { effectPoints: 0, skillTomes: 0 },
+      mir4Materials: { ...MIR4_EMPTY_MATERIALS },
     };
     const { world, commands } = makeWorld(state);
     const root = document.createElement('section');
@@ -366,13 +397,13 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
 
     expect(root.style.display).toBe('flex');
     expect(root.textContent).toContain('Achievements');
-    expect(root.textContent).toContain('3 Skill Tomes');
+    expect(root.textContent).toContain('1 Common Knowledge Tome');
     expect(root.querySelector('.deed-search')).toBeNull();
     const close = root.querySelector<HTMLButtonElement>('[data-close]');
     close?.focus();
-    state.mir4SkillResources = { effectPoints: 0, skillTomes: 3 };
+    state.mir4Materials = { ...MIR4_EMPTY_MATERIALS, knowledgeTomeCommon: 1 };
     window.refreshIfChanged();
-    expect(root.querySelector('.deeds-summary')?.textContent).toContain('Skill Tomes 3');
+    expect(root.querySelector('.deeds-summary')?.textContent).toContain('Common Knowledge Tomes 1');
     expect(document.activeElement).toBe(root.querySelector('[data-close]'));
     commands.mir4ClaimAchievement.mockResolvedValueOnce(false);
     let firstClaim = root.querySelector<HTMLButtonElement>('[data-achievement-claim="20101"]');
@@ -402,7 +433,7 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
     ).toBe(true);
 
     state.mir4AchievementClears = { 201: 1 };
-    state.mir4Currencies = { darksteel: 1_000 };
+    state.mir4Currencies = { darksteel: 1_000, energy: 0 };
     window.refreshIfChanged();
     expect(document.activeElement).toBe(
       root.querySelector<HTMLButtonElement>('[data-achievement-claim="20102"]'),
@@ -416,7 +447,7 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
         classId: 1,
         ultimateGauge: 0,
         mir4AchievementClears: {},
-        mir4Currencies: { darksteel: 0 },
+        mir4Currencies: { darksteel: 0, energy: 0 },
         mir4SkillResources: { effectPoints: 0, skillTomes: 0 },
       };
       const { world, commands } = makeWorld(state);
@@ -474,6 +505,7 @@ describe('MIR4 content reaches the existing World of ClaudeCraft windows', () =>
       classId: 1,
       ultimateGauge: 0,
       mir4Materials: {
+        ...MIR4_EMPTY_MATERIALS,
         sunStone: 10,
         moonStone: 10,
         solarScroll: 10,

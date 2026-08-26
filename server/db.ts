@@ -1711,7 +1711,7 @@ export async function createAccount(
 
   // Sim construction and canonical equipment serialization are CPU work, so
   // warm the immutable templates before opening a database transaction.
-  prepareCommunityTestCharacters();
+  prepareCommunityTestCharacters(PERSISTENCE_GAME_PROFILE);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -1719,7 +1719,7 @@ export async function createAccount(
     const account = res.rows[0] as AccountRow | undefined;
     if (!account) throw new Error('account insert returned no row');
 
-    for (const character of buildCommunityTestCharacters(account.id)) {
+    for (const character of buildCommunityTestCharacters(account.id, PERSISTENCE_GAME_PROFILE)) {
       assertCharacterStateGameProfile(
         character.state,
         PERSISTENCE_GAME_PROFILE,

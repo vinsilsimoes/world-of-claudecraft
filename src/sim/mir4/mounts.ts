@@ -1,4 +1,4 @@
-// MIR4 Mount progression over native World of ClaudeCraft visual shells. The
+// MIR4 Mount progression over native Aeldrune visual shells. The
 // 85 logical identities, grades, stats, ticket probabilities and collection
 // rules are gameplay data; every rendered/summoned model remains a target-owned
 // WoC mount selected deterministically by mir4MountVisualKey.
@@ -9,6 +9,12 @@ import {
   mir4MountById,
 } from '../content/mir4/mounts_catalog';
 import type { MountKey } from '../content/mounts';
+import {
+  type Mir4AlbumAward,
+  type Mir4AlbumBonuses,
+  mir4AlbumAwardForIndex,
+  mir4AlbumBonuses,
+} from './collection_album';
 
 export type Mir4MountTicketId = 'mount-ticket-dawn' | 'mount-ticket-twilight';
 
@@ -26,12 +32,10 @@ export interface Mir4MountState {
   nextPendingId?: number;
 }
 
-export interface Mir4MountBonuses {
+export type Mir4MountBonuses = Mir4AlbumBonuses & {
   moveSpeedBps: number;
   basicAttackSpeedBps: number;
-  physicalDefense: number;
-  magicDefense: number;
-}
+};
 
 export interface Mir4MountRuntimeStats {
   moveSpeedBps: number;
@@ -39,6 +43,11 @@ export interface Mir4MountRuntimeStats {
   physicalDefense: number;
   magicDefense: number;
 }
+
+// Mount confirmation rows include native-shell identity and therefore cost
+// more persisted bytes than Spirit rows. 128 still admits every supported
+// x100 summon while keeping the combined MIR4 owner snapshot below 128 KiB.
+export const MIR4_MOUNT_PENDING_LIMIT = 128;
 
 export const MIR4_MOUNT_MOVE_SPEED_BPS_BY_GRADE: Readonly<Record<number, number>> = {
   1: 1_000,
@@ -84,38 +93,6 @@ const TICKET_GRADES: Readonly<Record<Mir4MountTicketId, readonly (readonly [numb
   'mount-ticket-twilight': [
     [3, 9_900],
     [4, 100],
-  ],
-};
-
-const COLLECTION_STEPS: Readonly<
-  Record<number, readonly Readonly<{ required: number; defense: number }>[]>
-> = {
-  1: [
-    { required: 2, defense: 2 },
-    { required: 4, defense: 3 },
-  ],
-  2: [
-    { required: 2, defense: 4 },
-    { required: 4, defense: 6 },
-  ],
-  3: [
-    { required: 2, defense: 8 },
-    { required: 4, defense: 12 },
-  ],
-  4: [
-    { required: 2, defense: 16 },
-    { required: 4, defense: 24 },
-    { required: 6, defense: 32 },
-  ],
-  5: [
-    { required: 2, defense: 32 },
-    { required: 4, defense: 48 },
-    { required: 6, defense: 64 },
-  ],
-  6: [
-    { required: 2, defense: 60 },
-    { required: 4, defense: 90 },
-    { required: 6, defense: 120 },
   ],
 };
 
@@ -187,26 +164,31 @@ export function mir4MountOwnedCount(state: Mir4MountState | undefined, grade: nu
   );
 }
 
+export function mir4MountAlbumBonuses(state: Mir4MountState | undefined): Mir4AlbumBonuses {
+  return mir4AlbumBonuses(MIR4_MOUNTS_CATALOG, state?.discovered);
+}
+
+export const MIR4_MOUNT_ALBUM_MAX_BONUSES = mir4AlbumBonuses(
+  MIR4_MOUNTS_CATALOG,
+  MIR4_MOUNTS_CATALOG.map((mount) => mount.id),
+);
+
+export function mir4MountAlbumAward(mountId: string): Mir4AlbumAward | null {
+  const index = MIR4_MOUNTS_CATALOG.findIndex((mount) => mount.id === mountId);
+  const mount = MIR4_MOUNTS_CATALOG[index];
+  return mount ? mir4AlbumAwardForIndex(index, mount.grade) : null;
+}
+
 export function mir4MountBonuses(state: Mir4MountState | undefined): Mir4MountBonuses {
   const equipped = state?.equippedMountId ? mir4MountById(state.equippedMountId) : null;
   const equippedStats = equipped ? mir4MountRuntimeStats(equipped) : null;
-  let collectionDefense = 0;
-  const discovered = new Set(state?.discovered ?? []);
-  for (let grade = 1; grade <= 6; grade++) {
-    const gradeMounts = MIR4_MOUNTS_CATALOG.filter((mount) => mount.grade === grade);
-    const unique = gradeMounts.filter((mount) => discovered.has(mount.id)).length;
-    for (const step of COLLECTION_STEPS[grade] ?? []) {
-      // The inherited grade-6 table asks for six discoveries while the
-      // canonical 85-Mount catalog contains only five Mythical identities.
-      // "Complete the grade" is therefore the reachable final boundary.
-      if (unique >= Math.min(step.required, gradeMounts.length)) collectionDefense += step.defense;
-    }
-  }
+  const album = mir4MountAlbumBonuses(state);
   return {
+    ...album,
     moveSpeedBps: equippedStats?.moveSpeedBps ?? 0,
     basicAttackSpeedBps: equippedStats?.basicAttackSpeedBps ?? 0,
-    physicalDefense: (equippedStats?.physicalDefense ?? 0) + collectionDefense,
-    magicDefense: (equippedStats?.magicDefense ?? 0) + collectionDefense,
+    physicalDefense: (equippedStats?.physicalDefense ?? 0) + album.physicalDefense,
+    magicDefense: (equippedStats?.magicDefense ?? 0) + album.magicDefense,
   };
 }
 
@@ -252,7 +234,7 @@ export function sanitizeMir4MountState(value: unknown): Mir4MountState | undefin
       if (!mount || mount.grade < 4 || raw.grade !== mount.grade) continue;
       ids.add(raw.id);
       pending.push({ id: raw.id.slice(0, 96), mountId: mount.id, grade: mount.grade });
-      if (pending.length === 64) break;
+      if (pending.length === MIR4_MOUNT_PENDING_LIMIT) break;
     }
   }
   const nextPendingId =

@@ -3,6 +3,8 @@ import { MOUNT_KEYS, TRAINING_MOUNT_KEY } from './content/mounts';
 import { GATHERING_PROFESSIONS } from './content/professions';
 import { DUNGEONS, ITEMS, MOBS, NPCS } from './data';
 import { equipBestInSlotForDev } from './dev/bis_gear';
+import { grantMir4MountPlaytestKit } from './dev/mir4_mount_playtest';
+import { grantMir4SpiritPlaytestKit } from './dev/mir4_spirit_playtest';
 import { applyDevKit } from './dev_kit';
 import { createGroundObject, createMob } from './entity';
 import { enterDungeon } from './instances/dungeons';
@@ -204,6 +206,7 @@ export function handleDevChat(
   }
 
   if (/^\/(?:dev\s+mounts?|devmounts?)\s*$/i.test(raw)) {
+    const mir4Grant = grantMir4MountPlaytestKit(ctx, pid);
     const meta = ctx.players.get(pid);
     const entity = ctx.entities.get(pid);
     if (meta && entity) {
@@ -226,6 +229,27 @@ export function handleDevChat(
         ctx,
         pid,
         `[dev] Granted ${granted} mount reins (${MOUNT_KEYS.length} owned)${levelNote}. Use a reins item from your bags to ride.`,
+      );
+      if (mir4Grant) {
+        emitDevLog(
+          ctx,
+          pid,
+          `[dev] MIR4 Mount kit ready: ${mir4Grant.dawnTickets} Dawn tickets, ${mir4Grant.twilightTickets} Twilight tickets, and ${mir4Grant.fusionCopies} common copies for fusion.`,
+        );
+      }
+    }
+    return null;
+  }
+
+  if (/^\/(?:dev\s+spirits?|devspirits?)\s*$/i.test(raw)) {
+    const grant = grantMir4SpiritPlaytestKit(ctx, pid);
+    if (!grant) {
+      emitDevLog(ctx, pid, '[dev] The Spirit playtest kit is available only in the MIR4 profile.');
+    } else {
+      emitDevLog(
+        ctx,
+        pid,
+        `[dev] Spirit playtest kit ready: ${grant.dawnTickets} Dawn tickets, ${grant.sunsetTickets} Sunset tickets, and ${grant.fusionCopies} common copies for fusion.`,
       );
     }
     return null;
@@ -749,7 +773,7 @@ export function handleDevChat(
   if (/^\/dev(?:\s|$)/i.test(raw)) {
     ctx.error(
       pid,
-      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev dungeon, /dev raid, /dev kill',
+      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev spirits, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev dungeon, /dev raid, /dev kill',
     );
     return null;
   }

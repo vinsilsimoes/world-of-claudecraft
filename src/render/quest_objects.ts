@@ -29,6 +29,7 @@ const QUEST_OBJECT_URLS: Record<string, string> = {
   mir4_object_network_map: '/models/tools/map.glb',
   mir4_object_shortcut_key: '/models/tools/key_a.glb',
   mir4_object_waypoint_crystal: '/models/props/hollow_gate_crystal.glb',
+  mir4_object_energy_crystal: '/models/props/hollow_gate_crystal.glb',
   mir4_object_survey_compass: '/models/tools/compass_base.glb',
   mir4_object_gather_patch: '/models/resources/gather_herb_cluster.glb',
   mir4_object_clue_magnifier: '/models/tools/magnifying_glass.glb',

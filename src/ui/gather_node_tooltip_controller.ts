@@ -33,6 +33,7 @@ import {
   viewerUsableToolTier,
 } from './gathering_view';
 import { formatNumber, type TranslationKey, t } from './i18n';
+import { mir4MaterialName } from './mir4_material_i18n';
 import { getUiScale } from './ui_scale';
 
 // Re-pick cadence floor: world raycasts are the expensive half of hover (see
@@ -97,6 +98,11 @@ export function gatherNodeTooltipHtml(model: GatherNodeTooltipModel): string {
   // never promise a grade the harvest refuses.
   if (model.fineUpgrade === true) {
     html += `<div class="tt-green">${esc(t('hudChrome.gathering.fineGradePreview'))}</div>`;
+  }
+  if (model.mir4Reward?.kind === 'training-material') {
+    html += `<div class="tt-green">${esc(t('hudChrome.mir4.training.title'))}: ${esc(mir4MaterialName(model.mir4Reward.material))} (${esc(t(`itemUi.quality.${model.mir4Reward.rarity}`))})</div>`;
+  } else if (model.mir4Reward?.kind === 'darksteel') {
+    html += `<div class="tt-green">${esc(t('hudChrome.mir4.currencies.darksteel'))}</div>`;
   }
   // The state line: a live countdown when the world put a number on the
   // respawn timer, the untimed word for a null read (an unknown remaining is

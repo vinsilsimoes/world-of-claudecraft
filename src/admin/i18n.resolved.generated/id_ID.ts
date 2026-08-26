@@ -12,8 +12,8 @@
 import type { AdminTranslations } from '../i18n.en';
 
 export const id_ID: AdminTranslations = {
-  "app.title": "World of ClaudeCraft - Admin",
-  "app.shortTitle": "Admin WoC",
+  "app.title": "Aeldrune - Admin",
+  "app.shortTitle": "Admin Aeldrune",
   "auth.username": "Nama pengguna",
   "auth.password": "Kata sandi",
   "auth.signIn": "Masuk",

@@ -9,14 +9,23 @@ vi.mock('../src/ui/portrait_chip', () => ({
 }));
 
 import { mir4EquipmentItem } from '../src/sim/content/mir4/equipment_catalog';
+import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
 import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import { buildMir4EquipmentItemView } from '../src/ui/mir4_character_view';
 import {
   mir4EquipmentTooltipHtml,
+  mir4StatusLabel,
   paintMir4CharacterWindow,
   paintMir4InventoryWindow,
 } from '../src/ui/mir4_equipment_window_adapter';
 import type { IWorld } from '../src/world_api';
+
+describe('MIR4 Energy status labels', () => {
+  it('uses the official Energy gain and gathering names', () => {
+    expect(mir4StatusLabel(86)).toBe('Energy Gain Boost');
+    expect(mir4StatusLabel(92)).toBe('Energy Gathering Boost');
+  });
+});
 
 function harness() {
   const state: Mir4PlayerUiState = {
@@ -34,6 +43,7 @@ function harness() {
       991020101: { itemId: 991020101, enhancement: 3 },
     },
     mir4Materials: {
+      ...MIR4_EMPTY_MATERIALS,
       sunStone: 4,
       moonStone: 3,
       solarScroll: 2,
@@ -115,6 +125,8 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
 
     expect(root.textContent).toContain('Combat Power');
     expect(root.textContent).toContain('Boss Damage');
+    expect(root.textContent).toContain('Monster Damage Reduction');
+    expect(root.textContent).toContain('Recovery Potion Boost');
     expect(root.querySelectorAll('.equip-slot')).toHaveLength(8);
     expect(renderPreview).toHaveBeenCalledWith(
       {
@@ -140,7 +152,7 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
   });
 
   it('paints unequipped WoC visual shells and MIR4 materials into #bags', () => {
-    const { world, mir4EquipItem } = harness();
+    const { world, state, mir4EquipItem } = harness();
     const root = document.createElement('section');
 
     expect(
@@ -156,10 +168,44 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
 
     expect(root.textContent).toContain('Refinement Materials');
     expect(root.querySelectorAll('.mir4-bag-scroll')).toHaveLength(1);
+    expect(root.textContent).not.toContain('Spirit Sanctuary');
     expect(root.querySelectorAll(':scope > .bag-grid')).toHaveLength(0);
     root.querySelector<HTMLButtonElement>('[data-focus-key="mir4-item:991020101"]')?.click();
     expect(mir4EquipItem).toHaveBeenCalledWith(991020101);
-    expect(root.querySelectorAll('[aria-disabled="true"]')).toHaveLength(6);
+    expect(root.querySelectorAll('[aria-disabled="true"]')).toHaveLength(5);
+    expect(root.querySelectorAll('[data-mir4-currency]')).toHaveLength(0);
+    expect(root.querySelector('[data-focus-key="mir4-item:991020101"]')?.classList).toContain(
+      'mir4-equip-ready',
+    );
+    expect(
+      root.querySelector('[data-focus-key="mir4-item:991020101"] .mir4-equip-ready-mark'),
+    ).not.toBeNull();
+
+    const unchangedScroll = root.querySelector('.mir4-bag-scroll');
+    paintMir4InventoryWindow({
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterEquipmentChange: vi.fn(),
+    });
+    expect(root.querySelector('.mir4-bag-scroll')).toBe(unchangedScroll);
+
+    state.mir4Materials = {
+      ...state.mir4Materials!,
+      knowledgeTomeCommon: 7,
+    };
+    paintMir4InventoryWindow({
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterEquipmentChange: vi.fn(),
+    });
+    expect(root.textContent).toContain('7');
+    expect(root.querySelector('.mir4-bag-scroll')).not.toBe(unchangedScroll);
   });
 
   it('equips a campaign reward from #bags before an equipment instance exists', () => {
@@ -185,6 +231,32 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     expect(mir4EquipItem).toHaveBeenCalledWith(991010101);
   });
 
+  it('repaints an open #bags window when a quest grants equipment', () => {
+    const { world, state } = harness();
+    state.mir4Equipment = {};
+    state.mir4EquipmentInstances = undefined;
+    state.mir4ArcRewards = { items: {} };
+    const root = document.createElement('section');
+    const deps = {
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterEquipmentChange: vi.fn(),
+    };
+
+    paintMir4InventoryWindow(deps);
+    const before = root.querySelector('.mir4-bag-scroll');
+    expect(root.querySelector('[data-focus-key="mir4-item:991010101"]')).toBeNull();
+
+    state.mir4ArcRewards.items = { '991010101': 1 };
+    paintMir4InventoryWindow(deps);
+
+    expect(root.querySelector('.mir4-bag-scroll')).not.toBe(before);
+    expect(root.querySelector('[data-focus-key="mir4-item:991010101"]')).not.toBeNull();
+  });
+
   it('describes live MIR4 attributes but uses the WoC visual item name', () => {
     const def = mir4EquipmentItem(991010101);
     expect(def).not.toBeNull();
@@ -197,7 +269,7 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
 
     expect(html).toContain('Physical Attack');
     expect(html).toContain('+25');
-    expect(html).toContain('World of ClaudeCraft appearance');
+    expect(html).toContain('Aeldrune appearance');
     expect(html).not.toContain(def!.name);
   });
 
@@ -213,7 +285,7 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     expect(html).not.toContain('Combat Attribute');
   });
 
-  it('uses native WoC potion and reins items and redeems collection tickets inside #bags', () => {
+  it('uses native WoC potion and reins items while keeping Mount tickets outside #bags', () => {
     const { world, state, mir4RedeemTicket, useItem } = harness();
     world.inventory = [
       { itemId: 'minor_healing_potion', count: 2 },
@@ -235,22 +307,14 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     });
 
     root.querySelector<HTMLButtonElement>('[data-focus-key="runtime-item:0"]')?.click();
-    root
-      .querySelector<HTMLButtonElement>('[data-focus-key="mir4-ticket:mount-ticket-dawn"]')
-      ?.click();
     expect(useItem).toHaveBeenCalledWith('minor_healing_potion', { slotIndex: 0 });
-    expect(mir4RedeemTicket).toHaveBeenCalledWith('mount-ticket-dawn');
-    expect(root.textContent).toContain('Native World of ClaudeCraft Items');
-    expect(root.textContent).toContain('Collection Tickets');
-    const ticketTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-ticket:mount-ticket-dawn',
-    )?.[1] as (() => string) | undefined;
-    expect(ticketTooltip?.()).toContain('79% Common, 20% Uncommon, or 1% Rare');
-    expect(ticketTooltip?.()).toContain('native World of ClaudeCraft visual shell');
-    expect(ticketTooltip?.()).toContain('MIR4 stats are authoritative');
+    expect(mir4RedeemTicket).not.toHaveBeenCalled();
+    expect(root.textContent).toContain('Native Aeldrune Items');
+    expect(root.textContent).not.toContain('Collection Tickets');
+    expect(root.querySelector('[data-focus-key^="mir4-ticket:mount-"]')).toBeNull();
   });
 
-  it('summons, equips, and confirms Spirits through the existing #bags surface', () => {
+  it('keeps the independent Spirit system entirely outside #bags', () => {
     const {
       world,
       state,
@@ -280,43 +344,24 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
       afterEquipmentChange: vi.fn(),
     });
 
-    root
-      .querySelector<HTMLButtonElement>('[data-focus-key="mir4-ticket:spirit-ticket-sunset"]')
-      ?.click();
-    root
-      .querySelector<HTMLButtonElement>('[data-focus-key="mir4-spirit:spirit-common-01"]')
-      ?.click();
-    root
-      .querySelector<HTMLButtonElement>('[data-focus-key="mir4-spirit-pending:spirit-pending-1-1"]')
-      ?.click();
-    root.querySelector<HTMLButtonElement>('[data-focus-key="mir4-spirit-combine:1"]')?.click();
-    expect(mir4RedeemTicket).toHaveBeenCalledWith('spirit-ticket-sunset');
-    expect(mir4EquipSpirit).toHaveBeenCalledWith(null);
-    expect(mir4ConfirmSpirit).toHaveBeenCalledWith('spirit-pending-1-1');
-    expect(mir4CombineSpirits).toHaveBeenCalledWith(1);
-    expect(root.textContent).toContain('Spirits');
-    expect(root.textContent).toContain('Spirits Awaiting Confirmation');
-    const ticketTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) =>
-        (element as HTMLElement).dataset.focusKey === 'mir4-ticket:spirit-ticket-sunset',
-    )?.[1] as (() => string) | undefined;
-    expect(ticketTooltip?.()).toContain('94.5% Uncommon, 5% Rare, or 0.5% Epic');
-    expect(ticketTooltip?.()).toContain('Epic results wait for confirmation');
-    const combineTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-spirit-combine:1',
-    )?.[1] as (() => string) | undefined;
-    expect(combineTooltip?.()).toContain('Consumes four owned Spirits');
-    expect(combineTooltip?.()).toContain('20% chance');
-    expect(combineTooltip?.()).toContain('On failure');
-    const spiritTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-spirit:spirit-common-01',
-    )?.[1] as (() => string) | undefined;
-    expect(spiritTooltip?.()).toContain('12% chance · 6.55s cooldown');
-    expect(spiritTooltip?.()).toContain('triggering hit&#39;s raw damage by 3.5%');
+    expect(root.querySelector('[data-focus-key^="mir4-ticket:spirit-"]')).toBeNull();
+    expect(root.querySelector('[data-focus-key^="mir4-spirit:"]')).toBeNull();
+    expect(root.querySelector('[data-focus-key^="mir4-spirit-pending:"]')).toBeNull();
+    expect(root.querySelector('[data-focus-key^="mir4-spirit-combine:"]')).toBeNull();
+    expect(root.textContent).not.toContain('Spirits');
+    expect(mir4RedeemTicket).not.toHaveBeenCalled();
+    expect(mir4EquipSpirit).not.toHaveBeenCalled();
+    expect(mir4ConfirmSpirit).not.toHaveBeenCalled();
+    expect(mir4CombineSpirits).not.toHaveBeenCalled();
   });
 
-  it('equips and combines logical Mounts through #bags while retaining native reins visuals', () => {
-    const { world, state, mir4ConfirmMount, mir4EquipMount, mir4CombineMounts } = harness();
+  it('keeps the independent Mount system entirely outside #bags', () => {
+    const { world, state, mir4RedeemTicket, mir4ConfirmMount, mir4EquipMount, mir4CombineMounts } =
+      harness();
+    state.mir4ArcRewards = {
+      systems: ['mount-summon'],
+      tickets: { 'mount-ticket-dawn': 100_000 },
+    };
     state.mir4Mounts = {
       owned: { 'meadow-courser': 4 },
       discovered: ['meadow-courser'],
@@ -334,33 +379,14 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
       afterEquipmentChange: vi.fn(),
     });
 
-    root.querySelector<HTMLButtonElement>('[data-focus-key="mir4-mount:meadow-courser"]')?.click();
-    root
-      .querySelector<HTMLButtonElement>('[data-focus-key="mir4-mount-pending:mount-pending-1-1"]')
-      ?.click();
-    root.querySelector<HTMLButtonElement>('[data-focus-key="mir4-mount-combine:1"]')?.click();
-    expect(mir4EquipMount).toHaveBeenCalledWith(null);
-    expect(mir4ConfirmMount).toHaveBeenCalledWith('mount-pending-1-1');
-    expect(mir4CombineMounts).toHaveBeenCalledWith(1);
-    expect(root.textContent).toContain('Mounts');
-    expect(root.textContent).toContain('Mounts Awaiting Confirmation');
-    const mountTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-mount:meadow-courser',
-    )?.[1] as (() => string) | undefined;
-    expect(mountTooltip?.()).toContain('Native World of ClaudeCraft model with MIR4 Mount stats');
-    expect(mountTooltip?.()).toContain('Movement Speed: +10%');
-    expect(mountTooltip?.()).toContain('Basic Attack Speed: +5%');
-    expect(mountTooltip?.()).toContain('Physical Defense: +4 · Magic Defense: +4');
-    const pendingMountTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) =>
-        (element as HTMLElement).dataset.focusKey === 'mir4-mount-pending:mount-pending-1-1',
-    )?.[1] as (() => string) | undefined;
-    expect(pendingMountTooltip?.()).toContain('Movement Speed: +25%');
-    expect(pendingMountTooltip?.()).toContain('Basic Attack Speed: +20%');
-    const combineTooltip = presentation.attachTooltip.mock.calls.find(
-      ([element]) => (element as HTMLElement).dataset.focusKey === 'mir4-mount-combine:1',
-    )?.[1] as (() => string) | undefined;
-    expect(combineTooltip?.()).toContain('Consumes four owned Mounts');
-    expect(combineTooltip?.()).toContain('20% chance');
+    expect(root.querySelector('[data-focus-key^="mir4-ticket:mount-"]')).toBeNull();
+    expect(root.querySelector('[data-focus-key^="mir4-mount:"]')).toBeNull();
+    expect(root.querySelector('[data-focus-key^="mir4-mount-pending:"]')).toBeNull();
+    expect(root.querySelector('[data-focus-key^="mir4-mount-combine:"]')).toBeNull();
+    expect(root.textContent).not.toContain('Mounts Awaiting Confirmation');
+    expect(mir4RedeemTicket).not.toHaveBeenCalled();
+    expect(mir4EquipMount).not.toHaveBeenCalled();
+    expect(mir4ConfirmMount).not.toHaveBeenCalled();
+    expect(mir4CombineMounts).not.toHaveBeenCalled();
   });
 });

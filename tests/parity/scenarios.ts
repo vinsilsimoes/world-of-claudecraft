@@ -5846,7 +5846,7 @@ function mir4AutoBattleRng(): Scenario {
     name: 'mir4_auto_battle_rng',
     coverage: [
       'MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out',
-      'MIR4 4106 hit/crit/effect draw order on the following real simulation tick',
+      'MIR4 4106 hit/crit/effect draw order at its authored contact clock',
       'friendly proximity contributes neither targeting nor combat rng draws',
     ],
     sampleEvery: 1,
@@ -5861,6 +5861,10 @@ function mir4AutoBattleRng(): Scenario {
     drive(rec: Recorder) {
       const sim = rec.sim;
       const pid = sim.addPlayer('arbalist', 'Mir4Parity');
+      // The scenario deliberately exercises slot-4 4103 and slot-2 4106.
+      // Progression unlocks those at levels 30 and 10 respectively, so make
+      // the combat fixture eligible through the same level funnel as gameplay.
+      sim.setPlayerLevel(30, pid);
       const player = requireEntity(sim, pid, 'MIR4 parity player');
       teleport(sim, player, OPEN_FIELD.x, OPEN_FIELD.z);
       player.resource = player.maxResource;
@@ -5884,12 +5888,20 @@ function mir4AutoBattleRng(): Scenario {
       rec.track(pid, retained.id, nearPlus.id, nearMiddle.id, nearMinus.id, friendly.id);
       rec.snapshot('mir4-pack-ready');
 
+      // First tick admits 4103. Pause automation while its authored contact
+      // clock advances so the scenario pins the damage/effect draws themselves,
+      // not a second action admitted on the same tick the GCD clears.
       rec.tick(1);
+      sim.setMir4AutoBattleMode('off', pid);
+      rec.tick(14);
       rec.snapshot('actor-centered-4103');
 
       player.gcdRemaining = 0;
       player.resource = player.maxResource;
+      sim.setMir4AutoBattleMode('battle', pid);
       rec.tick(1);
+      sim.setMir4AutoBattleMode('off', pid);
+      rec.tick(13);
       rec.snapshot('targeted-4106');
     },
   };

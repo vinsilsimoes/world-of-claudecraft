@@ -22,9 +22,12 @@ import {
   parseStoredHotbarAction,
   placeAbilityOnSlot,
   placeItemOnSlot,
+  readHotbarActionTransfer,
   saveAttackSlotAction,
   shouldSeedFormBar,
+  swapAttackSlotWithHotbar,
   syncHotbarActions,
+  writeHotbarActionTransfer,
 } from '../src/ui/hud/action_bar/hotbar';
 
 const abilityIds = new Set([
@@ -198,7 +201,62 @@ describe('attack drag marker', () => {
   });
 });
 
+describe('hotbar drag payload', () => {
+  it('round-trips a valid action through the shared transfer helpers', () => {
+    const data = new Map<string, string>();
+    const transfer = {
+      getData: (format: string) => data.get(format) ?? '',
+      setData: (format: string, value: string) => data.set(format, value),
+    };
+
+    writeHotbarActionTransfer(transfer, { type: 'ability', id: 'fireball' });
+
+    expect(data.get('text/plain')).toBe('fireball');
+    expect(readHotbarActionTransfer(transfer, abilityExists, itemExists)).toEqual({
+      type: 'ability',
+      id: 'fireball',
+    });
+  });
+
+  it('rejects malformed or unknown transferred actions', () => {
+    const transfer = {
+      getData: () => '{bad json',
+      setData: () => undefined,
+    };
+    expect(readHotbarActionTransfer(transfer, abilityExists, itemExists)).toBeNull();
+    expect(readHotbarActionTransfer(null, abilityExists, itemExists)).toBeNull();
+  });
+});
+
 describe('hotbar action placement', () => {
+  it('swaps the assignable first seat with an occupied regular slot', () => {
+    const first = { type: 'ability' as const, id: 'fireball' };
+    const slots = [
+      { type: 'ability' as const, id: 'frost_armor' },
+      { type: 'item' as const, id: 'spring_water' },
+      null,
+    ];
+
+    const next = swapAttackSlotWithHotbar(first, slots, 1);
+
+    expect(next).toEqual({
+      attackAction: { type: 'item', id: 'spring_water' },
+      actions: [{ type: 'ability', id: 'frost_armor' }, { type: 'ability', id: 'fireball' }, null],
+    });
+    expect(slots[1]).toEqual({ type: 'item', id: 'spring_water' });
+  });
+
+  it('moves the first-seat action into an empty regular slot', () => {
+    const next = swapAttackSlotWithHotbar(
+      { type: 'ability', id: 'fireball' },
+      [{ type: 'ability', id: 'frost_armor' }, null],
+      1,
+    );
+
+    expect(next.attackAction).toBeNull();
+    expect(next.actions[1]).toEqual({ type: 'ability', id: 'fireball' });
+  });
+
   it('places a spellbook ability onto the target action slot', () => {
     const slots = [
       { type: 'ability' as const, id: 'fireball' },
@@ -499,6 +557,23 @@ describe('hotbar slot sync', () => {
       { type: 'ability', id: 'frostbolt' },
       { type: 'ability', id: 'blink' },
     ]);
+  });
+
+  it('does not replace an existing action when a newly learned ability finds a full bar', () => {
+    const slots = [
+      { type: 'ability' as const, id: 'fireball' },
+      { type: 'item' as const, id: 'spring_water' },
+      { type: 'ability' as const, id: 'blink' },
+    ];
+
+    const synced = syncHotbarActions(
+      slots,
+      ['fireball', 'frostbolt', 'blink'],
+      new Set(['frostbolt']),
+    );
+
+    expect(synced.actions).toEqual(slots);
+    expect(synced.changed).toBe(false);
   });
 
   it('drops abilities that are no longer known', () => {

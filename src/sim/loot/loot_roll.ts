@@ -35,8 +35,10 @@ import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
 import { MIR4_MOBS } from '../content/mir4/mobs';
 import { ITEMS, MOBS, QUESTS } from '../data';
 import { formatMoney } from '../format_money';
+import { MIR4_GAME_PROFILE } from '../game_profile';
 import { itemLevel } from '../item_level';
 import { effectiveMasterLooter, meetsMasterThreshold } from '../loot_master';
+import { mir4ModifiedDropChance, mir4ModifiedProgressionReward } from '../mir4/status_effects';
 import { isHarvestableCorpse } from '../professions/gathering';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
@@ -287,7 +289,11 @@ export function rollLoot(
       });
       continue;
     }
-    if (!ctx.rng.chance(entry.chance)) continue;
+    const chance =
+      ctx.gameProfile === MIR4_GAME_PROFILE && entry.itemId && !entry.copper
+        ? mir4ModifiedDropChance(entry.chance, ctx.entities.get(meta.entityId)?.mir4?.statusValues)
+        : entry.chance;
+    if (!ctx.rng.chance(chance)) continue;
     if (entry.copper) {
       // A heroic claim substitutes the raised finale money base (see
       // LootEntry.heroicCopper): a VALUE swap on the same single int draw at
@@ -345,11 +351,23 @@ export function rollLoot(
 }
 
 function grantLootCopper(ctx: SimContext, meta: PlayerMeta, amount: number): void {
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    amount = mir4ModifiedProgressionReward(
+      amount,
+      'hunting-copper',
+      ctx.entities.get(meta.entityId)?.mir4?.statusValues,
+    );
+  }
   meta.copper += amount;
   meta.counters.lootCopper += amount;
   // The persisted lifetime twin of the session counter above.
   ctx.bumpDeedStat(meta, 'lootCopper', amount);
-  ctx.emit({ type: 'loot', text: `You loot ${formatMoney(amount)}.`, pid: meta.entityId });
+  ctx.emit({
+    type: 'loot',
+    text: `You loot ${formatMoney(amount)}.`,
+    pid: meta.entityId,
+    lootOrigin: 'monster-drop',
+  });
 }
 
 function awardAllCopperToLooter(ctx: SimContext, looter: PlayerMeta, copper: number): void {
@@ -479,7 +497,7 @@ function tryAwardItemByRoundRobin(ctx: SimContext, itemId: string, mob: Entity):
   if (!party) return false;
   const winner = candidates[party.lootTurn % candidates.length];
   party.lootTurn++;
-  ctx.addItem(itemId, 1, winner.entityId);
+  ctx.addItem(itemId, 1, winner.entityId, { lootOrigin: 'monster-drop' });
   return true;
 }
 
@@ -499,7 +517,7 @@ export function awardSharedLootItem(
   if (startNeedGreedRoll(ctx, itemId, mob)) return true;
   if (tryAwardItemByRoundRobin(ctx, itemId, mob)) return true;
   if (!ctx.canAddItem(itemId, 1, looter.entityId)) return false;
-  ctx.addItem(itemId, 1, looter.entityId);
+  ctx.addItem(itemId, 1, looter.entityId, { lootOrigin: 'monster-drop' });
   return true;
 }
 
@@ -645,7 +663,21 @@ export function removePlayerFromLootRolls(ctx: SimContext, pid: number): void {
     }
 
     if (roll.candidates.length === 0) {
-      if (ctx.pendingLootRolls.delete(roll.id)) returnLootRollItemToCorpse(ctx, roll);
+      if (ctx.pendingLootRolls.delete(roll.id)) {
+        // preparePlayerLeave calls this before the character is serialized and
+        // removed. In MIR4, give the final unresolved item to that last original
+        // candidate so it persists with their logout snapshot; never widen the
+        // grant to an out-of-range party member who was only a broadcast target.
+        if (
+          ctx.gameProfile === MIR4_GAME_PROFILE &&
+          roll.candidateNames.has(pid) &&
+          isPidResolvable(ctx, pid)
+        ) {
+          ctx.addItem(roll.itemId, 1, pid, { lootOrigin: 'monster-drop' });
+        } else if (grantMir4RollFallback(ctx, roll, new Set([pid])) === null) {
+          returnLootRollItemToCorpse(ctx, roll);
+        }
+      }
       continue;
     }
 
@@ -744,7 +776,7 @@ export function assignMasterLoot(
         text: `${r.meta.name} assigned [[i:${roll.itemId}]] to ${targetName}.`,
         pid,
       });
-    ctx.addItem(roll.itemId, 1, targets[0]);
+    ctx.addItem(roll.itemId, 1, targets[0], { lootOrigin: 'monster-drop' });
     return;
   }
   convertMasterRollToNeedGreed(ctx, roll, targets);
@@ -760,6 +792,16 @@ function convertMasterRollToNeedGreed(
   targets: number[],
 ): void {
   roll.candidates = targets;
+  // This conversion is an explicit eligibility decision by the master looter.
+  // Keep the fallback/name snapshot scoped to that same subset so MIR4's
+  // corpse-less all-pass recovery cannot award the item to an original
+  // candidate the master deliberately excluded.
+  roll.candidateNames = new Map(
+    targets.map((pid) => [
+      pid,
+      roll.candidateNames.get(pid) ?? ctx.players.get(pid)?.name ?? 'Unknown',
+    ]),
+  );
   roll.masterLooter = undefined;
   roll.choices = new Map();
   roll.expiresAt = ctx.time + LOOT_ROLL_TIMEOUT;
@@ -835,7 +877,8 @@ export function resolveLootRoll(ctx: SimContext, roll: PendingLootRoll): void {
   const contenders =
     needers.length > 0 ? needers : entries.filter((entry) => entry.result.choice === 'greed');
   if (contenders.length === 0) {
-    returnLootRollItemToCorpse(ctx, roll);
+    const fallbackPid = grantMir4RollFallback(ctx, roll);
+    if (fallbackPid === null) returnLootRollItemToCorpse(ctx, roll);
     for (const pid of partyMembersForRoll(roll))
       ctx.emit({ type: 'loot', text: `Everyone passed on [[i:${roll.itemId}]].`, pid });
     return;
@@ -867,6 +910,26 @@ export function resolveLootRoll(ctx: SimContext, roll: PendingLootRoll): void {
     tiedWinners.length === 1 ? tiedWinners[0] : tiedWinners[ctx.rng.int(0, tiedWinners.length - 1)];
   const winnerMeta = ctx.players.get(winner.pid);
   const winnerName = winnerMeta?.name ?? roll.candidateNames.get(winner.pid) ?? 'Unknown';
+  // The winner can have logged out during the up-to-60s roll window (need/greed)
+  // or the up-to-5min master-loot curate window that converts into one: addItem
+  // resolves nothing for a departed pid and silently no-ops, which would destroy
+  // the item outright, violating the "items are never destroyed" grant guarantee
+  // (see addItem's own comment in sim.ts). MIR4 reroutes it to a live eligible
+  // player because its body has no manual loot; classic returns it to the corpse.
+  if (!isPidResolvable(ctx, winner.pid)) {
+    const fallbackPid = grantMir4RollFallback(ctx, roll, new Set([winner.pid]));
+    if (fallbackPid === null) {
+      returnLootRollItemToCorpse(ctx, roll);
+      for (const pid of partyMembersForRoll(roll)) {
+        ctx.emit({
+          type: 'loot',
+          text: `${winnerName} was offline; [[i:${roll.itemId}]] returned to the corpse.`,
+          pid,
+        });
+      }
+    }
+    return;
+  }
   for (const pid of partyMembersForRoll(roll)) {
     ctx.emit({
       type: 'loot',
@@ -874,23 +937,7 @@ export function resolveLootRoll(ctx: SimContext, roll: PendingLootRoll): void {
       pid,
     });
   }
-  // The winner can have logged out during the up-to-60s roll window (need/greed)
-  // or the up-to-5min master-loot curate window that converts into one: addItem
-  // resolves nothing for a departed pid and silently no-ops, which would destroy
-  // the item outright, violating the "items are never destroyed" grant guarantee
-  // (see addItem's own comment in sim.ts). Fall back to returning it to the
-  // corpse, exactly like the everyone-passed branch above, so it is never lost.
-  if (!isPidResolvable(ctx, winner.pid)) {
-    returnLootRollItemToCorpse(ctx, roll);
-    for (const pid of partyMembersForRoll(roll))
-      ctx.emit({
-        type: 'loot',
-        text: `${winnerName} was offline; [[i:${roll.itemId}]] returned to the corpse.`,
-        pid,
-      });
-    return;
-  }
-  ctx.addItem(roll.itemId, 1, winner.pid);
+  ctx.addItem(roll.itemId, 1, winner.pid, { lootOrigin: 'monster-drop' });
 }
 
 // Whether `pid` is a currently-connected player the loot hub's addItem/resolve
@@ -900,6 +947,33 @@ export function resolveLootRoll(ctx: SimContext, roll: PendingLootRoll): void {
 // object allocation here, not because the semantics differ.
 function isPidResolvable(ctx: SimContext, pid: number): boolean {
   return ctx.players.has(pid) && ctx.entities.has(pid);
+}
+
+/**
+ * MIR4 has no manual corpse-loot recovery path. If a party roll otherwise has
+ * nowhere to go, grant it deterministically to the live tapper, then the first
+ * live eligible candidate. Classic keeps its original return-to-corpse rule.
+ */
+function grantMir4RollFallback(
+  ctx: SimContext,
+  roll: PendingLootRoll,
+  excluded = new Set<number>(),
+): number | null {
+  if (ctx.gameProfile !== MIR4_GAME_PROFILE) return null;
+  const mob = ctx.entities.get(roll.mobId);
+  const tapper = mob?.tappedById ?? null;
+  const remaining = [...roll.candidateNames.keys()]
+    .filter((pid) => pid !== tapper)
+    .sort((a, b) => a - b);
+  const recipients =
+    tapper !== null && roll.candidateNames.has(tapper) ? [tapper, ...remaining] : remaining;
+  const recipient = recipients.find(
+    (pid) =>
+      !excluded.has(pid) && isPidResolvable(ctx, pid) && ctx.players.get(pid)?.leaving !== true,
+  );
+  if (recipient === undefined) return null;
+  ctx.addItem(roll.itemId, 1, recipient, { lootOrigin: 'monster-drop' });
+  return recipient;
 }
 
 function returnLootRollItemToCorpse(ctx: SimContext, roll: PendingLootRoll): void {

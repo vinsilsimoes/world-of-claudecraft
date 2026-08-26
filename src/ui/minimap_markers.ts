@@ -35,6 +35,8 @@
 
 import type { GatheringProfessionId } from '../sim/content/professions';
 import { GATHER_NODES, isBgPos, isDelvePos, isYumiMazePos, QUESTS, zoneAt } from '../sim/data';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { mir4QuestSearchAreas } from '../sim/mir4/quest_search_areas';
 import { NODE_HARVEST_TABLE } from '../sim/professions/gathering';
 import { canGatherTier } from '../sim/professions/tools';
 import { isQuestGatedGroundObjectHidden } from '../sim/quest_gated_entity';
@@ -173,6 +175,9 @@ export type MinimapObjectSemantic = Exclude<MapMarkerSemantic, { kind: 'dungeon'
 /** One overworld minimap marker, in canvas-pixel space. A DISCRIMINATED union (not a
  *  flat struct): each variant carries exactly the fields its draw branch needs. */
 export type MinimapMarker =
+  // Active MIR4 collection/interaction search region. Drawn below exact
+  // objects and actors; questId is retained for the canvas hover tooltip.
+  | { kind: 'quest-search-area'; mx: number; my: number; radius: number; questId: string }
   // An online friend/guild ally who is NOT in the party (party members are the
   // party-disc/arrow variants). Strangers get no marker, and neither does a
   // friend/guildmate sitting on the ENEMY roster of a live battleground match.
@@ -265,6 +270,25 @@ export interface MinimapMarkers {
   build(world: IWorld, S: number, pxPerYard: number, profile?: MapMarkerProfile): MinimapModel;
 }
 
+/** Resolve the most specific mission circle under one canvas point. */
+export function minimapQuestSearchAt(
+  markers: readonly MinimapMarker[],
+  mx: number,
+  my: number,
+): string | null {
+  let questId: string | null = null;
+  let smallestRadius = Number.POSITIVE_INFINITY;
+  for (const marker of markers) {
+    if (marker.kind !== 'quest-search-area' || marker.radius >= smallestRadius) continue;
+    const dx = mx - marker.mx;
+    const dy = my - marker.my;
+    if (dx * dx + dy * dy > marker.radius * marker.radius) continue;
+    questId = marker.questId;
+    smallestRadius = marker.radius;
+  }
+  return questId;
+}
+
 /** Which minimap surface this world renders. Delve when the player stands in a delve
  *  band and a run is active (matches the inline guard); overworld otherwise. The delve
  *  branch is delve_map_painter's; the overworld branch is this core's. */
@@ -352,6 +376,26 @@ export function createMinimapMarkers(): MinimapMarkers {
         questsDone: ReadonlySet<string>;
         cadenceBlocked: ReadonlySet<string> | undefined;
       } | null = null;
+
+      // MIR4 physical objectives expose one truthful local search region. The
+      // circle is derived from the same anchors that spawn each object, so it
+      // tracks stage progress and stays identical online/offline.
+      if (world.cfg.gameProfile === MIR4_GAME_PROFILE) {
+        const projections = world.cfg.world?.mir4ArcMapProjections;
+        for (const area of mir4QuestSearchAreas(world.mir4QuestTrackerEntries(), projections)) {
+          const dx = -(area.center.x - p.pos.x) * pxPerYard;
+          const dz = -(area.center.z - p.pos.z) * pxPerYard;
+          const radius = area.radius * pxPerYard;
+          if (Math.hypot(dx, dz) - radius > clipRadius) continue;
+          markers.push({
+            kind: 'quest-search-area',
+            mx: half + dx,
+            my: half + dz,
+            radius,
+            questId: area.questId,
+          });
+        }
+      }
 
       for (const e of world.entities.values()) {
         if (e.id === p.id) continue;

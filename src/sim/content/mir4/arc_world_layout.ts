@@ -1,6 +1,6 @@
 // Authored regional topology for the MIR4 campaign. The source project only
 // contributes progression and content semantics. Every coordinate here is a
-// fresh 3D layout built from the World of ClaudeCraft runtime vocabulary.
+// fresh 3D layout built from the Aeldrune runtime vocabulary.
 
 import type { Mir4ArcMapProjection } from '../../types';
 import { M01_VILA_DO_VAU_BLUEPRINT } from './m01_vila_do_vau_world';

@@ -87,7 +87,7 @@ function buildTopbar() {
   });
 
   bar.append(
-    h('div', { class: 'brand' }, h('b', {}, 'Fit Studio'), h('span', {}, 'World of Claudecraft')),
+    h('div', { class: 'brand' }, h('b', {}, 'Fit Studio'), h('span', {}, 'Aeldrune')),
     modeSeg.root,
     spaceBtn,
     snapBtn,

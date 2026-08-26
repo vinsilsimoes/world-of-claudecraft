@@ -9,23 +9,31 @@ import type { Mir4ClassId } from '../content/mir4/classes';
 import type { Mir4EquipmentItemDef } from '../content/mir4/equipment_catalog';
 import { MIR4_ITEMS, mir4EquipmentDefinition } from '../content/mir4/items';
 import { MIR4_QUESTS } from '../content/mir4/quests';
-import { MIR4_SKILL_LEVEL_CAPS } from '../content/mir4/skills';
+import { mir4SkillById } from '../content/mir4/skills';
 import type { Mir4AchievementClears, Mir4Currencies } from './achievements';
 import { MIR4_AFFIXES } from './affixes';
 import type { Mir4ArcQuestProgress } from './arc_quests';
 import { type Mir4ArcRewardState, sanitizeMir4ArcRewards } from './arc_rewards';
+import { sanitizeMir4DisabledAutoSkills } from './auto_skills';
+import { type Mir4CodexState, sanitizeMir4CodexState } from './codex';
 import { type Mir4DungeonTicketState, sanitizeMir4DungeonTickets } from './dungeon_tickets';
+import { MIR4_ENERGY_CAP } from './energy';
 import type { Mir4Equipment, Mir4EquipmentInstanceState, Mir4Materials } from './equipment';
 import { MIR4_EMPTY_MATERIALS } from './equipment';
 import { type Mir4MountState, sanitizeMir4MountState } from './mounts';
 import type { Mir4NarrativeDialogueState } from './narrative_dialogue';
 import type { Mir4QuestProgress } from './quest';
 import type { Mir4SkillEvolutionResources } from './skill_evolution';
+import { MIR4_SKILL_MAX_LEVEL } from './skill_progression';
 import { type Mir4SpiritState, sanitizeMir4SpiritState } from './spirits';
-import { markMir4WireDirty } from './wire_revision';
+import type { Mir4TargetCombatState } from './target_combat';
+import { type Mir4TrainingState, sanitizeMir4TrainingState } from './training';
+import { markMir4CodexWireDirty, markMir4WireDirty } from './wire_revision';
 
 export interface Mir4PersistedPlayerState {
   autoBattle?: Mir4AutoBattleState;
+  /** Skill ids explicitly excluded from both automatic combat rotations. */
+  mir4DisabledAutoSkills?: number[];
   mir4Quests?: Record<string, Mir4QuestProgress>;
   mir4ArcQuests?: Record<string, Mir4ArcQuestProgress>;
   mir4ArcRewards?: Mir4ArcRewardState;
@@ -40,6 +48,8 @@ export interface Mir4PersistedPlayerState {
   mir4Materials?: Mir4Materials;
   mir4Mounts?: Mir4MountState;
   mir4Spirits?: Mir4SpiritState;
+  mir4Codex?: Mir4CodexState;
+  mir4Training?: Mir4TrainingState;
   mir4UltGauge?: number;
   mir4SpiritSkillCooldownRemaining?: number;
 }
@@ -48,6 +58,9 @@ export interface Mir4PersistenceMeta extends Mir4PersistedPlayerState {
   /** Session-only Auto Mission story gate. Deliberately omitted by the
    * persistence serializer and restored fresh from the live quest state. */
   mir4NarrativeDialogue?: Mir4NarrativeDialogueState;
+  /** Session-only ordinary Attack contract. Auto Battle is persisted
+   * separately; a reconnect never resumes an old selected target. */
+  mir4TargetCombat?: Mir4TargetCombatState;
 }
 
 const MATERIAL_KEYS = Object.keys(MIR4_EMPTY_MATERIALS) as (keyof Mir4Materials)[];
@@ -246,16 +259,16 @@ function sanitizeSkillLevels(
 ): Record<number, number> | undefined {
   if (!isRecord(value)) return undefined;
   const levels: Record<number, number> = {};
-  const caps = MIR4_SKILL_LEVEL_CAPS[classId] ?? {};
   for (const [rawSkillId, rawLevel] of Object.entries(value)) {
     const skillId = Number(rawSkillId);
-    const cap = caps[skillId];
+    const skill = mir4SkillById(skillId);
     if (
-      !cap ||
+      !skill ||
+      skill.classId !== classId ||
       typeof rawLevel !== 'number' ||
       !Number.isInteger(rawLevel) ||
       rawLevel <= 1 ||
-      rawLevel > cap
+      rawLevel > MIR4_SKILL_MAX_LEVEL
     ) {
       continue;
     }
@@ -281,7 +294,10 @@ function sanitizeAchievementClears(value: unknown): Mir4AchievementClears | unde
 
 function sanitizeCurrencies(value: unknown): Mir4Currencies | undefined {
   if (!isRecord(value)) return undefined;
-  return { darksteel: safeCount(value.darksteel) };
+  return {
+    darksteel: safeCount(value.darksteel),
+    energy: safeCount(value.energy, MIR4_ENERGY_CAP),
+  };
 }
 
 function sanitizeAffixPairs(
@@ -411,12 +427,17 @@ function sanitizeMaterials(value: unknown): Mir4Materials | undefined {
   return wallet;
 }
 
-export function sanitizeMir4PlayerState(
+function sanitizeMir4PlayerStateProjection(
   value: unknown,
   classId: Mir4ClassId,
+  includeCodex: boolean,
 ): Mir4PersistedPlayerState {
   if (!isRecord(value)) return {};
   const autoBattle = sanitizeAutoBattle(value.autoBattle);
+  const mir4DisabledAutoSkills = sanitizeMir4DisabledAutoSkills(
+    value.mir4DisabledAutoSkills,
+    classId,
+  );
   const mir4Quests = sanitizeQuests(value.mir4Quests);
   const mir4ArcQuests = sanitizeArcQuests(value.mir4ArcQuests);
   const mir4ArcRewards = sanitizeMir4ArcRewards(value.mir4ArcRewards);
@@ -442,6 +463,10 @@ export function sanitizeMir4PlayerState(
   const mir4Materials = sanitizeMaterials(value.mir4Materials);
   const mir4Mounts = sanitizeMir4MountState(value.mir4Mounts);
   const mir4Spirits = sanitizeMir4SpiritState(value.mir4Spirits);
+  const mir4Training = sanitizeMir4TrainingState(value.mir4Training);
+  // The combat snapshot has a much higher invalidation cadence than the Codex.
+  // Its dedicated wire projection must not even sanitize/walk the album state.
+  const mir4Codex = includeCodex ? sanitizeMir4CodexState(value.mir4Codex) : undefined;
   const rawUltGauge = finiteNumber(value.mir4UltGauge);
   const mir4UltGauge = rawUltGauge === null ? undefined : Math.max(0, Math.min(100, rawUltGauge));
   const rawSpiritCooldown = finiteNumber(value.mir4SpiritSkillCooldownRemaining);
@@ -451,6 +476,7 @@ export function sanitizeMir4PlayerState(
       : Math.min(60, rawSpiritCooldown);
   return {
     ...(autoBattle ? { autoBattle } : {}),
+    ...(mir4DisabledAutoSkills ? { mir4DisabledAutoSkills } : {}),
     ...(mir4Quests ? { mir4Quests } : {}),
     ...(mir4ArcQuests ? { mir4ArcQuests } : {}),
     ...(mir4ArcRewards ? { mir4ArcRewards } : {}),
@@ -465,16 +491,21 @@ export function sanitizeMir4PlayerState(
     ...(mir4Materials ? { mir4Materials } : {}),
     ...(mir4Mounts ? { mir4Mounts } : {}),
     ...(mir4Spirits ? { mir4Spirits } : {}),
+    ...(mir4Training ? { mir4Training } : {}),
+    ...(mir4Codex ? { mir4Codex } : {}),
     ...(mir4UltGauge !== undefined ? { mir4UltGauge } : {}),
     ...(mir4SpiritSkillCooldownRemaining !== undefined ? { mir4SpiritSkillCooldownRemaining } : {}),
   };
 }
 
-export function serializeMir4PlayerState(
-  meta: Mir4PersistenceMeta,
+export function sanitizeMir4PlayerState(
+  value: unknown,
   classId: Mir4ClassId,
 ): Mir4PersistedPlayerState {
-  const serialized = sanitizeMir4PlayerState(meta, classId);
+  return sanitizeMir4PlayerStateProjection(value, classId, true);
+}
+
+function healLegacyAutoJourneyState(serialized: Mir4PersistedPlayerState): void {
   // Legacy Auto Journey builds temporarily owned Auto Battle while resolving
   // combat. A successful save through this build heals that old session by
   // stripping both the transient ownership marker and its battle mode. This
@@ -485,7 +516,25 @@ export function serializeMir4PlayerState(
   if (serialized.mir4AutoQuest?.battleOwned) {
     delete serialized.mir4AutoQuest.battleOwned;
   }
+}
+
+export function serializeMir4PlayerState(
+  meta: Mir4PersistenceMeta,
+  classId: Mir4ClassId,
+): Mir4PersistedPlayerState {
+  const serialized = sanitizeMir4PlayerState(meta, classId);
+  healLegacyAutoJourneyState(serialized);
   return serialized;
+}
+
+/** Combat-wire projection. Codex rides its own revisioned self delta. */
+export function serializeMir4WirePlayerState(
+  meta: Mir4PersistenceMeta,
+  classId: Mir4ClassId,
+): Omit<Mir4PersistedPlayerState, 'mir4Codex'> {
+  const wire = sanitizeMir4PlayerStateProjection(meta, classId, false);
+  healLegacyAutoJourneyState(wire);
+  return wire;
 }
 
 export function restoreMir4PlayerState(
@@ -495,6 +544,7 @@ export function restoreMir4PlayerState(
 ): Mir4PersistedPlayerState {
   const restored = sanitizeMir4PlayerState(state, classId);
   meta.autoBattle = restored.autoBattle;
+  meta.mir4DisabledAutoSkills = restored.mir4DisabledAutoSkills;
   meta.mir4Quests = restored.mir4Quests;
   meta.mir4ArcQuests = restored.mir4ArcQuests;
   meta.mir4ArcRewards = restored.mir4ArcRewards;
@@ -509,7 +559,10 @@ export function restoreMir4PlayerState(
   meta.mir4Materials = restored.mir4Materials;
   meta.mir4Mounts = restored.mir4Mounts;
   meta.mir4Spirits = restored.mir4Spirits;
+  meta.mir4Training = restored.mir4Training;
+  meta.mir4Codex = restored.mir4Codex;
   meta.mir4NarrativeDialogue = undefined;
+  markMir4CodexWireDirty(meta);
   markMir4WireDirty(meta);
   return restored;
 }

@@ -1028,6 +1028,38 @@ describe('Input Discord keybind', () => {
   });
 });
 
+describe('Input selected-target Attack keybind', () => {
+  it("dispatches onUiKey('attack') for the default Shift+V chord", () => {
+    const { cb, windowListeners } = makeInput();
+
+    windowListeners.get('keydown')!({ code: 'KeyV', repeat: false, shiftKey: true });
+
+    expect(cb.onUiKey).toHaveBeenCalledWith('attack');
+  });
+
+  it('keeps bare V assigned to nameplates', () => {
+    const { cb, windowListeners } = makeInput();
+
+    windowListeners.get('keydown')!({ code: 'KeyV', repeat: false });
+
+    expect(cb.onUiKey).toHaveBeenCalledWith('nameplates');
+    expect(cb.onUiKey).not.toHaveBeenCalledWith('attack');
+  });
+
+  it('routes the command to ordinary auto-attack without toggling MIR4 Auto Battle', () => {
+    const keyboardStart = mainSource.indexOf('onUiKey: (key) => {');
+    const keyboardRoute = mainSource.slice(
+      keyboardStart,
+      mainSource.indexOf('onEmoteWheel:', keyboardStart),
+    );
+
+    expect(keyboardRoute).toMatch(
+      /case 'attack':\s*if \(world\.player\.autoAttack\) world\.stopAutoAttack\(\);\s*else world\.startAutoAttack\(\);\s*break;/,
+    );
+    expect(keyboardRoute).not.toMatch(/case 'attack':[\s\S]{0,160}setMir4AutoBattle/);
+  });
+});
+
 describe('Input target buffs and debuffs keybind', () => {
   it("dispatches onUiKey('targetAuras') for the default Shift+J chord", () => {
     const { cb, windowListeners } = makeInput();

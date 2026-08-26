@@ -697,9 +697,16 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     guard: {
       kind: 'module',
       module: 'spellbook_window.ts',
-      proof: 'if (this.knownChanged(this.deps.world().known)) {',
+      proof: 'if (this.knownChanged(world.known)) {',
     },
     why: 'the ONLY window on the per-frame band, and since #2519 BOTH of its halves are gated: the guard proved below (knownChanged, an in-place walk of the resolved-ability numbers, no signature string built per frame) gates the rebuild, and the fall-through hotbar-control refresh takes its own change check (takeControlChange) over the three bar inputs its toggles render, so an unchanged frame makes no lookup, no allocation and no DOM write',
+  },
+  {
+    call: 'this.actionBarView.tick',
+    band: 'frame',
+    gate: '!this.isMobileLayout()',
+    surface: 'none',
+    why: 'derives the allocation-stable desktop action-bar state; it performs no DOM writes and is skipped when the touch ring owns the action surface',
   },
   {
     call: 'this.actionBarPainter.paint',
@@ -707,6 +714,20 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     gate: '!this.isMobileLayout()',
     surface: 'chrome',
     why: 'the desktop action bar, facet-routed; skipped on touch where hud.mobile.css sets #actionbar/#actionbar2/#actionbar3 to display:none the whole time (the mobile action ring below supersedes it), so ticking + painting it was pure waste every frame',
+  },
+  {
+    call: 'this.mir4AutoSkillToggles.paint',
+    band: 'frame',
+    gate: '!this.isMobileLayout()',
+    surface: 'chrome',
+    why: 'the per-skill MIR4 automatic-use toggles beside the desktop action bar; the writer facet elides unchanged display, class, attribute and label writes',
+  },
+  {
+    call: 'this.mir4ActionTools.paint',
+    band: 'frame',
+    gate: '',
+    surface: 'chrome',
+    why: 'the MIR4 desktop automation and potion dock; optional because classic never builds it, and every repeated write routes through the shared painter facet',
   },
   {
     call: 'this.crossHotbar.paint',
@@ -1267,6 +1288,54 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the reused MIR4 Quest Log, converged on authoritative auto-journey and progression snapshot echoes',
   },
   {
+    call: 'this.mir4MountCodexWindow.refreshIfChanged',
+    band: 'slow',
+    gate: '',
+    surface: 'window',
+    guard: {
+      kind: 'module',
+      module: 'mir4_mount_codex_window.ts',
+      proof: 'if (signature !== this.lastDataSignature) this.render();',
+    },
+    why: 'the MIR4 Mount system, converged on authoritative collection, summon and fusion snapshot echoes',
+  },
+  {
+    call: 'this.mir4SpiritCodexWindow.refreshIfChanged',
+    band: 'slow',
+    gate: '',
+    surface: 'window',
+    guard: {
+      kind: 'module',
+      module: 'mir4_spirit_codex_window.ts',
+      proof: 'if (signature === this.lastDataSignature) return;',
+    },
+    why: 'the MIR4 Spirit system, converged on authoritative collection, summon and fusion snapshot echoes',
+  },
+  {
+    call: 'this.mir4CodexWindow.refreshIfChanged',
+    band: 'slow',
+    gate: '',
+    surface: 'window',
+    guard: {
+      kind: 'module',
+      module: 'mir4_codex_window.ts',
+      proof: 'if (signature !== this.lastDataSignature) this.render();',
+    },
+    why: 'the MIR4 Codex system, converged on authoritative material, equipment, Mount and Spirit snapshot echoes',
+  },
+  {
+    call: 'this.mir4GrowthWindow.refreshIfChanged',
+    band: 'slow',
+    gate: '',
+    surface: 'window',
+    guard: {
+      kind: 'module',
+      module: 'mir4_growth_window.ts',
+      proof: 'if (signature !== this.lastDataSignature) this.render();',
+    },
+    why: 'the MIR4 Training systems, converged on authoritative resources and progression snapshot echoes',
+  },
+  {
     call: 'this.deedsWindow.refreshIfChanged',
     band: 'slow',
     gate: 'this.deedsWindow.isOpen',
@@ -1678,10 +1747,10 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // release's own window/chrome churn), so it cannot be reconciled by
       // arithmetic across a merge. The numbers below were set from a suite run
       // on the merged tree, not from either side's narrative.
-      // chrome 83 -> 84: the tracker-stack anchor apply (seats the stack below
-      // the minimap column; tracker_stack_anchor.ts).
-      // window 47 -> 49: the MIR4 Quest Log and profile-aware character-sheet latches.
-    ).toEqual({ window: 49, chrome: 84, none: 17 });
+      // chrome 84 -> 86: the MIR4 action-tools and auto-skill painters beside the desktop bar.
+      // window 47 -> 53: the MIR4 Quest Log, Mount/Spirit/Codex/Training windows and
+      // profile-aware character-sheet latches.
+    ).toEqual({ window: 53, chrome: 86, none: 18 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
@@ -1693,10 +1762,10 @@ describe('Hud.update() drives exactly the registered set, on the registered band
     for (const row of HUD_UPDATE_DRIVES)
       if (row.guard) byKind[row.guard.kind] = (byKind[row.guard.kind] ?? 0) + 1;
     expect(byKind, 'a guard kind changed: say why in the PR, not only in the table').toEqual({
-      // Reliquary cold window (module) + craft-cast single-surface strip (hud)
-      // both land on this pin; keep both counts, do not drop either side.
-      // 25 = the merged 24 plus the authoritative MIR4 Quest Log refresh guard.
-      module: 25,
+      // Reliquary and MIR4 Mount cold windows (module) plus craft-cast
+      // single-surface strip (hud) land on this pin.
+      // 29 = the merged 24 plus the MIR4 Quest Log and four system guards.
+      module: 29,
       // 7 = Phase 20's refreshCharSheetIfChanged. Its latch is a HUD field
       // (lastCharSheetSig), like its profession sibling, because the cold
       // char_window painter holds no signature of its own to diff.
@@ -1755,6 +1824,10 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'mailbox_window.ts: if (sig === this.lastSig) return;',
         'market_window.ts: if (sig === this.lastSig) return;',
         'meters.ts: if (!this.isOpen || now - this.lastRender < 250) return;',
+        'mir4_codex_window.ts: if (signature !== this.lastDataSignature) this.render();',
+        'mir4_growth_window.ts: if (signature !== this.lastDataSignature) this.render();',
+        'mir4_mount_codex_window.ts: if (signature !== this.lastDataSignature) this.render();',
+        'mir4_spirit_codex_window.ts: if (signature === this.lastDataSignature) return;',
         'mount_race_controls.ts: if (!button || mode === this.buttonMode) return;',
         'mount_race_strip.ts: if (view.raceId !== this.lastRaceId || view.phase !== this.lastPhase || second !== this.lastSecond) {',
         // The professions guard hashes the freshly built input inline (no local
@@ -1766,7 +1839,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         // #2519 replaced the joined signature string this used to build every frame with
         // an in-place comparison against the retained numbers; same guard, same place, no
         // per-frame allocation.
-        'spellbook_window.ts: if (this.knownChanged(this.deps.world().known)) {',
+        'spellbook_window.ts: if (this.knownChanged(world.known)) {',
         'target_auras_window.ts: if (this.cleared) return;',
         'vale_cup_betting.ts: if (view.sig !== this.lastSig) {',
         'vale_cup_briefing.ts: if (view.sig !== this.lastSig) {',

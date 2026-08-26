@@ -53,6 +53,7 @@ import { desktopNotifyOnSimEvents } from './game/desktop_notifications';
 import { desktopPresentationHidden } from './game/desktop_presentation';
 import { initDesktopShellIntegration } from './game/desktop_shell_integration';
 import { installDevTeleports } from './game/dev_shortcuts';
+import { provisionDiagnosticsCollectionTickets } from './game/diagnostics_playtest_kit';
 import { desktopPresenceOnFrame, pushDiscordPresenceEnabled } from './game/discord_presence';
 import { cycleHudFocus } from './game/dpad_focus_nav';
 import { takeEditorPlaytestRequest } from './game/editor_playtest';
@@ -130,6 +131,7 @@ import {
   selfFallbackSmoothingEnabled,
   selfMotionPredictionAllowedFor,
 } from './game/mir4_motion_ownership';
+import { handleMir4ToolShortcut } from './game/mir4_tool_shortcuts';
 import {
   interfaceModeFromSetting,
   isPhoneTouchDevice,
@@ -1919,9 +1921,14 @@ async function startGame(
       onInputIntent: (kind) => perf.markInputIntent(kind),
       onUiKey: (key) => {
         if (key !== 'escape') hud.cancelGroundAim();
+        if (handleMir4ToolShortcut(key, world, settings)) return;
         switch (key) {
           case 'interact':
             interactKey();
+            break;
+          case 'attack':
+            if (world.player.autoAttack) world.stopAutoAttack();
+            else world.startAutoAttack();
             break;
           case 'bags':
             hud.toggleBags();
@@ -2082,6 +2089,10 @@ async function startGame(
       hud.toggleChar();
       syncCharacterOpenDiagnostics();
     },
+    onMountCodex: () => hud.toggleMir4Mounts(),
+    onSpirits: () => hud.toggleMir4Spirits(),
+    onCodex: () => hud.toggleMir4Codex(),
+    onTraining: () => hud.toggleMir4Training(),
     onBags: () => hud.toggleBags(),
     onCrafting: () => hud.toggleCrafting(),
     onSpellbook: () => hud.toggleSpellbook(),
@@ -2201,6 +2212,7 @@ async function startGame(
       return;
     }
     hud.cancelGroundAim();
+    if (handleMir4ToolShortcut(id, world, settings)) return;
     switch (id) {
       case 'target':
         world.tabTarget();
@@ -5220,6 +5232,7 @@ async function startOffline(
         offlineStartupSimOptions({ playerClass, playerName: name, world, seedOverride }, startupParams, import.meta.env.DEV),
       ),
   );
+  provisionDiagnosticsCollectionTickets(sim, startupParams, import.meta.env.DEV);
   sim.setPlayerSkin(sim.playerId, skin);
   // Offline has no account and no character row, so the local draft IS this
   // character's authored look and the creator's toggle IS its helm choice.
@@ -7528,8 +7541,7 @@ function updateSeoMetadata(lang: SupportedLanguage): void {
           {
             '@type': 'WebSite',
             '@id': 'https://worldofclaudecraft.com/#website',
-            name: 'World of ClaudeCraft',
-            alternateName: 'World of Claudecraft',
+            name: 'Aeldrune',
             url: canonicalHref,
             inLanguage: languageTag(lang),
             description: t('seo.description'),
@@ -7540,22 +7552,21 @@ function updateSeoMetadata(lang: SupportedLanguage): void {
           {
             '@type': 'Organization',
             '@id': 'https://worldofclaudecraft.com/#organization',
-            name: 'World of ClaudeCraft',
+            name: 'Aeldrune',
             url: 'https://worldofclaudecraft.com/',
-            logo: 'https://worldofclaudecraft.com/woc_logo_square.webp',
+            logo: 'https://worldofclaudecraft.com/aeldrune-logo.png',
             sameAs,
           },
           {
             '@type': 'VideoGame',
             '@id': 'https://worldofclaudecraft.com/#game',
-            name: 'World of ClaudeCraft',
-            alternateName: 'World of Claudecraft',
+            name: 'Aeldrune',
             genre: t('seo.genre'),
             playMode: t('seo.playMode'),
             applicationCategory: t('seo.applicationCategory'),
             operatingSystem: t('seo.operatingSystem'),
             url: canonicalHref,
-            image: 'https://worldofclaudecraft.com/woc_logo_square.webp',
+            image: 'https://worldofclaudecraft.com/aeldrune-logo.png',
             description: t('seo.description'),
             inLanguage: languageTag(lang),
             publisher: {

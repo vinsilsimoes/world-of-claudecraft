@@ -12,8 +12,8 @@
 import type { AdminTranslations } from '../i18n.en';
 
 export const ko_KR: AdminTranslations = {
-  "app.title": "World of ClaudeCraft - 관리자",
-  "app.shortTitle": "WoC 관리자",
+  "app.title": "Aeldrune - 관리자",
+  "app.shortTitle": "Aeldrune 관리자",
   "auth.username": "사용자명",
   "auth.password": "비밀번호",
   "auth.signIn": "로그인",

@@ -1,17 +1,17 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { MIR4_SKILL_LEVEL_CAPS, mir4LevelRow } from '../../src/sim/content/mir4';
+import { mir4LevelRow } from '../../src/sim/content/mir4';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
+import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { initMir4Player } from '../../src/sim/mir4/stats';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 
 // Phase 3.6: the 25 class passives (summed bps over table+gear, unlocking at
-// 20/30/40/50/60) and skill level 2 (coefficient + levelUpCoefficient, with
-// the frozen caps fail-closing anything beyond them).
+// 20/30/40/50/60) and skill ranks (coefficient + rank * levelUpCoefficient).
 
 function makeClassSim(cls: Mir4ClassKey, seed = 111): Sim {
   const sim = new Sim({
@@ -50,6 +50,11 @@ function spawnWolf(sim: Sim): Entity {
   );
   sim.addEntity(wolf);
   return wolf;
+}
+
+function resolveContacts(sim: Sim): void {
+  for (const impact of sim.player.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+  updateMir4PendingImpacts(sim.ctx);
 }
 
 afterAll(() => {
@@ -97,7 +102,7 @@ describe('class passives', () => {
   });
 });
 
-describe('skill level 2', () => {
+describe('skill ranks', () => {
   it('1102 at level 2 with the starter weapon: 102+102+114 = 318', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('warrior', 115);
@@ -107,9 +112,10 @@ describe('skill level 2', () => {
     const wolf = spawnWolf(sim);
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+    resolveContacts(sim);
     expect(hp - wolf.hp).toBe(318); // vs 312 at level 1: the levelUp coefficients
   });
-  it('the caps fail-close: 1102 at a hand-set 5 still resolves 2', () => {
+  it('1102 at rank 5 applies four native level-up coefficient steps', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('warrior', 116);
     sim.mir4EquipStarterWeapon();
@@ -117,8 +123,7 @@ describe('skill level 2', () => {
     const wolf = spawnWolf(sim);
     const hp = wolf.hp;
     sim.mir4CastSkill(1102, wolf.id);
-    expect(hp - wolf.hp).toBe(318);
-    expect(MIR4_SKILL_LEVEL_CAPS[1]).toEqual({ 1102: 2, 1104: 2, 1304: 2, 1401: 2 });
-    expect(MIR4_SKILL_LEVEL_CAPS[3]).toEqual({ 3101: 2 }); // the taoist's only L2
+    resolveContacts(sim);
+    expect(hp - wolf.hp).toBe(337);
   });
 });

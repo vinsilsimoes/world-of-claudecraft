@@ -15,6 +15,7 @@ import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { creditMir4ArcTutorialReceipt } from './arc_receipts';
 import { mir4RecalcClassOf, recalcMir4PlayerStats } from './stats';
+import { mir4ModifiedEnhancementChance } from './status_effects';
 import { markMir4WireDirty } from './wire_revision';
 
 /** The full slot bag: source equip slots 1..8 keyed by number. */
@@ -48,6 +49,49 @@ export interface Mir4Materials {
   lunarSeal: number;
   dawnTear: number;
   solarWard: number;
+  knowledgeFragment: number;
+  knowledgeTomeCommon: number;
+  knowledgeTomeRare: number;
+  knowledgeTomeEpic: number;
+  knowledgeTomeLegendary: number;
+  herbLeaf: number;
+  reishi: number;
+  herbRoot: number;
+  unihornSlice: number;
+  flowerOil: number;
+  centuryFruit: number;
+  etherealShard: number;
+  lunarShard: number;
+  solarShard: number;
+  boundlessShard: number;
+  greaterYangPill: number;
+  greaterYinPill: number;
+  lesserYangPill: number;
+  lesserYinPill: number;
+  noirsoulHerbRare: number;
+  noirsoulHerbEpic: number;
+  noirsoulHerbLegendary: number;
+  unihornRare: number;
+  unihornEpic: number;
+  unihornLegendary: number;
+  flowerOilRare: number;
+  flowerOilEpic: number;
+  flowerOilLegendary: number;
+  centuryFruitRare: number;
+  centuryFruitEpic: number;
+  centuryFruitLegendary: number;
+  greaterYangPillRare: number;
+  greaterYangPillEpic: number;
+  greaterYangPillLegendary: number;
+  greaterYinPillRare: number;
+  greaterYinPillEpic: number;
+  greaterYinPillLegendary: number;
+  lesserYangPillRare: number;
+  lesserYangPillEpic: number;
+  lesserYangPillLegendary: number;
+  lesserYinPillRare: number;
+  lesserYinPillEpic: number;
+  lesserYinPillLegendary: number;
 }
 
 export const MIR4_EMPTY_MATERIALS: Mir4Materials = {
@@ -57,6 +101,49 @@ export const MIR4_EMPTY_MATERIALS: Mir4Materials = {
   lunarSeal: 0,
   dawnTear: 0,
   solarWard: 0,
+  knowledgeFragment: 0,
+  knowledgeTomeCommon: 0,
+  knowledgeTomeRare: 0,
+  knowledgeTomeEpic: 0,
+  knowledgeTomeLegendary: 0,
+  herbLeaf: 0,
+  reishi: 0,
+  herbRoot: 0,
+  unihornSlice: 0,
+  flowerOil: 0,
+  centuryFruit: 0,
+  etherealShard: 0,
+  lunarShard: 0,
+  solarShard: 0,
+  boundlessShard: 0,
+  greaterYangPill: 0,
+  greaterYinPill: 0,
+  lesserYangPill: 0,
+  lesserYinPill: 0,
+  noirsoulHerbRare: 0,
+  noirsoulHerbEpic: 0,
+  noirsoulHerbLegendary: 0,
+  unihornRare: 0,
+  unihornEpic: 0,
+  unihornLegendary: 0,
+  flowerOilRare: 0,
+  flowerOilEpic: 0,
+  flowerOilLegendary: 0,
+  centuryFruitRare: 0,
+  centuryFruitEpic: 0,
+  centuryFruitLegendary: 0,
+  greaterYangPillRare: 0,
+  greaterYangPillEpic: 0,
+  greaterYangPillLegendary: 0,
+  greaterYinPillRare: 0,
+  greaterYinPillEpic: 0,
+  greaterYinPillLegendary: 0,
+  lesserYangPillRare: 0,
+  lesserYangPillEpic: 0,
+  lesserYangPillLegendary: 0,
+  lesserYinPillRare: 0,
+  lesserYinPillEpic: 0,
+  lesserYinPillLegendary: 0,
 };
 
 /** The source's sealed enhancement table (bps per target level 1..15). */
@@ -120,6 +207,9 @@ function recalcFor(ctx: SimContext, pid: number): Entity | null {
     meta.mir4EquipmentInstances,
     meta.mir4Spirits,
     meta.mir4Mounts,
+    meta.mir4Codex,
+    meta.mir4ArcRewards?.items,
+    meta.mir4Training,
   );
   return p;
 }
@@ -250,7 +340,13 @@ export function mir4UnequipSlot(ctx: SimContext, pid: number, equipSlot: number)
 }
 
 export type Mir4EnhanceOutcome =
-  | { ok: true; level: number; destroyed: boolean; protected: boolean }
+  | {
+      ok: true;
+      level: number;
+      destroyed: boolean;
+      protected: boolean;
+      effectiveChanceBps: number;
+    }
   | { ok: false; code: 'unknown-item' | 'not-enhanceable' | 'max-level' | 'no-materials' };
 
 /**
@@ -279,21 +375,40 @@ export function mir4Enhance(ctx: SimContext, pid: number, itemId: number): Mir4E
   const guaranteeId = mir4TutorialEnhancementGuaranteeId(target);
   const guaranteedUses = guaranteeId ? (guarantees?.[guaranteeId] ?? 0) : 0;
   const guaranteed = guaranteedUses > 0;
+  const effectiveChanceBps = guaranteed
+    ? 100_000
+    : mir4ModifiedEnhancementChance(
+        chanceBps,
+        def.equipSlot,
+        ctx.entities.get(pid)?.mir4?.statusValues,
+      );
   if (guaranteed && guarantees && guaranteeId) {
     if (guaranteedUses <= 1) delete guarantees[guaranteeId];
     else guarantees[guaranteeId] = guaranteedUses - 1;
   }
   const roll = guaranteed ? -1 : Math.floor(ctx.rng.next() * 100_000);
-  if (roll < chanceBps) {
+  if (roll < effectiveChanceBps) {
     inst.enhancement = target;
     if (isEquipped(meta, itemId)) recalcFor(ctx, pid);
     creditMir4ArcTutorialReceipt(meta, { kind: 'enhance-item', level: target });
-    return { ok: true, level: target, destroyed: false, protected: false };
+    return {
+      ok: true,
+      level: target,
+      destroyed: false,
+      protected: false,
+      effectiveChanceBps,
+    };
   }
   if (target > 5) {
     if (wallet.solarWard >= 1) {
       wallet.solarWard -= 1;
-      return { ok: true, level: inst.enhancement, destroyed: false, protected: true };
+      return {
+        ok: true,
+        level: inst.enhancement,
+        destroyed: false,
+        protected: true,
+        effectiveChanceBps,
+      };
     }
     inst.destroyed = true;
     const bag = meta.mir4Equipment ?? {};
@@ -301,9 +416,21 @@ export function mir4Enhance(ctx: SimContext, pid: number, itemId: number): Mir4E
       if (bag[Number(slot)] === itemId) delete bag[Number(slot)];
     }
     recalcFor(ctx, pid);
-    return { ok: true, level: inst.enhancement, destroyed: true, protected: false };
+    return {
+      ok: true,
+      level: inst.enhancement,
+      destroyed: true,
+      protected: false,
+      effectiveChanceBps,
+    };
   }
-  return { ok: true, level: inst.enhancement, destroyed: false, protected: false };
+  return {
+    ok: true,
+    level: inst.enhancement,
+    destroyed: false,
+    protected: false,
+    effectiveChanceBps,
+  };
 }
 
 function isEquipped(meta: { mir4Equipment?: Mir4Equipment }, itemId: number): boolean {

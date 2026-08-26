@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
 import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import { buildMir4ProgressionView } from '../src/ui/mir4_progression_view';
 
@@ -25,6 +26,7 @@ describe('MIR4 progression view', () => {
         },
       },
       mir4Materials: {
+        ...MIR4_EMPTY_MATERIALS,
         sunStone: 1,
         moonStone: 4,
         solarScroll: 2,
@@ -33,23 +35,46 @@ describe('MIR4 progression view', () => {
         solarWard: 1,
       },
     };
-    const view = buildMir4ProgressionView(state, 5_000);
+    const view = buildMir4ProgressionView(state, 5_000, { 110: 1_000 });
     expect(view.items[0]).toMatchObject({
       equipped: true,
       nextEnhancement: 6,
-      successBps: 50_000,
+      successBps: 55_000,
       destroysOnFailure: true,
       wardAvailable: true,
       enchantable: true,
       blessable: true,
       pending: { rollId: 'r1', layer: 'blessing' },
     });
+    expect(view.items[0]?.enhancementAttributes).toEqual([
+      { statusId: 20, current: 27, next: 28, delta: 1 },
+    ]);
     expect(view.items[0]?.enchantment).toEqual([[20, 7]]);
     expect(view.recipes.find((recipe) => recipe.recipeId === 'solar-scroll')?.affordable).toBe(
       true,
     );
     expect(view.recipes.find((recipe) => recipe.recipeId === 'lunar-seal')?.affordable).toBe(false);
     expect(view.campaignProfession).toBeNull();
+  });
+
+  it('shows no next-level stat preview for an item already at its enhancement cap', () => {
+    const view = buildMir4ProgressionView(
+      {
+        classId: 1,
+        ultimateGauge: 0,
+        mir4EquipmentInstances: {
+          991010101: { itemId: 991010101, enhancement: 15 },
+        },
+      },
+      0,
+    );
+
+    expect(view.items[0]).toMatchObject({
+      nextEnhancement: null,
+      successBps: 0,
+      destroysOnFailure: false,
+      enhancementAttributes: [],
+    });
   });
 
   it('projects an active campaign profession order from authoritative logical materials', () => {

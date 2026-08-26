@@ -3,6 +3,7 @@ import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
+import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { mir4ShellClassFor } from '../../src/sim/mir4/stats';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey } from '../../src/sim/types';
@@ -60,11 +61,16 @@ describe('D1: hosting the mir4 roster', () => {
     expect(p.maxHp).toBe(4000);
     expect(p.attackPower).toBe(50); // taoist L1: PA 50 AND MA 50
     expect(p.spellPower).toBe(50);
+    p.level = 10;
     const wolf = spawnWolf(sim);
+    wolf.swingTimer = 999;
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(3101, wolf.id)).toEqual({ ok: true });
+    for (const impact of p.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+    updateMir4PendingImpacts(sim.ctx);
     expect(hp - wolf.hp).toBe(97); // the row-total-impact-vector split
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: false, reason: 'wrong-class' });
+    while (p.gcdRemaining > 0) sim.tick();
     // The taoist basic (4600): floor(50*4600/10000) = 23 at its offset.
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
     expect(wolf.hp).toBe(hp - 97); // scheduled, lands after the offset
@@ -72,7 +78,8 @@ describe('D1: hosting the mir4 roster', () => {
     expect(
       wolf.mir4Effects?.active.some((f) => f.kind === 'defense-break' && f.magnitude === 0.1),
     ).toBe(true);
-    expect(wolf.hp).toBe(hp - 97 - 25); // 3101's own +10% taken buffs the basic: floor(23*1.1)=25
+    expect(wolf.dead).toBe(true);
+    expect(wolf.hp).toBe(0); // the +10% basic overkills the final 23 HP
   });
 
   it('the arbalist and lancer derive their rows and basics', () => {

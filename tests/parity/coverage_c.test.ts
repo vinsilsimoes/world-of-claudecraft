@@ -665,7 +665,7 @@ describe('coverage: each scenario fires its subsystem', () => {
     expect(deaths.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('mir4_auto_battle_rng: actor AoE fan-out and the following stun keep draw order', () => {
+  it('mir4_auto_battle_rng: actor AoE fan-out and the following authored stun keep draw order', () => {
     const { trace, rec } = record(
       SCENARIOS.find((scenario) => scenario.name === 'mir4_auto_battle_rng')!,
     );

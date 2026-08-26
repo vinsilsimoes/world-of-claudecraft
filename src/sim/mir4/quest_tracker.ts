@@ -10,7 +10,11 @@ import {
   mir4OrderedArcProgress,
   mir4QuestCurrentStage,
 } from './arc_quests';
-import { mir4AutoJourneyCandidate } from './auto_journey_selection';
+import {
+  mir4AutoJourneyCandidate,
+  mir4AutoJourneyProgressSupported,
+  mir4AutoJourneyQuestLevelEligible,
+} from './auto_journey_selection';
 import { mir4CampaignMapAvailable } from './campaign_availability';
 import type { Mir4QuestProgress } from './quest';
 
@@ -101,7 +105,14 @@ export function mir4QuestTrackerEntries(state: Mir4QuestTrackerState): Mir4Quest
       return {
         id: progress.questId,
         complete: progress.state !== 'active',
-        autoJourneyAvailable: actionCandidate?.questId === progress.questId,
+        // Every compatible row is an explicit Auto Mission destination. The
+        // command still owns one journey globally, but clicking another row
+        // transfers that ownership instead of opening an unrelated main-only
+        // quest log. Manual receipt stages stay non-actionable.
+        autoJourneyAvailable:
+          actionCandidate?.questId === progress.questId ||
+          (mir4AutoJourneyProgressSupported(progress) &&
+            mir4AutoJourneyQuestLevelEligible(progress.questId, state.playerLevel)),
         autoJourneyActive: state.mir4AutoQuest?.questId === progress.questId,
         autoJourneySuspended:
           state.mir4AutoQuest?.questId === progress.questId && state.mir4AutoQuest.suspended,
@@ -120,7 +131,7 @@ export function mir4QuestTrackerEntries(state: Mir4QuestTrackerState): Mir4Quest
         {
           id: plannedMainId,
           complete: false,
-          autoJourneyAvailable: actionCandidate?.questId === plannedMainId,
+          autoJourneyAvailable: true,
           autoJourneyActive: state.mir4AutoQuest?.questId === plannedMainId,
           autoJourneySuspended:
             state.mir4AutoQuest?.questId === plannedMainId && state.mir4AutoQuest.suspended,

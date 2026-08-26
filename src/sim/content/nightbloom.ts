@@ -57,6 +57,15 @@ export const NIGHTBLOOM_ZONE: ZoneDef = {
 
 export const NIGHTBLOOM_ROADS: { x: number; z: number }[][] = [
   [
+    // The Goldmelt follows the high, dry shelf around the north side of the
+    // border mere. The former implicit edge cut diagonally through deep water
+    // and was too long for one reliable automation leg.
+    { x: -176, z: 1888 },
+    { x: -261, z: 1900 },
+    { x: -340, z: 1832 },
+    { x: -350, z: 1822 },
+  ], // the Frostveil west crossing -> the Amberfall/Nightbloom gold road
+  [
     { x: -330, z: 1264 },
     { x: -352, z: 1330 },
     { x: -368, z: 1382 },
@@ -91,6 +100,27 @@ export const NIGHTBLOOM_ROADS: { x: number; z: number }[][] = [
     { x: -348, z: 1816 },
   ], // the Barrow -> the gold road, west around the Barrowmere
   [
+    { x: -362, z: 1570 },
+    { x: -380, z: 1620 },
+    { x: -400, z: 1630 },
+  ], // the Ossuary's western name gallery
+  [
+    { x: -356, z: 1700 },
+    { x: -380, z: 1700 },
+  ], // the western memorial aisle
+  [
+    { x: -356, z: 1700 },
+    { x: -320, z: 1720 },
+  ], // the eastern burial gallery
+  [
+    { x: -350, z: 1760 },
+    { x: -330, z: 1740 },
+  ], // the funerary forge approach
+  [
+    // Connect the portal shore to the Standing Vigil road. Without this short
+    // visible leg the road graph ended 18 yards early, so Auto Journey cut
+    // north across the raw caldera flank and stopped on its >1.5 slope.
+    { x: -276, z: 1532 },
     { x: -280, z: 1550 },
     { x: -240, z: 1546 },
   ], // the Standing Vigil -> the Palewater's shore

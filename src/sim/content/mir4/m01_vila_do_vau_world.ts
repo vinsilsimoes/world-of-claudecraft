@@ -798,7 +798,7 @@ export const M01_VILA_DO_VAU_BLUEPRINT: Mir4M01WorldBlueprint = {
       pos: { x: 2577, z: -13 },
       facing: 1.4,
       greeting: 'Uma poção usada na hora certa vale mais que uma bolsa cheia.',
-      campaign: false,
+      campaign: true,
     },
     {
       id: 'm01-vila-do-vau-bren-campones',

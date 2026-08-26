@@ -40,7 +40,7 @@ import {
 import type { DelveModuleId } from '../sim/delve_layout';
 import { generateRiftFloor, riftLiftAt } from '../sim/rift/rift_gen';
 import type { BiomeId, ZoneDef } from '../sim/types';
-import { ALL_CLASSES, type Entity, isMechWearer, RUN_SPEED, type SimEvent } from '../sim/types';
+import { ALL_CLASSES, type Entity, isMechWearer, type SimEvent } from '../sim/types';
 import { biomeAt, groundHeight, waterLevelAt } from '../sim/world';
 import type { ChatBubbleStyle } from '../ui/chat_bubble_style';
 import { tEntity } from '../ui/entity_i18n';
@@ -155,10 +155,8 @@ import {
 import {
   characterResidencySources,
   isWeaponSkinModelUrl,
-  mechAssetsReady,
   mountAssetsReady,
   onCharacterAssetReady,
-  preloadMechAssets,
   preloadMountAssets,
 } from './characters/assets';
 import {
@@ -390,6 +388,8 @@ import {
 import { MageGroundFx } from './mage_ground_fx';
 import { buildMailboxPillar } from './mailbox';
 import { collectObjectTextures } from './material_texture_slots';
+import { playMir4AttackStart } from './mir4_attack_presentation';
+import { hideExpiredMir4Body } from './mir4_corpse_presentation';
 import { buildMobNightGlow, type MobNightGlowView } from './mob_night_glow';
 import { buildMotes, type MotesView } from './motes';
 import { MountBeacon } from './mount_beacon';
@@ -646,6 +646,7 @@ import { runTexturePrepLane } from './texture_prep_lane';
 import { sweepMaterialTextures, sweepObjectTextures } from './texture_prewarm';
 import { uploadDataTextureInChunks } from './texture_upload';
 import { sparkleTexture } from './textures';
+import { attachTravelPortalVfx, type TravelPortalVfxView } from './travel_portal_vfx';
 import { targetIntensityFromValues } from './travel_speed_fx';
 import { TravelSpeedFxPainter } from './travel_speed_fx_painter';
 import { UmbralAnchorMarker } from './umbral_anchor_marker';
@@ -1661,6 +1662,7 @@ export class Renderer {
     setBandRevealGate(gate: { allow(key: string): boolean } | null): void;
     revealRoots(key: string): readonly THREE.Object3D[];
   };
+  private travelPortalVfx: TravelPortalVfxView;
   /** The props reveal gate (far cells at construction, bands at world entry). */
   private propsRevealGate: RevealGateCore | null = null;
   /** The foliage bucket reveal gate (armed at world entry, like the bands). */
@@ -2468,6 +2470,7 @@ export class Renderer {
     setRenderCategory(props.group, 'props');
     this.scene.add(props.group);
     bd('props');
+    this.travelPortalVfx = attachTravelPortalVfx(this.scene, this.sim.cfg.seed);
     // The light budget must exist BEFORE any attachZoneFeature call: a static
     // feature that ships glowLights pushes into it during the loop below.
     this.fireLights = props.fireLights;
@@ -4912,6 +4915,7 @@ export class Renderer {
       dt,
       this.reducedMotion(),
     );
+    this.travelPortalVfx.update(this.time, this.reducedMotion());
     this.eastbrookTownView.update(
       this.camera.position.x,
       this.camera.position.y,
@@ -7439,6 +7443,12 @@ export class Renderer {
       }
       case 'castStop': {
         this.needleOfFateVfx.endCast(ev.entityId);
+        break;
+      }
+      case 'mir4AttackStart': {
+        const view = this.views.get(ev.sourceId);
+        if (playMir4AttackStart(view ? this.activeVisual(view) : null, ev))
+          this.attackTriggerCount++;
         break;
       }
       case 'spellfx': {
@@ -10574,6 +10584,7 @@ export class Renderer {
         continue;
       }
       this.syncDrainChannelVisual(id, e);
+      if (!isSelf && hideExpiredMir4Body(v.group, e, this.sim.cfg.gameProfile)) continue;
       // form swaps (polymorph sheep, druid forms), computed up front because
       // the shadow gates below must not run the base rig's proxy under a form.
       // One pass over the aura list instead of repeated .some() scans per entity per
@@ -12368,6 +12379,7 @@ export class Renderer {
       dt,
       this.reducedMotion(),
     );
+    this.travelPortalVfx.update(this.time, this.reducedMotion());
     this.eastbrookTownView.update(
       this.camera.position.x,
       this.camera.position.y,
@@ -12868,6 +12880,7 @@ export class Renderer {
     this.cancelTerrainStreaming();
     this.nameplatePainter.dispose();
     this.travelSpeedFx.dispose();
+    this.travelPortalVfx.dispose();
     this.blobShadows?.dispose();
   }
 

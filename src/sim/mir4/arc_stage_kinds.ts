@@ -2,6 +2,32 @@
 // Each bucket names the authoritative runtime evidence source; the coverage
 // test prevents generated content from silently introducing an unwired verb.
 
+import type { Mir4ArcQuestStage } from '../content/mir4/arc_campaign';
+
+export type Mir4ArcEncounterGrade = 'normal' | 'veteran' | 'guardian';
+
+/** Authored encounter grade. Never infer difficulty from a translated name. */
+export function mir4ArcEncounterGrade(
+  stage: Readonly<Mir4ArcQuestStage> | undefined,
+  explicitBoss = false,
+): Mir4ArcEncounterGrade {
+  if (
+    explicitBoss ||
+    stage?.kind === 'guardian-resolution' ||
+    (stage?.guardian && stage.kind !== 'defend-anchor')
+  ) {
+    return 'guardian';
+  }
+  if (stage?.kind === 'optional-elite-resolution' || stage?.kind === 'inspect-and-resolve-elite') {
+    return 'veteran';
+  }
+  return 'normal';
+}
+
+export function mir4ArcEncounterXpMultiplier(grade: Mir4ArcEncounterGrade): 1 | 5 | 20 {
+  return grade === 'guardian' ? 20 : grade === 'veteran' ? 5 : 1;
+}
+
 export const MIR4_ARC_TALK_STAGE_KINDS = new Set(['talk', 'deliver']);
 
 export const MIR4_ARC_POSITION_STAGE_KINDS = new Set(['travel', 'survive-zone']);

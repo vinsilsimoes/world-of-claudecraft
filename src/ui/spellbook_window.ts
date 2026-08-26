@@ -54,7 +54,12 @@ import { audio } from '../game/audio';
 import { mir4ClassById } from '../sim/content/mir4/classes';
 import { ABILITIES, CLASSES } from '../sim/data';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
-import { mir4ClassIdFromActions, mir4SkillIdFromAction } from '../sim/mir4/action_abilities';
+import {
+  mir4AbilityIdsForClass,
+  mir4ActionAbilityDef,
+  mir4ClassIdFromActions,
+  mir4SkillIdFromAction,
+} from '../sim/mir4/action_abilities';
 import { mir4SkillEvolutionFor } from '../sim/mir4/skill_evolution';
 import type { Mir4PlayerUiState } from '../sim/mir4/ui_state';
 import type { ResolvedAbility } from '../sim/sim';
@@ -70,8 +75,9 @@ import {
   type HotbarAction,
   isAbilityActionBarEligible,
 } from './hud/action_bar/hotbar';
-import { formatMoney, formatNumber, type TranslationKey, t } from './i18n';
+import { formatNumber, type TranslationKey, t } from './i18n';
 import { iconDataUrl } from './icons';
+import { mir4MaterialName } from './mir4_material_i18n';
 import { buildSpellbookView, type SpellbookRow } from './spellbook_view';
 import { svgIcon } from './ui_icons';
 
@@ -106,6 +112,8 @@ export interface SpellbookWindowDeps {
    * now derived at render time, where the allocation is paid once per rebuild.
    */
   barActions(): readonly HotbarAction[];
+  /** Ordinary action occupying the profile-aware first seat (classic Attack is null). */
+  firstAction?(): HotbarAction;
   /** The action bar has at least one empty slot. */
   hasFreeSlot(): boolean;
   /** The Attack toggle currently occupies bar slot 0 (showAttackButton on). */
@@ -184,8 +192,18 @@ export class SpellbookWindow {
   // writes is a function of exactly these three, so an unchanged frame has nothing
   // to paint; see takeControlChange.
   private lastAttackOnBar = false;
+  private lastFirstActionId: string | null = null;
   private lastHasFree = false;
   private readonly lastSlotIds: (string | null)[] = [];
+  // MIR4 upgrade affordability is material-backed rather than part of the
+  // resolved ability record. Poll it on a small cold-window cadence so drops,
+  // crafting and online snapshots update an open spellbook without turning the
+  // expensive MIR4 state projection into a per-frame allocation.
+  private nextMir4MaterialPollAt = 0;
+  private lastTomeCommon = -1;
+  private lastTomeRare = -1;
+  private lastTomeEpic = -1;
+  private lastTomeLegendary = -1;
 
   constructor(private readonly deps: SpellbookWindowDeps) {}
 
@@ -234,6 +252,25 @@ export class SpellbookWindow {
     }
   }
 
+  private mir4TomesChanged(state: Readonly<Mir4PlayerUiState> | null): boolean {
+    const materials = state?.mir4Materials;
+    return (
+      (materials?.knowledgeTomeCommon ?? -1) !== this.lastTomeCommon ||
+      (materials?.knowledgeTomeRare ?? -1) !== this.lastTomeRare ||
+      (materials?.knowledgeTomeEpic ?? -1) !== this.lastTomeEpic ||
+      (materials?.knowledgeTomeLegendary ?? -1) !== this.lastTomeLegendary
+    );
+  }
+
+  private captureMir4Tomes(state: Readonly<Mir4PlayerUiState> | null): void {
+    const materials = state?.mir4Materials;
+    this.lastTomeCommon = materials?.knowledgeTomeCommon ?? -1;
+    this.lastTomeRare = materials?.knowledgeTomeRare ?? -1;
+    this.lastTomeEpic = materials?.knowledgeTomeEpic ?? -1;
+    this.lastTomeLegendary = materials?.knowledgeTomeLegendary ?? -1;
+    this.nextMir4MaterialPollAt = performance.now() + 250;
+  }
+
   get isOpen(): boolean {
     return this.deps.root().style.display === 'block';
   }
@@ -275,9 +312,21 @@ export class SpellbookWindow {
   // resolve live regardless (see appendRow), so this covers the always-visible row
   // text, not the tooltip.
   tickOpen(): void {
-    if (this.knownChanged(this.deps.world().known)) {
+    const world = this.deps.world();
+    if (this.knownChanged(world.known)) {
       this.rerenderPreservingView();
       return;
+    }
+    if (
+      world.cfg.gameProfile === MIR4_GAME_PROFILE &&
+      performance.now() >= this.nextMir4MaterialPollAt
+    ) {
+      const state = world.mir4PlayerState();
+      this.nextMir4MaterialPollAt = performance.now() + 250;
+      if (this.mir4TomesChanged(state)) {
+        this.rerenderPreservingView();
+        return;
+      }
     }
     this.refreshHotbarControlsIfChanged();
   }
@@ -341,7 +390,15 @@ export class SpellbookWindow {
     // known WITHOUT being in the base kit (e.g. mortal_strike, chain_heal, stormstrike), so
     // append any known-but-not-in-kit ability so the spellbook shows everything the player has.
     const mir4Profile = world.cfg.gameProfile === MIR4_GAME_PROFILE;
-    const kit = mir4Profile ? world.known.map((ability) => ability.def.id) : cls.abilities;
+    const mir4State = mir4Profile ? world.mir4PlayerState() : null;
+    this.captureMir4Tomes(mir4State);
+    const mir4ClassId = mir4State?.classId ?? mir4ClassIdFromActions(world.known);
+    const kit =
+      mir4Profile && mir4ClassId !== null
+        ? mir4AbilityIdsForClass(mir4ClassId)
+        : mir4Profile
+          ? world.known.map((ability) => ability.def.id)
+          : cls.abilities;
     const grantedExtra = mir4Profile
       ? []
       : world.known.map((k) => k.def.id).filter((id) => !kit.includes(id) && !!ABILITIES[id]);
@@ -354,7 +411,10 @@ export class SpellbookWindow {
       // the touch-only "Page N" chip, which appendRow emits at BUILD time and no
       // repaint touches, so moving an ability between bar slots leaves that chip
       // until the next rebuild. Pre-existing, and left as it was.
-      barAbilityIds: this.lastSlotIds.filter((id): id is string => id !== null),
+      barAbilityIds: [
+        ...(this.lastFirstActionId === null ? [] : [this.lastFirstActionId]),
+        ...this.lastSlotIds.filter((id): id is string => id !== null),
+      ],
       abilityIdByBarSlot: this.lastSlotIds,
       hasFreeSlot: this.lastHasFree,
       attackOnBar: this.lastAttackOnBar,
@@ -362,7 +422,7 @@ export class SpellbookWindow {
       spec: world.talentSpec,
       level: world.player.level,
     });
-    const mir4Class = mir4Profile ? mir4ClassById(mir4ClassIdFromActions(world.known) ?? 0) : null;
+    const mir4Class = mir4Profile ? mir4ClassById(mir4ClassId ?? 0) : null;
     const className = mir4Class
       ? t(`classes.${mir4Class.key}` as TranslationKey)
       : classDisplayName(view.classId);
@@ -377,9 +437,8 @@ export class SpellbookWindow {
     list.className = 'spell-list';
     list.setAttribute('role', 'list');
     el.appendChild(list);
-    this.appendAttackRow(list, view.attackOnBar);
-    const mir4State = mir4Profile ? world.mir4PlayerState() : null;
-    for (const row of view.rows) this.appendRow(list, row, mir4State, world.copper);
+    if (!mir4Profile) this.appendAttackRow(list, view.attackOnBar);
+    for (const row of view.rows) this.appendRow(list, row, mir4State);
     if (view.empty) {
       const empty = document.createElement('div');
       empty.className = 'spell-sub';
@@ -444,9 +503,11 @@ export class SpellbookWindow {
   private takeControlChange(): boolean {
     const attackOnBar = this.deps.attackOnBar();
     const hasFree = this.deps.hasFreeSlot();
+    const firstActionId = slotAbilityId(this.deps.firstAction?.() ?? null);
     const actions = this.deps.barActions();
-    if (!this.controlsMoved(attackOnBar, hasFree, actions)) return false;
+    if (!this.controlsMoved(attackOnBar, firstActionId, hasFree, actions)) return false;
     this.lastAttackOnBar = attackOnBar;
+    this.lastFirstActionId = firstActionId;
     this.lastHasFree = hasFree;
     this.lastSlotIds.length = 0;
     for (const action of actions) this.lastSlotIds.push(slotAbilityId(action));
@@ -455,10 +516,12 @@ export class SpellbookWindow {
 
   private controlsMoved(
     attackOnBar: boolean,
+    firstActionId: string | null,
     hasFree: boolean,
     actions: readonly HotbarAction[],
   ): boolean {
     if (attackOnBar !== this.lastAttackOnBar) return true;
+    if (firstActionId !== this.lastFirstActionId) return true;
     if (hasFree !== this.lastHasFree) return true;
     if (actions.length !== this.lastSlotIds.length) return true;
     for (let i = 0; i < actions.length; i++) {
@@ -492,7 +555,7 @@ export class SpellbookWindow {
     }
     const hasFree = this.lastHasFree;
     for (const { abilityId, btn } of this.rowToggles) {
-      const onBar = this.lastSlotIds.includes(abilityId);
+      const onBar = this.lastFirstActionId === abilityId || this.lastSlotIds.includes(abilityId);
       // Elide the toggle-state writes per row: a repaint fires when ANY of the
       // three inputs moved, but the +/- text, the remove class, and the accessible
       // name only change when this row's on-bar membership flips, which
@@ -622,10 +685,9 @@ export class SpellbookWindow {
     list: HTMLElement,
     row: SpellbookRow,
     mir4State: Readonly<Mir4PlayerUiState> | null,
-    copper: number,
   ): void {
     const known = row.known;
-    const def = ABILITIES[row.abilityId] ?? known?.def;
+    const def = ABILITIES[row.abilityId] ?? mir4ActionAbilityDef(row.abilityId) ?? known?.def;
     if (!def) return;
     const el = document.createElement('div');
     el.className = `spell-row${known ? '' : ' locked'}`;
@@ -642,13 +704,7 @@ export class SpellbookWindow {
     const mir4SkillId = known ? mir4SkillIdFromAction(known.def.id) : null;
     const evolution =
       known && mir4State && mir4SkillId !== null
-        ? mir4SkillEvolutionFor(
-            mir4State.classId,
-            mir4SkillId,
-            known.rank,
-            copper,
-            mir4State.mir4SkillResources,
-          )
+        ? mir4SkillEvolutionFor(mir4State.classId, mir4SkillId, known.rank, mir4State.mir4Materials)
         : null;
     el.setAttribute(
       'aria-label',
@@ -660,19 +716,28 @@ export class SpellbookWindow {
           })
         : t('abilityUi.spellbook.unlearnedAbilityAria', { name, level: learnLevel }),
     );
+    const rankText =
+      known && evolution
+        ? t('hudChrome.spellbook.rankProgress', {
+            rank: this.formatAbilityNumber(known.rank),
+            max: this.formatAbilityNumber(evolution.maxLevel),
+          })
+        : known && known.rank > 1
+          ? t('abilityUi.tooltip.rank', { rank: this.formatAbilityNumber(known.rank) })
+          : '';
     el.innerHTML = `<div class="spell-icon" style="background-image:url(${iconDataUrl('ability', row.abilityId)})"></div>
-        <div class="spell-text"><div class="spell-name">${esc(name)}${known && known.rank > 1 ? ` <span class="spell-rank">${esc(t('abilityUi.tooltip.rank', { rank: this.formatAbilityNumber(known.rank) }))}</span>` : ''}</div>
+        <div class="spell-text"><div class="spell-name">${esc(name)}${rankText ? ` <span class="spell-rank">${esc(rankText)}</span>` : ''}</div>
         <div class="spell-sub">${locked ? esc(t('abilityUi.spellbook.trainableAtLevel', { level: learnLevel })) : esc(summary)}</div></div>`;
     if (known && evolution) {
       const controls = document.createElement('div');
       controls.className = 'spell-evolution';
-      if (evolution.status !== 'maxed') {
+      if (evolution.status !== 'maxed' && evolution.cost) {
         const cost = document.createElement('div');
         cost.className = 'spell-evolution-cost';
         cost.textContent = t('hudChrome.spellbook.evolutionCost', {
-          copper: formatMoney(evolution.costs.copper),
-          effectPoints: this.formatAbilityNumber(evolution.costs.effectPoints),
-          skillTomes: this.formatAbilityNumber(evolution.costs.skillTomes),
+          tome: mir4MaterialName(evolution.cost.key),
+          held: this.formatAbilityNumber(evolution.held),
+          needed: this.formatAbilityNumber(evolution.cost.count),
         });
         controls.appendChild(cost);
       }
@@ -686,12 +751,14 @@ export class SpellbookWindow {
           : t('hudChrome.spellbook.upgradeRank', {
               rank: this.formatAbilityNumber(evolution.nextLevel ?? evolution.maxLevel),
             });
+      upgrade.setAttribute('aria-label', `${name}: ${upgrade.textContent}`);
       upgrade.disabled = !evolution.canUpgrade;
       upgrade.addEventListener('pointerdown', (event) => event.stopPropagation());
       upgrade.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         world.mir4UpgradeSkill(evolution.skillId, evolution.currentLevel);
+        this.nextMir4MaterialPollAt = 0;
         audio.click();
       });
       controls.appendChild(upgrade);
@@ -756,7 +823,9 @@ export class SpellbookWindow {
         // is at most one frame old, and a keybind that moved this ability in that
         // frame would otherwise send the click down the wrong branch, where
         // addToBar reports no change and the press does nothing at all.
-        const onBar = this.deps.barActions().some((action) => slotAbilityId(action) === id);
+        const onBar =
+          slotAbilityId(this.deps.firstAction?.() ?? null) === id ||
+          this.deps.barActions().some((action) => slotAbilityId(action) === id);
         const changed = onBar ? this.deps.removeFromBar(id) : this.deps.addToBar(id);
         if (!changed) return;
         audio.click();

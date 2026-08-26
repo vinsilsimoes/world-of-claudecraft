@@ -53,7 +53,12 @@ export function corpseLootAvailability(
   // function that restated a sim rule instead of importing it, which is exactly
   // how it drifted: the rest already delegate (hasSharedLootRights below).
   const harvestable =
-    harvestStateReliable && isHarvestableCorpse(componentTags) && mob.harvestClaimedBy === null;
+    harvestStateReliable &&
+    isHarvestableCorpse(componentTags) &&
+    mob.harvestClaimedBy === null &&
+    // undefined is the classic profile. MIR4 explicitly flips this marker to
+    // false at ten seconds, closing profession interaction with the body.
+    mob.mir4CorpseVisible !== false;
   const tappedById = mob.tappedById ?? null;
   const tapperParty =
     tappedById !== null && partyMemberIds?.includes(tappedById) ? partyMemberIds : null;

@@ -10,20 +10,12 @@ import type { ActionBarDeps } from './hud/action_bar/action_bar_view';
 import { formatNumber, t } from './i18n';
 import type { UltimateGaugePresentation } from './paladin_devotion_view';
 
-export function profileAttackName(profile: GameProfile | undefined): string {
-  return t(
-    profile === MIR4_GAME_PROFILE
-      ? 'abilityUi.actionBar.autoBattleName'
-      : 'abilityUi.actionBar.attackName',
-  );
+export function profileAttackName(_profile: GameProfile | undefined): string {
+  return t('abilityUi.actionBar.attackName');
 }
 
-export function profileAttackSummary(profile: GameProfile | undefined): string {
-  return t(
-    profile === MIR4_GAME_PROFILE
-      ? 'abilityUi.actionBar.autoBattleTooltip'
-      : 'abilityUi.actionBar.attackTooltip',
-  );
+export function profileAttackSummary(_profile: GameProfile | undefined): string {
+  return t('abilityUi.actionBar.attackTooltip');
 }
 
 export function createProfileActionBarDeps(profile: () => GameProfile | undefined): ActionBarDeps {
@@ -84,6 +76,19 @@ export const MIR4_CLASSIC_ONLY_SELECTORS = [
   '#delve-rite-panel',
 ] as const;
 
+/** Whole MIR4 systems live in the system launcher rail, never inside Bags. */
+export const MIR4_ONLY_SELECTORS = [
+  '#mm-mount-codex',
+  '#mobile-mount-codex',
+  '#mm-spirit',
+  '#mobile-spirit',
+  '#mm-codex',
+  '#mobile-codex',
+  '#mm-training',
+  '#mobile-training',
+  '#mobile-auto-collect',
+] as const;
+
 export function applyProfileFeatureGate(
   document: Document,
   profile: GameProfile | undefined,
@@ -93,6 +98,12 @@ export function applyProfileFeatureGate(
     for (const node of document.querySelectorAll<HTMLElement>(selector)) {
       node.hidden = hideClassic;
       node.setAttribute('aria-hidden', hideClassic ? 'true' : 'false');
+    }
+  }
+  for (const selector of MIR4_ONLY_SELECTORS) {
+    for (const node of document.querySelectorAll<HTMLElement>(selector)) {
+      node.hidden = !hideClassic;
+      node.setAttribute('aria-hidden', hideClassic ? 'false' : 'true');
     }
   }
 

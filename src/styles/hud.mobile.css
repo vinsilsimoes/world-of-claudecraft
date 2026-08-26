@@ -2440,6 +2440,49 @@
   body.mobile-touch #actionbar {
     display: none;
   }
+  body.mobile-touch .mir4-action-tools {
+    display: none !important;
+  }
+  /* MIR4 keeps Auto Battle in the ring's primary attack seat and adds Auto
+     Collect as the matching tool between Attack and Use. It is a persistent
+     toggle, not a spell slot, and therefore never consumes an ability page. */
+  body.mobile-touch #mobile-auto-collect {
+    right: calc(
+      var(--mobile-ring-attack-size) /
+      2 +
+      var(--mobile-ring-hollow) *
+      0.7071 -
+      var(--mobile-ring-secondary-size) /
+      2
+    );
+    bottom: calc(var(--mobile-ring-attack-size) / 2 - var(--mobile-ring-secondary-size) / 2);
+    width: var(--mobile-ring-secondary-size);
+    height: var(--mobile-ring-secondary-size);
+    color: #fff0ba;
+    border-color: #806f35;
+  }
+  body.mobile-touch #mobile-auto-collect.active {
+    color: #fff8df;
+    border-color: #e9bf58;
+    box-shadow:
+      inset 0 0 0 2px #1b1206,
+      inset 0 0 13px #f2b43d66,
+      0 0 9px #f2b43dcc;
+  }
+  body.mobile-touch #mobile-auto-collect .ui-icon {
+    width: 40%;
+    height: 40%;
+  }
+  body.mobile-touch #mobile-auto-collect .mobile-label {
+    display: block;
+    max-width: 90%;
+    margin-top: 1px;
+    overflow: hidden;
+    color: #d8b98a;
+    font: 8px / 1 var(--ui-font);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   /* Pairing a pad to a phone changes the INPUT, not the layout. The action ring
      above already owns this band, so the cross hotbar stands down here rather
      than drawing its bar across the ring and shoving the touch seats around. */
@@ -3463,6 +3506,17 @@
     );
     right: auto;
   }
+  body.mobile-touch.mobile-left-handed #mobile-auto-collect {
+    left: calc(
+      var(--mobile-ring-attack-size) /
+      2 +
+      var(--mobile-ring-hollow) *
+      0.7071 -
+      var(--mobile-ring-secondary-size) /
+      2
+    );
+    right: auto;
+  }
   body.mobile-touch.mobile-left-handed #mobile-action-ring #mobile-interact {
     left: calc(
       var(--mobile-ring-attack-size) /
@@ -3901,7 +3955,11 @@
   body.mobile-touch #loot-settings-window,
   body.mobile-touch #town-focus-window,
   body.mobile-touch #dev-command-window,
-  body.mobile-touch #claudium-window {
+  body.mobile-touch #claudium-window,
+  body.mobile-touch #mount-sanctuary-window,
+  body.mobile-touch #spirit-sanctuary-window,
+  body.mobile-touch #codex-window,
+  body.mobile-touch #training-window {
     left: 10px;
     right: 10px;
     top: 10px;
@@ -3914,6 +3972,113 @@
     height: calc(var(--app-vh) / var(--ui-scale, 1) - 20px);
     max-height: none;
     overflow: hidden;
+  }
+  body.mobile-touch #mount-sanctuary-window,
+  body.mobile-touch #spirit-sanctuary-window,
+  body.mobile-touch #codex-window,
+  body.mobile-touch #training-window {
+    height: calc(var(--app-vh) / var(--ui-scale, 1) - 20px);
+    max-height: none;
+    overflow: hidden;
+  }
+  body.mobile-touch #codex-window {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    top: max(10px, env(safe-area-inset-top));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    height: auto;
+  }
+  body.mobile-touch #training-window {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    top: max(10px, env(safe-area-inset-top));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    height: auto;
+  }
+  body.mobile-touch .mir4-growth-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.mobile-touch .mir4-growth-tabs button,
+  body.mobile-touch .mir4-growth-card button {
+    min-height: 44px;
+  }
+  body.mobile-touch .mir4-growth-summary {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  body.mobile-touch .mir4-growth-balance {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, auto);
+    justify-content: end;
+    align-items: baseline;
+    gap: 8px;
+  }
+  body.mobile-touch .mir4-codex-intro {
+    align-items: flex-start;
+  }
+  body.mobile-touch .mir4-codex-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.mobile-touch .mir4-codex-requirement button,
+  body.mobile-touch .mir4-codex-card footer button {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  body.mobile-touch .mir4-spirit-layout {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  }
+  body.mobile-touch .mir4-spirit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.mobile-touch .mir4-spirit-tabs button,
+  body.mobile-touch .mir4-spirit-card,
+  body.mobile-touch .mir4-spirit-primary,
+  body.mobile-touch .mir4-spirit-ritual button,
+  body.mobile-touch .mir4-spirit-fusion-row button {
+    min-height: 40px;
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    body.mobile-touch .mir4-spirit-stage {
+      grid-template-rows: minmax(120px, 1fr) auto;
+      overflow-y: auto;
+    }
+    body.mobile-touch .mir4-spirit-model {
+      min-height: 120px;
+    }
+    body.mobile-touch .mir4-spirit-details {
+      gap: 5px;
+      padding: 8px 10px 10px;
+    }
+    body.mobile-touch .mir4-album-summary {
+      max-height: 100px;
+      padding: 7px 10px;
+    }
+  }
+  @media (orientation: portrait) {
+    body.mobile-touch .mir4-codex-intro {
+      display: grid;
+    }
+    body.mobile-touch .mir4-codex-list {
+      grid-template-columns: 1fr;
+    }
+    body.mobile-touch .mir4-spirit-layout {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    body.mobile-touch .mir4-spirit-stage {
+      min-height: 430px;
+      flex: 0 0 auto;
+      grid-template-rows: 220px auto;
+      border-right: 0;
+      border-bottom: 1px solid var(--color-border-showcase);
+    }
+    body.mobile-touch .mir4-spirit-model {
+      min-height: 220px;
+    }
+    body.mobile-touch .mir4-spirit-content {
+      min-height: 500px;
+      flex: 0 0 auto;
+    }
   }
   /* Crafting window on touch: the mailbox "tall list window" shape. The sheet
      shell stops scrolling (overflow hidden) so the inner .crafting-body pane
@@ -7293,9 +7458,40 @@
     font-size: calc(17px * var(--fct-scale, 1));
     animation-name: fct-xp-pop-mobile;
   }
+  body.mobile-touch .fct-loot {
+    max-width: 190px;
+    margin-left: -70px;
+    padding: 4px 8px 4px 21px;
+    font-size: calc(14px * var(--fct-scale, 1));
+    animation-name: fct-loot-rise-mobile;
+  }
+  body.mobile-touch .fct-loot::before {
+    left: 7px;
+  }
+  @keyframes fct-loot-rise-mobile {
+    0% {
+      opacity: 0;
+      translate: -50% calc(-50% + 6px);
+    }
+    14% {
+      opacity: 1;
+      translate: -50% -50%;
+    }
+    72% {
+      opacity: 1;
+      translate: -50% calc(-50% - 14px);
+    }
+    100% {
+      opacity: 0;
+      translate: -50% calc(-50% - 30px);
+    }
+  }
   :root[data-fx-level="low"] body.mobile-touch .fct-xp,
   :root[data-fx-level="low"] body.mobile-touch .fct-rested-xp {
     animation-name: fct-rise-mobile;
+  }
+  :root[data-fx-level="low"] body.mobile-touch .fct-loot {
+    animation-name: fct-loot-rise-mobile;
   }
 
   /* ---------- Dungeon Finder (mobile) ---------- */

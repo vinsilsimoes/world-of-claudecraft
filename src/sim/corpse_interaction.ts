@@ -1,3 +1,4 @@
+import { corpseInteractionPresent } from './corpse_presence';
 import { MOBS } from './data';
 import { hasSharedLootRights as computeSharedLootRights, lootHasGoneFfa } from './loot/loot_ffa';
 import { isHarvestableCorpse } from './professions/gathering';
@@ -16,7 +17,7 @@ export function corpseInteractionAvailability(
   entityId: number,
   honorFfa: boolean,
 ): CorpseInteractionAvailability {
-  if (mob.kind !== 'mob' || !mob.dead || !mob.lootable) {
+  if (!corpseInteractionPresent(mob)) {
     return { harvestable: false, hasLootRights: false, canInteract: false };
   }
 
@@ -31,6 +32,10 @@ export function corpseInteractionAvailability(
   );
   const personal = mob.loot?.items.some((s) => s.personalFor?.includes(entityId)) ?? false;
   const open = mob.loot?.items.some((s) => s.openToAll && s.count > 0) ?? false;
-  const hasLootRights = shared || personal || open;
+  const sharedPayload =
+    !!mob.loot &&
+    (mob.loot.copper > 0 ||
+      mob.loot.items.some((slot) => !slot.personalFor && !slot.openToAll && slot.count > 0));
+  const hasLootRights = (shared && sharedPayload) || personal || open;
   return { harvestable, hasLootRights, canInteract: harvestable || hasLootRights };
 }

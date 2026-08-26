@@ -143,6 +143,27 @@ describe('characterSheet: shared fields', () => {
     expect(sheet.mir4Stats!.magicDefense - withoutMount.mir4Stats!.magicDefense).toBe(4);
   });
 
+  it('includes authoritative Solitude bonuses in the owner character sheet', () => {
+    const base = makeState({ gameProfile: 'mir4-gameplay-port', level: 75 });
+    const withoutTraining = characterSheet(input({ row: makeRow('warrior', 75, base) }));
+    const withTraining = characterSheet(
+      input({
+        row: makeRow('warrior', 75, {
+          ...base,
+          mir4Training: {
+            version: 1,
+            constitution: [0, 0, 0, 0, 0, 0, 0],
+            innerForce: [0, 0, 0, 0],
+            solitude: { conceptionVessel: [0, 0, 1, 0, 0, 0, 0, 0] },
+          },
+        }),
+      }),
+    );
+    expect(withTraining.mir4Stats?.bossDamageBps).toBe(
+      (withoutTraining.mir4Stats?.bossDamageBps ?? 0) + 50,
+    );
+  });
+
   it('derives classLabel, zone, virtualLevel, prestige, spec, avatar + profile urls', () => {
     const sheet = characterSheet(input());
     expect(sheet.name).toBe('Thrallish');

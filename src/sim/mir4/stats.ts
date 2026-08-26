@@ -9,10 +9,12 @@
 import { mir4LevelRow } from '../content/mir4';
 import type { GameProfile } from '../game_profile';
 import type { Entity, Mir4ClassKey, PlayerClass } from '../types';
+import type { Mir4CodexState } from './codex';
 import { deriveMir4PlayerStats } from './derived_stats';
 import type { Mir4MountState } from './mounts';
 import { mir4NativeEquipmentPresentation } from './native_equipment_visuals';
 import type { Mir4SpiritState } from './spirits';
+import type { Mir4TrainingState } from './training';
 
 // Column indexes into MIR4_LEVEL_ROWS tuples (see MIR4_LEVEL_COLUMNS).
 export const MIR4_LEVEL_COL = {
@@ -129,6 +131,9 @@ export function recalcMir4PlayerStats(
   instances?: Record<number, unknown>,
   spirits?: Mir4SpiritState,
   mounts?: Mir4MountState,
+  codex?: Mir4CodexState,
+  rewardItems?: Record<string, number>,
+  training?: Mir4TrainingState,
 ): void {
   const classId = mir4ClassIdForPlayerClass(cls);
   const stats = deriveMir4PlayerStats(
@@ -138,6 +143,9 @@ export function recalcMir4PlayerStats(
     instances as never,
     spirits,
     mounts,
+    codex,
+    rewardItems,
+    training,
   );
   e.maxHp = stats.maxHp;
   e.hp = Math.min(e.hp <= 0 ? e.maxHp : e.hp, e.maxHp);
@@ -149,6 +157,7 @@ export function recalcMir4PlayerStats(
   e.spellPower = stats.magicAttack;
   e.mir4 = {
     classId,
+    statusValues: stats.statusValues,
     manaCostStat: stats.manaCost,
     accuracy: stats.accuracy,
     dodge: stats.dodge,
@@ -156,7 +165,17 @@ export function recalcMir4PlayerStats(
     avoidCritical: stats.avoidCritical,
     criticalOutcome: stats.criticalOutcome,
     bossDamageBps: stats.bossDamageBps,
+    bossDamageReductionBps: stats.bossDamageReductionBps,
+    pvpDamageBps: stats.pvpDamageBps,
+    pvpDamageReductionBps: stats.pvpDamageReductionBps,
+    monsterDamageBps: stats.monsterDamageBps,
+    monsterDamageReductionBps: stats.monsterDamageReductionBps,
     skillDamageBps: stats.skillDamageBps,
+    skillDamageReductionBps: stats.skillDamageReductionBps,
+    allDamageBps: stats.allDamageBps,
+    allDamageReductionBps: stats.allDamageReductionBps,
+    stunSuccessBps: stats.stunSuccessBps,
+    stunResistanceBps: stats.stunResistanceBps,
     physicalDefense: stats.physicalDefense,
     magicDefense: stats.magicDefense,
     penetrationBps: stats.penetrationBps,
@@ -196,6 +215,9 @@ export function initMir4Player(
         mir4EquipmentInstances?: Record<number, unknown>;
         mir4Spirits?: Mir4SpiritState;
         mir4Mounts?: Mir4MountState;
+        mir4Codex?: Mir4CodexState;
+        mir4ArcRewards?: { items?: Record<string, number> };
+        mir4Training?: Mir4TrainingState;
       }
     >;
   },
@@ -210,12 +232,15 @@ export function initMir4Player(
   // templateId, so it cannot be recovered from the entity alone).
   recalcMir4PlayerStats(
     p,
-    mir4RecalcClassOf(p, classKey),
+    classKey ?? mir4RecalcClassOf(p),
     p.level,
     meta?.mir4Equipment,
     meta?.mir4EquipmentInstances,
     meta?.mir4Spirits,
     meta?.mir4Mounts,
+    meta?.mir4Codex,
+    meta?.mir4ArcRewards?.items,
+    meta?.mir4Training,
   );
   if (state && (state.hp !== undefined || state.resource !== undefined)) {
     if (state.hp !== undefined) {

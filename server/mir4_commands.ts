@@ -17,6 +17,10 @@ const isAchievementId = (value: unknown): value is 20101 | 20102 =>
   value === 20101 || value === 20102;
 const isQuestId = (value: unknown): value is string =>
   typeof value === 'string' && /^M\d{2}-[PQRS]\d{2}$/.test(value);
+const isTicketRedeemCount = (value: unknown): value is 1 | 10 | 100 =>
+  value === 1 || value === 10 || value === 100;
+const isCodexId = (value: unknown): value is string =>
+  typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && value.length <= 80;
 
 export function handleMir4Command(
   sim: Sim,
@@ -30,6 +34,11 @@ export function handleMir4Command(
   switch (action) {
     case 'auto':
       if (typeof msg.on === 'boolean') sim.setMir4AutoBattle(msg.on, pid);
+      break;
+    case 'autoSkill':
+      if (isItemId(msg.skillId) && typeof msg.enabled === 'boolean') {
+        sim.setMir4AutoSkillEnabled(msg.skillId, msg.enabled, pid);
+      }
       break;
     case 'quest':
       if (typeof msg.on === 'boolean' && (msg.questId === undefined || isQuestId(msg.questId))) {
@@ -60,6 +69,42 @@ export function handleMir4Command(
         sim.mir4UpgradeSkill(msg.skillId, msg.expectedCurrentLevel, pid);
       }
       break;
+    case 'trainConstitution':
+      if (
+        Number.isSafeInteger(msg.branchId) &&
+        Number(msg.branchId) >= 1 &&
+        Number(msg.branchId) <= 7 &&
+        Number.isSafeInteger(msg.expectedCurrentLevel) &&
+        Number(msg.expectedCurrentLevel) >= 0 &&
+        Number(msg.expectedCurrentLevel) <= 5
+      ) {
+        sim.mir4TrainConstitution(Number(msg.branchId), Number(msg.expectedCurrentLevel), pid);
+      }
+      break;
+    case 'trainInnerForce':
+      if (
+        Number.isSafeInteger(msg.branchId) &&
+        Number(msg.branchId) >= 1 &&
+        Number(msg.branchId) <= 4 &&
+        Number.isSafeInteger(msg.expectedCurrentLevel) &&
+        Number(msg.expectedCurrentLevel) >= 0 &&
+        Number(msg.expectedCurrentLevel) <= 5
+      ) {
+        sim.mir4TrainInnerForce(Number(msg.branchId), Number(msg.expectedCurrentLevel), pid);
+      }
+      break;
+    case 'trainSolitude':
+      if (
+        Number.isSafeInteger(msg.branchId) &&
+        Number(msg.branchId) >= 1 &&
+        Number(msg.branchId) <= 8 &&
+        Number.isSafeInteger(msg.expectedCurrentLevel) &&
+        Number(msg.expectedCurrentLevel) >= 0 &&
+        Number(msg.expectedCurrentLevel) <= 10
+      ) {
+        sim.mir4TrainSolitude(Number(msg.branchId), Number(msg.expectedCurrentLevel), pid);
+      }
+      break;
     case 'claimAchievement':
       if (isAchievementId(msg.achievementId)) {
         return sim.mir4ClaimAchievement(msg.achievementId, pid).ok;
@@ -80,6 +125,11 @@ export function handleMir4Command(
     case 'equipItem':
       if (isItemId(msg.itemId)) {
         sim.mir4EquipItem(Number(msg.itemId), pid);
+      }
+      break;
+    case 'buyVillageEquipment':
+      if (isItemId(msg.npcId) && isItemId(msg.itemId)) {
+        sim.mir4BuyVillageEquipment(Number(msg.npcId), Number(msg.itemId), pid);
       }
       break;
     case 'unequipSlot':
@@ -111,24 +161,57 @@ export function handleMir4Command(
       }
       break;
     case 'craftMaterial':
-      if (msg.recipeId === 'solar-scroll' || msg.recipeId === 'lunar-seal') {
+      if (
+        msg.recipeId === 'solar-scroll' ||
+        msg.recipeId === 'lunar-seal' ||
+        msg.recipeId === 'knowledge-tome-common' ||
+        msg.recipeId === 'knowledge-tome-rare' ||
+        msg.recipeId === 'knowledge-tome-epic' ||
+        msg.recipeId === 'knowledge-tome-legendary'
+      ) {
         sim.mir4CraftMaterial(msg.recipeId, pid);
       }
       break;
-    case 'redeemTicket':
+    case 'registerCodex':
       if (
-        msg.ticketId === 'mount-ticket-dawn' ||
-        msg.ticketId === 'mount-ticket-twilight' ||
-        msg.ticketId === 'spirit-ticket-dawn' ||
-        msg.ticketId === 'spirit-ticket-sunset'
+        isCodexId(msg.collectionId) &&
+        isCodexId(msg.requirementId) &&
+        Number.isSafeInteger(msg.count) &&
+        Number(msg.count) > 0 &&
+        Number(msg.count) <= 1_000_000 &&
+        Number.isSafeInteger(msg.expectedRegistered) &&
+        Number(msg.expectedRegistered) >= 0 &&
+        Number(msg.expectedRegistered) <= 1_000_000
       ) {
-        sim.mir4RedeemTicket(msg.ticketId, pid);
+        sim.mir4RegisterCodex(
+          msg.collectionId,
+          msg.requirementId,
+          Number(msg.count),
+          Number(msg.expectedRegistered),
+          pid,
+        );
       }
       break;
+    case 'registerAllCodex':
+      if (isCodexId(msg.collectionId)) sim.mir4RegisterAllCodex(msg.collectionId, pid);
+      break;
+    case 'redeemTicket': {
+      const count = msg.count === undefined ? 1 : msg.count;
+      const ticketId = typeof msg.ticketId === 'string' ? msg.ticketId : '';
+      const spiritTicket = ticketId === 'spirit-ticket-dawn' || ticketId === 'spirit-ticket-sunset';
+      const mountTicket = ticketId === 'mount-ticket-dawn' || ticketId === 'mount-ticket-twilight';
+      if ((spiritTicket || mountTicket) && isTicketRedeemCount(count)) {
+        sim.mir4RedeemTicket(ticketId, count, pid);
+      }
+      break;
+    }
     case 'confirmMount':
       if (typeof msg.pendingId === 'string' && /^mount-pending-\d+-\d+$/.test(msg.pendingId)) {
         sim.mir4ConfirmMount(msg.pendingId, pid);
       }
+      break;
+    case 'confirmAllMounts':
+      sim.mir4ConfirmAllMounts(pid);
       break;
     case 'equipMount':
       if (
@@ -139,14 +222,22 @@ export function handleMir4Command(
       }
       break;
     case 'combineMounts':
-      if (Number.isInteger(msg.grade) && Number(msg.grade) >= 1 && Number(msg.grade) <= 5) {
-        sim.mir4CombineMounts(Number(msg.grade), pid);
+      if (
+        Number.isInteger(msg.grade) &&
+        Number(msg.grade) >= 1 &&
+        Number(msg.grade) <= 5 &&
+        (msg.all === undefined || typeof msg.all === 'boolean')
+      ) {
+        sim.mir4CombineMounts(Number(msg.grade), msg.all === true, pid);
       }
       break;
     case 'confirmSpirit':
       if (typeof msg.pendingId === 'string' && /^spirit-pending-\d+-\d+$/.test(msg.pendingId)) {
         sim.mir4ConfirmSpirit(msg.pendingId, pid);
       }
+      break;
+    case 'confirmAllSpirits':
+      sim.mir4ConfirmAllSpirits(pid);
       break;
     case 'equipSpirit':
       if (
@@ -158,8 +249,13 @@ export function handleMir4Command(
       }
       break;
     case 'combineSpirits':
-      if (Number.isInteger(msg.grade) && Number(msg.grade) >= 1 && Number(msg.grade) <= 5) {
-        sim.mir4CombineSpirits(Number(msg.grade), pid);
+      if (
+        Number.isInteger(msg.grade) &&
+        Number(msg.grade) >= 1 &&
+        Number(msg.grade) <= 5 &&
+        (msg.all === undefined || typeof msg.all === 'boolean')
+      ) {
+        sim.mir4CombineSpirits(Number(msg.grade), msg.all === true, pid);
       }
       break;
     case 'campaignProfession':

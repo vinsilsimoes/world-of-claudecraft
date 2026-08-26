@@ -452,6 +452,7 @@ export const IWORLD_MEMBERS = [
   { name: 'mir4PlayerState', kind: 'method' },
   { name: 'mir4AutoBattleActive', kind: 'method' },
   { name: 'setMir4AutoBattle', kind: 'method' },
+  { name: 'setMir4AutoSkillEnabled', kind: 'method' },
   { name: 'mir4AutoQuestActive', kind: 'method' },
   { name: 'setMir4AutoQuest', kind: 'method' },
   { name: 'mir4QuestStatusText', kind: 'method' },
@@ -460,16 +461,24 @@ export const IWORLD_MEMBERS = [
   { name: 'mir4SkipNarrativeDialogue', kind: 'method' },
   { name: 'mir4CastSkill', kind: 'method' },
   { name: 'mir4UpgradeSkill', kind: 'method' },
+  { name: 'mir4TrainConstitution', kind: 'method' },
+  { name: 'mir4TrainInnerForce', kind: 'method' },
+  { name: 'mir4TrainSolitude', kind: 'method' },
   { name: 'mir4ClaimAchievement', kind: 'method' },
   { name: 'mir4BasicAttack', kind: 'method' },
   { name: 'mir4EquipStarterWeapon', kind: 'method' },
+  { name: 'mir4BuyVillageEquipment', kind: 'method' },
   { name: 'mir4EquipItem', kind: 'method' },
   { name: 'mir4UnequipSlot', kind: 'method' },
   { name: 'mir4EnhanceItem', kind: 'method' },
   { name: 'mir4RollItemLayer', kind: 'method' },
   { name: 'mir4ResolveItemLayer', kind: 'method' },
   { name: 'mir4CraftMaterial', kind: 'method' },
+  { name: 'mir4RegisterCodex', kind: 'method' },
+  { name: 'mir4RegisterAllCodex', kind: 'method' },
   { name: 'mir4RedeemTicket', kind: 'method' },
+  { name: 'mir4ConfirmAllMounts', kind: 'method' },
+  { name: 'mir4ConfirmAllSpirits', kind: 'method' },
   { name: 'mir4ConfirmMount', kind: 'method' },
   { name: 'mir4EquipMount', kind: 'method' },
   { name: 'mir4CombineMounts', kind: 'method' },
@@ -639,9 +648,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(352);
+    expect(IWORLD_MEMBERS.length).toBe(361);
     expect(DATA_MEMBERS.length).toBe(86);
-    expect(METHOD_MEMBERS.length).toBe(266);
+    expect(METHOD_MEMBERS.length).toBe(275);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -843,11 +852,14 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4AutoBattleActive',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
+      'mir4BuyVillageEquipment',
       'mir4CampaignProfession',
       'mir4CastSkill',
       'mir4ClaimAchievement',
       'mir4CombineMounts',
       'mir4CombineSpirits',
+      'mir4ConfirmAllMounts',
+      'mir4ConfirmAllSpirits',
       'mir4ConfirmMount',
       'mir4ConfirmSpirit',
       'mir4CraftMaterial',
@@ -860,9 +872,14 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4QuestStatusText',
       'mir4QuestTrackerEntries',
       'mir4RedeemTicket',
+      'mir4RegisterAllCodex',
+      'mir4RegisterCodex',
       'mir4ResolveItemLayer',
       'mir4RollItemLayer',
       'mir4SkipNarrativeDialogue',
+      'mir4TrainConstitution',
+      'mir4TrainInnerForce',
+      'mir4TrainSolitude',
       'mir4UnequipSlot',
       'mir4UnequipWeapon',
       'mir4UpgradeSkill',
@@ -949,6 +966,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setMarker',
       'setMir4AutoBattle',
       'setMir4AutoQuest',
+      'setMir4AutoSkillEnabled',
       'setPartyLootMaster',
       'setPetAutoSpecial',
       'setPetAutoTaunt',
@@ -1236,11 +1254,14 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4AutoBattleActive',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
+      'mir4BuyVillageEquipment',
       'mir4CampaignProfession',
       'mir4CastSkill',
       'mir4ClaimAchievement',
       'mir4CombineMounts',
       'mir4CombineSpirits',
+      'mir4ConfirmAllMounts',
+      'mir4ConfirmAllSpirits',
       'mir4ConfirmMount',
       'mir4ConfirmSpirit',
       'mir4CraftMaterial',
@@ -1253,9 +1274,14 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mir4QuestStatusText',
       'mir4QuestTrackerEntries',
       'mir4RedeemTicket',
+      'mir4RegisterAllCodex',
+      'mir4RegisterCodex',
       'mir4ResolveItemLayer',
       'mir4RollItemLayer',
       'mir4SkipNarrativeDialogue',
+      'mir4TrainConstitution',
+      'mir4TrainInnerForce',
+      'mir4TrainSolitude',
       'mir4UnequipSlot',
       'mir4UnequipWeapon',
       'mir4UpgradeSkill',
@@ -1322,6 +1348,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setMarker',
       'setMir4AutoBattle',
       'setMir4AutoQuest',
+      'setMir4AutoSkillEnabled',
       'setPartyLootMaster',
       'setPetAutoSpecial',
       'setPetAutoTaunt',
@@ -1917,12 +1944,20 @@ const FACET_MIR4 = [
   'mir4CastSkill',
   'mir4ClaimAchievement',
   'mir4UpgradeSkill',
+  'mir4TrainConstitution',
+  'mir4TrainInnerForce',
+  'mir4TrainSolitude',
   'mir4CombineMounts',
   'mir4CombineSpirits',
+  'mir4ConfirmAllMounts',
+  'mir4ConfirmAllSpirits',
   'mir4ConfirmMount',
   'mir4ConfirmSpirit',
   'mir4CraftMaterial',
+  'mir4RegisterCodex',
+  'mir4RegisterAllCodex',
   'mir4EnhanceItem',
+  'mir4BuyVillageEquipment',
   'mir4EquipItem',
   'mir4EquipMount',
   'mir4EquipSpirit',
@@ -1934,6 +1969,7 @@ const FACET_MIR4 = [
   'mir4ResolveItemLayer',
   'mir4RollItemLayer',
   'setMir4AutoBattle',
+  'setMir4AutoSkillEnabled',
   'setMir4AutoQuest',
   'mir4UnequipWeapon',
   'mir4UnequipSlot',
@@ -2010,8 +2046,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(352);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(352);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(361);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(361);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

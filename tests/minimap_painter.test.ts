@@ -71,6 +71,8 @@ const MINIMAP_COLOR_TOKENS = [
   '--color-minimap-npc-quest-repeat',
   '--color-minimap-portal',
   '--color-minimap-object-loot',
+  '--color-minimap-quest-search-fill',
+  '--color-minimap-quest-search-stroke',
   '--color-minimap-mob-aggro',
   '--color-minimap-mob',
   '--color-minimap-mob-loot',
@@ -674,6 +676,22 @@ afterEach(() => {
 });
 
 describe('minimap_painter: tiny procedural symbols carry identity without hue', () => {
+  it('draws a translucent mission search circle beneath exact objective markers', () => {
+    const area = drawSymbols([
+      { kind: 'quest-search-area', mx: 40, my: 50, radius: 12, questId: 'M01-S03' },
+    ]);
+    expect(area.filledArcs).toEqual([{ x: 40, y: 50, radius: 12 }]);
+    expect(area.strokedArcs).toEqual([
+      {
+        x: 40,
+        y: 50,
+        radius: 12,
+        strokeStyle: 'paint:questSearchStroke',
+        lineWidth: 1.5,
+      },
+    ]);
+  });
+
   it('draws a friend as an outlined circle and a guildmate as an outlined diamond', () => {
     const friend = drawSymbols([{ kind: 'ally', mx: 20, my: 30, ally: 'friend' }]);
     const guild = drawSymbols([{ kind: 'ally', mx: 20, my: 30, ally: 'guild' }]);

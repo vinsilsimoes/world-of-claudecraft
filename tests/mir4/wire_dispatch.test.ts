@@ -4,6 +4,8 @@ import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
+import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
+import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey, SimEvent } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
@@ -64,7 +66,7 @@ describe('the native WoC VFX hook', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim('elementalist', 132);
     const p = sim.entities.get(sim.playerId)!;
-    p.level = 5;
+    p.level = 50;
     p.cooldowns.clear();
     p.gcdRemaining = 0;
     const events: SimEvent[] = [];
@@ -84,6 +86,90 @@ describe('the native WoC VFX hook', () => {
 });
 
 describe('the mir4 WS envelope dispatch', () => {
+  it('validates and routes class-safe Codex registration commands', () => {
+    const sim = makeSim('warrior', 1301);
+    sim.setPlayerLevel(12);
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, knowledgeFragment: 25 };
+
+    for (const collectionId of ['', '../field-notes', 'X'.repeat(81), 12]) {
+      handleMir4Command(sim, { m: 'registerAllCodex', collectionId }, sim.playerId);
+    }
+    expect(meta.mir4Codex).toBeUndefined();
+    handleMir4Command(sim, { m: 'registerAllCodex', collectionId: 'field-notes' }, sim.playerId);
+    expect(meta.mir4Codex?.registered['field-notes']?.['knowledge-fragment']).toBe(25);
+  });
+
+  it('validates every direct Codex registration field before dispatch', () => {
+    const sim = makeSim('warrior', 1302);
+    sim.setPlayerLevel(12);
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, knowledgeFragment: 25 };
+    const invalid = [
+      {
+        collectionId: '../field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 1,
+        expectedRegistered: 0,
+      },
+      {
+        collectionId: 'field-notes',
+        requirementId: '../fragment',
+        count: 1,
+        expectedRegistered: 0,
+      },
+      {
+        collectionId: 'field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 0,
+        expectedRegistered: 0,
+      },
+      {
+        collectionId: 'field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 1_000_001,
+        expectedRegistered: 0,
+      },
+      {
+        collectionId: 'field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 1.5,
+        expectedRegistered: 0,
+      },
+      {
+        collectionId: 'field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 1,
+        expectedRegistered: -1,
+      },
+      {
+        collectionId: 'field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 1,
+        expectedRegistered: 1_000_001,
+      },
+    ];
+    for (const payload of invalid) {
+      handleMir4Command(sim, { m: 'registerCodex', ...payload }, sim.playerId);
+    }
+    expect(meta.mir4Codex).toBeUndefined();
+    expect(meta.mir4Materials.knowledgeFragment).toBe(25);
+
+    handleMir4Command(
+      sim,
+      {
+        m: 'registerCodex',
+        collectionId: 'field-notes',
+        requirementId: 'knowledge-fragment',
+        count: 1,
+        expectedRegistered: 0,
+      },
+      sim.playerId,
+    );
+    expect(meta.mir4Codex?.registered['field-notes']?.['knowledge-fragment']).toBe(1);
+    expect(meta.mir4Materials.knowledgeFragment).toBe(24);
+  });
+
   it('rejects every MIR4 sub-action outside the MIR4 profile', () => {
     const sim = new Sim({ seed: 132, playerClass: 'warrior', playerName: 'Classic' });
     const player = sim.entities.get(sim.playerId)!;
@@ -96,11 +182,13 @@ describe('the mir4 WS envelope dispatch', () => {
 
     handleMir4Command(sim, { m: 'equip' }, sim.playerId);
     handleMir4Command(sim, { m: 'auto', on: true }, sim.playerId);
+    handleMir4Command(sim, { m: 'autoSkill', skillId: 1102, enabled: false }, sim.playerId);
 
     expect(player.maxHp).toBe(before.maxHp);
     expect(player.attackPower).toBe(before.attackPower);
     expect(player.mir4).toBe(before.mir4);
     expect(sim.mir4AutoBattleActive()).toBe(before.autoBattle);
+    expect(sim.mir4PlayerState()).toBeNull();
   });
 
   it("routes the sub-actions onto the Sim's verbs with field validation", () => {
@@ -113,10 +201,22 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(sim.mir4AutoBattleActive()).toBe(true);
     handleMir4Command(sim, { m: 'auto', on: false }, pid);
     expect(sim.mir4AutoBattleActive()).toBe(false);
+    handleMir4Command(sim, { m: 'autoSkill', skillId: 1102, enabled: false }, pid);
+    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([1102]);
+    handleMir4Command(sim, { m: 'autoSkill', skillId: 2101, enabled: false }, pid);
+    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([1102]);
+    handleMir4Command(sim, { m: 'autoSkill', skillId: 1102, enabled: true }, pid);
+    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toBeUndefined();
+    handleMir4Command(sim, { m: 'autoSkill', skillId: '1102', enabled: false }, pid);
+    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toBeUndefined();
+    handleMir4Command(sim, { m: 'autoSkill', skillId: 1102, enabled: 'false' }, pid);
+    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toBeUndefined();
     wolf.maxHp = 1_000;
     wolf.hp = 1_000;
     const hp = wolf.hp;
     handleMir4Command(sim, { m: 'cast', skill: 1102, target: wolf.id }, pid);
+    for (const impact of sim.player.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+    updateMir4PendingImpacts(sim.ctx);
     expect(hp - wolf.hp).toBe(312); // class-native starter stats crossed the pid-first delegate
     handleMir4Command(sim, { m: 'basic', target: wolf.id }, pid);
     handleMir4Command(sim, { m: 'equip' }, pid);
@@ -209,6 +309,92 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(upgrade).toHaveBeenCalledTimes(1);
   });
 
+  it('validates all three independent progression systems before authoritative dispatch', () => {
+    const sim = makeSim('warrior', 1_384);
+    const constitution = vi.spyOn(sim, 'mir4TrainConstitution').mockReturnValue({
+      ok: true,
+      code: 'success',
+      level: 1,
+      energySpent: 100,
+    });
+    const innerForce = vi.spyOn(sim, 'mir4TrainInnerForce').mockReturnValue({
+      ok: true,
+      code: 'success',
+      level: 1,
+      energySpent: 100,
+    });
+    const solitude = vi.spyOn(sim, 'mir4TrainSolitude').mockReturnValue({
+      ok: true,
+      code: 'success',
+      previousLevel: 0,
+      level: 1,
+      darksteelSpent: 1_000,
+    });
+
+    handleMir4Command(
+      sim,
+      { m: 'trainConstitution', branchId: 7, expectedCurrentLevel: 0 },
+      sim.playerId,
+    );
+    handleMir4Command(
+      sim,
+      { m: 'trainInnerForce', branchId: 4, expectedCurrentLevel: 0 },
+      sim.playerId,
+    );
+    handleMir4Command(
+      sim,
+      { m: 'trainSolitude', branchId: 8, expectedCurrentLevel: 0 },
+      sim.playerId,
+    );
+    for (const branchId of [0, 8, 1.5, Number.NaN, '1']) {
+      handleMir4Command(
+        sim,
+        { m: 'trainConstitution', branchId, expectedCurrentLevel: 0 },
+        sim.playerId,
+      );
+    }
+    for (const branchId of [0, 5, 1.5, Number.NaN, '1']) {
+      handleMir4Command(
+        sim,
+        { m: 'trainInnerForce', branchId, expectedCurrentLevel: 0 },
+        sim.playerId,
+      );
+    }
+    for (const branchId of [0, 9, 1.5, Number.NaN, '1']) {
+      handleMir4Command(
+        sim,
+        { m: 'trainSolitude', branchId, expectedCurrentLevel: 0 },
+        sim.playerId,
+      );
+    }
+    for (const expectedCurrentLevel of [-1, 6, 1.5, Number.NaN, '0']) {
+      handleMir4Command(
+        sim,
+        { m: 'trainConstitution', branchId: 1, expectedCurrentLevel },
+        sim.playerId,
+      );
+      handleMir4Command(
+        sim,
+        { m: 'trainInnerForce', branchId: 1, expectedCurrentLevel },
+        sim.playerId,
+      );
+    }
+    for (const expectedCurrentLevel of [-1, 11, 1.5, Number.NaN, '0']) {
+      handleMir4Command(
+        sim,
+        { m: 'trainSolitude', branchId: 1, expectedCurrentLevel },
+        sim.playerId,
+      );
+    }
+
+    expect(constitution).toHaveBeenCalledOnce();
+    expect(constitution).toHaveBeenCalledWith(7, 0, sim.playerId);
+    expect(innerForce).toHaveBeenCalledOnce();
+    expect(innerForce).toHaveBeenCalledWith(4, 0, sim.playerId);
+    expect(solitude).toHaveBeenCalledOnce();
+    expect(solitude).toHaveBeenCalledWith(8, 0, sim.playerId);
+  });
+
   it('admits only the two source-backed achievement ids', () => {
     const sim = makeSim('warrior', 139);
     const claim = vi.spyOn(sim, 'mir4ClaimAchievement').mockReturnValue({
@@ -231,20 +417,29 @@ describe('the mir4 WS envelope dispatch', () => {
   it('validates authoritative equipment item and slot identifiers', () => {
     const sim = makeSim('warrior', 135);
     const equip = vi.spyOn(sim, 'mir4EquipItem').mockReturnValue('equipped');
+    const buy = vi.spyOn(sim, 'mir4BuyVillageEquipment').mockReturnValue('purchased');
     const unequip = vi.spyOn(sim, 'mir4UnequipSlot').mockReturnValue('unequipped');
 
     handleMir4Command(sim, { m: 'equipItem', itemId: 991010101 }, sim.playerId);
+    handleMir4Command(
+      sim,
+      { m: 'buyVillageEquipment', npcId: 77, itemId: 991010101 },
+      sim.playerId,
+    );
     handleMir4Command(sim, { m: 'unequipSlot', equipSlot: 8 }, sim.playerId);
     expect(equip).toHaveBeenCalledWith(991010101, sim.playerId);
+    expect(buy).toHaveBeenCalledWith(77, 991010101, sim.playerId);
     expect(unequip).toHaveBeenCalledWith(8, sim.playerId);
 
     for (const itemId of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, '991010101']) {
       handleMir4Command(sim, { m: 'equipItem', itemId }, sim.playerId);
+      handleMir4Command(sim, { m: 'buyVillageEquipment', npcId: itemId, itemId }, sim.playerId);
     }
     for (const equipSlot of [0, 9, 1.5, '1']) {
       handleMir4Command(sim, { m: 'unequipSlot', equipSlot }, sim.playerId);
     }
     expect(equip).toHaveBeenCalledTimes(1);
+    expect(buy).toHaveBeenCalledTimes(1);
     expect(unequip).toHaveBeenCalledTimes(1);
   });
 
@@ -256,9 +451,15 @@ describe('the mir4 WS envelope dispatch', () => {
     const craft = vi.spyOn(sim, 'mir4CraftMaterial').mockImplementation(() => undefined);
     const redeem = vi.spyOn(sim, 'mir4RedeemTicket').mockImplementation(() => undefined);
     const confirmSpirit = vi.spyOn(sim, 'mir4ConfirmSpirit').mockImplementation(() => undefined);
+    const confirmAllSpirits = vi
+      .spyOn(sim, 'mir4ConfirmAllSpirits')
+      .mockImplementation(() => undefined);
     const equipSpirit = vi.spyOn(sim, 'mir4EquipSpirit').mockImplementation(() => undefined);
     const combineSpirits = vi.spyOn(sim, 'mir4CombineSpirits').mockImplementation(() => undefined);
     const confirmMount = vi.spyOn(sim, 'mir4ConfirmMount').mockImplementation(() => undefined);
+    const confirmAllMounts = vi
+      .spyOn(sim, 'mir4ConfirmAllMounts')
+      .mockImplementation(() => undefined);
     const equipMount = vi.spyOn(sim, 'mir4EquipMount').mockImplementation(() => undefined);
     const combineMounts = vi.spyOn(sim, 'mir4CombineMounts').mockImplementation(() => undefined);
     const campaignProfession = vi
@@ -277,31 +478,61 @@ describe('the mir4 WS envelope dispatch', () => {
     );
     handleMir4Command(sim, { m: 'craftMaterial', recipeId: 'lunar-seal' }, sim.playerId);
     handleMir4Command(sim, { m: 'redeemTicket', ticketId: 'mount-ticket-dawn' }, sim.playerId);
-    handleMir4Command(sim, { m: 'redeemTicket', ticketId: 'spirit-ticket-dawn' }, sim.playerId);
+    handleMir4Command(
+      sim,
+      { m: 'redeemTicket', ticketId: 'mount-ticket-dawn', count: 10 },
+      sim.playerId,
+    );
+    handleMir4Command(
+      sim,
+      { m: 'redeemTicket', ticketId: 'mount-ticket-dawn', count: 100 },
+      sim.playerId,
+    );
+    handleMir4Command(
+      sim,
+      { m: 'redeemTicket', ticketId: 'spirit-ticket-dawn', count: 10 },
+      sim.playerId,
+    );
+    handleMir4Command(
+      sim,
+      { m: 'redeemTicket', ticketId: 'spirit-ticket-dawn', count: 100 },
+      sim.playerId,
+    );
     handleMir4Command(sim, { m: 'confirmSpirit', pendingId: 'spirit-pending-1-2' }, sim.playerId);
+    handleMir4Command(sim, { m: 'confirmAllSpirits' }, sim.playerId);
     handleMir4Command(sim, { m: 'equipSpirit', spiritId: 'spirit-rare-01' }, sim.playerId);
     handleMir4Command(sim, { m: 'equipSpirit', spiritId: null }, sim.playerId);
     handleMir4Command(sim, { m: 'combineSpirits', grade: 4 }, sim.playerId);
+    handleMir4Command(sim, { m: 'combineSpirits', grade: 2, all: true }, sim.playerId);
     handleMir4Command(sim, { m: 'confirmMount', pendingId: 'mount-pending-1-2' }, sim.playerId);
+    handleMir4Command(sim, { m: 'confirmAllMounts' }, sim.playerId);
     handleMir4Command(sim, { m: 'equipMount', mountId: 'meadow-courser' }, sim.playerId);
     handleMir4Command(sim, { m: 'equipMount', mountId: null }, sim.playerId);
     handleMir4Command(sim, { m: 'combineMounts', grade: 3 }, sim.playerId);
+    handleMir4Command(sim, { m: 'combineMounts', grade: 2, all: true }, sim.playerId);
     handleMir4Command(sim, { m: 'campaignProfession' }, sim.playerId);
     handleMir4Command(sim, { m: 'ackTutorial', questId: 'M01-Q01' }, sim.playerId);
     expect(enhance).toHaveBeenCalledOnce();
     expect(roll).toHaveBeenCalledWith(991010101, 'blessing', sim.playerId);
     expect(resolve).toHaveBeenCalledWith(991010101, 'blessing', 'roll-1', false, sim.playerId);
     expect(craft).toHaveBeenCalledWith('lunar-seal', sim.playerId);
-    expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', sim.playerId);
-    expect(redeem).toHaveBeenLastCalledWith('spirit-ticket-dawn', sim.playerId);
+    expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', 1, sim.playerId);
+    expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', 10, sim.playerId);
+    expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', 100, sim.playerId);
+    expect(redeem).toHaveBeenCalledWith('spirit-ticket-dawn', 10, sim.playerId);
+    expect(redeem).toHaveBeenCalledWith('spirit-ticket-dawn', 100, sim.playerId);
     expect(confirmSpirit).toHaveBeenCalledWith('spirit-pending-1-2', sim.playerId);
+    expect(confirmAllSpirits).toHaveBeenCalledWith(sim.playerId);
     expect(equipSpirit).toHaveBeenNthCalledWith(1, 'spirit-rare-01', sim.playerId);
     expect(equipSpirit).toHaveBeenNthCalledWith(2, null, sim.playerId);
-    expect(combineSpirits).toHaveBeenCalledWith(4, sim.playerId);
+    expect(combineSpirits).toHaveBeenNthCalledWith(1, 4, false, sim.playerId);
+    expect(combineSpirits).toHaveBeenNthCalledWith(2, 2, true, sim.playerId);
     expect(confirmMount).toHaveBeenCalledWith('mount-pending-1-2', sim.playerId);
+    expect(confirmAllMounts).toHaveBeenCalledWith(sim.playerId);
     expect(equipMount).toHaveBeenNthCalledWith(1, 'meadow-courser', sim.playerId);
     expect(equipMount).toHaveBeenNthCalledWith(2, null, sim.playerId);
-    expect(combineMounts).toHaveBeenCalledWith(3, sim.playerId);
+    expect(combineMounts).toHaveBeenNthCalledWith(1, 3, false, sim.playerId);
+    expect(combineMounts).toHaveBeenNthCalledWith(2, 2, true, sim.playerId);
     expect(campaignProfession).toHaveBeenCalledWith(sim.playerId);
     expect(acknowledgeTutorial).toHaveBeenCalledWith('M01-Q01', sim.playerId);
 
@@ -316,6 +547,13 @@ describe('the mir4 WS envelope dispatch', () => {
     for (const ticketId of ['spirit-ticket-celestial', 'mount-ticket-sunset', '', 1]) {
       handleMir4Command(sim, { m: 'redeemTicket', ticketId }, sim.playerId);
     }
+    for (const count of [null, 0, 2, 101, 1.5, '10']) {
+      handleMir4Command(
+        sim,
+        { m: 'redeemTicket', ticketId: 'spirit-ticket-dawn', count },
+        sim.playerId,
+      );
+    }
     for (const pendingId of ['spirit-pending-x-1', '', 1]) {
       handleMir4Command(sim, { m: 'confirmSpirit', pendingId }, sim.playerId);
     }
@@ -325,6 +563,7 @@ describe('the mir4 WS envelope dispatch', () => {
     for (const grade of [0, 6, 1.5, '1']) {
       handleMir4Command(sim, { m: 'combineSpirits', grade }, sim.playerId);
     }
+    handleMir4Command(sim, { m: 'combineSpirits', grade: 2, all: 'yes' }, sim.playerId);
     for (const pendingId of ['mount-pending-x-1', '', 1]) {
       handleMir4Command(sim, { m: 'confirmMount', pendingId }, sim.playerId);
     }
@@ -334,6 +573,7 @@ describe('the mir4 WS envelope dispatch', () => {
     for (const grade of [0, 6, 1.5, '1']) {
       handleMir4Command(sim, { m: 'combineMounts', grade }, sim.playerId);
     }
+    handleMir4Command(sim, { m: 'combineMounts', grade: 2, all: 'yes' }, sim.playerId);
     for (const questId of ['M1-Q01', 'M01-S01', '../M01-Q01', 1]) {
       handleMir4Command(sim, { m: 'ackTutorial', questId }, sim.playerId);
     }
@@ -341,13 +581,13 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(roll).toHaveBeenCalledTimes(1);
     expect(resolve).toHaveBeenCalledTimes(1);
     expect(craft).toHaveBeenCalledTimes(1);
-    expect(redeem).toHaveBeenCalledTimes(2);
+    expect(redeem).toHaveBeenCalledTimes(5);
     expect(confirmSpirit).toHaveBeenCalledTimes(1);
     expect(equipSpirit).toHaveBeenCalledTimes(2);
-    expect(combineSpirits).toHaveBeenCalledTimes(1);
+    expect(combineSpirits).toHaveBeenCalledTimes(2);
     expect(confirmMount).toHaveBeenCalledTimes(1);
     expect(equipMount).toHaveBeenCalledTimes(2);
-    expect(combineMounts).toHaveBeenCalledTimes(1);
+    expect(combineMounts).toHaveBeenCalledTimes(2);
     expect(acknowledgeTutorial).toHaveBeenCalledTimes(1);
   });
 });

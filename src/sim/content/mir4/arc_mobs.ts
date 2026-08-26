@@ -3,10 +3,12 @@
 // mobIds census plus the spawn formula at the map's level band. Families map
 // onto the fork's MobFamily vocabulary; behavior stays the shared classic AI
 // (passive-until-attacked is m01's tutorial-zone rule only). XP rides the
-// map's combatXpModel normal value (34 for m01, scaling with the band).
+// map's combatXpModel normal value, copied from the original 20-map runtime.
+// Live rewards apply the documented long-term pacing divisors below while the
+// source rows remain intact as import evidence.
 
 import type { MobTemplate } from '../../types';
-import { mir4MobStats } from './mobs';
+import { mir4MobTemplateProgression } from './mobs';
 
 interface FamilySpec {
   family: MobTemplate['family'];
@@ -56,9 +58,30 @@ const FAMILIES: Record<string, FamilySpec> = {
   shadow_knight: { family: 'undead', names: ['Cavaleiro das Sombras'] },
 };
 
-/** The XP formula the source's map model implies: 34 at m01, growing per band. */
+/** Exact combatXpModel.normalXp rows from
+ * F:/Dev/Survival-Game/server/data/mir4-mmo-world-runtime-v1.json.
+ * The curve is intentionally irregular because each chapter owns a target
+ * number of normal-equivalent kills and an independently budgeted XP band. */
+export const MIR4_ARC_NORMAL_XP: readonly number[] = Object.freeze([
+  34, 173, 687, 3_078, 12_958, 37_444, 132_290, 915_233, 1_948_427, 4_294_479, 5_436_523,
+  14_330_260, 16_902_756, 63_755_887, 216_651_910, 478_539_849, 880_830_709, 2_469_385_815,
+  8_257_622_570, 24_108_716_020,
+]);
+
+/**
+ * Long-term live pacing for a level-200+ MMORPG. Early onboarding stays
+ * responsive, then each 10-level chapter progressively relies more on field
+ * combat. These divisors are an Aeldrune balance decision, not source data.
+ */
+export const MIR4_ARC_XP_DIVISORS: readonly number[] = Object.freeze([
+  1, 1, 2, 3, 3, 5, 5, 5, 24, 24, 24, 24, 36, 36, 36, 36, 60, 60, 60, 60,
+]);
+
 export function mir4ArcNormalXp(sequence: number): number {
-  return (34 * 1.32 ** (sequence - 1)) | 0;
+  const index = Math.max(0, Math.min(MIR4_ARC_NORMAL_XP.length - 1, Math.floor(sequence) - 1));
+  const sourceXp = MIR4_ARC_NORMAL_XP[index] ?? MIR4_ARC_NORMAL_XP[0] ?? 1;
+  const divisor = MIR4_ARC_XP_DIVISORS[index] ?? 1;
+  return Math.max(1, Math.floor(sourceXp / divisor));
 }
 
 /**
@@ -73,8 +96,7 @@ export function buildMir4ArcMobs(
   sequence: number,
 ): Record<string, MobTemplate> {
   const out: Record<string, MobTemplate> = {};
-  const lo = mir4MobStats(levelMin);
-  const hi = mir4MobStats(levelMax);
+  const progression = mir4MobTemplateProgression(levelMin, levelMax);
   const xp = mir4ArcNormalXp(sequence);
   for (const mobId of mobIds) {
     const spec = FAMILIES[mobId] ?? {
@@ -89,13 +111,11 @@ export function buildMir4ArcMobs(
       minLevel: levelMin,
       maxLevel: levelMax,
       family: spec.family,
-      hpBase: lo.maxHp,
-      hpPerLevel: Math.max(1, Math.round((hi.maxHp - lo.maxHp) / Math.max(1, levelMax - levelMin))),
-      dmgBase: lo.attack,
-      dmgPerLevel: Math.max(
-        1,
-        Math.round((hi.attack - lo.attack) / Math.max(1, levelMax - levelMin)),
-      ),
+      hpBase: progression.hpBase,
+      hpPerLevel: progression.hpPerLevel,
+      dmgBase: progression.dmgBase,
+      dmgPerLevel: progression.dmgPerLevel,
+      statAnchorLevel: progression.statAnchorLevel,
       attackSpeed: 2,
       armorPerLevel: 0,
       moveSpeed: 3.5,

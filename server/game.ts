@@ -285,7 +285,12 @@ import {
 import { type LiveSharedIp, sharedIpsFromLiveSessions } from './live_shared_ips';
 import { EMPTY_ACCOUNT_COSMETICS, reconcileWornMechChromaForJoin } from './mech_chroma_reconcile';
 import { handleMir4Command } from './mir4_commands';
-import { type GameProfile, gameProfileWorldConfig, mir4SelfSnapshotJson } from './mir4_host';
+import {
+  type GameProfile,
+  gameProfileWorldConfig,
+  mir4CodexSelfSnapshotJson,
+  mir4SelfSnapshotJson,
+} from './mir4_host';
 import {
   applyMobScanTick,
   createMobScanTickStats,
@@ -1453,6 +1458,9 @@ function dynamicFields(e: Entity, includeAuras = true): Record<string, unknown> 
   if (e.dead) out.dead = 1;
   if (e.ghost) out.gh = 1; // released spirit (ghost form); renders translucent
   if (e.lootable) out.loot = 1;
+  // Aeldrune auto-loots at death, so body presentation cannot reuse `loot`:
+  // doing so would advertise a clickable empty corpse. Sparse and cosmetic.
+  if (e.mir4CorpseVisible) out.mcv = 1;
   if (e.hostile) out.h = 1;
   if (e.afk) out.ak = 1; // /afk display bit: other clients tag the nameplate + presence dot
   // The target frame's resource bar: type + current/max, sent only for entities
@@ -3957,7 +3965,7 @@ export class GameServer {
     // broadcast it to everyone (and likewise don't broadcast departures below).
     this.send(session, {
       t: 'events',
-      list: [{ type: 'log', text: `${name} has entered World of ClaudeCraft.`, color: '#ffd100' }],
+      list: [{ type: 'log', text: `${name} has entered Aeldrune.`, color: '#ffd100' }],
     });
     // firstJoin: the fresh-join path (a resume takes resumeSession, which stamps
     // the guild with firstJoin false since the entity already carries it), so
@@ -9066,6 +9074,8 @@ export class GameServer {
       mir4CampaignMapIdsForWorld(this.sim.ctx.worldContent),
     );
     if (mir4) maybeRaw('mir4', mir4);
+    const mir4Codex = mir4CodexSelfSnapshotJson(this.sim.cfg.gameProfile, meta);
+    if (mir4Codex) maybeRaw('mir4Codex', mir4Codex);
     selfLap?.('self.timers');
     maybe('party', this.partyWire(anchorSession.pid));
     maybe('marks', this.markersWire(anchorSession.pid));

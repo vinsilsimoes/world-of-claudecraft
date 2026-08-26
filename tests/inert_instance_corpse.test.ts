@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MOBS, riftInstanceOrigin } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
 import { isInertInstanceCorpse } from '../src/sim/mob/locomotion';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
@@ -138,5 +139,29 @@ describe('Sim inert-corpse idle skip', () => {
     const before = corpse.corpseTimer;
     for (let i = 0; i < 10; i++) sim.tick();
     expect(corpse.corpseTimer).toBeLessThanOrEqual(before - 9 * DT);
+  });
+
+  it('keeps a far MIR4 instance corpse ticking until its ten-second body marker expires', () => {
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      idleMobTickRadius: 120,
+      gameProfile: MIR4_GAME_PROFILE,
+    });
+    const corpse = riftCorpse({
+      corpseTimer: 10,
+      lootable: false,
+      loot: null,
+      mir4CorpseVisible: true,
+      mir4CorpseTimer: 10,
+    });
+    corpse.id = sim.nextId++;
+    sim.addEntity(corpse);
+
+    for (let i = 0; i < 201; i++) sim.tick();
+
+    expect(corpse.mir4CorpseTimer).toBe(0);
+    expect(corpse.mir4CorpseVisible).toBe(false);
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
 import { setActiveWorldContent } from '../../src/sim/data';
-import { castMir4Skill } from '../../src/sim/mir4/combat';
+import { castMir4Skill, updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { applyMir4Effect } from '../../src/sim/mir4/effects';
 import { Sim } from '../../src/sim/sim';
 
@@ -47,6 +47,7 @@ function liveArbalistDuel(seed: number) {
   const attacker = sim.entities.get(arbalist);
   const target = sim.entities.get(warrior);
   if (!attacker || !target) throw new Error('MIR4 lancer duel roster missing');
+  attacker.level = 50;
   attacker.pos.x = 0;
   attacker.pos.z = 20;
   target.pos.x = 2;
@@ -57,6 +58,13 @@ function liveArbalistDuel(seed: number) {
     sim.tick();
   }
   return { sim, arbalist, warrior, attacker, target };
+}
+
+function resolveContacts(sim: Sim, sourceId: number): void {
+  const source = sim.entities.get(sourceId);
+  if (!source) throw new Error('MIR4 contact source missing');
+  for (const impact of source.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+  updateMir4PendingImpacts(sim.ctx);
 }
 
 describe('MIR4 PvP through the shared duel rules', () => {
@@ -124,6 +132,7 @@ describe('MIR4 PvP through the shared duel rules', () => {
       const next = vi.spyOn(sim.rng, 'next').mockImplementation(() => queuedDraws.shift() ?? 0.5);
 
       expect(castMir4Skill(sim.ctx, arbalist, 4106, warrior)).toEqual({ ok: true });
+      resolveContacts(sim, arbalist);
 
       expect(
         target.mir4Effects?.active.some(
@@ -141,6 +150,7 @@ describe('MIR4 PvP through the shared duel rules', () => {
     const next = vi.spyOn(sim.rng, 'next').mockImplementation(() => queuedDraws.shift() ?? 0.5);
 
     expect(castMir4Skill(sim.ctx, arbalist, 4106, warrior)).toEqual({ ok: true });
+    resolveContacts(sim, arbalist);
 
     expect(sim.duelFor(arbalist)).toBeNull();
     expect(target.hp).toBe(1);
@@ -154,6 +164,7 @@ describe('MIR4 PvP through the shared duel rules', () => {
     const queuedDraws = [0.5, 0.5, 0];
     vi.spyOn(sim.rng, 'next').mockImplementation(() => queuedDraws.shift() ?? 0.5);
     expect(castMir4Skill(sim.ctx, arbalist, 4106, warrior)).toEqual({ ok: true });
+    resolveContacts(sim, arbalist);
     expect(target.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4106_stun')).toBe(
       true,
     );
@@ -191,6 +202,7 @@ describe('MIR4 PvP through the shared duel rules', () => {
     const queuedDraws = [0.5, 0.5, 0];
     vi.spyOn(sim.rng, 'next').mockImplementation(() => queuedDraws.shift() ?? 0.5);
     expect(castMir4Skill(sim.ctx, arbalist, 4106, warrior)).toEqual({ ok: true });
+    resolveContacts(sim, arbalist);
     expect(
       applyMir4Effect(sim.ctx, target, {
         effectId: 'legacy_external_slow',

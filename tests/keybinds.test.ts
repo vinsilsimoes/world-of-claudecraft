@@ -142,6 +142,31 @@ describe('registry', () => {
     expect(sheathe?.kind).toBe('edge');
     expect(sheathe?.defaults).toEqual(['KeyZ']);
   });
+
+  it('registers MIR4 automation as rebindable tools instead of abilities', () => {
+    expect(BIND_CATEGORIES).toContain('Tools');
+    expect(BIND_ACTIONS.find((action) => action.id === 'toggleAutoCollect')).toMatchObject({
+      category: 'Tools',
+      kind: 'edge',
+      defaults: [],
+    });
+    expect(BIND_ACTIONS.find((action) => action.id === 'toggleAutoBattle')).toMatchObject({
+      category: 'Tools',
+      kind: 'edge',
+      defaults: [],
+    });
+    expect(BIND_ACTIONS.filter((action) => action.category === 'Action Bar')).toHaveLength(34);
+  });
+
+  it('registers ordinary selected-target Attack separately from automation', () => {
+    expect(BIND_ACTIONS.find((action) => action.id === 'attack')).toMatchObject({
+      label: 'Attack Selected Target',
+      category: 'Targeting',
+      kind: 'edge',
+      defaults: ['Shift+KeyV'],
+    });
+    expect(BIND_ACTIONS.find((action) => action.id === 'toggleAutoBattle')?.category).toBe('Tools');
+  });
 });
 
 describe('reserved keys', () => {
@@ -176,6 +201,7 @@ describe('Keybinds defaults', () => {
     // Bare Z sheathes; the Book of Deeds ships on the shifted layer of the same key.
     expect(kb.actionForCode('KeyZ')).toBe('sheathe');
     expect(kb.actionForCode('Shift+KeyZ')).toBe('deeds');
+    expect(kb.actionForCode('Shift+KeyV')).toBe('attack');
     expect(kb.actionForCode('Backquote')).toBe('mount');
     for (let index = 0; index < 11; index++) {
       const suffix = index < 9 ? index + 1 : index === 9 ? 0 : 'Decimal';

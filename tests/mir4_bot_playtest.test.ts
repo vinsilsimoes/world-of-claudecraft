@@ -2,16 +2,21 @@ import { describe, expect, it } from 'vitest';
 import {
   buildMir4PlaytestReport,
   createMir4BotTracker,
+  hasMir4NearbyHostile,
   MIR4_BOT_PORTAL_TUTORIAL_TARGETS,
   MIR4_BOT_UI_TUTORIAL_QUEST_IDS,
   MIR4_PLAYTEST_ROSTER,
   mir4BotAccountIdentity,
   mir4BotHasDuelRequest,
+  planMir4EscortIntervention,
   planMir4GrindingEngagement,
   planMir4ProgressionActions,
   planMir4PvpChallenge,
+  planMir4SurvivalIntervention,
+  planMir4ThreatBattleMode,
   planMir4ThreatIntervention,
   planMir4TutorialEngagement,
+  planMir4VendorRestock,
   recordMir4BotEvents,
   recordMir4BotSnapshot,
   selectMir4PlaytestRoster,
@@ -78,6 +83,9 @@ describe('MIR4 real-player bot playtest core', () => {
       ['taoist', 3],
       ['arbalist', 4],
       ['lancer', 5],
+    ]);
+    expect(MIR4_PLAYTEST_ROSTER.map(({ engagementRangeYards }) => engagementRangeYards)).toEqual([
+      4, 8, 4, 12, 6,
     ]);
     expect(new Set(MIR4_PLAYTEST_ROSTER.map((entry) => entry.initialSkillIds[0])).size).toBe(5);
     expect(mir4BotAccountIdentity('Cohort-A', MIR4_PLAYTEST_ROSTER[4])).toEqual({
@@ -177,14 +185,15 @@ describe('MIR4 real-player bot playtest core', () => {
 
     const ready = selfSnapshot({
       lv: 10,
-      copper: 4_000,
+      copper: 0,
       mir4: {
         classId: 1,
         autoBattle: { mode: 'battle' },
         mir4AutoQuest: { questId: 'M01-Q01', phase: 'to-site' },
         mir4AchievementClears: { 20101: { groupGrade: 1 } },
         mir4SkillLevels: { 1102: 1 },
-        mir4SkillResources: { effectPoints: 400, skillTomes: 3 },
+        mir4SkillResources: { effectPoints: 0, skillTomes: 0 },
+        mir4Materials: { knowledgeTomeCommon: 1 },
         mir4Mounts: {
           pending: [{ id: 'mount-pending-11-1', mountId: 'meadow-courser', grade: 4 }],
         },
@@ -195,7 +204,12 @@ describe('MIR4 real-player bot playtest core', () => {
     });
     expect(planMir4ProgressionActions(ready, MIR4_PLAYTEST_ROSTER[0])).toEqual([
       { cmd: 'mir4', m: 'claimAchievement', achievementId: 20102 },
-      { cmd: 'mir4', m: 'upgradeSkill', skillId: 1102, expectedCurrentLevel: 1 },
+      {
+        cmd: 'mir4',
+        m: 'upgradeSkill',
+        skillId: 1102,
+        expectedCurrentLevel: 1,
+      },
       { cmd: 'mir4', m: 'confirmMount', pendingId: 'mount-pending-11-1' },
       { cmd: 'mir4', m: 'confirmSpirit', pendingId: 'spirit-pending-11-1' },
     ]);
@@ -310,7 +324,10 @@ describe('MIR4 real-player bot playtest core', () => {
           991010101: { itemId: 991010101, enhancement: 7 },
           301201000: { itemId: 301201000, enhancement: 0 },
         },
-        mir4AchievementClears: { 20101: { groupGrade: 1 }, 20102: { groupGrade: 1 } },
+        mir4AchievementClears: {
+          20101: { groupGrade: 1 },
+          20102: { groupGrade: 1 },
+        },
         mir4ArcRewards: {
           items: {
             '991010105': 1,
@@ -342,7 +359,10 @@ describe('MIR4 real-player bot playtest core', () => {
           991010106: { itemId: 991010106, enhancement: 0 },
         },
         mir4ArcRewards: { items: { '991010106': 1 } },
-        mir4AchievementClears: { 20101: { groupGrade: 1 }, 20102: { groupGrade: 1 } },
+        mir4AchievementClears: {
+          20101: { groupGrade: 1 },
+          20102: { groupGrade: 1 },
+        },
       },
     });
 
@@ -391,6 +411,13 @@ describe('MIR4 real-player bot playtest core', () => {
     expect(
       planMir4TutorialEngagement({ ...tutorial, hp: 99 }, close, MIR4_PLAYTEST_ROSTER[0]),
     ).toEqual([]);
+    expect(
+      planMir4TutorialEngagement(
+        { ...tutorial, dead: true, hp: 0 },
+        close,
+        MIR4_PLAYTEST_ROSTER[0],
+      ),
+    ).toEqual([]);
   });
 
   it('releases movement inside the Auto Battle radius and ignores quest-scoped summons', () => {
@@ -410,12 +437,24 @@ describe('MIR4 real-player bot playtest core', () => {
     expect(planMir4GrindingEngagement(self, distant)).toEqual([
       { t: 'input', mi: { f: 1 }, facing: 0 },
     ]);
+    expect(planMir4GrindingEngagement({ ...self, gh: true }, distant)).toEqual([]);
   });
 
-  it('manually clears collection threats but never interrupts an active collection cast', () => {
+  it('manually clears collection threats and interrupts only a cast under active attack', () => {
     const self = selfSnapshot({ x: 10, z: 20 });
     const threats = new Map([
-      [90, { id: 90, kind: 'mob', hp: 200, x: 10, z: 22, hostile: true, targetId: 11 }],
+      [
+        90,
+        {
+          id: 90,
+          kind: 'mob',
+          hp: 200,
+          x: 10,
+          z: 22,
+          hostile: true,
+          targetId: 11,
+        },
+      ],
       [91, { id: 91, kind: 'mob', hp: 200, x: 10, z: 50, hostile: true }],
     ]);
 
@@ -429,6 +468,312 @@ describe('MIR4 real-player bot playtest core', () => {
         { ...self, castingAbility: 'gather' },
         threats,
         MIR4_PLAYTEST_ROSTER[0],
+      ),
+    ).toEqual([
+      { t: 'input', mi: {}, facing: 0 },
+      { cmd: 'mir4', m: 'cast', skill: 1102, target: 90 },
+      { cmd: 'mir4', m: 'basic', target: 90 },
+    ]);
+    expect(
+      planMir4ThreatIntervention(
+        { ...self, castingAbility: 'gather' },
+        new Map([[90, { id: 90, kind: 'mob', hp: 200, x: 10, z: 22, hostile: true }]]),
+        MIR4_PLAYTEST_ROSTER[0],
+      ),
+    ).toEqual([]);
+    expect(
+      planMir4ThreatIntervention(
+        self,
+        new Map([[94, { id: 94, kind: 'mob', hp: 200, x: 10, z: 22, hostile: true }]]),
+        MIR4_PLAYTEST_ROSTER[0],
+      ),
+    ).toEqual([]);
+    expect(
+      planMir4ThreatIntervention({ ...self, dead: true, hp: 0 }, threats, MIR4_PLAYTEST_ROSTER[0]),
+    ).toEqual([]);
+    expect(
+      planMir4ThreatIntervention({ ...self, gh: true }, threats, MIR4_PLAYTEST_ROSTER[0]),
+    ).toEqual([]);
+    expect(
+      planMir4ThreatIntervention(
+        {
+          ...self,
+          hp: 25,
+          mhp: 100,
+          pcd: 0,
+          inv: [{ itemId: 'minor_healing_potion', count: 2 }],
+        },
+        threats,
+        MIR4_PLAYTEST_ROSTER[0],
+      ),
+    ).toEqual([
+      { cmd: 'use', item: 'minor_healing_potion' },
+      { t: 'input', mi: {}, facing: 0 },
+      { cmd: 'mir4', m: 'cast', skill: 1102, target: 90 },
+      { cmd: 'mir4', m: 'basic', target: 90 },
+    ]);
+    const rangedThreat = new Map([
+      [
+        93,
+        {
+          id: 93,
+          kind: 'mob',
+          hp: 200,
+          x: 10,
+          z: 26,
+          hostile: true,
+          targetId: 11,
+        },
+      ],
+    ]);
+    expect(planMir4ThreatIntervention(self, rangedThreat, MIR4_PLAYTEST_ROSTER[1])).toEqual([
+      { t: 'input', mi: {}, facing: 0 },
+      { cmd: 'mir4', m: 'cast', skill: 2101, target: 93 },
+      { cmd: 'mir4', m: 'basic', target: 93 },
+    ]);
+    const distantAttacker = new Map([
+      [
+        95,
+        {
+          id: 95,
+          kind: 'mob',
+          hp: 200,
+          x: 10,
+          z: 32,
+          hostile: true,
+          aggroTargetId: 11,
+        },
+      ],
+    ]);
+    expect(planMir4ThreatIntervention(self, distantAttacker, MIR4_PLAYTEST_ROSTER[0], 14)).toEqual([
+      { t: 'input', mi: {}, facing: 0 },
+      { cmd: 'mir4', m: 'cast', skill: 1102, target: 95 },
+      { cmd: 'mir4', m: 'basic', target: 95 },
+    ]);
+  });
+
+  it('manually protects an escort from its scoped ambush without roaming into ambient mobs', () => {
+    const self = selfSnapshot({
+      x: 10,
+      z: 20,
+      mir4: { autoBattle: { mode: 'battle' } },
+    });
+    const threats = new Map([
+      [80, { id: 80, kind: 'mob', hp: 200, x: 10, z: 21, hostile: true }],
+      [
+        92,
+        {
+          id: 92,
+          kind: 'mob',
+          hp: 200,
+          x: 12,
+          z: 22,
+          hostile: true,
+          runScoped: true,
+          summonedAdd: true,
+        },
+      ],
+      [
+        91,
+        {
+          id: 91,
+          kind: 'mob',
+          hp: 200,
+          x: 8,
+          z: 22,
+          hostile: true,
+          runScoped: true,
+          summonedAdd: true,
+        },
+      ],
+      [
+        93,
+        {
+          id: 93,
+          kind: 'mob',
+          hp: 0,
+          x: 10,
+          z: 20,
+          hostile: true,
+          runScoped: true,
+          summonedAdd: true,
+        },
+      ],
+    ]);
+
+    expect(planMir4EscortIntervention(self, threats, MIR4_PLAYTEST_ROSTER[1])).toEqual([
+      { cmd: 'mir4', m: 'auto', on: false },
+      { t: 'input', mi: {}, facing: -Math.PI / 4 },
+      { cmd: 'mir4', m: 'cast', skill: 2101, target: 91 },
+      { cmd: 'mir4', m: 'basic', target: 91 },
+    ]);
+    expect(
+      planMir4EscortIntervention(
+        selfSnapshot(),
+        new Map([[80, threats.get(80)!]]),
+        MIR4_PLAYTEST_ROSTER[1],
+      ),
+    ).toEqual([]);
+  });
+
+  it('manually fights the quest guardian during a survival hold', () => {
+    const self = selfSnapshot({
+      x: 10,
+      z: 20,
+      mir4: { autoBattle: { mode: 'off' } },
+    });
+    const threats = new Map([
+      [80, { id: 80, kind: 'mob', hp: 200, x: 10, z: 21, hostile: true }],
+      [
+        91,
+        {
+          id: 91,
+          kind: 'mob',
+          hp: 200,
+          x: 12,
+          z: 22,
+          hostile: true,
+          runScoped: true,
+          summonedAdd: true,
+        },
+      ],
+      [
+        92,
+        {
+          id: 92,
+          kind: 'mob',
+          hp: 200,
+          x: 10,
+          z: 21,
+          hostile: true,
+          runScoped: true,
+          summonedAdd: true,
+        },
+      ],
+    ]);
+
+    expect(planMir4SurvivalIntervention(self, threats, MIR4_PLAYTEST_ROSTER[1], 91)).toEqual([
+      { t: 'input', mi: {}, facing: Math.PI / 4 },
+      { cmd: 'mir4', m: 'cast', skill: 2101, target: 91 },
+      { cmd: 'mir4', m: 'basic', target: 91 },
+    ]);
+    expect(
+      planMir4SurvivalIntervention(
+        {
+          ...self,
+          hp: 60,
+          mhp: 100,
+          pcd: 0,
+          inv: [{ itemId: 'minor_healing_potion', count: 2 }],
+        },
+        threats,
+        MIR4_PLAYTEST_ROSTER[1],
+        91,
+      ),
+    ).toEqual([
+      { cmd: 'use', item: 'minor_healing_potion' },
+      { t: 'input', mi: {}, facing: Math.PI / 4 },
+      { cmd: 'mir4', m: 'cast', skill: 2101, target: 91 },
+      { cmd: 'mir4', m: 'basic', target: 91 },
+    ]);
+    expect(
+      planMir4SurvivalIntervention(
+        self,
+        new Map([[80, threats.get(80)!]]),
+        MIR4_PLAYTEST_ROSTER[1],
+      ),
+    ).toEqual([]);
+    expect(
+      planMir4SurvivalIntervention(
+        self,
+        new Map<number, Record<string, any>>([
+          [
+            80,
+            {
+              ...threats.get(80)!,
+              targetId: 11,
+              aggroTargetId: 11,
+            },
+          ],
+          [91, { ...threats.get(91)!, hp: 0, dead: true }],
+        ]),
+        MIR4_PLAYTEST_ROSTER[1],
+        91,
+      ),
+    ).toEqual([
+      { t: 'input', mi: {}, facing: 0 },
+      { cmd: 'mir4', m: 'cast', skill: 2101, target: 80 },
+      { cmd: 'mir4', m: 'basic', target: 80 },
+    ]);
+  });
+
+  it('keeps Auto Battle off while the test player manually clears a fragile objective', () => {
+    const off = selfSnapshot({ mir4: { autoBattle: { mode: 'off' } } });
+    const on = selfSnapshot({ mir4: { autoBattle: { mode: 'battle' } } });
+    expect(planMir4ThreatBattleMode(off, true)).toEqual([]);
+    expect(planMir4ThreatBattleMode(on, true)).toEqual([{ cmd: 'mir4', m: 'auto', on: false }]);
+    expect(planMir4ThreatBattleMode(on, false)).toEqual([{ cmd: 'mir4', m: 'auto', on: false }]);
+  });
+
+  it('keeps a travel intervention active until the local hostile pack is clear', () => {
+    const self = selfSnapshot({ x: 10, z: 20 });
+    expect(
+      hasMir4NearbyHostile(
+        self,
+        new Map([[90, { id: 90, kind: 'mob', hp: 200, x: 28, z: 20, hostile: true }]]),
+        30,
+      ),
+    ).toBe(true);
+    expect(
+      hasMir4NearbyHostile(
+        self,
+        new Map([[90, { id: 90, kind: 'mob', hp: 200, x: 45, z: 20, hostile: true }]]),
+        30,
+      ),
+    ).toBe(false);
+  });
+
+  it('restocks ordinary healing potions only through an affordable nearby vendor purchase', () => {
+    const vendor = new Map([
+      [
+        70,
+        {
+          id: 70,
+          kind: 'npc',
+          x: 12,
+          z: 20,
+          vendorItems: ['minor_healing_potion'],
+        },
+      ],
+    ]);
+    expect(
+      planMir4VendorRestock(
+        selfSnapshot({
+          copper: 400,
+          inv: [{ itemId: 'minor_healing_potion', count: 2 }],
+        }),
+        vendor,
+      ),
+    ).toEqual([{ cmd: 'buy', npcId: 70, item: 'minor_healing_potion', count: 10 }]);
+    expect(
+      planMir4VendorRestock(
+        selfSnapshot({
+          copper: 20,
+          inv: [{ itemId: 'minor_healing_potion', count: 2 }],
+        }),
+        vendor,
+      ),
+    ).toEqual([]);
+    expect(
+      planMir4VendorRestock(selfSnapshot({ copper: 400, dead: true, hp: 0, inv: [] }), vendor),
+    ).toEqual([]);
+    expect(
+      planMir4VendorRestock(
+        selfSnapshot({
+          copper: 400,
+          inv: [{ itemId: 'minor_healing_potion', count: 20 }],
+        }),
+        vendor,
       ),
     ).toEqual([]);
   });
@@ -663,7 +1008,11 @@ describe('MIR4 real-player bot playtest core', () => {
       MIR4_PLAYTEST_ROSTER[0],
     );
 
-    expect(actions).toContainEqual({ cmd: 'mir4', m: 'equipItem', itemId: 991010101 });
+    expect(actions).toContainEqual({
+      cmd: 'mir4',
+      m: 'equipItem',
+      itemId: 991010101,
+    });
 
     const alreadyEquipped = planMir4ProgressionActions(
       selfSnapshot({
@@ -680,7 +1029,9 @@ describe('MIR4 real-player bot playtest core', () => {
             },
           },
           mir4Equipment: { 1: 991010201 },
-          mir4EquipmentInstances: { 991010201: { itemId: 991010201, enhancement: 0 } },
+          mir4EquipmentInstances: {
+            991010201: { itemId: 991010201, enhancement: 0 },
+          },
           mir4ArcRewards: { items: { 991010201: 1 } },
         },
       }),
@@ -744,12 +1095,18 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { sunStone: 2, solarScroll: 0 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 0 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 0 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'craftMaterial', recipeId: 'solar-scroll' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'craftMaterial',
+      recipeId: 'solar-scroll',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -758,7 +1115,9 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { sunStone: 0, solarScroll: 2 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 0 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 0 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
@@ -772,7 +1131,9 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { sunStone: 0, solarScroll: 1 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 1 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 1 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
@@ -802,12 +1163,18 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { sunStone: 3, solarScroll: 0 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 2 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 2 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'craftMaterial', recipeId: 'solar-scroll' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'craftMaterial',
+      recipeId: 'solar-scroll',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -816,7 +1183,9 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { sunStone: 0, solarScroll: 3 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 2 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 2 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
@@ -830,7 +1199,9 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { sunStone: 0, solarScroll: 1 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 4 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 4 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
@@ -855,7 +1226,9 @@ describe('MIR4 real-player bot playtest core', () => {
             },
           },
           mir4Equipment: { 1: 991010101 },
-          mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 5 } },
+          mir4EquipmentInstances: {
+            991010101: { itemId: 991010101, enhancement: 5 },
+          },
           mir4Materials: { sunStone: 0, solarScroll: 1, solarWard: 1 },
           mir4ArcRewards: { guarantees: { 'tutorial-first-plus-six': 1 } },
         },
@@ -863,7 +1236,11 @@ describe('MIR4 real-player bot playtest core', () => {
       MIR4_PLAYTEST_ROSTER[0],
     );
 
-    expect(actions).toContainEqual({ cmd: 'mir4', m: 'enhanceItem', itemId: 991010101 });
+    expect(actions).toContainEqual({
+      cmd: 'mir4',
+      m: 'enhanceItem',
+      itemId: 991010101,
+    });
   });
 
   it('redeems, confirms and equips the granted Spirit for the M02-Q04 lesson', () => {
@@ -890,7 +1267,11 @@ describe('MIR4 real-player bot playtest core', () => {
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'redeemTicket', ticketId: 'spirit-ticket-dawn' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'redeemTicket',
+      ticketId: 'spirit-ticket-dawn',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -898,13 +1279,23 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Spirits: {
-              pending: [{ id: 'spirit-pending-11-1', spiritId: 'spirit-epic-01', grade: 4 }],
+              pending: [
+                {
+                  id: 'spirit-pending-11-1',
+                  spiritId: 'spirit-epic-01',
+                  grade: 4,
+                },
+              ],
             },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'confirmSpirit', pendingId: 'spirit-pending-11-1' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'confirmSpirit',
+      pendingId: 'spirit-pending-11-1',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -916,7 +1307,11 @@ describe('MIR4 real-player bot playtest core', () => {
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'equipSpirit', spiritId: 'spirit-common-01' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'equipSpirit',
+      spiritId: 'spirit-common-01',
+    });
   });
 
   it('crafts, rolls and resolves the first weapon enchantment for M03-Q01', () => {
@@ -940,12 +1335,18 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { moonStone: 5, lunarSeal: 0 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 2 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 2 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'craftMaterial', recipeId: 'lunar-seal' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'craftMaterial',
+      recipeId: 'lunar-seal',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -953,7 +1354,9 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { moonStone: 0, lunarSeal: 1 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 2 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 2 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
@@ -1017,7 +1420,9 @@ describe('MIR4 real-player bot playtest core', () => {
           mir4: {
             ...baseMir4,
             mir4Materials: { dawnTear: 1 },
-            mir4EquipmentInstances: { 991010101: { itemId: 991010101, enhancement: 5 } },
+            mir4EquipmentInstances: {
+              991010101: { itemId: 991010101, enhancement: 5 },
+            },
           },
         }),
         MIR4_PLAYTEST_ROSTER[0],
@@ -1084,7 +1489,11 @@ describe('MIR4 real-player bot playtest core', () => {
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'redeemTicket', ticketId: 'mount-ticket-dawn' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'redeemTicket',
+      ticketId: 'mount-ticket-dawn',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -1098,7 +1507,11 @@ describe('MIR4 real-player bot playtest core', () => {
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'confirmMount', pendingId: 'mount-pending-11-1' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'confirmMount',
+      pendingId: 'mount-pending-11-1',
+    });
 
     expect(
       planMir4ProgressionActions(
@@ -1110,7 +1523,11 @@ describe('MIR4 real-player bot playtest core', () => {
         }),
         MIR4_PLAYTEST_ROSTER[0],
       ),
-    ).toContainEqual({ cmd: 'mir4', m: 'equipMount', mountId: 'meadow-courser' });
+    ).toContainEqual({
+      cmd: 'mir4',
+      m: 'equipMount',
+      mountId: 'meadow-courser',
+    });
   });
 
   it('turns comparable bot histories into actionable progression findings', () => {
@@ -1154,7 +1571,11 @@ describe('MIR4 real-player bot playtest core', () => {
       pvp: { status: 'completed', winnerClass: 'warrior', durationMs: 18_000 },
     });
 
-    expect(report.summary).toMatchObject({ bots: 5, classesRepresented: 5, pvpCompleted: true });
+    expect(report.summary).toMatchObject({
+      bots: 5,
+      classesRepresented: 5,
+      pvpCompleted: true,
+    });
     expect(report.findings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

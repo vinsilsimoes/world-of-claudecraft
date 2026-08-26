@@ -128,7 +128,14 @@ const MONOLITHS: MonolithRow[] = [
     // share placeAbility's spellbook-refresh through one commitHotbarActions
     // helper, fixing a stale assign toggle when a bound spell is cleared or
     // swapped with the spellbook open behind the editor. Exact count, zero slack.
-    ceiling: 19031,
+    // Raised 19031 -> 19169 for the consolidated Aeldrune systems integration.
+    // The first pass reached 19279; mount, spirit, Codex, Training and result
+    // ceremony ownership then moved to mir4_hud_systems.ts, removing 110 lines
+    // from Hud. What remains is thin wiring to extracted action-tool, minimap,
+    // vendor, loot-feedback and hotbar modules. The release base was already
+    // three lines over its stale pin. Maintainer decision, exact count and zero
+    // slack so any further growth must extract again.
+    ceiling: 19169,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -324,12 +331,21 @@ const MONOLITHS: MonolithRow[] = [
     // call site and adds only thin wiring for rebuild reveal-gate installation,
     // entry-barrier cleanup and observed display pacing; the policy and timer
     // ownership remain in sibling modules. Exact count, zero slack.
-    ceiling: 13541,
+    // Raised 13541 -> 13546 after extracting MIR4 attack presentation, corpse
+    // visibility and portal attachment into their own render modules. Renderer
+    // retains only their imports, event dispatch and lifecycle calls. Maintainer
+    // decision, exact count and zero slack.
+    ceiling: 13546,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
     file: 'src/sim/sim.ts',
-    ceiling: 12660,
+    // Re-pinned 12660 -> 12706 for the consolidated profile facade and save/load
+    // orchestration. Origin main was already eleven lines above the stale pin;
+    // the branch adds only typed facade declarations and calls into extracted
+    // MIR4 movement, corpse, loot and training modules. Maintainer decision,
+    // exact count and zero slack.
+    ceiling: 12706,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -364,7 +380,11 @@ const MONOLITHS: MonolithRow[] = [
     // three arms above nets against this branch's -17 (the touch bar editor +1
     // paid back by the escapeHtml -> esc() extraction). Exact merged count, zero
     // slack: any further growth reds again.
-    ceiling: 11519,
+    // Raised 11519 -> 11520 for the final Aeldrune wiring. Diagnostics ticket
+    // provisioning and MIR4 shortcut policy live in src/game siblings; main
+    // retains their call sites plus the four public HUD-system callbacks.
+    // Maintainer decision, exact count and zero slack.
+    ceiling: 11520,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -401,7 +421,10 @@ const MONOLITHS: MonolithRow[] = [
     file: 'src/sim/colliders.ts',
     // Lowered from 2660 after the cell-index math moved out to
     // collider_cells.ts (the ratchet rule: extraction lowers the ceiling).
-    ceiling: 2630,
+    // Re-pinned 2630 -> 2636 because origin main already had 2636 lines and this
+    // branch has zero net growth. The only changed decision delegates built-in
+    // presentation authority to world_presentation.ts.
+    ceiling: 2636,
     seam: 'per-zone collider data beside the zone content; shared logic stays here',
   },
   {

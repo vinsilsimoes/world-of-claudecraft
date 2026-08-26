@@ -20,14 +20,14 @@ M02-Q03|mm-quest|questlog|-|action:memoryRite:4
 M02-Q04|mm-bag|bags|-|material:spirit-ticket-dawn:1
 M03-Q01|mm-crafting|crafting|enchantment|material:moonStone:5,material:lunarSeal:1
 M03-Q03|mm-quest|questlog|-|action:stableBell:1
-M03-Q04|mm-bag|bags|-|material:mount-ticket-dawn:1,action:mountedCheckpoint:3
+M03-Q04|mm-mount-codex|mounts|-|material:mount-ticket-dawn:1,action:mountedCheckpoint:3
 M04-Q03|mm-crafting|crafting|refinement|material:solarScroll:3,enhancement:weapon:5
 M04-Q04|mm-crafting|crafting|blessing|material:dawnTear:1
 M04-Q05|mm-dfinder|dfinder|-|action:dungeonSeal:3
 M05-Q02|mm-dfinder|dfinder|-|party:partyMember:2
 M07-Q05|mm-crafting|crafting|refinement|material:sunStone:1,material:solarScroll:1,material:solarWard:1,enhancement:weapon:6
 M08-Q05|mm-dfinder|dfinder|-|action:trueNameBinding:1
-M09-Q04|mm-map|map|-|action:regionalLight:5
+M09-Q04|mm-map|map|-|action:portalTravel:1
 M10-Q03|mm-bag|bags|-|material:boundSpiritReplica:4
 M11-Q05|mm-crafting|crafting|refinement|enhancement:mainEquipment:7
 M12-Q05|mm-dfinder|dfinder|-|action:palaceEvidence:3
@@ -103,13 +103,21 @@ M20-Q06|mm-char|char|-|power:finalReadiness:1,enhancement:recommendedEquipment:1
     );
   });
 
-  it('routes equipment, Spirit and Mount lessons through the existing Bags window', () => {
-    for (const questId of ['M01-Q03', 'M02-Q04', 'M03-Q04']) {
+  it('keeps inventory lessons in Bags and routes the Mount lesson to its system window', () => {
+    for (const questId of ['M01-Q03', 'M02-Q04']) {
       expect(mir4ArcTutorialGuidance(questId), questId).toMatchObject({
         launcherId: 'mm-bag',
         shortcutAction: 'bags',
       });
     }
+    expect(mir4ArcTutorialGuidance('M03-Q04')).toMatchObject({
+      launcherId: 'mm-mount-codex',
+      shortcutAction: 'mounts',
+      steps: [
+        expect.stringContaining('Santuário de Montarias'),
+        expect.stringContaining('Equipe a montaria'),
+      ],
+    });
   });
 
   it('aligns the first equipment and craft lessons with native runtime verbs and grants', () => {

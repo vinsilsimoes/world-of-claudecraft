@@ -20,6 +20,9 @@ import {
   TOOL_EFFECTS,
 } from '../content/professions';
 import { ITEMS } from '../data';
+import { MIR4_GAME_PROFILE } from '../game_profile';
+import { mir4ModifiedGatherDurationSeconds } from '../mir4/status_effects';
+import { grantMir4GatherProgressionReward } from '../mir4/training_resources';
 import { forceDismount } from '../mounts';
 import type { Rng } from '../rng';
 import type { PlayerMeta } from '../sim';
@@ -727,11 +730,19 @@ export function harvestNode(
     p.mountCastRemaining = 0;
     p.mountCastKey = '';
   }
-  const duration = gatherCastDurationSec(
+  const baseDuration = gatherCastDurationSec(
     node.tier,
     wieldableToolTier,
     proficiencyBandFor(meta.gatheringProficiency[professionId]),
   );
+  const duration =
+    ctx.gameProfile === MIR4_GAME_PROFILE
+      ? mir4ModifiedGatherDurationSeconds(
+          baseDuration,
+          node.type === 'ore' ? 'mining' : 'gathering',
+          p.mir4?.statusValues,
+        )
+      : baseDuration;
   p.castingAbility = GATHER_CAST_ID;
   p.castTotal = duration;
   p.castRemaining = duration;
@@ -944,6 +955,9 @@ export function completeGatherCast(ctx: SimContext, p: Entity, meta: PlayerMeta)
     }
   } else {
     grantedQty = grantFungibleFit();
+  }
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+    grantMir4GatherProgressionReward(meta, node, rarity, grantedQty, p.mir4?.statusValues);
   }
   // The R42 charge settle, AFTER the grant so truncation is visible: the
   // charge is spent only when the bonus actually changed what the player

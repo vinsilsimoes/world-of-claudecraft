@@ -187,7 +187,7 @@ describe('Ruinas da Encosta authored world blueprint', () => {
       'M04-S02',
       'M04-S03',
     ]);
-    expect(objectiveAnchorDigest()).toBe('c962c550');
+    expect(objectiveAnchorDigest()).toBe('6c31f1b5');
   });
 
   it('uses four coherent art districts rather than another all-purpose forest', () => {
@@ -490,6 +490,19 @@ describe('Ruinas da Encosta authored world blueprint', () => {
         }
       }
     }
+  });
+
+  it('keeps the M04 strengthening materials out of the later crypt camp', () => {
+    const plan = M04_RUINAS_DA_ENCOSTA_BLUEPRINT.objectiveAnchors.find(
+      (candidate) => candidate.questId === 'M04-S01' && candidate.stageIndex === 1,
+    );
+    expect(plan?.points.slice(-2)).toEqual([
+      { x: 5565, z: 235 },
+      { x: 5645, z: 200 },
+    ]);
+    expect(
+      plan?.points.slice(-2).every((point) => Math.hypot(point.x - 5710, point.z - 35) > 100),
+    ).toBe(true);
   });
 
   it('uses only registered WoC props and projects authored content exactly once', () => {

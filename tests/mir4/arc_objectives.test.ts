@@ -10,6 +10,7 @@ import {
   mir4ArcObjectiveObjectItemId,
 } from '../../src/sim/mir4/arc_objectives';
 import { MIR4_ARC_INTERACT_STAGE_KINDS } from '../../src/sim/mir4/arc_stage_kinds';
+import { MIR4_ENERGY_SITE_ITEM_ID } from '../../src/sim/mir4/energy';
 
 describe('MIR4 physical campaign objectives', () => {
   it('maps every interaction verb to a distinct native WoC object family', () => {
@@ -42,6 +43,17 @@ describe('MIR4 physical campaign objectives', () => {
       const file = fileURLToPath(new URL(`../../public${url}`, import.meta.url));
       expect(existsSync(file), url).toBe(true);
     }
+  });
+
+  it('renders Energy with the existing WoC hollow-gate crystal', () => {
+    const urls = questObjectPreloadInternalsForTest.questObjectUrl;
+    expect(urls[MIR4_ENERGY_SITE_ITEM_ID]).toBe('/models/props/hollow_gate_crystal.glb');
+    expect(urls[MIR4_ENERGY_SITE_ITEM_ID]).toBe(urls.mir4_object_waypoint_crystal);
+    expect(
+      existsSync(
+        fileURLToPath(new URL(`../../public${urls[MIR4_ENERGY_SITE_ITEM_ID]}`, import.meta.url)),
+      ),
+    ).toBe(true);
   });
 
   it('preloads MIR4-only props only for the MIR4 profile', () => {

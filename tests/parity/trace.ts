@@ -219,6 +219,7 @@ export const META_EXCLUDE: ReadonlySet<string> = new Set([
   'moveInput', // input, not state
   'joinedAt', // session-only clock
   'lastActiveTick', // session-only
+  'mir4TargetCombat', // session-only selected-target pursuit; never persisted or restored
   'craftThrottle', // inert since the Craft Cast System retired the shared throttle; session-only
   'away', // session-only presence
   'lastWhisperFrom', // session-only

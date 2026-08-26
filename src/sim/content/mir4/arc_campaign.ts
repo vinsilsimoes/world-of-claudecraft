@@ -215,6 +215,10 @@ for (const quest of SOURCE_QUESTS_ARC) {
   }
   for (const id of npcSourceRefs(quest)) ids.add(id);
 }
+// Sara is an authored M01 service NPC promoted into the main route below.
+// Keep her in the same canonical identity table as every quest contact so
+// Auto Mission, dialogue and physical placement resolve one unique person.
+SOURCE_NPCS_BY_MAP.get('m01-vila-do-vau')?.add('sara-das-ervas');
 
 export const MIR4_ARC_NPC_IDENTITIES: readonly Mir4ArcNpcIdentity[] = [
   ...SOURCE_NPCS_BY_MAP.entries(),
@@ -282,6 +286,50 @@ function npcNamePattern(sourceNpcId: string): string {
     .join('[\\s-]+');
 }
 
+const PLAYER_FACING_MISSION_LABELS: readonly (readonly [string, string])[] = [
+  ['final-boss-and-city', 'derrotar o comandante final e proteger a cidade'],
+  ['public-event-defend', 'defender as pessoas durante o ataque'],
+  ['collect-and-activate', 'coletar os componentes e ativar o mecanismo'],
+  ['defend-and-activate', 'defender o local e ativar o mecanismo'],
+  ['activate-and-defend', 'ativar o mecanismo e defender o local'],
+  ['elite-and-activate', 'derrotar o inimigo de elite e ativar o mecanismo'],
+  ['explore-and-hunt', 'seguir os rastros e caçar as criaturas'],
+  ['interrupt-ritual', 'interromper o ritual'],
+  ['escort-entity', 'escoltar a patrulha'],
+  ['inspect-clues', 'examinar as pistas'],
+  ['survive-zone', 'sobreviver à área tomada pelos inimigos'],
+  ['open-passage', 'abrir a passagem'],
+  ['clear-access', 'eliminar os inimigos que bloqueiam o acesso'],
+  ['boss/cidade', 'derrotar o comandante inimigo e proteger a cidade'],
+  ['elite/defesa', 'derrotar o inimigo de elite e defender o local'],
+  ['investigate', 'investigar os sinais'],
+  ['collect', 'coletar os materiais'],
+  ['escort', 'escoltar o grupo'],
+  ['hunt', 'caçar as criaturas'],
+  ['boss', 'derrotar o comandante inimigo'],
+  ['elite', 'derrotar o inimigo de elite'],
+];
+
+function rewritePlayerFacingMissionText(value: string): string {
+  let rewritten = value;
+  for (const [label, playerText] of PLAYER_FACING_MISSION_LABELS) {
+    rewritten = rewritten.replaceAll(`‘${label}’`, `‘${playerText}’`);
+  }
+  return rewritten
+    .replace(/precisa executar ‘([^’]+)’/giu, 'precisa de ajuda para $1')
+    .replace(/A ordem diz ‘([^’]+)’/giu, 'O objetivo imediato é $1')
+    .replace(/anchor seguro/giu, 'ponto seguro')
+    .replace(/polígono hostil/giu, 'área controlada pelos inimigos')
+    .replace(/mother_of_leeches/giu, 'Mãe das Sanguessugas')
+    .replace(/\bboss\b/giu, 'chefe')
+    .replace(/\btracker\b/giu, 'rastreador')
+    .replace(/\blandmark\b/giu, 'ponto de interesse')
+    .replace(/\breceipt\b/giu, 'comprovante')
+    .replace(/\bguardian\b/giu, 'guardião')
+    .replace(/\bwaypoint\b/giu, 'ponto de viagem')
+    .replace(/\bpuzzle\b/giu, 'enigma');
+}
+
 function rewriteNpcText(mapId: string, value: string | undefined): string | undefined {
   if (!value) return value;
   let rewritten = value;
@@ -291,11 +339,22 @@ function rewriteNpcText(mapId: string, value: string | undefined): string | unde
     const pattern = npcNamePattern(sourceNpcId);
     rewritten = rewritten.replace(new RegExp(pattern, 'giu'), identity.name);
   }
-  return rewritten;
+  return rewritePlayerFacingMissionText(rewritten);
 }
 
 function rewriteNpcTarget(mapId: string, target: string): string {
   return mir4ArcNpcIdentityForSource(mapId, target)?.id ?? target;
+}
+
+const QUEST_MISSION_TEXT_OVERRIDES: Readonly<Record<string, readonly [string, string]>> = {
+  // The imported purpose says escort, but the authored stages investigate the
+  // vanished patrol's trail and confront its pursuers; no escort exists here.
+  'M17-Q05': ['escoltar a patrulha', 'seguir a trilha da patrulha e confrontar seus perseguidores'],
+};
+
+function rewriteQuestMissionText(questId: string, value: string): string {
+  const override = QUEST_MISSION_TEXT_OVERRIDES[questId];
+  return override ? value.replaceAll(override[0], override[1]) : value;
 }
 
 const TUTORIAL_STAGE_OVERRIDES: Readonly<
@@ -315,25 +374,187 @@ const TUTORIAL_STAGE_OVERRIDES: Readonly<
   },
 };
 
+const QUEST_STAGE_OVERRIDES: Readonly<
+  Record<string, Readonly<Record<number, Readonly<Partial<Mir4ArcQuestStage>>>>>
+> = {
+  'M02-Q02': {
+    1: {
+      text: 'Encontre Ivo Juncofirme na margem seca da Estrada dos Lírios.',
+    },
+    2: {
+      text: 'Fale com Ivo Juncofirme para iniciar. Acompanhe-o pela estrada seca e derrote os saqueadores nos três pontos de emboscada.',
+    },
+    3: {
+      text: 'Ivo chegou ao Posto das Duas Pontes. Derrote o Capitão da Ponte que bloqueia a passagem final.',
+    },
+    4: {
+      text: 'Examine as ordens do Capitão: os saqueadores conheciam cada parada da patrulha.',
+    },
+  },
+};
+
 function canonicalStage(
   questId: string,
   mapId: string,
   stage: Readonly<Mir4ArcQuestStage>,
+  stageIndex: number,
 ): Mir4ArcQuestStage {
-  const npcStage = stage.kind === 'talk' || stage.kind === 'deliver';
-  const target = npcStage
-    ? Array.isArray(stage.target)
-      ? stage.target.map((value) => rewriteNpcTarget(mapId, value))
-      : typeof stage.target === 'string'
-        ? rewriteNpcTarget(mapId, stage.target)
-        : stage.target
-    : stage.target;
-  return {
-    ...stage,
-    ...(stage.kind === 'system-tutorial' ? TUTORIAL_STAGE_OVERRIDES[questId] : {}),
-    ...(target === undefined ? {} : { target }),
-    ...(stage.text ? { text: rewriteNpcText(mapId, stage.text) } : {}),
+  const baseStage =
+    questId === 'M01-Q02' && stageIndex === 0
+      ? {
+          ...stage,
+          target: 'sara-das-ervas',
+          text: 'Fale com Sara das Ervas para conhecer poções, artigos gerais e equipamentos iniciais da sua classe.',
+        }
+      : stage;
+  const effectiveStage = {
+    ...baseStage,
+    ...QUEST_STAGE_OVERRIDES[questId]?.[stageIndex],
   };
+  const npcStage = effectiveStage.kind === 'talk' || effectiveStage.kind === 'deliver';
+  const target = npcStage
+    ? Array.isArray(effectiveStage.target)
+      ? effectiveStage.target.map((value) => rewriteNpcTarget(mapId, value))
+      : typeof effectiveStage.target === 'string'
+        ? rewriteNpcTarget(mapId, effectiveStage.target)
+        : effectiveStage.target
+    : effectiveStage.target;
+  return {
+    ...effectiveStage,
+    ...(effectiveStage.kind === 'system-tutorial' ? TUTORIAL_STAGE_OVERRIDES[questId] : {}),
+    ...(target === undefined ? {} : { target }),
+    ...(effectiveStage.text ? { text: rewriteNpcText(mapId, effectiveStage.text) } : {}),
+  };
+}
+
+type Mir4ArcDialogue = Mir4ArcQuest['dialogue'];
+
+const MAIN_DIALOGUE_OVERRIDES: Readonly<Record<string, Mir4ArcDialogue>> = {
+  'M02-Q02': [
+    {
+      beat: 'accept',
+      speaker: 'Darian Passojunco',
+      text: 'Ivo Juncofirme encontrou marcas de sabotagem na estrada dos Lírios. Encontre-o na margem seca e conduza-o até o Posto das Duas Pontes; os saqueadores conhecem cada parada da patrulha.',
+    },
+    {
+      beat: 'reveal',
+      speaker: 'Neris da Centelha',
+      text: 'As ordens do capitão marcam os três pontos da emboscada. Alguém que conhece as rotas do Farol entregou o caminho aos saqueadores.',
+    },
+    {
+      beat: 'complete',
+      speaker: 'Darian Passojunco',
+      text: 'Ivo chegou vivo e trouxe a prova. Agora sabemos que os incêndios escondem uma operação maior, guiada por alguém de dentro das rotas do Farol.',
+    },
+  ],
+};
+
+function sentenceCase(value: string): string {
+  const trimmed = value.trim().replace(/[.]+$/u, '');
+  return trimmed.length > 0 ? `${trimmed.slice(0, 1).toUpperCase()}${trimmed.slice(1)}` : trimmed;
+}
+
+interface FormulaicNarrativeParts {
+  objective: string;
+  context: string;
+  evidence: string;
+  goal: string;
+}
+
+function formulaicNarrativeParts(
+  purpose: string | null,
+  dialogue: Mir4ArcDialogue,
+): FormulaicNarrativeParts | null {
+  if (!purpose || dialogue.length !== 3 || dialogue.some((line) => typeof line === 'string'))
+    return null;
+  const [accept, reveal, complete] = dialogue;
+  if (
+    !accept ||
+    typeof accept === 'string' ||
+    !reveal ||
+    typeof reveal === 'string' ||
+    !complete ||
+    typeof complete === 'string'
+  )
+    return null;
+  const objective = /^O objetivo imediato é (.+?), mas uma vitória cega/iu.exec(accept.text)?.[1];
+  const context = / porque (.+?)\. Esta missão/iu.exec(purpose)?.[1];
+  const revealParts =
+    /^Os sinais convergem: (.+?)\. Isso muda nossa leitura do caminho para (.+?)\.$/iu.exec(
+      reveal.text,
+    );
+  const completionEvidence = /^Registramos que (.+?)\. Agora podemos/iu.exec(complete.text)?.[1];
+  if (!objective || !context || !revealParts?.[1] || !revealParts[2] || !completionEvidence)
+    return null;
+  if (revealParts[1].localeCompare(completionEvidence, 'pt-BR', { sensitivity: 'base' }) !== 0)
+    return null;
+  return {
+    objective,
+    context,
+    evidence: revealParts[1],
+    goal: revealParts[2],
+  };
+}
+
+function rewriteFormulaicMainDialogue(
+  order: number | null,
+  purpose: string | null,
+  dialogue: Mir4ArcDialogue,
+): Mir4ArcDialogue {
+  const parts = formulaicNarrativeParts(purpose, dialogue);
+  if (!parts) return dialogue;
+  const [accept, reveal, complete] = dialogue;
+  if (
+    !accept ||
+    typeof accept === 'string' ||
+    !reveal ||
+    typeof reveal === 'string' ||
+    !complete ||
+    typeof complete === 'string'
+  )
+    return dialogue;
+  const context = sentenceCase(parts.context);
+  const evidence = sentenceCase(parts.evidence);
+  const objective = parts.objective.replace(/[.]+$/u, '');
+  const goal = parts.goal.replace(/[.]+$/u, '');
+  const variants = [
+    {
+      accept: `${context}. Precisamos ${objective}, mas não transforme os sinais em cinzas antes de entendê-los. Volte com uma prova.`,
+      reveal: `${evidence}. Não é o que esperávamos, porém finalmente temos uma direção: ${goal}.`,
+      complete: `Guarde este registro. Se alguém contestar nossa descoberta, a prova falará por nós. Agora precisamos ${goal}.`,
+    },
+    {
+      accept: `${context}. Há algo deliberado por trás disso. Vá ${objective} e procure o detalhe que o inimigo tentou esconder.`,
+      reveal: `${evidence}. Isso explica os relatos desencontrados e muda o próximo passo: precisamos ${goal}.`,
+      complete: `Então era isso que estava diante de nós. Avise os outros; com essa descoberta, podemos ${goal}.`,
+    },
+    {
+      accept: `${context}. Antes que a trilha esfrie, precisamos ${objective}. Traga fatos, não rumores.`,
+      reveal: `${evidence}. Cada vestígio confirma a mesma história. Se agirmos depressa, ainda podemos ${goal}.`,
+      complete: `Você trouxe a peça que faltava. Vou preservar a prova enquanto você segue adiante para ${goal}.`,
+    },
+    {
+      accept: `${context}. Força sem resposta apenas alimentará o medo. Precisamos ${objective} e descobrir quem se beneficia desse caos.`,
+      reveal: `${evidence}. A ameaça tem método, não apenas fome. Nosso caminho agora é ${goal}.`,
+      complete: `A verdade é pior que o boato, mas ao menos pode ser enfrentada. Reúna o que precisa e vá ${goal}.`,
+    },
+    {
+      accept: `${context}. O tempo está contra nós. Precisamos ${objective}; observe o campo antes que os responsáveis apaguem as marcas.`,
+      reveal: `${evidence}. Esta prova liga o ataque ao que vimos antes. Ela também mostra como podemos ${goal}.`,
+      complete: `Não deixe esta informação morrer aqui. Leve-a adiante e use-a para ${goal}.`,
+    },
+    {
+      accept: `${context}. Chegamos ao ponto em que hesitar também custa vidas. Precisamos ${objective}, sem perder de vista o motivo desta luta.`,
+      reveal: `${evidence}. Agora a escolha está clara: para impedir que tudo se repita, precisamos ${goal}.`,
+      complete: `Está decidido. O que você descobriu encerra esta dúvida e abre o caminho para ${goal}.`,
+    },
+  ];
+  const variant = variants[Math.max(0, ((order ?? 1) - 1) % variants.length)]!;
+  return [
+    { ...accept, text: variant.accept },
+    { ...reveal, text: variant.reveal },
+    { ...complete, text: variant.complete },
+  ];
 }
 
 function canonicalQuest(source: Readonly<Mir4ArcQuest>): Mir4ArcQuest {
@@ -392,6 +613,18 @@ function canonicalQuest(source: Readonly<Mir4ArcQuest>): Mir4ArcQuest {
           binding: 'character',
           grantId: 'tutorial-m01-q04-sun-stone',
         },
+        {
+          itemId: 'copper_mining_pick',
+          quantity: 1,
+          binding: 'character',
+          grantId: 'tutorial-m01-q04-mining-pick',
+        },
+        {
+          itemId: 'gathering_sickle',
+          quantity: 1,
+          binding: 'character',
+          grantId: 'tutorial-m01-q04-gathering-sickle',
+        },
       ],
       currencies: [{ moneyId: 2, quantity: 5_000, grantId: 'tutorial-m01-q04-copper' }],
     };
@@ -415,6 +648,36 @@ function canonicalQuest(source: Readonly<Mir4ArcQuest>): Mir4ArcQuest {
     ]).get(source.questId);
     if (enhancementTarget) onAcceptGrants = guidedEnhancementGrant(enhancementTarget);
   }
+  const rewrittenPurpose = rewriteNpcText(source.mapId, source.purpose ?? undefined);
+  const purpose = rewrittenPurpose
+    ? rewriteQuestMissionText(source.questId, rewrittenPurpose)
+    : null;
+  const dialogue = source.dialogue.map((line) => {
+    if (typeof line === 'string') return rewriteNpcText(source.mapId, line) ?? line;
+    const speakerSourceId = slug(line.speaker);
+    const speaker = sourceIds.has(speakerSourceId)
+      ? (mir4ArcNpcIdentityForSource(source.mapId, speakerSourceId)?.name ?? line.speaker)
+      : line.speaker;
+    const canonicalLine = {
+      ...line,
+      speaker,
+      text: rewriteQuestMissionText(
+        source.questId,
+        rewriteNpcText(source.mapId, line.text) ?? line.text,
+      ),
+    };
+    return source.questId === 'M01-Q02' && line.beat === 'reveal'
+      ? {
+          ...canonicalLine,
+          speaker: 'Sara das Ervas',
+          text: 'Aqui você encontra poções de vida e mana, alimento para a estrada e equipamento básico próprio para sua classe. Abra a loja, compare os itens e mantenha poções no atalho antes de seguir para os currais.',
+        }
+      : canonicalLine;
+  });
+  const canonicalDialogue =
+    source.group === 'main'
+      ? rewriteFormulaicMainDialogue(source.order, purpose, dialogue)
+      : dialogue;
   return {
     ...source,
     title: rewriteNpcText(source.mapId, source.title) ?? source.title,
@@ -424,21 +687,12 @@ function canonicalQuest(source: Readonly<Mir4ArcQuest>): Mir4ArcQuest {
     turnInNpcId: source.turnInNpcId
       ? (mir4ArcNpcIdentityForSource(source.mapId, source.turnInNpcId)?.id ?? source.turnInNpcId)
       : '',
-    purpose: rewriteNpcText(source.mapId, source.purpose ?? undefined) ?? null,
+    purpose,
     onAcceptGrants,
-    stages: source.stages.map((stage) => canonicalStage(source.questId, source.mapId, stage)),
-    dialogue: source.dialogue.map((line) => {
-      if (typeof line === 'string') return rewriteNpcText(source.mapId, line) ?? line;
-      const speakerSourceId = slug(line.speaker);
-      const speaker = sourceIds.has(speakerSourceId)
-        ? (mir4ArcNpcIdentityForSource(source.mapId, speakerSourceId)?.name ?? line.speaker)
-        : line.speaker;
-      return {
-        ...line,
-        speaker,
-        text: rewriteNpcText(source.mapId, line.text) ?? line.text,
-      };
-    }),
+    stages: source.stages.map((stage, stageIndex) =>
+      canonicalStage(source.questId, source.mapId, stage, stageIndex),
+    ),
+    dialogue: MAIN_DIALOGUE_OVERRIDES[source.questId] ?? canonicalDialogue,
   };
 }
 

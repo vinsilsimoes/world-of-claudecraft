@@ -12,10 +12,14 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   blockFctAmountText,
+  compactLootFctText,
   DAMAGE_FCT_KINDS,
   describeFct,
   FCT_ANCHOR_HEAD_OFFSET,
   FCT_JITTER_RANGE,
+  FCT_LOOT_LANE_GAP_PX,
+  FCT_LOOT_LANE_ROWS,
+  FCT_LOOT_LANE_X_PX,
   FCT_RISE_PX,
   FCT_TTL_MS,
   FCT_XP_TTL_MS,
@@ -38,6 +42,27 @@ function makeEvent(overrides: Partial<FctEvent> = {}): FctEvent {
   };
 }
 
+describe('compactLootFctText: reward feed copy', () => {
+  const itemStack = (name: string, suffix?: string): string =>
+    `${name === 'Copper Ore' ? 'Minério de cobre' : name}${suffix ?? ''}`;
+  const money = (value: string): string => value.replace('12s 30c', '12p 30c');
+
+  it('keeps only the localized item stack so the reward name fits in the side lane', () => {
+    expect(compactLootFctText('You receive: Copper Ore x3.', itemStack, money)).toBe(
+      'Minério de cobre x3',
+    );
+    expect(compactLootFctText('You receive: Wolf Fang.', itemStack, money)).toBe('Wolf Fang');
+  });
+
+  it('renders money as a compact positive gain', () => {
+    expect(compactLootFctText('You loot 12s 30c.', itemStack, money)).toBe('+12p 30c');
+  });
+
+  it('rejects non-drop log wording instead of guessing', () => {
+    expect(compactLootFctText('Everyone passed on Wolf Fang.', itemStack, money)).toBeNull();
+  });
+});
+
 describe('describeFct: determinism (same input -> same output)', () => {
   it('returns a byte-identical descriptor for the same event + same injected jitter', () => {
     const event = makeEvent({ kind: 'heal', text: '+88', crit: true });
@@ -51,6 +76,8 @@ describe('describeFct: determinism (same input -> same output)', () => {
       crit: true,
       anchor: { x: 10, y: 2 + FCT_ANCHOR_HEAD_OFFSET, z: -3 },
       jitterOffset: 0.37 * FCT_JITTER_RANGE - FCT_JITTER_RANGE / 2,
+      lane: 'world',
+      laneOffsetX: 0,
       ttlMs: FCT_TTL_MS,
     });
   });
@@ -83,6 +110,7 @@ describe('describeFct: color token by kind + flags', () => {
     xp: { self: 'xp', other: 'xp' },
     'rested-xp': { self: 'rested-xp', other: 'rested-xp' },
     honor: { self: 'honor', other: 'honor' },
+    loot: { self: 'loot', other: 'loot' },
     'self-note': { self: 'self-note', other: 'self-note' },
   };
 
@@ -142,8 +170,8 @@ describe('describeFct: ttl is a pure function of kind (constant across kinds, ex
     }
   });
 
-  it('xp / rested-xp get the longer, distinct XP ttl (an informational reward, not a per-hit number)', () => {
-    for (const kind of ['xp', 'rested-xp'] as FctKind[]) {
+  it('xp / rested-xp / loot get the longer reward ttl instead of a per-hit lifetime', () => {
+    for (const kind of ['xp', 'rested-xp', 'loot'] as FctKind[]) {
       const d = describeFct(makeEvent({ kind, crit: true }), 0.9);
       expect(d.ttlMs).toBe(FCT_XP_TTL_MS);
       expect(FCT_XP_TTL_MS).toBeGreaterThan(FCT_TTL_MS);
@@ -154,6 +182,9 @@ describe('describeFct: ttl is a pure function of kind (constant across kinds, ex
     expect(FCT_JITTER_RANGE).toBe(30);
     expect(FCT_TTL_MS).toBe(1250);
     expect(FCT_XP_TTL_MS).toBe(1800);
+    expect(FCT_LOOT_LANE_X_PX).toBe(180);
+    expect(FCT_LOOT_LANE_GAP_PX).toBe(34);
+    expect(FCT_LOOT_LANE_ROWS).toBe(4);
     expect(FCT_ANCHOR_HEAD_OFFSET).toBe(2.2);
     expect(FCT_RISE_PX).toBe(76);
   });
@@ -177,6 +208,17 @@ describe('describeFct: injected jitter maps to the documented horizontal offset'
     expect(describeFct(makeEvent(), 0).jitterOffset).toBe(-FCT_JITTER_RANGE / 2);
     expect(describeFct(makeEvent(), 1).jitterOffset).toBe(FCT_JITTER_RANGE / 2);
     expect(describeFct(makeEvent(), 0.5).jitterOffset).toBe(0);
+  });
+
+  it('places loot in its dedicated side lane without random jitter', () => {
+    const left = describeFct(makeEvent({ kind: 'loot' }), 0);
+    const right = describeFct(makeEvent({ kind: 'loot' }), 1);
+    expect(left).toMatchObject({ lane: 'loot', laneOffsetX: FCT_LOOT_LANE_X_PX, jitterOffset: 0 });
+    expect(right).toMatchObject({ lane: 'loot', laneOffsetX: FCT_LOOT_LANE_X_PX, jitterOffset: 0 });
+    expect(describeFct(makeEvent({ kind: 'xp' }), 0.5)).toMatchObject({
+      lane: 'world',
+      laneOffsetX: 0,
+    });
   });
 });
 
@@ -242,6 +284,7 @@ describe('isDamageFctKind: the combat-damage taxonomy (damage-number classifier)
       'xp',
       'rested-xp',
       'honor',
+      'loot',
       'self-note',
     ];
     for (const kind of nonDamage) expect(isDamageFctKind(kind)).toBe(false);

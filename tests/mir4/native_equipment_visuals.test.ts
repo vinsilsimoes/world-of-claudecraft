@@ -17,9 +17,9 @@ function item(id: number) {
 
 describe('MIR4 native WoC equipment presentation', () => {
   it('uses deliberate native weapon silhouettes for the five classes', () => {
-    expect(mir4NativeHeldItemId(item(991010101))).toBe('worn_sword');
+    expect(mir4NativeHeldItemId(item(991010101))).toBe('eastbrook_greatsword');
     expect(mir4NativeHeldItemId(item(991010201))).toBe('gnarled_staff');
-    expect(mir4NativeHeldItemId(item(991010301))).toBe('rusty_dagger');
+    expect(mir4NativeHeldItemId(item(991010301))).toBe('hickory_shortstaff');
     expect(mir4NativeHeldItemId(item(991010401))).toBeNull();
     expect(mir4NativeHeldItemId(item(991010501))).toBe('ironbark_boar_spear');
     expect(mir4NativeVisualItem(item(991010401)).id).toBeTruthy();
@@ -37,7 +37,7 @@ describe('MIR4 native WoC equipment presentation', () => {
       classId: 1,
       armorMask:
         MIR4_NATIVE_ARMOR_MASK.chest | MIR4_NATIVE_ARMOR_MASK.head | MIR4_NATIVE_ARMOR_MASK.feet,
-      mainhandItemId: 'worn_sword',
+      mainhandItemId: 'eastbrook_greatsword',
       offhandItemId: null,
     });
   });

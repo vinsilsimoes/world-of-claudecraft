@@ -128,6 +128,9 @@ function recalcFor(ctx: SimContext, e: Entity, meta: PlayerMeta): void {
       meta.mir4EquipmentInstances,
       meta.mir4Spirits,
       meta.mir4Mounts,
+      meta.mir4Codex,
+      meta.mir4ArcRewards?.items,
+      meta.mir4Training,
     );
     return;
   }

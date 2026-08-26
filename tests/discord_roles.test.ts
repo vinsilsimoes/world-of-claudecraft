@@ -56,7 +56,7 @@ describe('discord special roles - guild role name matching', () => {
   });
 
   it('never resolves non-staff role names', () => {
-    for (const name of ['everyone', 'WoC Champion', 'Member', 'Bots', '']) {
+    for (const name of ['everyone', 'Aeldrune Champion', 'Member', 'Bots', '']) {
       expect(specialRoleByName(name)).toBeUndefined();
     }
   });
@@ -123,7 +123,7 @@ describe('discord special roles - priority', () => {
     expect(topSpecialRole(['Artist', 'Admin'])?.key).toBe('admin');
     expect(topSpecialRole(['Admin', 'Levy St'])?.key).toBe('levyst');
     expect(topSpecialRole(['Member', 'Artist'])?.key).toBe('artists');
-    expect(topSpecialRole(['Member', 'WoC Champion'])).toBeUndefined();
+    expect(topSpecialRole(['Member', 'Aeldrune Champion'])).toBeUndefined();
   });
 
   it('surfaces Core Dev over Devs, but Admin still outranks Core Dev', () => {

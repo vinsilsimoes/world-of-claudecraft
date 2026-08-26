@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
+import { updateMir4AutoBattle } from '../../src/sim/auto_battle/core';
 import { MIR4_MOBS, mir4MobStats } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { Sim } from '../../src/sim/sim';
-import type { Entity } from '../../src/sim/types';
+import type { Entity, SimEvent } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 
 // The Phase 2 vertical-slice combat core: a mir4-profile warrior executing the
@@ -34,6 +35,9 @@ function spawnWolf(sim: Sim, offset = 2): Entity {
     1,
     sim.groundPos(p.pos.x + offset, p.pos.z),
   );
+  // Combat timing fixtures isolate the requested player action. Runtime
+  // retaliation has its own coverage and must not inject a second player hit.
+  wolf.swingTimer = 999;
   sim.addEntity(wolf);
   return wolf;
 }
@@ -64,13 +68,13 @@ describe('the mir4 slice: creation and stats', () => {
       5: 301201000,
     });
   });
-  it('the forest wolf spawns with the source formula numbers', () => {
-    expect(mir4MobStats(1)).toEqual({ maxHp: 127, attack: 7 });
-    expect(mir4MobStats(2)).toEqual({ maxHp: 151, attack: 9 });
+  it('the forest wolf spawns with the live MMORPG pressure numbers', () => {
+    expect(mir4MobStats(1)).toEqual({ maxHp: 120, attack: 240 });
+    expect(mir4MobStats(2)).toEqual({ maxHp: 135, attack: 267 });
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
-    expect(wolf.maxHp).toBe(127);
-    expect(wolf.hp).toBe(127);
+    expect(wolf.maxHp).toBe(120);
+    expect(wolf.hp).toBe(120);
   });
 });
 
@@ -80,6 +84,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const wolf = spawnWolf(sim);
     wolf.maxHp = 1_000;
     wolf.hp = 1_000;
+    sim.drainEvents();
     const result = sim.castMir4Skill(1102, sim.playerId, wolf.id);
     expect(result).toEqual({ ok: true });
     const p = sim.entities.get(sim.playerId)!;
@@ -87,11 +92,185 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(p.cooldowns.has('1102')).toBe(true);
     expect(p.cooldowns.get('1102')).toBe(25);
     expect(p.gcdRemaining).toBe(1);
+    const impactEvents = sim.drainEvents();
     // The source starter adds 75 PA and 10 bps skill damage to the level-1
     // table, producing the shipping 100 + 100 + 112 impacts.
     expect(wolf.hp).toBe(1_000 - 312);
     expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(true);
     expect(wolf.auras.find((a) => a.kind === 'stun')?.duration).toBe(0.9);
+    const damageEvents = impactEvents.filter(
+      (event): event is Extract<SimEvent, { type: 'damage' }> =>
+        event.type === 'damage' && event.sourceId === p.id,
+    );
+    expect(damageEvents).toHaveLength(3);
+    expect(damageEvents.every((event) => event.attackAnimationStarted !== true)).toBe(true);
+    expect(impactEvents.some((event) => event.type === 'mir4AttackStart')).toBe(false);
+  });
+  it('lands all three 1102 contacts immediately and schedules no delayed duplicate', () => {
+    const sim = makeSliceSim(4_242);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 1_000;
+    wolf.hp = 1_000;
+    expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+    expect(wolf.hp).toBe(688);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(true);
+    expect(
+      (sim.player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
+    ).toHaveLength(0);
+
+    for (let tick = 0; tick < 24; tick++) sim.tick();
+    expect(wolf.hp).toBe(688);
+  });
+  it('applies a multi-hit effect when an earlier contact lands and the final one misses', () => {
+    const sim = makeSliceSim(4_243);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 1_000;
+    wolf.hp = 1_000;
+    const draws = vi
+      .spyOn(sim.rng, 'next')
+      // hit/crit for impact one, hit/crit for impact two, miss/crit for three
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValue(0.9999);
+    const startedAt = sim.time;
+    expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+
+    for (const offset of [0.45, 0.825, 1.2]) {
+      sim.time = startedAt + offset;
+      updateMir4PendingImpacts(sim.ctx);
+    }
+
+    expect(wolf.hp).toBe(800);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(true);
+    expect(draws).toHaveBeenCalledTimes(6);
+  });
+  it('applies no multi-hit effect when every damage contact misses', () => {
+    const sim = makeSliceSim(4_246);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 1_000;
+    wolf.hp = wolf.maxHp;
+    const draws = vi.spyOn(sim.rng, 'next').mockReturnValue(0.9999);
+    const startedAt = sim.time;
+    expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+
+    for (const offset of [0.45, 0.825, 1.2]) {
+      sim.time = startedAt + offset;
+      updateMir4PendingImpacts(sim.ctx);
+    }
+
+    expect(wolf.hp).toBe(wolf.maxHp);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(false);
+    expect(draws).toHaveBeenCalledTimes(6);
+  });
+  it('attempts the equipped spirit once on the first landed contact after an opening miss', () => {
+    const sim = makeSliceSim(4_245);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 2_000;
+    wolf.hp = wolf.maxHp;
+    const meta = sim.players.get(sim.playerId);
+    if (!meta) throw new Error('MIR4 player meta missing');
+    meta.mir4Spirits = {
+      owned: { 'spirit-common-01': 1 },
+      discovered: ['spirit-common-01'],
+      equippedSpiritId: 'spirit-common-01',
+    };
+    const draws = vi
+      .spyOn(sim.rng, 'next')
+      // opening miss, second hit + successful spirit roll, third hit
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValue(0.9999);
+    const startedAt = sim.time;
+    expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+
+    for (const offset of [0.45, 0.825, 1.2]) {
+      sim.time = startedAt + offset;
+      updateMir4PendingImpacts(sim.ctx);
+    }
+
+    const spiritFx = sim
+      .drainEvents()
+      .filter((event) => event.type === 'spellfx' && event.school === 'mir4/spirit/bonus-damage');
+    expect(spiritFx).toHaveLength(1);
+    expect(meta.mir4SpiritSkillReadyAt).toBeCloseTo(startedAt + 6.55);
+    expect(draws).toHaveBeenCalledTimes(7);
+  });
+  it('does not retry a failed spirit proc on later contacts of the same action', () => {
+    const sim = makeSliceSim(4_247);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 2_000;
+    wolf.hp = wolf.maxHp;
+    const meta = sim.players.get(sim.playerId);
+    if (!meta) throw new Error('MIR4 player meta missing');
+    meta.mir4Spirits = {
+      owned: { 'spirit-common-01': 1 },
+      discovered: ['spirit-common-01'],
+      equippedSpiritId: 'spirit-common-01',
+    };
+    const draws = vi
+      .spyOn(sim.rng, 'next')
+      // first hit + no crit + failed proc, then two ordinary landed hits
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9999)
+      .mockReturnValue(0.9999);
+    const startedAt = sim.time;
+    expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+
+    for (const offset of [0.45, 0.825, 1.2]) {
+      sim.time = startedAt + offset;
+      updateMir4PendingImpacts(sim.ctx);
+    }
+
+    const spiritFx = sim
+      .drainEvents()
+      .filter((event) => event.type === 'spellfx' && event.school === 'mir4/spirit/bonus-damage');
+    expect(spiritFx).toHaveLength(0);
+    expect(meta.mir4SpiritSkillReadyAt).toBeUndefined();
+    expect(draws).toHaveBeenCalledTimes(7);
+  });
+  it('keeps manual actions on the shared GCD without an extra skill contact lock', () => {
+    const sim = makeSliceSim(4_244);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 10_000;
+    wolf.hp = wolf.maxHp;
+    const p = sim.player;
+    p.level = 50;
+    p.mir4UltGauge = 100;
+    expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
+    expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: false, reason: 'on-gcd' });
+    expect(sim.mir4UltimateCast(wolf.id)).toEqual({ ok: false, reason: 'on-gcd' });
+
+    sim.drainEvents();
+    sim.setMir4AutoBattleMode('battle');
+    const resumedEvents = Array.from({ length: 20 }, () => sim.tick()).flat();
+    expect(resumedEvents.some((event) => event.type === 'mir4AttackStart')).toBe(true);
+  });
+  it('rejects a manual action on the GCD after an immediate auto-battle skill', () => {
+    const sim = makeSliceSim(4_248);
+    const wolf = spawnWolf(sim);
+    wolf.maxHp = 10_000;
+    wolf.hp = wolf.maxHp;
+    sim.player.level = 10;
+    sim.setMir4AutoBattleMode('battle');
+
+    updateMir4AutoBattle(sim.ctx);
+
+    expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(0);
+    expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: false, reason: 'on-gcd' });
   });
   it('gates: range, wrong class, unknown skill, cooldown', () => {
     const sim = makeSliceSim();
@@ -111,9 +290,14 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const near = spawnWolf(sim);
     near.maxHp = 1_000;
     near.hp = 1_000;
+    expect(sim.castMir4Skill(1104, sim.playerId, near.id)).toEqual({
+      ok: false,
+      reason: 'not-unlocked',
+    });
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({ ok: true });
+    sim.player.level = 10;
     expect(sim.castMir4Skill(1104, sim.playerId, near.id)).toEqual({ ok: false, reason: 'on-gcd' });
-    ticks(sim, 21); // 1.05s: GCD gone, 1102 still on its 25s cooldown
+    ticks(sim, 25); // 1.25s: the final-contact lock is gone; cooldown remains
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({
       ok: false,
       reason: 'on-cooldown',
@@ -134,6 +318,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
 
     expect(sim.mir4CastSkill(1102, covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
     expect(sim.mir4BasicAttack(covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
+    p.level = 50;
     expect(sim.mir4UltimateCast(covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
 
     expect(covered.hp).toBe(covered.maxHp);
@@ -173,16 +358,21 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
 
     expect(run(true)).toEqual(run(false));
   });
-  it('revalidates LoS at a delayed impact without consuming combat RNG', () => {
+  it('revalidates PvP LoS at a delayed impact without consuming combat RNG', () => {
     const sim = makeSliceSim(42423);
     const p = sim.player;
-    const wolf = spawnWolf(sim, 2);
-    wolf.maxHp = 5000;
-    wolf.hp = wolf.maxHp;
+    const enemyId = sim.addPlayer('warrior', 'PvP impact target');
+    const enemy = sim.entities.get(enemyId);
+    if (!enemy) throw new Error('PvP impact target was not created');
+    enemy.pos = sim.groundPos(p.pos.x + 2, p.pos.z);
+    enemy.prevPos = { ...enemy.pos };
+    const duel = { a: p.id, b: enemy.id, state: 'active' as const, timer: 0 };
+    sim.duels.set(p.id, duel);
+    sim.duels.set(enemy.id, duel);
     const originalHasLineOfSight = sim.ctx.hasLineOfSight;
     let visible = true;
     sim.ctx.hasLineOfSight = () => visible;
-    expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
+    expect(sim.mir4BasicAttack(enemy.id)).toEqual({ ok: true });
     const pending = p.mir4PendingImpacts?.[0];
     if (!pending) throw new Error('MIR4 basic impact was not scheduled');
     pending.dueAt = sim.ctx.time;
@@ -192,18 +382,56 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     updateMir4PendingImpacts(sim.ctx);
 
     sim.ctx.hasLineOfSight = originalHasLineOfSight;
-    expect(wolf.hp).toBe(wolf.maxHp);
+    expect(enemy.hp).toBe(enemy.maxHp);
     expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
     expect(draws).not.toHaveBeenCalled();
+  });
+  it('revalidates PvP LoS for a player-controlled pet at delayed impact', () => {
+    const sim = makeSliceSim(42424);
+    const p = sim.player;
+    const enemyId = sim.addPlayer('warrior', 'PvP pet owner');
+    const enemy = sim.entities.get(enemyId);
+    if (!enemy) throw new Error('PvP pet owner was not created');
+    enemy.pos = sim.groundPos(p.pos.x + 3, p.pos.z);
+    enemy.prevPos = { ...enemy.pos };
+    const pet = spawnWolf(sim, 2);
+    pet.ownerId = enemy.id;
+    pet.hostile = false;
+    const duel = { a: p.id, b: enemy.id, state: 'active' as const, timer: 0 };
+    sim.duels.set(p.id, duel);
+    sim.duels.set(enemy.id, duel);
+    const originalHasLineOfSight = sim.ctx.hasLineOfSight;
+    let visible = true;
+    sim.ctx.hasLineOfSight = () => visible;
+    expect(sim.mir4BasicAttack(pet.id)).toEqual({ ok: true });
+    const pending = p.mir4PendingImpacts?.[0];
+    if (!pending) throw new Error('MIR4 pet-target impact was not scheduled');
+    pending.dueAt = sim.ctx.time;
+    visible = false;
+
+    updateMir4PendingImpacts(sim.ctx);
+
+    sim.ctx.hasLineOfSight = originalHasLineOfSight;
+    expect(pet.hp).toBe(pet.maxHp);
+    expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
   });
   it('the basic attack deals floor(125 * 6000 / 10000) = 75 on its own cadence', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
     ticks(sim, 1);
+    sim.drainEvents();
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
-    expect(wolf.hp).toBe(127); // scheduled: nothing lands before the offset
+    expect(sim.drainEvents()).toContainEqual({
+      type: 'mir4AttackStart',
+      sourceId: sim.playerId,
+      targetId: wolf.id,
+      action: 'basic',
+      pose: 'weapon',
+      durationMs: 448,
+    });
+    expect(wolf.hp).toBe(120); // scheduled: nothing lands before the offset
     ticks(sim, 6); // 0.30s >= the authored 280ms offset
-    expect(wolf.hp).toBe(127 - 75);
+    expect(wolf.hp).toBe(120 - 75);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({
       ok: false,
       reason: 'on-cooldown',
@@ -218,6 +446,7 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
     sim.castMir4Skill(1102, sim.playerId, wolf.id); // starter-scaled 312, lethal
+    ticks(sim, 24);
     const meta = sim.players.get(sim.playerId);
     const p = sim.entities.get(sim.playerId)!;
     expect(wolf.dead).toBe(true);
@@ -229,11 +458,13 @@ describe('the mir4 slice: kills, XP, and the level table', () => {
     const sim = makeSliceSim(777);
     const p = sim.entities.get(sim.playerId)!;
     for (let wolfIndex = 0; wolfIndex < 5; wolfIndex++) {
+      p.hp = p.maxHp;
       const wolf = spawnWolf(sim, 2);
-      // Burn the wolf down with basics only: 2 hits x 75 = 150 >= 127. Every
-      // wolf spawns inside the warrior's 4yd band: an unharmed mir4 mob is
+      // Burn the wolf down with basics only: allow one deterministic miss beyond
+      // the two starter hits needed for 120 HP. Every wolf spawns inside the
+      // warrior's 4yd band: an unharmed mir4 mob is
       // passive-until-attacked and never closes the distance on its own.
-      for (let hit = 0; hit < 2 && !wolf.dead; hit++) {
+      for (let hit = 0; hit < 6 && !wolf.dead; hit++) {
         ticks(sim, 14);
         sim.mir4BasicAttack(wolf.id);
         ticks(sim, 7); // land the scheduled impact before re-checking

@@ -36,7 +36,7 @@ export interface Mir4PaperdollItemView {
   enhancement: number;
   attributes: readonly (readonly [number, number])[];
   runtimeAttributes: readonly Readonly<{ statusId: number; value: number }>[];
-  /** Existing World of ClaudeCraft item used only for 3D/UI appearance. */
+  /** Existing Aeldrune item used only for 3D/UI appearance. */
   visualItemId: string;
   visualSlot: EquipSlot;
 }
@@ -203,6 +203,9 @@ export function buildMir4CharacterView(
       state.mir4EquipmentInstances,
       state.mir4Spirits,
       state.mir4Mounts,
+      state.mir4Codex,
+      state.mir4ArcRewards?.items,
+      state.mir4Training,
     ),
     slots,
     spirit: spirit ? { id: spirit.id, grade: spirit.grade } : null,

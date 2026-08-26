@@ -59,7 +59,15 @@ describe('game-profile world selection', () => {
       mir4WocMap: true,
     });
 
-    expect(world?.zones).toBe(BUILTIN_WORLD.zones);
+    expect(world?.zones).not.toBe(BUILTIN_WORLD.zones);
+    expect(world?.zones.map(({ pois: _pois, ...zone }) => zone)).toEqual(
+      BUILTIN_WORLD.zones.map(({ pois: _pois, ...zone }) => zone),
+    );
+    expect(
+      world?.zones
+        .find((zone) => zone.id === 'willowfen')
+        ?.pois.some((poi) => poi.label === 'Juncal das Três Chamas'),
+    ).toBe(true);
     expect(world?.props.buildings).toBe(BUILTIN_WORLD.props.buildings);
     expect(world?.props.decorProps?.slice(0, BUILTIN_WORLD.props.decorProps?.length)).toEqual(
       BUILTIN_WORLD.props.decorProps,
@@ -83,7 +91,15 @@ describe('game-profile world selection', () => {
 
   it('activates the same profile world at the online client host boundary', () => {
     const mir4 = constructClient(MIR4_GAME_PROFILE);
-    expect(getActiveWorldContent().zones).toBe(BUILTIN_WORLD.zones);
+    expect(getActiveWorldContent().zones).not.toBe(BUILTIN_WORLD.zones);
+    expect(getActiveWorldContent().zones.map(({ pois: _pois, ...zone }) => zone)).toEqual(
+      BUILTIN_WORLD.zones.map(({ pois: _pois, ...zone }) => zone),
+    );
+    expect(
+      getActiveWorldContent()
+        .zones.find((zone) => zone.id === 'willowfen')
+        ?.pois.some((poi) => poi.label === 'Juncal das Três Chamas'),
+    ).toBe(true);
     expect(getActiveWorldContent().mir4ArcMapProjections).toHaveLength(20);
     expect(mir4.cfg.world).toBe(getActiveWorldContent());
 

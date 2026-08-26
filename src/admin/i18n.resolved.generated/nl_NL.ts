@@ -12,8 +12,8 @@
 import type { AdminTranslations } from '../i18n.en';
 
 export const nl_NL: AdminTranslations = {
-  "app.title": "World of ClaudeCraft - Beheer",
-  "app.shortTitle": "WoC-beheerder",
+  "app.title": "Aeldrune - Beheer",
+  "app.shortTitle": "Aeldrune-beheerder",
   "auth.username": "Gebruikersnaam",
   "auth.password": "Wachtwoord",
   "auth.signIn": "Aanmelden",

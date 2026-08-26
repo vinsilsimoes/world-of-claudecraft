@@ -12,12 +12,14 @@ import {
   type Mir4Currencies,
   mir4AchievementClaimability,
 } from '../sim/mir4/achievements';
+import type { Mir4Materials } from '../sim/mir4/equipment';
 import type { Mir4SkillEvolutionResources } from '../sim/mir4/skill_evolution';
 
 export interface Mir4AchievementsViewState {
   mir4AchievementClears?: Readonly<Mir4AchievementClears>;
   mir4Currencies?: Readonly<Mir4Currencies>;
   mir4SkillResources?: Readonly<Mir4SkillEvolutionResources>;
+  mir4Materials?: Readonly<Mir4Materials>;
 }
 
 export interface Mir4AchievementEntryModel {
@@ -25,7 +27,7 @@ export interface Mir4AchievementEntryModel {
   groupGrade: number;
   requiredLevel: number;
   progress: { current: number; target: number };
-  rewards: Mir4AchievementRewards & { skillTomes: number };
+  rewards: Mir4AchievementRewards & { knowledgeTomeCommon: number };
   status: 'claimed' | 'claimable' | 'locked' | 'grade-order';
 }
 
@@ -36,7 +38,7 @@ export interface Mir4AchievementsViewModel {
     copper: number;
     darksteel: number;
     effectPoints: number;
-    skillTomes: number;
+    knowledgeTomeCommon: number;
   };
   entries: Mir4AchievementEntryModel[];
 }
@@ -55,7 +57,7 @@ export function buildMir4AchievementsView(
       copper: Math.max(0, Math.floor(copper)),
       darksteel: Math.max(0, Math.floor(state.mir4Currencies?.darksteel ?? 0)),
       effectPoints: Math.max(0, Math.floor(state.mir4SkillResources?.effectPoints ?? 0)),
-      skillTomes: Math.max(0, Math.floor(state.mir4SkillResources?.skillTomes ?? 0)),
+      knowledgeTomeCommon: Math.max(0, Math.floor(state.mir4Materials?.knowledgeTomeCommon ?? 0)),
     },
     entries: MIR4_LEVEL_ACHIEVEMENTS.map((definition) => ({
       achievementId: definition.achievementId,
@@ -67,7 +69,8 @@ export function buildMir4AchievementsView(
       },
       rewards: {
         ...definition.rewards,
-        skillTomes: mir4AchievementPortBonus(definition.achievementId)?.skillTomes ?? 0,
+        knowledgeTomeCommon:
+          mir4AchievementPortBonus(definition.achievementId)?.knowledgeTomeCommon ?? 0,
       },
       status: mir4AchievementClaimability(definition, safeLevel, state.mir4AchievementClears),
     })),
@@ -85,6 +88,6 @@ export function mir4AchievementsRefreshSig(
     state.mir4AchievementClears?.[201] ?? 0,
     state.mir4Currencies?.darksteel ?? 0,
     state.mir4SkillResources?.effectPoints ?? 0,
-    state.mir4SkillResources?.skillTomes ?? 0,
+    state.mir4Materials?.knowledgeTomeCommon ?? 0,
   ].join('|');
 }

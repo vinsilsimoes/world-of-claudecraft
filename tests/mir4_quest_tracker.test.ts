@@ -18,7 +18,7 @@ describe('MIR4 quest tracker campaign priority', () => {
     ]);
   });
 
-  it('offers the global toggle on initial M01-Q01 instead of a restored repeatable', () => {
+  it('offers explicit Auto Mission routes for the main quest and a ready repeatable', () => {
     const entries = mir4QuestTrackerEntries({
       mir4ArcQuests: {
         'M01-R01': { questId: 'M01-R01', stageIndex: 2, stageProgress: 0, state: 'ready' },
@@ -31,7 +31,7 @@ describe('MIR4 quest tracker campaign priority', () => {
       autoJourneyActive: false,
       objective: { kind: 'reach-giver' },
     });
-    expect(entries[1]?.autoJourneyAvailable).toBe(false);
+    expect(entries[1]?.autoJourneyAvailable).toBe(true);
   });
 
   it('keeps the planned main quest visible before ready repeatables', () => {
@@ -56,10 +56,10 @@ describe('MIR4 quest tracker campaign priority', () => {
       autoJourneyActive: true,
       objective: { kind: 'reach-giver' },
     });
-    expect(entries.slice(1).every((entry) => entry.autoJourneyAvailable === false)).toBe(true);
+    expect(entries.slice(1).every((entry) => entry.autoJourneyAvailable === true)).toBe(true);
   });
 
-  it('offers Stop only on the journey that is actually active', () => {
+  it('offers Stop on the active journey and lets another row replace it', () => {
     const entries = mir4QuestTrackerEntries({
       mir4ArcQuests: {
         'M01-Q01': { questId: 'M01-Q01', stageIndex: 7, stageProgress: 0, state: 'done' },
@@ -76,7 +76,7 @@ describe('MIR4 quest tracker campaign priority', () => {
 
     expect(entries.map((entry) => entry.id)).toEqual(['M01-Q03', 'M01-R01']);
     expect(entries[0]).toMatchObject({
-      autoJourneyAvailable: false,
+      autoJourneyAvailable: true,
       autoJourneyActive: false,
     });
     expect(entries[1]).toMatchObject({
@@ -109,7 +109,7 @@ describe('MIR4 quest tracker campaign priority', () => {
       autoJourneyActive: true,
       autoJourneyAvailable: true,
     });
-    expect(entries.find((entry) => entry.id === 'M01-Q02')?.autoJourneyAvailable).toBe(false);
+    expect(entries.find((entry) => entry.id === 'M01-Q02')?.autoJourneyAvailable).toBe(true);
   });
 
   it('keeps the next main quest ahead of repeatable grind regardless of its recommended level', () => {
@@ -124,7 +124,7 @@ describe('MIR4 quest tracker campaign priority', () => {
     const levelSeven = mir4QuestTrackerEntries({ playerLevel: 7, mir4ArcQuests });
     expect(levelSeven.map((entry) => entry.id)).toEqual(['M01-Q05', 'M01-R01']);
     expect(levelSeven[0]?.autoJourneyAvailable).toBe(true);
-    expect(levelSeven[1]?.autoJourneyAvailable).toBe(false);
+    expect(levelSeven[1]?.autoJourneyAvailable).toBe(true);
 
     const levelEight = mir4QuestTrackerEntries({ playerLevel: 8, mir4ArcQuests });
     expect(levelEight).toEqual(levelSeven);
@@ -140,5 +140,19 @@ describe('MIR4 quest tracker campaign priority', () => {
     });
 
     expect(entries.map((entry) => entry.id)).toEqual(['M02-Q04']);
+  });
+
+  it('keeps manual side-quest receipt stages as detail rows instead of false routes', () => {
+    const entries = mir4QuestTrackerEntries({
+      playerLevel: 7,
+      mir4ArcQuests: {
+        'M01-Q05': { questId: 'M01-Q05', stageIndex: 1, stageProgress: 0, state: 'active' },
+        'M01-S01': { questId: 'M01-S01', stageIndex: 2, stageProgress: 0, state: 'active' },
+        'M01-S02': { questId: 'M01-S02', stageIndex: 1, stageProgress: 0, state: 'active' },
+      },
+    });
+
+    expect(entries.find((entry) => entry.id === 'M01-S01')?.autoJourneyAvailable).toBe(false);
+    expect(entries.find((entry) => entry.id === 'M01-S02')?.autoJourneyAvailable).toBe(true);
   });
 });

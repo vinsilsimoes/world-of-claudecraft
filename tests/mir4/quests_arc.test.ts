@@ -20,7 +20,7 @@ describe('the quest arc table', () => {
     expect(MIR4_QUESTS_ARC).toHaveLength(230);
     expect(new Set(MIR4_QUESTS_ARC.map((q) => q.questId)).size).toBe(230);
   });
-  it('M01-Q01 pins verbatim: giver, rewards, stage kinds, chain wiring', () => {
+  it('M01-Q01 pins its giver, rewards, stage kinds and chain wiring', () => {
     const q = mir4ArcQuest('M01-Q01');
     expect(q).toMatchObject({
       questId: 'M01-Q01',
@@ -49,7 +49,7 @@ describe('the quest arc table', () => {
       target: 'clues-m01-z01',
       goal: 3,
     });
-    expect(q?.purpose).toContain('pegadas dos lobos');
+    expect(q?.purpose).toContain('água escura do Vau');
     expect(q?.dialogue).toHaveLength(3);
     expect(q?.rewards).toMatchObject({
       xp: '1432',
@@ -70,6 +70,53 @@ describe('the quest arc table', () => {
     // nextQuestId chains within each map: order 1..6.
     const m01 = MIR4_QUESTS_MAIN.filter((q) => q.mapId === 'm01-vila-do-vau');
     expect(m01.map((q) => q.order)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+  it('keeps the authored M01 tutorial in player language instead of generator or engine terms', () => {
+    const m01 = MIR4_QUESTS_MAIN.filter((quest) => quest.mapId === 'm01-vila-do-vau');
+    const playerFacingText = m01.flatMap((quest) => [
+      quest.purpose,
+      ...quest.stages.map((stage) => stage.text),
+      ...quest.dialogue.map((line) => (typeof line === 'string' ? line : line.text)),
+    ]);
+    const forbidden = [
+      /A ordem diz/i,
+      /Os sinais convergem/i,
+      /Registramos que/i,
+      /precisa executar/i,
+      /anchor/i,
+      /polígono hostil/i,
+      /tracker/i,
+      /landmark/i,
+      /receipt/i,
+      /guardian/i,
+    ];
+    for (const text of playerFacingText) {
+      for (const term of forbidden) expect(text, term.source).not.toMatch(term);
+    }
+  });
+  it('keeps the authored M03 chapter in player language instead of generator or engine terms', () => {
+    const m03 = MIR4_QUESTS_MAIN.filter((quest) => quest.mapId === 'm03-bosque-do-vale');
+    const playerFacingText = m03.flatMap((quest) => [
+      quest.purpose,
+      ...quest.stages.map((stage) => stage.text),
+      ...quest.dialogue.map((line) => (typeof line === 'string' ? line : line.text)),
+    ]);
+    const forbidden = [
+      /A ordem diz/i,
+      /Os sinais convergem/i,
+      /Registramos que/i,
+      /precisa executar/i,
+      /anchor/i,
+      /polígono hostil/i,
+      /landmark/i,
+      /receipt/i,
+      /guardian/i,
+      /dire_wolf/i,
+      /boss/i,
+    ];
+    for (const text of playerFacingText) {
+      for (const term of forbidden) expect(text, term.source).not.toMatch(term);
+    }
   });
   it('the stage-kind vocabulary matches the source census', () => {
     const kinds = new Set(MIR4_QUESTS_ARC.flatMap((q) => q.stageKinds));

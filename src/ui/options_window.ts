@@ -62,6 +62,7 @@ import {
   SETTING_RANGES,
 } from '../game/settings';
 import { desktopBridge } from '../runtime';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import type { IWorld } from '../world_api';
 import { appVersionInfo } from './app_version';
 import { type AuraOverlayHooks, AuraOverlaySettingsPanel } from './aura_overlay_settings';
@@ -186,6 +187,7 @@ const BIND_CATEGORY_LABEL_KEYS: Partial<Record<string, TranslationKey>> = {
   Movement: 'hud.keybinds.categories.movement',
   Targeting: 'hud.keybinds.categories.targeting',
   Interface: 'hud.keybinds.categories.interface',
+  Tools: 'hudChrome.keybinds.categoryTools',
   'Action Bar': 'hud.keybinds.categories.actionBar',
   Pet: 'hudChrome.keybinds.categoryPet',
 };
@@ -202,6 +204,7 @@ const BIND_ACTION_LABEL_KEYS: Partial<Record<string, TranslationKey>> = {
   dive: 'hudChrome.keybinds.dive',
   autorun: 'hud.keybinds.actions.autorun',
   target: 'hud.keybinds.actions.target',
+  attack: 'hud.keybinds.actions.attack',
   attackMove: 'hud.keybinds.actions.attackMove',
   interact: 'hud.keybinds.actions.interact',
   char: 'hud.keybinds.actions.char',
@@ -232,6 +235,8 @@ const BIND_ACTION_LABEL_KEYS: Partial<Record<string, TranslationKey>> = {
   petDefensive: 'hudChrome.keybinds.petDefensive',
   petAggressive: 'hudChrome.keybinds.petAggressive',
   targetPet: 'hudChrome.keybinds.targetPet',
+  toggleAutoCollect: 'hudChrome.keybinds.toggleAutoCollect',
+  toggleAutoBattle: 'hudChrome.keybinds.toggleAutoBattle',
 
   // Reuse the existing window/feature names so these labels localize everywhere
   // without duplicating strings (these two ids were previously absent from the
@@ -2085,6 +2090,7 @@ export class OptionsWindow {
     // The Attack Move key is only meaningful (and only rebindable) while its mode
     // is on; otherwise hide its row so it can't shadow Turn Left's A in the list.
     const attackMoveOn = !!hooks?.settings.get('attackMove');
+    const mir4Profile = this.deps.world().cfg.gameProfile === MIR4_GAME_PROFILE;
     for (const category of BIND_CATEGORIES) {
       if (category === 'Action Bar') {
         // The wall of per-slot rebind rows (one per action-bar slot, 34 on this
@@ -2124,7 +2130,10 @@ export class OptionsWindow {
         continue;
       }
       const visible = BIND_ACTIONS.filter(
-        (a) => a.category === category && (a.id !== 'attackMove' || attackMoveOn),
+        (a) =>
+          a.category === category &&
+          (a.id !== 'attackMove' || attackMoveOn) &&
+          (a.category !== 'Tools' || mir4Profile),
       );
       if (visible.length === 0) continue;
       // Each category is its own column block (header + its rows) so the wide

@@ -89,11 +89,11 @@ describe('secret + uri generation', () => {
     expect(base32Decode(s)).toHaveLength(20);
   });
   it('builds an otpauth URI that encodes brand spaces and carries the secret', () => {
-    const uri = otpauthUri('GEZDGNBV', 'Aria', 'World of ClaudeCraft');
+    const uri = otpauthUri('GEZDGNBV', 'Aria', 'Aeldrune');
     expect(uri.startsWith('otpauth://totp/')).toBe(true);
     expect(uri).toContain('secret=GEZDGNBV');
-    expect(uri).toContain('issuer=World+of+ClaudeCraft');
-    expect(uri).toContain('World%20of%20ClaudeCraft%3AAria');
+    expect(uri).toContain('issuer=Aeldrune');
+    expect(uri).toContain('Aeldrune%3AAria');
   });
 });
 

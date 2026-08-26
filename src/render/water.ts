@@ -11,7 +11,7 @@ import {
   ZONES,
 } from '../sim/data';
 import type { ZoneDef } from '../sim/types';
-import { waterBodies, waterLevel, waterLevelAt } from '../sim/world';
+import { usesContentTerrain, waterBodies, waterLevel, waterLevelAt } from '../sim/world';
 import { loadTexture } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import {
@@ -1736,7 +1736,7 @@ function buildEmptyWater(): WaterView {
 
 export function buildWater(seed: number, renderer?: THREE.WebGLRenderer): WaterView {
   const content = getActiveWorldContent();
-  if (content.zones.length > 0 && content.zones !== ZONES) {
+  if (usesContentTerrain(content)) {
     const bodies = waterBodies();
     if (bodies.length === 0) return buildEmptyWater();
     return buildPhongWater(bodies, content.dryCrossings ?? []);

@@ -3,20 +3,24 @@ import { spellHasteMult } from '../../src/sim/combat/spell_combat';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_MOUNTS_CATALOG } from '../../src/sim/content/mir4/mounts_catalog';
 import { createMob } from '../../src/sim/entity';
+import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
 import {
+  combineAllMir4Mounts,
   combineMir4Mounts,
+  confirmAllMir4Mounts,
   confirmMir4Mount,
   equipMir4Mount,
   redeemMir4MountTicket,
 } from '../../src/sim/mir4/mount_commands';
 import {
   drawMir4Mount,
+  MIR4_MOUNT_PENDING_LIMIT,
   MIR4_NATIVE_MOUNT_VISUAL_KEYS,
   mir4MountBonuses,
   mir4MountVisualKey,
   sanitizeMir4MountState,
 } from '../../src/sim/mir4/mounts';
-import { mountItemId } from '../../src/sim/mounts';
+import { forceDismount, mountItemId } from '../../src/sim/mounts';
 import { moveSpeedMult } from '../../src/sim/player_motion';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey } from '../../src/sim/types';
@@ -48,6 +52,26 @@ function required<T>(value: T | null | undefined, label: string): T {
 }
 
 describe('MIR4 Mount progression', () => {
+  it('preserves Solitude bonuses across the native mount recalc path', () => {
+    const sim = makeSim(1_115);
+    const meta = required(sim.players.get(sim.playerId), 'Solitude player meta');
+    sim.setPlayerLevel(70);
+    meta.mir4Currencies = { darksteel: 1_000, energy: 0 };
+    meta.mir4Materials = {
+      ...MIR4_EMPTY_MATERIALS,
+      noirsoulHerbRare: 1,
+      unihornRare: 5,
+    };
+    vi.spyOn(sim.rng, 'next').mockReturnValue(0.1);
+    expect(sim.mir4TrainSolitude(1, 0).code).toBe('success');
+    expect(sim.player.mir4?.monsterDamageBps).toBe(50);
+
+    sim.player.mountKey = 'valorsteed';
+    forceDismount(sim.ctx, sim.player);
+    expect(sim.player.mir4?.monsterDamageBps).toBe(50);
+    expect(meta.mir4Training?.solitude?.conceptionVessel[0]).toBe(1);
+  });
+
   it('pins exact ticket boundaries and deterministic native visual shells', () => {
     expect(MIR4_NATIVE_MOUNT_VISUAL_KEYS).toEqual([
       'valorsteed',
@@ -68,7 +92,7 @@ describe('MIR4 Mount progression', () => {
     expect(mir4MountVisualKey('meadow-courser')).toBe('valorsteed');
   });
 
-  it('applies equipped grade stats and every exact unique-discovery collection step', () => {
+  it('applies equipped grade stats and one varied album bonus per unique discovery', () => {
     expect(
       mir4MountBonuses({
         owned: {
@@ -80,46 +104,24 @@ describe('MIR4 Mount progression', () => {
         discovered: ['meadow-courser', 'moss-boar', 'brook-stag', 'gray-wolf'],
         equippedMountId: 'meadow-courser',
       }),
-    ).toEqual({
+    ).toMatchObject({
       moveSpeedBps: 1_000,
       basicAttackSpeedBps: 500,
-      physicalDefense: 9,
-      magicDefense: 9,
+      maxHp: 25,
+      maxMana: 10,
+      physicalAttack: 2,
+      magicAttack: 2,
+      physicalDefense: 4,
+      magicDefense: 4,
     });
-
-    const expectedByGrade: Readonly<Record<number, readonly number[]>> = {
-      1: [2, 5],
-      2: [4, 10],
-      3: [8, 20],
-      4: [16, 40, 72],
-      5: [32, 80, 144],
-      6: [60, 150, 270],
-    };
-    const requiredByStep = [2, 4, 6] as const;
-    for (const [gradeText, expectedSteps] of Object.entries(expectedByGrade)) {
-      const grade = Number(gradeText);
-      const ids = MIR4_MOUNTS_CATALOG.filter((mount) => mount.grade === grade).map(
-        (mount) => mount.id,
-      );
-      expect(ids.length).toBeGreaterThanOrEqual(Math.min(expectedSteps.length * 2, 5));
-      for (let index = 0; index < expectedSteps.length; index++) {
-        const threshold = Math.min(
-          required(requiredByStep[index], `grade ${grade} threshold ${index}`),
-          ids.length,
-        );
-        const previousExpected =
-          index === 0
-            ? 0
-            : required(expectedSteps[index - 1], `grade ${grade} previous defense ${index}`);
-        const expected = required(expectedSteps[index], `grade ${grade} defense ${index}`);
-        expect(
-          mir4MountBonuses({ discovered: ids.slice(0, threshold - 1), owned: {} }).physicalDefense,
-        ).toBe(previousExpected);
-        expect(
-          mir4MountBonuses({ discovered: ids.slice(0, threshold), owned: {} }).physicalDefense,
-        ).toBe(expected);
-      }
-    }
+    expect(
+      Object.values(
+        mir4MountBonuses({
+          discovered: MIR4_MOUNTS_CATALOG.map((mount) => mount.id),
+          owned: {},
+        }),
+      ).filter((value) => value > 0),
+    ).toHaveLength(14);
   });
 
   it('applies the exact movement-speed schedule for every Mount grade', () => {
@@ -154,6 +156,10 @@ describe('MIR4 Mount progression', () => {
       reason: 'wrong-profile',
     });
     expect(confirmMir4Mount(classic.ctx, classic.playerId, 'pending')).toEqual({
+      ok: false,
+      reason: 'wrong-profile',
+    });
+    expect(confirmAllMir4Mounts(classic.ctx, classic.playerId)).toEqual({
       ok: false,
       reason: 'wrong-profile',
     });
@@ -201,6 +207,10 @@ describe('MIR4 Mount progression', () => {
       owned: { 'eclipse-lion': 1 },
       discovered: ['eclipse-lion'],
     });
+    expect(confirmAllMir4Mounts(confirmation.ctx, confirmation.playerId)).toEqual({
+      ok: false,
+      reason: 'pending-unknown',
+    });
 
     const missingPid = Number.MAX_SAFE_INTEGER;
     expect(equipMir4Mount(confirmation.ctx, missingPid, null)).toEqual({
@@ -245,9 +255,34 @@ describe('MIR4 Mount progression', () => {
     expect(sim.countItem(reinsId)).toBe(0);
   });
 
+  it('confirms the full pending Mount queue in one authoritative operation', () => {
+    const sim = makeSim(1_110);
+    const meta = required(sim.players.get(sim.playerId), 'batch confirmation player meta');
+    meta.mir4Mounts = {
+      pending: Array.from({ length: MIR4_MOUNT_PENDING_LIMIT }, (_, index) => ({
+        id: `mount-pending-${sim.playerId}-${index + 1}`,
+        mountId: index % 2 === 0 ? 'eclipse-lion' : 'crimson-wyvern',
+        grade: 4,
+      })),
+    };
+
+    expect(confirmAllMir4Mounts(sim.ctx, sim.playerId)).toEqual({
+      ok: true,
+      status: 'confirmed',
+      batchCount: MIR4_MOUNT_PENDING_LIMIT,
+    });
+    expect(meta.mir4Mounts.pending).toBeUndefined();
+    expect(meta.mir4Mounts.owned).toEqual({
+      'eclipse-lion': MIR4_MOUNT_PENDING_LIMIT / 2,
+      'crimson-wyvern': MIR4_MOUNT_PENDING_LIMIT / 2,
+    });
+    expect(meta.mir4Mounts.discovered).toEqual(['eclipse-lion', 'crimson-wyvern']);
+  });
+
   it('uses the exact 20% 4-to-1 outcome and queues Epic rewards', () => {
     const success = makeSim();
     const meta = required(success.players.get(success.playerId), 'success player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
     meta.mir4Mounts = {
       owned: { 'amber-bear': 4 },
       discovered: ['amber-bear'],
@@ -266,6 +301,7 @@ describe('MIR4 Mount progression', () => {
 
     const failure = makeSim(1_092);
     const failureMeta = required(failure.players.get(failure.playerId), 'failure player meta');
+    failureMeta.mir4ArcRewards = { systems: ['mount-summon'] };
     failureMeta.mir4Mounts = {
       owned: { 'meadow-courser': 4 },
       discovered: ['meadow-courser'],
@@ -281,19 +317,276 @@ describe('MIR4 Mount progression', () => {
     expect(failureMeta.mir4Mounts.owned).toEqual({ 'meadow-courser': 1 });
   });
 
+  it('combines every initially available Mount of one rarity without recycling rewards', () => {
+    const sim = makeSim(1_102);
+    const meta = required(sim.players.get(sim.playerId), 'batch player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'meadow-courser': 40 },
+      discovered: ['meadow-courser'],
+      equippedMountId: 'meadow-courser',
+    };
+    let draws = 0;
+    vi.spyOn(sim.rng, 'next').mockImplementation(() => {
+      draws += 1;
+      return draws % 2 === 1 && draws <= 8 ? 0 : 0.999;
+    });
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toMatchObject({
+      ok: true,
+      batchCount: 10,
+      successCount: 4,
+      failureCount: 6,
+      outcome: 'success',
+    });
+    expect(draws).toBe(20);
+    expect(meta.mir4Mounts.owned).toEqual({
+      'copper-ant-carrier': 6,
+      'root-golem': 4,
+    });
+    expect(meta.mir4Mounts.equippedMountId).toBeUndefined();
+  });
+
+  it('enforces every independent combine-all Mount admission gate before RNG or mutation', () => {
+    const classic = new Sim({ seed: 1_111, playerClass: 'warrior', playerName: 'Classic' });
+    const classicMeta = required(classic.players.get(classic.playerId), 'classic player meta');
+    classicMeta.mir4Mounts = { owned: { 'meadow-courser': 4 } };
+    const classicBefore = structuredClone(classicMeta.mir4Mounts);
+    const classicNext = vi.spyOn(classic.rng, 'next');
+    expect(combineAllMir4Mounts(classic.ctx, classic.playerId, 1)).toEqual({
+      ok: false,
+      reason: 'wrong-profile',
+    });
+    expect(classicMeta.mir4Mounts).toEqual(classicBefore);
+    expect(classicNext).not.toHaveBeenCalled();
+
+    const sim = makeSim(1_112);
+    const meta = required(sim.players.get(sim.playerId), 'combine-all gate player meta');
+    meta.mir4Mounts = { owned: { 'meadow-courser': 4 } };
+    const next = vi.spyOn(sim.rng, 'next');
+    const locked = structuredClone(meta.mir4Mounts);
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toEqual({
+      ok: false,
+      reason: 'locked',
+    });
+    expect(meta.mir4Mounts).toEqual(locked);
+    const invalidGrade = structuredClone(meta.mir4Mounts);
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 0)).toEqual({
+      ok: false,
+      reason: 'invalid-grade',
+    });
+    expect(meta.mir4Mounts).toEqual(invalidGrade);
+    expect(combineAllMir4Mounts(sim.ctx, Number.MAX_SAFE_INTEGER, 1)).toEqual({
+      ok: false,
+      reason: 'unavailable',
+    });
+
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = { owned: { 'meadow-courser': 3 } };
+    const insufficient = structuredClone(meta.mir4Mounts);
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toEqual({
+      ok: false,
+      reason: 'insufficient-copies',
+    });
+    expect(meta.mir4Mounts).toEqual(insufficient);
+    meta.mir4Mounts = {
+      owned: { 'amber-bear': 4 },
+      pending: Array.from({ length: MIR4_MOUNT_PENDING_LIMIT }, (_, index) => ({
+        id: `mount-pending-${sim.playerId}-${index + 1}`,
+        mountId: 'eclipse-lion',
+        grade: 4,
+      })),
+    };
+    const pendingFull = structuredClone(meta.mir4Mounts);
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 3)).toEqual({
+      ok: false,
+      reason: 'pending-full',
+    });
+    expect(meta.mir4Mounts).toEqual(pendingFull);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('consumes Mount copies in ordinal id order regardless of the host locale', () => {
+    const sim = makeSim(1_104);
+    const meta = required(sim.players.get(sim.playerId), 'deterministic player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'shaggy-yak': 4, 'tawny-mastiff': 1 },
+      discovered: ['shaggy-yak', 'tawny-mastiff'],
+    };
+    const localeCompare = vi
+      .spyOn(String.prototype, 'localeCompare')
+      .mockImplementation(function reverseOrdinal(this: string, other) {
+        const left = String(this);
+        return left === other ? 0 : left < other ? 1 : -1;
+      });
+    vi.spyOn(sim.rng, 'next').mockReturnValue(0);
+
+    try {
+      expect(combineMir4Mounts(sim.ctx, sim.playerId, 1)).toMatchObject({
+        ok: true,
+        outcome: 'success',
+        grade: 2,
+      });
+    } finally {
+      localeCompare.mockRestore();
+    }
+
+    expect(meta.mir4Mounts.owned?.['shaggy-yak']).toBeUndefined();
+    expect(meta.mir4Mounts.owned?.['tawny-mastiff']).toBe(1);
+  });
+
+  it('aggregates combine-all copies across Mount identities and preserves the remainder', () => {
+    const sim = makeSim(1_105);
+    const meta = required(sim.players.get(sim.playerId), 'aggregate player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'shaggy-yak': 5, 'tawny-mastiff': 4 },
+      discovered: ['shaggy-yak', 'tawny-mastiff'],
+    };
+    const next = vi.spyOn(sim.rng, 'next').mockReturnValue(0);
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toMatchObject({
+      ok: true,
+      outcome: 'success',
+      batchCount: 2,
+      successCount: 2,
+      failureCount: 0,
+    });
+    expect(next).toHaveBeenCalledTimes(4);
+    expect(meta.mir4Mounts.owned?.['shaggy-yak']).toBeUndefined();
+    expect(meta.mir4Mounts.owned?.['tawny-mastiff']).toBe(1);
+  });
+
+  it('reports an all-failure combine-all batch without recycling rewards', () => {
+    const sim = makeSim(1_106);
+    const meta = required(sim.players.get(sim.playerId), 'failure batch player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'shaggy-yak': 8 },
+      discovered: ['shaggy-yak'],
+    };
+    const rolls = [0.999, 0, 0.999, 0];
+    const next = vi.spyOn(sim.rng, 'next').mockImplementation(() => rolls.shift() ?? 0);
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toMatchObject({
+      ok: true,
+      outcome: 'failure',
+      batchCount: 2,
+      successCount: 0,
+      failureCount: 2,
+    });
+    expect(next).toHaveBeenCalledTimes(4);
+    expect(
+      Object.entries(meta.mir4Mounts.owned ?? {}).reduce((sum, [, count]) => sum + count, 0),
+    ).toBe(2);
+  });
+
+  it('rejects combine-all above the abuse limit without RNG or mutation', () => {
+    const sim = makeSim(1_107);
+    const meta = required(sim.players.get(sim.playerId), 'limit player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'shaggy-yak': 100_004 },
+      discovered: ['shaggy-yak'],
+    };
+    const before = structuredClone(meta.mir4Mounts);
+    const next = vi.spyOn(sim.rng, 'next');
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toEqual({
+      ok: false,
+      reason: 'unavailable',
+    });
+    expect(meta.mir4Mounts).toEqual(before);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('accepts the exact combine-all abuse boundary of 25,000 attempts', () => {
+    const sim = makeSim(1_108);
+    const meta = required(sim.players.get(sim.playerId), 'maximum batch player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'shaggy-yak': 100_000 },
+      discovered: ['shaggy-yak'],
+    };
+    const next = vi.spyOn(sim.rng, 'next').mockReturnValue(0.999);
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 1)).toMatchObject({
+      ok: true,
+      outcome: 'failure',
+      batchCount: 25_000,
+      successCount: 0,
+      failureCount: 25_000,
+    });
+    expect(next).toHaveBeenCalledTimes(50_000);
+  });
+
+  it('accepts high-grade combine-all at the exact pending capacity', () => {
+    const sim = makeSim(1_109);
+    const meta = required(sim.players.get(sim.playerId), 'exact capacity player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'amber-bear': 8 },
+      discovered: ['amber-bear'],
+      pending: Array.from({ length: MIR4_MOUNT_PENDING_LIMIT - 2 }, (_, index) => ({
+        id: `mount-pending-${sim.playerId}-${index + 1}`,
+        mountId: 'eclipse-lion',
+        grade: 4,
+      })),
+      nextPendingId: MIR4_MOUNT_PENDING_LIMIT - 1,
+    };
+    vi.spyOn(sim.rng, 'next').mockReturnValue(0);
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 3)).toMatchObject({
+      ok: true,
+      batchCount: 2,
+    });
+    expect(meta.mir4Mounts.pending).toHaveLength(MIR4_MOUNT_PENDING_LIMIT);
+  });
+
+  it('combines as many high-grade Mounts as the remaining pending capacity allows', () => {
+    const sim = makeSim(1_103);
+    const meta = required(sim.players.get(sim.playerId), 'capacity player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
+    meta.mir4Mounts = {
+      owned: { 'amber-bear': 8 },
+      discovered: ['amber-bear'],
+      pending: Array.from({ length: MIR4_MOUNT_PENDING_LIMIT - 1 }, (_, index) => ({
+        id: `mount-pending-${sim.playerId}-${index + 1}`,
+        mountId: 'eclipse-lion',
+        grade: 4,
+      })),
+    };
+    const next = vi.spyOn(sim.rng, 'next').mockReturnValue(0);
+
+    expect(combineAllMir4Mounts(sim.ctx, sim.playerId, 3)).toMatchObject({
+      ok: true,
+      batchCount: 1,
+      successCount: 1,
+    });
+    expect(meta.mir4Mounts.owned).toEqual({ 'amber-bear': 4 });
+    expect(meta.mir4Mounts.pending).toHaveLength(MIR4_MOUNT_PENDING_LIMIT);
+    expect(next).toHaveBeenCalledTimes(2);
+  });
+
   it('uses MIR4 movement speed instead of stacking native shell tuning', () => {
     const sim = makeSim(1_093);
-    required(sim.player.mir4, 'MIR4 player stats').mountMoveSpeedBps = 1_000;
+    const mir4 = required(sim.player.mir4, 'MIR4 player stats');
+    mir4.mountMoveSpeedBps = 1_000;
 
     expect(moveSpeedMult(sim.player)).toBe(1);
 
-    sim.player.mountKey = mir4MountVisualKey('meadow-courser');
+    mir4.statusValues = { ...mir4.statusValues, 77: 1_000 };
     expect(moveSpeedMult(sim.player)).toBeCloseTo(1.1);
+
+    sim.player.mountKey = mir4MountVisualKey('meadow-courser');
+    expect(moveSpeedMult(sim.player)).toBeCloseTo(1.2);
   });
 
   it('shortens the real melee and ranged basic cooldown while dismounted without speeding spells', () => {
     const sim = makeSim(1_100);
     const meta = required(sim.players.get(sim.playerId), 'player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
     meta.mir4Mounts = {
       owned: { 'meadow-courser': 1 },
       discovered: ['meadow-courser'],
@@ -372,6 +665,7 @@ describe('MIR4 Mount progression', () => {
   it('fails closed for invalid combine, missing pending rows, and unowned equips', () => {
     const sim = makeSim(1_094);
     const meta = required(sim.players.get(sim.playerId), 'player meta');
+    meta.mir4ArcRewards = { systems: ['mount-summon'] };
     meta.mir4Mounts = { owned: { 'meadow-courser': 3 }, discovered: ['meadow-courser'] };
     const before = structuredClone(meta.mir4Mounts);
 

@@ -2,6 +2,7 @@ export interface Mir4PlaytestRosterEntry {
   readonly classKey: 'warrior' | 'elementalist' | 'taoist' | 'arbalist' | 'lancer';
   readonly classId: 1 | 2 | 3 | 4 | 5;
   readonly namePrefix: string;
+  readonly engagementRangeYards: 4 | 6 | 8 | 12;
   readonly initialSkillIds: readonly number[];
 }
 
@@ -71,11 +72,36 @@ export function planMir4GrindingEngagement(
   entities: ReadonlyMap<number, Record<string, unknown>>,
   acquireRadiusYards?: number,
 ): Record<string, unknown>[];
+export function hasMir4NearbyHostile(
+  self: Record<string, unknown>,
+  entities: ReadonlyMap<number, Record<string, unknown>>,
+  radiusYards?: number,
+): boolean;
+export function planMir4VendorRestock(
+  self: Record<string, unknown>,
+  entities: ReadonlyMap<number, Record<string, unknown>>,
+): Record<string, unknown>[];
 export function planMir4ThreatIntervention(
   self: Record<string, unknown>,
   entities: ReadonlyMap<number, Record<string, unknown>>,
   rosterEntry: Mir4PlaytestRosterEntry,
   dangerRadiusYards?: number,
+): Record<string, unknown>[];
+export function planMir4EscortIntervention(
+  self: Record<string, unknown>,
+  entities: ReadonlyMap<number, Record<string, unknown>>,
+  rosterEntry: Mir4PlaytestRosterEntry,
+): Record<string, unknown>[];
+export function planMir4SurvivalIntervention(
+  self: Record<string, unknown>,
+  entities: ReadonlyMap<number, Record<string, unknown>>,
+  rosterEntry: Mir4PlaytestRosterEntry,
+  guardianEntityId?: number | null,
+): Record<string, unknown>[];
+
+export function planMir4ThreatBattleMode(
+  self: Record<string, any>,
+  hasThreat: boolean,
 ): Record<string, unknown>[];
 export interface Mir4PlaytestReport {
   schemaVersion: number;

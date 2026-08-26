@@ -3,13 +3,21 @@
 // it without retaining module-global state, drawing RNG, or changing the
 // save/wire projection.
 
-import { findPlayerPath } from '../pathfind';
+import {
+  findPlayerPath,
+  findReachablePlayerPath,
+  PLAYER_MAX_CLIMB_SLOPE,
+  resolvePlayerDestination,
+} from '../pathfind';
 import type { ZoneDef } from '../types';
+import { groundHeight, waterLevelAt } from '../world';
 
 const ROUTE_REACHED_YARDS = 0.75;
 const ROUTE_STALL_TICKS = 20;
 const ROUTE_LOCAL_SPAN_YARDS = 96;
 const ROUTE_AUTHORED_LEG_MAX_SPAN = 192;
+const AUTOMATION_PROBE_STEP_YARDS = 0.35;
+const ROUTE_NEARBY_AUTHORED_RECOVERY_YARDS = 24;
 
 export interface Mir4AutoQuestRouteState {
   goalX: number;
@@ -95,7 +103,19 @@ export function authoredRoadRoute(
         node.x < (zone.xMax ?? 180) &&
         node.z >= zone.zMin &&
         node.z < zone.zMax,
-    )?.id;
+    );
+  const isBorderGateway = (node: RoadNode, zone: ZoneDef | undefined): boolean => {
+    if (!zone) return false;
+    const xMin = zone.xMin ?? -180;
+    const xMax = zone.xMax ?? 180;
+    const borderDistance = Math.min(
+      Math.abs(node.x - xMin),
+      Math.abs(node.x - xMax),
+      Math.abs(node.z - zone.zMin),
+      Math.abs(node.z - zone.zMax),
+    );
+    return borderDistance <= 30;
+  };
   const join = (left: number, right: number, limit: number) => {
     if (left === right) return;
     const weight = Math.hypot(nodes[left]!.x - nodes[right]!.x, nodes[left]!.z - nodes[right]!.z);
@@ -127,7 +147,23 @@ export function authoredRoadRoute(
         if (a.road === b.road || a.node === b.node) continue;
         const aZone = zoneAt(nodes[a.node]!);
         const bZone = zoneAt(nodes[b.node]!);
-        if (!aZone || !bZone || aZone === bZone) continue;
+        if (!aZone || !bZone) continue;
+        // Some WoC roads deliberately begin inside the previous zone because
+        // the intervening open ground is itself the named passage. The
+        // Ferrywalk starts at the Farshore Causeway POI 30 yards before the
+        // zone boundary, for example. Treat an endpoint on a declared border
+        // POI as a physical gateway even when both endpoint coordinates are
+        // classified in the same zone. Requiring border proximity avoids
+        // inventing shortcuts between ordinary same-biome road spokes. The
+        // campaign replaces WoC POI labels, so geometry, rather than a
+        // particular cartography label, is the stable gateway authority.
+        if (
+          aZone.id === bZone.id &&
+          !isBorderGateway(nodes[a.node]!, aZone) &&
+          !isBorderGateway(nodes[b.node]!, bZone)
+        ) {
+          continue;
+        }
         join(a.node, b.node, ROAD_EXIT_JOIN_YARDS);
       }
     }
@@ -184,12 +220,24 @@ export function authoredRoadRoute(
   }
   if (indices.at(-1) !== start.index) return null;
   indices.reverse();
+  const skipSnappedStart = start.distance <= ROAD_LOCAL_JOIN_YARDS;
+  const skipSnappedEnd = end.distance <= ROAD_LOCAL_JOIN_YARDS;
   const route = indices
     .map((index) => ({ x: nodes[index]!.x, z: nodes[index]!.z }))
-    // Never walk back to the snapped start vertex. Portal landings intentionally
-    // sit a few yards past their road endpoint; returning to the closest vertex
-    // would immediately re-enter the portal and ping-pong between maps.
-    .filter((_point, index) => index > 0);
+    // Portal landings intentionally sit a few yards past their road endpoint;
+    // returning to that nearby vertex would immediately re-enter the portal.
+    // A player far from the graph is different: the snapped vertex is the
+    // authored entrance or exit around a maze, wall or lake and must remain in
+    // the route before following the road network.
+    // The same rule applies at the destination. A quest NPC or objective can
+    // stand a few yards past a road endpoint, and the endpoint itself may be
+    // occupied by the visible arch, sign or landmark that explains the turn.
+    // Walking onto that decoration before the actual goal can cause a portal
+    // loop or a collision stall even though the goal is directly reachable.
+    .filter(
+      (_point, index) =>
+        (index > 0 || !skipSnappedStart) && (index < indices.length - 1 || !skipSnappedEnd),
+    );
   const last = route.at(-1);
   if (!last || Math.hypot(last.x - goal.x, last.z - goal.z) > 0.5) {
     route.push({ x: goal.x, z: goal.z });
@@ -197,8 +245,12 @@ export function authoredRoadRoute(
   return route;
 }
 
-function sameGoal(route: Mir4AutoQuestRouteState, goal: { x: number; z: number }): boolean {
-  return Math.hypot(route.goalX - goal.x, route.goalZ - goal.z) < 0.5;
+function sameGoal(
+  route: Mir4AutoQuestRouteState,
+  goal: { x: number; z: number },
+  repathGoalDistance: number,
+): boolean {
+  return Math.hypot(route.goalX - goal.x, route.goalZ - goal.z) < repathGoalDistance;
 }
 
 function localRouteGoal(
@@ -213,6 +265,106 @@ function localRouteGoal(
   return { x: from.x + dx * scale, z: from.z + dz * scale };
 }
 
+/** The shared automated mover rejects an uphill sample inside a steep-wall
+ * cell even when coarse A* found a nominal path. Validate each compressed A*
+ * segment at the live movement step before committing to an authored-road
+ * approach, otherwise both layers can rebuild the same unusable route forever.
+ * Authored switchbacks and ramps provide the physical alternative when this
+ * conservative check rejects a shortcut across their surrounding relief. */
+function automationApproachStartsWalkable(
+  seed: number,
+  current: Readonly<{ x: number; z: number }>,
+  approach: readonly { x: number; z: number }[],
+): boolean {
+  const rideHeight = (x: number, z: number) =>
+    Math.max(groundHeight(x, z, seed), waterLevelAt(x, z, seed));
+  let fromX = current.x;
+  let fromZ = current.z;
+  for (const waypoint of approach) {
+    const dx = waypoint.x - fromX;
+    const dz = waypoint.z - fromZ;
+    const distance = Math.hypot(dx, dz);
+    const steps = Math.max(1, Math.ceil(distance / AUTOMATION_PROBE_STEP_YARDS));
+    let previousX = fromX;
+    let previousZ = fromZ;
+    for (let index = 1; index <= steps; index += 1) {
+      const ratio = index / steps;
+      const nextX = fromX + dx * ratio;
+      const nextZ = fromZ + dz * ratio;
+      const stepRun = Math.hypot(nextX - previousX, nextZ - previousZ);
+      if (
+        rideHeight(nextX, nextZ) - rideHeight(previousX, previousZ) >
+        PLAYER_MAX_CLIMB_SLOPE * stepRun + 1e-6
+      ) {
+        return false;
+      }
+      previousX = nextX;
+      previousZ = nextZ;
+    }
+    fromX = waypoint.x;
+    fromZ = waypoint.z;
+  }
+  return approach.length > 0;
+}
+
+function reachableRoadDetour(
+  seed: number,
+  current: { x: number; z: number },
+  goal: { x: number; z: number },
+  roads: readonly (readonly { x: number; z: number }[])[],
+  zones: readonly ZoneDef[],
+  riftToken: number,
+  swim: boolean,
+): { x: number; z: number }[] | null {
+  const seen = new Set<string>();
+  const candidates = roads
+    .flatMap((road) => road)
+    .filter((point) => {
+      const key = roadNodeKey(point);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return Math.hypot(point.x - current.x, point.z - current.z) <= WOC_ROAD_SNAP_YARDS;
+    })
+    .sort(
+      (left, right) =>
+        Math.hypot(left.x - current.x, left.z - current.z) -
+        Math.hypot(right.x - current.x, right.z - current.z),
+    )
+    .slice(0, 16);
+
+  for (const candidate of candidates) {
+    let approach = findReachablePlayerPath(
+      seed,
+      current,
+      candidate,
+      ROUTE_AUTHORED_LEG_MAX_SPAN,
+      false,
+      swim,
+      riftToken,
+    );
+    // A character already down inside a swimmable authored ramp can be closer
+    // to its road endpoint than the coarse land A* can represent. Admit that
+    // short direct leg only after the same per-step physical grade probe used
+    // for normal approaches. The live mover still handles water and colliders;
+    // this merely reconnects it to the visible authored escape.
+    if (
+      approach.length === 0 &&
+      Math.hypot(candidate.x - current.x, candidate.z - current.z) <=
+        ROUTE_NEARBY_AUTHORED_RECOVERY_YARDS &&
+      automationApproachStartsWalkable(seed, current, [candidate])
+    ) {
+      approach = [candidate];
+    }
+    if (approach.length === 0 || !automationApproachStartsWalkable(seed, current, approach)) {
+      continue;
+    }
+    const road = authoredRoadRoute(candidate, goal, roads, zones);
+    if (!road) continue;
+    return [...approach, ...road];
+  }
+  return null;
+}
+
 export function advanceMir4AutomationRoute(
   seed: number,
   current: { x: number; z: number },
@@ -223,6 +375,8 @@ export function advanceMir4AutomationRoute(
   preferAuthoredRoads = false,
   roads: readonly (readonly { x: number; z: number }[])[] = [],
   zones: readonly ZoneDef[] = [],
+  swim = false,
+  repathGoalDistance = 0.5,
 ): { route: Mir4AutoQuestRouteState; waypoint: { x: number; z: number } } {
   let route = previous;
   let stalledTicks = 0;
@@ -238,7 +392,7 @@ export function advanceMir4AutomationRoute(
       }
     }
   }
-  const goalChanged = route ? !sameGoal(route, goal) : true;
+  const goalChanged = route ? !sameGoal(route, goal, repathGoalDistance) : true;
 
   if (route && !goalChanged) {
     while (
@@ -270,11 +424,50 @@ export function advanceMir4AutomationRoute(
   }
 
   if (goalChanged || !route || route.waypoints.length === 0 || stalledTicks >= ROUTE_STALL_TICKS) {
-    const authored = preferAuthoredRoads ? authoredRoadRoute(current, goal, roads, zones) : null;
+    // A dialogue, portal landing or crowd collision can leave the player's
+    // centre a few inches inside a static prop. A* deliberately treats a
+    // blocked start as a fallback case, which used to collapse the route to a
+    // straight segment through that same prop forever. Plan from the nearest
+    // collision-safe point instead. The returned path still starts close
+    // enough for ordinary swept movement to escape physically; this does not
+    // teleport or phase the player through geometry.
+    const planningStart = resolvePlayerDestination(seed, current, swim, riftToken);
+    let authored = preferAuthoredRoads
+      ? authoredRoadRoute(planningStart, goal, roads, zones)
+      : null;
+    // A shallow beach inside a declared lake can be technically dry while
+    // still lying below an impassable carved rim. When the destination is
+    // outside that water body, retain the nearest authored shore/ramp vertex
+    // instead of skipping it as a normal close road snap. This is what leads
+    // Glacier Tarn waders to the visible slipway before climbing the bench.
+    const leavingWaterBody =
+      Number.isFinite(waterLevelAt(planningStart.x, planningStart.z, seed)) &&
+      !Number.isFinite(waterLevelAt(goal.x, goal.z, seed));
+    if (authored && leavingWaterBody) {
+      authored =
+        reachableRoadDetour(seed, planningStart, goal, roads, zones, riftToken, swim) ?? authored;
+    }
+    if (authored?.[0]) {
+      const directApproach = findReachablePlayerPath(
+        seed,
+        planningStart,
+        authored[0],
+        ROUTE_AUTHORED_LEG_MAX_SPAN,
+        false,
+        swim,
+        riftToken,
+      );
+      if (
+        directApproach.length === 0 ||
+        !automationApproachStartsWalkable(seed, planningStart, directApproach)
+      ) {
+        authored = reachableRoadDetour(seed, planningStart, goal, roads, zones, riftToken, swim);
+      }
+    }
     const checkpoints = authored ?? [localRouteGoal(current, goal)];
     const maxSpan = authored ? ROUTE_AUTHORED_LEG_MAX_SPAN : 128;
     const waypoints: { x: number; z: number }[] = [];
-    let legStart = { x: current.x, z: current.z };
+    let legStart = planningStart;
     for (const checkpoint of checkpoints) {
       for (const waypoint of findRoute(
         seed,
@@ -282,7 +475,7 @@ export function advanceMir4AutomationRoute(
         checkpoint,
         maxSpan,
         false,
-        false,
+        swim,
         riftToken,
       )) {
         const prior = waypoints.at(-1);

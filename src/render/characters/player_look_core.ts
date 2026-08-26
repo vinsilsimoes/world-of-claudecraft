@@ -18,9 +18,8 @@
 
 import {
   MIR4_NATIVE_ARMOR_MASK,
-  MIR4_NATIVE_ARMOR_SET,
-  MIR4_NATIVE_VISUAL_CLASS,
-} from '../../sim/mir4/native_equipment_visuals';
+  mir4NativeClassPresentation,
+} from '../../sim/mir4/native_class_presentation';
 import type { Entity, PlayerClass } from '../../sim/types';
 import { sameAppearance } from '../../world_api/appearance';
 import {
@@ -100,9 +99,10 @@ export function inWorldLookFor(
 export function mir4InWorldLookFor(e: Entity): ModularLook | null {
   if (e.kind !== 'player') return null;
   const classId = e.mir4VisualClassId;
-  const armorSet = classId === undefined ? undefined : MIR4_NATIVE_ARMOR_SET[classId];
-  if (!armorSet) return null;
-  const mask = e.mir4VisualArmorMask ?? 0;
+  if (classId === undefined) return null;
+  const profile = mir4NativeClassPresentation(classId);
+  const armorSet = profile.armorSet;
+  const mask = (e.mir4VisualArmorMask ?? 0) | profile.baselineArmorMask;
   const worn: ArmorLoadout = {};
   if ((mask & MIR4_NATIVE_ARMOR_MASK.chest) !== 0) {
     worn.chest = armorSet;
@@ -123,7 +123,7 @@ export function mir4InWorldLookFor(e: Entity): ModularLook | null {
 export function mir4VisualClassForEntity(e: Entity): PlayerClass | null {
   return e.mir4VisualClassId === undefined
     ? null
-    : (MIR4_NATIVE_VISUAL_CLASS[e.mir4VisualClassId] ?? null);
+    : mir4NativeClassPresentation(e.mir4VisualClassId).visualClass;
 }
 
 /**

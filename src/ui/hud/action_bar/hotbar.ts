@@ -4,6 +4,7 @@ import {
   type TalentAllocation,
 } from '../../../sim/content/talents';
 import { abilitiesKnownAt } from '../../../sim/data';
+import { type GameProfile, MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import type { AbilityDef, PlayerClass } from '../../../sim/types';
 
 export type HotbarAction = { type: 'ability'; id: string } | { type: 'item'; id: string } | null;
@@ -23,6 +24,14 @@ export const HOTBAR_ACTION_MIME = 'application/x-woc-hotbar-action';
 // (which restores Attack to slot 0). Kept distinct from HOTBAR_ACTION_MIME so the
 // normal ability/item drop path never mistakes it for an assignable action.
 export const HOTBAR_ATTACK_MIME = 'application/x-woc-hotbar-attack';
+
+/** MIR4 owns separate combat tools, so its first visible seat is always assignable. */
+export function profileUsesFixedAttackSlot(
+  profile: GameProfile | undefined,
+  showAttackButton: boolean,
+): boolean {
+  return profile !== MIR4_GAME_PROFILE && showAttackButton;
+}
 
 // True when an in-progress drag carries the Attack marker. Reads DataTransfer.types
 // (available during dragover, unlike getData) so the action bar can accept the drop.
@@ -107,6 +116,35 @@ export function parseHotbarAction(
   return null;
 }
 
+export interface HotbarDataTransfer {
+  getData(format: string): string;
+  setData(format: string, data: string): void;
+}
+
+export function writeHotbarActionTransfer(
+  transfer: HotbarDataTransfer | null,
+  action: Exclude<HotbarAction, null>,
+): void {
+  if (!transfer) return;
+  transfer.setData(HOTBAR_ACTION_MIME, encodeHotbarAction(action));
+  transfer.setData('text/plain', action.id);
+}
+
+export function readHotbarActionTransfer(
+  transfer: HotbarDataTransfer | null,
+  abilityExists: (id: string) => boolean,
+  itemExists: (id: string) => boolean,
+): Exclude<HotbarAction, null> | null {
+  if (!transfer) return null;
+  const raw = transfer.getData(HOTBAR_ACTION_MIME);
+  if (!raw) return null;
+  try {
+    return parseHotbarAction(JSON.parse(raw), abilityExists, itemExists);
+  } catch {
+    return null;
+  }
+}
+
 export function parseStoredHotbarAction(
   raw: string | null,
   abilityExists: (id: string) => boolean,
@@ -156,6 +194,24 @@ export function assignAttackSlotAction(
   sourceIndex: number | null | undefined,
 ): { action: Exclude<HotbarAction, null>; clearSourceIndex: number | null } {
   return { action, clearSourceIndex: sourceIndex ?? null };
+}
+
+/**
+ * Swap the profile-aware first action seat with one configurable hotbar slot.
+ * MIR4 makes that first seat a normal ability slot, so moving an action across
+ * the boundary must preserve the displaced action exactly like a regular
+ * slot-to-slot drag.
+ */
+export function swapAttackSlotWithHotbar(
+  attackAction: HotbarAction,
+  actions: readonly HotbarAction[],
+  targetIndex: number,
+): { attackAction: HotbarAction; actions: HotbarAction[] } {
+  const next = actions.slice();
+  if (targetIndex < 0 || targetIndex >= next.length) return { attackAction, actions: next };
+  const displaced = next[targetIndex] ?? null;
+  next[targetIndex] = attackAction;
+  return { attackAction: displaced, actions: next };
 }
 
 export function handleMobileAttackTap(

@@ -16,7 +16,15 @@ describe('offlineSimOptions (main.ts Sim-options extraction)', () => {
       playerName: 'Aldric',
     });
     expect(mir4.gameProfile).toBe('mir4-gameplay-port');
-    expect(mir4.world?.zones).toBe(BUILTIN_WORLD.zones);
+    expect(mir4.world?.zones).not.toBe(BUILTIN_WORLD.zones);
+    expect(mir4.world?.zones.map(({ pois: _pois, ...zone }) => zone)).toEqual(
+      BUILTIN_WORLD.zones.map(({ pois: _pois, ...zone }) => zone),
+    );
+    expect(
+      mir4.world?.zones
+        .find((zone) => zone.id === 'willowfen')
+        ?.pois.some((poi) => poi.label === 'Juncal das Três Chamas'),
+    ).toBe(true);
     expect(mir4.world?.mir4ArcMapProjections).toHaveLength(20);
     vi.unstubAllEnvs();
     expect(offlineSimOptions({ playerClass: 'warrior', playerName: 'Aldric' }).gameProfile).toBe(

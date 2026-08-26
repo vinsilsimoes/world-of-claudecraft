@@ -101,6 +101,10 @@ const STANDARD_MARKER_PROFILE = (): MapMarkerProfile => 'standard';
 const ALLY_FONT = 'bold 11px Georgia';
 // Building footprint outline width in the detail overlay.
 const BUILDING_LINE_WIDTH = 1;
+// Town walls are paths on a cartographic map, not filled collision volumes.
+// A slightly heavier centerline keeps the perimeter readable without exposing
+// the exact OBB footprint used by movement physics.
+const TOWN_WALL_LINE_WIDTH = 2;
 // A curtain wall is a few yards thick, which falls under a pixel once the
 // whole zone is framed; hold every plan rect to at least this so a castle
 // never thins out of existence at the default zoom.
@@ -1102,9 +1106,28 @@ export class MapWindowPainter {
       ctx.fill();
     }
 
-    ctx.lineWidth = BUILDING_LINE_WIDTH;
     ctx.strokeStyle = colors.buildingOutline;
     for (const b of detail.buildings) {
+      if (b.kind === 'wall') {
+        const p0 = b.points[0];
+        const p1 = b.points[1];
+        const p2 = b.points[2];
+        const p3 = b.points[3];
+        const edge01Sq = (p1.mx - p0.mx) ** 2 + (p1.my - p0.my) ** 2;
+        const edge12Sq = (p2.mx - p1.mx) ** 2 + (p2.my - p1.my) ** 2;
+        ctx.lineWidth = TOWN_WALL_LINE_WIDTH;
+        ctx.beginPath();
+        if (edge01Sq >= edge12Sq) {
+          ctx.moveTo((p0.mx + p3.mx) / 2, (p0.my + p3.my) / 2);
+          ctx.lineTo((p1.mx + p2.mx) / 2, (p1.my + p2.my) / 2);
+        } else {
+          ctx.moveTo((p0.mx + p1.mx) / 2, (p0.my + p1.my) / 2);
+          ctx.lineTo((p2.mx + p3.mx) / 2, (p2.my + p3.my) / 2);
+        }
+        ctx.stroke();
+        continue;
+      }
+      ctx.lineWidth = BUILDING_LINE_WIDTH;
       ctx.fillStyle =
         b.kind === 'armoury'
           ? colors.buildingArmoury

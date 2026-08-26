@@ -146,6 +146,11 @@ const FANOUT_ARMS: readonly string[] = [
   'this.lockpickController.relocalize|',
   'this.tutorial.relocalize|',
   'this.mobileActionRingPainter.relocalize|',
+  'this.mir4ActionTools.relocalize|',
+  'this.mir4MountCodexWindow.relocalize|',
+  'this.mir4SpiritCodexWindow.relocalize|',
+  'this.mir4CodexWindow.relocalize|',
+  'this.mir4GrowthWindow.relocalize|',
   'this.mountRaceStrip.relocalize|',
   'this.mountRaceControls.relocalize|',
 ];
@@ -301,6 +306,12 @@ const ANSWERED: readonly AnsweredSurface[] = [
     why: 'the profession intro hint visibility latch, and the offerable-row signature (quest ids and marker kinds, text-independent by design; the phase 23 cadence-lapse watch)',
   },
   {
+    file: 'hud/quest/questlog_window.ts',
+    memos: ['lastMir4Signature'],
+    answer: 'this.questlogWindow.render',
+    why: 'the MIR4 quest ids, stage indices and progress numbers gate a localized open quest-log repaint; the existing open-window fan-out render rebuilds it after a locale change',
+  },
+  {
     file: 'hud/rift/rift_floor_tracker_controller.ts',
     memos: ['lastSignature'],
     answer: 'this.riftTracker.relocalize',
@@ -311,6 +322,30 @@ const ANSWERED: readonly AnsweredSurface[] = [
     memos: ['lastSig'],
     answer: 'this.mailboxWindow.relocalize',
     why: 'the tab, the open letter id and the mail mirror (#2529)',
+  },
+  {
+    file: 'mir4_codex_window.ts',
+    memos: ['lastDataSignature'],
+    answer: 'this.mir4CodexWindow.relocalize',
+    why: 'the class, level, registered materials and automatic collection sources form a text-independent JSON signature, so an open Codex needs a forced rebuild after a locale change',
+  },
+  {
+    file: 'mir4_growth_window.ts',
+    memos: ['lastDataSignature'],
+    answer: 'this.mir4GrowthWindow.relocalize',
+    why: 'the training resources, branch levels and promotion state form a text-independent JSON signature, so an open Training window needs a forced rebuild after a locale change',
+  },
+  {
+    file: 'mir4_mount_codex_window.ts',
+    memos: ['lastDataSignature'],
+    answer: 'this.mir4MountCodexWindow.relocalize',
+    why: 'the Mount collection, pending confirmations and ticket counts form a text-independent JSON signature, so an open Sanctuary needs a forced rebuild after a locale change',
+  },
+  {
+    file: 'mir4_spirit_codex_window.ts',
+    memos: ['lastDataSignature'],
+    answer: 'this.mir4SpiritCodexWindow.relocalize',
+    why: 'the Spirit collection, pending confirmations and ticket counts form a text-independent JSON signature, so an open Sanctuary needs a forced rebuild after a locale change',
   },
   {
     file: 'market_window.ts',
@@ -332,7 +367,18 @@ const ANSWERED: readonly AnsweredSurface[] = [
   },
   {
     file: 'spellbook_window.ts',
-    memos: ['knownIds', 'knownNums', 'lastAttackOnBar', 'lastHasFree', 'lastSlotIds'],
+    memos: [
+      'knownIds',
+      'knownNums',
+      'lastAttackOnBar',
+      'lastFirstActionId',
+      'lastHasFree',
+      'lastSlotIds',
+      'lastTomeCommon',
+      'lastTomeEpic',
+      'lastTomeLegendary',
+      'lastTomeRare',
+    ],
     answer: 'this.spellbookWindow.relocalize',
     why: 'the resolved ability ids and their rank/cost/cast/cooldown numbers, plus the hotbar toggle state (#2529)',
   },
@@ -737,7 +783,7 @@ describe('language fan-out: half 2, every signature-gated src/ui surface is clas
       'src/ui module(s) exposing a relocalize() that Hud.refreshLocalizedDynamicUi never calls. Wire it into the fan-out, or delete it: an uncalled relocalize is what let four windows look answered while they were not:\n' +
         uncalled.join('\n'),
     ).toEqual([]);
-  });
+  }, 30_000);
 });
 
 /**

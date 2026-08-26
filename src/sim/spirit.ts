@@ -61,7 +61,13 @@ import {
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
 import type { BgMatch } from './social/battleground';
-import { dist2d, type Entity, emptyMoveInput, type Vec3 } from './types';
+import {
+  dist2d,
+  type Entity,
+  emptyMoveInput,
+  type Vec3,
+  type WorldContent,
+} from './types';
 
 // --- tuning -----------------------------------------------------------------
 // A released spirit runs faster than the living, ignoring slows (a ghost cannot be
@@ -108,6 +114,54 @@ export function nearestOverworldGraveyard(
   return { x: best.x, z: best.z };
 }
 
+/**
+ * Keep campaign deaths inside the physical WoC zone where they happened.
+ *
+ * The MIR4 transplant can place two authored graveyards on opposite sides of
+ * a zone border. Raw Euclidean distance alone may then choose the graveyard in
+ * the next chapter even though a ridge, portal, or much stronger population
+ * separates the two zones. Classic WoC worlds retain their original nearest-
+ * graveyard behavior; the restriction is enabled only for the projected MIR4
+ * campaign and falls back safely when a zone has no authored graveyard.
+ */
+export function graveyardsForWorldPosition(
+  world: Readonly<WorldContent>,
+  pos: Readonly<{ x: number; z: number }>,
+  graveyards: readonly { x: number; z: number }[],
+): readonly { x: number; z: number }[] {
+  if (!world.mir4ArcMapProjections?.length || graveyards.length < 2) return graveyards;
+  const zone = world.zones.find(
+    (candidate) =>
+      pos.x >= (candidate.xMin ?? -180) &&
+      pos.x < (candidate.xMax ?? 180) &&
+      pos.z >= candidate.zMin &&
+      pos.z < candidate.zMax,
+  );
+  if (!zone) return graveyards;
+  const local = graveyards.filter(
+    (graveyard) =>
+      graveyard.x >= (zone.xMin ?? -180) &&
+      graveyard.x < (zone.xMax ?? 180) &&
+      graveyard.z >= zone.zMin &&
+      graveyard.z < zone.zMax,
+  );
+  return local.length > 0 ? local : graveyards;
+}
+
+function nearestWorldGraveyard(
+  ctx: SimContext,
+  pos: Readonly<{ x: number; z: number }>,
+  graveyards: readonly { x: number; z: number }[],
+  fallback: Readonly<{ x: number; z: number }>,
+): { x: number; z: number } {
+  return nearestOverworldGraveyard(
+    pos.x,
+    pos.z,
+    graveyardsForWorldPosition(ctx.worldContent, pos, graveyards),
+    fallback,
+  );
+}
+
 // The graveyard a released spirit appears at. A dungeon/raid death sends the spirit OUT
 // to the overworld graveyard nearest the instance door (never inside the instance): the
 // ghost runs its spirit back to the door and re-enters to resurrect at the entrance, so
@@ -127,16 +181,16 @@ function ghostGraveyard(
   if (bgMatch) return bgGraveyardSpot(bgMatch, p.id);
   const scriptedReturn = scriptedInstanceReturnAt(ctx.instances, p.pos, p.id);
   if (scriptedReturn) {
-    return nearestOverworldGraveyard(scriptedReturn.x, scriptedReturn.z, graveyards, fallback);
+    return nearestWorldGraveyard(ctx, scriptedReturn, graveyards, fallback);
   }
   const dungeon = dungeonAt(p.pos.x);
   if (dungeon) {
-    return nearestOverworldGraveyard(dungeon.doorPos.x, dungeon.doorPos.z, graveyards, fallback);
+    return nearestWorldGraveyard(ctx, dungeon.doorPos, graveyards, fallback);
   }
   const delve = ctx.delveRunForPlayer(p.id);
   if (delve && isDelvePos(p.pos.x)) {
     const door = DELVES[delve.delveId]?.doorPos;
-    if (door) return nearestOverworldGraveyard(door.x, door.z, graveyards, fallback);
+    if (door) return nearestWorldGraveyard(ctx, door, graveyards, fallback);
   }
   // A rift death returns the spirit to the overworld graveyard nearest where the
   // player STEPPED THROUGH the portal (the instance's returnPos), not the far-off
@@ -150,11 +204,11 @@ function ghostGraveyard(
         Math.abs(p.pos.x - o.x) <= RIFT_REGION_HALF_X &&
         Math.abs(p.pos.z - o.z) <= RIFT_REGION_HALF_Z
       ) {
-        return nearestOverworldGraveyard(inst.returnPos.x, inst.returnPos.z, graveyards, fallback);
+        return nearestWorldGraveyard(ctx, inst.returnPos, graveyards, fallback);
       }
     }
   }
-  return nearestOverworldGraveyard(p.pos.x, p.pos.z, graveyards, fallback);
+  return nearestWorldGraveyard(ctx, p.pos, graveyards, fallback);
 }
 
 // --- release / resurrect ----------------------------------------------------
@@ -204,7 +258,12 @@ export function moveToGraveyardForUnstuck(ctx: SimContext, pid?: number): void {
   // stops riding castingAbility.
   cancelProfessionSessionOnDisplacement(ctx, p);
   // Resolve the graveyard before the move takes the player out of its instance band.
-  const gy = ghostGraveyard(ctx, p);
+  const gy = ghostGraveyard(
+    ctx,
+    p,
+    ctx.worldContent.services?.graveyards ?? [],
+    ctx.worldContent.playerStart,
+  );
   p.pos = ctx.groundPos(gy.x, gy.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);
@@ -248,7 +307,12 @@ export function reviveAtGraveyardForUnstuck(ctx: SimContext, pid?: number): void
   if (!r?.e.dead) return;
   const { meta, e: p } = r;
   // Resolve the graveyard before the revive moves the body out of its instance band.
-  const gy = ghostGraveyard(ctx, p);
+  const gy = ghostGraveyard(
+    ctx,
+    p,
+    ctx.worldContent.services?.graveyards ?? [],
+    ctx.worldContent.playerStart,
+  );
   reviveAt(ctx, meta, p, { x: gy.x, y: p.pos.y, z: gy.z }, RES_HEALER_HP_FRACTION, 'unstuck');
   ctx.emit({ type: 'respawn', pid: meta.entityId });
 }

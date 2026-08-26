@@ -56,6 +56,16 @@ function lootRollEvent(sim: Sim): Extract<SimEvent, { type: 'lootRoll' }> {
   return event;
 }
 
+function monsterDropAcquisitions(sim: Sim, pid?: number): Extract<SimEvent, { type: 'loot' }>[] {
+  return sim.events.filter(
+    (event): event is Extract<SimEvent, { type: 'loot' }> =>
+      event.type === 'loot' &&
+      event.lootOrigin === 'monster-drop' &&
+      (pid === undefined || event.pid === pid) &&
+      (event.text.startsWith('You receive:') || event.text.startsWith('You loot ')),
+  );
+}
+
 // A pre-killed corpse with an explicit death-time recipient snapshot, so the
 // candidate set is deterministic without depending on positions/range.
 function deadCorpse(
@@ -235,6 +245,29 @@ describe('loot_roll: probability tables', () => {
 });
 
 describe('loot_roll: need-greed resolution (module entry)', () => {
+  it('marks a direct solo item grant as a monster-drop acquisition', () => {
+    const sim = makeSim();
+    const a = sim.addPlayer('warrior', 'Solo');
+    const mob = deadCorpse(sim, a, [a], {
+      copper: 0,
+      items: [{ itemId: 'worn_sword', count: 1 }],
+    });
+
+    expect(awardSharedLootItem(sim.ctx, 'worn_sword', mob, playerMeta(sim, a))).toBe(true);
+    expect(monsterDropAcquisitions(sim, a)).toHaveLength(1);
+  });
+
+  it('marks a round-robin party item grant as a monster-drop acquisition', () => {
+    const { sim, a, b, c } = partyOfThree();
+    const mob = deadCorpse(sim, a, [a, b, c], {
+      copper: 0,
+      items: [{ itemId: 'worn_sword', count: 1 }],
+    });
+
+    expect(awardSharedLootItem(sim.ctx, 'worn_sword', mob, playerMeta(sim, a))).toBe(true);
+    expect(monsterDropAcquisitions(sim)).toHaveLength(1);
+  });
+
   it('need beats greed; the winner receives the item and others get nothing', () => {
     const { sim, a, b, c } = partyOfThree();
     const mob = deadCorpse(sim, a, [a, b, c], {
@@ -249,6 +282,7 @@ describe('loot_roll: need-greed resolution (module entry)', () => {
     expect(sim.countItem('greyjaw_hide_boots', a)).toBe(1);
     expect(sim.countItem('greyjaw_hide_boots', b)).toBe(0);
     expect(sim.countItem('greyjaw_hide_boots', c)).toBe(0);
+    expect(monsterDropAcquisitions(sim, a)).toHaveLength(1);
   });
 
   it('ties between two needers break by the higher d100 roll, deterministically per seed', () => {

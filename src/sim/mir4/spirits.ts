@@ -1,5 +1,5 @@
 // Pure MIR4 Spirit collection rules. The port owns only behavioral state and
-// numbers: presentation is supplied by existing World of ClaudeCraft UI/icon
+// numbers: presentation is supplied by existing Aeldrune UI/icon
 // primitives, and Spirits never replace the player's native 3D actor model.
 
 import {
@@ -7,8 +7,15 @@ import {
   type Mir4SpiritDef,
   mir4SpiritById,
 } from '../content/mir4/spirits_catalog';
+import {
+  type Mir4AlbumAward,
+  type Mir4AlbumBonuses,
+  mir4AlbumAwardForIndex,
+  mir4AlbumBonuses,
+} from './collection_album';
 
 export type Mir4SpiritTicketId = 'spirit-ticket-dawn' | 'spirit-ticket-sunset';
+export const MIR4_SPIRIT_PENDING_LIMIT = 256;
 
 export interface Mir4SpiritPending {
   id: string;
@@ -24,15 +31,7 @@ export interface Mir4SpiritState {
   nextPendingId?: number;
 }
 
-export interface Mir4SpiritBonuses {
-  physicalAttack: number;
-  magicAttack: number;
-  physicalDefense: number;
-  magicDefense: number;
-  accuracy: number;
-  critical: number;
-  penetrationBps: number;
-}
+export type Mir4SpiritBonuses = Mir4AlbumBonuses;
 
 export type Mir4SpiritSkillKind =
   | 'bonus-damage'
@@ -84,16 +83,6 @@ for (let grade = 1; grade <= 6; grade += 1) {
     MIR4_SPIRITS_CATALOG.filter((spirit) => spirit.grade === grade),
   );
 }
-
-const EMPTY_BONUSES: Mir4SpiritBonuses = {
-  physicalAttack: 0,
-  magicAttack: 0,
-  physicalDefense: 0,
-  magicDefense: 0,
-  accuracy: 0,
-  critical: 0,
-  penetrationBps: 0,
-};
 
 const SPIRIT_SKILL_NAMES: Readonly<Record<number, readonly string[]>> = {
   1: ['Centelha Errante', 'Instinto do Ocaso', 'Orvalho Vital', 'Sopro de Mana'],
@@ -246,7 +235,7 @@ export function sanitizeMir4SpiritState(value: unknown): Mir4SpiritState | undef
       }
       pendingIds.add(raw.id);
       pending.push({ id: raw.id, spiritId: spirit.id, grade: spirit.grade });
-      if (pending.length === 64) break;
+      if (pending.length === MIR4_SPIRIT_PENDING_LIMIT) break;
     }
   }
   const equippedSpiritId =
@@ -277,29 +266,29 @@ export function sanitizeMir4SpiritState(value: unknown): Mir4SpiritState | undef
 
 /** Equipped Spirit stats plus every active unique-discovery collection step. */
 export function mir4SpiritBonuses(state: Mir4SpiritState | undefined): Mir4SpiritBonuses {
-  const result = { ...EMPTY_BONUSES };
+  const result = mir4SpiritAlbumBonuses(state);
   const equipped = state?.equippedSpiritId ? mir4SpiritById(state.equippedSpiritId) : null;
   if (equipped && (state?.owned?.[equipped.id] ?? 0) > 0) {
     for (const key of Object.keys(result) as (keyof Mir4SpiritBonuses)[]) {
       result[key] += equipped.stats[key] ?? 0;
     }
   }
-  const discovered = new Set(state?.discovered ?? []);
-  for (let grade = 1; grade <= 6; grade += 1) {
-    const unique = (SPIRITS_BY_GRADE.get(grade) ?? []).filter((spirit) =>
-      discovered.has(spirit.id),
-    ).length;
-    const thresholds = grade >= 4 ? [2, 4, 6] : [2, 4];
-    for (let index = 0; index < thresholds.length; index += 1) {
-      if (unique < thresholds[index]!) continue;
-      const amount = grade * (index + 1);
-      result.physicalAttack += amount;
-      result.magicAttack += amount;
-      result.physicalDefense += amount;
-      result.magicDefense += amount;
-    }
-  }
   return result;
+}
+
+export function mir4SpiritAlbumBonuses(state: Mir4SpiritState | undefined): Mir4AlbumBonuses {
+  return mir4AlbumBonuses(MIR4_SPIRITS_CATALOG, state?.discovered);
+}
+
+export const MIR4_SPIRIT_ALBUM_MAX_BONUSES = mir4AlbumBonuses(
+  MIR4_SPIRITS_CATALOG,
+  MIR4_SPIRITS_CATALOG.map((spirit) => spirit.id),
+);
+
+export function mir4SpiritAlbumAward(spiritId: string): Mir4AlbumAward | null {
+  const index = MIR4_SPIRITS_CATALOG.findIndex((spirit) => spirit.id === spiritId);
+  const spirit = MIR4_SPIRITS_CATALOG[index];
+  return spirit ? mir4AlbumAwardForIndex(index, spirit.grade) : null;
 }
 
 export function mir4SpiritOwnedCount(state: Mir4SpiritState | undefined, grade: number): number {

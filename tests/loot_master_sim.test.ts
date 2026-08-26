@@ -71,6 +71,15 @@ describe('master loot', () => {
     expect(sim.countItem(PREMIUM, b)).toBe(1);
     expect(sim.countItem(PREMIUM, a)).toBe(0);
     expect(sim.events.some((e) => e.type === 'loot' && e.text.includes('assigned'))).toBe(true);
+    expect(
+      sim.events.some(
+        (event) =>
+          event.type === 'loot' &&
+          event.pid === b &&
+          event.text.startsWith('You receive:') &&
+          event.lootOrigin === 'monster-drop',
+      ),
+    ).toBe(true);
     expect(sim.events.filter((e) => e.type === 'lootRoll')).toHaveLength(0); // 1 target skips the roll
   });
 

@@ -6,7 +6,6 @@ import { GALECREST_FLOWER_MEADOWS } from '../sim/content/galecrest';
 import { STABLE_PADDOCK } from '../sim/content/mounts';
 import { REALM_FLOWER_MEADOWS } from '../sim/content/realm';
 import {
-  BUILTIN_WORLD,
   DUNGEON_X_THRESHOLD,
   getActiveWorldContent,
   WORLD_MAX_X,
@@ -26,6 +25,7 @@ import {
   terrainHeight,
   WATER_LEVEL,
 } from '../sim/world';
+import { usesBuiltinWorldPresentation } from '../sim/world_presentation';
 import { loadGltf, releaseGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import { attachBiomeHaze } from './biome_haze_field';
@@ -2728,7 +2728,7 @@ function buildGrassRing(
   const activeContent = getActiveWorldContent();
   const townExclusions = eastbrookGrassExclusions(
     activeContent.props.buildings,
-    activeContent === BUILTIN_WORLD,
+    usesBuiltinWorldPresentation(activeContent),
     activeContent.services?.noticeboards ?? [],
   );
 

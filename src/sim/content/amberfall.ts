@@ -15,12 +15,12 @@ import type {
   QuestDef,
   ZoneDef,
   ZonePropsDef,
-} from '../types';
-import { emptyZoneProps } from '../types';
+} from "../types";
+import { emptyZoneProps } from "../types";
 
 export const AMBERFALL_ZONE: ZoneDef = {
-  id: 'amberfall',
-  name: 'The Amberfall',
+  id: "amberfall",
+  name: "The Amberfall",
   riftPortalEligible: true,
   riftTierWeights: { B: 0.15, A: 0.55, S: 0.3 },
   zMin: 1820,
@@ -28,10 +28,10 @@ export const AMBERFALL_ZONE: ZoneDef = {
   xMin: -540,
   xMax: -180,
   levelRange: [18, 20],
-  biome: 'amber',
+  biome: "amber",
   southPassX: -350, // the old gold road, now rising out of the night downs
   eastPassZ: 1890, // the Goldmelt: autumn meets the snow across the column border
-  hub: { x: -360, z: 2072, radius: 24, name: 'Lanternmere' },
+  hub: { x: -360, z: 2072, radius: 24, name: "Lanternmere" },
   graveyard: { x: -336, z: 2050 },
   lakes: [
     { x: -360, z: 2132, radius: 26 }, // the Great Mere
@@ -41,17 +41,22 @@ export const AMBERFALL_ZONE: ZoneDef = {
     { x: -264, z: 2246, radius: 9 }, // the Monolith tarn
   ],
   pois: [
-    { x: -360, z: 2072, label: 'Lanternmere', id: 'lanternmere' },
-    { x: -350, z: 1848, label: 'The Goldmelt', id: 'the_goldmelt' },
-    { x: -432, z: 1992, label: 'The Gilded Orchard', id: 'the_gilded_orchard' },
-    { x: -290, z: 1960, label: 'Harvest Hollow', id: 'harvest_hollow' },
-    { x: -360, z: 2132, label: 'The Great Mere', id: 'the_great_mere' },
-    { x: -430, z: 2210, label: 'Cindermaple Rise', id: 'cindermaple_rise' },
-    { x: -276, z: 2230, label: 'The Leaning Monolith', id: 'the_leaning_monolith' },
+    { x: -360, z: 2072, label: "Lanternmere", id: "lanternmere" },
+    { x: -350, z: 1848, label: "The Goldmelt", id: "the_goldmelt" },
+    { x: -432, z: 1992, label: "The Gilded Orchard", id: "the_gilded_orchard" },
+    { x: -290, z: 1960, label: "Harvest Hollow", id: "harvest_hollow" },
+    { x: -360, z: 2132, label: "The Great Mere", id: "the_great_mere" },
+    { x: -430, z: 2210, label: "Cindermaple Rise", id: "cindermaple_rise" },
+    {
+      x: -276,
+      z: 2230,
+      label: "The Leaning Monolith",
+      id: "the_leaning_monolith",
+    },
   ],
   welcome:
-    'Every leaf here burns gold and red, yet none ever fall. The lanterns of Lanternmere are lit for you.',
-  welcomeQuestId: 'q_af_goldmelt_road',
+    "Every leaf here burns gold and red, yet none ever fall. The lanterns of Lanternmere are lit for you.",
+  welcomeQuestId: "q_af_goldmelt_road",
 };
 
 export const AMBERFALL_ROADS: { x: number; z: number }[][] = [
@@ -62,26 +67,31 @@ export const AMBERFALL_ROADS: { x: number; z: number }[][] = [
     { x: -360, z: 2072 },
   ], // the Goldmelt pass -> Lanternmere
   [
+    { x: -360, z: 2072 },
     { x: -372, z: 2050 },
     { x: -410, z: 2020 },
     { x: -432, z: 1994 },
   ], // Lanternmere -> the Gilded Orchard's edge
   [
+    { x: -360, z: 2072 },
     { x: -348, z: 2050 },
     { x: -315, z: 2000 },
     { x: -290, z: 1960 },
   ], // Lanternmere -> Harvest Hollow
   [
+    { x: -360, z: 2072 },
     { x: -374, z: 2090 },
     { x: -418, z: 2146 },
     { x: -430, z: 2210 },
   ], // Lanternmere -> Cindermaple Rise, west of the Mere
   [
+    { x: -360, z: 2072 },
     { x: -344, z: 2092 },
     { x: -292, z: 2156 },
     { x: -272, z: 2226 },
   ], // Lanternmere -> the Leaning Monolith, east of the Mere
   [
+    { x: -360, z: 2072 },
     { x: -374, z: 2090 },
     { x: -404, z: 2108 },
     { x: -412, z: 2180 },
@@ -100,11 +110,11 @@ export const AMBERFALL_PORTALS: PortalDef[] = [];
 // Quests and folk follow in a later pass.
 export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
   gilded_stag: {
-    id: 'gilded_stag',
-    name: 'Gilded Stag',
+    id: "gilded_stag",
+    name: "Gilded Stag",
     minLevel: 18,
     maxLevel: 19,
-    family: 'beast',
+    family: "beast",
     hpBase: 54,
     hpPerLevel: 18,
     dmgBase: 10,
@@ -113,17 +123,23 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     armorPerLevel: 12,
     moveSpeed: 9,
     aggroRadius: 0, // grazes the gold meadows, fights only if pressed
-    loot: [{ itemId: 'gilded_sap_clot', chance: 0.6, questId: 'q_af_amber_from_the_herd' }],
+    loot: [
+      {
+        itemId: "gilded_sap_clot",
+        chance: 0.6,
+        questId: "q_af_amber_from_the_herd",
+      },
+    ],
     scale: 1.15,
     color: 0xd8a848,
-    componentTags: ['hide', 'meat'],
+    componentTags: ["hide", "meat"],
   },
   gloam_fox: {
-    id: 'gloam_fox',
-    name: 'Gloam Fox',
+    id: "gloam_fox",
+    name: "Gloam Fox",
     minLevel: 18,
     maxLevel: 18,
-    family: 'beast',
+    family: "beast",
     hpBase: 44,
     hpPerLevel: 16,
     dmgBase: 9,
@@ -135,11 +151,11 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     loot: [{ copper: 90, chance: 1 }],
     scale: 1,
     color: 0xd87838,
-    componentTags: ['hide', 'fang'],
+    componentTags: ["hide", "fang"],
   },
   orchard_treant: {
-    id: 'orchard_treant',
-    name: 'Orchard Treant',
+    id: "orchard_treant",
+    name: "Orchard Treant",
     minLevel: 19,
     maxLevel: 20,
     // Animated wood, not a brute. It was tagged into the ogre family while that
@@ -149,7 +165,7 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     // (FIRE_BUILDING_FAMILIES: ogres build fires, walking trees do not), so a
     // treant reading "Ogre" was wrong on all five. Elemental, not beast: beast
     // is tameable (TAMEABLE_FAMILIES).
-    family: 'elemental',
+    family: "elemental",
     hpBase: 110,
     hpPerLevel: 28,
     dmgBase: 14,
@@ -161,17 +177,17 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     elite: true,
     loot: [
       { copper: 100, chance: 1 },
-      { itemId: 'tangled_weed', chance: 0.4 },
+      { itemId: "tangled_weed", chance: 0.4 },
     ],
     scale: 1.4,
     color: 0xc89838,
   },
   harvest_sprite: {
-    id: 'harvest_sprite',
-    name: 'Harvest Sprite',
+    id: "harvest_sprite",
+    name: "Harvest Sprite",
     minLevel: 18,
     maxLevel: 19,
-    family: 'burrower',
+    family: "burrower",
     hpBase: 48,
     hpPerLevel: 17,
     dmgBase: 10,
@@ -185,11 +201,11 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     color: 0xe8c878,
   },
   mere_lurker: {
-    id: 'mere_lurker',
-    name: 'Mere Lurker',
+    id: "mere_lurker",
+    name: "Mere Lurker",
     minLevel: 19,
     maxLevel: 20,
-    family: 'mudfin',
+    family: "mudfin",
     hpBase: 58,
     hpPerLevel: 20,
     dmgBase: 12,
@@ -200,7 +216,7 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     aggroRadius: 13,
     loot: [
       { copper: 100, chance: 1 },
-      { itemId: 'mudfin_scale', chance: 0.4 },
+      { itemId: "mudfin_scale", chance: 0.4 },
     ],
     scale: 1.1,
     color: 0xa8b048,
@@ -210,11 +226,11 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
   // Mere at dusk. Spawned by the quest camp appended at the END of the merged
   // CAMPS array (draw-order rule); named elite, deliberately not rare.
   the_meredark: {
-    id: 'the_meredark',
-    name: 'The Meredark',
+    id: "the_meredark",
+    name: "The Meredark",
     minLevel: 20,
     maxLevel: 20,
-    family: 'mudfin',
+    family: "mudfin",
     hpBase: 120,
     hpPerLevel: 30,
     dmgBase: 15,
@@ -226,7 +242,7 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
     elite: true,
     loot: [
       { copper: 100, chance: 1 },
-      { itemId: 'mudfin_scale', chance: 1 },
+      { itemId: "mudfin_scale", chance: 1 },
     ],
     scale: 1.6,
     color: 0x5a7038,
@@ -239,65 +255,78 @@ export const AMBERFALL_MOBS: Record<string, MobTemplate> = {
 // players out to find them.
 export const AMBERFALL_NPCS: Record<string, NpcDef> = {
   reeve_ottoline: {
-    id: 'reeve_ottoline',
-    name: 'Reeve Ottoline',
-    title: 'Reeve of Lanternmere',
+    id: "reeve_ottoline",
+    name: "Reeve Ottoline",
+    title: "Reeve of Lanternmere",
     pos: { x: -358, z: 2070 },
     facing: -0.6,
     color: 0xc08848,
-    questIds: ['q_af_goldmelt_road', 'q_af_foxes_in_the_lamplight', 'q_af_orchard_call'],
-    greeting: 'Welcome to Lanternmere, where the harvest never ends and neither does the work.',
+    questIds: [
+      "q_af_goldmelt_road",
+      "q_af_foxes_in_the_lamplight",
+      "q_af_orchard_call",
+    ],
+    greeting:
+      "Welcome to Lanternmere, where the harvest never ends and neither does the work.",
   },
   waywatcher_sorrel: {
-    id: 'waywatcher_sorrel',
-    name: 'Waywatcher Sorrel',
-    title: 'Watcher of the Goldmelt',
+    id: "waywatcher_sorrel",
+    name: "Waywatcher Sorrel",
+    title: "Watcher of the Goldmelt",
     pos: { x: -351, z: 1846 },
     facing: 2.8,
     color: 0x9a7d5a,
-    questIds: ['q_af_goldmelt_road'],
+    questIds: ["q_af_goldmelt_road"],
     greeting:
-      'Snow behind you, gold ahead. Few walk the Goldmelt twice, so make the crossing count.',
+      "Snow behind you, gold ahead. Few walk the Goldmelt twice, so make the crossing count.",
   },
   ferrymaster_caddow: {
-    id: 'ferrymaster_caddow',
-    name: 'Ferrymaster Caddow',
-    title: 'Keeper of the Lantern Ferries',
+    id: "ferrymaster_caddow",
+    name: "Ferrymaster Caddow",
+    title: "Keeper of the Lantern Ferries",
     pos: { x: -356, z: 2098 },
     facing: 0.2,
     color: 0x6a7d8a,
-    questIds: ['q_af_lanterns_on_the_water', 'q_af_what_took_the_moorings', 'q_af_the_meredark'],
+    questIds: [
+      "q_af_lanterns_on_the_water",
+      "q_af_what_took_the_moorings",
+      "q_af_the_meredark",
+    ],
     greeting:
-      'Fog is on the Mere again. When the lanterns go out on the water, wise folk stay ashore.',
+      "Fog is on the Mere again. When the lanterns go out on the water, wise folk stay ashore.",
   },
   orchardist_pomeline: {
-    id: 'orchardist_pomeline',
-    name: 'Orchardist Pomeline',
-    title: 'Keeper of the Gilded Rows',
+    id: "orchardist_pomeline",
+    name: "Orchardist Pomeline",
+    title: "Keeper of the Gilded Rows",
     pos: { x: -428, z: 1996 },
     facing: 1.2,
     color: 0x8a9a4a,
-    questIds: ['q_af_orchard_call', 'q_af_sprites_and_spigots', 'q_af_amber_from_the_herd'],
+    questIds: [
+      "q_af_orchard_call",
+      "q_af_sprites_and_spigots",
+      "q_af_amber_from_the_herd",
+    ],
     greeting:
-      'Mind where you step. Every root in these rows is older than the town, and they remember.',
+      "Mind where you step. Every root in these rows is older than the town, and they remember.",
   },
 };
 
 export const AMBERFALL_QUESTS: Record<string, QuestDef> = {
   q_af_goldmelt_road: {
-    id: 'q_af_goldmelt_road',
-    name: 'The Gold Road Down',
-    giverNpcId: 'waywatcher_sorrel',
-    turnInNpcId: 'reeve_ottoline',
-    text: 'You came over the Goldmelt, $N, snow still on your boots. I keep this shrine so Lanternmere knows who walks in from the cold, and lately I have had little to report. Take the gold road down to the town, find Reeve Ottoline by the well, and tell her the pass is quiet.',
+    id: "q_af_goldmelt_road",
+    name: "The Gold Road Down",
+    giverNpcId: "waywatcher_sorrel",
+    turnInNpcId: "reeve_ottoline",
+    text: "You came over the Goldmelt, $N, snow still on your boots. I keep this shrine so Lanternmere knows who walks in from the cold, and lately I have had little to report. Take the gold road down to the town, find Reeve Ottoline by the well, and tell her the pass is quiet.",
     completionText:
-      'Quiet on the Goldmelt, and a traveler with snow in their hair to prove it. Sorrel keeps her watch too well to send idle word. Be welcome in Lanternmere, $N. The lanterns burn for you.',
+      "Quiet on the Goldmelt, and a traveler with snow in their hair to prove it. Sorrel keeps her watch too well to send idle word. Be welcome in Lanternmere, $N. The lanterns burn for you.",
     objectives: [
       {
-        type: 'interact',
-        targetNpcId: 'reeve_ottoline',
+        type: "interact",
+        targetNpcId: "reeve_ottoline",
         count: 1,
-        label: 'Report to Reeve Ottoline',
+        label: "Report to Reeve Ottoline",
       },
     ],
     xpReward: 2400,
@@ -306,140 +335,167 @@ export const AMBERFALL_QUESTS: Record<string, QuestDef> = {
     minLevel: 17,
   },
   q_af_foxes_in_the_lamplight: {
-    id: 'q_af_foxes_in_the_lamplight',
-    name: 'Foxes in the Lamplight',
-    giverNpcId: 'reeve_ottoline',
-    turnInNpcId: 'reeve_ottoline',
-    text: 'The gloam foxes have learned what the lantern stores are worth, $N. Every dusk they slip the fences and carry off the tallow we press for the ferry lamps. Soft paws, softer conscience. Cull ten of them and the rest will remember to fear the town.',
+    id: "q_af_foxes_in_the_lamplight",
+    name: "Foxes in the Lamplight",
+    giverNpcId: "reeve_ottoline",
+    turnInNpcId: "reeve_ottoline",
+    text: "The gloam foxes have learned what the lantern stores are worth, $N. Every dusk they slip the fences and carry off the tallow we press for the ferry lamps. Soft paws, softer conscience. Cull ten of them and the rest will remember to fear the town.",
     completionText:
-      'Ten, and the stores went untouched last night for the first time this season. The lamplighters send their thanks, $N.',
-    objectives: [{ type: 'kill', targetMobId: 'gloam_fox', count: 10, label: 'Gloam Fox slain' }],
+      "Ten, and the stores went untouched last night for the first time this season. The lamplighters send their thanks, $N.",
+    objectives: [
+      {
+        type: "kill",
+        targetMobId: "gloam_fox",
+        count: 10,
+        label: "Gloam Fox slain",
+      },
+    ],
     xpReward: 4200,
     copperReward: 2000,
     itemRewards: {},
-    requiresQuest: 'q_af_goldmelt_road',
+    requiresQuest: "q_af_goldmelt_road",
   },
   q_af_orchard_call: {
-    id: 'q_af_orchard_call',
-    name: 'A Cart for the Orchard',
-    giverNpcId: 'reeve_ottoline',
-    turnInNpcId: 'orchardist_pomeline',
-    text: 'Orchardist Pomeline keeps the Gilded Orchard on the west road, and her sap carts are three days overdue. The whole town runs on that amber sap, $N: lamp resin, sweetening, the harvest ale. Walk the west road and find out what keeps her.',
+    id: "q_af_orchard_call",
+    name: "A Cart for the Orchard",
+    giverNpcId: "reeve_ottoline",
+    turnInNpcId: "orchardist_pomeline",
+    text: "Orchardist Pomeline keeps the Gilded Orchard on the west road, and her sap carts are three days overdue. The whole town runs on that amber sap, $N: lamp resin, sweetening, the harvest ale. Walk the west road and find out what keeps her.",
     completionText:
-      'The Reeve counts her carts, does she? Well, she can count them missing a while longer. Look at my rows, $N. I have greater troubles than a late delivery.',
+      "The Reeve counts her carts, does she? Well, she can count them missing a while longer. Look at my rows, $N. I have greater troubles than a late delivery.",
     objectives: [
       {
-        type: 'interact',
-        targetNpcId: 'orchardist_pomeline',
+        type: "interact",
+        targetNpcId: "orchardist_pomeline",
         count: 1,
-        label: 'Find Orchardist Pomeline',
+        label: "Find Orchardist Pomeline",
       },
     ],
     xpReward: 2600,
     copperReward: 1000,
     itemRewards: {},
-    requiresQuest: 'q_af_goldmelt_road',
+    requiresQuest: "q_af_goldmelt_road",
     minLevel: 18,
   },
   q_af_sprites_and_spigots: {
-    id: 'q_af_sprites_and_spigots',
-    name: 'Sprites and Spigots',
-    giverNpcId: 'orchardist_pomeline',
-    turnInNpcId: 'orchardist_pomeline',
-    text: 'Harvest sprites, $N. They pry my sap-taps from the trunks for the sweetness inside and fling the buckets into the grass. Drive off eight of the little thieves and bring back four of my buckets, and the carts roll again.',
+    id: "q_af_sprites_and_spigots",
+    name: "Sprites and Spigots",
+    giverNpcId: "orchardist_pomeline",
+    turnInNpcId: "orchardist_pomeline",
+    text: "Harvest sprites, $N. They pry my sap-taps from the trunks for the sweetness inside and fling the buckets into the grass. Drive off eight of the little thieves and bring back four of my buckets, and the carts roll again.",
     completionText:
-      'Four buckets back on their hooks and the rows gone quiet. You have a heavier hand with sprites than I do, $N, and today I am glad of it.',
+      "Four buckets back on their hooks and the rows gone quiet. You have a heavier hand with sprites than I do, $N, and today I am glad of it.",
     objectives: [
-      { type: 'kill', targetMobId: 'harvest_sprite', count: 8, label: 'Harvest Sprite driven off' },
       {
-        type: 'interact',
-        targetObjectItemId: 'amberfall_sap_bucket',
+        type: "kill",
+        targetMobId: "harvest_sprite",
+        count: 8,
+        label: "Harvest Sprite driven off",
+      },
+      {
+        type: "interact",
+        targetObjectItemId: "amberfall_sap_bucket",
         count: 4,
-        label: 'Sap-Tap Bucket recovered',
+        label: "Sap-Tap Bucket recovered",
       },
     ],
     xpReward: 4800,
     copperReward: 2600,
     itemRewards: {},
-    requiresQuest: 'q_af_orchard_call',
+    requiresQuest: "q_af_orchard_call",
   },
   q_af_amber_from_the_herd: {
-    id: 'q_af_amber_from_the_herd',
-    name: 'Amber off the Herd',
-    giverNpcId: 'orchardist_pomeline',
-    turnInNpcId: 'orchardist_pomeline',
-    text: 'The gilded stags bed down beneath my oldest trees, and the sap drips gold into their coats all night. Combed clots of it are the purest amber in the weald. Bring me six, $N. The stags will not thank you, but they will not miss it either.',
+    id: "q_af_amber_from_the_herd",
+    name: "Amber off the Herd",
+    giverNpcId: "orchardist_pomeline",
+    turnInNpcId: "orchardist_pomeline",
+    text: "The gilded stags bed down beneath my oldest trees, and the sap drips gold into their coats all night. Combed clots of it are the purest amber in the weald. Bring me six, $N. The stags will not thank you, but they will not miss it either.",
     completionText:
-      'Six clots, clean as poured honey. These gloves are stitched with the last batch, $N: sap-stiffened, and warmer than they look.',
+      "Six clots, clean as poured honey. These gloves are stitched with the last batch, $N: sap-stiffened, and warmer than they look.",
     objectives: [
-      { type: 'collect', itemId: 'gilded_sap_clot', count: 6, label: 'Gilded Sap Clot' },
+      {
+        type: "collect",
+        itemId: "gilded_sap_clot",
+        count: 6,
+        label: "Gilded Sap Clot",
+      },
     ],
     xpReward: 4200,
     copperReward: 2000,
     itemRewards: {
-      warrior: 'orchard_sapbinder_grips',
-      mage: 'orchard_sapbinder_grips',
-      rogue: 'orchard_sapbinder_grips',
+      warrior: "orchard_sapbinder_grips",
+      mage: "orchard_sapbinder_grips",
+      rogue: "orchard_sapbinder_grips",
     },
-    requiresQuest: 'q_af_orchard_call',
+    requiresQuest: "q_af_orchard_call",
   },
   q_af_lanterns_on_the_water: {
-    id: 'q_af_lanterns_on_the_water',
-    name: 'Lanterns on the Water',
-    giverNpcId: 'ferrymaster_caddow',
-    turnInNpcId: 'ferrymaster_caddow',
-    text: 'Every ferry on the Mere carries a stern lantern, $N, and three of my boats came back at dawn without theirs. The fog took them, or something in the fog did. They wash up along the east shore when the wind turns. Walk the shore road and bring my lanterns home.',
+    id: "q_af_lanterns_on_the_water",
+    name: "Lanterns on the Water",
+    giverNpcId: "ferrymaster_caddow",
+    turnInNpcId: "ferrymaster_caddow",
+    text: "Every ferry on the Mere carries a stern lantern, $N, and three of my boats came back at dawn without theirs. The fog took them, or something in the fog did. They wash up along the east shore when the wind turns. Walk the shore road and bring my lanterns home.",
     completionText:
-      'All three, and still burning. Ferry lanterns do not go out in water, $N. That is the point of them. What worries me is what pulled them loose.',
+      "All three, and still burning. Ferry lanterns do not go out in water, $N. That is the point of them. What worries me is what pulled them loose.",
     objectives: [
       {
-        type: 'interact',
-        targetObjectItemId: 'mere_ferry_lantern',
+        type: "interact",
+        targetObjectItemId: "mere_ferry_lantern",
         count: 3,
-        label: 'Ferry Lantern recovered',
+        label: "Ferry Lantern recovered",
       },
     ],
     xpReward: 4200,
     copperReward: 2000,
     itemRewards: {},
-    requiresQuest: 'q_af_goldmelt_road',
+    requiresQuest: "q_af_goldmelt_road",
   },
   q_af_what_took_the_moorings: {
-    id: 'q_af_what_took_the_moorings',
-    name: 'What Took the Moorings',
-    giverNpcId: 'ferrymaster_caddow',
-    turnInNpcId: 'ferrymaster_caddow',
-    text: 'Now I will tell you what I did not say in front of the town. The moorings were not slipped, they were bitten through. Mere lurkers, bolder every night, dragging at the ropes and the rudders. Put eight of them back under the water for good, $N, before a ferryman goes with them.',
+    id: "q_af_what_took_the_moorings",
+    name: "What Took the Moorings",
+    giverNpcId: "ferrymaster_caddow",
+    turnInNpcId: "ferrymaster_caddow",
+    text: "Now I will tell you what I did not say in front of the town. The moorings were not slipped, they were bitten through. Mere lurkers, bolder every night, dragging at the ropes and the rudders. Put eight of them back under the water for good, $N, before a ferryman goes with them.",
     completionText:
-      'Eight fewer shapes in the shallows, and the crossing ran on time today for the first time in a fortnight. But bold lurkers are driven lurkers, $N. Something beneath the Mere is moving them.',
+      "Eight fewer shapes in the shallows, and the crossing ran on time today for the first time in a fortnight. But bold lurkers are driven lurkers, $N. Something beneath the Mere is moving them.",
     objectives: [
-      { type: 'kill', targetMobId: 'mere_lurker', count: 8, label: 'Mere Lurker slain' },
+      {
+        type: "kill",
+        targetMobId: "mere_lurker",
+        count: 8,
+        label: "Mere Lurker slain",
+      },
     ],
     xpReward: 4600,
     copperReward: 2400,
     itemRewards: {},
-    requiresQuest: 'q_af_lanterns_on_the_water',
+    requiresQuest: "q_af_lanterns_on_the_water",
     minLevel: 18,
   },
   q_af_the_meredark: {
-    id: 'q_af_the_meredark',
-    name: 'The Meredark',
-    giverNpcId: 'ferrymaster_caddow',
-    turnInNpcId: 'ferrymaster_caddow',
-    text: 'The old ferrymen have a name they only say ashore: the Meredark, the first lurker, old as the lake and twice as patient. It rose once before, the year the drowned jetty went under, and it is rising now. At dusk it suns itself on the jetty ruin off the south shore, $N. Take a friend, take two, and end it while it can still be ended.',
+    id: "q_af_the_meredark",
+    name: "The Meredark",
+    giverNpcId: "ferrymaster_caddow",
+    turnInNpcId: "ferrymaster_caddow",
+    text: "The old ferrymen have a name they only say ashore: the Meredark, the first lurker, old as the lake and twice as patient. It rose once before, the year the drowned jetty went under, and it is rising now. At dusk it suns itself on the jetty ruin off the south shore, $N. Take a friend, take two, and end it while it can still be ended.",
     completionText:
-      'The fog lifted off the Mere this morning, $N, and the whole town saw it. The ferries will run the night crossing again, and every lantern on the water will burn in your name. Take this: it was dredged from the drowned jetty, and no one has better right to wear it.',
+      "The fog lifted off the Mere this morning, $N, and the whole town saw it. The ferries will run the night crossing again, and every lantern on the water will burn in your name. Take this: it was dredged from the drowned jetty, and no one has better right to wear it.",
     objectives: [
-      { type: 'kill', targetMobId: 'the_meredark', count: 1, label: 'The Meredark slain' },
+      {
+        type: "kill",
+        targetMobId: "the_meredark",
+        count: 1,
+        label: "The Meredark slain",
+      },
     ],
     xpReward: 6000,
     copperReward: 3600,
     itemRewards: {
-      warrior: 'mantle_of_the_meredark',
-      mage: 'mantle_of_the_meredark',
-      rogue: 'mantle_of_the_meredark',
+      warrior: "mantle_of_the_meredark",
+      mage: "mantle_of_the_meredark",
+      rogue: "mantle_of_the_meredark",
     },
-    requiresQuest: 'q_af_what_took_the_moorings',
+    requiresQuest: "q_af_what_took_the_moorings",
     minLevel: 19,
     suggestedPlayers: 2,
   },
@@ -448,76 +504,86 @@ export const AMBERFALL_QUESTS: Record<string, QuestDef> = {
 // Level-braided presentation order (not strictly chain order), matching the
 // Veiled Hollow convention.
 export const AMBERFALL_QUEST_ORDER: string[] = [
-  'q_af_goldmelt_road',
-  'q_af_foxes_in_the_lamplight',
-  'q_af_lanterns_on_the_water',
-  'q_af_orchard_call',
-  'q_af_amber_from_the_herd',
-  'q_af_what_took_the_moorings',
-  'q_af_sprites_and_spigots',
-  'q_af_the_meredark',
+  "q_af_goldmelt_road",
+  "q_af_foxes_in_the_lamplight",
+  "q_af_lanterns_on_the_water",
+  "q_af_orchard_call",
+  "q_af_amber_from_the_herd",
+  "q_af_what_took_the_moorings",
+  "q_af_sprites_and_spigots",
+  "q_af_the_meredark",
 ];
 
 export const AMBERFALL_ITEMS: Record<string, ItemDef> = {
   // --- quest items ---
   gilded_sap_clot: {
-    id: 'gilded_sap_clot',
-    name: 'Gilded Sap Clot',
-    kind: 'quest',
+    id: "gilded_sap_clot",
+    name: "Gilded Sap Clot",
+    kind: "quest",
     sellValue: 0,
-    questId: 'q_af_amber_from_the_herd',
+    questId: "q_af_amber_from_the_herd",
   },
   amberfall_sap_bucket: {
-    id: 'amberfall_sap_bucket',
-    name: 'Sap-Tap Bucket',
-    kind: 'quest',
+    id: "amberfall_sap_bucket",
+    name: "Sap-Tap Bucket",
+    kind: "quest",
     sellValue: 0,
-    questId: 'q_af_sprites_and_spigots',
+    questId: "q_af_sprites_and_spigots",
     noVendorSell: true,
   },
   mere_ferry_lantern: {
-    id: 'mere_ferry_lantern',
-    name: 'Ferry Lantern',
-    kind: 'quest',
+    id: "mere_ferry_lantern",
+    name: "Ferry Lantern",
+    kind: "quest",
     sellValue: 0,
-    questId: 'q_af_lanterns_on_the_water',
+    questId: "q_af_lanterns_on_the_water",
     noVendorSell: true,
   },
   // --- quest rewards ---
   orchard_sapbinder_grips: {
-    id: 'orchard_sapbinder_grips',
-    name: 'Sapbinder Grips',
-    kind: 'armor',
-    armorType: 'cloth',
-    slot: 'gloves',
-    quality: 'uncommon',
+    id: "orchard_sapbinder_grips",
+    name: "Sapbinder Grips",
+    kind: "armor",
+    armorType: "cloth",
+    slot: "gloves",
+    quality: "uncommon",
     stats: { armor: 54, sta: 4, int: 3 },
     sellValue: 950,
   },
   mantle_of_the_meredark: {
-    id: 'mantle_of_the_meredark',
-    name: 'Mantle of the Meredark',
-    kind: 'armor',
-    armorType: 'cloth',
-    slot: 'shoulder',
-    quality: 'rare',
+    id: "mantle_of_the_meredark",
+    name: "Mantle of the Meredark",
+    kind: "armor",
+    armorType: "cloth",
+    slot: "shoulder",
+    quality: "rare",
     stats: { armor: 74, sta: 6, spi: 4 },
     sellValue: 2300,
   },
 };
 export const AMBERFALL_CAMPS: CampDef[] = [
-  { mobId: 'gilded_stag', center: { x: -300, z: 1976 }, radius: 12, count: 3 },
-  { mobId: 'gilded_stag', center: { x: -420, z: 2020 }, radius: 11, count: 2 },
-  { mobId: 'gloam_fox', center: { x: -330, z: 2030 }, radius: 10, count: 2 },
-  { mobId: 'harvest_sprite', center: { x: -436, z: 1984 }, radius: 10, count: 3 },
-  { mobId: 'orchard_treant', center: { x: -426, z: 2202 }, radius: 9, count: 2 },
-  { mobId: 'mere_lurker', center: { x: -312, z: 2158 }, radius: 8, count: 2 },
-  { mobId: 'mere_lurker', center: { x: -282, z: 2226 }, radius: 8, count: 2 },
+  { mobId: "gilded_stag", center: { x: -300, z: 1976 }, radius: 12, count: 3 },
+  { mobId: "gilded_stag", center: { x: -420, z: 2020 }, radius: 11, count: 2 },
+  { mobId: "gloam_fox", center: { x: -330, z: 2030 }, radius: 10, count: 2 },
+  {
+    mobId: "harvest_sprite",
+    center: { x: -436, z: 1984 },
+    radius: 10,
+    count: 3,
+  },
+  {
+    mobId: "orchard_treant",
+    center: { x: -426, z: 2202 },
+    radius: 9,
+    count: 2,
+  },
+  { mobId: "mere_lurker", center: { x: -312, z: 2158 }, radius: 8, count: 2 },
+  { mobId: "mere_lurker", center: { x: -282, z: 2226 }, radius: 8, count: 2 },
 ];
 export const AMBERFALL_OBJECTS: GroundObjectDef[] = [
   {
-    itemId: 'amberfall_sap_bucket',
-    name: 'Sap-Tap Bucket',
+    itemId: "amberfall_sap_bucket",
+    name: "Sap-Tap Bucket",
     // Flung into the grass by harvest sprites, around the Gilded Orchard's
     // rows and the orchard road.
     positions: [
@@ -528,8 +594,8 @@ export const AMBERFALL_OBJECTS: GroundObjectDef[] = [
     ],
   },
   {
-    itemId: 'mere_ferry_lantern',
-    name: 'Ferry Lantern',
+    itemId: "mere_ferry_lantern",
+    name: "Ferry Lantern",
     // Washed up along the Mere's east shore, near the Monolith road.
     positions: [
       { x: -338, z: 2102 },
@@ -545,17 +611,17 @@ export const AMBERFALL_OBJECTS: GroundObjectDef[] = [
 // world-gen rng in array order, so only a tail append leaves every existing
 // spawn untouched.
 export const AMBERFALL_QUEST_CAMPS: CampDef[] = [
-  { mobId: 'the_meredark', center: { x: -358, z: 2186 }, radius: 6, count: 1 },
+  { mobId: "the_meredark", center: { x: -358, z: 2186 }, radius: 6, count: 1 },
 ];
 
 export const AMBERFALL_PROPS: ZonePropsDef = {
   ...emptyZoneProps(),
   // Lanternmere: an autumn market town on the Mere's north shore
   buildings: [
-    { kind: 'inn', x: -372, z: 2066, w: 6, d: 7, rot: 0.6 },
-    { kind: 'house', x: -348, z: 2062, w: 6, d: 6, rot: -0.8 },
-    { kind: 'house', x: -374, z: 2084, w: 6, d: 6, rot: 2.0 },
-    { kind: 'chapel', x: -346, z: 2082, w: 5, d: 7, rot: -2.2 },
+    { kind: "inn", x: -372, z: 2066, w: 6, d: 7, rot: 0.6 },
+    { kind: "house", x: -348, z: 2062, w: 6, d: 6, rot: -0.8 },
+    { kind: "house", x: -374, z: 2084, w: 6, d: 6, rot: 2.0 },
+    { kind: "chapel", x: -346, z: 2082, w: 5, d: 7, rot: -2.2 },
   ],
   wells: [{ x: -360, z: 2074, r: 1.5 }],
   stalls: [

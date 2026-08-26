@@ -55,6 +55,12 @@ import { canStackInstancePayloads, itemInstancePayloadsEqual } from './item_inst
 import { meetsLevelRequirement, requiredLevelFor } from './item_level_req';
 import { isItemLocked } from './item_lock';
 import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
+import {
+  MIR4_HP_POTION_COOLDOWN_SECONDS,
+  MIR4_HP_POTION_HEAL_BPS,
+  MIR4_MP_POTION_COOLDOWN_SECONDS,
+  MIR4_MP_POTION_RESTORE,
+} from './mir4/combat';
 import { mir4MountVisualKey } from './mir4/mounts';
 import { mountOwned, summonMountItem } from './mounts';
 import { learnRiding } from './mounts_training';
@@ -824,10 +830,21 @@ export function useItem(
       ctx.error(meta.entityId, 'That potion is not ready yet.');
       return;
     }
+    const mir4HealingPotion =
+      ctx.gameProfile === MIR4_GAME_PROFILE && itemId === 'minor_healing_potion';
+    const mir4ManaPotion = ctx.gameProfile === MIR4_GAME_PROFILE && itemId === 'minor_mana_potion';
+    const manaRestore = mir4ManaPotion ? MIR4_MP_POTION_RESTORE : (def.potionMana ?? 0);
     const restoresMana =
-      (def.potionMana ?? 0) > 0 && p.resourceType === 'mana' && p.resource < p.maxResource;
+      manaRestore > 0 && p.resourceType === 'mana' && p.resource < p.maxResource;
     const restoresHp = ((def.potionHp ?? 0) > 0 || (def.potionHpPctMax ?? 0) > 0) && p.hp < p.maxHp;
     if (!restoresHp && !restoresMana) {
+      // M01-Q02 teaches the valid potion action, not the act of wasting a
+      // consumable. A ready health-potion click at full HP proves the player
+      // found and activated the assigned slot, while the normal refusal below
+      // keeps the potion and leaves its cooldown untouched.
+      if (itemId === 'minor_healing_potion' && p.hp >= p.maxHp) {
+        creditMir4ArcTutorialReceipt(meta, { kind: 'use-health-potion' });
+      }
       ctx.error(
         meta.entityId,
         p.hp >= p.maxHp && (def.potionMana ?? 0) === 0
@@ -858,16 +875,23 @@ export function useItem(
       // short-circuit), so the craft-skill deeds re-check this player.
       if (granted > 0) ctx.markDeedsDirty(meta.entityId);
     }
-    p.potionCooldownUntil = ctx.time + POTION_COOLDOWN;
-    p.potionCdRemaining = POTION_COOLDOWN; // materialized remaining for the action-bar swipe
+    const potionCooldown = mir4HealingPotion
+      ? MIR4_HP_POTION_COOLDOWN_SECONDS
+      : mir4ManaPotion
+        ? MIR4_MP_POTION_COOLDOWN_SECONDS
+        : POTION_COOLDOWN;
+    p.potionCooldownUntil = ctx.time + potionCooldown;
+    p.potionCdRemaining = potionCooldown; // materialized remaining for the action-bar swipe
     let potionHeal = 0;
     if (restoresHp) {
-      const baseHeal = (def.potionHp ?? 0) + p.maxHp * (def.potionHpPctMax ?? 0);
+      const baseHeal = mir4HealingPotion
+        ? (p.maxHp * MIR4_HP_POTION_HEAL_BPS) / 10_000
+        : (def.potionHp ?? 0) + p.maxHp * (def.potionHpPctMax ?? 0);
       potionHeal = Math.min(Math.round(baseHeal * ctx.healingTakenMult(p)), p.maxHp - p.hp);
       p.hp += potionHeal;
     }
     if (restoresMana) {
-      p.resource = Math.min(p.maxResource, p.resource + def.potionMana!);
+      p.resource = Math.min(p.maxResource, p.resource + manaRestore);
     }
     // Always emit, even a pure-mana potion (potionHeal 0): this is what plays
     // the dedicated quaff sound (hud.ts), distinct from a real heal's

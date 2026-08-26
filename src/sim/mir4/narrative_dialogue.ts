@@ -4,7 +4,12 @@
 // granted by the client: timeout and skip both re-enter the normal NPC-talk
 // authority after validating the live NPC and range again.
 
-import { type Mir4ArcQuest, mir4ArcNpcIdentity, mir4ArcQuest } from '../content/mir4/arc_campaign';
+import {
+  MIR4_ARC_NPC_IDENTITIES,
+  type Mir4ArcQuest,
+  mir4ArcNpcIdentity,
+  mir4ArcQuest,
+} from '../content/mir4/arc_campaign';
 import type { SimContext } from '../sim_context';
 import { dist2d, type Entity, INTERACT_RANGE } from '../types';
 import { mir4HandleArcNpcTalkForQuest } from './arc_quest_runtime';
@@ -50,6 +55,35 @@ export function mir4DialogueReadingSeconds(lines: readonly Mir4NarrativeDialogue
   );
 }
 
+function normalizedSpeakerName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/[^a-z0-9]+/gu, ' ')
+    .trim();
+}
+
+const CANONICAL_SPEAKER_BY_NAME = new Map(
+  MIR4_ARC_NPC_IDENTITIES.map((npc) => [normalizedSpeakerName(npc.name), npc.name] as const),
+);
+
+function authoredStringDialogueLine(
+  line: string,
+  fallbackSpeaker: string,
+): Mir4NarrativeDialogueLine {
+  const separator = line.indexOf(':');
+  if (separator <= 0) return { speaker: fallbackSpeaker, text: line };
+  const authoredSpeaker = line.slice(0, separator).trim();
+  const text = line.slice(separator + 1).trim();
+  if (!authoredSpeaker || !text) return { speaker: fallbackSpeaker, text: line };
+  return {
+    speaker:
+      CANONICAL_SPEAKER_BY_NAME.get(normalizedSpeakerName(authoredSpeaker)) ?? authoredSpeaker,
+    text,
+  };
+}
+
 export function mir4NarrativeDialogueLines(
   quest: Readonly<Mir4ArcQuest>,
   beat: Mir4NarrativeDialogueBeat,
@@ -58,7 +92,7 @@ export function mir4NarrativeDialogueLines(
 ): readonly Mir4NarrativeDialogueLine[] {
   const lines = quest.dialogue.flatMap((line): Mir4NarrativeDialogueLine[] => {
     if (typeof line === 'string') {
-      return beat === 'accept' ? [{ speaker: fallbackSpeaker, text: line }] : [];
+      return beat === 'accept' ? [authoredStringDialogueLine(line, fallbackSpeaker)] : [];
     }
     return line.beat === beat ? [{ speaker: line.speaker, text: line.text }] : [];
   });

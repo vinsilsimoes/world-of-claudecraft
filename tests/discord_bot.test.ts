@@ -296,9 +296,9 @@ describe('departed-member reconcile (flair cleared after an offline leave)', () 
 });
 
 describe('status-tier roles', () => {
-  it('names roles "WoC <Tier>" per rung', () => {
-    expect(tierRoleName(1)).toBe('WoC Initiate');
-    expect(tierRoleName(8)).toBe('WoC Mythic');
+  it('names roles "Aeldrune <Tier>" per rung', () => {
+    expect(tierRoleName(1)).toBe('Aeldrune Initiate');
+    expect(tierRoleName(8)).toBe('Aeldrune Mythic');
     expect(tierRoleName(0)).toBeNull();
     expect(allTierRoleNames()).toHaveLength(8);
   });
@@ -309,7 +309,7 @@ describe('status-tier roles', () => {
       [4, 'r4'],
       [5, 'r5'],
     ]);
-    // Member is champion (5) but currently holds the knight (r4) role + a non-WoC role.
+    // Member is champion (5) but currently holds the knight (r4) role + a non-Aeldrune role.
     const { toAdd, toRemove } = computeRoleSync({
       tier: 5,
       memberRoleIds: ['r4', 'other'],

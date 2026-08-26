@@ -1,13 +1,21 @@
+import { mir4SkillsForClass } from '../../src/sim/content/mir4';
 import { MIR4_CLASS_IDS, MIR4_CLASSES, type Mir4ClassId } from '../../src/sim/content/mir4/classes';
+import { MIR4_CODEX_COLLECTIONS } from '../../src/sim/content/mir4/codex';
 import { MIR4_EQUIPMENT_CATALOG } from '../../src/sim/content/mir4/equipment_catalog';
 import { MIR4_MOUNTS_CATALOG } from '../../src/sim/content/mir4/mounts_catalog';
 import { MIR4_QUESTS } from '../../src/sim/content/mir4/quests';
 import { MIR4_QUESTS_ARC } from '../../src/sim/content/mir4/quests_arc';
-import { MIR4_SKILL_LEVEL_CAPS } from '../../src/sim/content/mir4/skills';
 import { MIR4_SPIRITS_CATALOG } from '../../src/sim/content/mir4/spirits_catalog';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { MIR4_AFFIXES } from '../../src/sim/mir4/affixes';
-import type { Mir4EquipmentInstanceState } from '../../src/sim/mir4/equipment';
+import { MIR4_ARC_DYNAMIC_GRANT_IDS } from '../../src/sim/mir4/arc_rewards';
+import {
+  MIR4_EMPTY_MATERIALS,
+  type Mir4EquipmentInstanceState,
+} from '../../src/sim/mir4/equipment';
+import { MIR4_MOUNT_PENDING_LIMIT } from '../../src/sim/mir4/mounts';
+import { MIR4_SKILL_MAX_LEVEL } from '../../src/sim/mir4/skill_progression';
+import { MIR4_SPIRIT_PENDING_LIMIT } from '../../src/sim/mir4/spirits';
 import { type CharacterState, Sim } from '../../src/sim/sim';
 
 export interface MaxMir4PersistedStateFixture {
@@ -128,10 +136,13 @@ export function buildMaxMir4PersistedState(): MaxMir4PersistedStateFixture {
     acquireRadiusYards: 500,
     suspended: true,
   };
-  meta.mir4SkillLevels = { ...MIR4_SKILL_LEVEL_CAPS[selectedClassId] };
+  meta.mir4SkillLevels = Object.fromEntries(
+    mir4SkillsForClass(selectedClassId).map((skill) => [skill.skillId, MIR4_SKILL_MAX_LEVEL]),
+  );
+  meta.mir4DisabledAutoSkills = mir4SkillsForClass(selectedClassId).map((skill) => skill.skillId);
   meta.mir4SkillResources = { effectPoints: 1_000_000_000, skillTomes: 1_000_000_000 };
   meta.mir4AchievementClears = { 201: 2 };
-  meta.mir4Currencies = { darksteel: 1_000_000_000 };
+  meta.mir4Currencies = { darksteel: 1_000_000_000, energy: 5_000_000 };
   meta.mir4Quests = Object.fromEntries(
     Object.values(MIR4_QUESTS).map((quest) => [
       quest.id,
@@ -184,6 +195,7 @@ export function buildMaxMir4PersistedState(): MaxMir4PersistedStateFixture {
     collectRewardIds(quest.onAcceptGrants);
     collectRewardIds(quest.rewards);
   }
+  for (const grantId of MIR4_ARC_DYNAMIC_GRANT_IDS) rewardIds.add(grantId);
   const rewardIdList = [...rewardIds];
   const rewardCounts = Object.fromEntries(rewardIdList.map((id) => [id, 1_000_000_000]));
   meta.mir4ArcRewards = {
@@ -200,20 +212,23 @@ export function buildMaxMir4PersistedState(): MaxMir4PersistedStateFixture {
   };
   meta.mir4Equipment = equipment;
   meta.mir4EquipmentInstances = instances;
-  meta.mir4Materials = {
-    sunStone: 1_000_000_000,
-    moonStone: 1_000_000_000,
-    solarScroll: 1_000_000_000,
-    lunarSeal: 1_000_000_000,
-    dawnTear: 1_000_000_000,
-    solarWard: 1_000_000_000,
+  const maximumMaterials = { ...MIR4_EMPTY_MATERIALS };
+  for (const key of Object.keys(maximumMaterials) as (keyof typeof maximumMaterials)[]) {
+    maximumMaterials[key] = 1_000_000_000;
+  }
+  meta.mir4Materials = maximumMaterials;
+  meta.mir4Training = {
+    version: 1,
+    constitution: [5, 5, 5, 5, 5, 5, 5],
+    innerForce: [5, 5, 5, 5],
+    solitude: { conceptionVessel: [10, 10, 10, 10, 10, 10, 10, 10] },
   };
   const pendingMounts = MIR4_MOUNTS_CATALOG.filter((mount) => mount.grade >= 4);
   meta.mir4Mounts = {
     owned: Object.fromEntries(MIR4_MOUNTS_CATALOG.map((mount) => [mount.id, 1_000_000])),
     discovered: MIR4_MOUNTS_CATALOG.map((mount) => mount.id),
     equippedMountId: requiredFirst(MIR4_MOUNTS_CATALOG, 'MIR4 mount').id,
-    pending: Array.from({ length: 64 }, (_, index) => {
+    pending: Array.from({ length: MIR4_MOUNT_PENDING_LIMIT }, (_, index) => {
       const mount = requiredCycled(pendingMounts, index, 'grade 4+ MIR4 mount');
       return {
         id: boundedEntropy('mount-pending', index, 96),
@@ -228,7 +243,7 @@ export function buildMaxMir4PersistedState(): MaxMir4PersistedStateFixture {
     owned: Object.fromEntries(MIR4_SPIRITS_CATALOG.map((spirit) => [spirit.id, 1_000_000])),
     discovered: MIR4_SPIRITS_CATALOG.map((spirit) => spirit.id),
     equippedSpiritId: requiredFirst(MIR4_SPIRITS_CATALOG, 'MIR4 spirit').id,
-    pending: Array.from({ length: 64 }, (_, index) => {
+    pending: Array.from({ length: MIR4_SPIRIT_PENDING_LIMIT }, (_, index) => {
       const spirit = requiredCycled(pendingSpirits, index, 'grade 4+ MIR4 spirit');
       return {
         id: boundedEntropy('spirit-pending', index, 96),
@@ -237,6 +252,21 @@ export function buildMaxMir4PersistedState(): MaxMir4PersistedStateFixture {
       };
     }),
     nextPendingId: Number.MAX_SAFE_INTEGER,
+  };
+  meta.mir4Codex = {
+    version: 1,
+    registered: Object.fromEntries(
+      MIR4_CODEX_COLLECTIONS.filter((collection) => collection.registration === 'manual').map(
+        (collection) => [
+          collection.id,
+          Object.fromEntries(
+            collection.requirements
+              .filter((requirement) => requirement.kind === 'material')
+              .map((requirement) => [requirement.id, requirement.requiredCount]),
+          ),
+        ],
+      ),
+    ),
   };
   sim.player.mir4UltGauge = 100;
   meta.mir4SpiritSkillReadyAt = sim.time + 60;

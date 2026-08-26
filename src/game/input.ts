@@ -76,6 +76,7 @@ export interface InputCallbacks {
   onUiKey(
     key:
       | 'interact'
+      | 'attack'
       | 'bags'
       | 'char'
       | 'spellbook'
@@ -100,7 +101,9 @@ export interface InputCallbacks {
       | 'reliquary'
       | 'crafting'
       | 'sheathe'
-      | 'mount',
+      | 'mount'
+      | 'toggleAutoCollect'
+      | 'toggleAutoBattle',
   ): void;
   onEmoteWheel(open: boolean): void;
   onClickPick(x: number, y: number, button: number): void;
@@ -1188,6 +1191,9 @@ export class Input {
       case 'bgFlag':
         this.cb.onUiKey('bgFlag');
         return;
+      case 'attack':
+        this.cb.onUiKey('attack');
+        return;
       case 'leaderboard':
         this.cb.onUiKey('leaderboard');
         return;
@@ -1211,6 +1217,12 @@ export class Input {
         return;
       case 'sheathe':
         this.cb.onUiKey('sheathe');
+        return;
+      case 'toggleAutoCollect':
+        this.cb.onUiKey('toggleAutoCollect');
+        return;
+      case 'toggleAutoBattle':
+        this.cb.onUiKey('toggleAutoBattle');
         return;
     }
   }

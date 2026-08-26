@@ -232,7 +232,7 @@ describe('fctSpawnShape: absorb (defender side and attacker side)', () => {
   });
 });
 
-describe('fctSpawnShape: heal / xp / rested-xp / honor / self-note', () => {
+describe('fctSpawnShape: heal / xp / rested-xp / honor / loot / self-note', () => {
   it('heal isSelf tracks isPlayerTarget and passes crit through', () => {
     expect(
       fctSpawnShape({ type: 'heal', crit: false, isPlayerTarget: true }),
@@ -242,7 +242,7 @@ describe('fctSpawnShape: heal / xp / rested-xp / honor / self-note', () => {
     ).toEqual<FctSpawnShape>({ kind: 'heal', isSelf: false, crit: true });
   });
 
-  it('xp / rested-xp / honor / self-note are always self, never crit', () => {
+  it('xp / rested-xp / honor / loot / self-note are always self, never crit', () => {
     expect(fctSpawnShape({ type: 'xp' })).toEqual<FctSpawnShape>({
       kind: 'xp',
       isSelf: true,
@@ -255,6 +255,11 @@ describe('fctSpawnShape: heal / xp / rested-xp / honor / self-note', () => {
     });
     expect(fctSpawnShape({ type: 'honor' })).toEqual<FctSpawnShape>({
       kind: 'honor',
+      isSelf: true,
+      crit: false,
+    });
+    expect(fctSpawnShape({ type: 'loot' })).toEqual<FctSpawnShape>({
+      kind: 'loot',
       isSelf: true,
       crit: false,
     });

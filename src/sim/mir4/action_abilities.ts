@@ -1,12 +1,11 @@
 // Profile adapter from the MIR4 skill catalog to the existing World of
-// ClaudeCraft ability model. This is content/model adaptation only: the action
+// Aeldrune ability model. This is content/model adaptation only: the action
 // bar, spellbook, cooldown painter, keybinds and tooltips remain the existing UI.
 
 import {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
   MIR4_CLASS_PASSIVES,
-  MIR4_SKILL_LEVEL_CAPS,
   type Mir4ClassId,
   type Mir4SkillDef,
   mir4ClassById,
@@ -16,7 +15,18 @@ import {
 } from '../content/mir4';
 import type { ResolvedAbility } from '../sim';
 import type { AbilityDef, Entity } from '../types';
-import { mir4CoefficientDamage, mir4SkillDamageAfterBoost, mir4SkillManaCost } from './math';
+import {
+  mir4AuthorialSkillRankDamage,
+  mir4CoefficientDamage,
+  mir4SkillDamageAfterBoost,
+  mir4SkillManaCost,
+  mir4SkillRankScaledInteger,
+} from './math';
+import {
+  MIR4_SKILL_MAX_LEVEL,
+  MIR4_ULTIMATE_UNLOCK_LEVEL,
+  mir4SkillUnlockLevel,
+} from './skill_progression';
 
 const ACTION_PREFIX = 'mir4_skill_';
 const ULTIMATE_PREFIX = 'mir4_ultimate_';
@@ -106,10 +116,18 @@ function percent(value: number): string {
   return `${Math.round(value * 1000) / 10}%`;
 }
 
-function effectSentence(skill: Mir4SkillDef): string {
+function effectSentence(skill: Mir4SkillDef, rank = 1): string {
   const effect = skill.effect;
   if (!effect) return '';
-  const seconds = (effect.durationMs ?? 0) / 1000;
+  const scalesControlEffect =
+    skill.damage === null &&
+    MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId] === undefined &&
+    effect.effect !== 'magic-shield' &&
+    effect.effect !== 'heal-pulse';
+  const durationMs = scalesControlEffect
+    ? mir4SkillRankScaledInteger(effect.durationMs ?? 0, rank)
+    : (effect.durationMs ?? 0);
+  const seconds = durationMs / 1000;
   switch (effect.effect) {
     case 'stun':
       return ` Stuns the target for ${seconds} sec.`;
@@ -130,18 +148,18 @@ function effectSentence(skill: Mir4SkillDef): string {
     case 'burn':
       return ` Increases damage taken by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
     case 'magic-shield':
-      return `Reduces damage taken by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
+      return `Reduces damage taken by ${percent(mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), rank) / 10_000)} for ${seconds} sec.`;
     case 'heal-pulse': {
       const basisPoints = Number(effect.healMaxHpBasisPoints ?? 0);
-      return `Restores ${basisPoints / 100}% of maximum health.`;
+      return `Restores ${mir4SkillRankScaledInteger(basisPoints, rank) / 100}% of maximum health.`;
     }
     default:
       return '';
   }
 }
 
-function descriptionFor(skill: Mir4SkillDef): string {
-  const utility = effectSentence(skill);
+function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
+  const utility = effectSentence(skill, rank);
   if (skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse') {
     return utility;
   }
@@ -185,11 +203,14 @@ export function mir4ClassIdFromActions(
   for (const ability of abilities) {
     const classId = mir4ClassIdFromUltimateAction(ability.def.id);
     if (classId !== null) return classId;
+    const skillId = mir4SkillIdFromAction(ability.def.id);
+    const skill = skillId === null ? null : mir4SkillById(skillId);
+    if (skill) return skill.classId;
   }
   return null;
 }
 
-function actionDef(skill: Mir4SkillDef, range: number, cost: number): AbilityDef {
+function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): AbilityDef {
   const selfUtility =
     skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
   return {
@@ -202,12 +223,12 @@ function actionDef(skill: Mir4SkillDef, range: number, cost: number): AbilityDef
     range: selfUtility ? 0 : range,
     school: skill.classId === 2 || skill.classId === 3 ? 'arcane' : 'physical',
     requiresTarget: !selfUtility,
-    learnLevel: skill.unlock.kind === 'level' ? skill.unlock.level : 1,
+    learnLevel: mir4SkillUnlockLevel(skill.slot),
     effects:
       skill.damage !== null || MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId]
         ? [{ type: 'directDamage', min: 0, max: 0 }]
         : [],
-    description: descriptionFor(skill),
+    description: descriptionFor(skill, rank),
   };
 }
 
@@ -224,7 +245,7 @@ function ultimateActionDef(classId: Mir4ClassId): AbilityDef {
     range: spec.rangePx / 16,
     school: spec.channel === 'magic' ? 'arcane' : 'physical',
     requiresTarget: true,
-    learnLevel: 1,
+    learnLevel: MIR4_ULTIMATE_UNLOCK_LEVEL,
     effects: [{ type: 'directDamage', min: 0, max: 0 }],
     description: `Deals $d damage over ${impacts} impacts. Requires a full Ultimate gauge.`,
   };
@@ -282,6 +303,15 @@ export function mir4ActionAbilityDef(abilityId: string): AbilityDef | null {
   return ACTION_DEF_INDEX.get(abilityId) ?? null;
 }
 
+/** Complete spellbook order, including actions the character has not unlocked yet. */
+export function mir4AbilityIdsForClass(classId: Mir4ClassId): string[] {
+  return [
+    ...mir4SkillsForClass(classId).map((skill) => mir4ActionId(skill.skillId)),
+    mir4UltimateActionId(classId),
+    ...MIR4_CLASS_PASSIVES[classId].map((passive) => `${PASSIVE_PREFIX}${passive.id}`),
+  ];
+}
+
 export function mir4ActionAbilities(
   classId: Mir4ClassId,
   level: number,
@@ -292,12 +322,14 @@ export function mir4ActionAbilities(
   if (!cls) return [];
   const range = mir4ClassRangeYards(cls);
   const skills: ResolvedAbility[] = mir4SkillsForClass(classId)
-    .filter((skill) => skill.unlock.kind === 'initial-deck' || level >= skill.unlock.level)
+    .filter((skill) => level >= mir4SkillUnlockLevel(skill.slot))
     .map((skill) => {
-      const cap = MIR4_SKILL_LEVEL_CAPS[classId]?.[skill.skillId] ?? 1;
-      const rank = Math.min(cap, Math.max(1, Math.floor(skillLevels?.[skill.skillId] ?? 1)));
+      const rank = Math.min(
+        MIR4_SKILL_MAX_LEVEL,
+        Math.max(1, Math.floor(skillLevels?.[skill.skillId] ?? 1)),
+      );
       const cost = mir4SkillManaCost(manaCostStat, skill.skillCost, skill.skillCostType);
-      const def = actionDef(skill, range, cost);
+      const def = actionDef(skill, range, cost, rank);
       return {
         def,
         rank,
@@ -311,17 +343,19 @@ export function mir4ActionAbilities(
       };
     });
   const ultimateDef = ultimateActionDef(classId);
-  skills.push({
-    def: ultimateDef,
-    rank: 1,
-    cost: 0,
-    castTime: 0,
-    cooldown: ultimateDef.cooldown,
-    cooldownId: 'mir4_ult',
-    effects: ultimateDef.effects,
-    threatFlat: 0,
-    threatMult: 1,
-  });
+  if (level >= MIR4_ULTIMATE_UNLOCK_LEVEL) {
+    skills.push({
+      def: ultimateDef,
+      rank: 1,
+      cost: 0,
+      castTime: 0,
+      cooldown: ultimateDef.cooldown,
+      cooldownId: 'mir4_ult',
+      effects: ultimateDef.effects,
+      threatFlat: 0,
+      threatMult: 1,
+    });
+  }
   for (const passive of MIR4_CLASS_PASSIVES[classId]) {
     if (level < passive.level) continue;
     const def = passiveActionDef(classId, passive);
@@ -364,7 +398,10 @@ export function mir4ActionRawDamage(
   if (policy) {
     const physical = Math.floor((attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
     const magic = Math.floor((spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
-    return mir4SkillDamageAfterBoost(Math.max(1, physical + magic), skillDamageBps);
+    return mir4SkillDamageAfterBoost(
+      mir4AuthorialSkillRankDamage(Math.max(1, physical + magic), rank),
+      skillDamageBps,
+    );
   }
   const skill = mir4SkillById(skillId);
   if (!skill?.damage) return null;

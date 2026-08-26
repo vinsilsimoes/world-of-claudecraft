@@ -7,6 +7,7 @@ import type { NameplateCanvasState } from '../src/render/nameplate_canvas';
 import { NameplatePainter } from '../src/render/nameplate_painter';
 import { FRIENDLY } from '../src/render/reaction';
 import type { EntityView } from '../src/render/renderer';
+import type { GameProfile } from '../src/sim/game_profile';
 import type { Entity } from '../src/sim/types';
 import type { IWorld } from '../src/world_api';
 
@@ -86,6 +87,7 @@ function view(): EntityView {
 
 interface PainterStateAccess {
   states: Map<number, NameplateCanvasState>;
+  anchorCount: number;
 }
 
 function stateOf(painter: NameplatePainter, id: number): NameplateCanvasState {
@@ -101,6 +103,7 @@ function harness(
     isHostilePlayer?: (e: Entity) => boolean;
     markerFor?: (entityId: number) => number | null;
     questState?: (questId: string) => string;
+    gameProfile?: GameProfile;
   } = {},
 ) {
   const me = entity({
@@ -118,6 +121,7 @@ function harness(
   const entities = new Map<number, Entity>([[me.id, me]]);
   for (const target of targets) entities.set(target.id, target);
   const world = {
+    cfg: { seed: 1, playerClass: 'warrior', gameProfile: options.gameProfile },
     player: me,
     entities,
     markerFor: options.markerFor ?? (() => null),
@@ -141,6 +145,25 @@ function harness(
 }
 
 describe('batched canvas nameplate state', () => {
+  it('drops an expired MIR4 corpse plate and loot marker with the hidden body', () => {
+    const target = entity({
+      id: 2,
+      kind: 'mob',
+      templateId: 'forest_wolf',
+      dead: true,
+      lootable: true,
+      mir4CorpseVisible: true,
+    });
+    const { painter } = harness([target], { gameProfile: 'mir4-gameplay-port' });
+
+    painter.update(true);
+    expect((painter as unknown as PainterStateAccess).anchorCount).toBe(1);
+
+    target.mir4CorpseVisible = false;
+    painter.update(true);
+    expect((painter as unknown as PainterStateAccess).anchorCount).toBe(0);
+  });
+
   it('uses one canvas for many entities and creates no per-entity nameplate DOM', () => {
     const targets = [entity({ id: 2 }), entity({ id: 3, name: 'Other' })];
     const { painter, layer } = harness(targets);

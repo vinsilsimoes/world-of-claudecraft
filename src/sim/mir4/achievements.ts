@@ -9,12 +9,15 @@ import {
 } from '../content/mir4/achievements';
 import { MIR4_GAME_PROFILE } from '../game_profile';
 import type { SimContext } from '../sim_context';
+import { MIR4_EMPTY_MATERIALS } from './equipment';
 import { MIR4_PERSISTED_COUNT_CAP } from './persistence';
 import { MIR4_EMPTY_SKILL_EVOLUTION_RESOURCES } from './skill_evolution';
+import { mir4ModifiedProgressionReward } from './status_effects';
 import { markMir4WireDirty } from './wire_revision';
 
 export interface Mir4Currencies {
   darksteel: number;
+  energy: number;
 }
 
 export type Mir4AchievementClears = Record<number, number>;
@@ -73,14 +76,39 @@ export function claimMir4Achievement(
   const resources = meta.mir4SkillResources ?? MIR4_EMPTY_SKILL_EVOLUTION_RESOURCES;
   const portBonus = mir4AchievementPortBonus(definition.achievementId);
   const darksteel = meta.mir4Currencies?.darksteel ?? 0;
-  meta.copper = saturatingCredit(meta.copper, definition.rewards.copper, Number.MAX_SAFE_INTEGER);
+  const energy = meta.mir4Currencies?.energy ?? 0;
+  meta.copper = saturatingCredit(
+    meta.copper,
+    mir4ModifiedProgressionReward(
+      definition.rewards.copper,
+      'reward-copper',
+      entity.mir4.statusValues,
+    ),
+    Number.MAX_SAFE_INTEGER,
+  );
   meta.mir4Currencies = {
-    darksteel: saturatingCredit(darksteel, definition.rewards.darksteel),
+    energy,
+    darksteel: saturatingCredit(
+      darksteel,
+      mir4ModifiedProgressionReward(
+        definition.rewards.darksteel,
+        'darksteel',
+        entity.mir4.statusValues,
+      ),
+    ),
   };
   meta.mir4SkillResources = {
     effectPoints: saturatingCredit(resources.effectPoints, definition.rewards.effectPoints),
-    skillTomes: saturatingCredit(resources.skillTomes, portBonus?.skillTomes ?? 0),
+    skillTomes: resources.skillTomes,
   };
+  if (portBonus) {
+    const materials = { ...MIR4_EMPTY_MATERIALS, ...meta.mir4Materials };
+    materials.knowledgeTomeCommon = saturatingCredit(
+      materials.knowledgeTomeCommon,
+      portBonus.knowledgeTomeCommon,
+    );
+    meta.mir4Materials = materials;
+  }
   meta.mir4AchievementClears = {
     ...meta.mir4AchievementClears,
     [definition.groupId]: definition.groupGrade,

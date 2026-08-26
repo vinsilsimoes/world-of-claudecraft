@@ -1,6 +1,6 @@
 # Mobile Store Release
 
-World of ClaudeCraft ships to iOS and Android through Capacitor. The native apps
+Aeldrune ships to iOS and Android through Capacitor. The native apps
 bundle the built Vite client and connect to the production backend at
 `https://worldofclaudecraft.com`.
 
@@ -486,7 +486,7 @@ offline launch to ensure startup does not depend on an update service.
 
 ## Store Review Notes
 
-- App name: World of ClaudeCraft.
+- App name: Aeldrune.
 - Bundle/application ID: `com.worldofclaudecraft`.
 - App Store tags: Action, Fantasy, Free, Co-Op, PvP, Leaderboard, MMO,
   Multiplayer, Open World.

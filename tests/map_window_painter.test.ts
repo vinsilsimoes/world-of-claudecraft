@@ -564,6 +564,65 @@ describe('map_window_painter: no magic values', () => {
     ]);
     expect(trace.styleReads.filter((token) => token.endsWith('building-armoury'))).toHaveLength(2);
   });
+
+  it('draws authored walls as cartographic strokes instead of filled collision boxes', () => {
+    const trace = newTrace();
+    installMapStyleGlobals(trace);
+    const ctx = fakeMapContext(trace);
+    const painter = new MapWindowPainter(classColor);
+    const world = mapWorld();
+    const props = emptyZoneProps();
+    props.walls = [
+      {
+        id: 'test_town_wall',
+        assetId: '/models/props/test_town_wall.glb',
+        x: 17.5,
+        z: -5.5,
+        w: 12,
+        d: 0.65,
+        rot: 0.6,
+        height: 4,
+      },
+    ];
+    const background = { width: 560, height: 560 } as HTMLCanvasElement;
+    const zone = ZONES[0];
+    setActiveWorldContent({ ...BUILTIN_WORLD, props });
+
+    painter.paintOverworld(ctx, world, {
+      zone,
+      zoneBg: {
+        canvas: background,
+        region: {
+          minX: zone.xMin ?? STRIP_MIN_X,
+          maxX: zone.xMax ?? STRIP_MAX_X,
+          minZ: zone.zMin,
+          maxZ: zone.zMax,
+        },
+      },
+      canvasSize: 560,
+      zoom: 6,
+      center: { x: 17.5, z: -5.5 },
+    });
+
+    expect(
+      trace.fills.filter(
+        (fill) =>
+          fill.style === 'paint:--color-map-building-house' &&
+          fill.commands.includes('closePath'),
+      ),
+    ).toEqual([]);
+    const wallStrokes = trace.strokes.filter(
+        (stroke) =>
+          stroke.style === 'paint:--color-map-building-outline' &&
+          stroke.commands.join() === 'moveTo,lineTo',
+      );
+    expect(wallStrokes).toHaveLength(1);
+    expect(wallStrokes[0]?.lineWidth).toBe(2);
+    const [x0, y0, x1, y1] = wallStrokes[0]?.args ?? [];
+    expect(Math.hypot((x1 ?? 0) - (x0 ?? 0), (y1 ?? 0) - (y0 ?? 0))).toBeGreaterThan(50);
+    expect(Math.abs((x1 ?? 0) - (x0 ?? 0))).toBeGreaterThan(1);
+    expect(Math.abs((y1 ?? 0) - (y0 ?? 0))).toBeGreaterThan(1);
+  });
 });
 
 describe('map_window_painter: cadence + cached background preserved', () => {

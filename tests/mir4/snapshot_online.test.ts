@@ -78,7 +78,7 @@ describe('MIR4 online authoritative snapshot', () => {
       copper: 2_100,
       mir4: {
         mir4AchievementClears: { 201: 1 },
-        mir4Currencies: { darksteel: 1_000 },
+        mir4Currencies: { darksteel: 1_000, energy: 0 },
         mir4SkillResources: { effectPoints: 0, skillTomes: 0 },
       },
     });
@@ -111,11 +111,11 @@ describe('MIR4 online authoritative snapshot', () => {
     expect(fc.sent).toContainEqual({ t: 'commandOutcome', rid: 13, ok: true });
     broadcast(server);
     expect(lastSnap(fc.sent).self).toMatchObject({
-      copper: 3_300,
       mir4: {
         mir4AchievementClears: { 201: 2 },
-        mir4Currencies: { darksteel: 1_000 },
-        mir4SkillResources: { effectPoints: 500, skillTomes: 3 },
+        mir4Currencies: { darksteel: 1_000, energy: 0 },
+        mir4SkillResources: { effectPoints: 500, skillTomes: 0 },
+        mir4Materials: { knowledgeTomeCommon: 1 },
       },
     });
 
@@ -131,10 +131,10 @@ describe('MIR4 online authoritative snapshot', () => {
     );
     broadcast(server);
     expect(lastSnap(fc.sent).self).toMatchObject({
-      copper: 100,
       mir4: {
         mir4SkillLevels: { 1102: 2 },
-        mir4SkillResources: { effectPoints: 100, skillTomes: 0 },
+        mir4SkillResources: { effectPoints: 500, skillTomes: 0 },
+        mir4Materials: { knowledgeTomeCommon: 0 },
       },
     });
 
@@ -150,7 +150,7 @@ describe('MIR4 online authoritative snapshot', () => {
     );
     broadcast(server);
     expect(lastSnap(fc.sent).self).not.toHaveProperty('mir4');
-    expect(meta.copper).toBe(100);
+    expect(meta.copper).toBe(3_300);
   });
 
   it('carries native identity and gameplay metadata, then delta-elides it while unchanged', () => {
@@ -159,6 +159,7 @@ describe('MIR4 online authoritative snapshot', () => {
     const joined = server.join(fc.ws, 1, 1, 'Elyra', 'elementalist', null, false, {});
     if ('error' in joined) throw new Error(joined.error);
     joined.blockListLoaded = true;
+    server.sim.setPlayerLevel(10, joined.pid);
     const meta = server.sim.players.get(joined.pid);
     if (!meta) throw new Error('missing joined MIR4 player');
     meta.autoBattle = {
@@ -171,7 +172,7 @@ describe('MIR4 online authoritative snapshot', () => {
     meta.mir4SkillLevels = { 2101: 2 };
     meta.mir4SkillResources = { effectPoints: 800, skillTomes: 6 };
     meta.mir4AchievementClears = { 201: 2 };
-    meta.mir4Currencies = { darksteel: 1_000 };
+    meta.mir4Currencies = { darksteel: 1_000, energy: 500 };
     meta.copper = 10_000;
     meta.mir4ArcQuests = {
       'M01-Q02': { questId: 'M01-Q02', stageIndex: 2, stageProgress: 1, state: 'active' },
@@ -205,7 +206,17 @@ describe('MIR4 online authoritative snapshot', () => {
     meta.mir4EquipmentInstances = {
       991010201: { itemId: 991010201, enhancement: 3 },
     };
-    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, moonStone: 5 };
+    meta.mir4Materials = {
+      ...MIR4_EMPTY_MATERIALS,
+      moonStone: 5,
+      knowledgeTomeCommon: 1,
+    };
+    meta.mir4Training = {
+      version: 1,
+      constitution: [1, 0, 0, 0, 0, 0, 0],
+      innerForce: [0, 1, 0, 0],
+      solitude: { conceptionVessel: [0, 0, 1, 0, 0, 0, 0, 0] },
+    };
     meta.mir4Mounts = {
       owned: { 'meadow-courser': 1 },
       discovered: ['meadow-courser', 'moss-boar'],
@@ -235,7 +246,7 @@ describe('MIR4 online authoritative snapshot', () => {
       mir4SkillLevels: { 2101: 2 },
       mir4SkillResources: { effectPoints: 800, skillTomes: 6 },
       mir4AchievementClears: { 201: 2 },
-      mir4Currencies: { darksteel: 1_000 },
+      mir4Currencies: { darksteel: 1_000, energy: 500 },
       mir4ArcQuests: {
         'M01-Q02': { questId: 'M01-Q02', stageIndex: 2, stageProgress: 1, state: 'active' },
       },
@@ -262,7 +273,12 @@ describe('MIR4 online authoritative snapshot', () => {
       mir4EquipmentInstances: {
         991010201: { itemId: 991010201, enhancement: 3 },
       },
-      mir4Materials: { moonStone: 5 },
+      mir4Materials: { moonStone: 5, knowledgeTomeCommon: 1 },
+      mir4Training: {
+        constitution: [1, 0, 0, 0, 0, 0, 0],
+        innerForce: [0, 1, 0, 0],
+        solitude: { conceptionVessel: [0, 0, 1, 0, 0, 0, 0, 0] },
+      },
       mir4Mounts: {
         owned: { 'meadow-courser': 1 },
         discovered: ['meadow-courser', 'moss-boar'],
@@ -322,9 +338,50 @@ describe('MIR4 online authoritative snapshot', () => {
     const third = lastSnap(fc.sent);
     expect(third.self.mir4).toMatchObject({
       mir4SkillLevels: { 2101: 2, 2111: 2 },
-      mir4SkillResources: { effectPoints: 400, skillTomes: 3 },
+      mir4SkillResources: { effectPoints: 800, skillTomes: 6 },
+      mir4Materials: { moonStone: 5 },
     });
-    expect(third.self.copper).toBe(6_800);
+    expect(third.self).not.toHaveProperty('copper');
+    expect(meta.copper).toBe(10_000);
+  });
+
+  it('sends Codex through a dedicated delta and never with gauge-only combat updates', () => {
+    const server = new GameServer(undefined, MIR4_GAME_PROFILE);
+    const fc = fakeWs();
+    const joined = server.join(fc.ws, 1, 1, 'Codex Wire', 'warrior', null, false, {});
+    if ('error' in joined) throw new Error(joined.error);
+    joined.blockListLoaded = true;
+    server.sim.setPlayerLevel(12, joined.pid);
+    const meta = server.sim.players.get(joined.pid)!;
+    const entity = server.sim.entities.get(joined.pid)!;
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, knowledgeFragment: 25 };
+
+    broadcast(server);
+    expect(lastSnap(fc.sent).self.mir4Codex).toBeNull();
+    server.handleMessage(
+      joined,
+      JSON.stringify({
+        t: 'cmd',
+        cmd: 'mir4',
+        m: 'registerAllCodex',
+        collectionId: 'field-notes',
+      }),
+    );
+    broadcast(server);
+    const registered = lastSnap(fc.sent).self;
+    expect(registered.mir4).not.toHaveProperty('mir4Codex');
+    expect(registered.mir4Codex).toEqual({
+      version: 1,
+      registered: { 'field-notes': { 'knowledge-fragment': 25 } },
+    });
+
+    broadcast(server);
+    expect(lastSnap(fc.sent).self).not.toHaveProperty('mir4Codex');
+    entity.mir4UltGauge = 50;
+    broadcast(server);
+    const combat = lastSnap(fc.sent).self;
+    expect(combat.mir4).toMatchObject({ ultimateGauge: 50 });
+    expect(combat).not.toHaveProperty('mir4Codex');
   });
 
   it('sanitizes once per player revision instead of once per 20 Hz snapshot', () => {

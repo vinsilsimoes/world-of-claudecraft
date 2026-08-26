@@ -6,6 +6,7 @@ type TestPickEntity = {
   kind: 'mob' | 'object' | 'player' | 'npc';
   dead: boolean;
   lootable: boolean;
+  mir4CorpseVisible?: boolean;
 };
 
 function entities(
@@ -14,6 +15,7 @@ function entities(
     kind: TestPickEntity['kind'];
     dead?: boolean;
     lootable?: boolean;
+    mir4CorpseVisible?: boolean;
   }>,
 ): Map<number, TestPickEntity> {
   return new Map(
@@ -32,6 +34,24 @@ describe('resolveDirectPickEntityId', () => {
   it('keeps a normal single lootable corpse pick unchanged', () => {
     const map = entities([{ id: 10, kind: 'mob', dead: true, lootable: true }]);
     expect(resolveDirectPickEntityId([10], map, 10)).toBe(10);
+  });
+
+  it('keeps a visible MIR4 body pickable for harvesting, then skips it after expiry', () => {
+    const map = entities([
+      {
+        id: 9,
+        kind: 'mob',
+        dead: true,
+        lootable: false,
+        mir4CorpseVisible: true,
+      },
+      { id: 10, kind: 'mob', dead: false },
+    ]);
+    expect(resolveDirectPickEntityId([9], map)).toBe(9);
+    const corpse = map.get(9);
+    if (!corpse) throw new Error('missing corpse');
+    corpse.mir4CorpseVisible = false;
+    expect(resolveDirectPickEntityId([9], map)).toBeNull();
   });
 
   it('skips an already-unlootable corpse to reach a stacked lootable corpse', () => {

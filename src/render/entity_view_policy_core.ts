@@ -2,6 +2,7 @@
 // Candidate storage stays in view_candidate_pool_core; this module owns only
 // entity classification and lifecycle decisions.
 
+import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { mir4ArcObjectiveVisibleTo } from '../sim/mir4/arc_objectives';
 import type { Entity, QuestProgress } from '../sim/types';
 import { interactionLandmarkViewPriority } from './prewarm_policy';
@@ -29,6 +30,20 @@ export function entityViewIsAdmitted(
   return (
     (viewerId < 0 || mir4ArcObjectiveVisibleTo(entity, viewerId)) &&
     !questObjectHidden(entity, questLog)
+  );
+}
+
+/** MIR4 wild-mob bodies stop drawing when their ten-second corpse marker expires. */
+export function entityViewBodyVisible(
+  entity: Entity,
+  gameProfile: GameProfile | undefined,
+): boolean {
+  return !(
+    gameProfile === MIR4_GAME_PROFILE &&
+    entity.kind === 'mob' &&
+    entity.ownerId === null &&
+    entity.dead &&
+    entity.mir4CorpseVisible !== true
   );
 }
 

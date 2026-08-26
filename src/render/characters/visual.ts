@@ -56,6 +56,7 @@ import {
   takeFarBakeBudget,
   tintedFarMaterials,
 } from './assets';
+import { mir4ActionDurationSeconds, mir4ActionTimeScale } from './attack_timing_core';
 import {
   createGhostEffectMaterial,
   createMoonkinEffectMaterial,
@@ -1412,7 +1413,7 @@ export class CharacterVisual {
     return override !== undefined && this.action(override) !== null;
   }
 
-  playAttack(abilityId?: string): void {
+  playAttack(abilityId?: string, durationMs?: number): void {
     if (this.deadLock) return;
     // Resolved against THIS rig's bound clips: a rig without the substitute
     // (every body but the hunter) keeps its own authored attack instead of
@@ -1441,7 +1442,11 @@ export class CharacterVisual {
       const authoredTimeScale = abilityId
         ? this.def.clips.attackTimeScaleByAbility?.[abilityId]
         : undefined;
-      this.playOneShot(override, authoredTimeScale ?? this.def.attackTimeScale ?? 1.3);
+      this.playTimedOneShot(
+        override,
+        authoredTimeScale ?? this.def.attackTimeScale ?? 1.3,
+        durationMs,
+      );
       this.currentOneShotIsAttack = true;
       if (override === PALADIN_TEMPLARS_VERDICT_CLIP) {
         this.templarsVerdictAction = this.action(override);
@@ -1453,25 +1458,52 @@ export class CharacterVisual {
     const style = weaponAttackStyle(this.weaponItemId, this.offhandItemId);
     const handClip = style ? this.def.clips.attackByHand?.[style] : undefined;
     if (!skinAttack && handClip && this.action(handClip)) {
-      this.playOneShot(handClip, this.def.attackTimeScale ?? 1.3);
+      this.playTimedOneShot(handClip, this.def.attackTimeScale ?? 1.3, durationMs);
       this.currentOneShotIsAttack = true;
       return;
     }
     const clips = skinAttack?.clips ?? this.def.clips.attack;
     if (clips.length === 0) return;
     const name = clips[this.attackIdx++ % clips.length];
-    this.playOneShot(name, skinAttack?.timeScale ?? this.def.attackTimeScale ?? 1.3);
+    this.playTimedOneShot(
+      name,
+      skinAttack?.timeScale ?? this.def.attackTimeScale ?? 1.3,
+      durationMs,
+    );
+    this.currentOneShotIsAttack = true;
+  }
+
+  /** MIR4 magic and utility actions use the rig's cast language instead of a
+   * generic weapon chop. A real per-ability override remains authoritative;
+   * otherwise the native cast clip is fitted to the same simulation window
+   * that owns the contact event. */
+  playCastAction(abilityId?: string, durationMs?: number): void {
+    if (this.deadLock) return;
+    if (abilityId && this.hasAttackClipOverride(abilityId)) {
+      this.playAttack(abilityId, durationMs);
+      return;
+    }
+    const castClip = this.def.clips.cast ?? 'Spellcast_Raise';
+    if (!this.action(castClip)) {
+      this.playAttack(abilityId, durationMs);
+      return;
+    }
+    this.playTimedOneShot(castClip, this.def.attackTimeScale ?? 1.3, durationMs);
     this.currentOneShotIsAttack = true;
   }
 
   /** Bladed Gyre is instant, so it uses one short body spin instead of the
    *  held Bladestorm channel pose. Repeated AoE hits only refresh the timer. */
-  playWhirl(): void {
+  playWhirl(durationMs?: number): void {
     if (this.deadLock) return;
-    this.spinOnceTimer = SPIN_ATTACK_VISUAL_DURATION;
+    this.spinOnceTimer = mir4ActionDurationSeconds(durationMs, SPIN_ATTACK_VISUAL_DURATION);
     const clips = this.def.clips.attack;
     if (clips.length > 0) {
-      this.playOneShot(clips[this.attackIdx++ % clips.length], SPIN_ATTACK_TIMESCALE);
+      this.playTimedOneShot(
+        clips[this.attackIdx++ % clips.length],
+        SPIN_ATTACK_TIMESCALE,
+        durationMs,
+      );
     }
   }
 
@@ -3278,6 +3310,18 @@ export class CharacterVisual {
     if ((this.baseState === 'jump' || this.baseState === 'fall') && this.def.clips.land)
       return a === this.action(this.def.clips.jump);
     return false;
+  }
+
+  private playTimedOneShot(
+    name: string,
+    fallbackTimeScale: number,
+    durationMs: number | undefined,
+  ): void {
+    const action = this.action(name);
+    const timeScale = action
+      ? mir4ActionTimeScale(action.getClip().duration, durationMs, fallbackTimeScale)
+      : fallbackTimeScale;
+    this.playOneShot(name, timeScale);
   }
 
   private playOneShot(

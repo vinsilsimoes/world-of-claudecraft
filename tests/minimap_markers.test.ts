@@ -11,6 +11,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { DELVE_X_MIN, GATHER_NODES, ITEMS, QUESTS, STATIONS, YUMI_MAZE_X } from '../src/sim/data';
+import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
+import { mir4QuestSearchAreas } from '../src/sim/mir4/quest_search_areas';
 import { isQuestTurnInNpc } from '../src/sim/types';
 import { STABLE_MAP_NAVIGATION_LANDMARKS } from '../src/ui/map_navigation_landmarks_core';
 import {
@@ -19,6 +21,7 @@ import {
   type MinimapMarker,
   minimapMode,
   minimapPaintedMarkerClearance,
+  minimapQuestSearchAt,
   minimapSafeCenterRadius,
 } from '../src/ui/minimap_markers';
 import type { IWorld } from '../src/world_api';
@@ -203,6 +206,54 @@ describe('minimapMode (delve vs overworld discriminator)', () => {
 });
 
 describe('createMinimapMarkers: the discriminated union per draw kind', () => {
+  it('hit-tests the smallest overlapping mission search circle for hover tooltips', () => {
+    const markers: MinimapMarker[] = [
+      { kind: 'quest-search-area', mx: 80, my: 80, radius: 20, questId: 'M01-S03' },
+      { kind: 'quest-search-area', mx: 82, my: 82, radius: 8, questId: 'M01-Q03' },
+    ];
+    expect(minimapQuestSearchAt(markers, 82, 82)).toBe('M01-Q03');
+    expect(minimapQuestSearchAt(markers, 10, 10)).toBeNull();
+  });
+
+  it('projects the active MIR4 interaction stage into a visible local search circle', () => {
+    const entry = {
+      id: 'M01-S03',
+      complete: false,
+      autoJourneyActive: false,
+      autoJourneySuspended: false,
+      objective: {
+        kind: 'campaign-stage' as const,
+        stageKind: 'prepare-civilians',
+        stageIndex: 1,
+        current: 0,
+        total: 3,
+      },
+    };
+    const area = mir4QuestSearchAreas([entry])[0]!;
+    const world = makeWorld('client') as unknown as {
+      cfg: { seed: number; playerClass: string; gameProfile: string };
+      player: { pos: { x: number; z: number } };
+      mir4QuestTrackerEntries: () => readonly (typeof entry)[];
+    };
+    world.cfg.gameProfile = MIR4_GAME_PROFILE;
+    world.player.pos = { ...area.center };
+    world.mir4QuestTrackerEntries = () => [entry];
+
+    const marker = createMinimapMarkers()
+      .build(world as unknown as IWorld, S, PPY)
+      .markers.find(
+        (candidate): candidate is Extract<MinimapMarker, { kind: 'quest-search-area' }> =>
+          candidate.kind === 'quest-search-area',
+      );
+    expect(marker).toEqual({
+      kind: 'quest-search-area',
+      mx: S / 2,
+      my: S / 2,
+      radius: area.radius * PPY,
+      questId: entry.id,
+    });
+  });
+
   it('keeps a painted marker full-corner-safe at the circular clip in both profiles', () => {
     for (const size of [16, 18, 20, 22, 24, 26]) {
       const clearance = minimapPaintedMarkerClearance(size);

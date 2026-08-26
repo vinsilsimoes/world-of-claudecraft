@@ -128,6 +128,9 @@ export function objectDisplayName(entity: Entity): string {
     }
     return t('hudChrome.mir4.campaign.objective.interact');
   }
+  if (entity.objectItemId === 'mir4_object_energy_crystal') {
+    return t('hudChrome.mir4.energyGatheringSite');
+  }
   if (entity.objectItemId) return tEntity({ kind: 'item', id: entity.objectItemId, field: 'name' });
   return entity.name;
 }

@@ -7,7 +7,7 @@ import {
 import { buildingCameraHeight } from '../sim/building_layout';
 import { mineMoundFootprint, STALL_HALF_D, STALL_HALF_W } from '../sim/colliders';
 import { MOUNT_RACE_JUMP_FIXTURES } from '../sim/content/mounts';
-import { BUILTIN_WORLD, getActiveWorldContent, WORLD_MIN_Z } from '../sim/data';
+import { getActiveWorldContent, WORLD_MIN_Z } from '../sim/data';
 import {
   DOCK_SECTION_LOCAL_Z,
   DOCK_SECTION_SURFACE_Y,
@@ -27,6 +27,7 @@ import {
 import { hash2 } from '../sim/rng';
 import type { BuildingDef } from '../sim/types';
 import { terrainHeight, WATER_LEVEL, waterLevel } from '../sim/world';
+import { usesBuiltinWorldPresentation } from '../sim/world_presentation';
 import { loadGltf, releaseGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import { attachBiomeHaze } from './biome_haze_field';
@@ -1452,7 +1453,7 @@ export function buildProps(seed: number, delveLabel?: (delveId: string) => strin
   const windmillFans: THREE.Object3D[] = [];
   const fireLights: THREE.PointLight[] = [];
   const activeContent = getActiveWorldContent();
-  const builtInWorld = activeContent === BUILTIN_WORLD;
+  const builtInWorld = usesBuiltinWorldPresentation(activeContent);
 
   const ground = (x: number, z: number) => terrainHeight(x, z, seed);
 
@@ -3185,7 +3186,7 @@ export function collectBuildingImpostors(seed: number): {
   instances: BuildingImpostorInstance[];
 } {
   const activeContent = getActiveWorldContent();
-  const builtInWorld = activeContent === BUILTIN_WORLD;
+  const builtInWorld = usesBuiltinWorldPresentation(activeContent);
   const used = new Map<string, PropAsset>();
   const instances: BuildingImpostorInstance[] = [];
   const use = (key: PropKey): PropAsset => {

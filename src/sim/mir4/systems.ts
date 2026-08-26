@@ -11,14 +11,16 @@ import { updateMir4ArcDungeonEncounters } from './arc_dungeons';
 import { updateMir4ArcEncounters } from './arc_encounters';
 import { updateMir4ArcEscorts } from './arc_escorts';
 import { updateMir4ArcObjectiveEntities, updateMir4ArcQuestTravel } from './arc_quest_runtime';
-import { updateMir4PendingImpacts } from './combat';
+import { updateMir4PendingImpacts, updateMir4Regeneration } from './combat';
 import { updateMir4Effects } from './effects';
 import { updateMir4NarrativeDialogue } from './narrative_dialogue';
+import { updateMir4TargetCombat } from './target_combat';
 
 export function updateMir4Systems(ctx: SimContext): void {
   updateMir4ArcObjectiveEntities(ctx);
   updateMir4NarrativeDialogue(ctx);
   updateMir4AutoQuest(ctx);
+  updateMir4TargetCombat(ctx);
   updateMir4AutoBattle(ctx);
   updateMir4ArcQuestTravel(ctx);
   updateMir4ArcEscorts(ctx);
@@ -26,4 +28,5 @@ export function updateMir4Systems(ctx: SimContext): void {
   updateMir4ArcEncounters(ctx);
   updateMir4Effects(ctx);
   updateMir4PendingImpacts(ctx);
+  updateMir4Regeneration(ctx);
 }

@@ -12,6 +12,7 @@ import {
 import type { Mir4SkillDef } from '../content/mir4/skills';
 import { mir4HardControlled } from '../mir4/effects';
 import { mir4SkillManaCost } from '../mir4/math';
+import { MIR4_ULTIMATE_UNLOCK_LEVEL, mir4SkillUnlockLevel } from '../mir4/skill_progression';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 
@@ -79,13 +80,15 @@ export function pickMir4AutoBattleSkill(
   p: Entity,
   target: Entity,
   area: Mir4AutoBattleArea,
+  disabledSkillIds?: readonly number[],
 ): Mir4AutoBattleSkillPick | null {
   // Every skill shares the global cooldown. Avoid building and scanning the
   // deck while none can pass castMir4Skill's admission gate; Auto Battle may
   // still fall through to its independent basic attack for this tick.
   if (p.gcdRemaining > 0) return null;
   const kit = mir4SkillsForClass((p.mir4?.classId ?? 1) as 1 | 2 | 3 | 4 | 5).filter(
-    (skill) => skill.unlock.kind !== 'level' || p.level >= skill.unlock.level,
+    (skill) =>
+      p.level >= mir4SkillUnlockLevel(skill.slot) && !disabledSkillIds?.includes(skill.skillId),
   );
   const hpPercent = (p.hp / p.maxHp) * 100;
   const targetHpPercent = (target.hp / target.maxHp) * 100;
@@ -140,13 +143,22 @@ export function pickMir4AutoBattleSkill(
 }
 
 /** The exact admission range of the action Auto Battle will try next. */
-export function mir4AutoBattleActionRange(p: Entity, pick: Mir4AutoBattleSkillPick | null): number {
+export function mir4AutoBattleActionRange(
+  p: Entity,
+  pick: Mir4AutoBattleSkillPick | null,
+  ultimateReadyOverride?: boolean,
+): number {
   const classId = p.mir4?.classId ?? 1;
   const def = mir4ClassById(classId);
   const classRange = def ? mir4ClassRangeYards(def) : 4;
   const spec = MIR4_CLASS_COMBAT_SPECS[classId] ?? MIR4_CLASS_COMBAT_SPECS[1];
   if (!spec) return classRange;
-  if ((p.mir4UltGauge ?? 0) >= 100 && !p.cooldowns.has('mir4_ult')) {
+  const ultimateReady =
+    ultimateReadyOverride ??
+    (p.level >= MIR4_ULTIMATE_UNLOCK_LEVEL &&
+      (p.mir4UltGauge ?? 0) >= 100 &&
+      !p.cooldowns.has('mir4_ult'));
+  if (ultimateReady) {
     return Math.min(classRange * 1.5, spec.ultimate.rangePx / 16);
   }
   if (pick?.actorCentered) {

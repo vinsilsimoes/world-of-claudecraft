@@ -28,6 +28,11 @@ import {
   type ToolEffectId,
 } from '../sim/content/professions';
 import { GATHER_NODES, ITEMS } from '../sim/data';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import {
+  type Mir4GatherProgressionSource,
+  mir4GatherProgressionSourceForNode,
+} from '../sim/mir4/training_resources';
 import {
   effectiveGradeToolTier,
   type GradeReadMeta,
@@ -167,6 +172,10 @@ export interface GatherNodeTooltipModel {
    *  effectiveGradeToolTier read (never a second copy of the rule). Absent
    *  while the node is locked: the red requirement line owns that state. */
   fineUpgrade?: boolean;
+  /** MIR4-only secondary yield attached to this physical WoC node. The map
+   * and 3D hover share it so a Training plant or Darksteel district is
+   * discoverable before the player commits to a harvest. */
+  mir4Reward?: Mir4GatherProgressionSource;
 }
 
 /** Adapts the IWorld reads into the GradeReadMeta shape the sim's grade
@@ -283,6 +292,8 @@ export function buildGatherNodeTooltip(
         node,
         effectiveGradeToolTier(gradeReadMetaFor(world), professionId, node),
       ) !== nodeMaterialFor(node.type, node.zoneId).itemId;
+  const mir4Reward =
+    world.cfg?.gameProfile === MIR4_GAME_PROFILE ? mir4GatherProgressionSourceForNode(node) : null;
   return {
     type: node.type,
     professionId,
@@ -292,6 +303,7 @@ export function buildGatherNodeTooltip(
     state,
     ...(respawn !== null && respawn > 0 ? { respawnSeconds: respawn } : {}),
     ...(fineUpgrade !== undefined ? { fineUpgrade } : {}),
+    ...(mir4Reward ? { mir4Reward } : {}),
   };
 }
 

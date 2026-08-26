@@ -148,27 +148,52 @@ describe('the mir4 slice equipment', () => {
     expect(p.mir4?.accuracy).toBe(row[9] + 5); // column 9: accuracy
   });
 
-  it('wolf kills pay copper through the classic loot pipeline', () => {
+  it('wolf kills send loot straight to the bag and keep the corpse for ten seconds', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(33);
+    const template = {
+      ...MIR4_MOBS.mir4_forest_wolf,
+      id: 'mir4_auto_loot_fixture',
+      respawnSeconds: 30,
+      loot: [
+        { copper: 2, chance: 1 },
+        { itemId: 'linen_scrap', chance: 1 },
+      ],
+    };
+    sim.ctx.mir4RuntimeMobTemplates.set(template.id, template as never);
+    const player = sim.entities.get(sim.playerId);
+    if (!player) throw new Error('test player missing');
     const wolf = createMob(
       sim.nextId++,
-      MIR4_MOBS.mir4_forest_wolf as never,
+      template as never,
       1,
-      sim.groundPos(
-        sim.entities.get(sim.playerId)!.pos.x + 2,
-        sim.entities.get(sim.playerId)!.pos.z,
-      ),
+      sim.groundPos(player.pos.x + 2, player.pos.z),
     );
     sim.addEntity(wolf);
     expect(wolf.maxHp).toBe(mir4MobStats(1).maxHp);
-    sim.castMir4Skill(1102, sim.playerId, wolf.id); // 125 of 127
+    sim.castMir4Skill(1102, sim.playerId, wolf.id); // live starter skill is lethal
     sim.tick();
     sim.mir4BasicAttack(wolf.id); // lethal (scheduled at the 280ms offset)
-    for (let t = 0; t < 7 && !wolf.dead; t++) sim.tick();
+    for (let t = 0; t < 25 && !wolf.dead; t++) sim.tick();
     expect(wolf.dead).toBe(true);
-    // Copper rides the corpse: looting pays the rolled band (2x[0.6..1.4] = 2).
-    expect(sim.lootCorpse(wolf.id, sim.playerId)).toBe(true);
-    expect(sim.players.get(sim.playerId)?.copper).toBe(2);
+    // MIR4 kill loot is credited at death; the corpse is presentation-only.
+    expect(sim.players.get(sim.playerId)?.copper).toBeGreaterThan(0);
+    expect(sim.countItem('linen_scrap', sim.playerId)).toBe(1);
+    expect(wolf.loot).toBeNull();
+    expect(wolf.lootable).toBe(false);
+    expect(wolf.mir4CorpseVisible).toBe(true);
+    expect(sim.lootCorpse(wolf.id, sim.playerId)).toBe(false);
+    player.targetId = wolf.id;
+    // The delayed impact lands in the MIR4 tail after corpse decay for this
+    // tick, so the full ten-second presentation window starts intact.
+    expect(wolf.mir4CorpseTimer).toBeCloseTo(10);
+
+    for (let t = 0; t < 198; t++) sim.tick();
+    expect(wolf.dead).toBe(true);
+    expect(wolf.mir4CorpseVisible).toBe(true);
+    sim.tick();
+    sim.tick();
+    expect(wolf.mir4CorpseVisible).toBe(false);
+    expect(player.targetId).toBeNull();
   });
 });

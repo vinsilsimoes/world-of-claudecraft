@@ -68,13 +68,13 @@ async function main() {
 
     await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 2 });
     // Navigate via the pretty alias to prove the static-route rewrite works.
-    await page.goto(`${base}/links`, { waitUntil: 'networkidle2', timeout: 20000 });
+    await page.goto(`${base}/links?lang=en`, { waitUntil: 'networkidle2', timeout: 20000 });
     await new Promise((r) => setTimeout(r, 600)); // let fonts settle
 
     ok(errors.length === 0, `no page/console errors (got: ${JSON.stringify(errors)})`);
 
     const title = await page.title();
-    ok(title === 'World of ClaudeCraft - Official Links', `document.title is localized ("${title}")`);
+    ok(title === 'Aeldrune - Official Links', `document.title is localized ("${title}")`);
 
     const htmlLang = await page.evaluate(() => document.documentElement.lang);
     ok(htmlLang === 'en', `html lang = en (got "${htmlLang}")`);

@@ -23,6 +23,19 @@ afterEach(() => {
 });
 
 describe('MIR4 runtime presentation labels', () => {
+  it('labels the Energy crystal without treating it as an inventory item', () => {
+    expect(
+      objectDisplayName(
+        entity({
+          templateId: 'ground_mir4_object_energy_crystal',
+          objectItemId: 'mir4_object_energy_crystal',
+          name: 'Energy Gathering Site',
+        }),
+      ),
+    ).toBe('Energy Gathering Site');
+    expect(entityTranslationFallbackLog()).toEqual([]);
+  });
+
   it('localizes physical objectives as actions instead of leaking internal target names', async () => {
     await ensureLocaleLoaded('pt_BR');
     setLanguage('pt_BR');

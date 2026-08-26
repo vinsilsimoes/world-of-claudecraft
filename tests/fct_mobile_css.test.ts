@@ -69,12 +69,19 @@ describe('desktop FCT css is unchanged (hud.css)', () => {
     );
   });
 
-  it('re-points the low-fx desktop xp/rested-xp at the non-crit rise (preserves the low-tier shed)', () => {
-    const m = HUD_CSS.match(
-      /:root\[data-fx-level="low"\]\s+\.fct-xp,\s*\n\s*:root\[data-fx-level="low"\]\s+\.fct-rested-xp\s*\{([^}]*)\}/,
+  it('gives MIR4 loot a compact side-feed chip and its own non-scaling animation', () => {
+    expect(HUD_CSS).toMatch(
+      /\.fct-loot\s*\{[^}]*color:\s*var\(--color-gold-300\)[^}]*max-width:\s*300px[^}]*border-left:\s*2px\s+solid\s+var\(--color-gold-500\)[^}]*font-size:\s*calc\(16px\s*\*\s*var\(--fct-scale[^}]*animation-name:\s*fct-loot-rise\b[^}]*animation-duration:\s*1\.8s/,
     );
-    expect(m, 'the low-fx desktop xp/rested-xp shed rule should exist').not.toBeNull();
-    expect(m![1]).toMatch(/animation-name:\s*fct-rise\b/);
+    expect(HUD_CSS).toMatch(/\.fct-loot\s*\{[^}]*text-shadow:[^}]*var\(--color-text-success\)/);
+    expect(HUD_CSS).toMatch(/\.fct-loot::before\s*\{[^}]*content:\s*"✦"/);
+    expect(HUD_CSS).toContain('@keyframes fct-loot-rise');
+  });
+
+  it('re-points low-fx desktop rewards at the non-crit rise (preserves the low-tier shed)', () => {
+    const m = HUD_CSS.match(/:root\[data-fx-level="low"\]\s+\.fct-loot\s*\{([^}]*)\}/);
+    expect(m, 'the low-fx desktop reward shed rule should exist').not.toBeNull();
+    expect(m?.[1]).toMatch(/animation-name:\s*fct-loot-rise\b/);
   });
 });
 
@@ -104,10 +111,10 @@ describe('mobile FCT css (hud.mobile.css)', () => {
       /:root\[data-fx-level="low"\]\s+body\.mobile-touch\s+\.fct\.crit\s*\{([^}]*)\}/,
     );
     expect(m, 'the low-fx mobile crit rule should exist').not.toBeNull();
-    expect(m![1]).toMatch(/animation-name:\s*fct-rise-mobile/);
+    expect(m?.[1]).toMatch(/animation-name:\s*fct-rise-mobile/);
     // fct-rise-mobile is a non-crit keyframe (no scale pop), matching the desktop
     // low-tier shed that points at fct-rise.
-    expect(m![1]).not.toMatch(/fct-crit-mobile/);
+    expect(m?.[1]).not.toMatch(/fct-crit-mobile/);
   });
 
   it('declares fct-xp-pop-mobile with a strictly shorter rise than desktop fct-xp-pop', () => {
@@ -117,18 +124,19 @@ describe('mobile FCT css (hud.mobile.css)', () => {
     expect(xpMobile).toBe(56);
   });
 
-  it('scales the mobile .fct-xp / .fct-rested-xp font-size by --fct-scale and swaps animation-name', () => {
+  it('keeps mobile loot compact and reuses the dedicated reward lane motion', () => {
     expect(HUD_MOBILE_CSS).toMatch(
-      /body\.mobile-touch\s+\.fct-xp,\s*\n\s*body\.mobile-touch\s+\.fct-rested-xp\s*\{[^}]*font-size:\s*calc\(17px\s*\*\s*var\(--fct-scale[^}]*animation-name:\s*fct-xp-pop-mobile/,
+      /body\.mobile-touch\s+\.fct-loot\s*\{[^}]*max-width:\s*190px[^}]*margin-left:\s*-70px[^}]*font-size:\s*calc\(14px\s*\*\s*var\(--fct-scale[^}]*animation-name:\s*fct-loot-rise-mobile/,
     );
+    expect(HUD_MOBILE_CSS).toContain('@keyframes fct-loot-rise-mobile');
   });
 
-  it('re-points the low-fx mobile xp/rested-xp at the non-crit mobile rise (preserves the low-tier shed)', () => {
+  it('re-points low-fx mobile rewards at the non-crit mobile rise (preserves the low-tier shed)', () => {
     const m = HUD_MOBILE_CSS.match(
-      /:root\[data-fx-level="low"\]\s+body\.mobile-touch\s+\.fct-xp,\s*\n\s*:root\[data-fx-level="low"\]\s+body\.mobile-touch\s+\.fct-rested-xp\s*\{([^}]*)\}/,
+      /:root\[data-fx-level="low"\]\s+body\.mobile-touch\s+\.fct-loot\s*\{([^}]*)\}/,
     );
-    expect(m, 'the low-fx mobile xp/rested-xp shed rule should exist').not.toBeNull();
-    expect(m![1]).toMatch(/animation-name:\s*fct-rise-mobile/);
-    expect(m![1]).not.toMatch(/fct-xp-pop-mobile/);
+    expect(m, 'the low-fx mobile reward shed rule should exist').not.toBeNull();
+    expect(m?.[1]).toMatch(/animation-name:\s*fct-loot-rise-mobile/);
+    expect(m?.[1]).not.toMatch(/fct-xp-pop-mobile/);
   });
 });

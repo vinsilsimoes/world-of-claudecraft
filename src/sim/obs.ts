@@ -7,9 +7,11 @@ import {
   dominionTemplateForAbility,
 } from './combat/necromancy_dominion';
 import { canUseForbiddenReflection } from './combat/warlock_talents';
-import { MIR4_MAX_LEVEL, mir4LevelRow } from './content/mir4';
+import { MIR4_MAX_LEVEL, type Mir4ClassId, mir4LevelRow, mir4SkillsForClass } from './content/mir4';
 import { MIR4_QUESTS_MAIN } from './content/mir4/arc_campaign';
 import { noticeboardDefByEntityId } from './content/noticeboards';
+import { corpseInteractionAvailability } from './corpse_interaction';
+import { corpseInteractionPresent } from './corpse_presence';
 import {
   CLASSES,
   ITEMS,
@@ -24,6 +26,7 @@ import {
 } from './data';
 import { MIR4_GAME_PROFILE } from './game_profile';
 import { mir4ArcStageGoal, mir4QuestCurrentStage } from './mir4/arc_quests';
+import { mir4SkillUnlockLevel } from './mir4/skill_progression';
 import {
   ASCENSION_CHARGES,
   ASCENSION_DURATION,
@@ -74,6 +77,15 @@ export const ACTIONS = [
   'eat_drink', // consume best food (or water for mana classes) from bags
   'claim_achievement_20101', // MIR4 player-level achievement grade 1
   'claim_achievement_20102', // MIR4 player-level achievement grade 2
+  'craft_knowledge_common',
+  'craft_knowledge_rare',
+  'craft_knowledge_epic',
+  'craft_knowledge_legendary',
+  'upgrade_skill_1',
+  'upgrade_skill_2',
+  'upgrade_skill_3',
+  'upgrade_skill_4',
+  'upgrade_skill_5',
 ] as const;
 
 export const NUM_ACTIONS = ACTIONS.length;
@@ -149,11 +161,32 @@ export function applyAction(sim: Sim, action: number): void {
     case 'claim_achievement_20102':
       sim.mir4ClaimAchievement(20102);
       break;
+    case 'craft_knowledge_common':
+      sim.mir4CraftMaterial('knowledge-tome-common');
+      break;
+    case 'craft_knowledge_rare':
+      sim.mir4CraftMaterial('knowledge-tome-rare');
+      break;
+    case 'craft_knowledge_epic':
+      sim.mir4CraftMaterial('knowledge-tome-epic');
+      break;
+    case 'craft_knowledge_legendary':
+      sim.mir4CraftMaterial('knowledge-tome-legendary');
+      break;
     case 'noop':
       break;
     default: {
       if (name.startsWith('ability_')) {
         sim.castAbilityBySlot(parseInt(name.slice(8), 10) - 1);
+      } else if (name.startsWith('upgrade_skill_') && sim.player.mir4) {
+        const slot = Number.parseInt(name.slice('upgrade_skill_'.length), 10);
+        const skill = mir4SkillsForClass(sim.player.mir4.classId as Mir4ClassId).find(
+          (candidate) => candidate.slot === slot,
+        );
+        if (skill) {
+          const current = sim.players.get(sim.playerId)?.mir4SkillLevels?.[skill.skillId] ?? 1;
+          sim.mir4UpgradeSkill(skill.skillId, current);
+        }
       }
     }
   }
@@ -175,7 +208,7 @@ export function applyAction(sim: Sim, action: number): void {
 const NEARBY_MOBS = 5;
 
 export function obsSize(): number {
-  return 16 + ABILITY_SLOTS * 2 + 9 + NEARBY_MOBS * 6 + 5 + QUEST_ORDER.length * 2 + 3 + 3 + 1;
+  return 16 + ABILITY_SLOTS * 2 + 9 + NEARBY_MOBS * 6 + 5 + QUEST_ORDER.length * 2 + 3 + 3 + 1 + 10;
 }
 
 export function encodeObs(sim: Sim): number[] {
@@ -323,7 +356,7 @@ export function encodeObs(sim: Sim): number[] {
 
   // --- target (9) ---
   const target = selectedTarget;
-  if (target && (!target.dead || target.lootable)) {
+  if (target && (!target.dead || corpseInteractionPresent(target))) {
     const d = dist2d(p.pos, target.pos);
     const rel = normAngle(angleTo(p.pos, target.pos) - p.facing);
     obs.push(1);
@@ -336,7 +369,7 @@ export function encodeObs(sim: Sim): number[] {
     obs.push(Math.sin(rel));
     obs.push(Math.cos(rel));
     obs.push(target.hostile ? 1 : 0);
-    obs.push(target.dead && target.lootable ? 1 : 0);
+    obs.push(target.dead && corpseInteractionPresent(target) ? 1 : 0);
     obs.push(target.aggroTargetId === p.id ? 1 : 0);
   } else {
     obs.push(0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -378,7 +411,11 @@ export function encodeObs(sim: Sim): number[] {
   let bestQuestEntity: Interactable | null = null;
   let bestQuestEntityD2 = INTERACT_RANGE * INTERACT_RANGE;
   sim.grid.forEachInRadius(p.pos.x, p.pos.z, INTERACT_RANGE, (e, d2) => {
-    if (e.kind === 'mob' && e.lootable && d2 < bestCorpseD2) {
+    if (
+      corpseInteractionPresent(e) &&
+      corpseInteractionAvailability(sim.ctx, e, p.id, true).canInteract &&
+      d2 < bestCorpseD2
+    ) {
       bestCorpse = { e, d2, type: 0.33 };
       bestCorpseD2 = d2;
     }
@@ -474,10 +511,29 @@ export function encodeObs(sim: Sim): number[] {
   obs.push(devotion ? devotion.ascensionCharges / ASCENSION_CHARGES : 0);
   obs.push(devotion ? devotion.ascensionRemaining / ASCENSION_DURATION : 0);
 
-  // Skill Tomes were added after every established observation field so
-  // trained consumers keep all prior indices. Three tomes fund one sealed
-  // L2 transition; cap at the Python Box upper bound for larger save wallets.
+  // The retired Skill Tome wallet stays in its original observation slot so
+  // trained consumers keep all prior indices. New progression uses the
+  // crafted knowledge-tome fields below; this legacy slot normally stays 0.
   obs.push(isMir4 ? clamp((mir4Meta?.mir4SkillResources?.skillTomes ?? 0) / 3, 0, 2) : 0);
+
+  // Current skill-progression economy, appended so existing observation
+  // indices stay stable: fragment + four tome balances, then ranks for the
+  // five regular class skills (locked skills remain zero).
+  const materials = mir4Meta?.mir4Materials;
+  obs.push(
+    isMir4 ? clamp((materials?.knowledgeFragment ?? 0) / 5, 0, 2) : 0,
+    isMir4 ? clamp((materials?.knowledgeTomeCommon ?? 0) / 10, 0, 2) : 0,
+    isMir4 ? clamp((materials?.knowledgeTomeRare ?? 0) / 10, 0, 2) : 0,
+    isMir4 ? clamp((materials?.knowledgeTomeEpic ?? 0) / 10, 0, 2) : 0,
+    isMir4 ? clamp((materials?.knowledgeTomeLegendary ?? 0) / 10, 0, 2) : 0,
+  );
+  const mir4Skills = p.mir4 ? mir4SkillsForClass(p.mir4.classId as Mir4ClassId) : [];
+  for (let slot = 1; slot <= 5; slot++) {
+    const skill = mir4Skills.find((candidate) => candidate.slot === slot);
+    const unlocked = !!skill && p.level >= mir4SkillUnlockLevel(slot);
+    const rank = unlocked && skill ? (mir4Meta?.mir4SkillLevels?.[skill.skillId] ?? 1) : 0;
+    obs.push(clamp(rank / 15, 0, 1));
+  }
 
   return obs;
 }

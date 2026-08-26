@@ -27,6 +27,7 @@ import { bagCapacity, canGrantItemInstance, fitsAll } from './bags';
 import { type NoticeboardDef, noticeboardDefByEntityId } from './content/noticeboards';
 import { HARVEST_COMPONENT_SPECIMENS, monsterMaterialTierFor } from './content/professions';
 import { corpseInteractionAvailability } from './corpse_interaction';
+import { corpseInteractionPresent } from './corpse_presence';
 import { ITEMS, MOBS, QUESTS, SPIRIT_HEALER_NPC_ID } from './data';
 import * as deedsMod from './deeds';
 import {
@@ -35,6 +36,7 @@ import {
   tryStartNythraxisWardChannel,
 } from './encounters/nythraxis';
 import { tryStartEscort } from './escort';
+import { MIR4_GAME_PROFILE } from './game_profile';
 import { isInRaidInstance } from './instances/dungeons';
 import { HUT_OBJECT_ID, tryBurnHut } from './interactions/firebottle_hut';
 import { hasSharedLootRights as computeSharedLootRights, lootHasGoneFfa } from './loot/loot_ffa';
@@ -52,6 +54,7 @@ import {
   mir4HandleArcObjectiveInteract,
   mir4IsArcObjectiveEntity,
 } from './mir4/arc_quest_runtime';
+import { mir4HandleEnergySiteInteract, mir4IsEnergySiteEntity } from './mir4/energy';
 import { applyFocusBonus, applyFocusTierBonus, type FocusAllocation } from './professions/focus';
 import {
   forfeitsEveryMappedYield,
@@ -303,6 +306,7 @@ export function harvestCorpse(
   }
   const mob = ctx.entities.get(mobId);
   if (mob?.kind !== 'mob' || !mob.dead) return;
+  if (ctx.gameProfile === MIR4_GAME_PROFILE && mob.mir4CorpseVisible !== true) return;
   const componentTags = MOBS[mob.templateId]?.componentTags;
   if (!isHarvestableCorpse(componentTags)) {
     ctx.error(meta.entityId, 'That corpse has nothing to harvest.');
@@ -727,7 +731,7 @@ export function harvestCorpse(
   // short owner window instead of the full decay. A pending need-greed roll
   // owns the timer outright (its window outlives both clamps), matching
   // pruneCorpseLoot's guard.
-  if (!hasPendingLootRollForMob(ctx, mobId)) {
+  if (ctx.gameProfile !== MIR4_GAME_PROFILE && !hasPendingLootRollForMob(ctx, mobId)) {
     if (!mob.loot || (mob.loot.copper <= 0 && mob.loot.items.length === 0)) {
       mob.lootable = false;
       mob.corpseTimer = Math.min(mob.corpseTimer, 4);
@@ -766,6 +770,9 @@ export function pickUpObject(
   }
   const obj = ctx.entities.get(objId);
   if (obj?.kind !== 'object' || !obj.lootable) return false;
+  if (mir4IsEnergySiteEntity(obj)) {
+    return mir4HandleEnergySiteInteract(ctx, meta.entityId, obj.id);
+  }
   // MIR4 campaign objectives are evidence entities, never inventory items.
   // Route an exact click through the owner/stage-aware reducer and fail closed
   // so neither the owner nor another player can collect the selector string.
@@ -887,11 +894,10 @@ export function interact(
     return;
   }
   if (tryStartMir4ArcEscort(ctx, p)) return;
-  if (mir4HandleArcObjectiveInteract(ctx, p.id)) return;
   if (p.targetId !== null) {
     const target = ctx.entities.get(p.targetId);
     if (target && dist2d(p.pos, target.pos) <= INTERACT_RANGE + 2) {
-      if (target.kind === 'mob' && target.lootable) {
+      if (corpseInteractionPresent(target)) {
         const availability = corpseInteractionAvailability(ctx, target, p.id, true);
         if (availability.canInteract) {
           // Unified press, targeted arm: same composition as the
@@ -901,7 +907,7 @@ export function interact(
           if (availability.harvestable) {
             harvestCorpse(ctx, target.id, undefined, p.id);
           }
-          lootCorpse(ctx, target.id, p.id);
+          if (availability.hasLootRights) lootCorpse(ctx, target.id, p.id);
           return;
         }
       }
@@ -960,6 +966,10 @@ export function interact(
       }
     }
   }
+  // An explicitly selected target always wins above. Without one, campaign
+  // evidence still takes precedence over the shared Energy site: M01-Q04
+  // deliberately places both at Moss Cemetery.
+  if (mir4HandleArcObjectiveInteract(ctx, p.id)) return;
   // Escort start: standing near an idle escortee whose quest this player has
   // active begins the walk (escort.ts picks the nearest eligible one).
   if (tryStartEscort(ctx, p, r.meta)) return;
@@ -971,8 +981,7 @@ export function interact(
   let bestQuestD2 = INTERACT_RANGE * INTERACT_RANGE;
   ctx.grid.forEachInRadius(p.pos.x, p.pos.z, INTERACT_RANGE, (e, d2) => {
     if (
-      e.kind === 'mob' &&
-      e.lootable &&
+      corpseInteractionPresent(e) &&
       corpseInteractionAvailability(ctx, e, p.id, true).canInteract &&
       d2 < bestCorpseD2
     ) {
@@ -982,6 +991,7 @@ export function interact(
     if (
       e.kind === 'object' &&
       e.lootable &&
+      !mir4IsEnergySiteEntity(e) &&
       d2 < bestObjD2 &&
       // A quest collectable this player is not on the quest for is not in their
       // world (the client withholds its view entirely), so the interact key must
@@ -1009,10 +1019,11 @@ export function interact(
     // still owes its unclaimed harvest half; omitted components = the town
     // focus default) and loots. Two separate calls on purpose: a harvest
     // refusal never blocks the loot half, and vice versa.
-    if (corpseInteractionAvailability(ctx, corpse, p.id, true).harvestable) {
+    const availability = corpseInteractionAvailability(ctx, corpse, p.id, true);
+    if (availability.harvestable) {
       harvestCorpse(ctx, corpse.id, undefined, p.id);
     }
-    lootCorpse(ctx, corpse.id, p.id);
+    if (availability.hasLootRights) lootCorpse(ctx, corpse.id, p.id);
     return;
   }
   if (obj) {
@@ -1062,5 +1073,11 @@ export function interact(
     ctx.emit({ type: 'bank', pid: p.id });
     return;
   }
-  if (questEntity) ctx.talkToNpc(questEntity.id, p.id);
+  if (questEntity) {
+    ctx.talkToNpc(questEntity.id, p.id);
+    return;
+  }
+  // Energy is a proximity fallback. Exact selection is handled earlier by
+  // pickUpObject, but it must never mask campaign evidence or NPC dialogue.
+  mir4HandleEnergySiteInteract(ctx, p.id);
 }

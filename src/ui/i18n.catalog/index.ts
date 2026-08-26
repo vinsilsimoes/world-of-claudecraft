@@ -281,7 +281,7 @@ export const en = {
     realmName: 'World Name',
   },
   footer: {
-    copyright: '2026 World of ClaudeCraft',
+    copyright: '2026 Aeldrune',
     githubLink: 'https://github.com/levy-street/world-of-claudecraft',
     githubLabel: 'Open Source Project',
     whitepaper: 'Whitepaper',
@@ -342,7 +342,7 @@ export const en = {
     serverOnline: 'Online',
     serverOffline: 'Offline',
     play: 'Play',
-    playAria: 'Play World of ClaudeCraft',
+    playAria: 'Play Aeldrune',
     serverLabel: 'Choose your world',
     serverAria: 'Select world: Online or Offline',
     serverOfflineSub: 'Instant local world',
@@ -708,7 +708,7 @@ export const en = {
     seekerAppHelp:
       'Continue with Seed Vault Wallet. Review the connection and verification requests in Seed Vault, then return to the game.',
     standaloneAppHelp:
-      'Wallet connections are not available in the Home Screen app yet. Open World of ClaudeCraft in Safari or Chrome to use Phantom or Solflare.',
+      'Wallet connections are not available in the Home Screen app yet. Open Aeldrune in Safari or Chrome to use Phantom or Solflare.',
     openAppTitle: 'Continue in {wallet}',
     openAppHelp:
       'Open {wallet} to review this request. Keep this game tab open while the wallet app is active.',
@@ -716,7 +716,7 @@ export const en = {
     manualReturnBrowserHelp:
       'After approval, return to this game tab. If iOS opens another browser, close it and return to the original browser manually.',
     manualReturnStandaloneHelp:
-      'After approval, return to World of ClaudeCraft from your Home Screen. If iOS opens a browser, close it and reopen the Home Screen app manually.',
+      'After approval, return to Aeldrune from your Home Screen. If iOS opens a browser, close it and reopen the Home Screen app manually.',
     preparingAppButton: 'Preparing {wallet}...',
     walletAppUnavailable: '{wallet} could not be prepared. Close this window and try again.',
     flowConnect: 'Choose a wallet. Verification continues automatically.',
@@ -734,12 +734,12 @@ export const en = {
         'Choose the wallet linked to your account and approve the transaction in this browser.',
       extensionHelp:
         'No compatible wallet extension was found. Install or unlock Phantom, Solflare, or another Solana browser wallet, then retry.',
-      safety: 'World of ClaudeCraft never asks for your recovery phrase or private key.',
+      safety: 'Aeldrune never asks for your recovery phrase or private key.',
       continueWith: 'Continue with {wallet}',
       reviewTitle: 'Review in your wallet',
       reviewBody: 'Follow the prompt from {wallet}. Keep this browser page open.',
       completeTitle: 'Wallet authorization complete',
-      completeBody: 'You can return to the World of ClaudeCraft desktop app.',
+      completeBody: 'You can return to the Aeldrune desktop app.',
       returnButton: 'Return to desktop app',
       failed: 'Wallet authorization failed or expired. Return to the desktop app and try again.',
       retry: 'Retry',
@@ -786,8 +786,8 @@ export const en = {
     levelClass: 'Level {level} - {className}',
     topPercent: 'TOP {percent}%',
     realmSubtitle: '{realm} World',
-    defaultRealm: 'World of ClaudeCraft',
-    brandWordmark: 'WORLD OF CLAUDECRAFT',
+    defaultRealm: 'Aeldrune',
+    brandWordmark: 'AELDRUNE',
     recruited: '{count} recruited',
     footerHandle: '@{handle}',
     footerHandleWithRecruits: '@{handle} - {recruited}',
@@ -795,8 +795,8 @@ export const en = {
     arenaStat: 'Arena',
     shareTierBit: ', {tier}-rank $WOC holder',
     shareText:
-      "I'm forging my legend in World of ClaudeCraft: Level {level} {className}{tierBit}. Join my world:",
-    nativeShareTitle: 'World of ClaudeCraft',
+      "I'm forging my legend in Aeldrune: Level {level} {className}{tierBit}. Join my world:",
+    nativeShareTitle: 'Aeldrune',
     fileNameFallback: 'player',
     actionShareX: 'Share to X',
     actionCopyReferral: 'Copy Referral Link',

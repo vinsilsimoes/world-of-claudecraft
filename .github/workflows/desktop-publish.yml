@@ -318,8 +318,8 @@ jobs:
       # that skipped notarization must fail here, never publish.
       - name: Verify code signature and notarization
         run: |
-          codesign --verify --deep --strict "release/mac-universal/World of ClaudeCraft.app"
-          spctl -a -t exec -vv "release/mac-universal/World of ClaudeCraft.app"
+          codesign --verify --deep --strict "release/mac-universal/Aeldrune.app"
+          spctl -a -t exec -vv "release/mac-universal/Aeldrune.app"
 
       - name: Generate SHA256SUMS-mac
         run: |

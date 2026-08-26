@@ -39,8 +39,14 @@ describe('MIR4 snapshot wire', () => {
         mir4SkillLevels: { 2101: 2, 1102: 2 },
         mir4SkillResources: { effectPoints: 800.9, skillTomes: 6, injected: 999 },
         mir4AchievementClears: { 201: 2, injected: 999 },
-        mir4Currencies: { darksteel: 1_000.9, injected: 999 },
+        mir4Currencies: { darksteel: 1_000.9, energy: 500.9, injected: 999 },
         mir4Materials: { sunStone: 3, injected: 999 },
+        mir4Training: {
+          version: 1,
+          constitution: [0, 0, 0, 0, 0, 0, 0],
+          innerForce: [0, 0, 0, 0],
+          solitude: { conceptionVessel: [1, 2, 3, 4, 5, 6, 7, 8] },
+        },
         mir4NarrativeDialogue: {
           id: 'M01-Q01:accept:-1:17',
           questId: 'M01-Q01',
@@ -60,8 +66,11 @@ describe('MIR4 snapshot wire', () => {
       mir4SkillLevels: { 2101: 2 },
       mir4SkillResources: { effectPoints: 800, skillTomes: 6 },
       mir4AchievementClears: { 201: 2 },
-      mir4Currencies: { darksteel: 1_000 },
+      mir4Currencies: { darksteel: 1_000, energy: 500 },
       mir4Materials: { sunStone: 3 },
+      mir4Training: {
+        solitude: { conceptionVessel: [1, 2, 3, 4, 5, 6, 7, 8] },
+      },
       mir4NarrativeDialogue: { id: 'M01-Q01:accept:-1:17', durationSeconds: 8 },
     });
     expect(decodeMir4Snapshot({ classId: 99, autoBattle: {} })).toBeNull();
@@ -82,6 +91,7 @@ describe('MIR4 snapshot wire', () => {
     apply.applySnapshot(
       selfSnapshot({
         classId: 2,
+        mir4DisabledAutoSkills: [2101],
         fullCampaignAvailable: true,
         campaignMapIds: ['m02-trilha-dos-juncos', 'invalid-map', 'm01-vila-do-vau'],
         ultimateGauge: 72,
@@ -115,6 +125,7 @@ describe('MIR4 snapshot wire', () => {
       }),
     );
     expect(client.mir4AutoBattleActive()).toBe(true);
+    expect(client.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([2101]);
     expect(client.player.mir4UltGauge).toBe(72);
     expect(client.mir4PlayerState()?.playerLevel).toBe(client.player.level);
     expect(client.mir4PlayerState()?.fullCampaignAvailable).toBe(true);
@@ -132,13 +143,7 @@ describe('MIR4 snapshot wire', () => {
         objective: { kind: 'inspect-clues', current: 1, total: 3 },
       }),
     ]);
-    expect(client.known.map((ability) => ability.def.id)).toEqual([
-      'mir4_skill_2101',
-      'mir4_skill_2111',
-      'mir4_skill_2501',
-      'mir4_skill_2301',
-      'mir4_ultimate_2',
-    ]);
+    expect(client.known.map((ability) => ability.def.id)).toEqual(['mir4_skill_2101']);
 
     apply.applySnapshot(selfSnapshot(undefined, 8));
     expect(client.mir4AutoBattleActive()).toBe(true);
@@ -146,6 +151,12 @@ describe('MIR4 snapshot wire', () => {
     expect(client.mir4PlayerState()?.playerLevel).toBe(8);
     apply.applySnapshot(selfSnapshot('corrupt'));
     expect(client.mir4AutoBattleActive()).toBe(true);
+
+    apply.applySnapshot(
+      selfSnapshot({ classId: 2, mir4DisabledAutoSkills: 'corrupt', ultimateGauge: 0 }),
+    );
+    expect(client.player.mir4UltGauge).toBe(72);
+    expect(client.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([2101]);
 
     apply.applySnapshot(
       selfSnapshot({
@@ -160,6 +171,7 @@ describe('MIR4 snapshot wire', () => {
     expect(client.player.mir4UltGauge).toBe(0);
     expect(client.mir4AutoQuestActive()).toBe(false);
     expect(client.mir4PlayerState()?.mir4NarrativeDialogue).toBeUndefined();
+    expect(client.mir4PlayerState()?.mir4DisabledAutoSkills).toBeUndefined();
     expect(client.mir4QuestStatusText()).toBe('Auto quest off');
     expect(client.mir4QuestTrackerEntries()).toEqual([]);
   });

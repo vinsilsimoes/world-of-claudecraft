@@ -1,12 +1,19 @@
 // Authoritative reward ledger for the imported campaign contracts. Logical
 // item ids remain progression tokens. Equipment milestones grant only the
-// existing World of ClaudeCraft runtime catalog and its native presentation.
+// existing Aeldrune runtime catalog and its native presentation.
 
+import { bagCapacity, fitsAll } from '../bags';
 import { MIR4_QUESTS_ARC, type Mir4ArcQuest } from '../content/mir4/arc_campaign';
+import type { Mir4ClassId } from '../content/mir4/classes';
 import { MIR4_EQUIPMENT_CATALOG } from '../content/mir4/equipment_catalog';
+import {
+  MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS,
+  mir4M01QuestEquipmentRewards,
+} from '../content/mir4/starter_quest_equipment';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
 import { MIR4_EMPTY_MATERIALS, MIR4_MATERIAL_IDS, type Mir4Materials } from './equipment';
+import { mir4ModifiedProgressionReward } from './status_effects';
 import { markMir4WireDirty } from './wire_revision';
 
 export interface Mir4ArcRewardState {
@@ -20,6 +27,8 @@ export interface Mir4ArcRewardState {
   professionXp?: number;
   recipeFragments?: number;
   cityReputation?: number;
+  /** Version 2 separates quest XP from the one-billion inventory stack cap. */
+  xpLedgerVersion?: number;
 }
 
 interface RewardMeta {
@@ -29,7 +38,23 @@ interface RewardMeta {
 }
 
 const MAX_COUNT = 1_000_000_000;
+const XP_LEDGER_VERSION = 2;
 const M01_Q03_WEAPON_GRANT_ID = 'tutorial-m01-q03-recovered-weapon';
+const M04_Q03_ENHANCEMENT_RECOVERY_GRANT_ID = 'tutorial-m04-q03-enhancement-recovery';
+export const MIR4_ARC_DYNAMIC_GRANT_IDS = Object.freeze([
+  M01_Q03_WEAPON_GRANT_ID,
+  M04_Q03_ENHANCEMENT_RECOVERY_GRANT_ID,
+  ...Array.from({ length: 5 }, (_, classIndex) => classIndex + 1).flatMap((classId) => [
+    ...MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS.map(
+      (questId) => `campaign-equipment-${questId.toLowerCase()}-class-${classId}`,
+    ),
+    ...Array.from(
+      { length: 6 },
+      (_, rankIndex) => `campaign-equipment-rank-${rankIndex + 1}-class-${classId}`,
+    ),
+  ]),
+]);
+const MIR4_NATIVE_ACCEPT_ITEMS = new Set(['copper_mining_pick', 'gathering_sickle']);
 const EQUIPMENT_MILESTONE_RANK = new Map<string, number>([
   ['M01-Q06', 1],
   ['M02-Q06', 2],
@@ -56,13 +81,8 @@ const allowed = {
   grantIds: new Set<string>(),
 };
 allowed.items.add('profession-salvaged-parts');
-allowed.grantIds.add(M01_Q03_WEAPON_GRANT_ID);
+for (const grantId of MIR4_ARC_DYNAMIC_GRANT_IDS) allowed.grantIds.add(grantId);
 for (const item of MIR4_EQUIPMENT_CATALOG) allowed.items.add(String(item.itemId));
-for (let classId = 1; classId <= 5; classId += 1) {
-  for (let rank = 1; rank <= 6; rank += 1) {
-    allowed.grantIds.add(`campaign-equipment-rank-${rank}-class-${classId}`);
-  }
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -73,6 +93,11 @@ function positiveCount(value: unknown): number {
   return typeof numeric === 'number' && Number.isFinite(numeric) && numeric > 0
     ? Math.min(MAX_COUNT, Math.floor(numeric))
     : 0;
+}
+
+function positiveExperience(value: unknown): number {
+  const numeric = typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
+  return typeof numeric === 'number' && Number.isSafeInteger(numeric) && numeric > 0 ? numeric : 0;
 }
 
 function stringArray(value: unknown): string[] {
@@ -144,6 +169,31 @@ function rewardState(meta: RewardMeta): Mir4ArcRewardState {
   return meta.mir4ArcRewards;
 }
 
+/**
+ * Repairs characters that completed unique campaign quests while XP was
+ * incorrectly clamped as though it were an item stack. The marker is written
+ * even when no backpay is due, so fresh characters can never receive the same
+ * quest XP twice after completing it under the corrected ledger.
+ */
+export function ensureMir4ArcXpLedger(ctx: SimContext, meta: PlayerMeta): boolean {
+  const state = rewardState(meta);
+  if (state.xpLedgerVersion === XP_LEDGER_VERSION) return false;
+
+  let missingXp = 0;
+  for (const progress of Object.values(meta.mir4ArcQuests ?? {})) {
+    if (progress.state !== 'done') continue;
+    const quest = MIR4_QUESTS_ARC.find((candidate) => candidate.questId === progress.questId);
+    if (!quest || quest.repeatability !== 'once-per-character') continue;
+    const authoredXp = positiveExperience(quest.rewards.xp ?? quest.xp);
+    const underpayment = Math.max(0, authoredXp - Math.min(MAX_COUNT, authoredXp));
+    missingXp = Math.min(Number.MAX_SAFE_INTEGER, missingXp + underpayment);
+  }
+
+  state.xpLedgerVersion = XP_LEDGER_VERSION;
+  if (missingXp > 0) ctx.grantXp(missingXp, meta);
+  return true;
+}
+
 export function grantMir4ArcLogicalItem(meta: RewardMeta, itemId: string, quantity: number): void {
   const count = positiveCount(quantity);
   if (count === 0 || !allowed.items.has(itemId)) return;
@@ -195,11 +245,62 @@ function claimOnce(meta: RewardMeta, grantId: string | undefined): boolean {
   return true;
 }
 
-function ownsEquipmentReward(meta: PlayerMeta, itemId: number): boolean {
+/** Equipment rewards use the native instance ledger, the same representation
+ * used by the vendor. Any legacy logical token is consumed during migration so
+ * one catalog item can never exist in two persistent inventories at once. */
+function grantNativeEquipmentReward(
+  meta: PlayerMeta,
+  itemId: number,
+  grantIfMissing: boolean,
+): boolean {
+  const legacyItemKey = String(itemId);
+  const items = meta.mir4ArcRewards?.items;
+  const hasLegacyToken = (items?.[legacyItemKey] ?? 0) > 0;
+  let changed = false;
   const instance = meta.mir4EquipmentInstances?.[itemId];
-  return instance && !instance.destroyed
-    ? true
-    : (meta.mir4ArcRewards?.items?.[String(itemId)] ?? 0) > 0;
+  if ((grantIfMissing || hasLegacyToken) && (!instance || instance.destroyed)) {
+    meta.mir4EquipmentInstances = {
+      ...meta.mir4EquipmentInstances,
+      [itemId]: { itemId, enhancement: 0 },
+    };
+    changed = true;
+  }
+  if (!hasLegacyToken || !items) return changed;
+  delete items[legacyItemKey];
+  changed = true;
+  if (Object.keys(items).length === 0 && meta.mir4ArcRewards) {
+    delete meta.mir4ArcRewards.items;
+  }
+  return changed;
+}
+
+function grantPendingNativeAcceptItems(
+  ctx: SimContext,
+  meta: PlayerMeta,
+  quest: Mir4ArcQuest,
+): boolean {
+  const claimed = new Set(meta.mir4ArcRewards?.claimedGrantIds ?? []);
+  const pending = itemRows(quest.onAcceptGrants.items).flatMap((row) => {
+    if (
+      typeof row.itemId !== 'string' ||
+      !MIR4_NATIVE_ACCEPT_ITEMS.has(row.itemId) ||
+      typeof row.grantId !== 'string' ||
+      claimed.has(row.grantId)
+    ) {
+      return [];
+    }
+    const count = positiveCount(row.quantity);
+    return count > 0 ? [{ itemId: row.itemId, count, grantId: row.grantId }] : [];
+  });
+  if (pending.length === 0) return false;
+  if (!fitsAll(meta.inventory, bagCapacity(meta.bags), pending)) return false;
+  let changed = false;
+  for (const row of pending) {
+    if (!claimOnce(meta, row.grantId)) continue;
+    ctx.addItem(row.itemId, row.count, meta.entityId, { callerLogs: true });
+    changed = true;
+  }
+  return changed;
 }
 
 function grantMir4ArcEquipmentMilestone(
@@ -208,21 +309,40 @@ function grantMir4ArcEquipmentMilestone(
   questId: string,
 ): boolean {
   const rank = EQUIPMENT_MILESTONE_RANK.get(questId);
-  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId;
+  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId as Mir4ClassId | undefined;
   if (rank === undefined || classId === undefined) return false;
   const grantId = `campaign-equipment-rank-${rank}-class-${classId}`;
-  if (!claimOnce(meta, grantId)) return false;
+  const newlyClaimed = claimOnce(meta, grantId);
+  let changed = newlyClaimed;
   for (const item of MIR4_EQUIPMENT_CATALOG) {
     if (item.classId !== classId || item.catalogRank !== rank) continue;
-    if (!ownsEquipmentReward(meta, item.itemId)) grantItem(meta, item.itemId, 1);
+    if (grantNativeEquipmentReward(meta, item.itemId, newlyClaimed)) changed = true;
   }
-  return true;
+  return changed;
+}
+
+function grantMir4M01QuestEquipment(ctx: SimContext, meta: PlayerMeta, questId: string): boolean {
+  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId as Mir4ClassId | undefined;
+  if (classId === undefined) return false;
+  const rewards = mir4M01QuestEquipmentRewards(questId, classId);
+  if (rewards.length === 0) return false;
+  const grantId = `campaign-equipment-${questId.toLowerCase()}-class-${classId}`;
+  const newlyClaimed = claimOnce(meta, grantId);
+  let changed = newlyClaimed;
+  for (const item of rewards) {
+    if (grantNativeEquipmentReward(meta, item.itemId, newlyClaimed)) changed = true;
+  }
+  return changed;
 }
 
 /** Backfills native catalog sets for characters that cleared a milestone
  * before equipment progression was connected to the imported campaign. */
 export function ensureMir4ArcEquipmentMilestones(ctx: SimContext, meta: PlayerMeta): boolean {
   let changed = false;
+  for (const questId of MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS) {
+    if (meta.mir4ArcQuests?.[questId]?.state !== 'done') continue;
+    if (grantMir4M01QuestEquipment(ctx, meta, questId)) changed = true;
+  }
   for (const [questId] of EQUIPMENT_MILESTONE_RANK) {
     if (meta.mir4ArcQuests?.[questId]?.state !== 'done') continue;
     if (grantMir4ArcEquipmentMilestone(ctx, meta, questId)) changed = true;
@@ -233,17 +353,57 @@ export function ensureMir4ArcEquipmentMilestones(ctx: SimContext, meta: PlayerMe
 function grantM01Q03RecoveredWeapon(ctx: SimContext, meta: PlayerMeta): boolean {
   const classId = ctx.entities.get(meta.entityId)?.mir4?.classId;
   const itemId = M01_Q03_WEAPON_BY_CLASS.get(classId as 1 | 2 | 3 | 4 | 5);
-  if (itemId === undefined || !claimOnce(meta, M01_Q03_WEAPON_GRANT_ID)) return false;
-  grantItem(meta, itemId, 1);
+  if (itemId === undefined) return false;
+  const newlyClaimed = claimOnce(meta, M01_Q03_WEAPON_GRANT_ID);
+  return grantNativeEquipmentReward(meta, itemId, newlyClaimed) || newlyClaimed;
+}
+
+function recoverM04Q03EnhancementMaterials(meta: PlayerMeta): boolean {
+  const progress = meta.mir4ArcQuests?.['M04-Q03'];
+  if (progress?.state !== 'active' || progress.stageIndex !== 3) return false;
+  const weaponItemId = meta.mir4Equipment?.[1];
+  if (weaponItemId === undefined) return false;
+  const enhancement = Math.max(
+    0,
+    Math.floor(meta.mir4EquipmentInstances?.[weaponItemId]?.enhancement ?? 0),
+  );
+  const attemptsNeeded = Math.max(0, 5 - enhancement);
+  if (attemptsNeeded === 0) return false;
+  const wallet = meta.mir4Materials ?? { ...MIR4_EMPTY_MATERIALS };
+  const craftableScrolls = Math.min(wallet.sunStone, Math.floor(meta.copper / 5_000));
+  const missingAttempts = Math.max(0, attemptsNeeded - wallet.solarScroll - craftableScrolls);
+  if (missingAttempts === 0 || !claimOnce(meta, M04_Q03_ENHANCEMENT_RECOVERY_GRANT_ID)) {
+    return false;
+  }
+  meta.mir4Materials = wallet;
+  wallet.solarScroll = Math.min(MAX_COUNT, wallet.solarScroll + missingAttempts);
   return true;
 }
 
 /** Repairs characters that accepted M01-Q03 before its recovered-weapon grant
- * existed. The claim id makes this safe to run from the authoritative tick. */
+ * existed and M04-Q03 saves that can no longer reach the guaranteed +5
+ * target. Claim ids make both repairs safe to run from the authoritative tick. */
 export function ensureMir4ArcTutorialGrants(ctx: SimContext, meta: PlayerMeta): boolean {
-  const progress = meta.mir4ArcQuests?.['M01-Q03'];
-  if (progress?.state !== 'active' || progress.stageIndex < 3) return false;
-  return grantM01Q03RecoveredWeapon(ctx, meta);
+  let changed = false;
+  const recoveredWeaponProgress = meta.mir4ArcQuests?.['M01-Q03'];
+  if (
+    recoveredWeaponProgress?.state === 'active' &&
+    recoveredWeaponProgress.stageIndex >= 3 &&
+    grantM01Q03RecoveredWeapon(ctx, meta)
+  ) {
+    changed = true;
+  }
+  if (recoverM04Q03EnhancementMaterials(meta)) changed = true;
+  const nativeToolsProgress = meta.mir4ArcQuests?.['M01-Q04'];
+  const nativeToolsQuest = MIR4_QUESTS_ARC.find((quest) => quest.questId === 'M01-Q04');
+  if (
+    nativeToolsProgress &&
+    nativeToolsQuest &&
+    grantPendingNativeAcceptItems(ctx, meta, nativeToolsQuest)
+  ) {
+    changed = true;
+  }
+  return changed;
 }
 
 export function grantMir4ArcAcceptGrants(
@@ -251,8 +411,11 @@ export function grantMir4ArcAcceptGrants(
   meta: PlayerMeta,
   quest: Mir4ArcQuest,
 ): void {
+  const rewardStatuses = ctx.entities.get(meta.entityId)?.mir4?.statusValues;
   const accept = quest.onAcceptGrants;
+  grantPendingNativeAcceptItems(ctx, meta, quest);
   for (const row of itemRows(accept.items)) {
+    if (typeof row.itemId === 'string' && MIR4_NATIVE_ACCEPT_ITEMS.has(row.itemId)) continue;
     if (
       (typeof row.itemId !== 'string' && typeof row.itemId !== 'number') ||
       !claimOnce(meta, typeof row.grantId === 'string' ? row.grantId : undefined)
@@ -265,7 +428,9 @@ export function grantMir4ArcAcceptGrants(
         row.itemId === 'potion-minor-bound' &&
         ctx.canAddItem('minor_healing_potion', quantity, meta.entityId)
       ) {
-        ctx.addItem('minor_healing_potion', quantity, meta.entityId, { callerLogs: true });
+        ctx.addItem('minor_healing_potion', quantity, meta.entityId, {
+          callerLogs: true,
+        });
       }
     }
   }
@@ -278,7 +443,11 @@ export function grantMir4ArcAcceptGrants(
       !claimOnce(meta, typeof row.grantId === 'string' ? row.grantId : undefined)
     )
       continue;
-    meta.copper = Math.min(Number.MAX_SAFE_INTEGER, meta.copper + positiveCount(row.quantity));
+    meta.copper = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      meta.copper +
+        mir4ModifiedProgressionReward(positiveCount(row.quantity), 'reward-copper', rewardStatuses),
+    );
   }
   for (const row of itemRows(accept.guarantees)) {
     if (typeof row.guaranteeId !== 'string') continue;
@@ -293,8 +462,14 @@ export function grantMir4ArcQuestRewards(
   quest: Mir4ArcQuest,
 ): void {
   const rewards = quest.rewards;
+  const rewardStatuses = ctx.entities.get(meta.entityId)?.mir4?.statusValues;
+  grantMir4M01QuestEquipment(ctx, meta, quest.questId);
   grantMir4ArcEquipmentMilestone(ctx, meta, quest.questId);
-  const xp = positiveCount(rewards.xp ?? quest.xp);
+  // Campaign XP grows into the billions from the middle chapters onward. It is
+  // a progression currency, not an inventory stack, so applying MAX_COUNT here
+  // silently underpays every later quest. The authored table remains within the
+  // exact JavaScript integer range used by advanceMir4Experience.
+  const xp = positiveExperience(rewards.xp ?? quest.xp);
   if (xp > 0) ctx.grantXp(xp, meta);
   const copper = positiveCount(rewards.copper ?? quest.copper);
   const formula =
@@ -304,7 +479,11 @@ export function grantMir4ArcQuestRewards(
   const sequence = Number(quest.mapId.slice(1, 3));
   const formulaCopper = formula ? positiveCount(Number(formula[1]) * sequence * sequence) : 0;
   if (copper + formulaCopper > 0) {
-    meta.copper = Math.min(Number.MAX_SAFE_INTEGER, meta.copper + copper + formulaCopper);
+    meta.copper = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      meta.copper +
+        mir4ModifiedProgressionReward(copper + formulaCopper, 'reward-copper', rewardStatuses),
+    );
   }
   for (const row of [...itemRows(rewards.materials), ...itemRows(rewards.items)]) {
     if (typeof row.itemId !== 'string' && typeof row.itemId !== 'number') continue;
@@ -371,6 +550,7 @@ export function sanitizeMir4ArcRewards(value: unknown): Mir4ArcRewardState | und
     professionXp: positiveCount(value.professionXp) || undefined,
     recipeFragments: positiveCount(value.recipeFragments) || undefined,
     cityReputation: positiveCount(value.cityReputation) || undefined,
+    xpLedgerVersion: value.xpLedgerVersion === XP_LEDGER_VERSION ? XP_LEDGER_VERSION : undefined,
   };
   for (const key of Object.keys(result) as (keyof Mir4ArcRewardState)[]) {
     if (result[key] === undefined) delete result[key];

@@ -1,5 +1,5 @@
 // Narrative transplant from the 20 MIR4 campaign chapters into the original
-// World of ClaudeCraft overworld. These are authored story placements, not a
+// Aeldrune overworld. These are authored story placements, not a
 // procedural map generator: every chapter names one WoC biome and six physical
 // gameplay anchors selected to match its theme and progression role.
 
@@ -8,6 +8,11 @@ export interface Mir4WocChapterLayout {
   targetZoneId: string;
   hub: { x: number; z: number };
   sites: readonly { x: number; z: number }[];
+  objectiveAnchors?: readonly {
+    questId: string;
+    stageIndex: number;
+    points: readonly { x: number; z: number }[];
+  }[];
 }
 
 export const MIR4_WOC_CHAPTER_LAYOUTS: readonly Mir4WocChapterLayout[] = Object.freeze([
@@ -49,6 +54,22 @@ export const MIR4_WOC_CHAPTER_LAYOUTS: readonly Mir4WocChapterLayout[] = Object.
       { x: 360, z: 1016 },
       { x: 412, z: 1112 },
     ],
+    // Three readable wolf signs lead out of the Great Maze and along the
+    // North Watch road. The middle sign remains inside the pack's danger
+    // envelope, so collection still requires deliberate combat intervention.
+    objectiveAnchors: [
+      {
+        questId: 'M03-Q06',
+        stageIndex: 2,
+        points: [
+          { x: 387, z: 1098 },
+          { x: 420, z: 1104 },
+          { x: 440, z: 1110 },
+        ],
+      },
+      { questId: 'M03-Q06', stageIndex: 3, points: [{ x: 418, z: 1124 }] },
+      { questId: 'M03-Q06', stageIndex: 4, points: [{ x: 440, z: 1110 }] },
+    ],
   },
   {
     mapId: 'm04-ruinas-da-encosta',
@@ -61,6 +82,25 @@ export const MIR4_WOC_CHAPTER_LAYOUTS: readonly Mir4WocChapterLayout[] = Object.
       { x: -131, z: 739 },
       { x: 109, z: 759 },
       { x: 55, z: 819 },
+    ],
+    // The final strengthening materials stay on the windward rampart edge.
+    // One guard patrols the first node, but neither point sits in the later
+    // level 38-39 crypt pack centered at 109,759.
+    objectiveAnchors: [
+      {
+        questId: 'M04-S01',
+        stageIndex: 1,
+        points: [
+          { x: -2.16, z: 541.04 },
+          { x: 1.04, z: 541.84 },
+          { x: 2.4, z: 538.8 },
+          { x: 89.48, z: 708.76 },
+          { x: 92.52, z: 709.8 },
+          { x: 91.32, z: 710.36 },
+          { x: -166, z: 735 },
+          { x: -151, z: 765 },
+        ],
+      },
     ],
   },
   {
@@ -94,12 +134,15 @@ export const MIR4_WOC_CHAPTER_LAYOUTS: readonly Mir4WocChapterLayout[] = Object.
     targetZoneId: 'nightbloom',
     hub: { x: -360, z: 1650 },
     sites: [
-      { x: -420, z: 1510 },
-      { x: -330, z: 1520 },
-      { x: -272, z: 1538 },
-      { x: -400, z: 1580 },
-      { x: -360, z: 1650 },
-      { x: -300, z: 1700 },
+      // Keep the opening Ossuary investigation in the northern barrow road.
+      // The southern Gloamfield is reserved for M19; sharing that footprint
+      // placed level-140 monsters on top of M07 clues and side-quest gathers.
+      { x: -360, z: 1636 },
+      { x: -380, z: 1620 },
+      { x: -380, z: 1700 },
+      { x: -320, z: 1720 },
+      { x: -330, z: 1740 },
+      { x: -348, z: 1816 },
     ],
   },
   {
@@ -230,6 +273,39 @@ export const MIR4_WOC_CHAPTER_LAYOUTS: readonly Mir4WocChapterLayout[] = Object.
       { x: 100, z: 1600 },
       { x: -90, z: 1680 },
       { x: 30, z: 1700 },
+    ],
+    // Yrsa's salvage lies along the walkable west-rim switchback. The generic
+    // projection placed the first node on Glacier Tarn's steep south lip; a
+    // swimmer could see it but could not climb within interaction range.
+    objectiveAnchors: [
+      {
+        questId: 'M17-S01',
+        stageIndex: 1,
+        points: [
+          { x: 28, z: 1662 },
+          { x: 30, z: 1670 },
+          { x: 34, z: 1680 },
+          { x: 38, z: 1690 },
+          { x: 40, z: 1700 },
+          { x: 36, z: 1710 },
+          { x: 32, z: 1720 },
+          { x: 30, z: 1730 },
+        ],
+      },
+      {
+        questId: 'M17-S01',
+        stageIndex: 2,
+        points: [{ x: 30, z: 1730 }],
+      },
+      // Edda prepares the aurora camp before the player is sent back into
+      // Glacier Tarn for the defense. The generic projection landed these
+      // supplies on the steep lake lip, about eleven yards below the closest
+      // standable road, so the interaction could never begin.
+      {
+        questId: 'M17-S03',
+        stageIndex: 1,
+        points: [{ x: 36, z: 1710 }],
+      },
     ],
   },
   {

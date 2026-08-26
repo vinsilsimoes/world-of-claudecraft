@@ -2,6 +2,7 @@
 // movement, threat and snapshot runtime. The logical quest stage owns progress;
 // every visible escortee/ambusher is a native 3D runtime mob shell.
 
+import { mir4ArcEscortProfile } from '../content/mir4';
 import { mir4MobStats } from '../content/mir4/mobs';
 import { createMob } from '../entity';
 import { MIR4_GAME_PROFILE } from '../game_profile';
@@ -36,15 +37,6 @@ function runKey(pid: number, questId: string, stageIndex: number): string {
   return `${pid}:${questId}:${stageIndex}`;
 }
 
-function slug(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-}
-
 function escortTemplate(run: Mir4ArcEscortRun, level: number, name: string): MobTemplate {
   const stats = mir4MobStats(level);
   return {
@@ -53,7 +45,12 @@ function escortTemplate(run: Mir4ArcEscortRun, level: number, name: string): Mob
     minLevel: level,
     maxLevel: level,
     family: 'humanoid',
-    hpBase: stats.maxHp * 3,
+    // The authored ambusher focuses the escortee immediately. The native mob
+    // health curve is much lower than the MIR4 player curve, so 3x still let
+    // them delete a same-level convoy in roughly five seconds. Twelve times
+    // keeps the NPC mortal while giving a player time to read the ambush,
+    // select its attackers and take threat before the route resets.
+    hpBase: stats.maxHp * 12,
     hpPerLevel: 0,
     dmgBase: 1,
     dmgPerLevel: 0,
@@ -61,6 +58,10 @@ function escortTemplate(run: Mir4ArcEscortRun, level: number, name: string): Mob
     armorPerLevel: 0,
     moveSpeed: 0,
     aggroRadius: 0,
+    // Campaign escorts are people following authored roads. Letting their
+    // runtime shell swim made wetland routes cut across pools and visually
+    // disappear below the water surface.
+    canSwim: false,
     loot: [],
     scale: 1,
     color: 0xb7a68a,
@@ -147,10 +148,11 @@ function spawnEscortee(ctx: SimContext, run: Mir4ArcEscortRun, meta: PlayerMeta)
     : null;
   if (!stage || !player || !anchor) return;
   const target = Array.isArray(stage.target) ? stage.target[0] : stage.target;
+  const profile = mir4ArcEscortProfile(run.questId, run.stageIndex);
   const template = escortTemplate(
     run,
     player.level,
-    typeof target === 'string' ? target.replace(/-/g, ' ') : 'Caravan Escort',
+    profile?.name ?? (typeof target === 'string' ? target.replace(/-/g, ' ') : 'Caravan Escort'),
   );
   ctx.mir4RuntimeMobTemplates.set(template.id, template);
   const npc = createMob(
@@ -167,8 +169,11 @@ function spawnEscortee(ctx: SimContext, run: Mir4ArcEscortRun, meta: PlayerMeta)
   run.respawnAt = 0;
 }
 
-function spawnAmbush(ctx: SimContext, run: Mir4ArcEscortRun, npc: Entity, kind: string): void {
-  const count = kind === 'escort-supply-run' ? 1 : 2;
+function spawnAmbush(ctx: SimContext, run: Mir4ArcEscortRun, npc: Entity): void {
+  // One committed enemy makes protection about taking threat rather than a
+  // two-source DPS race against the NPC. The campaign's surrounding ecology
+  // supplies the additional danger on the production WoC map.
+  const count = 1;
   const template = ambushTemplate(run, run.checkpoint, npc.level);
   ctx.mir4RuntimeMobTemplates.set(template.id, template);
   run.ambushIds = [];
@@ -378,7 +383,7 @@ export function updateMir4ArcEscorts(ctx: SimContext): void {
       );
       if (!waypoint) continue;
       if (Math.hypot(npc.pos.x - waypoint.x, npc.pos.z - waypoint.z) <= ARRIVE_RADIUS) {
-        spawnAmbush(ctx, run, npc, stage.kind);
+        spawnAmbush(ctx, run, npc);
         run.waitingCheckpoint = true;
         continue;
       }

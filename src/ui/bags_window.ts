@@ -20,6 +20,7 @@
 import { audio } from '../game/audio';
 import { BACKPACK_SLOTS, bagSlotsOf } from '../sim/bags';
 import { ITEMS, QUESTS } from '../sim/data';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { FIREBOTTLE_COOLDOWN_SECS, FIREBOTTLE_ITEM_ID } from '../sim/interactions/firebottle_hut';
 import { isItemLocked } from '../sim/item_lock';
 import type { EquipSlot, InvSlot, ItemDef, ItemInstancePayload } from '../sim/types';
@@ -54,6 +55,7 @@ import {
   bagSortSignature,
   bagStackIndex,
   bagsMoneyRowStale,
+  bagsWindowShown,
   bagTooltipHintKey,
   bagUnknownAction,
   bankDepositOpensPrompt,
@@ -336,6 +338,16 @@ export class BagsWindow {
    */
   refreshIfChanged(): void {
     const el = this.deps.root();
+    if (
+      this.deps.world().cfg.gameProfile === MIR4_GAME_PROFILE &&
+      bagsWindowShown(el.style.display)
+    ) {
+      // The MIR4 adapter carries its own state signature. Probing it on the
+      // existing slow band keeps material drops/crafting and online snapshots
+      // visible without rebuilding an unchanged inventory window.
+      this.render();
+      return;
+    }
     if (!bagsMoneyRowStale(el.style.display, this.deps.world().copper, this.lastMoneyCopper))
       return;
     this.refreshMoneyRow();

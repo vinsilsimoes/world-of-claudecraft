@@ -20,6 +20,7 @@ import {
 import { collectSuiteVisibility } from '../scripts/lib/gate_discovery.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
+const VITEST_CLI = path.join(REPO_ROOT, 'node_modules', 'vitest', 'vitest.mjs');
 
 // A realistic fixture: enough always-run files to clear the sanity floor, plus
 // every guard suite and a parity pin so the guard union resolves.
@@ -752,10 +753,9 @@ describe('ci_shard_test.mjs entry (subprocess, --plan-only)', () => {
       writeFileSync(path.join(fixtureRoot, 'notes.md'), 'inert non-test seed\n');
       const runChild = (seeds: string[]) => {
         const child = spawn(
-          'npx',
+          process.execPath,
           [
-            '--no-install',
-            'vitest',
+            VITEST_CLI,
             'related',
             ...seeds,
             '--run',
@@ -1015,10 +1015,9 @@ describe('ci_shard_test.mjs entry (subprocess, --plan-only)', () => {
     excludePath: string,
   ): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
     const child = spawn(
-      'npx',
+      process.execPath,
       [
-        '--no-install',
-        'vitest',
+        VITEST_CLI,
         'list',
         '--filesOnly',
         `--exclude=${excludePath}`,

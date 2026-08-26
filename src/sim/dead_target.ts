@@ -7,10 +7,11 @@
 // online ClientWorld's optimistic mirror (net/online.ts) call this so they agree on
 // what is selectable. src/sim-pure (no DOM/Three/rng), enforced by architecture.test.
 
+import { corpseInteractionPresent } from './corpse_presence';
 import type { Entity } from './types';
 
 export function deadTargetSelectable(e: Entity, viewerId: number): boolean {
-  if (e.lootable) return true;
+  if (corpseInteractionPresent(e)) return true;
   if (e.kind === 'player') return true;
   // the viewer's own pet (an owned mob) stays targetable while dead
   return e.kind === 'mob' && e.ownerId === viewerId;

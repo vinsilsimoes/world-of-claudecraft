@@ -32,6 +32,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { ITEMS } from '../src/sim/data';
+import { type GameProfile, MIR4_GAME_PROFILE } from '../src/sim/game_profile';
 import type { HarvestYield } from '../src/sim/professions/harvest_yields';
 import type { SimEvent } from '../src/sim/types';
 import { itemDisplayName } from '../src/ui/entity_i18n';
@@ -67,6 +68,8 @@ const cssColor = (hex: string): string => {
 interface GrantLineHarness {
   sim: {
     playerId: number;
+    cfg: { gameProfile: GameProfile };
+    player: { pos: { x: number; y: number; z: number }; scale: number };
     craftingIdentity: { synced: boolean };
     craftSkills: Record<string, number>;
     gatheringProficiency: Record<string, number>;
@@ -76,6 +79,8 @@ interface GrantLineHarness {
   meters: { onEvent: ReturnType<typeof vi.fn> };
   isNythraxisEvent: ReturnType<typeof vi.fn>;
   lootRolls: { closeForItem: ReturnType<typeof vi.fn> };
+  fctPainter: { spawn: ReturnType<typeof vi.fn> };
+  mir4ResultOverlay: { handle: ReturnType<typeof vi.fn> };
   chatLogEl: HTMLElement;
   chatTimestamps: boolean;
   chatWindow: { hideIfFiltered: ReturnType<typeof vi.fn> };
@@ -88,13 +93,16 @@ interface GrantLineHarness {
   showError: ReturnType<typeof vi.fn>;
   attachTooltip: ReturnType<typeof vi.fn>;
   itemTooltip: ReturnType<typeof vi.fn>;
+  localizeLootText: (text: string) => string;
   handleEvents(events: SimEvent[]): void;
 }
 
-function makeHud(): GrantLineHarness {
+function makeHud(gameProfile: GameProfile = 'woc-classic'): GrantLineHarness {
   const hud = Object.create(Hud.prototype) as unknown as GrantLineHarness;
   hud.sim = {
     playerId: PLAYER_ID,
+    cfg: { gameProfile },
+    player: { pos: { x: 4, y: 2, z: -3 }, scale: 1 },
     craftingIdentity: { synced: false },
     craftSkills: {},
     gatheringProficiency: {},
@@ -104,6 +112,8 @@ function makeHud(): GrantLineHarness {
   hud.meters = { onEvent: vi.fn() };
   hud.isNythraxisEvent = vi.fn(() => false);
   hud.lootRolls = { closeForItem: vi.fn() };
+  hud.fctPainter = { spawn: vi.fn() };
+  hud.mir4ResultOverlay = { handle: vi.fn() };
   hud.chatLogEl = document.createElement('div');
   hud.chatTimestamps = false;
   hud.chatWindow = { hideIfFiltered: vi.fn() };
@@ -120,6 +130,7 @@ function makeHud(): GrantLineHarness {
   // exercises the LINK construction without the tooltip host.
   hud.attachTooltip = vi.fn();
   hud.itemTooltip = vi.fn();
+  hud.localizeLootText = (text) => text;
   return hud;
 }
 
@@ -635,6 +646,130 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
 });
 
 describe('non-profession grants are untouched', () => {
+  it('floats an ordinary MIR4 item grant over the player as reward feedback', () => {
+    const hud = makeHud(MIR4_GAME_PROFILE);
+    hud.handleEvents([
+      {
+        type: 'loot',
+        text: 'You receive: Copper Ore x3.',
+        pid: PLAYER_ID,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+
+    expect(hud.fctPainter.spawn).toHaveBeenCalledTimes(1);
+    expect(hud.fctPainter.spawn.mock.calls[0]?.[0]).toMatchObject({
+      kind: 'loot',
+      text: 'Copper Ore x3',
+      target: hud.sim.player,
+      isSelf: true,
+      crit: false,
+    });
+  });
+
+  it('floats MIR4 copper loot because arc monsters commonly have no item drop', () => {
+    const mir4 = makeHud(MIR4_GAME_PROFILE);
+    mir4.handleEvents([
+      {
+        type: 'loot',
+        text: 'You loot 12s 30c.',
+        pid: PLAYER_ID,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+
+    expect(mir4.fctPainter.spawn).toHaveBeenCalledTimes(1);
+    expect(mir4.fctPainter.spawn.mock.calls[0]?.[0]).toMatchObject({
+      kind: 'loot',
+      text: '+12s 30c',
+      target: mir4.sim.player,
+    });
+  });
+
+  it('keeps the full localized sentence in chat while the floater uses the compact stack', () => {
+    const mir4 = makeHud(MIR4_GAME_PROFILE);
+    mir4.localizeLootText = vi.fn(() => 'Você recebeu: Minério de cobre x3.');
+    mir4.handleEvents([
+      {
+        type: 'loot',
+        text: 'You receive: Copper Ore x3.',
+        pid: PLAYER_ID,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+
+    expect(mir4.fctPainter.spawn.mock.calls[0]?.[0]).toMatchObject({
+      kind: 'loot',
+      text: 'Copper Ore x3',
+    });
+    expect(lines(mir4)).toEqual(['Você recebeu: Minério de cobre x3.']);
+  });
+
+  it('does not float MIR4 acquisitions that did not come from a monster drop', () => {
+    const mir4 = makeHud(MIR4_GAME_PROFILE);
+    mir4.handleEvents([
+      { type: 'loot', text: 'You receive: Copper Ore.', pid: PLAYER_ID } as SimEvent,
+      { type: 'loot', text: 'You loot 12s 30c.', pid: PLAYER_ID } as SimEvent,
+    ]);
+
+    expect(mir4.fctPainter.spawn).not.toHaveBeenCalled();
+  });
+
+  it('keeps the canonical drop wording gate independent from its structured origin', () => {
+    const mir4 = makeHud(MIR4_GAME_PROFILE);
+    mir4.handleEvents([
+      {
+        type: 'loot',
+        text: 'Rolling for [[i:copper_ore]].',
+        pid: PLAYER_ID,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+
+    expect(mir4.fctPainter.spawn).not.toHaveBeenCalled();
+  });
+
+  it('still floats a silent MIR4 drop while suppressing only its audio cue', () => {
+    const mir4 = makeHud(MIR4_GAME_PROFILE);
+    mir4.handleEvents([
+      {
+        type: 'loot',
+        text: 'You receive: Copper Ore.',
+        pid: PLAYER_ID,
+        silent: true,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+
+    expect(mir4.fctPainter.spawn).toHaveBeenCalledTimes(1);
+    expect(audio.lootItem).not.toHaveBeenCalled();
+  });
+
+  it('does not duplicate caller-owned result lines or add floaters to classic grants', () => {
+    const mir4 = makeHud(MIR4_GAME_PROFILE);
+    mir4.handleEvents([
+      {
+        type: 'loot',
+        text: 'You receive: Copper Ore.',
+        pid: PLAYER_ID,
+        callerLogs: true,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+    expect(mir4.fctPainter.spawn).not.toHaveBeenCalled();
+
+    const classic = makeHud();
+    classic.handleEvents([
+      {
+        type: 'loot',
+        text: 'You receive: Copper Ore.',
+        pid: PLAYER_ID,
+        lootOrigin: 'monster-drop',
+      } as SimEvent,
+    ]);
+    expect(classic.fctPainter.spawn).not.toHaveBeenCalled();
+  });
+
   it('an ordinary loot grant still prints the hub line and plays the hub cue', () => {
     // The control. Mob loot, corpse loot, quest rewards, vendor buys, mail and
     // trade all reach the hub with no flags, and none of them has a result

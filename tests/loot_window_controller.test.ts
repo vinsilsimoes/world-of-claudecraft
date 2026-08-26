@@ -455,6 +455,35 @@ describe('LootWindowController', () => {
     expect(test.controller.hasOpenChest).toBe(false);
   });
 
+  it('keeps a marker-only MIR4 harvest open until the body expires or is claimed', () => {
+    const mob = entity(32, {
+      kind: 'mob',
+      templateId: harvestMobId,
+      dead: true,
+      lootable: false,
+      loot: null,
+      mir4CorpseVisible: true,
+      harvestClaimedBy: null,
+    });
+    const test = harness([mob]);
+
+    test.controller.openCorpse(mob.id, 0, 0);
+    test.controller.updateProximity();
+    expect(test.element.style.display).toBe('block');
+
+    mob.mir4CorpseVisible = false;
+    test.controller.updateProximity();
+    expect(test.element.style.display).toBe('none');
+
+    mob.mir4CorpseVisible = true;
+    mob.harvestClaimedBy = null;
+    test.controller.openCorpse(mob.id, 0, 0);
+    expect(test.element.style.display).toBe('block');
+    mob.harvestClaimedBy = 7;
+    test.controller.updateProximity();
+    expect(test.element.style.display).toBe('none');
+  });
+
   it('centers corpse loot on touch layouts instead of using pointer geometry', () => {
     document.body.classList.add('mobile-touch');
     const mob = entity(40, {

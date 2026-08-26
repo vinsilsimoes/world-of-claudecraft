@@ -5,6 +5,8 @@ import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { mir4ResolveLayer, mir4RollLayer } from '../../src/sim/mir4/affixes';
 import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
+import { MIR4_MOUNT_PENDING_LIMIT } from '../../src/sim/mir4/mounts';
+import { MIR4_SPIRIT_PENDING_LIMIT } from '../../src/sim/mir4/spirits';
 import { buildMir4WocCampaignWorld } from '../../src/sim/mir4/woc_comparison_world';
 import { Sim } from '../../src/sim/sim';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
@@ -27,6 +29,71 @@ afterAll(() => {
 });
 
 describe('MIR4 character persistence', () => {
+  it('round-trips per-skill automatic-use opt-outs and restores new skills as enabled', () => {
+    const source = makeMir4Sim(394);
+    source.setPlayerLevel(10);
+    source.setMir4AutoSkillEnabled(1104, false);
+    source.setMir4AutoSkillEnabled(1102, false);
+
+    const saved = source.serializeCharacter(source.playerId)!;
+    expect(saved.mir4DisabledAutoSkills).toEqual([1102, 1104]);
+
+    const target = makeMir4Sim(393, true);
+    const restoredPid = target.addPlayer('warrior', 'Automatic Skills', { state: saved });
+    expect(target.players.get(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1104]);
+    expect(target.mir4PlayerState(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1104]);
+  });
+
+  it('round-trips one hundred pending Spirit summons without truncation', () => {
+    expect(MIR4_SPIRIT_PENDING_LIMIT).toBe(256);
+    const source = makeMir4Sim(395);
+    const meta = source.players.get(source.playerId)!;
+    meta.mir4Spirits = {
+      pending: Array.from({ length: 100 }, (_, index) => ({
+        id: `spirit-pending-${source.playerId}-${index + 1}`,
+        spiritId: 'spirit-epic-01',
+        grade: 4,
+      })),
+      nextPendingId: 101,
+    };
+
+    const saved = source.serializeCharacter(source.playerId)!;
+    const target = makeMir4Sim(396, true);
+    const restoredPid = target.addPlayer('warrior', 'Hundred Spirits', { state: saved });
+    const restored = target.players.get(restoredPid)?.mir4Spirits;
+
+    expect(restored?.pending).toHaveLength(100);
+    expect(new Set(restored?.pending?.map((entry) => entry.id))).toHaveLength(100);
+    expect(restored?.pending?.at(-1)?.id).toBe(`spirit-pending-${source.playerId}-100`);
+  });
+
+  it('round-trips the full pending Mount capacity without truncation', () => {
+    expect(MIR4_MOUNT_PENDING_LIMIT).toBe(128);
+    const source = makeMir4Sim(397);
+    const meta = source.players.get(source.playerId)!;
+    meta.mir4Mounts = {
+      pending: Array.from({ length: MIR4_MOUNT_PENDING_LIMIT }, (_, index) => ({
+        id: `mount-pending-${source.playerId}-${index + 1}`,
+        mountId: 'eclipse-lion',
+        grade: 4,
+      })),
+      nextPendingId: MIR4_MOUNT_PENDING_LIMIT + 1,
+    };
+
+    const saved = source.serializeCharacter(source.playerId)!;
+    const target = makeMir4Sim(398, true);
+    const restoredPid = target.addPlayer('warrior', 'Full Mount Stable', { state: saved });
+    const restored = target.players.get(restoredPid)?.mir4Mounts;
+
+    expect(restored?.pending).toHaveLength(MIR4_MOUNT_PENDING_LIMIT);
+    expect(new Set(restored?.pending?.map((entry) => entry.id))).toHaveLength(
+      MIR4_MOUNT_PENDING_LIMIT,
+    );
+    expect(restored?.pending?.at(-1)?.id).toBe(
+      `mount-pending-${source.playerId}-${MIR4_MOUNT_PENDING_LIMIT}`,
+    );
+  });
+
   it('keeps the current narrative dialogue session-only', () => {
     const source = makeMir4Sim(396);
     const meta = source.players.get(source.playerId)!;
@@ -283,10 +350,10 @@ describe('MIR4 character persistence', () => {
       siteIndex: 3,
       suspended: false,
     };
-    meta.mir4SkillLevels = { 2101: 2 };
+    meta.mir4SkillLevels = { 2101: 15 };
     meta.mir4SkillResources = { effectPoints: 800, skillTomes: 6 };
     meta.mir4AchievementClears = { 201: 2 };
-    meta.mir4Currencies = { darksteel: 1_000 };
+    meta.mir4Currencies = { darksteel: 1_000, energy: 250 };
     meta.mir4Equipment = { 1: 991010201 };
     meta.mir4EquipmentInstances = {
       991010201: {
@@ -309,6 +376,20 @@ describe('MIR4 character persistence', () => {
       moonStone: 5,
       lunarSeal: 2,
       solarWard: 1,
+      knowledgeFragment: 17,
+      knowledgeTomeCommon: 3,
+      knowledgeTomeRare: 4,
+      knowledgeTomeEpic: 5,
+      knowledgeTomeLegendary: 6,
+      noirsoulHerbRare: 7,
+      unihornEpic: 8,
+      lesserYinPillLegendary: 9,
+    };
+    meta.mir4Training = {
+      version: 1,
+      constitution: [1, 2, 3, 4, 5, 0, 1],
+      innerForce: [5, 4, 3, 2],
+      solitude: { conceptionVessel: [1, 2, 3, 4, 5, 6, 7, 8] },
     };
     meta.mir4Mounts = {
       owned: { 'meadow-courser': 2 },
@@ -340,6 +421,7 @@ describe('MIR4 character persistence', () => {
     expect(saved.mir4Equipment).toEqual(meta.mir4Equipment);
     expect(saved.mir4EquipmentInstances).toEqual(meta.mir4EquipmentInstances);
     expect(saved.mir4Materials).toEqual(meta.mir4Materials);
+    expect(saved.mir4Training).toEqual(meta.mir4Training);
     expect(saved.mir4Mounts).toEqual(meta.mir4Mounts);
     expect(saved.mir4Spirits).toEqual(meta.mir4Spirits);
     expect(saved.mir4UltGauge).toBe(73.5);
@@ -355,6 +437,9 @@ describe('MIR4 character persistence', () => {
     (meta.mir4EquipmentInstances[991010201]!.pendingRoll!.affixes as [number, number][])[0][1] =
       999;
     meta.mir4Materials.moonStone = 999;
+    const solitude = meta.mir4Training.solitude;
+    if (!solitude) throw new Error('missing persisted Solitude state');
+    (solitude.conceptionVessel as number[])[0] = 10;
     meta.mir4Mounts.owned!['meadow-courser'] = 999;
     meta.mir4Spirits.owned!['spirit-uncommon-01'] = 999;
     expect(saved.autoBattle.anchorX).toBe(12.5);
@@ -366,6 +451,7 @@ describe('MIR4 character persistence', () => {
     expect(saved.mir4Currencies.darksteel).toBe(1_000);
     expect(saved.mir4EquipmentInstances[991010201].pendingRoll.affixes[0][1]).toBe(5);
     expect(saved.mir4Materials.moonStone).toBe(5);
+    expect(saved.mir4Training.solitude.conceptionVessel[0]).toBe(1);
     expect(saved.mir4Mounts.owned['meadow-courser']).toBe(2);
     expect(saved.mir4Spirits.owned['spirit-uncommon-01']).toBe(1);
 
@@ -384,12 +470,30 @@ describe('MIR4 character persistence', () => {
     expect(restored.mir4Equipment).toEqual(saved.mir4Equipment);
     expect(restored.mir4EquipmentInstances).toEqual(saved.mir4EquipmentInstances);
     expect(restored.mir4Materials).toEqual(saved.mir4Materials);
+    expect(restored.mir4Training).toEqual(saved.mir4Training);
     expect(restored.mir4Mounts).toEqual(saved.mir4Mounts);
     expect(restored.mir4Spirits).toEqual(saved.mir4Spirits);
     expect(target.entities.get(restoredPid)?.mir4UltGauge).toBe(73.5);
     expect(restored.mir4SpiritSkillReadyAt).toBe(target.time + 18.25);
     expect(target.entities.get(restoredPid)?.mir4?.classId).toBe(2);
     expect(target.entities.get(restoredPid)?.spellPower).toBeGreaterThan(50);
+    const resaved = target.serializeCharacter(restoredPid)! as any;
+    expect(resaved.mir4Materials).toEqual(saved.mir4Materials);
+    expect(resaved.mir4Training).toEqual(saved.mir4Training);
+  });
+
+  it('restores a leveled MIR4-only class instead of keeping its temporary warrior shell', () => {
+    const source = makeMir4Sim(403, true);
+    const sourcePid = source.addPlayer('elementalist', 'Leveled Elyra');
+    source.setPlayerLevel(33, sourcePid);
+    const saved = source.serializeCharacter(sourcePid)!;
+
+    const target = makeMir4Sim(404, true);
+    const restoredPid = target.addPlayer('elementalist', 'Leveled Elyra', { state: saved });
+
+    expect(target.entities.get(restoredPid)?.level).toBe(33);
+    expect(target.entities.get(restoredPid)?.mir4?.classId).toBe(2);
+    expect(target.players.get(restoredPid)?.mir4Equipment?.[1]).toBe(200202000);
   });
 
   it('sanitizes MIR4 combat state and defaults pre-feature saves to ready/empty', () => {
@@ -447,7 +551,7 @@ describe('MIR4 character persistence', () => {
       injected: 999,
     };
     saved.mir4AchievementClears = { 201: 99, 999: 2 };
-    saved.mir4Currencies = { darksteel: 1_000.9, injected: 999 };
+    saved.mir4Currencies = { darksteel: 1_000.9, energy: 500.9, injected: 999 };
     saved.mir4Equipment = { weapon: 200201000, 1: 991010201, 2: 991010101, 99: 991010101 };
     saved.mir4EquipmentInstances = {
       991010201: { itemId: 991010201, enhancement: 99 },
@@ -460,6 +564,11 @@ describe('MIR4 character persistence', () => {
       lunarSeal: 2,
       dawnTear: Number.NaN,
       solarWard: 1,
+      knowledgeFragment: 6.9,
+      knowledgeTomeCommon: 3.2,
+      knowledgeTomeRare: -4,
+      knowledgeTomeEpic: Number.POSITIVE_INFINITY,
+      knowledgeTomeLegendary: 2,
       injected: 999,
     };
     saved.mir4Mounts = {
@@ -502,18 +611,19 @@ describe('MIR4 character persistence', () => {
     expect(restored.mir4SkillLevels).toBeUndefined();
     expect(restored.mir4SkillResources).toEqual({ effectPoints: 400, skillTomes: 0 });
     expect(restored.mir4AchievementClears).toBeUndefined();
-    expect(restored.mir4Currencies).toEqual({ darksteel: 1_000 });
+    expect(restored.mir4Currencies).toEqual({ darksteel: 1_000, energy: 500 });
     expect(restored.mir4Equipment).toEqual({ 1: 200201000 });
     expect(restored.mir4EquipmentInstances).toEqual({
       200201000: { itemId: 200201000, enhancement: 0 },
     });
     expect(restored.mir4Materials).toEqual({
+      ...MIR4_EMPTY_MATERIALS,
       sunStone: 4,
-      moonStone: 0,
-      solarScroll: 0,
       lunarSeal: 2,
-      dawnTear: 0,
       solarWard: 1,
+      knowledgeFragment: 6,
+      knowledgeTomeCommon: 3,
+      knowledgeTomeLegendary: 2,
     });
     expect(restored.mir4Mounts).toEqual({
       owned: { 'meadow-courser': 2 },

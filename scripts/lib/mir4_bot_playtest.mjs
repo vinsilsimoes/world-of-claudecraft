@@ -3,30 +3,35 @@ export const MIR4_PLAYTEST_ROSTER = Object.freeze([
     classKey: 'warrior',
     classId: 1,
     namePrefix: 'Aldric',
+    engagementRangeYards: 4,
     initialSkillIds: Object.freeze([1102, 1104, 1304, 1401]),
   }),
   Object.freeze({
     classKey: 'elementalist',
     classId: 2,
     namePrefix: 'Elyra',
+    engagementRangeYards: 8,
     initialSkillIds: Object.freeze([2101, 2111, 2501, 2301]),
   }),
   Object.freeze({
     classKey: 'taoist',
     classId: 3,
     namePrefix: 'Sora',
+    engagementRangeYards: 4,
     initialSkillIds: Object.freeze([3506, 3101, 3301, 3104]),
   }),
   Object.freeze({
     classKey: 'arbalist',
     classId: 4,
     namePrefix: 'Mira',
+    engagementRangeYards: 12,
     initialSkillIds: Object.freeze([4101, 4106, 4102, 4103]),
   }),
   Object.freeze({
     classKey: 'lancer',
     classId: 5,
     namePrefix: 'Kael',
+    engagementRangeYards: 6,
     initialSkillIds: Object.freeze([5201, 5101, 5104, 5301]),
   }),
 ]);
@@ -77,7 +82,7 @@ const MIR4_BOT_UI_TUTORIAL_STAGE_INDEX = Object.freeze({ 'M05-Q02': 4 });
 // suite. They use the same portal runtime as the original Duskfall passage.
 export const MIR4_BOT_PORTAL_TUTORIAL_TARGETS = Object.freeze({
   'M02-Q01': Object.freeze({ x: -400, z: 250 }),
-  'M09-Q04': Object.freeze({ x: -55, z: 330 }),
+  'M09-Q04': Object.freeze({ x: -13, z: 330 }),
 });
 
 function alphaFingerprint(value) {
@@ -264,7 +269,11 @@ export function recordMir4BotSnapshot(tracker, self, atMs) {
       const prior = tracker.equipmentEnhancements.get(itemId);
       if (prior !== undefined && levelNow > prior) {
         tracker.progress.equipmentEnhancements += levelNow - prior;
-        appendTimeline(tracker, atMs, 'equipment', { itemId, from: prior, to: levelNow });
+        appendTimeline(tracker, atMs, 'equipment', {
+          itemId,
+          from: prior,
+          to: levelNow,
+        });
         markProgress(tracker, atMs);
       }
     }
@@ -319,7 +328,11 @@ const MIR4_CATALOG_REQUIRED_LEVEL = Object.freeze([0, 1, 10, 25, 40, 60, 80]);
 function mir4CatalogIdentity(itemId) {
   const match = /^991(0[1-8])(0[1-5])(0[1-6])$/.exec(String(itemId));
   if (!match) return null;
-  return { slot: Number(match[1]), classId: Number(match[2]), rank: Number(match[3]) };
+  return {
+    slot: Number(match[1]),
+    classId: Number(match[2]),
+    rank: Number(match[3]),
+  };
 }
 
 function bestOwnedMir4Equipment(mir4, level) {
@@ -415,7 +428,11 @@ export function planMir4ProgressionActions(self, rosterEntry) {
       earnedItemId &&
       !actions.some((action) => action.m === 'equipItem' && action.itemId === Number(earnedItemId))
     ) {
-      actions.push({ cmd: 'mir4', m: 'equipItem', itemId: Number(earnedItemId) });
+      actions.push({
+        cmd: 'mir4',
+        m: 'equipItem',
+        itemId: Number(earnedItemId),
+      });
     }
   }
 
@@ -466,7 +483,11 @@ export function planMir4ProgressionActions(self, rosterEntry) {
       finiteNumber(mir4.mir4Materials?.sunStone) >= 1 &&
       finiteNumber(self.copper) >= 5_000
     ) {
-      actions.push({ cmd: 'mir4', m: 'craftMaterial', recipeId: 'solar-scroll' });
+      actions.push({
+        cmd: 'mir4',
+        m: 'craftMaterial',
+        recipeId: 'solar-scroll',
+      });
     } else if (
       Number.isSafeInteger(equippedWeaponId) &&
       weaponEnhancement < weaponEnhancementTutorial.targetLevel &&
@@ -498,14 +519,22 @@ export function planMir4ProgressionActions(self, rosterEntry) {
   const firstSpiritTutorial = mir4.mir4ArcQuests?.['M02-Q04'];
   if (firstSpiritTutorial?.state === 'active' && firstSpiritTutorial.stageIndex === 3) {
     if (finiteNumber(mir4.mir4ArcRewards?.tickets?.['spirit-ticket-dawn']) >= 1) {
-      actions.push({ cmd: 'mir4', m: 'redeemTicket', ticketId: 'spirit-ticket-dawn' });
+      actions.push({
+        cmd: 'mir4',
+        m: 'redeemTicket',
+        ticketId: 'spirit-ticket-dawn',
+      });
     } else if (!mir4.mir4Spirits?.pending?.length) {
       const ownedSpiritId = Object.entries(mir4.mir4Spirits?.owned ?? {})
         .filter(([, count]) => finiteNumber(count) >= 1)
         .map(([spiritId]) => spiritId)
         .sort()[0];
       if (ownedSpiritId && mir4.mir4Spirits?.equippedSpiritId !== ownedSpiritId) {
-        actions.push({ cmd: 'mir4', m: 'equipSpirit', spiritId: ownedSpiritId });
+        actions.push({
+          cmd: 'mir4',
+          m: 'equipSpirit',
+          spiritId: ownedSpiritId,
+        });
       }
     }
   }
@@ -581,7 +610,11 @@ export function planMir4ProgressionActions(self, rosterEntry) {
   const firstMountTutorial = mir4.mir4ArcQuests?.['M03-Q04'];
   if (firstMountTutorial?.state === 'active' && firstMountTutorial.stageIndex === 4) {
     if (finiteNumber(mir4.mir4ArcRewards?.tickets?.['mount-ticket-dawn']) >= 1) {
-      actions.push({ cmd: 'mir4', m: 'redeemTicket', ticketId: 'mount-ticket-dawn' });
+      actions.push({
+        cmd: 'mir4',
+        m: 'redeemTicket',
+        ticketId: 'mount-ticket-dawn',
+      });
     } else if (!mir4.mir4Mounts?.pending?.length) {
       const ownedMountId = Object.entries(mir4.mir4Mounts?.owned ?? {})
         .filter(([, count]) => finiteNumber(count) >= 1)
@@ -610,13 +643,10 @@ export function planMir4ProgressionActions(self, rosterEntry) {
 
   const firstSkill = rosterEntry?.initialSkillIds?.[0];
   const currentSkillLevel = firstSkill ? (mir4.mir4SkillLevels?.[firstSkill] ?? 1) : 0;
-  const resources = mir4.mir4SkillResources;
   if (
     firstSkill &&
     currentSkillLevel === 1 &&
-    finiteNumber(self.copper) >= 3_200 &&
-    finiteNumber(resources?.effectPoints) >= 400 &&
-    finiteNumber(resources?.skillTomes) >= 3
+    finiteNumber(mir4.mir4Materials?.knowledgeTomeCommon) >= 1
   ) {
     actions.push({
       cmd: 'mir4',
@@ -638,6 +668,7 @@ export function planMir4ProgressionActions(self, rosterEntry) {
 }
 
 export function planMir4TutorialEngagement(self, entities, rosterEntry) {
+  if (self?.dead === true || self?.gh === true || finiteNumber(self?.hp, 1) <= 0) return [];
   const portalTutorialQuestId = Object.keys(MIR4_BOT_PORTAL_TUTORIAL_TARGETS).find((questId) => {
     const progress = self?.mir4?.mir4ArcQuests?.[questId];
     return progress?.state === 'active' && progress.stageIndex === 3;
@@ -691,12 +722,18 @@ export function planMir4TutorialEngagement(self, entities, rosterEntry) {
   if (nearestDistance > 2.5) return [{ t: 'input', mi: { f: 1 }, facing }];
   return [
     { t: 'input', mi: {}, facing },
-    { cmd: 'mir4', m: 'cast', skill: rosterEntry.initialSkillIds[0], target: nearest.id },
+    {
+      cmd: 'mir4',
+      m: 'cast',
+      skill: rosterEntry.initialSkillIds[0],
+      target: nearest.id,
+    },
     { cmd: 'mir4', m: 'basic', target: nearest.id },
   ];
 }
 
 export function planMir4GrindingEngagement(self, entities, acquireRadiusYards = 30) {
+  if (self?.dead === true || self?.gh === true || finiteNumber(self?.hp, 1) <= 0) return [];
   let nearest = null;
   let nearestDistance = Number.POSITIVE_INFINITY;
   for (const entity of entities?.values?.() ?? []) {
@@ -729,13 +766,109 @@ export function planMir4GrindingEngagement(self, entities, acquireRadiusYards = 
   return [{ t: 'input', mi: nearestDistance > 4 ? { f: 1 } : {}, facing }];
 }
 
+export function hasMir4NearbyHostile(self, entities, radiusYards = 30) {
+  if (self?.dead === true || self?.gh === true || finiteNumber(self?.hp, 1) <= 0) return false;
+  const radius = Math.max(0, finiteNumber(radiusYards, 30));
+  for (const entity of entities?.values?.() ?? []) {
+    if (
+      (entity?.kind ?? entity?.k) !== 'mob' ||
+      entity.dead === true ||
+      finiteNumber(entity.hp) <= 0 ||
+      entity.hostile === false ||
+      entity.runScoped === true ||
+      entity.summonedAdd === true ||
+      !Number.isSafeInteger(entity.id)
+    ) {
+      continue;
+    }
+    if (
+      Math.hypot(
+        finiteNumber(entity.x) - finiteNumber(self?.x),
+        finiteNumber(entity.z) - finiteNumber(self?.z),
+      ) <= radius
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const MIR4_BOT_HEALING_POTION_PRICE = 40;
+const MIR4_BOT_HEALING_POTION_TARGET = 20;
+const MIR4_BOT_VENDOR_INTERACT_RANGE = 7;
+
+/**
+ * Restock through the ordinary vendor command while the campaign has already
+ * brought the player within interaction range. This deliberately does not
+ * teleport, grant inventory, or hijack Auto Mission to visit a shop.
+ */
+export function planMir4VendorRestock(self, entities) {
+  if (self?.dead === true || self?.gh === true || finiteNumber(self?.hp, 1) <= 0) return [];
+  const current = (self?.inv ?? []).reduce(
+    (sum, slot) =>
+      slot?.itemId === 'minor_healing_potion'
+        ? sum + Math.max(0, Math.floor(finiteNumber(slot.count)))
+        : sum,
+    0,
+  );
+  const needed = Math.max(0, MIR4_BOT_HEALING_POTION_TARGET - current);
+  const affordable = Math.floor(
+    Math.max(0, finiteNumber(self?.copper)) / MIR4_BOT_HEALING_POTION_PRICE,
+  );
+  if (needed === 0 || affordable === 0) return [];
+
+  let vendor = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (const entity of entities?.values?.() ?? []) {
+    if (
+      (entity?.kind ?? entity?.k) !== 'npc' ||
+      !Number.isSafeInteger(entity.id) ||
+      !entity.vendorItems?.includes?.('minor_healing_potion')
+    ) {
+      continue;
+    }
+    const distance = Math.hypot(
+      finiteNumber(entity.x) - finiteNumber(self?.x),
+      finiteNumber(entity.z) - finiteNumber(self?.z),
+    );
+    if (distance <= MIR4_BOT_VENDOR_INTERACT_RANGE && distance < nearestDistance) {
+      vendor = entity;
+      nearestDistance = distance;
+    }
+  }
+  if (!vendor) return [];
+  return [
+    {
+      cmd: 'buy',
+      npcId: vendor.id,
+      item: 'minor_healing_potion',
+      count: Math.min(needed, affordable),
+    },
+  ];
+}
+
 /**
  * Model the player's required intervention around a collection objective.
  * Auto Mission remains passive: the bot itself clears a nearby threat with
  * ordinary skill/basic commands, then leaves the five-second cast alone.
  */
+function mir4BotHealingPotionActions(self) {
+  const healingPotion = self?.inv?.find?.(
+    (slot) => slot?.itemId === 'minor_healing_potion' && finiteNumber(slot.count) > 0,
+  );
+  const maxHp = finiteNumber(self?.mhp ?? self?.maxHp);
+  return healingPotion &&
+    maxHp > 0 &&
+    finiteNumber(self?.hp) / maxHp < 0.7 &&
+    finiteNumber(self?.pcd) <= 0
+    ? [{ cmd: 'use', item: 'minor_healing_potion' }]
+    : [];
+}
+
 export function planMir4ThreatIntervention(self, entities, rosterEntry, dangerRadiusYards = 14) {
-  if (self?.castingAbility) return [];
+  if (self?.dead === true || self?.gh === true || finiteNumber(self?.hp, 1) <= 0) {
+    return [];
+  }
   let nearest = null;
   let nearestDistance = Number.POSITIVE_INFINITY;
   for (const entity of entities?.values?.() ?? []) {
@@ -754,8 +887,14 @@ export function planMir4ThreatIntervention(self, entities, rosterEntry, dangerRa
       finiteNumber(entity.x) - finiteNumber(self?.x),
       finiteNumber(entity.z) - finiteNumber(self?.z),
     );
-    const attackingPlayer = entity.targetId === self?.id;
-    if (!attackingPlayer && distance > Math.max(0, finiteNumber(dangerRadiusYards, 14))) continue;
+    const attackingPlayer = (entity.aggroTargetId ?? entity.targetId) === self?.id;
+    // A fragile objective should provoke only the manual intervention the
+    // player actually needs. Proactively pulling every neutral creature in a
+    // radius turns a single interrupted collection into an endless camp clear
+    // and drags the player away from the object. Let Auto Mission attempt the
+    // cast; intervene only after a creature has committed to attacking.
+    if (!attackingPlayer) continue;
+    if (distance > Math.max(0, finiteNumber(dangerRadiusYards, 14))) continue;
     if (distance < nearestDistance) {
       nearest = entity;
       nearestDistance = distance;
@@ -766,12 +905,105 @@ export function planMir4ThreatIntervention(self, entities, rosterEntry, dangerRa
     finiteNumber(nearest.x) - finiteNumber(self?.x),
     finiteNumber(nearest.z) - finiteNumber(self?.z),
   );
-  if (nearestDistance > 4) return [{ t: 'input', mi: { f: 1 }, facing }];
+  const actions = mir4BotHealingPotionActions(self);
+  // Hold the objective position. Admission will accept a ranged attack when
+  // it is legal, while a melee aggressor closes its own distance. Chasing it
+  // would move the danger radius into the rest of the camp and create an
+  // artificial infinite fight.
   return [
+    ...actions,
     { t: 'input', mi: {}, facing },
-    { cmd: 'mir4', m: 'cast', skill: rosterEntry.initialSkillIds[0], target: nearest.id },
+    {
+      cmd: 'mir4',
+      m: 'cast',
+      skill: rosterEntry.initialSkillIds[0],
+      target: nearest.id,
+    },
     { cmd: 'mir4', m: 'basic', target: nearest.id },
   ];
+}
+
+/**
+ * Protect a campaign escort with the same explicit single-target actions a
+ * player would use. Auto Mission owns only the route and target hint; this
+ * helper deliberately ignores ambient mobs and attacks only the quest-scoped
+ * ambushers spawned for the active escort. Keeping Auto Battle off prevents it
+ * from abandoning the convoy to roam through a dense grind camp.
+ */
+export function planMir4EscortIntervention(self, entities, rosterEntry) {
+  if (self?.dead === true || self?.gh === true || finiteNumber(self?.hp, 1) <= 0) {
+    return [];
+  }
+  let nearest = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+  for (const entity of entities?.values?.() ?? []) {
+    if (
+      (entity?.kind ?? entity?.k) !== 'mob' ||
+      entity.dead === true ||
+      finiteNumber(entity.hp) <= 0 ||
+      entity.hostile === false ||
+      entity.runScoped !== true ||
+      entity.summonedAdd !== true ||
+      !Number.isSafeInteger(entity.id)
+    ) {
+      continue;
+    }
+    const distance = Math.hypot(
+      finiteNumber(entity.x) - finiteNumber(self?.x),
+      finiteNumber(entity.z) - finiteNumber(self?.z),
+    );
+    if (
+      distance > nearestDistance ||
+      (distance === nearestDistance && nearest !== null && entity.id > nearest.id)
+    ) {
+      continue;
+    }
+    nearest = entity;
+    nearestDistance = distance;
+  }
+  if (!nearest) return [];
+  const facing = Math.atan2(
+    finiteNumber(nearest.x) - finiteNumber(self?.x),
+    finiteNumber(nearest.z) - finiteNumber(self?.z),
+  );
+  return [
+    ...(self?.mir4?.autoBattle?.mode === 'battle' ? [{ cmd: 'mir4', m: 'auto', on: false }] : []),
+    { t: 'input', mi: {}, facing },
+    {
+      cmd: 'mir4',
+      m: 'cast',
+      skill: rosterEntry.initialSkillIds[0],
+      target: nearest.id,
+    },
+    { cmd: 'mir4', m: 'basic', target: nearest.id },
+  ];
+}
+
+/** A survival hold deliberately requires player intervention. Reuse the
+ * single-target quest-threat policy so Auto Mission keeps owning only the
+ * objective position while the player kills the one scoped guardian. */
+export function planMir4SurvivalIntervention(self, entities, rosterEntry, guardianEntityId) {
+  if (Number.isSafeInteger(guardianEntityId)) {
+    const guardian = entities?.get?.(guardianEntityId);
+    if (guardian) {
+      const guardianActions = planMir4EscortIntervention(
+        self,
+        new Map([[guardianEntityId, guardian]]),
+        rosterEntry,
+      );
+      if (guardianActions.length > 0) {
+        return [...mir4BotHealingPotionActions(self), ...guardianActions];
+      }
+    }
+  }
+  return planMir4ThreatIntervention(self, entities, rosterEntry, 30);
+}
+
+/** Fragile objectives require manual intervention. Keep Auto Battle off so it
+ * cannot chain from the blocking creature into the whole surrounding camp. */
+export function planMir4ThreatBattleMode(self, _hasThreat) {
+  const active = self?.mir4?.autoBattle?.mode === 'battle';
+  return active ? [{ cmd: 'mir4', m: 'auto', on: false }] : [];
 }
 
 function progressionScore(tracker) {
@@ -823,7 +1055,11 @@ export function buildMir4PlaytestReport({
   for (const bot of bots) {
     const classKey = bot.identity.classKey;
     if (bot.snapshots === 0) {
-      findings.push({ severity: 'critical', code: 'no-authoritative-snapshots', classKey });
+      findings.push({
+        severity: 'critical',
+        code: 'no-authoritative-snapshots',
+        classKey,
+      });
       continue;
     }
     if (bot.secondsSinceProgress * 1_000 >= stallThresholdMs) {
@@ -868,7 +1104,11 @@ export function buildMir4PlaytestReport({
     }
   }
   if (pvp && pvp.status !== 'completed') {
-    findings.push({ severity: 'high', code: 'pvp-did-not-complete', status: pvp.status });
+    findings.push({
+      severity: 'high',
+      code: 'pvp-did-not-complete',
+      status: pvp.status,
+    });
   }
   return {
     schemaVersion: 1,

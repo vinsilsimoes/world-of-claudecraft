@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   applyProfileFeatureGate,
   MIR4_CLASSIC_ONLY_SELECTORS,
+  MIR4_ONLY_SELECTORS,
 } from '../src/ui/profile_feature_gate';
 
 function documentHarness() {
@@ -30,17 +31,41 @@ function documentHarness() {
       },
     ]),
   );
+  const mir4Nodes = new Map(
+    MIR4_ONLY_SELECTORS.map((selector) => [
+      selector,
+      {
+        hidden: true,
+        setAttribute: vi.fn(),
+      },
+    ]),
+  );
   const document = {
     querySelectorAll: (selector: string) => {
       const node = nodes.get(selector as (typeof MIR4_CLASSIC_ONLY_SELECTORS)[number]);
+      const mir4Node = mir4Nodes.get(selector as (typeof MIR4_ONLY_SELECTORS)[number]);
       const shared = sharedNodes.get(selector);
-      return node ? [node] : shared ? [shared] : [];
+      return node ? [node] : mir4Node ? [mir4Node] : shared ? [shared] : [];
     },
   } as unknown as Document;
-  return { document, mobileLabel, nodes, sharedNodes };
+  return { document, mobileLabel, mir4Nodes, nodes, sharedNodes };
 }
 
 describe('profile feature visibility matrix', () => {
+  it('classifies the Mount, Spirit, Codex, Training and Auto Collect launchers as MIR4-only systems', () => {
+    expect(MIR4_ONLY_SELECTORS).toEqual([
+      '#mm-mount-codex',
+      '#mobile-mount-codex',
+      '#mm-spirit',
+      '#mobile-spirit',
+      '#mm-codex',
+      '#mobile-codex',
+      '#mm-training',
+      '#mobile-training',
+      '#mobile-auto-collect',
+    ]);
+  });
+
   it('keeps the adapted Character, Bags, Crafting, Map and Quest Log available to MIR4', () => {
     expect(MIR4_CLASSIC_ONLY_SELECTORS).not.toContain('#char-window');
     expect(MIR4_CLASSIC_ONLY_SELECTORS).not.toContain('#bags');
@@ -67,6 +92,10 @@ describe('profile feature visibility matrix', () => {
       expect(node.hidden).toBe(true);
       expect(node.setAttribute).toHaveBeenLastCalledWith('aria-hidden', 'true');
     }
+    for (const node of test.mir4Nodes.values()) {
+      expect(node.hidden).toBe(false);
+      expect(node.setAttribute).toHaveBeenLastCalledWith('aria-hidden', 'false');
+    }
     for (const [selector, node] of test.sharedNodes) {
       expect(node.hidden).toBe(false);
       if (selector !== '#deeds-window') {
@@ -90,6 +119,10 @@ describe('profile feature visibility matrix', () => {
     for (const node of test.nodes.values()) {
       expect(node.hidden).toBe(false);
       expect(node.setAttribute).toHaveBeenLastCalledWith('aria-hidden', 'false');
+    }
+    for (const node of test.mir4Nodes.values()) {
+      expect(node.hidden).toBe(true);
+      expect(node.setAttribute).toHaveBeenLastCalledWith('aria-hidden', 'true');
     }
     expect(test.sharedNodes.get('#mm-deeds')?.setAttribute).toHaveBeenCalledWith(
       'data-i18n-title',

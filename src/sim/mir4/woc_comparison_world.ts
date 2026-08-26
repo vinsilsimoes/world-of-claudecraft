@@ -1,4 +1,4 @@
-// Production MIR4 campaign world on the original World of ClaudeCraft terrain,
+// Production MIR4 campaign world on the original Aeldrune terrain,
 // roads and scenery. Story actors and objectives are transplanted onto curated
 // physical anchors while the WoC map remains the single world authority.
 
@@ -22,9 +22,17 @@ import type {
 import { terrainHeight, waterLevelAt, withWorldTerrainContent } from '../world';
 import { WORLD_SEED } from '../world_seed';
 import { mir4ArcStageAnchor } from './arc_quest_runtime';
+import { mir4EnergyGroundObjects } from './energy';
+import { mir4WocEscortObjectiveAnchors } from './woc_campaign_escort_routes';
+import { buildMir4WocCampaignZones } from './woc_campaign_landmarks';
 import { MIR4_WOC_CHAPTER_LAYOUTS } from './woc_campaign_layout';
 import { buildMir4GrindPopulation, seatMir4NpcsOnWocWorld } from './woc_campaign_population';
-import { MIR4_WOC_TUTORIAL_PORTAL_ARCHES, MIR4_WOC_TUTORIAL_PORTALS } from './woc_campaign_portals';
+import {
+  MIR4_WOC_CAMPAIGN_TRANSIT_PORTAL_ARCHES,
+  MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS,
+  MIR4_WOC_TUTORIAL_PORTAL_ARCHES,
+  MIR4_WOC_TUTORIAL_PORTALS,
+} from './woc_campaign_portals';
 
 const CENTRAL_WORLD_X_MIN = -180;
 const CENTRAL_WORLD_X_MAX = 180;
@@ -157,6 +165,10 @@ function buildProjections(mapCount: number, terrainSeed: number): readonly Mir4A
         if (!target) throw new Error(`${region.mapId} is missing mission site ${siteIndex + 1}`);
         return Object.freeze({ source: site.pos, target });
       });
+      const objectiveAnchors = [
+        ...(chapter.objectiveAnchors ?? []),
+        ...mir4WocEscortObjectiveAnchors(region.mapId),
+      ];
       return Object.freeze({
         mapId: region.mapId,
         targetZoneId: targetZone.id,
@@ -174,6 +186,17 @@ function buildProjections(mapCount: number, terrainSeed: number): readonly Mir4A
           ...siteControlPoints,
         ]),
         localScale: CHAPTER_LOCAL_SCALE,
+        objectiveAnchors:
+          objectiveAnchors.length > 0
+            ? Object.freeze(
+                objectiveAnchors.map((plan) =>
+                  Object.freeze({
+                    ...plan,
+                    points: Object.freeze(plan.points.map((point) => Object.freeze({ ...point }))),
+                  }),
+                ),
+              )
+            : undefined,
         portalIn: hubTarget,
         portalOut: portalOutTarget,
       });
@@ -288,6 +311,25 @@ function buildMir4WocCampaignWorldFromBuiltinTerrain(
     ...graveyards.map((graveyard) => ({ x: graveyard.x, z: graveyard.z })),
     ...noticeboards.flatMap((board) => [{ x: board.x, z: board.z }, board.frontStandingPoint]),
   ];
+  const interactionSites = [
+    ...projections.flatMap(
+      (projection) => projection.controlPoints?.slice(3).map((control) => control.target) ?? [],
+    ),
+    // M04-S01's two western resource patches sit beyond the Wolf-Briar road.
+    // Five doubled native packs overlapped the only physical approach, so a
+    // level-34 character met 12-14 simultaneous attackers and died before it
+    // could reduce the group. Keep one six-creature guard pack: collection is
+    // still interrupted until the player intervenes, but a successful clear
+    // now creates the intended five-second gathering window.
+    { x: -96, z: 724, clearRadius: 40 },
+    // The M16 westbound road narrows between three overlapping Drakelands
+    // camps (20 hounds inside one acquisition radius). Preserve one guard pack
+    // while keeping the corridor clearable before its 60-second respawn.
+    { x: 390, z: 2264, clearRadius: 20 },
+    // The northward M16-Q04 leg repeats the same problem with two hound packs
+    // and one obsidian-guard pack directly on the single road.
+    { x: 351, z: 2294, clearRadius: 18 },
+  ];
   const camps = buildMir4GrindPopulation(
     projectCamps(source.camps, projections),
     BUILTIN_WORLD.camps,
@@ -299,19 +341,30 @@ function buildMir4WocCampaignWorldFromBuiltinTerrain(
     (point) =>
       terrainHeight(point.x, point.z, terrainSeed) >=
       waterLevelAt(point.x, point.z, terrainSeed) + 0.2,
+    interactionSites,
   );
+  const zones = buildMir4WocCampaignZones(BUILTIN_WORLD.zones, source.zones, projections);
 
   return {
-    // These references intentionally remain the original WoC world. The proof
-    // swaps actors and quest coordinates only, never copies MIR4 map geometry.
-    zones: BUILTIN_WORLD.zones,
+    // Geometry remains the original WoC world. Zones are shallow-cloned only
+    // where campaign landmark names replace the old cartography; their bounds,
+    // terrain and painted map inputs remain unchanged.
+    zones,
     roads: BUILTIN_WORLD.roads,
-    travelPortals: Object.freeze([...PORTALS, ...MIR4_WOC_TUTORIAL_PORTALS]),
+    travelPortals: Object.freeze([
+      ...PORTALS,
+      ...MIR4_WOC_TUTORIAL_PORTALS,
+      ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS,
+    ]),
     litRoads: BUILTIN_WORLD.litRoads,
     dryCrossings: BUILTIN_WORLD.dryCrossings,
     props: {
       ...BUILTIN_WORLD.props,
-      decorProps: [...(BUILTIN_WORLD.props.decorProps ?? []), ...MIR4_WOC_TUTORIAL_PORTAL_ARCHES],
+      decorProps: [
+        ...(BUILTIN_WORLD.props.decorProps ?? []),
+        ...MIR4_WOC_TUTORIAL_PORTAL_ARCHES,
+        ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTAL_ARCHES,
+      ],
     },
     terrainEdits: BUILTIN_WORLD.terrainEdits,
     placements: BUILTIN_WORLD.placements,
@@ -319,11 +372,19 @@ function buildMir4WocCampaignWorldFromBuiltinTerrain(
     biomePaint: BUILTIN_WORLD.biomePaint,
     waterLevel: BUILTIN_WORLD.waterLevel,
     terrainModel: 'builtin',
+    presentationModel: 'builtin',
     camps,
     npcs,
-    groundObjects: projectGroundObjects(source.groundObjects, projections),
+    groundObjects: [
+      ...projectGroundObjects(source.groundObjects, projections),
+      ...mir4EnergyGroundObjects(projections),
+    ],
     playerStart,
-    services: { noticeboards, graveyards },
+    services: {
+      noticeboards,
+      musterBoards: BUILTIN_WORLD.services?.musterBoards,
+      graveyards,
+    },
     mir4ArcMapProjections: projections,
   };
 }

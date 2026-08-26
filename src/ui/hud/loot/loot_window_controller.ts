@@ -1,4 +1,5 @@
 import type { corpseLootAvailability } from '../../../game/corpse_loot_availability';
+import { corpseInteractionPresent } from '../../../sim/corpse_presence';
 import { ITEMS } from '../../../sim/data';
 import { dist2d, type Entity, type ItemDef } from '../../../sim/types';
 import type { IWorld } from '../../../world_api';
@@ -153,7 +154,13 @@ export class LootWindowController {
     const world = this.deps.world();
     if (this.mobId !== null) {
       const mob = world.entities.get(this.mobId);
-      if (!mob?.lootable || this.distanceFromPlayer(mob) > 7) this.close();
+      if (
+        !mob ||
+        !corpseInteractionPresent(mob) ||
+        !this.deps.corpseAvailability(mob).canOpen ||
+        this.distanceFromPlayer(mob) > 7
+      )
+        this.close();
     }
     if (this.chestId !== null) {
       const chest = world.entities.get(this.chestId);

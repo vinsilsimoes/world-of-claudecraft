@@ -27,6 +27,9 @@ import {
   ZONES,
 } from '../src/sim/data';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
+import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
+import type { Mir4QuestTrackerEntry } from '../src/sim/mir4/quest_tracker';
+import { buildMir4WocComparisonWorld } from '../src/sim/mir4/woc_comparison_world';
 import type { QuestObjectiveRef } from '../src/sim/quest_targets';
 import {
   emptyZoneProps,
@@ -54,6 +57,7 @@ import {
   MAP_STATION_NPC_SEPARATION,
   MAP_TOUCH_POINT_HIT_RADIUS_CSS_PX,
   type MapPointMarkerHit,
+  MIR4_WORLD_MAP_SEARCH_MIN_RADIUS_PX,
   mapBuildingMarkerKind,
   mapPointMarkerHits,
   mapPointMarkerHitsInto,
@@ -935,6 +939,48 @@ describe('active-quest objective areas (the classic POI blobs)', () => {
       expect(Number.isFinite(a.mx)).toBe(true);
       expect(Number.isFinite(a.my)).toBe(true);
     }
+  });
+
+  it('plots MIR4 collection search circles on the full map opened with M', () => {
+    const content = buildMir4WocComparisonWorld();
+    const tracker: Mir4QuestTrackerEntry = {
+      id: 'M01-S03',
+      complete: false,
+      autoJourneyActive: false,
+      autoJourneySuspended: false,
+      objective: {
+        kind: 'campaign-stage',
+        stageKind: 'prepare-civilians',
+        stageIndex: 1,
+        current: 0,
+        total: 3,
+      },
+    };
+    const world = makeOverworldWorld('sim') as unknown as {
+      cfg: Record<string, unknown>;
+      mir4QuestTrackerEntries: () => readonly Mir4QuestTrackerEntry[];
+    };
+    world.cfg = {
+      ...world.cfg,
+      gameProfile: MIR4_GAME_PROFILE,
+      world: content,
+    };
+    world.mir4QuestTrackerEntries = () => [tracker];
+    const model = buildOverworldMapModel(input(world as unknown as IWorld, 1));
+    const areas = model.questAreas.filter((area) =>
+      area.objectives.some((objective) => objective.questId === tracker.id),
+    );
+
+    expect(areas.length).toBeGreaterThan(0);
+    expect(areas.every((area) => area.numbers.length === 0)).toBe(true);
+    expect(areas.every((area) => area.radius >= MIR4_WORLD_MAP_SEARCH_MIN_RADIUS_PX)).toBe(true);
+    const first = areas[0];
+    expect(first).toBeDefined();
+    if (!first) return;
+    expect(questAreaObjectivesAt(model.questAreas, first.mx, first.my)).toContainEqual({
+      questId: tracker.id,
+      objectiveIndex: 0,
+    });
   });
 
   it('plots nothing with an empty quest log or once the quest is turn-in ready', () => {

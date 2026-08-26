@@ -35,7 +35,12 @@ import { MIR4_GAME_PROFILE } from '../game_profile';
 import { lockNormalDungeonResetOnBossKill, spawnBossExitPortal } from '../instances/dungeons';
 import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
 import { grantMir4Xp } from '../mir4/combat';
-import { mir4QuestObjectiveEntityIdFromCast } from '../mir4/quest_objective_cast';
+import { settleMir4KillLoot } from '../mir4/kill_loot';
+import { mir4MonsterRespawnSeconds } from '../mir4/monster_respawn';
+import { mir4FragileGatherEntityIdFromCast } from '../mir4/quest_objective_cast';
+import { grantMir4KnowledgeFragment } from '../mir4/skill_materials';
+import { retaliateMir4TargetCombat } from '../mir4/target_combat';
+import { grantMir4TrainingCombatMaterial } from '../mir4/training_resources';
 import { spawnWidowHatchlingOnEggDeath } from '../mob/egg_hatchling';
 import { resolveMobTemplate } from '../mob/template';
 import { grantAbilityDevotion } from '../paladin_devotion';
@@ -1157,13 +1162,12 @@ export function dealDamage(
     // classic-era spell pushback: a landed hit delays the cast rather than
     // cancelling it (misses and fully absorbed hits don't push back)
     const tookDamage = amount > 0 || totalAbsorbed > 0;
-    const isMir4QuestObjectiveCast =
+    const isMir4FragileGatherCast =
       target.castingAbility !== null &&
-      mir4QuestObjectiveEntityIdFromCast(target.gatherCastNodeId) !== null;
-    if (target.castingAbility && tookDamage && isMir4QuestObjectiveCast) {
-      // Campaign collection is deliberately fragile: every real incoming
-      // damage event interrupts it, including environmental/periodic damage
-      // without an attacker. Auto Mission may retry, but never fights back.
+      mir4FragileGatherEntityIdFromCast(target.gatherCastNodeId) !== null;
+    if (target.castingAbility && tookDamage && isMir4FragileGatherCast) {
+      // Campaign collection and Energy meditation are deliberately fragile:
+      // every real incoming damage event interrupts them, including hazards.
       ctx.cancelCast(target);
     } else if (
       target.castingAbility &&
@@ -1189,6 +1193,22 @@ export function dealDamage(
       ) {
         ctx.pushbackCast(target);
       }
+    }
+
+    // MIR4 auto-retaliation is the ordinary one-target attack contract. A
+    // landed direct hostile attack captures its source without enabling Auto
+    // Battle; an existing focused fight remains authoritative and no new target
+    // is acquired after this aggressor dies. Run after fragile-cast cancellation
+    // so collection can be interrupted and the defensive response armed in the
+    // same authoritative damage transaction.
+    if (
+      ctx.gameProfile === MIR4_GAME_PROFILE &&
+      source &&
+      direct &&
+      tookDamage &&
+      (kind === 'hit' || kind === 'block')
+    ) {
+      retaliateMir4TargetCombat(ctx, target.id, source.id);
     }
   }
 
@@ -1558,6 +1578,9 @@ export function handleDeath(
           template?.respawnWindow ? (min, max) => ctx.rng.range(min, max) : null,
           ctx.cfg.world?.zones,
         );
+    if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+      e.respawnTimer = mir4MonsterRespawnSeconds(e.respawnTimer);
+    }
     // A fixed respawn also caps corpse decay so the mob returns on schedule whether
     // or not its loot was looted (training dummy: 10s). MIR4's dense hunting
     // grounds use the same rule for their short per-zone cadence: an untouched
@@ -1752,7 +1775,17 @@ export function handleDeath(
                 mir4ArcMobTemplate(e.templateId)?.mir4XpReward ??
                 0)
             : Math.round((mobXpValue(e.level, mE.level) * eliteMult * bonus) / eligible.length);
-        if (xpGain > 0) grantXp(ctx, xpGain, member, { fromKill: true });
+        if (xpGain > 0) {
+          if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+            grantMir4TrainingCombatMaterial(member, {
+              family: e.mobFamily,
+              elite: e.mobElite,
+              boss: e.mobBoss,
+              level: e.level,
+            });
+          }
+          grantXp(ctx, xpGain, member, { fromKill: true });
+        }
         ctx.onMobKilledForQuests(e, member);
         mir4CreditArcQuestKills(ctx, member, e.templateId, e);
       }
@@ -1787,6 +1820,9 @@ export function handleDeath(
       // World-boss deeds ride the same never-pruned contributor roster.
       deedsMod.onWorldBossKilledForDeeds(ctx, e, worldBossContribs);
     }
+    if (ctx.gameProfile === MIR4_GAME_PROFILE) {
+      settleMir4KillLoot(ctx, e, meta ?? null, template?.worldBoss === true);
+    }
   }
 }
 
@@ -1799,7 +1835,8 @@ export function grantXp(
   // The mir4 profile advances through the ported level table (BigInt-safe
   // reqExp) instead of the classic XP_TABLE loop; see src/sim/mir4/combat.ts.
   if (ctx.gameProfile === MIR4_GAME_PROFILE) {
-    grantMir4Xp(ctx, amount, meta);
+    if (opts?.fromKill) grantMir4KnowledgeFragment(meta);
+    grantMir4Xp(ctx, amount, meta, opts?.fromKill ? 'hunting' : 'reward');
     return;
   }
   const p = ctx.entities.get(meta.entityId);

@@ -7,6 +7,8 @@ import { mir4LevelRow } from '../sim/content/mir4';
 import type { Mir4ClassId } from '../sim/content/mir4/classes';
 import { MIR4_WORLD_ARC } from '../sim/content/mir4/world_arc';
 import { mir4ActionAbilities } from '../sim/mir4/action_abilities';
+import { sanitizeMir4DisabledAutoSkills } from '../sim/mir4/auto_skills';
+import { type Mir4CodexState, sanitizeMir4CodexState } from '../sim/mir4/codex';
 import {
   type Mir4NarrativeDialogueState,
   sanitizeMir4NarrativeDialogue,
@@ -46,6 +48,19 @@ export function decodeMir4Snapshot(value: unknown): Mir4SnapshotState | null {
   if (Object.hasOwn(value, 'mir4NarrativeDialogue') && !narrativeDialogue) {
     return null;
   }
+  if (Object.hasOwn(value, 'mir4DisabledAutoSkills')) {
+    if (!Array.isArray(value.mir4DisabledAutoSkills)) return null;
+    const disabledAutoSkills = new Set(
+      sanitizeMir4DisabledAutoSkills(value.mir4DisabledAutoSkills, value.classId) ?? [],
+    );
+    if (
+      value.mir4DisabledAutoSkills.some(
+        (skillId) => !Number.isSafeInteger(skillId) || !disabledAutoSkills.has(skillId as number),
+      )
+    ) {
+      return null;
+    }
+  }
   return {
     classId: value.classId,
     ...(typeof value.fullCampaignAvailable === 'boolean'
@@ -77,17 +92,39 @@ export function applyMir4SnapshotDelta(
 ): Mir4SnapshotState | null {
   const decoded = decodeMir4Snapshot(value);
   if (!decoded) return previous ? { ...previous, playerLevel: entity.level } : previous;
+  const next: Mir4SnapshotState = {
+    ...decoded,
+    ...(previous?.mir4Codex ? { mir4Codex: previous.mir4Codex } : {}),
+    playerLevel: entity.level,
+  };
   entity.mir4UltGauge = decoded.ultimateGauge;
+  recalcMir4SnapshotPlayerStats(entity, next);
+  return next;
+}
+
+/** Rebuilds the client Entity from the fully merged aggregate + dedicated Codex deltas. */
+export function recalcMir4SnapshotPlayerStats(entity: Entity, snapshot: Mir4SnapshotState): void {
   recalcMir4PlayerStats(
     entity,
-    mir4ClassKeyForId(decoded.classId),
+    mir4ClassKeyForId(snapshot.classId),
     entity.level,
-    decoded.mir4Equipment,
-    decoded.mir4EquipmentInstances,
-    decoded.mir4Spirits,
-    decoded.mir4Mounts,
+    snapshot.mir4Equipment,
+    snapshot.mir4EquipmentInstances,
+    snapshot.mir4Spirits,
+    snapshot.mir4Mounts,
+    snapshot.mir4Codex,
+    snapshot.mir4ArcRewards?.items,
+    snapshot.mir4Training,
   );
-  return { ...decoded, playerLevel: entity.level };
+}
+
+export function applyMir4CodexSnapshotDelta(
+  value: unknown,
+  previous: Mir4CodexState | undefined,
+): Mir4CodexState | undefined {
+  if (value === undefined) return previous;
+  if (value === null) return undefined;
+  return sanitizeMir4CodexState(value) ?? previous;
 }
 
 export function mir4SnapshotActionAbilities(

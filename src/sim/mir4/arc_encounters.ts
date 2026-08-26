@@ -5,7 +5,7 @@
 import { resolvePosition } from '../colliders';
 import { mir4ArcQuest } from '../content/mir4/arc_campaign';
 import { mir4ArcNormalXp } from '../content/mir4/arc_mobs';
-import { mir4MobStats } from '../content/mir4/mobs';
+import { mir4MobTemplateProgression } from '../content/mir4/mobs';
 import { MIR4_WORLD_ARC_BY_MAP } from '../content/mir4/world_arc';
 import { createMob } from '../entity';
 import { PLAYER_BODY_RADIUS } from '../pathfind';
@@ -14,7 +14,12 @@ import type { MobTemplate } from '../types';
 import { mir4ArcQuestDropForPlayer, mir4ArcStageAnchor } from './arc_quest_runtime';
 import { mir4OrderedArcProgress, mir4QuestCurrentStage } from './arc_quests';
 import { type Mir4ArcEncounterRun, releaseMir4RuntimeMobTemplate } from './arc_runtime_state';
-import { MIR4_ARC_COMBAT_STAGE_KINDS, MIR4_ARC_SHORT_DUNGEON_STAGE_KINDS } from './arc_stage_kinds';
+import {
+  MIR4_ARC_COMBAT_STAGE_KINDS,
+  MIR4_ARC_SHORT_DUNGEON_STAGE_KINDS,
+  mir4ArcEncounterGrade,
+  mir4ArcEncounterXpMultiplier,
+} from './arc_stage_kinds';
 import { mir4ArcTargetSlug } from './arc_target_identity';
 
 const SPAWN_DISTANCE = 46;
@@ -24,9 +29,9 @@ export function stageMobSource(
   progress: number,
 ): string | null {
   if (!stage) return null;
-  if (stage.guardian) return stage.guardian;
   if (stage.sources && stage.sources.length > 0)
-    return stage.sources[progress % stage.sources.length]!;
+    return stage.sources[progress % stage.sources.length] ?? null;
+  if (stage.guardian) return stage.guardian;
   const target = Array.isArray(stage.target)
     ? stage.target[progress % stage.target.length]
     : stage.target;
@@ -43,35 +48,37 @@ export function encounterTemplate(
   const quest = mir4ArcQuest(questId);
   const map = quest ? MIR4_WORLD_ARC_BY_MAP.get(quest.mapId) : undefined;
   if (!quest || !map) return null;
+  const stage = quest.stages[stageIndex];
   const id = `mir4_quest_${questId.toLowerCase()}_${stageIndex}_${progress}_${mir4ArcTargetSlug(source)}`;
-  const lo = mir4MobStats(map.levelMin);
-  const hi = mir4MobStats(map.levelMax);
+  const grade = mir4ArcEncounterGrade(stage, boss);
+  const bossEncounter = grade === 'guardian';
+  const elite = grade === 'veteran';
+  const progressionStats = mir4MobTemplateProgression(map.levelMin, map.levelMax, grade, elite);
+  const normalXp = mir4ArcNormalXp(map.sequence);
   return {
     id,
     name: source.replace(/_/g, ' '),
     minLevel: map.levelMin,
     maxLevel: map.levelMax,
     family: source.includes('wolf') || source.includes('boar') ? 'beast' : 'humanoid',
-    hpBase: lo.maxHp,
-    hpPerLevel: Math.max(
-      1,
-      Math.round((hi.maxHp - lo.maxHp) / Math.max(1, map.levelMax - map.levelMin)),
-    ),
-    dmgBase: lo.attack,
-    dmgPerLevel: Math.max(
-      1,
-      Math.round((hi.attack - lo.attack) / Math.max(1, map.levelMax - map.levelMin)),
-    ),
+    hpBase: progressionStats.hpBase,
+    hpPerLevel: progressionStats.hpPerLevel,
+    dmgBase: progressionStats.dmgBase,
+    dmgPerLevel: progressionStats.dmgPerLevel,
+    statAnchorLevel: progressionStats.statAnchorLevel,
     attackSpeed: 2,
     armorPerLevel: 0,
     moveSpeed: 3.5,
     aggroRadius: 9,
-    mir4XpReward: mir4ArcNormalXp(map.sequence),
+    // The original campaign model pays 5x for elites and 20x for bosses.
+    // MIR4 kill XP is flat per template, so encode the grade multiplier here
+    // instead of relying on the classic profile's elite multiplier.
+    mir4XpReward: normalXp * mir4ArcEncounterXpMultiplier(grade),
     loot: [{ copper: 2 + map.sequence, chance: 1 }],
-    boss,
-    mir4BossDamageReductionBps: boss ? 250 : 0,
-    elite: source.includes(' ') || source.includes('guardian') || source.includes('matriarch'),
-    scale: source.includes(' ') ? 1.25 : 1,
+    boss: bossEncounter,
+    mir4BossDamageReductionBps: bossEncounter ? 250 : 0,
+    elite,
+    scale: bossEncounter || elite ? 1.25 : 1,
     color: 0x7a6c5d,
   };
 }
@@ -129,6 +136,13 @@ export function updateMir4ArcEncounters(ctx: SimContext): void {
       if (existing) {
         const entity = ctx.entities.get(existing.entityId);
         if (entity && !entity.dead) continue;
+        // A survival stage owns one guardian per uninterrupted attempt. Once
+        // defeated, retain the run marker until the stage ends; recreating a
+        // full boss every tick turned the 90-second hold into an infinite boss
+        // farm and made the authored level range impossible. Player death
+        // removes this key from activeKeys, so a genuine retry still receives
+        // a fresh threat after resurrection.
+        if (stage.kind === 'survive-zone') continue;
         if (entity) {
           const templateId = entity.templateId;
           ctx.dropEntity(entity.id);

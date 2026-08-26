@@ -13,6 +13,7 @@ import { addSoulFragments } from '../src/sim/combat/necromancy';
 import { buildMir4ArcWorld } from '../src/sim/content/mir4/arc_world';
 import { CLASSES, MOBS, QUEST_ORDER } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
 import { upgradeMir4Skill } from '../src/sim/mir4/skill_evolution';
 import { ACTIONS, applyAction, encodeObs, NUM_ACTIONS, obsSize } from '../src/sim/obs';
 import { grantDevotion } from '../src/sim/paladin_devotion';
@@ -164,7 +165,7 @@ describe('headless environment protocol validation', () => {
 
     const obs = encodeObs(sim);
     const readyIndex = 16 + slot * 2;
-    const questStart = obsSize() - 7 - QUEST_ORDER.length * 2;
+    const questStart = obsSize() - 17 - QUEST_ORDER.length * 2;
     expect(obs).toHaveLength(obsSize());
     expect(obs[2]).toBe(1);
     expect(obs[3]).toBe(1);
@@ -213,16 +214,55 @@ describe('headless environment protocol validation', () => {
     applyAction(sim, claimGrade2);
     expect(meta.mir4AchievementClears).toEqual({ 201: 2 });
     expect(meta.copper).toBe(3_200);
-    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000 });
-    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 3 });
+    expect(meta.mir4Currencies).toEqual({ darksteel: 1_000, energy: 0 });
+    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 0 });
+    expect(meta.mir4Materials?.knowledgeTomeCommon).toBe(1);
 
     const claimedObs = encodeObs(sim);
-    const achievementObs = claimedObs.slice(-7, -4);
+    const achievementObs = claimedObs.slice(-17, -14);
     expect(achievementObs).toEqual([1, 1, 1]);
-    expect(claimedObs.at(-1)).toBe(1);
+    expect(claimedObs.at(-11)).toBe(0);
+    expect(claimedObs.at(-9)).toBeCloseTo(0.1);
 
     expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1102, 1).ok).toBe(true);
-    expect(encodeObs(sim).at(-1)).toBe(0);
+    const upgradedObs = encodeObs(sim);
+    expect(upgradedObs.at(-11)).toBe(0);
+    expect(upgradedObs.at(-9)).toBe(0);
+    expect(upgradedObs.at(-5)).toBeCloseTo(2 / 15);
+  });
+
+  it('lets headless bots craft the tome chain and upgrade each unlocked skill slot', () => {
+    const sim = new Sim({
+      seed: 24,
+      playerClass: 'warrior',
+      playerClassMir4: 'warrior',
+      gameProfile: 'mir4-gameplay-port',
+      world: buildMir4ArcWorld(),
+    });
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4Materials = {
+      ...MIR4_EMPTY_MATERIALS,
+      sunStone: 0,
+      moonStone: 0,
+      solarScroll: 0,
+      lunarSeal: 0,
+      dawnTear: 0,
+      solarWard: 0,
+      knowledgeFragment: 5,
+      knowledgeTomeCommon: 0,
+      knowledgeTomeRare: 0,
+      knowledgeTomeEpic: 0,
+      knowledgeTomeLegendary: 0,
+    };
+
+    applyAction(sim, ACTIONS.indexOf('craft_knowledge_common'));
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(1);
+    applyAction(sim, ACTIONS.indexOf('upgrade_skill_1'));
+    expect(meta.mir4SkillLevels?.[1102]).toBe(2);
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(0);
+
+    applyAction(sim, ACTIONS.indexOf('upgrade_skill_2'));
+    expect(meta.mir4SkillLevels?.[1104]).toBeUndefined();
   });
 
   it('sizes the action space to the largest class kit so every class is castable', () => {
@@ -236,9 +276,9 @@ describe('headless environment protocol validation', () => {
     for (const cls of ALL_CLASSES) {
       expect(CLASSES[cls].abilities.length).toBeLessThanOrEqual(abilitySlots);
     }
-    // 15 fixed actions (10 move/target + interact/stop/eat_drink + 2 MIR4 claims)
+    // 24 fixed actions (the original 15 plus 4 knowledge crafts + 5 skill upgrades)
     // plus the ability slots.
-    expect(NUM_ACTIONS).toBe(15 + abilitySlots);
+    expect(NUM_ACTIONS).toBe(24 + abilitySlots);
   });
 
   it('observes Devotion, Ascension, and the real Divine Ascension readiness gate', () => {
@@ -250,18 +290,18 @@ describe('headless environment protocol validation', () => {
     const readyIndex = 16 + slot * 2;
 
     expect(encodeObs(sim)[readyIndex]).toBe(0);
-    expect(encodeObs(sim).slice(-4, -1)).toEqual([0, 0, 0]);
+    expect(encodeObs(sim).slice(-14, -11)).toEqual([0, 0, 0]);
 
     grantDevotion(sim.player, 20);
     expect(encodeObs(sim)[readyIndex]).toBe(1);
-    expect(encodeObs(sim).slice(-4, -1)).toEqual([1, 0, 0]);
+    expect(encodeObs(sim).slice(-14, -11)).toEqual([1, 0, 0]);
 
     sim.castAbility('divine_ascension');
     expect(encodeObs(sim)[readyIndex]).toBe(0);
-    expect(encodeObs(sim).slice(-4, -1)).toEqual([0, 1, 1]);
+    expect(encodeObs(sim).slice(-14, -11)).toEqual([0, 1, 1]);
 
     const warrior = new Sim({ seed: 18, playerClass: 'warrior', autoEquip: true });
-    expect(encodeObs(warrior).slice(-4, -1)).toEqual([0, 0, 0]);
+    expect(encodeObs(warrior).slice(-14, -11)).toEqual([0, 0, 0]);
   });
 
   it('marks a Necromancy spender ready only when enough Soul Fragments exist', () => {

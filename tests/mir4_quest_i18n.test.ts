@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mir4ArcQuest } from '../src/sim/content/mir4/arc_campaign';
+import {
+  MIR4_QUESTS_ARC,
+  mir4ArcNpcIdentity,
+  mir4ArcQuest,
+} from '../src/sim/content/mir4/arc_campaign';
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
 import {
   mir4NoticeboardMessage,
@@ -62,7 +66,22 @@ describe('MIR4 campaign quest localization', () => {
         kind: 'return-giver',
         ready: true,
       }),
-    ).toBe('Return to the campaign contact: Ilyra da Centelha');
+    ).toBe('Return to Ilyra da Centelha');
+  });
+
+  it('always names the canonical turn-in NPC for authored main and side quests', () => {
+    for (const quest of MIR4_QUESTS_ARC.filter((candidate) => candidate.group !== 'repeatable')) {
+      const contact = mir4ArcNpcIdentity(quest.turnInNpcId);
+      expect(contact, quest.questId).toBeDefined();
+      const displayedName = mir4QuestTurnInName(quest.questId);
+      const label = mir4QuestObjectiveLabel({
+        questId: quest.questId,
+        kind: 'campaign-stage',
+        ready: true,
+      });
+      expect(label, quest.questId).toContain(displayedName);
+      expect(label, quest.questId).not.toContain('campaign contact');
+    }
   });
 
   it('builds noticeboard feedback from the canonical quest title', () => {
@@ -95,5 +114,23 @@ describe('MIR4 campaign quest localization', () => {
         ready: false,
       }),
     ).toBe(quest.stages[3]!.text);
+  });
+
+  it('names the exact place and objects used by the Vila do Vau oath', () => {
+    const quest = mir4ArcQuest('M01-S03');
+    expect(
+      mir4QuestObjectiveLabel({
+        questId: 'M01-S03',
+        kind: 'campaign-stage',
+        stageKind: 'prepare-civilians',
+        stageIndex: 1,
+        ready: false,
+      }),
+    ).toBe(
+      'Vá à Ponte das Sete Marcas e prepare as 3 caixas de suprimentos civis marcadas, uma de cada vez.',
+    );
+    expect(quest?.dialogue[0]).toBe(
+      'Maela do Vau: Leve mantimentos à Ponte das Sete Marcas. Prepare as três caixas marcadas, uma de cada vez, antes de assumir a defesa.',
+    );
   });
 });

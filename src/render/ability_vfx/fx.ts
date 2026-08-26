@@ -1041,9 +1041,9 @@ export class AbilityVfxFx implements SequencerHost {
   }
 
   // Held barrier shell, refreshed per frame while the barrier aura lives.
-  holdShell(entityId: number, colorHex: number): void {
+  holdShell(entityId: number, colorHex: number, priority = false): void {
     if (this.disposed) return;
-    this.shells.hold(entityId, colorHex, this.frame);
+    this.shells.hold(entityId, colorHex, this.frame, priority);
   }
 
   // Held under-character ground aura (the default buff read), refreshed per

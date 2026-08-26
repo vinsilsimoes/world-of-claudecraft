@@ -3,31 +3,14 @@
 // source COMBATPOINT table: sum effective STATUS * class weight, then divide
 // by 10,000. The projection contains no host or UI state.
 
-import { mir4LevelRow } from '../content/mir4';
 import type { Mir4ClassId } from '../content/mir4/classes';
-import { aggregateMir4PassiveBonuses } from '../content/mir4/passives';
+import type { Mir4CodexState } from './codex';
 import type { Mir4Equipment, Mir4EquipmentInstanceState } from './equipment';
-import { mir4EquippedAttributes } from './equipment';
-import { type Mir4MountState, mir4MountBonuses } from './mounts';
-import { type Mir4SpiritState, mir4SpiritBonuses } from './spirits';
-
-const LEVEL_STATUS_COLUMNS = {
-  1: 3,
-  6: 4,
-  19: 20,
-  20: 5,
-  22: 6,
-  24: 7,
-  26: 8,
-  28: 9,
-  29: 10,
-  30: 11,
-  31: 12,
-  32: 13,
-  38: 16,
-  41: 14,
-  43: 15,
-} as const;
+import type { Mir4MountState } from './mounts';
+import type { Mir4SpiritState } from './spirits';
+import { aggregateMir4CharacterStatuses } from './status_aggregation';
+import type { Mir4StatusRecord } from './status_values';
+import type { Mir4TrainingState } from './training';
 
 const COMMON_COMBAT_POWER_WEIGHTS = new Map<number, number>([
   [1, 3_000],
@@ -63,10 +46,16 @@ const MAGIC_WEIGHTS: Readonly<Record<Mir4ClassId, number>> = {
   5: 30_000,
 };
 
-/** Statuses whose effective values currently drive live MIR4 combat. */
-export const MIR4_RUNTIME_STATUS_IDS = new Set([1, 6, 20, 22, 24, 26, 28, 29, 30, 31, 32, 41, 44]);
+/** Statuses whose effective values currently drive a live runtime system. */
+export const MIR4_RUNTIME_STATUS_IDS = new Set([
+  1, 3, 4, 5, 6, 8, 9, 10, 18, 19, 20, 22, 24, 26, 28, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42, 43,
+  44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 77, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 91, 92, 93,
+  94, 95, 97, 110, 111, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133,
+  134, 135, 136, 143, 146, 147, 148, 149, 153, 154, 155, 159, 160, 161,
+]);
 
 export interface Mir4DerivedPlayerStats {
+  statusValues: Mir4StatusRecord;
   maxHp: number;
   maxMana: number;
   physicalAttack: number;
@@ -79,7 +68,17 @@ export interface Mir4DerivedPlayerStats {
   avoidCritical: number;
   criticalOutcome: number;
   bossDamageBps: number;
+  bossDamageReductionBps: number;
+  pvpDamageBps: number;
+  pvpDamageReductionBps: number;
+  monsterDamageBps: number;
+  monsterDamageReductionBps: number;
   skillDamageBps: number;
+  skillDamageReductionBps: number;
+  allDamageBps: number;
+  allDamageReductionBps: number;
+  stunSuccessBps: number;
+  stunResistanceBps: number;
   manaCost: number;
   penetrationBps: number;
   mountMoveSpeedBps: number;
@@ -108,33 +107,25 @@ export function deriveMir4PlayerStats(
   instances?: Record<number, Mir4EquipmentInstanceState>,
   spirits?: Mir4SpiritState,
   mounts?: Mir4MountState,
+  codex?: Mir4CodexState,
+  rewardItems?: Record<string, number>,
+  training?: Mir4TrainingState,
 ): Mir4DerivedPlayerStats {
-  const row = mir4LevelRow(classId, level);
-  if (!row) throw new Error(`mir4 level row missing for class ${classId} level ${level}`);
-  const values = new Map<number, number>();
-  for (const [rawStatusId, column] of Object.entries(LEVEL_STATUS_COLUMNS)) {
-    values.set(Number(rawStatusId), Number(row[column] ?? 0));
-  }
-  for (const [statusId, value] of mir4EquippedAttributes(equipment, instances)) {
-    values.set(statusId, (values.get(statusId) ?? 0) + value);
-  }
-  const spirit = mir4SpiritBonuses(spirits);
-  values.set(20, (values.get(20) ?? 0) + spirit.physicalAttack);
-  values.set(22, (values.get(22) ?? 0) + spirit.magicAttack);
-  values.set(24, (values.get(24) ?? 0) + spirit.physicalDefense);
-  values.set(26, (values.get(26) ?? 0) + spirit.magicDefense);
-  values.set(28, (values.get(28) ?? 0) + spirit.accuracy);
-  values.set(30, (values.get(30) ?? 0) + spirit.critical);
-  const mount = mir4MountBonuses(mounts);
-  values.set(24, (values.get(24) ?? 0) + mount.physicalDefense);
-  values.set(26, (values.get(26) ?? 0) + mount.magicDefense);
-  for (const [statusId, bps] of aggregateMir4PassiveBonuses(classId, level)) {
-    const current = values.get(statusId) ?? 0;
-    if (bps > 0 && current > 0)
-      values.set(statusId, current + Math.floor((current * bps) / 10_000));
-  }
+  const aggregated = aggregateMir4CharacterStatuses({
+    classId,
+    level,
+    equipment,
+    instances,
+    spirits,
+    mounts,
+    codex,
+    rewardItems,
+    training,
+  });
+  const values = aggregated.values;
   const get = (statusId: number) => values.get(statusId) ?? 0;
   return {
+    statusValues: Object.freeze(Object.fromEntries(values)),
     maxHp: get(1),
     maxMana: get(6),
     physicalAttack: get(20),
@@ -147,11 +138,21 @@ export function deriveMir4PlayerStats(
     avoidCritical: get(31),
     criticalOutcome: get(32),
     bossDamageBps: get(41),
+    bossDamageReductionBps: get(43),
+    pvpDamageBps: get(38),
+    pvpDamageReductionBps: get(39),
+    monsterDamageBps: get(40),
+    monsterDamageReductionBps: get(42),
     skillDamageBps: get(44),
+    skillDamageReductionBps: get(45),
+    allDamageBps: get(46),
+    allDamageReductionBps: get(47),
+    stunSuccessBps: get(48),
+    stunResistanceBps: get(49),
     manaCost: get(19),
-    penetrationBps: spirit.penetrationBps,
-    mountMoveSpeedBps: mount.moveSpeedBps,
-    mountBasicAttackSpeedBps: mount.basicAttackSpeedBps,
+    penetrationBps: aggregated.penetrationBps,
+    mountMoveSpeedBps: aggregated.mountMoveSpeedBps,
+    mountBasicAttackSpeedBps: aggregated.mountBasicAttackSpeedBps,
     combatPower: combatPower(classId, values),
   };
 }

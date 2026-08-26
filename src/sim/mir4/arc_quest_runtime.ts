@@ -23,6 +23,7 @@ import { completeGatherCast } from '../professions/gathering';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
 import { dist2d, type Entity, type Mir4ArcMapProjection } from '../types';
+import { spreadMir4ObjectiveAnchors } from './arc_objective_spread';
 import {
   MIR4_ARC_OBJECTIVE_TEMPLATE_PREFIX,
   MIR4_ARC_QUEST_DROP_TEMPLATE_PREFIX,
@@ -33,6 +34,7 @@ import {
 import {
   type Mir4ArcQuestProgress,
   mir4ApplyPlayerQuestEvidence,
+  mir4ArcStageGoal,
   mir4NextMainQuest,
   mir4OrderedArcProgress,
   mir4QuestCurrentStage,
@@ -40,23 +42,30 @@ import {
 import {
   ensureMir4ArcEquipmentMilestones,
   ensureMir4ArcTutorialGrants,
+  ensureMir4ArcXpLedger,
   grantMir4ArcAcceptGrants,
   grantMir4ArcLogicalItem,
   grantMir4ArcQuestRewards,
   spendMir4ArcLogicalItems,
 } from './arc_rewards';
 import { MIR4_ARC_INTERACT_STAGE_KINDS, MIR4_ARC_POSITION_STAGE_KINDS } from './arc_stage_kinds';
+import { refreshMir4CodexDerivedStats } from './codex';
+import { completeMir4EnergyCast } from './energy';
 import {
-  MIR4_QUEST_OBJECTIVE_CAST_ID,
-  MIR4_QUEST_OBJECTIVE_CAST_SECONDS,
   mir4QuestObjectiveCastNodeId,
+  mir4QuestObjectiveCastSeconds,
   mir4QuestObjectiveEntityIdFromCast,
+  startMir4FragileGatherCast,
 } from './quest_objective_cast';
 import { markMir4WireDirty } from './wire_revision';
 
-export { MIR4_QUEST_OBJECTIVE_CAST_SECONDS } from './quest_objective_cast';
+export {
+  MIR4_QUEST_INTERACTION_CAST_SECONDS,
+  MIR4_QUEST_OBJECTIVE_CAST_SECONDS,
+} from './quest_objective_cast';
 
 export function completeMir4OrGatherCast(ctx: SimContext, player: Entity, meta: PlayerMeta): void {
+  if (completeMir4EnergyCast(ctx, player)) return;
   if (!completeMir4ArcObjectiveCast(ctx, player)) completeGatherCast(ctx, player, meta);
 }
 
@@ -122,6 +131,7 @@ function finishQuest(ctx: SimContext, meta: PlayerMeta, progress: Mir4ArcQuestPr
   const quest = mir4ArcQuest(progress.questId);
   if (!quest || progress.state !== 'ready') return;
   grantMir4ArcQuestRewards(ctx, meta, quest);
+  refreshMir4CodexDerivedStats(ctx, meta.entityId);
   progress.state = 'done';
   meta.counters.questsCompleted += 1;
   if (quest.group === 'repeatable' && ctx.utcDay) progress.completedDay = ctx.utcDay;
@@ -456,8 +466,7 @@ function handleMir4ArcQuestDropInteract(
   return false;
 }
 
-/** Freshly-authored 3D anchor; source map geometry is never read or copied. */
-export function mir4ArcStageAnchor(
+function mir4ArcStageRawAnchor(
   questId: string,
   stage: Readonly<Mir4ArcQuestStage>,
   objectiveIndex = 0,
@@ -470,6 +479,12 @@ export function mir4ArcStageAnchor(
   const site = quest ? mir4ArcQuestSite(quest.mapId, quest.order, quest.questId) : null;
   if (!quest || !site || typeof target !== 'string') return null;
   const stageIndex = quest.stages.indexOf(stage as Mir4ArcQuestStage);
+  const worldAuthored = projections
+    ?.find((projection) => projection.mapId === quest.mapId)
+    ?.objectiveAnchors?.find((plan) => plan.questId === questId && plan.stageIndex === stageIndex);
+  const worldPoint =
+    worldAuthored?.points[Math.min(objectiveIndex, worldAuthored.points.length - 1)];
+  if (worldPoint) return { x: worldPoint.x, z: worldPoint.z };
   if (quest.mapId === M02_TRILHA_DOS_JUNCOS_BLUEPRINT.mapId && stageIndex >= 0) {
     const authored = M02_TRILHA_DOS_JUNCOS_BLUEPRINT.objectiveAnchors.find(
       (plan) => plan.questId === questId && plan.stageIndex === stageIndex,
@@ -499,6 +514,30 @@ export function mir4ArcStageAnchor(
     x: site.pos.x + Math.sin(angle) * radius,
     z: site.pos.z + Math.cos(angle) * radius,
   });
+}
+
+/** Freshly-authored 3D anchor; source map geometry is never read or copied. */
+export function mir4ArcStageAnchor(
+  questId: string,
+  stage: Readonly<Mir4ArcQuestStage>,
+  objectiveIndex = 0,
+  projections?: readonly Mir4ArcMapProjection[],
+): { x: number; z: number } | null {
+  const raw = mir4ArcStageRawAnchor(questId, stage, objectiveIndex, projections);
+  const quest = mir4ArcQuest(questId);
+  const stageIndex = quest?.stages.indexOf(stage as Mir4ArcQuestStage) ?? -1;
+  const goal = mir4ArcStageGoal(stage as Mir4ArcQuestStage);
+  if (!raw || stageIndex < 0 || goal < 2 || !MIR4_ARC_INTERACT_STAGE_KINDS.has(stage.kind)) {
+    return raw;
+  }
+  const key = `${questId}:${stageIndex}:${goal}`;
+  const authored = Array.from({ length: goal }, (_, index) =>
+    mir4ArcStageRawAnchor(questId, stage, index, projections),
+  );
+  if (authored.some((point) => point === null)) return raw;
+  const anchors = spreadMir4ObjectiveAnchors(key, authored as readonly { x: number; z: number }[]);
+  const anchor = anchors[Math.min(Math.max(0, objectiveIndex), anchors.length - 1)];
+  return anchor ? { ...anchor } : raw;
 }
 
 /** Index used by both evidence and Auto Journey routing. Position objectives
@@ -606,32 +645,18 @@ export function mir4HandleArcObjectiveInteract(
     if (objectiveId !== undefined) ctx.error(pid, 'Too far away.');
     return false;
   }
-  ctx.breakStealth(player);
-  if (player.sitting) ctx.standUp(player);
-  // This is the native WoC gather-cast lane, so keep its mounted-state
-  // contract as well: collecting a physical quest object happens on foot and
-  // cancels an unfinished mount summon before the five-second bar begins.
-  if (player.mountKey !== '') ctx.forceDismount(player);
-  if (player.mountCastKey !== '') {
-    player.mountCastRemaining = 0;
-    player.mountCastKey = '';
+  let stageKind = mir4IsArcQuestDropEntity(objective) ? 'collect-quest-wallet' : '';
+  if (!stageKind) {
+    for (const progress of mir4OrderedArcProgress(meta.mir4ArcQuests)) {
+      const stage = mir4QuestCurrentStage(progress);
+      if (stage && objective.templateId === objectiveTemplateId(pid, progress, stage)) {
+        stageKind = stage.kind;
+        break;
+      }
+    }
   }
-  player.castingAbility = MIR4_QUEST_OBJECTIVE_CAST_ID;
-  player.castTotal = MIR4_QUEST_OBJECTIVE_CAST_SECONDS;
-  player.castRemaining = MIR4_QUEST_OBJECTIVE_CAST_SECONDS;
-  player.castTargetId = null;
-  player.channeling = false;
-  player.gatherCastNodeId = mir4QuestObjectiveCastNodeId(objective.id);
-  player.gatherCastToolRarity = '';
-  player.gatherCastEffectConfirmed = false;
-  player.queuedCastAbility = null;
-  player.queuedCastAim = null;
-  ctx.emit({
-    type: 'castStart',
-    entityId: player.id,
-    ability: MIR4_QUEST_OBJECTIVE_CAST_ID,
-    time: MIR4_QUEST_OBJECTIVE_CAST_SECONDS,
-  });
+  const castSeconds = mir4QuestObjectiveCastSeconds(stageKind);
+  startMir4FragileGatherCast(ctx, player, castSeconds, mir4QuestObjectiveCastNodeId(objective.id));
   return true;
 }
 
@@ -651,10 +676,32 @@ export function completeMir4ArcObjectiveCast(ctx: SimContext, player: Entity): b
 export function updateMir4ArcQuestTravel(ctx: SimContext): void {
   for (const meta of ctx.players.values()) {
     const player = ctx.entities.get(meta.entityId);
-    if (!player || player.dead) continue;
-    if (ensureMir4ArcTutorialGrants(ctx, meta) || ensureMir4ArcEquipmentMilestones(ctx, meta)) {
+    if (!player) continue;
+    if (player.dead) {
+      // Survive objectives measure one uninterrupted living hold. Retaining
+      // elapsed seconds through death lets repeated corpse runs eventually
+      // pass a strength check without ever surviving it.
+      for (const progress of mir4OrderedArcProgress(meta.mir4ArcQuests)) {
+        const stage = mir4QuestCurrentStage(progress);
+        if (
+          stage?.kind !== 'survive-zone' ||
+          (progress.stageProgress === 0 && progress.lastEvidenceAt === undefined)
+        ) {
+          continue;
+        }
+        progress.stageProgress = 0;
+        progress.lastEvidenceAt = undefined;
+        markMir4WireDirty(meta);
+      }
+      continue;
+    }
+    const xpLedgerChanged = ensureMir4ArcXpLedger(ctx, meta);
+    const tutorialGrantsChanged = ensureMir4ArcTutorialGrants(ctx, meta);
+    const equipmentMilestonesChanged = ensureMir4ArcEquipmentMilestones(ctx, meta);
+    if (xpLedgerChanged || tutorialGrantsChanged || equipmentMilestonesChanged) {
       markMir4WireDirty(meta);
     }
+    if (equipmentMilestonesChanged) refreshMir4CodexDerivedStats(ctx, meta.entityId);
     for (const progress of mir4OrderedArcProgress(meta.mir4ArcQuests)) {
       const stage = mir4QuestCurrentStage(progress);
       if (!stage || !MIR4_ARC_POSITION_STAGE_KINDS.has(stage.kind)) continue;

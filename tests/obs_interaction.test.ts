@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BUILTIN_WORLD, setActiveWorldContent } from '../src/sim/data';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { createGroundObject } from '../src/sim/entity';
+import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
 import { ACTIONS, applyAction, encodeObs } from '../src/sim/obs';
 import { Sim } from '../src/sim/sim';
 import { angleTo, dist2d, type Entity, INTERACT_RANGE, normAngle } from '../src/sim/types';
@@ -9,6 +10,7 @@ import { angleTo, dist2d, type Entity, INTERACT_RANGE, normAngle } from '../src/
 const SEED = 20_061;
 const ABILITY_SLOTS = ACTIONS.filter((action) => action.startsWith('ability_')).length;
 const INTERACTABLE_START = 16 + ABILITY_SLOTS * 2 + 9 + 5 * 6;
+const TARGET_START = 16 + ABILITY_SLOTS * 2;
 const EMPTY_INTERACTABLE = [0, 1.5, 0, 0, 0];
 const FRIENDLY_QUEST_ID = 'q_nythraxis_scourges_end';
 
@@ -110,6 +112,38 @@ afterEach(() => {
 });
 
 describe('RL interactable observation parity', () => {
+  it('observes a MIR4 marker-only body as target and interactable until the marker expires', () => {
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      gameProfile: MIR4_GAME_PROFILE,
+    });
+    const [corpse] = mobFixtures(sim, 'forest_wolf', 1);
+    corpse.dead = true;
+    corpse.hp = 0;
+    corpse.hostile = true;
+    corpse.lootable = false;
+    corpse.loot = null;
+    corpse.tappedById = sim.player.id;
+    corpse.harvestClaimedBy = null;
+    corpse.mir4CorpseVisible = true;
+    corpse.mir4CorpseTimer = 10;
+    moveTo(sim, corpse, { x: 35, z: 2 });
+    parkOtherInteractables(sim, corpse);
+    const player = standAt(sim, { x: 32, z: 0 });
+    player.targetId = corpse.id;
+
+    const active = encodeObs(sim);
+    expect(active[TARGET_START]).toBe(1);
+    expect(active[TARGET_START + 7]).toBe(1);
+    expectAdvertises(sim, corpse, 0.33);
+
+    corpse.mir4CorpseVisible = false;
+    const expired = encodeObs(sim);
+    expect(expired.slice(TARGET_START, TARGET_START + 9)).toEqual(Array(9).fill(0));
+    expect(interactableObs(sim)).toEqual(EMPTY_INTERACTABLE);
+  });
+
   it('advertises and loots the selected corpse through applyAction', () => {
     const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
     const [corpse] = mobFixtures(sim, 'forest_wolf', 1);

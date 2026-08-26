@@ -39,6 +39,7 @@ import { MOUNT_RACE_START_PLATFORM, type MountKey } from '../src/sim/content/mou
 import { COMBO_RECIPES } from '../src/sim/content/recipes';
 import { BUILTIN_WORLD, DELVES, GATHER_NODES, ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
 import { emptySaleLog } from '../src/sim/market_sale_log';
 import { MOUNT_RACE_COUNTDOWN_TICKS } from '../src/sim/mount_race';
 import { petOf, serializePet, summonPet } from '../src/sim/pet/pet_commands';
@@ -858,6 +859,36 @@ describe('loot FFA lapse over the wire', () => {
     const alive = createMob(9104, template, template.maxLevel, { x: 0, y: 0, z: 0 });
     alive.lootFfaTimer = 0;
     expect(wireEntity(alive)).not.toHaveProperty('ffa');
+  });
+});
+
+describe('MIR4 corpse presentation over the wire', () => {
+  it('mirrors the body marker independently from loot and clears it sparsely at expiry', () => {
+    const template = MOBS.forest_wolf;
+    const mob = createMob(9110, template, template.maxLevel, { x: 0, y: 0, z: 0 });
+    mob.dead = true;
+    mob.lootable = false;
+    mob.loot = null;
+    mob.mir4CorpseVisible = true;
+
+    const visibleWire = wireEntity(mob);
+    expect(visibleWire.mcv).toBe(1);
+    expect(visibleWire).not.toHaveProperty('loot');
+
+    const client = bareClient(1, {
+      cfg: { seed: 20061, playerClass: 'warrior', gameProfile: MIR4_GAME_PROFILE },
+    });
+    (client as any).applySnapshot({ t: 'snap', ents: [visibleWire] });
+    const mirrored = client.entities.get(mob.id);
+    if (!mirrored) throw new Error('missing mirrored MIR4 corpse');
+    expect(mirrored.mir4CorpseVisible).toBe(true);
+    expect(mirrored.lootable).toBe(false);
+
+    mob.mir4CorpseVisible = false;
+    const expiredWire = wireEntity(mob);
+    expect(expiredWire).not.toHaveProperty('mcv');
+    (client as any).applySnapshot({ t: 'snap', ents: [expiredWire] });
+    expect(client.entities.get(mob.id)?.mir4CorpseVisible).toBe(false);
   });
 });
 
@@ -4220,6 +4251,7 @@ const ALL_DELTA_KEYS = [
   'marks',
   'milestones',
   'mir4',
+  'mir4Codex',
   'mktU',
   'mloot',
   'mntLesson',
@@ -4258,7 +4290,9 @@ const ALL_DELTA_KEYS = [
  *  appearance) has none, so it stays sparse on the wire the way `eq`/`eqi` do
  *  on the entity record. `mir4` is profile-scoped and therefore absent from a
  *  classic session. Both have dedicated round-trip tests. */
-const DENSE_DELTA_KEYS = ALL_DELTA_KEYS.filter((key) => key !== 'app' && key !== 'mir4');
+const DENSE_DELTA_KEYS = ALL_DELTA_KEYS.filter(
+  (key) => key !== 'app' && key !== 'mir4' && key !== 'mir4Codex',
+);
 
 // The terse wire key -> IWorld member name rename map, in sorted order. The wire
 // string IS the protocol (contract #4): a terse key renamed on one side passes tsc
@@ -4750,7 +4784,9 @@ describe('full self-state snapshot delta fixture', () => {
     broadcast(server);
     const snap = lastSnap(fc.sent);
     expect(snap).not.toBeNull();
-    for (const key of ALL_DELTA_KEYS.filter((candidate) => candidate !== 'mir4')) {
+    for (const key of ALL_DELTA_KEYS.filter(
+      (candidate) => candidate !== 'mir4' && candidate !== 'mir4Codex',
+    )) {
       expect(snap.self, `self.${key} missing from first snapshot`).toHaveProperty(key);
       // each was dirtied to a non-default value, so none rides the wire as null
       expect(snap.self[key], `self.${key} arrived null`).not.toBeNull();
@@ -5171,7 +5207,7 @@ describe('gather node cooldown wire round trip (ncd)', () => {
 });
 
 describe('delta-key contract pins (anti-drift)', () => {
-  it('ALL_DELTA_KEYS contains exactly 87 unique keys in sorted order', () => {
+  it('ALL_DELTA_KEYS contains exactly 88 unique keys in sorted order', () => {
     // +1: guildBank (Guild Bank Phase 2), +1: the battleground bg key, +1: the
     // commission order board's corder key (issue #1298), +1: the character
     // sheet's lifetime played-time key ptime, for 67, then +16: the static
@@ -5183,12 +5219,13 @@ describe('delta-key contract pins (anti-drift)', () => {
     // modular look, which cannot come from the entity list because the
     // broadcast loop skips the viewer's own entity, and which is heavy and
     // immutable so it rides this channel instead of re-serializing per tick),
-    // for 86, plus the profile-scoped authoritative `mir4` state for 87. Every
+    // for 86, plus the profile-scoped authoritative `mir4` state for 87 and
+    // its separately revisioned `mir4Codex` state for 88. Every
     // v0.36.0 sync conflicts here because each side pins its own
     // additions alone; the merged tree carries all of them, and this number
     // came from a run on the merged tree.
-    expect(ALL_DELTA_KEYS).toHaveLength(87);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(87);
+    expect(ALL_DELTA_KEYS).toHaveLength(88);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(88);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -5219,8 +5256,9 @@ describe('delta-key contract pins (anti-drift)', () => {
     // (ap/sp/sh/crit/dodge/blk/bval/crat/hrat/hirat/xp/lxp/rxp/prk/copper/ddiff)
     // for 83, then reliq (Reliquary Phase 3 sparse blob) for 84, the nameplate
     // border echo aborder for 85, the authored modular look `app` for 86, and
-    // the profile-scoped authoritative MIR4 block for 87.
-    expect(scraped.size).toBe(87);
+    // the profile-scoped authoritative MIR4 block for 87 and its dedicated
+    // Codex delta for 88.
+    expect(scraped.size).toBe(88);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

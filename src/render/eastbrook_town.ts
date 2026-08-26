@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { BUILDING_TERRAIN_SAMPLE_STEP } from '../sim/building_layout';
-import { BUILTIN_WORLD, getActiveWorldContent } from '../sim/data';
+import { getActiveWorldContent } from '../sim/data';
 import { EASTBROOK_LAYOUT, localToWorld, wallSegmentMirrored } from '../sim/eastbrook_layout';
 import type { BuildingDef, ZonePropsDef } from '../sim/types';
 import { terrainHeight } from '../sim/world';
+import { usesBuiltinWorldPresentation } from '../sim/world_presentation';
 import { loadGltf, releaseGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
 import {
@@ -1067,7 +1068,7 @@ export function buildEastbrookTownView(seed: number): EastbrookTownView {
   // root stays isolated, while loader-owned decoded sources can be released and
   // a later same-page switch to the built-in world remains synchronous.
   if (loadedSources.size > 0) prepareTemplates(loadedSources, preparedTemplates, true);
-  if (getActiveWorldContent() !== BUILTIN_WORLD) {
+  if (!usesBuiltinWorldPresentation(getActiveWorldContent())) {
     return buildFromTemplates(preparedTemplates, () => 0, false, undefined);
   }
   prepareTemplates(loadedSources, preparedTemplates, true);

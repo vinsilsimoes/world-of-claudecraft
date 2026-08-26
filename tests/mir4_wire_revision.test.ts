@@ -6,6 +6,7 @@ import { tsFilesUnder } from './helpers/ts_files_under';
 
 const PERSISTED_FIELDS = [
   'autoBattle',
+  'mir4DisabledAutoSkills',
   'mir4Quests',
   'mir4ArcQuests',
   'mir4ArcRewards',
@@ -17,6 +18,7 @@ const PERSISTED_FIELDS = [
   'mir4Equipment',
   'mir4EquipmentInstances',
   'mir4Materials',
+  'mir4Training',
   'mir4Mounts',
   'mir4Spirits',
 ];
@@ -24,17 +26,26 @@ const PERSISTED_FIELDS = [
 const DIRECT_WRITER_MODULES = [
   'auto_battle/core.ts',
   'auto_quest/core.ts',
+  'dev/mir4_mount_playtest.ts',
+  'dev/mir4_spirit_playtest.ts',
   'mir4/achievements.ts',
   'mir4/affixes.ts',
   'mir4/arc_quest_runtime.ts',
   'mir4/arc_rewards.ts',
+  'mir4/auto_skills.ts',
+  'mir4/codex/runtime.ts',
   'mir4/crafting.ts',
+  'mir4/energy.ts',
   'mir4/equipment.ts',
   'mir4/mount_commands.ts',
   'mir4/persistence.ts',
   'mir4/quest.ts',
   'mir4/skill_evolution.ts',
+  'mir4/skill_materials.ts',
+  'mir4/solitude_training_commands.ts',
   'mir4/spirit_commands.ts',
+  'mir4/training_commands.ts',
+  'mir4/training_resources.ts',
 ];
 
 describe('MIR4 wire revision coverage', () => {

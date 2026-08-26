@@ -12,6 +12,8 @@ import {
   type Mir4EquipmentInstanceState,
   type Mir4Materials,
 } from '../sim/mir4/equipment';
+import { mir4ModifiedEnhancementChance } from '../sim/mir4/status_effects';
+import type { Mir4StatusRecord } from '../sim/mir4/status_values';
 import type { Mir4PlayerUiState } from '../sim/mir4/ui_state';
 import { buildMir4EquipmentItemView, type Mir4PaperdollItemView } from './mir4_character_view';
 
@@ -19,6 +21,7 @@ export type Mir4ProgressionTab = 'refinement' | 'enchantment' | 'blessing' | 'cr
 
 export interface Mir4ProgressionItemView {
   item: Mir4PaperdollItemView;
+  enhancementAttributes: readonly Mir4EnhancementAttributeView[];
   equipped: boolean;
   maxEnhancement: number;
   nextEnhancement: number | null;
@@ -30,6 +33,13 @@ export interface Mir4ProgressionItemView {
   enchantment: readonly (readonly [number, number])[];
   blessing: readonly (readonly [number, number])[];
   pending: NonNullable<Mir4EquipmentInstanceState['pendingRoll']> | null;
+}
+
+export interface Mir4EnhancementAttributeView {
+  statusId: number;
+  current: number;
+  next: number;
+  delta: number;
 }
 
 export interface Mir4CraftRecipeView {
@@ -62,6 +72,7 @@ export interface Mir4CampaignProfessionView {
 export function buildMir4ProgressionView(
   state: Readonly<Mir4PlayerUiState>,
   copper: number,
+  statuses?: Mir4StatusRecord,
 ): Mir4ProgressionView {
   const wallet = state.mir4Materials ?? MIR4_EMPTY_MATERIALS;
   const equipped = new Set(Object.values(state.mir4Equipment ?? {}));
@@ -72,13 +83,42 @@ export function buildMir4ProgressionView(
       if (!def) return null;
       const nextEnhancement =
         instance.enhancement < def.maxEnhancementLevel ? instance.enhancement + 1 : null;
+      const item = buildMir4EquipmentItemView(def, instance);
+      const nextItem =
+        nextEnhancement === null
+          ? null
+          : buildMir4EquipmentItemView(def, { ...instance, enhancement: nextEnhancement });
+      const nextAttributes = new Map(
+        (nextItem?.runtimeAttributes ?? item.runtimeAttributes).map((attribute) => [
+          attribute.statusId,
+          attribute.value,
+        ]),
+      );
+      const enhancementAttributes = item.runtimeAttributes
+        .map((attribute): Mir4EnhancementAttributeView => {
+          const next = nextAttributes.get(attribute.statusId) ?? attribute.value;
+          return {
+            statusId: attribute.statusId,
+            current: attribute.value,
+            next,
+            delta: next - attribute.value,
+          };
+        })
+        .filter((attribute) => attribute.delta > 0);
       return {
-        item: buildMir4EquipmentItemView(def, instance),
+        item,
+        enhancementAttributes,
         equipped: equipped.has(instance.itemId),
         maxEnhancement: def.maxEnhancementLevel,
         nextEnhancement,
         successBps:
-          nextEnhancement === null ? 0 : (MIR4_ENHANCEMENT_SUCCESS_BPS[nextEnhancement] ?? 100_000),
+          nextEnhancement === null
+            ? 0
+            : mir4ModifiedEnhancementChance(
+                MIR4_ENHANCEMENT_SUCCESS_BPS[nextEnhancement] ?? 100_000,
+                def.equipSlot,
+                statuses,
+              ),
         destroysOnFailure: nextEnhancement !== null && nextEnhancement > 5,
         wardAvailable: wallet.solarWard > 0,
         enchantable: def.enchantable,

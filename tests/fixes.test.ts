@@ -460,6 +460,19 @@ describe('swimming', () => {
     expect(sim.isSwimming(p)).toBe(true);
   });
 
+  it('automation movement carries a player through the same swimmable water', () => {
+    const sim = makeSim();
+    const p = sim.player;
+    teleportTo(sim, LAKE.x + 24, LAKE.z + 24);
+
+    for (let i = 0; i < 120; i++) {
+      asHarness(sim).moveToward(p, { x: LAKE.x, y: WATER_LEVEL, z: LAKE.z }, 7);
+    }
+
+    expect(groundHeight(p.pos.x, p.pos.z, SEED)).toBeLessThan(WATER_LEVEL - 0.8);
+    expect(p.pos.y).toBeGreaterThan(WATER_LEVEL - 1.0);
+  });
+
   it('ordinary mobs chase into deep water and keep dealing melee damage', () => {
     const sim = makeSim();
     const wolf = expectDefined(

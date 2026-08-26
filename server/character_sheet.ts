@@ -555,6 +555,9 @@ export function characterSheet(input: CharacterSheetInput): CharacterSheet {
         state.mir4EquipmentInstances,
         state.mir4Spirits,
         state.mir4Mounts,
+        state.mir4Codex,
+        state.mir4ArcRewards?.items,
+        state.mir4Training,
       );
       const mir4 = entity.mir4;
       if (!mir4) throw new Error(`missing MIR4 derived stats for ${cls}`);

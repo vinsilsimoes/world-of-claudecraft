@@ -299,7 +299,11 @@ describe('MIR4 authoritative campaign host', () => {
     updateMir4ArcQuestTravel(sim.ctx);
     updateMir4ArcQuestTravel(sim.ctx);
 
-    expect(meta.mir4ArcRewards?.items?.['991010101']).toBe(1);
+    expect(meta.mir4EquipmentInstances?.[991010101]).toEqual({
+      itemId: 991010101,
+      enhancement: 0,
+    });
+    expect(meta.mir4ArcRewards?.items?.['991010101']).toBeUndefined();
   });
 
   it('accepts the next main quest below its recommended level', () => {

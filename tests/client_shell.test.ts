@@ -892,10 +892,10 @@ describe('client HTML shell', () => {
       '<meta name="robots" content="index, follow, max-image-preview:large" />',
     );
     expect(html).toContain('<link rel="canonical" href="https://worldofclaudecraft.com/" />');
-    expect(html).toContain('<meta property="og:site_name" content="World of ClaudeCraft" />');
-    expect(html).toContain('"alternateName": "World of Claudecraft"');
+    expect(html).toContain('<meta property="og:site_name" content="Aeldrune" />');
+    expect(html).not.toContain('"alternateName"');
     expect(html).toContain('"https://github.com/levy-street/world-of-claudecraft"');
-    expect(mainTs).toContain("alternateName: 'World of Claudecraft'");
+    expect(mainTs).not.toContain('alternateName:');
     expect(mainTs).toContain("'https://github.com/levy-street/world-of-claudecraft'");
     expect(robotsTxt.trim()).toBe(
       'User-agent: *\nAllow: /\n\nSitemap: https://worldofclaudecraft.com/sitemap.xml\nSitemap: https://worldofclaudecraft.com/sitemap-characters.xml',
@@ -2585,6 +2585,23 @@ describe('client HTML shell', () => {
     expect(mobileControlsTs).toContain(
       "this.bindButton('mobile-menu-spellbook', () => this.callbacks.onSpellbook());",
     );
+    expect(mobileControlsTs).toContain(
+      "this.bindButton('mobile-spirit', () => this.callbacks.onSpirits());",
+    );
+    expect(mobileControlsTs).toContain(
+      "this.bindButton('mobile-mount-codex', () => this.callbacks.onMountCodex());",
+    );
+    expect(mainTs).toContain('onSpirits: () => hud.toggleMir4Spirits(),');
+    expect(mainTs).toContain('onMountCodex: () => hud.toggleMir4Mounts(),');
+    for (const entryHtml of [html, playHtml]) {
+      expect(entryHtml).toContain('id="mm-mount-codex"');
+      expect(entryHtml).toContain('id="mobile-mount-codex"');
+      expect(entryHtml).toContain('id="mount-sanctuary-window"');
+      expect(entryHtml).toContain('id="mm-spirit"');
+      expect(entryHtml).toContain('id="mobile-spirit"');
+      expect(entryHtml).toContain('id="mobile-auto-collect"');
+      expect(entryHtml).toContain('id="spirit-sanctuary-window"');
+    }
     expect(mobileControlsTs).toContain(
       // No default-action callback: the control opens its own row and runs no
       // action of its own, so the chat toggle moved to the strip's own seat.

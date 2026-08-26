@@ -1,4 +1,4 @@
-// World of ClaudeCraft Discord bot.
+// Aeldrune Discord bot.
 //
 // Two-way bridge between the game and the official Discord server:
 //  - IN DISCORD: /whoami shows your link status, /link the connect instructions;
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
 
   await discord.registerGuildCommands(cfg.clientId, cfg.guildId, [...SLASH_COMMANDS]);
 
-  // Resolve the status-tier role ids by name (WoC Initiate ... WoC Mythic).
+  // Resolve the status-tier role ids by name (Aeldrune Initiate ... Aeldrune Mythic).
   // tierRoleIds maps a 1-based rung index to its role id.
   const tierRoleIds = new Map<number, string>();
   const refreshTierRoles = async (): Promise<void> => {
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
     });
   };
 
-  // Auto-provision any missing WoC tier roles (needs MANAGE_ROLES). Idempotent:
+  // Auto-provision any missing Aeldrune tier roles (needs MANAGE_ROLES). Idempotent:
   // only creates the rungs not already present, then re-resolves the id map. If
   // the bot lacks permission this logs and the missing rungs are simply skipped.
   const ensureTierRoles = async (): Promise<void> => {
@@ -372,7 +372,7 @@ async function main(): Promise<void> {
             announced = true;
             void discord
               .createMessage(cfg.testChannelId, {
-                content: `:satellite: World of ClaudeCraft bot online and connected. Two-way sync active. Try \`/whoami\` or \`/link\`. Play at ${cfg.gameUrl}`,
+                content: `:satellite: Aeldrune bot online and connected. Two-way sync active. Try \`/whoami\` or \`/link\`. Play at ${cfg.gameUrl}`,
               })
               .catch((e) => console.error('[bot] startup announce failed', e));
           }
@@ -844,7 +844,7 @@ async function main(): Promise<void> {
   // the reconnect-storm path this phase cares about.
   scheduler.startAll();
   gateway.connect(false);
-  console.log('[bot] World of ClaudeCraft Discord bot started');
+  console.log('[bot] Aeldrune Discord bot started');
 }
 
 // ── small helpers ──────────────────────────────────────────────────────────────

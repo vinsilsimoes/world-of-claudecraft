@@ -43,6 +43,7 @@ export type FctKind =
   | 'xp'
   | 'rested-xp'
   | 'honor'
+  | 'loot'
   | 'self-note';
 
 /**
@@ -86,7 +87,11 @@ export type FctColorToken =
   | 'xp'
   | 'rested-xp'
   | 'honor'
+  | 'loot'
   | 'self-note';
+
+/** Visual lane discriminator. Loot uses a dedicated side feed; all other FCT stays centered. */
+export type FctLane = 'world' | 'loot';
 
 /**
  * The minimal entity shape the anchor is read from. Structural on purpose so the core
@@ -137,6 +142,10 @@ export interface FctDescriptor {
    * before the /z divide. Range: -FCT_JITTER_RANGE / 2 .. +FCT_JITTER_RANGE / 2.
    */
   readonly jitterOffset: number;
+  /** Dedicated presentation lane so reward text never competes with XP/combat feedback. */
+  readonly lane: FctLane;
+  /** Fixed horizontal screen-space displacement for the selected lane. */
+  readonly laneOffsetX: number;
   /** Lifetime in ms before the painter evicts the entry (the live setTimeout removal). */
   readonly ttlMs: number;
 }
@@ -154,6 +163,12 @@ export const FCT_TTL_MS = 1250;
  * actually legible instead of fading as fast as a damage tick.
  */
 export const FCT_XP_TTL_MS = 1800;
+/** Horizontal separation between the player-centered XP lane and the MIR4 loot feed. */
+export const FCT_LOOT_LANE_X_PX = 180;
+/** Vertical separation between simultaneous entries in the loot feed. */
+export const FCT_LOOT_LANE_GAP_PX = 34;
+/** Maximum simultaneous reward chips; newer drops replace the oldest beyond this bound. */
+export const FCT_LOOT_LANE_ROWS = 4;
 /** Head offset above the entity origin, scaled by entity scale. Live fct(): pos.y + 2.2 * scale. */
 export const FCT_ANCHOR_HEAD_OFFSET = 2.2;
 /**
@@ -166,6 +181,23 @@ export const FCT_ANCHOR_HEAD_OFFSET = 2.2;
  * rides the .fct.crit class.
  */
 export const FCT_RISE_PX = 76;
+
+/**
+ * Reduce the canonical monster-drop log line to the payload a compact reward chip needs.
+ * The caller owns localization because this core stays i18n-agnostic: item stacks and money
+ * are resolved before the text reaches the painter, while the full sentence remains in chat.
+ */
+export function compactLootFctText(
+  text: string,
+  localizeItemStack: (name: string, stackSuffix?: string) => string,
+  localizeMoney: (money: string) => string,
+): string | null {
+  let match = /^You receive: (.+?)( x\d+)?\.$/.exec(text);
+  if (match) return localizeItemStack(match[1], match[2]);
+  match = /^You loot (.+)\.$/.exec(text);
+  if (match) return `+${localizeMoney(match[1])}`;
+  return null;
+}
 
 function colorToken(kind: FctKind, isSelf: boolean): FctColorToken {
   switch (kind) {
@@ -211,12 +243,19 @@ export function blockFctAmountText(amount: number, crit: boolean, taken: boolean
 
 export function describeFct(event: FctEvent, jitter01: number): FctDescriptor {
   const { pos, scale } = event.target;
+  const lane: FctLane = event.kind === 'loot' ? 'loot' : 'world';
   return {
     text: event.text,
     colorToken: colorToken(event.kind, event.isSelf),
     crit: event.crit,
     anchor: { x: pos.x, y: pos.y + FCT_ANCHOR_HEAD_OFFSET * scale, z: pos.z },
-    jitterOffset: jitter01 * FCT_JITTER_RANGE - FCT_JITTER_RANGE / 2,
-    ttlMs: event.kind === 'xp' || event.kind === 'rested-xp' ? FCT_XP_TTL_MS : FCT_TTL_MS,
+    // A reward feed must line up as a readable stack. Combat retains its organic jitter.
+    jitterOffset: lane === 'loot' ? 0 : jitter01 * FCT_JITTER_RANGE - FCT_JITTER_RANGE / 2,
+    lane,
+    laneOffsetX: lane === 'loot' ? FCT_LOOT_LANE_X_PX : 0,
+    ttlMs:
+      event.kind === 'xp' || event.kind === 'rested-xp' || event.kind === 'loot'
+        ? FCT_XP_TTL_MS
+        : FCT_TTL_MS,
   };
 }

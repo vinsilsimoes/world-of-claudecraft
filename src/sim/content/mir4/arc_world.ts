@@ -25,12 +25,13 @@ import { M01_VILA_DO_VAU_BLUEPRINT } from './m01_vila_do_vau_world';
 import { M02_TRILHA_DOS_JUNCOS_BLUEPRINT } from './m02_trilha_dos_juncos_world';
 import { M03_BOSQUE_DO_VALE_BLUEPRINT } from './m03_bosque_do_vale_world';
 import { M04_RUINAS_DA_ENCOSTA_BLUEPRINT } from './m04_ruinas_da_encosta_world';
+import { MIR4_VILLAGE_GENERAL_GOODS } from './village_provisioner';
 import { MIR4_WORLD_ARC, type Mir4ArcMap } from './world_arc';
 
 export { mir4ArcNpcTemplateId } from './arc_campaign';
 export { MIR4_MAP_DEPTH, MIR4_MAP_WIDTH } from './arc_world_layout';
 
-// Four off-road positions around each hub. Keeping the contacts away from the
+// Five off-road positions around each hub. Keeping the contacts away from the
 // north/south travel lane prevents an NPC collider from becoming a fake route
 // obstruction while preserving a short, readable walk from the central plaza.
 const CAMPAIGN_NPC_HUB_SLOTS = [
@@ -38,7 +39,35 @@ const CAMPAIGN_NPC_HUB_SLOTS = [
   { x: -7, z: 13 },
   { x: 12, z: -9 },
   { x: -12, z: -9 },
+  { x: 0, z: -15 },
 ] as const;
+
+// One named field supplier per chapter. The campaign crosses remote and very
+// dangerous biomes, so healing and mana consumables cannot disappear after
+// the tutorial village. These are existing story NPCs placed on the normal
+// quest route, not synthetic shops or inventory grants.
+const CAMPAIGN_POTION_SUPPLIER_IDS = new Set([
+  'm01-vila-do-vau-sara-das-ervas',
+  'm02-trilha-dos-juncos-nara-dos-juncos',
+  'm03-bosque-do-vale-selene-folhavera',
+  'm04-ruinas-da-encosta-capita-maela',
+  'm05-clareira-da-fenda-guarda-lenna',
+  'm06-criptas-de-pedra-vela-prior-elian',
+  'm07-galerias-do-ossario-arquivista-nomes',
+  'm08-fortaleza-de-brumapedra-capitao-brum',
+  'm09-pantano-das-lanternas-guia-pavio',
+  'm10-charcos-do-rei-bog-chefe-tabua',
+  'm11-mangue-das-sanguessugas-mae-salina',
+  'm12-porto-dos-juncos-capita-cais',
+  'm13-dunas-de-vidro-matriarca-safira',
+  'm14-necropole-de-akhet-khemet-de-akhet',
+  'm15-caldeira-de-cinerita-comandante-cinza',
+  'm16-forja-do-sol-partido-capita-escoria',
+  'm17-tundra-dos-uivos-edda-aurora',
+  'm18-passo-do-jarl-astrid-aurora',
+  'm19-veu-da-noite-sigrid-aurora',
+  'm20-bastilha-do-eclipse-alva-aurora',
+]);
 
 export interface Mir4ArcBand extends Mir4ArcRegionLayout {}
 
@@ -470,7 +499,18 @@ export function buildMir4ArcWorld(maps: number = MIR4_AUTHORED_MAP_IDS.length): 
     const npcIds = [
       ...new Set(
         MIR4_QUESTS_ARC.filter((quest) => quest.mapId === map.mapId)
-          .flatMap((quest) => [quest.giverNpcId, quest.turnInNpcId])
+          .flatMap((quest) => [
+            quest.giverNpcId,
+            quest.turnInNpcId,
+            ...quest.stages.flatMap((stage) => {
+              if (stage.kind !== 'talk' && stage.kind !== 'deliver') return [];
+              return Array.isArray(stage.target)
+                ? [...stage.target]
+                : typeof stage.target === 'string'
+                  ? [stage.target]
+                  : [];
+            }),
+          ])
           .filter(Boolean),
       ),
     ];
@@ -517,6 +557,14 @@ export function buildMir4ArcWorld(maps: number = MIR4_AUTHORED_MAP_IDS.length): 
           authoredNpc?.facing ?? Math.atan2(band.hub.x - placement.x, band.hub.z - placement.z),
         color: 0x4f7f9f,
         questIds: [],
+        ...(CAMPAIGN_POTION_SUPPLIER_IDS.has(npcId)
+          ? {
+              vendorItems:
+                npcId === 'm01-vila-do-vau-sara-das-ervas'
+                  ? [...MIR4_VILLAGE_GENERAL_GOODS]
+                  : ['minor_healing_potion', 'minor_mana_potion'],
+            }
+          : {}),
         greeting: authoredNpc?.greeting ?? `${map.name}, Act ${map.act}.`,
       };
     }

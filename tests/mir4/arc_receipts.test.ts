@@ -9,6 +9,7 @@ import {
   type Mir4ArcTutorialReceipt,
 } from '../../src/sim/mir4/arc_receipts';
 import { redeemMir4CollectionTicket } from '../../src/sim/mir4/collection_tickets';
+import { MIR4_HP_POTION_HEAL_BPS } from '../../src/sim/mir4/combat';
 import { mir4Craft } from '../../src/sim/mir4/crafting';
 import { MIR4_EMPTY_MATERIALS, mir4Enhance } from '../../src/sim/mir4/equipment';
 import { equipMir4Mount } from '../../src/sim/mir4/mount_commands';
@@ -61,9 +62,67 @@ describe('MIR4 campaign gameplay receipts', () => {
       },
     };
     sim.addItem('minor_healing_potion', 1);
-    sim.player.hp -= 20;
+    sim.player.hp = Math.floor(sim.player.maxHp * 0.5);
+    const before = sim.player.hp;
     sim.useItem('minor_healing_potion');
     expect(meta.mir4ArcQuests['M01-Q02']?.stageIndex).toBe(4);
+    expect(sim.player.hp).toBe(
+      before + Math.floor((sim.player.maxHp * MIR4_HP_POTION_HEAL_BPS) / 10_000),
+    );
+    expect(sim.player.potionCooldownUntil - sim.time).toBe(1);
+  });
+
+  it('credits the potion tutorial when a full-health player tries its slotted potion', () => {
+    const sim = makeSim();
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4ArcQuests = {
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 3,
+        stageProgress: 0,
+        state: 'active',
+      },
+    };
+    sim.addItem('minor_healing_potion', 1);
+
+    expect(sim.player.hp).toBe(sim.player.maxHp);
+    sim.useItem('minor_healing_potion');
+
+    expect(meta.mir4ArcQuests['M01-Q02']?.stageIndex).toBe(4);
+    expect(sim.countItem('minor_healing_potion')).toBe(1);
+    expect(sim.player.potionCooldownUntil).toBeLessThanOrEqual(sim.time);
+  });
+
+  it('does not credit the potion tutorial for an unknown item', () => {
+    const sim = makeSim();
+    const progress = armTutorial(sim, 'M01-Q02');
+
+    sim.useItem('missing_potion');
+
+    expect(progress.stageIndex).toBe(3);
+  });
+
+  it('does not credit the potion tutorial without the health potion', () => {
+    const sim = makeSim();
+    const progress = armTutorial(sim, 'M01-Q02');
+
+    sim.useItem('minor_healing_potion');
+
+    expect(progress.stageIndex).toBe(3);
+  });
+
+  it('does not credit a full-health potion attempt while its cooldown is active', () => {
+    const sim = makeSim();
+    const progress = armTutorial(sim, 'M01-Q02');
+    sim.addItem('minor_healing_potion', 1);
+    const cooldownUntil = sim.time + 30;
+    sim.player.potionCooldownUntil = cooldownUntil;
+
+    sim.useItem('minor_healing_potion');
+
+    expect(progress.stageIndex).toBe(3);
+    expect(sim.countItem('minor_healing_potion')).toBe(1);
+    expect(sim.player.potionCooldownUntil).toBe(cooldownUntil);
   });
 
   it('waits for the exact +2 enhancement milestone before crediting its tutorial', () => {
@@ -175,9 +234,16 @@ describe('MIR4 campaign gameplay receipts', () => {
       systems: ['mount-summon'],
       tickets: { 'mount-ticket-dawn': 1 },
     };
+    const tutorialStageIndex = progress.stageIndex;
+    expect(equipMir4Mount(sim.ctx, sim.playerId, 'meadow-courser')).toEqual({
+      ok: false,
+      reason: 'not-owned',
+    });
+    expect(progress.stageIndex).toBe(tutorialStageIndex);
     const result = redeemMir4CollectionTicket(sim.ctx, sim.playerId, 'mount-ticket-dawn');
     expect(result.ok).toBe(true);
     if (!result.ok || !result.mountId) return;
+    expect(progress.stageIndex).toBe(tutorialStageIndex);
     expect(equipMir4Mount(sim.ctx, sim.playerId, result.mountId)).toMatchObject({
       ok: true,
       status: 'equipped',

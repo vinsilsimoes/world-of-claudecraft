@@ -1,6 +1,10 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { colliderInternalsForTest } from '../../src/sim/colliders';
-import { mir4ArcMobTemplate, mir4ArcNormalXp } from '../../src/sim/content/mir4/arc_mobs';
+import {
+  MIR4_ARC_NORMAL_XP,
+  mir4ArcMobTemplate,
+  mir4ArcNormalXp,
+} from '../../src/sim/content/mir4/arc_mobs';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
 import { MIR4_ARC_REGION_LAYOUTS } from '../../src/sim/content/mir4/arc_world_layout';
 import { MIR4_WORLD_ARC } from '../../src/sim/content/mir4/world_arc';
@@ -45,9 +49,16 @@ describe('arc mob templates', () => {
     expect(laterWolf?.mir4XpReward).toBe(mir4ArcNormalXp(4));
     expect(mir4ArcMobTemplate('mir4_owlbear_cub')?.name).toBe('Filhote de Urso-Coruja');
   });
-  it('XP scales with the map sequence (34 at m01)', () => {
-    expect(mir4ArcNormalXp(1)).toBe(34);
-    expect(mir4ArcNormalXp(20)).toBeGreaterThan(mir4ArcNormalXp(19));
+  it('preserves the original XP evidence and applies the live pacing curve', () => {
+    expect(MIR4_ARC_NORMAL_XP).toEqual([
+      34, 173, 687, 3_078, 12_958, 37_444, 132_290, 915_233, 1_948_427, 4_294_479, 5_436_523,
+      14_330_260, 16_902_756, 63_755_887, 216_651_910, 478_539_849, 880_830_709, 2_469_385_815,
+      8_257_622_570, 24_108_716_020,
+    ]);
+    expect(MIR4_ARC_NORMAL_XP.map((_, index) => mir4ArcNormalXp(index + 1))).toEqual([
+      34, 173, 343, 1_026, 4_319, 7_488, 26_458, 183_046, 81_184, 178_936, 226_521, 597_094,
+      469_521, 1_770_996, 6_018_108, 13_292_773, 14_680_511, 41_156_430, 137_627_042, 401_811_933,
+    ]);
   });
 });
 

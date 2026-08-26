@@ -11,7 +11,9 @@
 
 import { advanceMir4AutomationRoute, type Mir4AutomationRouteState } from '../auto_quest/route';
 import { castMir4Skill, mir4BasicAttack, mir4Ultimate, mir4UsePotion } from '../mir4/combat';
+import { MIR4_ULTIMATE_UNLOCK_LEVEL } from '../mir4/skill_progression';
 import { markMir4WireDirty } from '../mir4/wire_revision';
+import { findReachablePlayerPath } from '../pathfind';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { DT, dist2d } from '../types';
@@ -37,6 +39,8 @@ export const MIR4_AUTO_BATTLE_ANCHOR_TOLERANCE_YARDS = 2;
 /** Source passive MP regen (fraction of max pool per second). */
 export const MIR4_MP_REGEN_COMBAT = 0.0025;
 export const MIR4_MP_REGEN_REST = 0.005;
+const MIR4_AUTO_BATTLE_REACHABILITY_SPAN = 64;
+const MIR4_AUTO_BATTLE_REACHABILITY_PROBES = 6;
 
 export interface Mir4AutoBattleState extends Mir4AutoBattleTargetMemory {
   mode: 'off' | 'battle';
@@ -59,7 +63,6 @@ export function setMir4AutoBattleMode(
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
   if (!meta || !p) return;
-  p.autoAttack = mode === 'battle';
   if (mode === 'battle') {
     if (source === 'player' && meta.mir4AutoQuest?.battleOwned) {
       // An explicit off -> on is a player takeover. Journey must not switch
@@ -102,18 +105,67 @@ function acquireTarget(
   anchorX = st.anchorX,
   anchorZ = st.anchorZ,
 ): Entity | null {
-  let best: Entity | null = null;
-  let bestD = Infinity;
+  const candidates: { entity: Entity; distance: number }[] = [];
   for (const e of ctx.entities.values()) {
     if (e.kind !== 'mob' || e.dead || !ctx.isHostileTo(p, e)) continue;
     if (mir4AutoBattleTargetBlocked(st, e.id, ctx.time)) continue;
     const d = dist2d({ x: anchorX, y: 0, z: anchorZ } as Entity['pos'], e.pos);
     const fromPlayer = dist2d(p.pos, e.pos);
-    if (d > st.acquireRadiusYards || fromPlayer >= bestD) continue;
-    best = e;
-    bestD = fromPlayer;
+    if (d > st.acquireRadiusYards) continue;
+    candidates.push({ entity: e, distance: fromPlayer });
   }
-  return best;
+  candidates.sort(
+    (left, right) => left.distance - right.distance || left.entity.id - right.entity.id,
+  );
+
+  const meta = ctx.players.get(p.id);
+  const canAttackFromHere = (candidate: { entity: Entity; distance: number }): boolean => {
+    const area = { anchorX, anchorZ, acquireRadiusYards: st.acquireRadiusYards };
+    const pick = pickMir4AutoBattleSkill(
+      ctx,
+      p,
+      candidate.entity,
+      area,
+      meta?.mir4DisabledAutoSkills,
+    );
+    return candidate.distance <= mir4AutoBattleActionRange(p, pick);
+  };
+  const hasReachablePath = (entity: Entity): boolean =>
+    findReachablePlayerPath(
+      ctx.cfg.seed,
+      p.pos,
+      entity.pos,
+      MIR4_AUTO_BATTLE_REACHABILITY_SPAN,
+      false,
+      false,
+      ctx.riftCollisionToken,
+    ).length > 0;
+
+  // Prefer visible prey, but visibility alone does not prove the player can
+  // reach it: monsters across water and outside attack range used to trap the
+  // bot against the shoreline. Directly attackable targets need no path;
+  // every other candidate must pass the same collision-aware route probe.
+  const visible = candidates
+    .filter(({ entity }) => ctx.hasLineOfSight(p, entity))
+    .slice(0, MIR4_AUTO_BATTLE_REACHABILITY_PROBES);
+  for (const candidate of visible) {
+    if (canAttackFromHere(candidate) || hasReachablePath(candidate.entity)) {
+      return candidate.entity;
+    }
+  }
+
+  // Around corners, admit only a bounded number of physically reachable
+  // candidates. A 30-yard search radius must not turn into a long trip around
+  // a maze merely because the target is close in a straight line.
+  for (const { entity } of candidates.slice(0, MIR4_AUTO_BATTLE_REACHABILITY_PROBES)) {
+    if (
+      !visible.some((candidate) => candidate.entity.id === entity.id) &&
+      hasReachablePath(entity)
+    ) {
+      return entity;
+    }
+  }
+  return null;
 }
 
 /**
@@ -139,6 +191,11 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     pruneMir4AutoBattleTargetBlocks(st, ctx.time);
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
+
+    // Ordinary Attack owns exactly one selected target. Auto Battle remains
+    // enabled but cannot acquire, move or cast until that focused contract
+    // ends; it resumes independently on the following decision in this phase.
+    if (p.autoAttack && meta.mir4TargetCombat) continue;
 
     // Manual override: any player-driven movement input suspends the bot (the
     // player is steering). The moment the hands leave the keys it RESUMES,
@@ -224,14 +281,17 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       anchorZ: effectiveAnchorZ,
       acquireRadiusYards: st.acquireRadiusYards,
     };
-    const pick = pickMir4AutoBattleSkill(ctx, p, target, area);
+    const pick = pickMir4AutoBattleSkill(ctx, p, target, area, meta.mir4DisabledAutoSkills);
     if (pick?.selfUtility) {
       const result = castMir4Skill(ctx, p.id, pick.skillId, target.id);
       if (result.ok) continue;
     }
 
     const rangeYards = mir4AutoBattleActionRange(p, pick);
-    const ultimateReady = (p.mir4UltGauge ?? 0) >= 100 && !p.cooldowns.has('mir4_ult');
+    const ultimateReady =
+      p.level >= MIR4_ULTIMATE_UNLOCK_LEVEL &&
+      (p.mir4UltGauge ?? 0) >= 100 &&
+      !p.cooldowns.has('mir4_ult');
     const needsTargetLineOfSight = ultimateReady || pick?.actorCentered !== true;
     const actorCenteredReady = pick?.actorCentered === true && !ultimateReady;
     const needsPursuit =
@@ -243,7 +303,12 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       // may attack an enemy already in range, but it must never add a second
       // moveToward step or pull the journey away from its authored route.
       if (journeyActive) continue;
-      const observed = observeMir4AutoBattlePursuit(st.pursuit, target.id, p.pos);
+      const observed = observeMir4AutoBattlePursuit(
+        st.pursuit,
+        target.id,
+        p.pos,
+        dist2d(p.pos, target.pos),
+      );
       st.pursuit = observed.pursuit;
       if (observed.stalled) {
         blockMir4AutoBattleTarget(st, target.id, ctx.time);
@@ -260,7 +325,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
 
     // The ultimate first when the gauge is full (the source's selection
     // order), then the rotation cascade, else the basic filler.
-    if ((p.mir4UltGauge ?? 0) >= 100) {
+    if (p.level >= MIR4_ULTIMATE_UNLOCK_LEVEL && (p.mir4UltGauge ?? 0) >= 100) {
       const result = mir4Ultimate(ctx, p.id, target.id);
       if (result.ok) continue;
     }

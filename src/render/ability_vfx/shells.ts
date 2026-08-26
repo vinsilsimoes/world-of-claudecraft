@@ -24,6 +24,7 @@ interface ShellSlot {
   dur: number;
   stamp: number;
   active: boolean;
+  priority: boolean;
 }
 
 export class BuffShells {
@@ -76,7 +77,16 @@ export class BuffShells {
       mesh.renderOrder = 6;
       mesh.userData.renderCategory = 'vfx';
       scene.add(mesh);
-      this.slots.push({ mesh, mat, entityId: -1, age: 0, dur: 0, stamp: 0, active: false });
+      this.slots.push({
+        mesh,
+        mat,
+        entityId: -1,
+        age: 0,
+        dur: 0,
+        stamp: 0,
+        active: false,
+        priority: false,
+      });
     }
     proto.dispose();
   }
@@ -84,10 +94,13 @@ export class BuffShells {
   // Timed shell (buff shellDur): plays once and fades out on its own.
   flash(entityId: number, colorHex: number, dur: number): void {
     if (this.disposed) return;
+    const existing = this.slots.find((slot) => slot.active && slot.entityId === entityId);
     const slot =
-      this.slots.find((s) => s.active && s.entityId === entityId) ??
-      this.slots.find((s) => !s.active) ??
-      this.slots[0];
+      existing ??
+      this.slots.find((slot) => !slot.active) ??
+      this.slots.find((slot) => slot.active && !slot.priority);
+    if (!slot) return;
+    if (!existing) slot.priority = false;
     slot.active = true;
     slot.entityId = entityId;
     slot.age = 0;
@@ -98,16 +111,21 @@ export class BuffShells {
 
   // Held shell (barrier auras): refreshed every frame while the aura lives;
   // hold() marks it seen, endFrame() releases the ones that stopped arriving.
-  hold(entityId: number, colorHex: number, frame: number): void {
+  hold(entityId: number, colorHex: number, frame: number, priority = false): void {
     if (this.disposed) return;
     let slot = this.slots.find((s) => s.active && s.entityId === entityId);
     if (!slot) {
-      slot = this.slots.find((s) => !s.active);
+      slot =
+        this.slots.find((candidate) => !candidate.active) ??
+        (priority
+          ? this.slots.find((candidate) => candidate.active && !candidate.priority)
+          : undefined);
       if (!slot) return;
       slot.active = true;
       slot.entityId = entityId;
       slot.age = 0;
     }
+    slot.priority = priority;
     slot.dur = Number.POSITIVE_INFINITY;
     slot.stamp = frame;
     (slot.mat.uniforms.uColor.value as THREE.Color).setHex(colorHex);
@@ -126,12 +144,14 @@ export class BuffShells {
       }
       if (!held && slot.age >= slot.dur) {
         slot.active = false;
+        slot.priority = false;
         slot.mesh.visible = false;
         continue;
       }
       const at = anchor(slot.entityId, 0.5, anchorScratch);
       if (!at) {
         slot.active = false;
+        slot.priority = false;
         slot.mesh.visible = false;
         continue;
       }
@@ -148,6 +168,7 @@ export class BuffShells {
     for (const slot of this.slots) {
       if (!slot.active || slot.entityId !== entityId) continue;
       slot.active = false;
+      slot.priority = false;
       slot.mesh.visible = false;
     }
   }
@@ -155,6 +176,7 @@ export class BuffShells {
   clear(): void {
     for (const slot of this.slots) {
       slot.active = false;
+      slot.priority = false;
       slot.mesh.visible = false;
     }
   }

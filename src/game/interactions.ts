@@ -1,3 +1,4 @@
+import { corpseInteractionPresent } from '../sim/corpse_presence';
 import { mir4ArcObjectiveVisibleTo } from '../sim/mir4/arc_objectives';
 import { isQuestGatedEntityHidden } from '../sim/quest_gated_entity';
 import {
@@ -145,8 +146,7 @@ export function shouldApproachPickedEntity(
   const d = dist2d(player.pos, entity.pos);
   if (entity.dead) {
     return (
-      entity.kind === 'mob' &&
-      entity.lootable &&
+      corpseInteractionPresent(entity) &&
       d > INTERACT_RANGE + 1 &&
       corpseLootAvailability(entity, player.id, harvestStateReliable, partyMemberIds).canOpen
     );
@@ -164,9 +164,7 @@ export function shouldDeferPickedCorpseToGatherNode(
 ): boolean {
   return (
     !!entity &&
-    entity.kind === 'mob' &&
-    entity.dead &&
-    entity.lootable &&
+    corpseInteractionPresent(entity) &&
     !corpseLootAvailability(entity, playerId, harvestStateReliable, partyMemberIds).canOpen
   );
 }
@@ -211,7 +209,7 @@ export function handlePickedEntity(
         return true;
       }
       return world.pickUpObject(id);
-    } else if (e.kind === 'mob' && e.dead && e.lootable) {
+    } else if (corpseInteractionPresent(e)) {
       if (world.player.dead) {
         hud.showError(tSim('error.cantWhileDead'));
         return false;
@@ -299,7 +297,7 @@ export function handlePickedEntity(
         return true;
       }
       return world.pickUpObject(id);
-    } else if (e.kind === 'mob' && e.dead && e.lootable) {
+    } else if (corpseInteractionPresent(e)) {
       if (world.player.dead) {
         hud.showError(tSim('error.cantWhileDead'));
         return false;

@@ -119,6 +119,29 @@ describe('player gesture release on cast fx (review #2961)', () => {
     expect(triggerAttack).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['projectile', 'earth_shock'],
+    ['lightning', 'lightning_bolt'],
+    ['nova', 'thunder_clap'],
+    ['windup', 'aimed_shot'],
+    ['selfCast', 'mortal_strike'],
+    ['nova', 'whirlwind'],
+  ] as const)(
+    'does not restart a MIR4 %s/%s gesture whose authoritative action already began',
+    (fx, ability) => {
+      const { painter, triggerAttack } = makePainter((_id, candidate) => candidate === ability);
+      painter.handleSpellfx({
+        sourceId: SOURCE_ID,
+        targetId: TARGET_ID,
+        school: 'nature',
+        fx,
+        ability,
+        attackAnimationStarted: true,
+      });
+      expect(triggerAttack).not.toHaveBeenCalled();
+    },
+  );
+
   it('never plays the player gesture path for a mob (mobThrowFallback owns that read)', () => {
     const { painter, triggerAttack } = makePainter(
       (_id, ability) => ability === 'earth_shock',

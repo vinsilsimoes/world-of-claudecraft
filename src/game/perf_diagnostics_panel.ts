@@ -568,7 +568,7 @@ export class PerfDiagnosticsPanel {
     if (!text) return;
     const write = navigator.clipboard?.writeText(text);
     if (!write) {
-      console.info('World of ClaudeCraft diagnosis:', text);
+      console.info('Aeldrune diagnosis:', text);
       this.copyButton.textContent = t('hudChrome.perf.diagnostics.controls.reportLogged');
       window.setTimeout(() => {
         this.copyButton.textContent = t('hudChrome.perf.diagnostics.controls.copyReport');
@@ -583,7 +583,7 @@ export class PerfDiagnosticsPanel {
         }, 1400);
       },
       () => {
-        console.info('World of ClaudeCraft diagnosis:', text);
+        console.info('Aeldrune diagnosis:', text);
         this.copyButton.textContent = t('hudChrome.perf.diagnostics.controls.copyBlocked');
         window.setTimeout(() => {
           this.copyButton.textContent = t('hudChrome.perf.diagnostics.controls.copyReport');

@@ -39,6 +39,22 @@ function sourceNpcName(sourceNpcId: string): string {
     .join(' ');
 }
 
+describe('the Vila do Vau provisioner route', () => {
+  it('takes M01-Q02 to Sara and explains her supplies before the hunt', () => {
+    const quest = mir4ArcQuest('M01-Q02');
+
+    expect(quest?.stages[0]).toMatchObject({
+      kind: 'talk',
+      target: 'm01-vila-do-vau-sara-das-ervas',
+    });
+    expect(quest?.stages[0]?.text).toContain('Sara das Ervas');
+    expect(quest?.stages[0]?.text).toContain('equipamentos iniciais');
+    expect(quest?.dialogue).toContainEqual(
+      expect.objectContaining({ beat: 'reveal', speaker: 'Sara das Ervas' }),
+    );
+  });
+});
+
 function normalizeSearch(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -72,9 +88,9 @@ function evidenceFor(
 
 describe('canonical MIR4 campaign NPC identity', () => {
   it('gives every physical campaign NPC a globally unique non-empty id and name', () => {
-    expect(MIR4_ARC_NPC_IDENTITIES).toHaveLength(80);
-    expect(new Set(MIR4_ARC_NPC_IDENTITIES.map((npc) => npc.id)).size).toBe(80);
-    expect(new Set(MIR4_ARC_NPC_IDENTITIES.map((npc) => npc.name)).size).toBe(80);
+    expect(MIR4_ARC_NPC_IDENTITIES).toHaveLength(81);
+    expect(new Set(MIR4_ARC_NPC_IDENTITIES.map((npc) => npc.id)).size).toBe(81);
+    expect(new Set(MIR4_ARC_NPC_IDENTITIES.map((npc) => npc.name)).size).toBe(81);
     expect(MIR4_ARC_NPC_IDENTITIES.every((npc) => npc.id.length > 0 && npc.name.length > 0)).toBe(
       true,
     );
@@ -123,6 +139,49 @@ describe('canonical MIR4 campaign NPC identity', () => {
       );
       expect(mapScript, npc.id).toContain(npc.name);
     }
+  });
+
+  it('keeps all canonical main-quest prose free of generator and engine labels', () => {
+    const playerFacingText = MIR4_QUESTS_MAIN.flatMap((quest) => [
+      quest.purpose,
+      ...quest.stages.map((stage) => stage.text),
+      ...quest.dialogue.map((line) => (typeof line === 'string' ? line : line.text)),
+    ]).filter((text): text is string => typeof text === 'string');
+    const forbidden = [
+      /A ordem diz/i,
+      /precisa executar/i,
+      /anchor seguro/i,
+      /polígono hostil/i,
+      /escort-entity/i,
+      /explore-and-hunt/i,
+      /inspect-clues/i,
+      /survive-zone/i,
+      /open-passage/i,
+      /clear-access/i,
+      /interrupt-ritual/i,
+      /mother_of_leeches/i,
+    ];
+
+    for (const text of playerFacingText) {
+      for (const term of forbidden) expect(text, term.source).not.toMatch(term);
+    }
+  });
+
+  it('replaces the repeated generated main-quest dialogue with narrative beats', () => {
+    const text = MIR4_QUESTS_MAIN.flatMap((quest) =>
+      quest.dialogue.map((line) => (typeof line === 'string' ? line : line.text)),
+    ).join('\n');
+
+    expect(text).not.toMatch(/uma vitória cega|Os sinais convergem|Registramos que/iu);
+    expect(text).toContain('A patrulha perdida viu Hrim aceitar a Coroa do Eclipse');
+    expect(text).toContain(
+      'precisamos descobrir por que o antigo guardião da Aurora se voltou contra a Rede',
+    );
+    const lostPatrol = MIR4_QUESTS_MAIN.find((quest) => quest.questId === 'M17-Q05');
+    expect(lostPatrol?.purpose).toContain(
+      'seguir a trilha da patrulha e confrontar seus perseguidores',
+    );
+    expect(JSON.stringify(lostPatrol?.dialogue)).not.toContain('escoltar a patrulha');
   });
 
   it('places campaign contacts in each authored layout or unfinished scaffold', () => {

@@ -188,7 +188,7 @@ try {
     if (!meta) throw new Error('Missing player metadata');
     sim.setPlayerLevel(250);
     meta.copper = 100_000;
-    meta.mir4SkillResources = { effectPoints: 800, skillTomes: 6 };
+    meta.mir4SkillResources = { effectPoints: 800, skillTomes: 0 };
     meta.mir4Materials = {
       sunStone: 20,
       moonStone: 20,
@@ -196,6 +196,11 @@ try {
       lunarSeal: 20,
       dawnTear: 20,
       solarWard: 20,
+      knowledgeFragment: 0,
+      knowledgeTomeCommon: 1,
+      knowledgeTomeRare: 0,
+      knowledgeTomeEpic: 0,
+      knowledgeTomeLegendary: 0,
     };
     meta.mir4ArcRewards = {
       items: { [String(itemId)]: 1 },
@@ -215,6 +220,7 @@ try {
       copper: meta?.copper,
       effectPoints: meta?.mir4SkillResources?.effectPoints,
       skillTomes: meta?.mir4SkillResources?.skillTomes,
+      knowledgeTomeCommon: meta?.mir4Materials?.knowledgeTomeCommon,
     };
   });
   check(
@@ -223,8 +229,11 @@ try {
     JSON.stringify(skillState),
   );
   check(
-    'skill evolution spends all three authoritative resources',
-    skillState.copper === 96_800 && skillState.effectPoints === 400 && skillState.skillTomes === 3,
+    'skill evolution spends one crafted common knowledge tome',
+    skillState.copper === 100_000 &&
+      skillState.effectPoints === 800 &&
+      skillState.skillTomes === 0 &&
+      skillState.knowledgeTomeCommon === 0,
     JSON.stringify(skillState),
   );
   await domClick(page, '#mm-spell');

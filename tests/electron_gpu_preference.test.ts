@@ -23,7 +23,7 @@ import {
 } from '../electron/gpu_preference.cjs';
 
 const EXE =
-  'C:\\Users\\p\\AppData\\Local\\Programs\\world-of-claudecraft\\World of ClaudeCraft.exe';
+  'C:\\Users\\p\\AppData\\Local\\Programs\\world-of-claudecraft\\Aeldrune.exe';
 
 /** The error execFileSync surfaces when reg.exe exits 1 (value or key not found). */
 function missingValueError(): Error {

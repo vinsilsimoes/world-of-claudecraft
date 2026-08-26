@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  entityViewBodyVisible,
   entityViewCandidatePriority,
   entityViewDistanceSq,
   entityViewIsAdmitted,
@@ -151,6 +152,38 @@ describe('entity view admission', () => {
 
     expect(entityViewIsAdmitted(owned, questLog, showAll, 1)).toBe(true);
     expect(entityViewIsAdmitted(foreign, questLog, showAll, 1)).toBe(false);
+  });
+});
+
+describe('entity body visibility', () => {
+  it('hides only expired wild-monster corpses in the MIR4 profile', () => {
+    const expired = entity(20, 'mob', {
+      dead: true,
+      lootable: false,
+      ownerId: null,
+      mir4CorpseVisible: false,
+    });
+    const fresh = entity(21, 'mob', {
+      dead: true,
+      lootable: false,
+      ownerId: null,
+      mir4CorpseVisible: true,
+    });
+    const pet = entity(22, 'mob', {
+      dead: true,
+      lootable: false,
+      ownerId: 1,
+      mir4CorpseVisible: false,
+    });
+    const living = entity(23, 'mob', { dead: false, ownerId: null });
+    const object = entity(24, 'object', { dead: true, ownerId: null });
+
+    expect(entityViewBodyVisible(expired, 'mir4-gameplay-port')).toBe(false);
+    expect(entityViewBodyVisible(fresh, 'mir4-gameplay-port')).toBe(true);
+    expect(entityViewBodyVisible(pet, 'mir4-gameplay-port')).toBe(true);
+    expect(entityViewBodyVisible(living, 'mir4-gameplay-port')).toBe(true);
+    expect(entityViewBodyVisible(object, 'mir4-gameplay-port')).toBe(true);
+    expect(entityViewBodyVisible(expired, 'woc-classic')).toBe(true);
   });
 });
 

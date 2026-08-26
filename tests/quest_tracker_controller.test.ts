@@ -71,7 +71,13 @@ function harness(
       dataset: Record<string, string>;
     }
   >();
-  for (const id of ['mm-crafting', 'crafting-window']) {
+  for (const id of [
+    'mm-crafting',
+    'mobile-crafting',
+    'crafting-window',
+    'mm-mount-codex',
+    'mobile-mount-codex',
+  ]) {
     launchers.set(id, {
       click: vi.fn(),
       classList: { add: vi.fn(), remove: vi.fn() },
@@ -286,6 +292,37 @@ describe('QuestTrackerController', () => {
     expect(test.setMir4AutoQuest).toHaveBeenCalledWith(true, 'mir4_m01_q01');
   });
 
+  it('switches Auto Mission from the main quest to an explicitly clicked side quest', () => {
+    const test = harness([], 'mir4-gameplay-port', [
+      {
+        id: 'M01-Q05',
+        complete: false,
+        autoJourneyAvailable: true,
+        autoJourneyActive: true,
+        autoJourneySuspended: false,
+        objective: { kind: 'campaign-stage', stageKind: 'travel', current: 0, total: 1 },
+      },
+      {
+        id: 'M01-S02',
+        complete: false,
+        autoJourneyAvailable: true,
+        autoJourneyActive: false,
+        autoJourneySuspended: false,
+        objective: {
+          kind: 'campaign-stage',
+          stageKind: 'explore-landmarks',
+          current: 0,
+          total: 3,
+        },
+      },
+    ]);
+
+    test.controller.update(0);
+    test.controller.activateQuest('M01-S02');
+
+    expect(test.setMir4AutoQuest).toHaveBeenCalledWith(true, 'M01-S02');
+  });
+
   it('renders tutorial steps, requirements and opens the existing highlighted destination', () => {
     const test = harness([], 'mir4-gameplay-port', [
       {
@@ -310,12 +347,41 @@ describe('QuestTrackerController', () => {
     expect(test.launcher('mm-crafting')?.classList.add).toHaveBeenCalledWith(
       'mir4-tutorial-target',
     );
+    expect(test.launcher('mobile-crafting')?.classList.add).toHaveBeenCalledWith(
+      'mir4-tutorial-target',
+    );
 
     test.controller.openTutorialDestination('M01-Q06');
 
     expect(test.launcher('crafting-window')?.dataset.mir4ProgressionTab).toBe('refinement');
     expect(test.launcher('mm-crafting')?.click).toHaveBeenCalledTimes(1);
     expect(test.acknowledgeTutorial).toHaveBeenCalledWith('M01-Q06');
+  });
+
+  it('highlights both visible-layout launchers for the Mount tutorial', () => {
+    const test = harness([], 'mir4-gameplay-port', [
+      {
+        id: 'M03-Q04',
+        complete: false,
+        autoJourneyActive: false,
+        autoJourneySuspended: false,
+        objective: {
+          kind: 'campaign-stage',
+          stageKind: 'system-tutorial',
+          current: 0,
+          total: 1,
+        },
+      },
+    ]);
+
+    test.controller.update(0);
+
+    expect(test.launcher('mm-mount-codex')?.classList.add).toHaveBeenCalledWith(
+      'mir4-tutorial-target',
+    );
+    expect(test.launcher('mobile-mount-codex')?.classList.add).toHaveBeenCalledWith(
+      'mir4-tutorial-target',
+    );
   });
 
   it('does not restore header focus after a pointer-driven toggle (the focus drop ran first)', () => {

@@ -86,6 +86,7 @@ describe('the rotation cascade', () => {
     ) => {
       setActiveWorldContent(MIR4_SLICE_WORLD);
       const sim = makeSim(seed, cls);
+      sim.setPlayerLevel(40);
       teleport(sim, 1.5, -10.5);
       const player = sim.player;
       const target = createMob(
@@ -134,6 +135,7 @@ describe('the rotation cascade', () => {
       setup(1035, 'warrior', (_sim, player) => {
         player.cooldowns.set('1102', 10);
         player.cooldowns.set('1304', 10);
+        player.cooldowns.set('1501', 10);
       }),
     ).toBe(1104);
   });
@@ -141,6 +143,7 @@ describe('the rotation cascade', () => {
   it('filters candidates outside the Auto Battle anchor before tracing line of sight', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(1036);
+    sim.setPlayerLevel(40);
     teleport(sim, 1.5, -10.5);
     const player = sim.player;
     const target = createMob(
@@ -197,6 +200,7 @@ describe('the rotation cascade', () => {
   it('filters candidates outside the skill radius before tracing line of sight', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(1038);
+    sim.setPlayerLevel(40);
     teleport(sim, 1.5, -10.5);
     const player = sim.player;
     const target = createMob(
@@ -279,6 +283,7 @@ describe('the rotation cascade', () => {
   it('warrior setup order: 1102 first, then 1304, 1104, 1401 across GCDs', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(103);
+    sim.setPlayerLevel(40);
     teleport(sim, 1.5, -10.5); // near Tarek, away from camps
     // One tanky wolf close: nearby count 1 (aoe never fires) and it survives
     // the full four-cast sweep; a tight radius keeps the camps out of reach.

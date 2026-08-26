@@ -54,6 +54,7 @@ import {
   STRIP_MIN_X,
   yumiMazeOriginAt,
 } from './data';
+import { usesBuiltinWorldPresentation } from './world_presentation';
 
 // Re-exported from the extracted cell-index module so existing importers keep
 // their './colliders' path.
@@ -755,10 +756,9 @@ function staticWorldColliders(seed: number): Collider[] {
       cameraTopY: topY(seed, board.x, board.z, board.height),
     });
   }
-  // The dedicated Fenbridge renderer is built-in-only. Keep this specialized
-  // service collision under the same authority so a programmatic custom world
-  // cannot create an invisible solid board by supplying musterBoards data.
-  if (content === BUILTIN_WORLD) {
+  // Renderer and collision share one explicit presentation capability, so a
+  // world borrowing only the heightfield cannot create an invisible board.
+  if (usesBuiltinWorldPresentation(content)) {
     for (const board of content.services?.musterBoards ?? []) {
       out.push({
         type: 'obb',

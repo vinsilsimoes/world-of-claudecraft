@@ -4,6 +4,7 @@ import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
+import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import {
   applyMir4Effect,
   MIR4_CONTROL_IMMUNITY_TAIL_SECONDS,
@@ -33,6 +34,7 @@ function makeSim(seed = 61): Sim {
   });
   sim.mir4UnequipSlot(1);
   sim.mir4UnequipSlot(5);
+  sim.player.level = 40;
   return sim;
 }
 
@@ -49,7 +51,7 @@ function spawnWolf(sim: Sim, dx: number, dz: number): Entity {
 }
 
 function makeClassSim(seed: number, playerClassMir4: Mir4ClassKey): Sim {
-  return new Sim({
+  const sim = new Sim({
     seed,
     playerClass: 'warrior',
     playerClassMir4,
@@ -58,6 +60,8 @@ function makeClassSim(seed: number, playerClassMir4: Mir4ClassKey): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: EMPTY_TEST_WORLD,
   });
+  sim.player.level = 40;
+  return sim;
 }
 
 function spawnTankWolf(sim: Sim, x: number, z: number, id: string): Entity {
@@ -76,6 +80,11 @@ function spawnTankWolf(sim: Sim, x: number, z: number, id: string): Entity {
   wolf.wanderTimer = 999999;
   sim.addEntity(wolf);
   return wolf;
+}
+
+function resolveContacts(sim: Sim): void {
+  for (const impact of sim.player.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+  updateMir4PendingImpacts(sim.ctx);
 }
 
 afterAll(() => {
@@ -233,6 +242,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     const wolf = spawnWolf(sim, 2, 0);
     const hpBefore = wolf.hp;
     expect(sim.mir4CastSkill(1104, wolf.id)).toEqual({ ok: true });
+    resolveContacts(sim);
     // 21000 coefficient at PA 50: floor(50*21000/10000) = 105, one impact.
     expect(hpBefore - wolf.hp).toBe(105);
     const knockdown = wolf.mir4Effects?.active.find((f) => f.kind === 'knockdown');
@@ -244,11 +254,13 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     const sim = makeSim(64);
     const wolf = spawnWolf(sim, 2, 0);
     sim.mir4CastSkill(1304, wolf.id); // 22000 coef: 110 damage + break 4.5s
+    resolveContacts(sim);
     const brk = wolf.mir4Effects?.active.find((f) => f.kind === 'defense-break');
     expect(brk?.duration).toBe(4.5);
     expect(brk?.magnitude).toBe(0.12);
     for (let i = 0; i < 20; i++) sim.tick(); // clear the 1s GCD
     sim.mir4CastSkill(1102, wolf.id);
+    resolveContacts(sim);
     // 17 hp left; the buffed 1102 (floor(125*1.12) = 140) overkills: the
     // taken-addend math is pinned by the +12% engine test, here it kills.
     expect(wolf.dead).toBe(true);
@@ -260,6 +272,10 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     const near1 = spawnWolf(sim, 3.5, 1);
     const near2 = spawnWolf(sim, 0.5, 1);
     const far = spawnWolf(sim, 30, 20); // outside the 7yd (112px) radius
+    for (const wolf of [primary, near1, near2, far]) {
+      wolf.maxHp = 5_000;
+      wolf.hp = wolf.maxHp;
+    }
     const before = new Map<number, number>([
       [primary.id, primary.hp],
       [near1.id, near1.hp],
@@ -267,6 +283,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       [far.id, far.hp],
     ]);
     expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
+    resolveContacts(sim);
     // Primary: 25000 coef = 125 + knockdown 0.8s.
     expect(before.get(primary.id)! - primary.hp).toBe(125);
     expect(
@@ -292,6 +309,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     const draws = vi.spyOn(sim.rng, 'next').mockReturnValue(0.5);
 
     expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
+    resolveContacts(sim);
 
     sim.ctx.hasLineOfSight = originalHasLineOfSight;
     expect(primary.hp).toBeLessThan(primary.maxHp);
@@ -335,6 +353,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       sim.ctx.hasLineOfSight = () => true;
 
       expect(sim.mir4CastSkill(skillId)).toEqual({ ok: true });
+      resolveContacts(sim);
 
       expect(p.cooldowns.has(String(skillId))).toBe(true);
       expect(primary.hp).toBeLessThan(primary.maxHp);
@@ -367,6 +386,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       sim.ctx.hasLineOfSight = () => true;
 
       expect(sim.mir4CastSkill(skillId)).toEqual({ ok: true });
+      resolveContacts(sim);
 
       expect(edge.mir4Effects?.active.some((effect) => effect.kind === effectKind)).toBe(true);
       expect(outside.hp).toBe(outside.maxHp);
@@ -390,6 +410,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     const friendlyHp = friendly.hp;
 
     expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
+    resolveContacts(sim);
 
     sim.ctx.isHostileTo = originalIsHostileTo;
     expect(hostile.hp).toBeLessThan(hostileHp);

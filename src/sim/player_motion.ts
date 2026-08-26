@@ -23,6 +23,7 @@ import { isRooted, isStunned } from './combat/cc';
 import { iceFloesAuraForAbility } from './combat/empower_next';
 import { isVeilboundMarchActive } from './combat/paladin_veilbound_state';
 import { mountMoveSpeedPct } from './content/mounts';
+import { mir4StatusRecordValue } from './mir4/status_values';
 import { PLAYER_BODY_RADIUS, PLAYER_MAX_CLIMB_SLOPE, PLAYER_SWIM_DEPTH } from './pathfind';
 import {
   type CharacterMoveParams,
@@ -228,6 +229,7 @@ export function moveSpeedMult(e: Entity, extraSpeedPct = 0): number {
   // MIR4 keeps the target-native model but replaces its stats: the logical
   // equipped Mount supplies the source speed, so native shell tuning does not
   // stack on top. Classic riders retain the native catalog value.
+  if (e.mir4) speed += mir4StatusRecordValue(e.mir4.statusValues, 77) / 10_000;
   if (e.mountKey) {
     if (e.mir4) speed += e.mir4.mountMoveSpeedBps / 10_000;
     else speed += mountMoveSpeedPct(e.mountKey);

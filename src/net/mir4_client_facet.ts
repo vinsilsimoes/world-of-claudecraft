@@ -8,9 +8,11 @@ import type { Entity } from '../sim/types';
 import type { ClientCommand } from '../world_api';
 import type { IWorldMir4 } from '../world_api/mir4';
 import {
+  applyMir4CodexSnapshotDelta,
   applyMir4SnapshotDelta,
   type Mir4SnapshotState,
   mir4SnapshotActionAbilities,
+  recalcMir4SnapshotPlayerStats,
 } from './mir4_snapshot_wire';
 
 export type Mir4CommandPayload = { cmd: ClientCommand } & Record<string, unknown>;
@@ -26,8 +28,20 @@ export class Mir4ClientFacet implements IWorldMir4 {
     private readonly sendWithOutcome: SendCommandWithOutcome,
   ) {}
 
-  applySnapshot(value: unknown, entity: Entity): void {
+  applySnapshot(value: unknown, entity: Entity, codexValue?: unknown): void {
     this.snapshot = applyMir4SnapshotDelta(value, entity, this.snapshot);
+    if (this.snapshot) {
+      const mir4Codex = applyMir4CodexSnapshotDelta(codexValue, this.snapshot.mir4Codex);
+      if (mir4Codex) this.snapshot = { ...this.snapshot, mir4Codex };
+      else if (codexValue === null) {
+        const { mir4Codex: _removed, ...withoutCodex } = this.snapshot;
+        this.snapshot = withoutCodex;
+      }
+      // Codex is a separate low-frequency delta and is merged after the combat
+      // payload. Recalculate only when that delta is present so its permanent
+      // bonuses are reflected immediately without adding work to normal frames.
+      if (codexValue !== undefined) recalcMir4SnapshotPlayerStats(entity, this.snapshot);
+    }
   }
 
   actionAbilities(profile: GameProfile | undefined, level: number): KnownAbility[] | null {
@@ -37,6 +51,8 @@ export class Mir4ClientFacet implements IWorldMir4 {
   readonly mir4PlayerState = (): Readonly<Mir4SnapshotState> | null => this.snapshot;
   readonly mir4AutoBattleActive = (): boolean => this.snapshot?.autoBattle?.mode === 'battle';
   readonly setMir4AutoBattle = (on: boolean): void => this.send({ cmd: 'mir4', m: 'auto', on });
+  readonly setMir4AutoSkillEnabled = (skillId: number, enabled: boolean): void =>
+    this.send({ cmd: 'mir4', m: 'autoSkill', skillId, enabled });
   readonly mir4AutoQuestActive = (): boolean => this.snapshot?.mir4AutoQuest !== undefined;
   readonly setMir4AutoQuest = (on: boolean, questId?: string): void =>
     this.send({ cmd: 'mir4', m: 'quest', on, ...(questId ? { questId } : {}) });
@@ -52,6 +68,12 @@ export class Mir4ClientFacet implements IWorldMir4 {
   };
   readonly mir4UpgradeSkill = (skillId: number, expectedCurrentLevel: number): void =>
     this.send({ cmd: 'mir4', m: 'upgradeSkill', skillId, expectedCurrentLevel });
+  readonly mir4TrainConstitution = (branchId: number, expectedCurrentLevel: number): void =>
+    this.send({ cmd: 'mir4', m: 'trainConstitution', branchId, expectedCurrentLevel });
+  readonly mir4TrainInnerForce = (branchId: number, expectedCurrentLevel: number): void =>
+    this.send({ cmd: 'mir4', m: 'trainInnerForce', branchId, expectedCurrentLevel });
+  readonly mir4TrainSolitude = (branchId: number, expectedCurrentLevel: number): void =>
+    this.send({ cmd: 'mir4', m: 'trainSolitude', branchId, expectedCurrentLevel });
   readonly mir4ClaimAchievement = (achievementId: number): Promise<boolean> =>
     this.sendWithOutcome({ cmd: 'mir4', m: 'claimAchievement', achievementId });
   readonly mir4BasicAttack = (targetId?: number): Mir4CastResult => {
@@ -70,6 +92,10 @@ export class Mir4ClientFacet implements IWorldMir4 {
     this.send({ cmd: 'mir4', m: 'equipItem', itemId });
     return 'Equipment requested.';
   };
+  readonly mir4BuyVillageEquipment = (npcId: number, itemId: number): string => {
+    this.send({ cmd: 'mir4', m: 'buyVillageEquipment', npcId, itemId });
+    return 'Purchase requested.';
+  };
   readonly mir4UnequipSlot = (equipSlot: number): string => {
     this.send({ cmd: 'mir4', m: 'unequipSlot', equipSlot });
     return 'Unequip requested.';
@@ -86,20 +112,43 @@ export class Mir4ClientFacet implements IWorldMir4 {
   ): void => this.send({ cmd: 'mir4', m: 'resolveLayer', itemId, layer, rollId, accept });
   readonly mir4CraftMaterial = (recipeId: string): void =>
     this.send({ cmd: 'mir4', m: 'craftMaterial', recipeId });
-  readonly mir4RedeemTicket = (ticketId: string): void =>
-    this.send({ cmd: 'mir4', m: 'redeemTicket', ticketId });
+  readonly mir4RegisterCodex = (
+    collectionId: string,
+    requirementId: string,
+    count: number,
+    expectedRegistered: number,
+  ): void =>
+    this.send({
+      cmd: 'mir4',
+      m: 'registerCodex',
+      collectionId,
+      requirementId,
+      count,
+      expectedRegistered,
+    });
+  readonly mir4RegisterAllCodex = (collectionId: string): void =>
+    this.send({ cmd: 'mir4', m: 'registerAllCodex', collectionId });
+  readonly mir4RedeemTicket = (ticketId: string, count = 1): void =>
+    this.send({
+      cmd: 'mir4',
+      m: 'redeemTicket',
+      ticketId,
+      ...(count === 1 ? {} : { count }),
+    });
   readonly mir4ConfirmMount = (pendingId: string): void =>
     this.send({ cmd: 'mir4', m: 'confirmMount', pendingId });
+  readonly mir4ConfirmAllMounts = (): void => this.send({ cmd: 'mir4', m: 'confirmAllMounts' });
   readonly mir4EquipMount = (mountId: string | null): void =>
     this.send({ cmd: 'mir4', m: 'equipMount', mountId });
-  readonly mir4CombineMounts = (grade: number): void =>
-    this.send({ cmd: 'mir4', m: 'combineMounts', grade });
+  readonly mir4CombineMounts = (grade: number, all = false): void =>
+    this.send({ cmd: 'mir4', m: 'combineMounts', grade, ...(all ? { all: true } : {}) });
   readonly mir4ConfirmSpirit = (pendingId: string): void =>
     this.send({ cmd: 'mir4', m: 'confirmSpirit', pendingId });
+  readonly mir4ConfirmAllSpirits = (): void => this.send({ cmd: 'mir4', m: 'confirmAllSpirits' });
   readonly mir4EquipSpirit = (spiritId: string | null): void =>
     this.send({ cmd: 'mir4', m: 'equipSpirit', spiritId });
-  readonly mir4CombineSpirits = (grade: number): void =>
-    this.send({ cmd: 'mir4', m: 'combineSpirits', grade });
+  readonly mir4CombineSpirits = (grade: number, all = false): void =>
+    this.send({ cmd: 'mir4', m: 'combineSpirits', grade, ...(all ? { all: true } : {}) });
   readonly mir4CampaignProfession = (): void => this.send({ cmd: 'mir4', m: 'campaignProfession' });
 }
 
@@ -130,8 +179,8 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
     return this.mir4Facet;
   }
 
-  protected applyMir4Snapshot(value: unknown, entity: Entity): void {
-    this.ensureMir4Facet().applySnapshot(value, entity);
+  protected applyMir4Snapshot(value: unknown, entity: Entity, codexValue?: unknown): void {
+    this.ensureMir4Facet().applySnapshot(value, entity, codexValue);
   }
 
   protected mir4ActionAbilities(
@@ -149,6 +198,9 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   }
   setMir4AutoBattle(on: boolean): void {
     this.ensureMir4Facet().setMir4AutoBattle(on);
+  }
+  setMir4AutoSkillEnabled(skillId: number, enabled: boolean): void {
+    this.ensureMir4Facet().setMir4AutoSkillEnabled(skillId, enabled);
   }
   mir4AutoQuestActive(): boolean {
     return this.ensureMir4Facet().mir4AutoQuestActive();
@@ -174,6 +226,15 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   mir4UpgradeSkill(skillId: number, expectedCurrentLevel: number): void {
     this.ensureMir4Facet().mir4UpgradeSkill(skillId, expectedCurrentLevel);
   }
+  mir4TrainConstitution(branchId: number, expectedCurrentLevel: number): void {
+    this.ensureMir4Facet().mir4TrainConstitution(branchId, expectedCurrentLevel);
+  }
+  mir4TrainInnerForce(branchId: number, expectedCurrentLevel: number): void {
+    this.ensureMir4Facet().mir4TrainInnerForce(branchId, expectedCurrentLevel);
+  }
+  mir4TrainSolitude(branchId: number, expectedCurrentLevel: number): void {
+    this.ensureMir4Facet().mir4TrainSolitude(branchId, expectedCurrentLevel);
+  }
   mir4ClaimAchievement(achievementId: number): Promise<boolean> {
     return this.ensureMir4Facet().mir4ClaimAchievement(achievementId);
   }
@@ -188,6 +249,9 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   }
   mir4EquipItem(itemId: number): string {
     return this.ensureMir4Facet().mir4EquipItem(itemId);
+  }
+  mir4BuyVillageEquipment(npcId: number, itemId: number): string {
+    return this.ensureMir4Facet().mir4BuyVillageEquipment(npcId, itemId);
   }
   mir4UnequipSlot(equipSlot: number): string {
     return this.ensureMir4Facet().mir4UnequipSlot(equipSlot);
@@ -209,26 +273,48 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   mir4CraftMaterial(recipeId: string): void {
     this.ensureMir4Facet().mir4CraftMaterial(recipeId);
   }
-  mir4RedeemTicket(ticketId: string): void {
-    this.ensureMir4Facet().mir4RedeemTicket(ticketId);
+  mir4RegisterCodex(
+    collectionId: string,
+    requirementId: string,
+    count: number,
+    expectedRegistered: number,
+  ): void {
+    this.ensureMir4Facet().mir4RegisterCodex(
+      collectionId,
+      requirementId,
+      count,
+      expectedRegistered,
+    );
+  }
+  mir4RegisterAllCodex(collectionId: string): void {
+    this.ensureMir4Facet().mir4RegisterAllCodex(collectionId);
+  }
+  mir4RedeemTicket(ticketId: string, count?: number): void {
+    this.ensureMir4Facet().mir4RedeemTicket(ticketId, count);
   }
   mir4ConfirmMount(pendingId: string): void {
     this.ensureMir4Facet().mir4ConfirmMount(pendingId);
   }
+  mir4ConfirmAllMounts(): void {
+    this.ensureMir4Facet().mir4ConfirmAllMounts();
+  }
   mir4EquipMount(mountId: string | null): void {
     this.ensureMir4Facet().mir4EquipMount(mountId);
   }
-  mir4CombineMounts(grade: number): void {
-    this.ensureMir4Facet().mir4CombineMounts(grade);
+  mir4CombineMounts(grade: number, all?: boolean): void {
+    this.ensureMir4Facet().mir4CombineMounts(grade, all);
   }
   mir4ConfirmSpirit(pendingId: string): void {
     this.ensureMir4Facet().mir4ConfirmSpirit(pendingId);
   }
+  mir4ConfirmAllSpirits(): void {
+    this.ensureMir4Facet().mir4ConfirmAllSpirits();
+  }
   mir4EquipSpirit(spiritId: string | null): void {
     this.ensureMir4Facet().mir4EquipSpirit(spiritId);
   }
-  mir4CombineSpirits(grade: number): void {
-    this.ensureMir4Facet().mir4CombineSpirits(grade);
+  mir4CombineSpirits(grade: number, all?: boolean): void {
+    this.ensureMir4Facet().mir4CombineSpirits(grade, all);
   }
   mir4CampaignProfession(): void {
     this.ensureMir4Facet().mir4CampaignProfession();

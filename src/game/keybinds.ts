@@ -196,6 +196,15 @@ export const BIND_ACTIONS: BindAction[] = [
     kind: 'edge',
     defaults: ['Shift+KeyF'],
   },
+  {
+    id: 'attack',
+    label: 'Attack Selected Target',
+    category: 'Targeting',
+    kind: 'edge',
+    // F remains Interact in the 3D control scheme. The shifted V layer is free
+    // by default and keeps ordinary Attack close to the target/nameplate keys.
+    defaults: ['Shift+KeyV'],
+  },
   // Only acts while the Attack Move setting is on; shares its default key with
   // Turn Left intentionally, and only that key is reserved while active.
   {
@@ -205,6 +214,23 @@ export const BIND_ACTIONS: BindAction[] = [
     kind: 'edge',
     defaults: ['KeyA'],
     allowShared: true,
+  },
+  // MIR4 automation controls are tools, not abilities. They intentionally ship
+  // unbound so existing movement/interface/action-bar defaults keep their keys;
+  // players can assign either one from Key Bindings.
+  {
+    id: 'toggleAutoCollect',
+    label: 'Toggle Auto Collect',
+    category: 'Tools',
+    kind: 'edge',
+    defaults: [],
+  },
+  {
+    id: 'toggleAutoBattle',
+    label: 'Toggle Auto Battle',
+    category: 'Tools',
+    kind: 'edge',
+    defaults: [],
   },
   // Interface windows
   { id: 'char', label: 'Character', category: 'Interface', kind: 'edge', defaults: ['KeyC'] },

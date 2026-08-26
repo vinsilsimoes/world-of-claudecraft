@@ -1,6 +1,6 @@
 # Desktop release runbook (Electron: website download + Steam + Epic)
 
-How to build, sign, publish, and verify the World of ClaudeCraft desktop app.
+How to build, sign, publish, and verify the Aeldrune desktop app.
 The longer companion explainer (what shipped, per-platform update/signing
 mechanics, step-by-step release walkthroughs) is `docs/desktop-ship-notes.md`.
 One codebase produces three distribution channels:
@@ -95,7 +95,7 @@ Linux artifacts on Linux). Cross-building is not part of this runbook.
 | Epic EOS client id/secret (+ `EPIC_ENABLED=1`, product/deployment ids) | Book of Deeds achievement mirror + account link (`server/epic/`) | game-server runtime env (see `DEPLOY.md`); never the BPT client secret |
 | Epic BPT client id/secret + organization/artifact ids | BuildPatchTool binary upload to Dev sandbox | local shell only; never commit; see `docs/epic-games-integration/bpt-upload.md` |
 | Optional: a crash-minidump endpoint (e.g. a Sentry project's minidump URL) | crash uploads | build env `WOC_CRASH_SUBMIT_URL` (https only) |
-| Discord application registration, NAMED "World of ClaudeCraft" (the registration name is what Discord renders as "Playing X") | Discord Rich Presence (`electron/discord_presence.cjs`) | PROVISIONED 2026-08-15: the official application id ships baked in (`DEFAULT_DISCORD_APP_ID`, pinned to its literal in `tests/electron_discord_presence.test.ts`), so presence works out of the box in every build. `WOC_DISCORD_APP_ID` remains the operator override at shell launch (`resolveDiscordClientId`); a set-but-invalid value (for example `WOC_DISCORD_APP_ID=off`) resolves to inert, which is both the typo failure mode and the opt-out for forks. App Verification status on the portal does not gate rich presence |
+| Discord application registration, NAMED "Aeldrune" (the registration name is what Discord renders as "Playing X") | Discord Rich Presence (`electron/discord_presence.cjs`) | PROVISIONED 2026-08-15: the official application id ships baked in (`DEFAULT_DISCORD_APP_ID`, pinned to its literal in `tests/electron_discord_presence.test.ts`), so presence works out of the box in every build. `WOC_DISCORD_APP_ID` remains the operator override at shell launch (`resolveDiscordClientId`); a set-but-invalid value (for example `WOC_DISCORD_APP_ID=off`) resolves to inert, which is both the typo failure mode and the opt-out for forks. App Verification status on the portal does not gate rich presence |
 
 Never commit any of these values; they are env vars in CI or the local shell.
 
@@ -158,7 +158,7 @@ the nested Electron frameworks).
 - HARD DEPENDENCY: macOS auto-update does not apply unless the app is signed with a
   real Developer ID AND notarized. The updater consumes the ZIP target (which is why
   zip stays in the mac target list). Ship no public mac build without both.
-- Verify after a signed build: `codesign --verify --deep --strict "release/mac-universal/World of ClaudeCraft.app"`
+- Verify after a signed build: `codesign --verify --deep --strict "release/mac-universal/Aeldrune.app"`
   and `spctl -a -t exec -vv <app>` says "accepted, source=Notarized Developer ID".
 
 ## Windows: Azure signing (two routes)
@@ -395,7 +395,7 @@ would init Steam with the Spacewar fallback id (480) and link tickets would veri
 against the wrong app. Output layouts
 in `release-steam/`:
 
-- `mac-universal/World of ClaudeCraft.app` (one universal .app)
+- `mac-universal/Aeldrune.app` (one universal .app)
 - `win-unpacked/` (x64; Windows-on-ARM runs it via emulation)
 - `linux-unpacked/` (x64)
 
@@ -404,11 +404,11 @@ Depot layout (one app, three depots, one package):
 | Depot | Content root | OS filter |
 |---|---|---|
 | `<appid>1` | `win-unpacked/*` | Windows, 64-bit |
-| `<appid>2` | `World of ClaudeCraft.app` (the loose bundle) | macOS |
+| `<appid>2` | `Aeldrune.app` (the loose bundle) | macOS |
 | `<appid>3` | `linux-unpacked/*` | Linux, 64-bit |
 
-Launch options (one per OS): Windows `World of ClaudeCraft.exe`; macOS
-`World of ClaudeCraft.app` (app-bundle launch picks the best arch on Apple Silicon);
+Launch options (one per OS): Windows `Aeldrune.exe`; macOS
+`Aeldrune.app` (app-bundle launch picks the best arch on Apple Silicon);
 Linux `world-of-claudecraft` (the executable inside linux-unpacked).
 
 Rules that keep this working:
@@ -451,7 +451,7 @@ Publish is always null on this channel (`publish: null`); there is no
 `app-update.yml` and electron-updater never runs (Epic BuildPatchTool owns
 patches). Output layouts in `release-epic/`:
 
-- `mac-universal/World of ClaudeCraft.app` (one universal `.app`)
+- `mac-universal/Aeldrune.app` (one universal `.app`)
 - `win-unpacked/` (x64; Windows-on-ARM runs it via emulation)
 
 There is **no Linux** epic target or depot (v1 ships Windows + macOS only).
@@ -461,8 +461,8 @@ Launch relative paths for BPT `-AppLaunch` (inside each BuildRoot):
 
 | OS | BuildRoot (upload the loose tree) | AppLaunch (relative to BuildRoot) |
 |---|---|---|
-| Windows | `release-epic/win-unpacked/` | `World of ClaudeCraft.exe` |
-| macOS | `release-epic/mac-universal/` | `World of ClaudeCraft.app/Contents/MacOS/World of ClaudeCraft` (exact nested MacOS binary name as emitted; confirm on first pack) |
+| Windows | `release-epic/win-unpacked/` | `Aeldrune.exe` |
+| macOS | `release-epic/mac-universal/` | `Aeldrune.app/Contents/MacOS/Aeldrune` (exact nested MacOS binary name as emitted; confirm on first pack) |
 
 Rules that keep this working:
 

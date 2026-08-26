@@ -1,6 +1,6 @@
 // Pure MIR4 provider for the existing Bags window. Equipment instances are the
 // current owned-item ledger; equipped and destroyed copies are excluded. The
-// six-material wallet is always projected in a stable order.
+// material wallet keeps its stable order after zero-count entries are removed.
 
 import { mir4EquipmentDefinition } from '../sim/content/mir4/items';
 import { MIR4_MOUNTS_CATALOG, mir4MountById } from '../sim/content/mir4/mounts_catalog';
@@ -32,6 +32,49 @@ export const MIR4_MATERIAL_KEYS = [
   'lunarSeal',
   'dawnTear',
   'solarWard',
+  'knowledgeFragment',
+  'knowledgeTomeCommon',
+  'knowledgeTomeRare',
+  'knowledgeTomeEpic',
+  'knowledgeTomeLegendary',
+  'herbLeaf',
+  'reishi',
+  'herbRoot',
+  'unihornSlice',
+  'flowerOil',
+  'centuryFruit',
+  'etherealShard',
+  'lunarShard',
+  'solarShard',
+  'boundlessShard',
+  'greaterYangPill',
+  'greaterYinPill',
+  'lesserYangPill',
+  'lesserYinPill',
+  'noirsoulHerbRare',
+  'noirsoulHerbEpic',
+  'noirsoulHerbLegendary',
+  'unihornRare',
+  'unihornEpic',
+  'unihornLegendary',
+  'flowerOilRare',
+  'flowerOilEpic',
+  'flowerOilLegendary',
+  'centuryFruitRare',
+  'centuryFruitEpic',
+  'centuryFruitLegendary',
+  'greaterYangPillRare',
+  'greaterYangPillEpic',
+  'greaterYangPillLegendary',
+  'greaterYinPillRare',
+  'greaterYinPillEpic',
+  'greaterYinPillLegendary',
+  'lesserYangPillRare',
+  'lesserYangPillEpic',
+  'lesserYangPillLegendary',
+  'lesserYinPillRare',
+  'lesserYinPillEpic',
+  'lesserYinPillLegendary',
 ] as const satisfies readonly (keyof Mir4Materials)[];
 
 export interface Mir4MaterialView {
@@ -39,7 +82,15 @@ export interface Mir4MaterialView {
   count: number;
 }
 
+export type Mir4CurrencyKey = 'energy' | 'darksteel';
+
+export interface Mir4CurrencyView {
+  key: Mir4CurrencyKey;
+  count: number;
+}
+
 export interface Mir4InventoryView {
+  currencies: readonly Mir4CurrencyView[];
   equipment: readonly Mir4PaperdollItemView[];
   materials: readonly Mir4MaterialView[];
   nativeItems: readonly Mir4NativeItemView[];
@@ -183,13 +234,17 @@ export function buildMir4InventoryView(
   const wallet = state.mir4Materials ?? MIR4_EMPTY_MATERIALS;
   const spirits = state.mir4Spirits;
   return {
+    currencies: [
+      { key: 'energy' as const, count: state.mir4Currencies?.energy ?? 0 },
+      { key: 'darksteel' as const, count: state.mir4Currencies?.darksteel ?? 0 },
+    ].filter((entry) => entry.count > 0),
     equipment,
-    materials: MIR4_MATERIAL_KEYS.map((key) => ({ key, count: wallet[key] })),
+    materials: MIR4_MATERIAL_KEYS.map((key) => ({ key, count: wallet[key] })).filter(
+      (entry) => entry.count > 0,
+    ),
     nativeItems: runtimeInventory
       .map((slot, slotIndex) => ({ slotIndex, slot }))
-      .filter(
-        ({ slot }) => ITEMS[slot.itemId]?.kind === 'potion' || ITEMS[slot.itemId]?.kind === 'mount',
-      ),
+      .filter(({ slot }) => slot.count > 0 && ITEMS[slot.itemId] !== undefined),
     mountTickets: Object.entries(state.mir4ArcRewards?.tickets ?? {})
       .filter(
         (entry): entry is [Mir4MountTicketId, number] =>

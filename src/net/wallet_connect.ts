@@ -115,10 +115,10 @@ export async function createWalletConnectClient(projectId: string): Promise<Wall
     networks: [solana],
     defaultNetwork: solana,
     metadata: {
-      name: 'World of ClaudeCraft',
-      description: 'Connect a Solana wallet to World of ClaudeCraft',
+      name: 'Aeldrune',
+      description: 'Connect a Solana wallet to Aeldrune',
       url: metadataUrl(),
-      icons: ['https://worldofclaudecraft.com/icons/icon-512.png'],
+      icons: ['https://worldofclaudecraft.com/icon-512.png'],
     },
     featuredWalletIds: [...FEATURED_WALLET_IDS],
     allWallets: runtime.allWallets,

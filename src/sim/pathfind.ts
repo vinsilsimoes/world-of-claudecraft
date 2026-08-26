@@ -26,6 +26,10 @@ export interface PathOpts {
   swim?: boolean;
   // Per-Sim rift collision token (colliders.ts registry); 0/undefined = none.
   riftToken?: number;
+  /** Return an empty route when no physical path exists instead of the legacy
+   * straight-line fallback. Navigation planners use this to compare road
+   * entrances without mistaking an unreachable goal for a valid direct leg. */
+  fallbackToStraight?: boolean;
 }
 
 function minGroundAt(o: PathOpts, x: number, z: number): number {
@@ -128,7 +132,8 @@ export function findPath(
   const W = Math.ceil((Math.max(from.x, to.x) + MARGIN - minX) / CELL);
   const H = Math.ceil((Math.max(from.z, to.z) + MARGIN - minZ) / CELL);
   const maxSpan = o.maxSpan ?? MAX_SPAN;
-  if (W > maxSpan || H > maxSpan) return [{ x: to.x, z: to.z }];
+  if (W > maxSpan || H > maxSpan)
+    return o.fallbackToStraight === false ? [] : [{ x: to.x, z: to.z }];
   const cx = (gx: number) => minX + (gx + 0.5) * CELL;
   const cz = (gz: number) => minZ + (gz + 0.5) * CELL;
   const toCell = (x: number, z: number) => ({
@@ -238,7 +243,7 @@ export function findPath(
       }
     }
   }
-  if (!found) return [{ x: to.x, z: to.z }];
+  if (!found) return o.fallbackToStraight === false ? [] : [{ x: to.x, z: to.z }];
 
   // reconstruct, then string-pull through any intermediate grid corners that
   // have a direct walkable segment. A* gives legal cells; this converts the
@@ -279,6 +284,32 @@ export function findPlayerPath(
     ignoreFences,
     swim,
     riftToken,
+  });
+}
+
+/** A physical reachability probe for higher-level route planners. Unlike the
+ * legacy movement helper, this never disguises A* failure as a direct leg. */
+export function findReachablePlayerPath(
+  seed: number,
+  from: { x: number; z: number },
+  to: { x: number; z: number },
+  maxSpan = 128,
+  ignoreFences = false,
+  swim = false,
+  riftToken = 0,
+): { x: number; z: number }[] {
+  return findPath(from, to, {
+    seed,
+    bodyRadius: PLAYER_BODY_RADIUS,
+    maxClimbSlope: PLAYER_MAX_CLIMB_SLOPE,
+    minGround: swim
+      ? -Infinity
+      : (x: number, z: number) => waterLevelAt(x, z, seed) - PLAYER_SWIM_DEPTH,
+    maxSpan,
+    ignoreFences,
+    swim,
+    riftToken,
+    fallbackToStraight: false,
   });
 }
 

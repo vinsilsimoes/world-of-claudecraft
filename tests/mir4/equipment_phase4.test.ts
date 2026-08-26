@@ -139,7 +139,13 @@ describe('the enhancement path', () => {
     const pa0 = p.attackPower;
     for (let step = 1; step <= 5; step++) {
       const out = mir4Enhance(sim.ctx, sim.playerId, 991010101);
-      expect(out).toEqual({ ok: true, level: step, destroyed: false, protected: false });
+      expect(out).toEqual({
+        ok: true,
+        level: step,
+        destroyed: false,
+        protected: false,
+        effectiveChanceBps: 100_000,
+      });
     }
     // +5: base 18 + floor(18 * 15% * 1.0 weapon-main-stat) = 18 + 2 = 20 applied.
     const inst = meta.mir4EquipmentInstances![991010101]!;
@@ -193,6 +199,26 @@ describe('the enhancement path', () => {
     expect(inst.enhancement).toBe(5); // level kept, ward consumed
   });
 
+  it('applies the weapon enhancement success status to the actual roll', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(145);
+    const meta = sim.players.get(sim.playerId)!;
+    sim.mir4EquipItem(991010101);
+    const mir4 = sim.player.mir4!;
+    meta.mir4EquipmentInstances = { 991010101: { itemId: 991010101, enhancement: 5 } };
+    meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, solarScroll: 1 };
+    mir4.statusValues = { ...mir4.statusValues, 110: 10_000 };
+    vi.spyOn(sim.ctx.rng, 'next').mockReturnValue(0.99999);
+
+    expect(mir4Enhance(sim.ctx, sim.playerId, 991010101)).toEqual({
+      ok: true,
+      level: 6,
+      destroyed: false,
+      protected: false,
+      effectiveChanceBps: 100_000,
+    });
+  });
+
   it('consumes the campaign guarantee so the first +6 lesson cannot fail or destroy gear', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(146);
@@ -219,6 +245,7 @@ describe('the enhancement path', () => {
       level: 6,
       destroyed: false,
       protected: false,
+      effectiveChanceBps: 100_000,
     });
     expect(meta.mir4ArcRewards.guarantees?.['tutorial-first-plus-six']).toBeUndefined();
     expect(meta.mir4Materials.solarWard).toBe(1);
@@ -251,6 +278,7 @@ describe('the enhancement path', () => {
       level: 10,
       destroyed: false,
       protected: false,
+      effectiveChanceBps: 100_000,
     });
     expect(next).not.toHaveBeenCalled();
     expect(meta.mir4ArcRewards.guarantees?.['tutorial-guided-plus-10']).toBeUndefined();
