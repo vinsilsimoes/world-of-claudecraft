@@ -1921,6 +1921,9 @@ async function startGame(
       onAbilityDown: (slot) => hud.pressSlot(slot),
       onAbilityUp: (slot) => hud.releaseSlot(slot),
       onInputIntent: (kind) => perf.markInputIntent(kind),
+      onManualKey: () => {
+        if (world.mir4PlayerState()) world.cancelMir4AutoRetaliation();
+      },
       onUiKey: (key) => {
         if (key !== 'escape') hud.cancelGroundAim();
         if (handleMir4ToolShortcut(key, world, settings)) return;

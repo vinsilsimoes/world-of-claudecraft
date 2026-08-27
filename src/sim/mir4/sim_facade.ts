@@ -57,6 +57,7 @@ import { type Mir4SkillUpgradeResult, upgradeMir4Skill } from './skill_evolution
 import { type Mir4SolitudeTrainingResult, trainMir4Solitude } from './solitude_training_commands';
 import { isMir4SpiritTicketId, MIR4_SPIRIT_PENDING_LIMIT } from './spirits';
 import { mir4BuyVillageEquipment } from './starter_vendor';
+import { cancelMir4AutoRetaliation } from './target_combat';
 import {
   type Mir4TrainingResult,
   trainMir4Constitution,
@@ -80,6 +81,7 @@ export interface Mir4SimFacade {
   setMir4AutoPotionThreshold(kind: Mir4AutoPotionKind, percent: number, pid?: number): void;
   mir4PlayerState(pid?: number): Mir4PlayerUiState | null;
   setMir4AutoBattle(on: boolean, pid?: number): void;
+  cancelMir4AutoRetaliation(pid?: number): void;
   setMir4AutoSkillEnabled(skillId: number, enabled: boolean, pid?: number): boolean;
   mir4AutoQuestActive(pid?: number): boolean;
   mir4QuestStatusText(pid?: number): string;
@@ -146,6 +148,7 @@ export interface Mir4SimFacade {
 
 declare module '../sim' {
   interface Sim {
+    cancelMir4AutoRetaliation: Mir4SimFacade['cancelMir4AutoRetaliation'];
     mir4RegisterCodex: Mir4SimFacade['mir4RegisterCodex'];
     mir4RegisterAllCodex: Mir4SimFacade['mir4RegisterAllCodex'];
   }
@@ -194,6 +197,9 @@ export const mir4SimFacade = defineMir4SimFacade({
   },
   setMir4AutoBattle(this: Mir4SimFacadeHost, on, pid = this.playerId) {
     setMir4AutoBattleMode(this.ctx, pid, on ? 'battle' : 'off');
+  },
+  cancelMir4AutoRetaliation(this: Mir4SimFacadeHost, pid = this.playerId) {
+    cancelMir4AutoRetaliation(this.ctx, pid);
   },
   setMir4AutoSkillEnabled(this: Mir4SimFacadeHost, skillId, enabled, pid = this.playerId) {
     return setMir4AutoSkillEnabled(this.ctx, pid, skillId, enabled);

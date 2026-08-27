@@ -37,6 +37,7 @@ describe('MIR4 online client facet', () => {
       },
     );
     facet.setMir4AutoBattle(true);
+    facet.cancelMir4AutoRetaliation();
     facet.setMir4AutoQuest(true, 'M08-S01');
     facet.mir4SkipNarrativeDialogue('M01-Q01:accept:-1:17');
     facet.mir4CastSkill(2101, 17);
@@ -55,6 +56,7 @@ describe('MIR4 online client facet', () => {
 
     expect(sent).toEqual([
       { cmd: 'mir4', m: 'auto', on: true },
+      { cmd: 'mir4', m: 'cancelRetaliation' },
       { cmd: 'mir4', m: 'quest', on: true, questId: 'M08-S01' },
       { cmd: 'mir4', m: 'skipDialogue', dialogueId: 'M01-Q01:accept:-1:17' },
       { cmd: 'mir4', m: 'cast', skill: 2101, target: 17 },

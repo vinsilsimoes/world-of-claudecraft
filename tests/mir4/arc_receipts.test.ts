@@ -8,6 +8,10 @@ import {
   creditMir4ArcTutorialReceipt,
   type Mir4ArcTutorialReceipt,
 } from '../../src/sim/mir4/arc_receipts';
+import {
+  ensureMir4ArcTutorialGrants,
+  grantMir4ArcAcceptGrants,
+} from '../../src/sim/mir4/arc_rewards';
 import { redeemMir4CollectionTicket } from '../../src/sim/mir4/collection_tickets';
 import { MIR4_HP_POTION_HEAL_BPS } from '../../src/sim/mir4/combat';
 import { mir4Craft } from '../../src/sim/mir4/crafting';
@@ -17,6 +21,7 @@ import { combineMir4Spirits, equipMir4Spirit } from '../../src/sim/mir4/spirit_c
 import { MIR4_ARC_PORTALS } from '../../src/sim/mir4/travel';
 import { Sim } from '../../src/sim/sim';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
+import { buildMir4InventoryView } from '../../src/ui/mir4_inventory_view';
 
 function makeSim(maps = 1): Sim {
   const world = buildMir4ArcWorld(maps);
@@ -83,13 +88,14 @@ describe('MIR4 campaign gameplay receipts', () => {
         state: 'active',
       },
     };
+    const potionCount = sim.countItem('minor_healing_potion');
     sim.addItem('minor_healing_potion', 1);
 
     expect(sim.player.hp).toBe(sim.player.maxHp);
     sim.useItem('minor_healing_potion');
 
     expect(meta.mir4ArcQuests['M01-Q02']?.stageIndex).toBe(4);
-    expect(sim.countItem('minor_healing_potion')).toBe(1);
+    expect(sim.countItem('minor_healing_potion')).toBe(potionCount + 1);
     expect(sim.player.potionCooldownUntil).toBeLessThanOrEqual(sim.time);
   });
 
@@ -105,6 +111,7 @@ describe('MIR4 campaign gameplay receipts', () => {
   it('does not credit the potion tutorial without the health potion', () => {
     const sim = makeSim();
     const progress = armTutorial(sim, 'M01-Q02');
+    sim.removeItem('minor_healing_potion', sim.countItem('minor_healing_potion'));
 
     sim.useItem('minor_healing_potion');
 
@@ -114,6 +121,7 @@ describe('MIR4 campaign gameplay receipts', () => {
   it('does not credit a full-health potion attempt while its cooldown is active', () => {
     const sim = makeSim();
     const progress = armTutorial(sim, 'M01-Q02');
+    const potionCount = sim.countItem('minor_healing_potion');
     sim.addItem('minor_healing_potion', 1);
     const cooldownUntil = sim.time + 30;
     sim.player.potionCooldownUntil = cooldownUntil;
@@ -121,7 +129,7 @@ describe('MIR4 campaign gameplay receipts', () => {
     sim.useItem('minor_healing_potion');
 
     expect(progress.stageIndex).toBe(3);
-    expect(sim.countItem('minor_healing_potion')).toBe(1);
+    expect(sim.countItem('minor_healing_potion')).toBe(potionCount + 1);
     expect(sim.player.potionCooldownUntil).toBe(cooldownUntil);
   });
 
@@ -165,6 +173,36 @@ describe('MIR4 campaign gameplay receipts', () => {
       count: 1,
     });
     expect(craft.stageIndex).toBeGreaterThan(2);
+  });
+
+  it('moves the recovered starter weapon into bags before requiring the real equip action', () => {
+    const sim = makeSim();
+    const meta = sim.players.get(sim.playerId);
+    const quest = mir4ArcQuest('M01-Q03');
+    if (!meta || !quest) throw new Error('M01-Q03 tutorial fixture is incomplete');
+    const starterWeaponId = 200201000;
+    grantMir4ArcAcceptGrants(sim.ctx, meta, quest);
+    const progress = armTutorial(sim, 'M01-Q03');
+
+    expect(meta.mir4Equipment?.[1]).toBe(starterWeaponId);
+    expect(ensureMir4ArcTutorialGrants(sim.ctx, meta)).toBe(true);
+    expect(meta.mir4Equipment?.[1]).toBeUndefined();
+    expect(meta.mir4EquipmentInstances?.[starterWeaponId]).toEqual({
+      itemId: starterWeaponId,
+      enhancement: 0,
+    });
+    expect(progress.stageIndex).toBe(3);
+    const tutorialState = sim.mir4PlayerState();
+    if (!tutorialState) throw new Error('M01-Q03 tutorial state is unavailable');
+    expect(buildMir4InventoryView(tutorialState).equipment.map((item) => item.itemId)).toContain(
+      starterWeaponId,
+    );
+
+    expect(sim.mir4EquipItem(starterWeaponId)).toBe('Arma Inicial do Guerreiro equipped.');
+    expect(meta.mir4Equipment?.[1]).toBe(starterWeaponId);
+    expect(progress.stageIndex).toBe(4);
+    expect(ensureMir4ArcTutorialGrants(sim.ctx, meta)).toBe(false);
+    expect(meta.mir4Equipment?.[1]).toBe(starterWeaponId);
   });
 
   it('credits portal travel only after the existing positional portal teleports the player', () => {

@@ -23,7 +23,7 @@ export interface Mir4TargetCombatState {
   targetId: number;
   /** The feature that armed this contract. Auto Mission releases only its own
    * focus; player attacks and defensive retaliation remain independent. */
-  owner: 'player' | 'journey';
+  owner: 'player' | 'journey' | 'retaliation';
   route?: Mir4AutomationRouteState;
   pursuit?: Mir4AutoBattlePursuitMemory;
 }
@@ -35,7 +35,10 @@ function hasManualMovement(input: MoveInput): boolean {
     input.strafeLeft ||
     input.strafeRight ||
     input.turnLeft ||
-    input.turnRight
+    input.turnRight ||
+    input.jump ||
+    input.dive ||
+    input.surface
   );
 }
 
@@ -121,8 +124,14 @@ export function retaliateMir4TargetCombat(
   if (player.weaponStowed) drawWeapon(player);
   player.targetId = attackerId;
   player.autoAttack = true;
-  meta.mir4TargetCombat = { targetId: attackerId, owner: 'player' };
+  meta.mir4TargetCombat = { targetId: attackerId, owner: 'retaliation' };
   return true;
+}
+
+/** Gives explicit player input priority without interrupting focused combat
+ * that the player or Auto Mission deliberately started. */
+export function cancelMir4AutoRetaliation(ctx: SimContext, pid: number): void {
+  stopMir4TargetCombat(ctx, pid, 'retaliation');
 }
 
 /** Stops ordinary target combat without changing the Auto Battle tool. */
@@ -153,6 +162,10 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
     // target contract. None of them can roll combat onto another entity.
     const target = livingSelectedHostile(ctx, player, state.targetId);
     if (player.dead || player.targetId !== state.targetId || !target) {
+      clearMir4TargetCombat(ctx, player);
+      continue;
+    }
+    if (state.owner === 'retaliation' && hasManualMovement(meta.moveInput)) {
       clearMir4TargetCombat(ctx, player);
       continue;
     }
@@ -188,8 +201,10 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
       continue;
     }
 
-    // Hands on the movement controls always own locomotion. Attack stays armed
-    // and resumes its focused pursuit when the player releases the controls.
+    // For player-started and Auto Mission focus, hands on the movement controls
+    // own locomotion. Those deliberate attacks stay armed and resume their
+    // focused pursuit when the player releases the controls. Defensive
+    // retaliation is cleared earlier instead of reaching this branch.
     if (hasManualMovement(meta.moveInput)) continue;
 
     const observed = observeMir4AutoBattlePursuit(state.pursuit, target.id, player.pos, distance);

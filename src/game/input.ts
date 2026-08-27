@@ -109,6 +109,8 @@ export interface InputCallbacks {
   onClickPick(x: number, y: number, button: number): void;
   /** Attack-move key pressed (only fires while Attack Move mode is on); x/y is the cursor. */
   onAttackMove?(x: number, y: number): void;
+  /** Every accepted, non-repeating keyboard press outside text entry. */
+  onManualKey?(): void;
   /** When false, keydown-driven actions are ignored: edge actions (spells, UI keys)
    *  and held movement keys. Escape is handled before this gate and still reaches
    *  onUiKey; key releases are ungated. */
@@ -977,6 +979,7 @@ export class Input {
     }
     const tag = (document.activeElement?.tagName ?? '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return;
+    this.cb.onManualKey?.();
     if (e.code === 'Escape') {
       this.cb.onUiKey('escape');
       return;

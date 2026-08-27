@@ -85,6 +85,7 @@ function makeInput(userAgent?: string) {
     onEmoteWheel: vi.fn(),
     onClickPick: vi.fn(),
     onAttackMove: vi.fn(),
+    onManualKey: vi.fn(),
     canUseGameKeys: () => gameKeysAllowed,
   };
   const input = new Input(canvas as any, cb, new Keybinds());
@@ -1006,6 +1007,39 @@ describe('Input Escape handling', () => {
 
     expect(cb.onUiKey).toHaveBeenCalledTimes(1);
     expect(cb.onUiKey).toHaveBeenCalledWith('escape');
+  });
+});
+
+describe('Input manual-key intent', () => {
+  it('reports every non-repeating gameplay key, even when a modal owns its action', () => {
+    const { cb, windowListeners, setGameKeysAllowed } = makeInput();
+    setGameKeysAllowed(false);
+
+    windowListeners.get('keydown')!({ code: 'KeyW', repeat: false });
+    windowListeners.get('keydown')!({ code: 'KeyW', repeat: true });
+    windowListeners.get('keydown')!({ code: 'Escape', repeat: false });
+
+    expect(cb.onManualKey).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not treat typing in a text field as gameplay intent', () => {
+    const { cb, windowListeners } = makeInput();
+    (globalThis as any).document.activeElement = { tagName: 'INPUT' };
+
+    windowListeners.get('keydown')!({ code: 'KeyW', repeat: false });
+
+    expect(cb.onManualKey).not.toHaveBeenCalled();
+  });
+
+  it('routes manual keys to the MIR4 retaliation-only cancel command', () => {
+    const keyboardStart = mainSource.indexOf('onManualKey: () => {');
+    const keyboardRoute = mainSource.slice(
+      keyboardStart,
+      mainSource.indexOf('onUiKey: (key) => {', keyboardStart),
+    );
+
+    expect(keyboardRoute).toContain('world.cancelMir4AutoRetaliation()');
+    expect(keyboardRoute).not.toContain('world.stopAutoAttack()');
   });
 });
 

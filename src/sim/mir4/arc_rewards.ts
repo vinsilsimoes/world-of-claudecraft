@@ -10,7 +10,12 @@ import { MIR4_STARTER_LOADOUT_BY_CLASS } from '../content/mir4/items';
 import { MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS } from '../content/mir4/starter_quest_equipment';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
-import { MIR4_EMPTY_MATERIALS, MIR4_MATERIAL_IDS, type Mir4Materials } from './equipment';
+import {
+  MIR4_EMPTY_MATERIALS,
+  MIR4_MATERIAL_IDS,
+  type Mir4Materials,
+  mir4UnequipSlot,
+} from './equipment';
 import { mir4ModifiedProgressionReward } from './status_effects';
 import { markMir4WireDirty } from './wire_revision';
 
@@ -38,9 +43,11 @@ interface RewardMeta {
 const MAX_COUNT = 1_000_000_000;
 const XP_LEDGER_VERSION = 2;
 const M01_Q03_WEAPON_GRANT_ID = 'tutorial-m01-q03-recovered-weapon';
+const M01_Q03_WEAPON_PRESENTED_GRANT_ID = 'tutorial-m01-q03-recovered-weapon-presented';
 const M04_Q03_ENHANCEMENT_RECOVERY_GRANT_ID = 'tutorial-m04-q03-enhancement-recovery';
 export const MIR4_ARC_DYNAMIC_GRANT_IDS = Object.freeze([
   M01_Q03_WEAPON_GRANT_ID,
+  M01_Q03_WEAPON_PRESENTED_GRANT_ID,
   M04_Q03_ENHANCEMENT_RECOVERY_GRANT_ID,
   ...Array.from({ length: 5 }, (_, classIndex) => classIndex + 1).flatMap((classId) => [
     ...MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS.map(
@@ -302,6 +309,33 @@ function grantM01Q03RecoveredWeapon(ctx: SimContext, meta: PlayerMeta): boolean 
   return grantNativeEquipmentReward(meta, itemId, newlyClaimed) || newlyClaimed;
 }
 
+/** Fresh characters use their starter weapon during the opening fights. When
+ * M01-Q03 reaches its equipment lesson, move that recovered weapon into bags
+ * exactly once so the player can perform the equip action the tutorial teaches. */
+function presentM01Q03RecoveredWeapon(ctx: SimContext, meta: PlayerMeta): boolean {
+  const progress = meta.mir4ArcQuests?.['M01-Q03'];
+  if (meta.mir4ArcRewards?.claimedGrantIds?.includes(M01_Q03_WEAPON_PRESENTED_GRANT_ID)) {
+    return false;
+  }
+  const stage = progress
+    ? MIR4_QUESTS_ARC.find((quest) => quest.questId === progress.questId)?.stages[
+        progress.stageIndex
+      ]
+    : undefined;
+  if (progress?.state !== 'active' || stage?.kind !== 'system-tutorial') return false;
+  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId as Mir4ClassId | undefined;
+  const itemId = classId ? MIR4_STARTER_LOADOUT_BY_CLASS[classId]?.weapon : undefined;
+  if (
+    itemId === undefined ||
+    !meta.mir4EquipmentInstances?.[itemId] ||
+    !claimOnce(meta, M01_Q03_WEAPON_PRESENTED_GRANT_ID)
+  ) {
+    return false;
+  }
+  if (meta.mir4Equipment?.[1] === itemId) mir4UnequipSlot(ctx, meta.entityId, 1);
+  return true;
+}
+
 function recoverM04Q03EnhancementMaterials(meta: PlayerMeta): boolean {
   const progress = meta.mir4ArcQuests?.['M04-Q03'];
   if (progress?.state !== 'active' || progress.stageIndex !== 3) return false;
@@ -330,12 +364,9 @@ function recoverM04Q03EnhancementMaterials(meta: PlayerMeta): boolean {
 export function ensureMir4ArcTutorialGrants(ctx: SimContext, meta: PlayerMeta): boolean {
   let changed = false;
   const recoveredWeaponProgress = meta.mir4ArcQuests?.['M01-Q03'];
-  if (
-    recoveredWeaponProgress?.state === 'active' &&
-    recoveredWeaponProgress.stageIndex >= 3 &&
-    grantM01Q03RecoveredWeapon(ctx, meta)
-  ) {
-    changed = true;
+  if (recoveredWeaponProgress?.state === 'active' && recoveredWeaponProgress.stageIndex >= 3) {
+    if (grantM01Q03RecoveredWeapon(ctx, meta)) changed = true;
+    if (presentM01Q03RecoveredWeapon(ctx, meta)) changed = true;
   }
   if (recoverM04Q03EnhancementMaterials(meta)) changed = true;
   const nativeToolsProgress = meta.mir4ArcQuests?.['M01-Q04'];

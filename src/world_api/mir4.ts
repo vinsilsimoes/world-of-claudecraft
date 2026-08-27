@@ -21,6 +21,8 @@ export interface IWorldMir4 {
   /** Authoritative auto-battle read. */
   mir4AutoBattleActive(): boolean;
   setMir4AutoBattle(on: boolean): void;
+  /** Cancel only combat armed by defensive auto-retaliation. */
+  cancelMir4AutoRetaliation(): void;
   /** Persisted percentages at or below which Auto Battle uses each potion role. */
   mir4AutoPotionThresholds(): Mir4AutoPotionThresholds;
   setMir4AutoPotionThreshold(kind: Mir4AutoPotionKind, percent: number): void;

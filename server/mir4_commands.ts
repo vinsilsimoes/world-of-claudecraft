@@ -45,6 +45,9 @@ export function handleMir4Command(
     case 'auto':
       if (typeof msg.on === 'boolean') sim.setMir4AutoBattle(msg.on, pid);
       break;
+    case 'cancelRetaliation':
+      sim.cancelMir4AutoRetaliation(pid);
+      break;
     case 'autoPotion':
       if ((msg.kind === 'health' || msg.kind === 'mana') && isAutoPotionPercent(msg.percent)) {
         sim.setMir4AutoPotionThreshold(msg.kind, msg.percent, pid);

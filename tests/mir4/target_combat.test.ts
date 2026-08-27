@@ -48,7 +48,44 @@ describe('MIR4 focused target combat', () => {
 
     expect(sim.player.targetId).toBe(attacker.id);
     expect(sim.player.autoAttack).toBe(true);
-    expect(sim.players.get(sim.playerId)?.mir4TargetCombat?.targetId).toBe(attacker.id);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toMatchObject({
+      targetId: attacker.id,
+      owner: 'retaliation',
+    });
+    expect(sim.mir4AutoBattleActive()).toBe(false);
+  });
+
+  it('cancels only defensive retaliation when a non-movement key reports manual intent', () => {
+    const sim = makeSim(6223);
+    const attacker = spawnWolf(sim, 2, 'retaliation_key_override', 5000);
+
+    sim.ctx.dealDamage(attacker, sim.player, 1, false, 'physical', null, 'hit');
+    sim.cancelMir4AutoRetaliation();
+
+    expect(sim.player.autoAttack).toBe(false);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toBeUndefined();
+
+    sim.player.targetId = attacker.id;
+    sim.startAutoAttack();
+    sim.cancelMir4AutoRetaliation();
+
+    expect(sim.player.autoAttack).toBe(true);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toMatchObject({
+      targetId: attacker.id,
+      owner: 'player',
+    });
+  });
+
+  it('cancels defensive retaliation as soon as the player provides manual movement input', () => {
+    const sim = makeSim(6222);
+    const attacker = spawnWolf(sim, 2, 'retaliation_manual_override', 5000);
+
+    sim.ctx.dealDamage(attacker, sim.player, 1, false, 'physical', null, 'hit');
+    sim.moveInput.forward = true;
+    sim.tick();
+
+    expect(sim.player.autoAttack).toBe(false);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toBeUndefined();
     expect(sim.mir4AutoBattleActive()).toBe(false);
   });
 

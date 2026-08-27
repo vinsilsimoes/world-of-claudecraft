@@ -102,9 +102,14 @@ describe('game-profile command authority', () => {
 
     const sortInventory = vi.spyOn(server.sim, 'sortInventory');
     const autoBattle = vi.spyOn(server.sim, 'setMir4AutoBattle');
+    const cancelRetaliation = vi.spyOn(server.sim, 'cancelMir4AutoRetaliation');
     const autoPotion = vi.spyOn(server.sim, 'setMir4AutoPotionThreshold');
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'inv_sort' }));
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'auto', on: true }));
+    server.handleMessage(
+      session,
+      JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'cancelRetaliation' }),
+    );
     server.handleMessage(
       session,
       JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'autoPotion', kind: 'health', percent: 65 }),
@@ -116,6 +121,7 @@ describe('game-profile command authority', () => {
 
     expect(sortInventory).toHaveBeenCalledWith(session.pid);
     expect(autoBattle).toHaveBeenCalledWith(true, session.pid);
+    expect(cancelRetaliation).toHaveBeenCalledWith(session.pid);
     expect(autoPotion).toHaveBeenCalledTimes(1);
     expect(autoPotion).toHaveBeenCalledWith('health', 65, session.pid);
   });

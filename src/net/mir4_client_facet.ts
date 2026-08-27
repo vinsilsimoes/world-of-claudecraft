@@ -56,6 +56,8 @@ export class Mir4ClientFacet implements IWorldMir4 {
   readonly mir4PlayerState = (): Readonly<Mir4SnapshotState> | null => this.snapshot;
   readonly mir4AutoBattleActive = (): boolean => this.snapshot?.autoBattle?.mode === 'battle';
   readonly setMir4AutoBattle = (on: boolean): void => this.send({ cmd: 'mir4', m: 'auto', on });
+  readonly cancelMir4AutoRetaliation = (): void =>
+    this.send({ cmd: 'mir4', m: 'cancelRetaliation' });
   readonly mir4AutoPotionThresholds = (): Mir4AutoPotionThresholds =>
     resolveMir4AutoPotionThresholds(this.snapshot?.mir4AutoPotion);
   readonly setMir4AutoPotionThreshold = (kind: Mir4AutoPotionKind, percent: number): void =>
@@ -207,6 +209,9 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   }
   setMir4AutoBattle(on: boolean): void {
     this.ensureMir4Facet().setMir4AutoBattle(on);
+  }
+  cancelMir4AutoRetaliation(): void {
+    this.ensureMir4Facet().cancelMir4AutoRetaliation();
   }
   mir4AutoPotionThresholds(): Mir4AutoPotionThresholds {
     return this.ensureMir4Facet().mir4AutoPotionThresholds();
