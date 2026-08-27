@@ -1021,6 +1021,9 @@ export const en_XA: EnTranslations = {
       "characterTitle": "[Çĥáŕáçţéŕ]",
       "awaitingState": "[Ŵáíţíñĝ ƒóŕ áúţĥóŕíţáţíʋé çĥáŕáçţéŕ ðáţá...]",
       "combatPowerLine": "[Çóɱƀáţ Þóŵéŕ {value}]",
+      "fameLine": "[Ƒáɱé: {value}]",
+      "pkStatusSafe": "[Šţáţúš: þéáçéƒúļ]",
+      "pkStatusMarked": "[Šţáţúš: ÞĶ - áļļ šţáţš ŕéðúçéð ƀý 50%]",
       "equipmentVisualShell": "[Áéļðŕúñé áþþéáŕáñçé ŵíţĥ çļášš-šþéçíƒíç çóɱƀáţ áţţŕíƀúţéš]",
       "equipmentTierGrade": "[Íɱþóŕţéð šóúŕçé ţíéŕ {tier}, ĝŕáðé {grade}]",
       "equipmentRequiredLevel": "[Çŕáƒţéð éɋúíþɱéñţ ĥáš ñó çĥáŕáçţéŕ ļéʋéļ ŕéɋúíŕéɱéñţ; ļéĝáçý çáţáļóĝ ļéʋéļ {level} íš íĝñóŕéð.]",
@@ -3691,6 +3694,7 @@ export const en_XA: EnTranslations = {
     "social": {
       "lastSeen": "[Ļášţ šééñ: {when}]",
       "lastSeenNever": "[ñéʋéŕ]",
+      "friendRequest": "[Ƒŕíéñð ŕéɋúéšţ]",
       "ignoredTab": "[Íĝñóŕéð]",
       "blockedTab": "[Ɓļóçķéð]",
       "ignoredEmpty": "[Ýóú áŕé ñóţ íĝñóŕíñĝ áñýóñé.]",

@@ -13,13 +13,22 @@ afterEach(() => setActiveWorldContent(null));
 function makeWorld(): Sim {
   const world = buildMir4ArcWorld(20);
   setActiveWorldContent(world);
-  return new Sim({
+  const sim = new Sim({
     seed: 470,
     playerClass: 'warrior',
     playerName: 'Aldric',
     gameProfile: 'mir4-gameplay-port',
     world,
   });
+  const meta = sim.meta(sim.player.id);
+  if (!meta) throw new Error('MIR4 test player metadata is required');
+  meta.mir4ArcQuests = Object.fromEntries(
+    Array.from({ length: 20 }, (_, index) => {
+      const questId = `M${String(index + 1).padStart(2, '0')}-Q01`;
+      return [questId, { questId, stageIndex: 0, stageProgress: 0, state: 'active' as const }];
+    }),
+  );
+  return sim;
 }
 
 function placeAt(sim: Sim, x: number, z: number): void {
@@ -29,6 +38,28 @@ function placeAt(sim: Sim, x: number, z: number): void {
 }
 
 describe('MIR4 arc travel through the existing portal runtime', () => {
+  it('keeps a forward portal sealed until a main quest sends the player to its map', () => {
+    const world = buildMir4ArcWorld(2);
+    setActiveWorldContent(world);
+    const sim = new Sim({
+      seed: 469,
+      playerClass: 'warrior',
+      playerName: 'Locked Boundary Probe',
+      gameProfile: 'mir4-gameplay-port',
+      world,
+    });
+    const portal = MIR4_ARC_PORTALS[0]!;
+    placeAt(sim, portal.a.x, portal.a.z);
+    sim.tick();
+    expect(zoneAt(sim.player.pos.x, sim.player.pos.z).id).toBe('mir4_m01-vila-do-vau');
+
+    const meta = sim.meta(sim.player.id)!;
+    meta.mir4ArcQuests = {
+      'M02-Q01': { questId: 'M02-Q01', stageIndex: 0, stageProgress: 0, state: 'active' },
+    };
+    sim.tick();
+    expect(zoneAt(sim.player.pos.x, sim.player.pos.z).id).toBe('mir4_m02-trilha-dos-juncos');
+  });
   it('builds the 19 reciprocal links from the source map order and 3D band geometry', () => {
     expect(MIR4_ARC_PORTALS).toHaveLength(19);
     expect(MIR4_ARC_PORTALS[0]?.id).toBe('mir4_m01-vila-do-vau_to_m02-trilha-dos-juncos');

@@ -1021,6 +1021,9 @@ export const zh_TW: EnTranslations = {
       "characterTitle": "角色",
       "awaitingState": "正在等待權威角色資料……",
       "combatPowerLine": "戰力 {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "採用 Aeldrune 外觀與 MIR4 戰鬥屬性",
       "equipmentTierGrade": "階層 {tier}，品級 {grade}",
       "equipmentRequiredLevel": "需要等級 {level}",
@@ -3691,6 +3694,7 @@ export const zh_TW: EnTranslations = {
     "social": {
       "lastSeen": "最後上線: {when}",
       "lastSeenNever": "從未",
+      "friendRequest": "Friend request",
       "ignoredTab": "已忽略",
       "blockedTab": "封鎖",
       "ignoredEmpty": "你沒有忽略任何人。",

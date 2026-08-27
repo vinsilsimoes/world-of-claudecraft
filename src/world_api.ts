@@ -132,7 +132,9 @@ export type {
 // 13 = MIR4/WoC inter-map portals and their protected monster-free approaches
 // moved away from settlements. Epoch 12 peers would render and route to the old
 // coordinates while the authoritative simulation triggers the new locations.
-export const ONLINE_WORLD_LAYOUT_VERSION = 13 as const;
+// 14 = persistent friend requests add two commands and one social-frame field.
+// Older peers cannot accept or decline a request and would strand the social state.
+export const ONLINE_WORLD_LAYOUT_VERSION = 14 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI
@@ -420,6 +422,8 @@ export const COMMAND_NAMES = [
   'duel_accept',
   'duel_decline',
   'friend_add',
+  'friend_accept',
+  'friend_decline',
   'friend_remove',
   'block_add',
   'block_remove',
@@ -839,6 +843,8 @@ export const COMMAND_FACETS = {
   // wire and the chat event already carry (no command); social_refresh is a
   // dispatch-only server push (untagged).
   friend_add: 'IWorldSocialGraph',
+  friend_accept: 'IWorldSocialGraph',
+  friend_decline: 'IWorldSocialGraph',
   friend_remove: 'IWorldSocialGraph',
   block_add: 'IWorldSocialGraph',
   block_remove: 'IWorldSocialGraph',

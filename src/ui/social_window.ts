@@ -454,6 +454,9 @@ export class SocialWindow {
     const act = node.dataset.act;
     const name = node.dataset.name ?? '';
     if (act === 'unfriend') w.friendRemove(name);
+    else if (act === 'friend-accept') w.friendAccept(name);
+    else if (act === 'friend-decline') w.friendDecline(name);
+    else if (act === 'party-invite') w.chat(`/invite ${name}`);
     else if (act === 'unblock') w.blockRemove(name);
     else if (act === 'unignore') w.ignoreRemove(name);
     else if (act === 'gkick') w.guildKick(name);
@@ -495,10 +498,23 @@ export class SocialWindow {
   }
 
   private friendsHtml(): string {
-    const rows = friendRows(this.deps.world().socialInfo);
-    if (rows.length === 0)
+    const social = this.deps.world().socialInfo;
+    const rows = friendRows(social);
+    const requests = social?.friendRequests ?? [];
+    if (rows.length === 0 && requests.length === 0)
       return `<div class="soc-empty">${esc(t('hud.social.friendsEmpty'))}</div>`;
-    return rows
+    const requestHtml = requests
+      .map(
+        (request) =>
+          `<div class="soc-row soc-request">` +
+          `<span class="soc-dot"></span>` +
+          `<span class="soc-id"><span class="soc-name">${esc(request.name)}</span><span class="soc-sub">${esc(t('hud.social.levelClass', { level: formatNumber(request.level, { maximumFractionDigits: 0 }), className: playerClassDisplayName(request.cls) }))}</span></span>` +
+          `<span class="soc-meta">${esc(t('hudChrome.social.friendRequest'))}</span>` +
+          `<span class="soc-actions"><button type="button" class="soc-x" data-act="friend-accept" data-name="${esc(request.name)}" title="${esc(t('questUi.dialog.accept'))}">${svgIcon('check')}</button><button type="button" class="soc-x" data-act="friend-decline" data-name="${esc(request.name)}" title="${esc(t('questUi.dialog.decline'))}">${svgIcon('close')}</button></span>` +
+          `</div>`,
+      )
+      .join('');
+    const friendsHtml = rows
       .map((f) => {
         const meta = f.online
           ? `<span class="zone">${esc(f.zone ? localizeZone(f.zone) : '')}</span><br>${esc(statusLabel(f.status))}`
@@ -515,17 +531,21 @@ export class SocialWindow {
         const whisper = f.online
           ? `<button type="button" class="soc-x" data-whisper="${esc(f.name)}" title="${esc(t('hud.social.whisperTitle', { name: f.name }))}">${svgIcon('whisper')}</button>`
           : '';
+        const partyInvite = f.online
+          ? `<button type="button" class="soc-x" data-act="party-invite" data-name="${esc(f.name)}" title="${esc(t('hud.social.invite'))}">${svgIcon('check')}</button>`
+          : '';
         const tip = esc(dotTitle(f.online, f.status, f.zone));
         return (
           `<div class="soc-row">` +
           `<span class="soc-dot ${f.dot === 'off' ? '' : f.dot}" title="${tip}"></span>` +
           `<span class="soc-id">${name}<span class="soc-sub">${esc(t('hud.social.levelClass', { level: formatNumber(f.level, { maximumFractionDigits: 0 }), className: playerClassDisplayName(f.cls) }))}</span></span>` +
           `<span class="soc-meta" title="${tip}">${meta}</span>` +
-          `<span class="soc-actions">${whisper}<button type="button" class="soc-x" data-act="unfriend" data-name="${esc(f.name)}" title="${esc(t('hud.social.removeFriendTitle', { name: f.name }))}">${svgIcon('close')}</button></span>` +
+          `<span class="soc-actions">${partyInvite}${whisper}<button type="button" class="soc-x" data-act="unfriend" data-name="${esc(f.name)}" title="${esc(t('hud.social.removeFriendTitle', { name: f.name }))}">${svgIcon('close')}</button></span>` +
           `</div>`
         );
       })
       .join('');
+    return requestHtml + friendsHtml;
   }
 
   // The two PLAYER tiers get a tab each, so a row can never be mistaken for the

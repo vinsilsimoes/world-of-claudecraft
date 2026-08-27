@@ -17,7 +17,7 @@
 //
 // CARDINALITY IS BOUNDED BY DESIGN, same contract as server/http/metrics.ts: the
 // only label values here are the ws-message direction (a fixed two), the
-// inbound drop cause (the fixed eight-value WS_DROP_CAUSES set), the guild-bank
+// inbound drop cause (the fixed nine-value WS_DROP_CAUSES set), the guild-bank
 // incident kind (the fixed nine-value GUILD_BANK_INCIDENTS set), the copper-flow
 // source, the harvest band and node tier (the fixed sets in
 // server/economy_telemetry.ts), and the fishing band and rod recipe id (the
@@ -55,14 +55,15 @@ export const GENERAL_CHAT_QUOTA_DB_OUTCOMES = [
 export type GeneralChatQuotaDbOutcome = (typeof GENERAL_CHAT_QUOTA_DB_OUTCOMES)[number];
 
 /**
- * The fixed eight causes an inbound ws frame can be dropped for: the two
+ * The fixed nine causes an inbound ws frame can be dropped for: the two
  * pre-parse gate causes (server/msg_rate_limit.ts), the three post-parse
  * lanes (server/msg_lanes.ts), the list-read guard on the ignore/block
  * readouts (server/list_read_guard.ts), the guild-bank op guard
  * (server/guild_bank_op_guard.ts, each allowed op is a keep-forever ledger
  * write), and the cosmetic-set guard on the two Book of Deeds pickers
  * (server/cosmetic_op_guard.ts, each allowed set re-wires a full identity
- * record to every in-range viewer). This closed set IS the cause label's
+ * record to every in-range viewer), and the persistent social-mutation guard.
+ * This closed set IS the cause label's
  * whole vocabulary; it never grows per-player or per-message.
  */
 export const WS_DROP_CAUSES = [
@@ -74,9 +75,10 @@ export const WS_DROP_CAUSES = [
   'list_read',
   'guild_bank',
   'cosmetic',
+  'social_mutation',
 ] as const;
 
-/** One of the fixed eight inbound drop causes. */
+/** One of the fixed nine inbound drop causes. */
 export type WsDropCause = (typeof WS_DROP_CAUSES)[number];
 
 /**

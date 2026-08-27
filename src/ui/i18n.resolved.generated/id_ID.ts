@@ -1021,6 +1021,9 @@ export const id_ID: EnTranslations = {
       "characterTitle": "Character",
       "awaitingState": "Waiting for authoritative character data...",
       "combatPowerLine": "Combat Power {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "Aeldrune appearance with class-specific combat attributes",
       "equipmentTierGrade": "Imported source tier {tier}, grade {grade}",
       "equipmentRequiredLevel": "Crafted equipment has no character level requirement; legacy catalog level {level} is ignored.",
@@ -3691,6 +3694,7 @@ export const id_ID: EnTranslations = {
     "social": {
       "lastSeen": "Terakhir terlihat: {when}",
       "lastSeenNever": "tidak pernah",
+      "friendRequest": "Friend request",
       "ignoredTab": "Diabaikan",
       "blockedTab": "Diblokir",
       "ignoredEmpty": "Kamu tidak mengabaikan siapa pun.",

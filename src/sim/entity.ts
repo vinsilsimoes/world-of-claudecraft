@@ -155,6 +155,7 @@ function baseEntity(id: number, pos: Vec3): Entity {
     helmHidden: false,
     modularAppearance: null,
     afk: false,
+    pkMarked: false,
     aiState: 'idle',
     tappedById: null,
     pulseTimer: 0,

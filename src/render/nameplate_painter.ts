@@ -378,9 +378,10 @@ export class NameplatePainter {
       }
       const roleColor = specialRoleColor(entity.discordRole);
       const roleTag = discordRoleTagLabel(entity.discordRole);
-      const baseName = roleTag ? `[${roleTag}] ${entity.name}` : entity.name;
+      const visibleName = entity.pkMarked ? `[PK] ${entity.name}` : entity.name;
+      const baseName = roleTag ? `[${roleTag}] ${visibleName}` : visibleName;
       state.name = entity.afk ? `<${t('hudChrome.nameplate.afkTag')}> ${baseName}` : baseName;
-      state.nameColor = roleColor ?? '#7fb8ff';
+      state.nameColor = entity.pkMarked ? '#ff4d4d' : (roleColor ?? '#7fb8ff');
       state.guild = entity.guild;
       // Build the drawn `<guild>` wrapper here, not in the per-frame drawBase:
       // resolveContent is guild's only writer and runs strictly less often (the

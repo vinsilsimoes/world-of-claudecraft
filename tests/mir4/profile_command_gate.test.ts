@@ -40,7 +40,7 @@ describe('game-profile command authority', () => {
     const classified = [...new Set([...blocked, ...shared])].sort();
 
     expect(MIR4_CLASSIC_ONLY_COMMANDS).toHaveLength(100);
-    expect(MIR4_SHARED_COMMANDS).toHaveLength(113);
+    expect(MIR4_SHARED_COMMANDS).toHaveLength(115);
     expect([...blocked].filter((command) => shared.has(command))).toEqual([]);
     expect(classified).toEqual([...COMMAND_NAMES].sort());
     for (const command of MIR4_CLASSIC_ONLY_COMMANDS) {
@@ -49,6 +49,12 @@ describe('game-profile command authority', () => {
     for (const command of MIR4_SHARED_COMMANDS) {
       expect(gameProfileAllowsCommand(MIR4_GAME_PROFILE, command), command).toBe(true);
     }
+  });
+
+  it('admits the complete friend-request lifecycle in Aeldrune', () => {
+    expect(gameProfileAllowsCommand(MIR4_GAME_PROFILE, 'friend_add')).toBe(true);
+    expect(gameProfileAllowsCommand(MIR4_GAME_PROFILE, 'friend_accept')).toBe(true);
+    expect(gameProfileAllowsCommand(MIR4_GAME_PROFILE, 'friend_decline')).toBe(true);
   });
 
   it('keeps the MIR4 envelope closed on classic realms', () => {

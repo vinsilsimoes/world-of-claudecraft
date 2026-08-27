@@ -16657,25 +16657,8 @@ export class Hud {
     // applyState at character load, when no window can be open.)
   }
 
-  // The progression-block sibling of refreshOpenProfessionSurfacesIfChanged:
-  // the sheet's title line, border badge row, and Reliquary pair are readouts
-  // on a cold window, and no surface that moves them repaints an already open
-  // sheet (the deeds picker repaints only itself; a relic fill, the tracker).
-  //
-  // Computed even when closed, like the sibling, with the cost stated rather
-  // than waved through: three size reads are O(1), and Sim.ownedMounts() pays
-  // one merged bags-plus-bank allocation per 2 Hz tick (the read the Reliquary
-  // tracker defers behind a thunk). Microseconds against a 500 ms band,
-  // ACCEPTED so the warm signature stops a reopen from being followed by a
-  // redundant signature-diff repaint. The sizes are a proxy, not a second
-  // completion walk; the core's own header says what the proxy misses.
-  //
-  // Rule of three: a THIRD consumer of these ownership reads on this band earns
-  // one shared once-per-tick computation instead of a third inventory walk.
-  //
-  // Converges in both hosts with no optimistic write (offline setters are
-  // synchronous; online the atitle/aborder echo and the snapshot's ownership
-  // fields land well inside one band), and render() rebuilds every row fresh.
+  // Repaint an open character sheet when a cold readout changes. The 2 Hz
+  // signature also prevents a redundant repaint immediately after reopening.
   private refreshCharSheetIfChanged(): void {
     const sig = charSheetRefreshSig({
       activeTitle: this.sim.activeTitle,
@@ -16684,6 +16667,8 @@ export class Hud {
       itemsDiscovered: this.sim.deedStats.itemsDiscovered.size,
       marks: this.sim.reliquaryMarks.size,
       mounts: this.sim.ownedMounts().length,
+      fame: this.sim.fame,
+      pkMarked: this.sim.pkMarked,
     });
     if (sig === this.lastCharSheetSig) return;
     this.lastCharSheetSig = sig;

@@ -43,6 +43,8 @@ const base = {
   itemsDiscovered: 40,
   marks: 3,
   mounts: 5,
+  fame: 2_000,
+  pkMarked: false,
 };
 
 describe('charSheetRefreshSig', () => {
@@ -55,6 +57,8 @@ describe('charSheetRefreshSig', () => {
       itemsDiscovered: 0,
       marks: 0,
       mounts: 0,
+      fame: 2_000,
+      pkMarked: false,
     };
     expect(charSheetRefreshSig(empty)).toBe(charSheetRefreshSig({ ...empty }));
   });
@@ -103,6 +107,13 @@ describe('charSheetRefreshSig', () => {
     expect(charSheetRefreshSig(base)).not.toBe(
       charSheetRefreshSig({ ...base, mounts: base.mounts - 1 }),
     );
+  });
+
+  it('moves when fame changes or the PK threshold flips', () => {
+    expect(charSheetRefreshSig(base)).not.toBe(
+      charSheetRefreshSig({ ...base, fame: base.fame - 100 }),
+    );
+    expect(charSheetRefreshSig(base)).not.toBe(charSheetRefreshSig({ ...base, pkMarked: true }));
   });
 
   it('distinguishes worn from unworn in BOTH id slots (the take-off edge)', () => {
@@ -218,6 +229,8 @@ describe('the HUD latch that converges the open character sheet', () => {
     expect(body).toContain('itemsDiscovered: this.sim.deedStats.itemsDiscovered.size,');
     expect(body).toContain('marks: this.sim.reliquaryMarks.size,');
     expect(body).toContain('mounts: this.sim.ownedMounts().length,');
+    expect(body).toContain('fame: this.sim.fame,');
+    expect(body).toContain('pkMarked: this.sim.pkMarked,');
     expect(body).toContain('if (sig === this.lastCharSheetSig) return;');
     expect(body).toContain('this.lastCharSheetSig = sig;');
     // ORDER, not just presence: hoisting the assignment above the compare

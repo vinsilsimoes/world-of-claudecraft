@@ -123,6 +123,16 @@ describe('social_window: delegated row listeners (no per-tick churn)', () => {
     expect(painter).toContain('private onBodyClick(');
   });
 
+  it('renders incoming friend requests with accept/decline and exposes party invite on online friends', () => {
+    expect(painter).toContain('social?.friendRequests ?? []');
+    expect(painter).toContain('data-act="friend-accept"');
+    expect(painter).toContain('data-act="friend-decline"');
+    expect(painter).toContain('w.friendAccept(name)');
+    expect(painter).toContain('w.friendDecline(name)');
+    expect(painter).toContain('data-act="party-invite"');
+    expect(painter).toContain('w.chat(`/invite ${name}`)');
+  });
+
   it('the content refresh only swaps innerHTML and re-attaches no row handlers', () => {
     // Isolate refreshList(): it must not addEventListener (the delegated body listener
     // from render() keeps working across the innerHTML swap, so a cadence tick that

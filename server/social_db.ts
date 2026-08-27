@@ -3,7 +3,7 @@
 // on `characters` scopes a character to a world/shard (one realm today, but
 // stored now so cross-realm friends/guilds need no migration later).
 
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import { bustAdminGuildListReads } from './admin_guilds_read';
 import {
   GUILD_NAME_ADVISORY_LOCK_SQL,
@@ -13,6 +13,7 @@ import {
 import { GuildRosterCache } from './guild_roster_cache';
 import { REALM } from './realm';
 import type { CharInfo, CharRef, GuildEventRow, GuildRank, SocialDb } from './social';
+import { BLOCK_LIMIT, FRIEND_LIMIT, FRIEND_REQUEST_LIMIT } from './social';
 
 // The exact element type SocialDb.guildMembers() promises, named once so the
 // cache and the raw reader below can share it without repeating the shape.
@@ -102,6 +103,19 @@ CREATE TABLE IF NOT EXISTS friendships (
 );
 CREATE INDEX IF NOT EXISTS friendships_friend ON friendships(friend_id);
 
+CREATE TABLE IF NOT EXISTS friend_requests (
+  requester_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  recipient_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (requester_id, recipient_id),
+  CHECK (requester_id <> recipient_id)
+);
+-- Incoming requests are read whenever the Friends panel refreshes. The primary
+-- key covers requester-first lookups; this composite makes recipient reads and
+-- oldest-first bounded hydration direct without maintaining a redundant prefix.
+CREATE INDEX IF NOT EXISTS friend_requests_recipient_created
+  ON friend_requests(recipient_id, created_at, requester_id);
+
 CREATE TABLE IF NOT EXISTS blocks (
   character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   blocked_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
@@ -186,6 +200,61 @@ CREATE TABLE IF NOT EXISTS guild_banks (
 
 const CHAR_COLS = 'id, name, class AS cls, level, realm';
 
+async function beginSocialPairMutation(
+  client: PoolClient,
+  firstId: number,
+  secondId: number,
+): Promise<void> {
+  await client.query('BEGIN');
+  await client.query("SET LOCAL lock_timeout = '2s'");
+  await client.query("SET LOCAL statement_timeout = '5s'");
+  // The same deterministic row-lock protocol is shared by requests, accepts,
+  // removals and blocks. Locking the recipient row also serializes its cap
+  // check across many different requesters.
+  await client.query(
+    `SELECT id FROM characters
+     WHERE id = ANY($1::int[]) ORDER BY id FOR UPDATE`,
+    [[firstId, secondId]],
+  );
+}
+
+async function rollbackQuietly(client: PoolClient): Promise<void> {
+  await client.query('ROLLBACK').catch(() => undefined);
+}
+
+async function friendListCannotAdd(
+  client: PoolClient,
+  characterId: number,
+  prospectiveFriendId: number,
+): Promise<boolean> {
+  const count = await client.query(
+    `SELECT
+       count(*)::int AS count,
+       bool_or(friend_id = $2) AS already_present
+     FROM friendships WHERE character_id = $1`,
+    [characterId, prospectiveFriendId],
+  );
+  const row = count.rows[0];
+  return row?.already_present !== true && (row?.count ?? 0) >= FRIEND_LIMIT;
+}
+
+async function pendingRequestListIsFull(
+  client: PoolClient,
+  column: 'requester_id' | 'recipient_id',
+  characterId: number,
+): Promise<boolean> {
+  const count = await client.query(
+    `SELECT count(*)::int AS count
+     FROM (
+       SELECT 1 FROM friend_requests
+       WHERE ${column} = $1
+       LIMIT $2
+     ) pending`,
+    [characterId, FRIEND_REQUEST_LIMIT],
+  );
+  return (count.rows[0]?.count ?? 0) >= FRIEND_REQUEST_LIMIT;
+}
+
 export class PgSocialDb implements SocialDb {
   // See server/guild_roster_cache.ts for what this caches, why it is safe for
   // the "fresh database read" carrier lookup, and why it lives per instance.
@@ -219,20 +288,6 @@ export class PgSocialDb implements SocialDb {
     return res.rows[0] ?? null;
   }
 
-  async addFriend(charId: number, friendId: number): Promise<void> {
-    await this.pool.query(
-      'INSERT INTO friendships (character_id, friend_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-      [charId, friendId],
-    );
-  }
-
-  async removeFriend(charId: number, friendId: number): Promise<void> {
-    await this.pool.query('DELETE FROM friendships WHERE character_id = $1 AND friend_id = $2', [
-      charId,
-      friendId,
-    ]);
-  }
-
   async listFriends(charId: number): Promise<(CharInfo & { activeTitle: string | null })[]> {
     // state->>'activeTitle' rides the same JOINed characters row (the
     // charactersForDeedsBoard read precedent in server/db.ts): no extra query.
@@ -256,11 +311,284 @@ export class PgSocialDb implements SocialDb {
     return res.rows.map((r) => r.character_id);
   }
 
-  async addBlock(charId: number, blockedId: number): Promise<void> {
-    await this.pool.query(
-      'INSERT INTO blocks (character_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-      [charId, blockedId],
+  async requestFriendship(
+    requesterId: number,
+    recipientId: number,
+  ): Promise<
+    | 'requested'
+    | 'accepted'
+    | 'duplicate'
+    | 'recipient_full'
+    | 'requester_full'
+    | 'friend_full'
+    | 'target_friend_full'
+    | 'blocked'
+  > {
+    const client = await this.pool.connect();
+    try {
+      await beginSocialPairMutation(client, requesterId, recipientId);
+      const blocked = await client.query(
+        `SELECT 1 FROM blocks
+         WHERE (character_id = $1 AND blocked_id = $2)
+            OR (character_id = $2 AND blocked_id = $1)
+         LIMIT 1`,
+        [requesterId, recipientId],
+      );
+      if (blocked.rowCount) {
+        await client.query('ROLLBACK');
+        return 'blocked';
+      }
+      const existingFriendship = await client.query(
+        `SELECT 1 FROM friendships
+         WHERE (character_id = $1 AND friend_id = $2)
+            OR (character_id = $2 AND friend_id = $1)
+         LIMIT 1`,
+        [requesterId, recipientId],
+      );
+      if (existingFriendship.rowCount) {
+        await client.query('ROLLBACK');
+        return 'duplicate';
+      }
+      const reverse = await client.query(
+        `DELETE FROM friend_requests
+         WHERE requester_id = $2 AND recipient_id = $1
+         RETURNING requester_id`,
+        [requesterId, recipientId],
+      );
+      if (reverse.rowCount) {
+        if (await friendListCannotAdd(client, requesterId, recipientId)) {
+          await client.query('ROLLBACK');
+          return 'friend_full';
+        }
+        if (await friendListCannotAdd(client, recipientId, requesterId)) {
+          await client.query('ROLLBACK');
+          return 'target_friend_full';
+        }
+        await client.query(
+          `INSERT INTO friendships (character_id, friend_id)
+           VALUES ($1, $2), ($2, $1) ON CONFLICT DO NOTHING`,
+          [requesterId, recipientId],
+        );
+        await client.query('COMMIT');
+        return 'accepted';
+      }
+      if (await pendingRequestListIsFull(client, 'recipient_id', recipientId)) {
+        await client.query('ROLLBACK');
+        return 'recipient_full';
+      }
+      if (await pendingRequestListIsFull(client, 'requester_id', requesterId)) {
+        await client.query('ROLLBACK');
+        return 'requester_full';
+      }
+      if (await friendListCannotAdd(client, requesterId, recipientId)) {
+        await client.query('ROLLBACK');
+        return 'friend_full';
+      }
+      const inserted = await client.query(
+        `INSERT INTO friend_requests (requester_id, recipient_id)
+         VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING requester_id`,
+        [requesterId, recipientId],
+      );
+      if (!inserted.rowCount) {
+        await client.query('ROLLBACK');
+        return 'duplicate';
+      }
+      await client.query('COMMIT');
+      return 'requested';
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async acceptFriendRequest(
+    recipientId: number,
+    requesterId: number,
+  ): Promise<'accepted' | 'missing' | 'friend_full' | 'target_friend_full' | 'blocked'> {
+    const client = await this.pool.connect();
+    try {
+      await beginSocialPairMutation(client, recipientId, requesterId);
+      const blocked = await client.query(
+        `SELECT 1 FROM blocks
+         WHERE (character_id = $1 AND blocked_id = $2)
+            OR (character_id = $2 AND blocked_id = $1)
+         LIMIT 1`,
+        [recipientId, requesterId],
+      );
+      if (blocked.rowCount) {
+        await client.query(
+          `DELETE FROM friend_requests
+           WHERE (requester_id = $1 AND recipient_id = $2)
+              OR (requester_id = $2 AND recipient_id = $1)`,
+          [recipientId, requesterId],
+        );
+        await client.query('COMMIT');
+        return 'blocked';
+      }
+      if (await friendListCannotAdd(client, recipientId, requesterId)) {
+        await client.query('ROLLBACK');
+        return 'friend_full';
+      }
+      if (await friendListCannotAdd(client, requesterId, recipientId)) {
+        await client.query('ROLLBACK');
+        return 'target_friend_full';
+      }
+      const removed = await client.query(
+        `DELETE FROM friend_requests
+         WHERE requester_id = $2 AND recipient_id = $1
+         RETURNING requester_id`,
+        [recipientId, requesterId],
+      );
+      if (!removed.rowCount) {
+        await client.query('ROLLBACK');
+        return 'missing';
+      }
+      await client.query(
+        `INSERT INTO friendships (character_id, friend_id)
+         VALUES ($1, $2), ($2, $1) ON CONFLICT DO NOTHING`,
+        [recipientId, requesterId],
+      );
+      await client.query('COMMIT');
+      return 'accepted';
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async declineFriendRequest(recipientId: number, requesterId: number): Promise<boolean> {
+    const client = await this.pool.connect();
+    try {
+      await beginSocialPairMutation(client, recipientId, requesterId);
+      const removed = await client.query(
+        `DELETE FROM friend_requests
+         WHERE requester_id = $2 AND recipient_id = $1
+         RETURNING requester_id`,
+        [recipientId, requesterId],
+      );
+      if (!removed.rowCount) {
+        await client.query('ROLLBACK');
+        return false;
+      }
+      await client.query('DELETE FROM friendships WHERE character_id = $2 AND friend_id = $1', [
+        recipientId,
+        requesterId,
+      ]);
+      await client.query('COMMIT');
+      return true;
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async listFriendRequests(recipientId: number): Promise<CharInfo[]> {
+    const res = await this.pool.query(
+      `SELECT ${CHAR_COLS}
+       FROM (
+         SELECT requester_id FROM friend_requests
+         WHERE recipient_id = $1
+         ORDER BY created_at, requester_id
+         LIMIT $2
+       ) r
+       JOIN characters c ON c.id = r.requester_id
+       ORDER BY c.name`,
+      [recipientId, FRIEND_REQUEST_LIMIT],
     );
+    return res.rows;
+  }
+
+  async removeFriendPair(firstId: number, secondId: number): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await beginSocialPairMutation(client, firstId, secondId);
+      await client.query(
+        `DELETE FROM friendships
+         WHERE (character_id = $1 AND friend_id = $2)
+            OR (character_id = $2 AND friend_id = $1)`,
+        [firstId, secondId],
+      );
+      await client.query(
+        `DELETE FROM friend_requests
+         WHERE (requester_id = $1 AND recipient_id = $2)
+            OR (requester_id = $2 AND recipient_id = $1)`,
+        [firstId, secondId],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async removeFriendRequestsBetween(firstId: number, secondId: number): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await beginSocialPairMutation(client, firstId, secondId);
+      await client.query(
+        `DELETE FROM friend_requests
+         WHERE (requester_id = $1 AND recipient_id = $2)
+            OR (requester_id = $2 AND recipient_id = $1)`,
+        [firstId, secondId],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async addBlock(charId: number, blockedId: number): Promise<'added' | 'list_full'> {
+    const client = await this.pool.connect();
+    try {
+      await beginSocialPairMutation(client, charId, blockedId);
+      const existing = await client.query(
+        'SELECT 1 FROM blocks WHERE character_id = $1 AND blocked_id = $2',
+        [charId, blockedId],
+      );
+      if (!existing.rowCount) {
+        const count = await client.query(
+          `SELECT count(*)::int AS count
+           FROM (SELECT 1 FROM blocks WHERE character_id = $1 LIMIT $2) current_blocks`,
+          [charId, BLOCK_LIMIT],
+        );
+        if ((count.rows[0]?.count ?? 0) >= BLOCK_LIMIT) {
+          await client.query('ROLLBACK');
+          return 'list_full';
+        }
+      }
+      await client.query(
+        'INSERT INTO blocks (character_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [charId, blockedId],
+      );
+      await client.query('DELETE FROM friendships WHERE character_id = $1 AND friend_id = $2', [
+        charId,
+        blockedId,
+      ]);
+      await client.query(
+        `DELETE FROM friend_requests
+         WHERE (requester_id = $1 AND recipient_id = $2)
+            OR (requester_id = $2 AND recipient_id = $1)`,
+        [charId, blockedId],
+      );
+      await client.query('COMMIT');
+      return 'added';
+    } catch (error) {
+      await rollbackQuietly(client);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   async removeBlock(charId: number, blockedId: number): Promise<void> {
@@ -495,7 +823,7 @@ export class PgSocialDb implements SocialDb {
       const toRow = rows.rows.find((r) => r.character_id === toCharId);
       // re-check under the lock: the actor may have lost leadership (or the
       // target may have left) to a transfer that committed first.
-      if (!fromRow || fromRow.rank !== 'leader') {
+      if (fromRow?.rank !== 'leader') {
         await client.query('ROLLBACK');
         return 'not_leader';
       }

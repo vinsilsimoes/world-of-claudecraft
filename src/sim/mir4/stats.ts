@@ -8,6 +8,7 @@
 
 import { mir4LevelRow } from '../content/mir4';
 import type { GameProfile } from '../game_profile';
+import { pkStat } from '../pvp/infamy';
 import type { Entity, Mir4ClassKey, PlayerClass } from '../types';
 import type { Mir4CodexState } from './codex';
 import { deriveMir4PlayerStats } from './derived_stats';
@@ -147,40 +148,46 @@ export function recalcMir4PlayerStats(
     rewardItems,
     training,
   );
-  e.maxHp = stats.maxHp;
+  const penalized = (value: number) => pkStat(value, e.pkMarked);
+  e.maxHp = penalized(stats.maxHp);
   e.hp = Math.min(e.hp <= 0 ? e.maxHp : e.hp, e.maxHp);
   e.resourceType = 'mana';
-  e.maxResource = stats.maxMana;
+  e.maxResource = penalized(stats.maxMana);
+  e.resource = Math.min(e.resource, e.maxResource);
   // The classic AP field carries the mir4 physicalAttack stat (the combat
   // module's coefficient math reads it); spellPower mirrors magicAttack.
-  e.attackPower = stats.physicalAttack;
-  e.spellPower = stats.magicAttack;
+  e.attackPower = penalized(stats.physicalAttack);
+  e.spellPower = penalized(stats.magicAttack);
   e.mir4 = {
     classId,
-    statusValues: stats.statusValues,
+    statusValues: Object.freeze(
+      Object.fromEntries(
+        Object.entries(stats.statusValues).map(([statusId, value]) => [statusId, penalized(value)]),
+      ),
+    ),
     manaCostStat: stats.manaCost,
-    accuracy: stats.accuracy,
-    dodge: stats.dodge,
-    critical: stats.critical,
-    avoidCritical: stats.avoidCritical,
-    criticalOutcome: stats.criticalOutcome,
-    bossDamageBps: stats.bossDamageBps,
-    bossDamageReductionBps: stats.bossDamageReductionBps,
-    pvpDamageBps: stats.pvpDamageBps,
-    pvpDamageReductionBps: stats.pvpDamageReductionBps,
-    monsterDamageBps: stats.monsterDamageBps,
-    monsterDamageReductionBps: stats.monsterDamageReductionBps,
-    skillDamageBps: stats.skillDamageBps,
-    skillDamageReductionBps: stats.skillDamageReductionBps,
-    allDamageBps: stats.allDamageBps,
-    allDamageReductionBps: stats.allDamageReductionBps,
-    stunSuccessBps: stats.stunSuccessBps,
-    stunResistanceBps: stats.stunResistanceBps,
-    physicalDefense: stats.physicalDefense,
-    magicDefense: stats.magicDefense,
-    penetrationBps: stats.penetrationBps,
-    mountMoveSpeedBps: stats.mountMoveSpeedBps,
-    mountBasicAttackSpeedBps: stats.mountBasicAttackSpeedBps,
+    accuracy: penalized(stats.accuracy),
+    dodge: penalized(stats.dodge),
+    critical: penalized(stats.critical),
+    avoidCritical: penalized(stats.avoidCritical),
+    criticalOutcome: penalized(stats.criticalOutcome),
+    bossDamageBps: penalized(stats.bossDamageBps),
+    bossDamageReductionBps: penalized(stats.bossDamageReductionBps),
+    pvpDamageBps: penalized(stats.pvpDamageBps),
+    pvpDamageReductionBps: penalized(stats.pvpDamageReductionBps),
+    monsterDamageBps: penalized(stats.monsterDamageBps),
+    monsterDamageReductionBps: penalized(stats.monsterDamageReductionBps),
+    skillDamageBps: penalized(stats.skillDamageBps),
+    skillDamageReductionBps: penalized(stats.skillDamageReductionBps),
+    allDamageBps: penalized(stats.allDamageBps),
+    allDamageReductionBps: penalized(stats.allDamageReductionBps),
+    stunSuccessBps: penalized(stats.stunSuccessBps),
+    stunResistanceBps: penalized(stats.stunResistanceBps),
+    physicalDefense: penalized(stats.physicalDefense),
+    magicDefense: penalized(stats.magicDefense),
+    penetrationBps: penalized(stats.penetrationBps),
+    mountMoveSpeedBps: penalized(stats.mountMoveSpeedBps),
+    mountBasicAttackSpeedBps: penalized(stats.mountBasicAttackSpeedBps),
   };
   const presentation = mir4NativeEquipmentPresentation(classId, equipment);
   e.mir4VisualClassId = presentation.classId;

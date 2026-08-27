@@ -548,6 +548,8 @@ import {
 import { prestige as prestigeImpl, updateRested } from './progression/xp';
 import { advancePendingProjectiles, type PendingProjectile } from './projectile_travel';
 import * as honorMod from './pvp';
+import { DEFAULT_FAME, normalizeInfamyState, serializedInfamy } from './pvp/infamy';
+import { isOpenWorldPvpHostile, pvpController } from './pvp/open_world_hostility';
 // By path, not through the pvp barrel: see the comment in src/sim/pvp/index.ts.
 import {
   spawnWarfareQuartermaster,
@@ -1402,6 +1404,8 @@ export interface PlayerMeta extends Mir4PersistenceMeta {
   // Soulbound PvP currency. honor is spendable; lifetimeHonor is monotonic.
   honor: number;
   lifetimeHonor: number;
+  fame: number;
+  pkMarked: boolean;
   // Persisted per-day, per-opponent ranked-win accounting for honor DR.
   honorArenaDaily?: HonorArenaDailyState;
   prestigeRank: number;
@@ -1742,6 +1746,8 @@ export interface CharacterState extends Mir4PersistedPlayerState {
   // Soulbound PvP progression. Optional so pre-honor saves load at zero.
   honor?: number;
   lifetimeHonor?: number;
+  fame?: number;
+  pkMarked?: boolean;
   honorArenaDaily?: HonorArenaDailyState;
   prestigeRank?: number;
   unlockedMilestones?: string[];
@@ -3072,6 +3078,7 @@ export class Sim {
       lifetimeXp: 0,
       honor: 0,
       lifetimeHonor: 0,
+      ...normalizeInfamyState(undefined, false),
       prestigeRank: 0,
       unlockedMilestones: new Set(),
       restedXp: 0,
@@ -3215,6 +3222,7 @@ export class Sim {
         meta.honor,
         honorMod.normalizeHonorCounter(s.lifetimeHonor ?? meta.honor),
       );
+      Object.assign(meta, normalizeInfamyState(s.fame, s.pkMarked));
       meta.honorArenaDaily = honorMod.normalizeHonorDailyState(s.honorArenaDaily);
       meta.prestigeRank = s.prestigeRank ?? 0;
       meta.restedXp = Math.max(0, s.restedXp ?? 0);
@@ -3759,6 +3767,7 @@ export class Sim {
     deedsMod.evaluateDeedsFor(this.ctx, meta, player, true);
     this.deedDirtyPids.delete(player.id);
     this.deedDirtyKeys.delete(player.id);
+    player.pkMarked = meta.pkMarked;
     restoreMir4ProfilePlayer(this.cfg.gameProfile, this.ctx, meta, player.id, savedState, clsParam);
     return player.id;
   }
@@ -4183,6 +4192,7 @@ export class Sim {
       ...(meta.honor || meta.lifetimeHonor
         ? { honor: meta.honor, lifetimeHonor: meta.lifetimeHonor }
         : {}),
+      ...serializedInfamy(meta.fame, meta.pkMarked),
       ...(meta.honorArenaDaily
         ? {
             honorArenaDaily: {
@@ -5687,7 +5697,7 @@ export class Sim {
       enterCombat: sim.enterCombat.bind(sim),
       hexOutputMult: sim.hexOutputMult.bind(sim),
       critVulnBonus: sim.critVulnBonus.bind(sim),
-      pvpController: sim.pvpController.bind(sim),
+      pvpController: (entity) => pvpController(sim.entities, entity),
       threatMod: sim.threatMod.bind(sim),
       clearNonPlayerStatAuras: sim.clearNonPlayerStatAuras.bind(sim),
       // C3 aura/regen runner (combat/auras.ts) consumes these: the incoming-heal mult +
@@ -10267,27 +10277,10 @@ export class Sim {
   // findPlayerByName / broadcastEmote moved to social/chat.ts (G2); chat() reaches
   // them via chatMod.*(this.ctx, ...). They had no callers outside chat().
 
-  // -------------------------------------------------------------------------
-  // Hostility: mobs are hostile to players; controlled pets inherit their
-  // owner's PvP hostility during active duels and arena matches.
-  // -------------------------------------------------------------------------
-
-  private pvpController(e: Entity | null): Entity | null {
-    if (!e) return null;
-    if (e.kind === 'player') return e;
-    if (e.kind === 'mob' && e.ownerId !== null) {
-      const owner = this.entities.get(e.ownerId);
-      return owner?.kind === 'player' ? owner : null;
-    }
-    return null;
-  }
-
   isHostileTo(attacker: Entity, target: Entity): boolean {
     if (target.kind === 'mob') {
       if (target.templateId.startsWith('vision_') || escortMod.isActiveEscortee(this.ctx, target))
         return false;
-      // A Protect Yumi cat is attackable only by the opposing team of its
-      // live match (social/yumi.ts owns the rule).
       if (yumiMod.isYumiCat(target)) return yumiMod.yumiCatHostileTo(this.ctx, attacker, target);
       if (target.ownerId !== null) {
         const owner = this.entities.get(target.ownerId);
@@ -10296,7 +10289,7 @@ export class Sim {
       return target.hostile;
     }
     if (target.kind === 'player') {
-      const attackerPlayer = this.pvpController(attacker);
+      const attackerPlayer = pvpController(this.entities, attacker);
       if (!attackerPlayer) return false;
       if (attackerPlayer.dead) return false;
       if (attackerPlayer.id === target.id) return false;
@@ -10318,29 +10311,27 @@ export class Sim {
       ) {
         return true;
       }
-      // Thornhollow Fields: hostile to the other team while the battle is live,
-      // friendly to your own (isFriendlyTo derives from this arm, so
-      // cross-team heals are refused too).
+      // Thornhollow is hostile only across live-match teams.
       const bg = this.bgMatches.get(attackerPlayer.id);
       if (bg && bg.state === 'active' && this.bgMatches.get(target.id) === bg) {
         return bgMod.bgTeamOf(bg, attackerPlayer.id) !== bgMod.bgTeamOf(bg, target.id);
       }
-      // The jail brawl: prisoners are hostile to each other, always (pets
-      // resolve to their owner via pvpController above, so a prisoner's pet
-      // fights too). A visiting moderator is never jailed, so no prisoner
-      // action can ever target them; GM invulnerability (dealDamage) is the
-      // backstop. isFriendlyTo mirrors this, so prisoners cannot cross-heal.
+      // Prisoners may brawl; pets resolve to their jailed owner.
       if (attackerPlayer.jailed && target.jailed) return true;
-      // One-way warden arm: a GM (the visiting moderator; enterJailVisit sets
-      // the flag) MAY strike prisoners. Deliberately asymmetric: the reverse
-      // direction stays non-hostile, and any reflected/proc damage still
-      // bounces off GM invulnerability. Audited punishment stays /kill; this
-      // is for roughing up the cellblock.
+      // Visiting wardens may strike prisoners, never the reverse.
       if (attackerPlayer.gm && target.jailed) return true;
-      // The Vale Cup: opposing fighters are hostile only while play is live so
-      // the harvest-truce Shoulder can land on them (targeting also opens during
-      // the countdown via targeting.ts; damage between seated fighters is
-      // floored to 0 in combat/damage.ts, boots and shoulders only).
+      const party = this.partyOf(attackerPlayer.id);
+      if (
+        isOpenWorldPvpHostile(
+          attackerPlayer,
+          target,
+          this.cfg.gameProfile === MIR4_GAME_PROFILE,
+          attackerPlayer.pos.x <= DUNGEON_X_THRESHOLD && target.pos.x <= DUNGEON_X_THRESHOLD,
+          !!party?.members.includes(target.id),
+        )
+      )
+        return true;
+      // The Vale Cup is hostile only across live-match teams.
       const cupMatch = this.vcup.match;
       return (
         !!cupMatch &&
@@ -10353,17 +10344,13 @@ export class Sim {
 
   private isFriendlyTo(caster: Entity, target: Entity): boolean {
     if (target.kind === 'player') return !this.isHostileTo(caster, target);
-    // A Protect Yumi cat is heal/shield-targetable only by its own team.
+    // Protect Yumi owns its team-specific cat support rule.
     if (target.kind === 'mob' && yumiMod.isYumiCat(target))
       return yumiMod.yumiCatFriendlyTo(this.ctx, caster, target);
-    // The dev-gated healer practice dummy is friendly to everyone (no controller
-    // check: it exists so a solo healer has something to heal).
     if (target.kind === 'mob' && target.friendlyPracticeTarget) return true;
-    // An escortee with a live run is heal/shield-targetable by any player or
-    // player-owned pet (pvpController resolves a pet to its owner; escort.ts
-    // owns the predicate). Active escort identity wins over any stale hostile flag.
+    // Active escort identity wins over a stale hostile flag.
     if (target.kind === 'mob' && escortMod.isActiveEscortee(this.ctx, target)) {
-      return this.pvpController(caster) !== null;
+      return pvpController(this.entities, caster) !== null;
     }
     if (target.kind === 'mob' && target.ownerId !== null) {
       const owner = this.entities.get(target.ownerId);
@@ -10376,11 +10363,7 @@ export class Sim {
   // Parties
   // -------------------------------------------------------------------------
 
-  // A1: the party/raid state machine lives in src/sim/social/party.ts. partyOf + the
-  // eight command methods stay as thin delegates so IWorld + the many foreign
-  // `this.partyOf` call sites (loot/xp/tap/quest/arena/dungeon/UI) resolve unchanged;
-  // hasPendingSocialInvite stays reachable for the trade/duel invite path still on Sim;
-  // partyCapacity moved to the SimContext seam (W5), reached by the moved partyReadout.
+  // Party commands remain thin delegates to src/sim/social/party.ts.
   partyOf(pid: number): Party | null {
     return this.party.partyOf(pid);
   }
@@ -10650,6 +10633,8 @@ export class Sim {
   accountAdmin = true;
   socialInfo: null = null;
   friendAdd(_name: string): void {}
+  friendAccept(_name: string): void {}
+  friendDecline(_name: string): void {}
   friendRemove(_name: string): void {}
   blockAdd(_name: string): void {}
   blockRemove(_name: string): void {}
@@ -11853,6 +11838,14 @@ export class Sim {
 
   get lifetimeHonor(): number {
     return this.primaryId === -1 ? 0 : (this.players.get(this.primaryId)?.lifetimeHonor ?? 0);
+  }
+
+  get fame(): number {
+    return this.players.get(this.primaryId)?.fame ?? DEFAULT_FAME;
+  }
+
+  get pkMarked(): boolean {
+    return this.players.get(this.primaryId)?.pkMarked ?? false;
   }
 
   get marketInfo(): import('../world_api').MarketInfo | null {

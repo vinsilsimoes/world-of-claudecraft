@@ -3705,6 +3705,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.playerFrame.unlock': 'Mover quadro do jogador',
   'hudChrome.social.lastSeen': 'Visto por último: {when}',
   'hudChrome.social.lastSeenNever': 'nunca',
+  'hudChrome.social.friendRequest': 'Pedido de amizade',
   'hudChrome.targetFrame.lock': 'Travar quadro do alvo',
   'hudChrome.targetFrame.unlock': 'Mover quadro do alvo',
   'hudChrome.unitFrame.durationUnitDays': 'd',
@@ -13617,6 +13618,9 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.characterTitle': 'Personagem',
   'hudChrome.mir4.awaitingState': 'Aguardando dados autoritativos do personagem...',
   'hudChrome.mir4.combatPowerLine': 'Poder de Combate {value}',
+  'hudChrome.mir4.fameLine': 'Fama: {value}',
+  'hudChrome.mir4.pkStatusSafe': 'Status: pacífico',
+  'hudChrome.mir4.pkStatusMarked': 'Status: PK - todos os atributos reduzidos em 50%',
   'hudChrome.mir4.equipmentVisualShell':
     'Aparência do Aeldrune com atributos de combate MIR4',
   'hudChrome.mir4.equipmentTierGrade': 'Tier {tier}, Grau {grade}',

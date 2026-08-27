@@ -9,8 +9,11 @@ import {
   resolveRealm,
 } from '../server/realm';
 import {
+  BLOCK_LIMIT,
   type CharInfo,
   type CharRef,
+  FRIEND_LIMIT,
+  FRIEND_REQUEST_LIMIT,
   type GuildEventRow,
   type GuildRank,
   type Presence,
@@ -31,6 +34,7 @@ import type { SimEvent } from '../src/sim/types';
 class FakeDb implements SocialDb {
   private chars = new Map<number, CharInfo & { activeTitle: string | null }>();
   private friends = new Map<number, Set<number>>();
+  private friendRequests = new Map<number, Set<number>>();
   blocks = new Map<number, Set<number>>();
   ignores = new Map<number, Set<number>>();
   private guilds = new Map<number, string>();
@@ -72,9 +76,83 @@ class FakeDb implements SocialDb {
   async whoFriended(c: number): Promise<number[]> {
     return [...this.friends.entries()].filter(([, set]) => set.has(c)).map(([id]) => id);
   }
+  async requestFriendship(
+    requester: number,
+    recipient: number,
+  ): Promise<
+    | 'requested'
+    | 'accepted'
+    | 'duplicate'
+    | 'recipient_full'
+    | 'requester_full'
+    | 'friend_full'
+    | 'target_friend_full'
+    | 'blocked'
+  > {
+    if (this.blocks.get(requester)?.has(recipient) || this.blocks.get(recipient)?.has(requester)) {
+      return 'blocked';
+    }
+    const incoming = this.friendRequests.get(requester);
+    if (incoming?.has(recipient)) {
+      if ((this.friends.get(requester)?.size ?? 0) >= FRIEND_LIMIT) return 'friend_full';
+      if ((this.friends.get(recipient)?.size ?? 0) >= FRIEND_LIMIT) return 'target_friend_full';
+      incoming.delete(recipient);
+      await this.addFriend(requester, recipient);
+      await this.addFriend(recipient, requester);
+      return 'accepted';
+    }
+    const requests = this.friendRequests.get(recipient) ?? new Set<number>();
+    if (requests.has(requester)) return 'duplicate';
+    if (requests.size >= FRIEND_REQUEST_LIMIT) return 'recipient_full';
+    const outgoingCount = [...this.friendRequests.values()].filter((set) =>
+      set.has(requester),
+    ).length;
+    if (outgoingCount >= FRIEND_REQUEST_LIMIT) return 'requester_full';
+    if ((this.friends.get(requester)?.size ?? 0) >= FRIEND_LIMIT) return 'friend_full';
+    requests.add(requester);
+    this.friendRequests.set(recipient, requests);
+    return 'requested';
+  }
+  async acceptFriendRequest(
+    recipient: number,
+    requester: number,
+  ): Promise<'accepted' | 'missing' | 'friend_full' | 'target_friend_full' | 'blocked'> {
+    if (this.blocks.get(recipient)?.has(requester) || this.blocks.get(requester)?.has(recipient)) {
+      this.friendRequests.get(recipient)?.delete(requester);
+      return 'blocked';
+    }
+    if ((this.friends.get(recipient)?.size ?? 0) >= FRIEND_LIMIT) return 'friend_full';
+    if ((this.friends.get(requester)?.size ?? 0) >= FRIEND_LIMIT) return 'target_friend_full';
+    if (!this.friendRequests.get(recipient)?.delete(requester)) return 'missing';
+    await this.addFriend(recipient, requester);
+    await this.addFriend(requester, recipient);
+    return 'accepted';
+  }
+  async declineFriendRequest(recipient: number, requester: number): Promise<boolean> {
+    if (!this.friendRequests.get(recipient)?.delete(requester)) return false;
+    return true;
+  }
+  async listFriendRequests(recipient: number): Promise<CharInfo[]> {
+    return [...(this.friendRequests.get(recipient) ?? [])]
+      .map((id) => this.chars.get(id)!)
+      .filter(Boolean);
+  }
+  async removeFriendPair(first: number, second: number): Promise<void> {
+    await this.removeFriend(first, second);
+    await this.removeFriend(second, first);
+  }
+  async removeFriendRequestsBetween(first: number, second: number): Promise<void> {
+    this.friendRequests.get(first)?.delete(second);
+    this.friendRequests.get(second)?.delete(first);
+  }
 
-  async addBlock(c: number, b: number): Promise<void> {
+  async addBlock(c: number, b: number): Promise<'added' | 'list_full'> {
+    const current = this.blocks.get(c) ?? new Set<number>();
+    if (!current.has(b) && current.size >= BLOCK_LIMIT) return 'list_full';
     (this.blocks.get(c) ?? this.blocks.set(c, new Set()).get(c)!).add(b);
+    await this.removeFriend(c, b);
+    await this.removeFriendRequestsBetween(c, b);
+    return 'added';
   }
   async removeBlock(c: number, b: number): Promise<void> {
     this.blocks.get(c)?.delete(b);
@@ -399,12 +477,17 @@ function setup(cfg: { isNameOffensive?: (name: string) => boolean } = {}) {
     });
     actors.set(id, { characterId: id, name });
   };
+  const befriend = async (requesterId: number, recipientId: number): Promise<void> => {
+    await svc.friendAdd(actors.get(requesterId)!, actors.get(recipientId)!.name);
+    await svc.friendAccept(actors.get(recipientId)!, actors.get(requesterId)!.name);
+  };
   return {
     db,
     tx,
     svc,
     actors,
     add,
+    befriend,
     actor: (id: number) => actors.get(id)!,
     advance: (ms: number) => {
       clock += ms;
@@ -459,17 +542,62 @@ describe('friends', () => {
     h.add(2, 'Bet');
   });
 
-  it('adds a friend and reflects it in the snapshot', async () => {
+  it('keeps a request pending without exposing friend presence before consent', async () => {
     await h.svc.friendAdd(h.actor(1), 'Bet');
     const snap = await h.svc.snapshot(1);
-    expect(snap.friends.map((f) => f.name)).toEqual(['Bet']);
+    expect(snap.friends).toHaveLength(0);
+    expect((await h.svc.snapshot(2)).friendRequests?.map((request) => request.name)).toEqual([
+      'Aleph',
+    ]);
     expect(h.tx.errorsFor(1)).toHaveLength(0);
+  });
+
+  it('shows an incoming friend request and creates the reciprocal friendship on acceptance', async () => {
+    await h.svc.friendAdd(h.actor(1), 'Bet');
+    expect((await h.svc.snapshot(2)).friendRequests!.map((request) => request.name)).toEqual([
+      'Aleph',
+    ]);
+
+    await h.svc.friendAccept(h.actor(2), 'Aleph');
+    expect((await h.svc.snapshot(2)).friendRequests).toHaveLength(0);
+    expect((await h.svc.snapshot(2)).friends.map((friend) => friend.name)).toEqual(['Aleph']);
+    expect((await h.svc.snapshot(1)).friends.map((friend) => friend.name)).toEqual(['Bet']);
+  });
+
+  it('declines an incoming request without ever creating a friendship', async () => {
+    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.svc.friendDecline(h.actor(2), 'Aleph');
+    expect((await h.svc.snapshot(2)).friendRequests).toHaveLength(0);
+    expect((await h.svc.snapshot(1)).friends).toHaveLength(0);
+  });
+
+  it('caps incoming friend requests per recipient', async () => {
+    for (let id = 3; id < 3 + FRIEND_REQUEST_LIMIT; id++) {
+      h.add(id, `Requester${id}`);
+      await h.svc.friendAdd(h.actor(id), 'Bet');
+    }
+    h.add(100, 'Overflow');
+    await h.svc.friendAdd(h.actor(100), 'Bet');
+
+    expect((await h.svc.snapshot(2)).friendRequests).toHaveLength(FRIEND_REQUEST_LIMIT);
+    expect(h.tx.errorsFor(100)).toContain('Bet has too many pending friend requests.');
+  });
+
+  it('caps outgoing pending friend requests per requester', async () => {
+    for (let id = 3; id < 3 + FRIEND_REQUEST_LIMIT; id++) {
+      h.add(id, `Recipient${id}`);
+      await h.svc.friendAdd(h.actor(1), `Recipient${id}`);
+    }
+    h.add(100, 'OverflowRecipient');
+    await h.svc.friendAdd(h.actor(1), 'OverflowRecipient');
+
+    expect(h.tx.errorsFor(1)).toContain('You have too many pending friend requests.');
   });
 
   it('shows online friends first, with zone and status', async () => {
     h.add(3, 'Gimel');
-    await h.svc.friendAdd(h.actor(1), 'Bet');
-    await h.svc.friendAdd(h.actor(1), 'Gimel');
+    await h.befriend(1, 2);
+    await h.befriend(1, 3);
     h.tx.setOnline(3, { zone: 'Hollow Crypt', status: 'dungeon' });
     const snap = await h.svc.snapshot(1);
     expect(snap.friends[0].name).toBe('Gimel');
@@ -481,7 +609,7 @@ describe('friends', () => {
   });
 
   it('carries live coordinates for online friends (for the world map)', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     h.tx.setOnline(2, { zone: 'Mirewood', status: 'online', x: 12.5, z: -34 });
     const snap = await h.svc.snapshot(1);
     expect(snap.friends[0].x).toBe(12.5);
@@ -494,7 +622,7 @@ describe('friends', () => {
     await h.svc.friendAdd(h.actor(1), 'Bet');
     h.tx.clear();
     await h.svc.friendAdd(h.actor(1), 'Bet');
-    expect(h.tx.errorsFor(1).join()).toMatch(/already your friend/i);
+    expect(h.tx.errorsFor(1).join()).toMatch(/already pending/i);
   });
 
   it('errors on an unknown name', async () => {
@@ -503,7 +631,7 @@ describe('friends', () => {
   });
 
   it('removes a friend', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     await h.svc.friendRemove(h.actor(1), 'Bet');
     expect((await h.svc.snapshot(1)).friends).toHaveLength(0);
   });
@@ -516,7 +644,7 @@ describe('friends', () => {
 
   it('notifies watching friends when a character comes online', async () => {
     // 1 has 2 on their friends list; 2 logs in
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     h.tx.setOnline(1);
     h.tx.clear();
     await h.svc.announcePresence(h.actor(2), true);
@@ -528,7 +656,7 @@ describe('friends', () => {
     // 1 has 2 on their friends list (a "watches 2" edge); 2 then blocks 1, which
     // only cleans 2's OWN friend edge, never 1's, so 1 keeps watching 2 unless
     // announcePresence itself checks the block.
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     h.tx.setOnline(1);
     await h.db.addBlock(2, 1); // Bet blocks Aleph directly (bypassing blockAdd's own-edge cleanup)
     h.tx.clear();
@@ -538,7 +666,7 @@ describe('friends', () => {
   });
 
   it('does not notify a watcher who has blocked the actor', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     h.tx.setOnline(1);
     await h.db.addBlock(1, 2); // Aleph (the watcher) blocks Bet (the actor)
     h.tx.clear();
@@ -548,7 +676,7 @@ describe('friends', () => {
   });
 
   it('hides live presence for a friend who has blocked the viewer (stale one-directional edge)', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet'); // Aleph friends Bet
+    await h.befriend(1, 2); // Aleph friends Bet
     h.tx.setOnline(2, { zone: 'Mirewood', status: 'online', x: 5, z: 9 });
     await h.svc.blockAdd(h.actor(2), 'Aleph'); // Bet blocks Aleph; Aleph's own edge to Bet survives
     const snap = await h.svc.snapshot(1);
@@ -559,7 +687,7 @@ describe('friends', () => {
   });
 
   it('fails closed on a snapshot when the friend has a persisted block but their live block list has not loaded yet (#2437)', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet'); // Aleph friends Bet
+    await h.befriend(1, 2); // Aleph friends Bet
     await h.db.addBlock(2, 1); // Bet has persisted a block on Aleph
     h.tx.setOnline(2, { zone: 'Mirewood', status: 'online', x: 5, z: 9 });
     h.tx.notLoaded.add(2); // but Bet's session block list has not loaded yet
@@ -570,7 +698,7 @@ describe('friends', () => {
   });
 
   it('does not notify or refresh a watcher whose own block list has not loaded yet (#2437)', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet'); // Aleph watches Bet
+    await h.befriend(1, 2); // Aleph watches Bet
     h.tx.setOnline(1);
     h.tx.notLoaded.add(1); // Aleph's session block list has not loaded yet
     h.tx.clear();
@@ -596,8 +724,17 @@ describe('ignore / block', () => {
     expect(h.tx.blockSets.get(1)).toEqual([2]);
   });
 
+  it('enforces the block cap in the storage mutation', async () => {
+    for (let id = 10; id < 10 + BLOCK_LIMIT; id++) {
+      h.add(id, `Blocked${id}`);
+      expect(await h.db.addBlock(1, id)).toBe('added');
+    }
+    h.add(100, 'OverflowBlocked');
+    expect(await h.db.addBlock(1, 100)).toBe('list_full');
+  });
+
   it('blocking someone also removes them from friends', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     await h.svc.blockAdd(h.actor(1), 'Bet');
     const snap = await h.svc.snapshot(1);
     expect(snap.friends).toHaveLength(0);
@@ -648,7 +785,7 @@ describe('ignore / block', () => {
   it('ignoring someone does NOT remove them from friends (a block does)', async () => {
     // The load-bearing difference between the two tiers: ignoring a chatty friend
     // is a normal thing to want, so it must not quietly unfriend them.
-    await h.svc.friendAdd(h.actor(1), 'Bet');
+    await h.befriend(1, 2);
     await h.svc.ignoreAdd(h.actor(1), 'Bet');
     const snap = await h.svc.snapshot(1);
     expect(snap.friends.map((f) => f.name)).toEqual(['Bet']);
@@ -799,7 +936,7 @@ describe('guilds', () => {
   });
 
   it('does not double-notify someone who is both a friend and a guildmate (#100)', async () => {
-    await h.svc.friendAdd(h.actor(1), 'Bet'); // Aleph friends Bet
+    await h.befriend(1, 2); // Aleph friends Bet
     await h.svc.guildCreate(h.actor(1), 'Iron Vanguard');
     await h.svc.guildInvite(h.actor(1), 'Bet');
     await h.svc.guildAccept(h.actor(2));
@@ -1157,7 +1294,7 @@ describe('guilds', () => {
     await h.svc.guildCreate(h.actor(1), 'Knights');
     await h.svc.guildInvite(h.actor(1), 'Bet');
     await h.svc.guildAccept(h.actor(2));
-    await h.svc.friendAdd(h.actor(1), 'Gimel');
+    await h.befriend(1, 3);
     h.db.setActiveTitle(2, 'prog_veteran');
     h.db.setActiveTitle(3, null);
     const snap = await h.svc.snapshot(1);

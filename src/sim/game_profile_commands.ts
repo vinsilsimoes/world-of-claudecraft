@@ -180,6 +180,8 @@ export const MIR4_SHARED_COMMANDS = [
   'duel_accept',
   'duel_decline',
   'friend_add',
+  'friend_accept',
+  'friend_decline',
   'friend_remove',
   'block_add',
   'block_remove',

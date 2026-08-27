@@ -353,6 +353,16 @@ import {
 import type { GuildRank, Presence, PresenceStatus, SocialActor, SocialTransport } from './social';
 import { SocialService } from './social';
 import { PgSocialDb } from './social_db';
+import {
+  consumeSocialMutationToken,
+  createSocialMutationGuard,
+  type SocialMutationGuardState,
+} from './social_mutation_guard';
+import {
+  SocialSnapshotAdmission,
+  SocialSnapshotFlights,
+  type SocialSnapshotRelease,
+} from './social_snapshot_admission';
 import { reconcileOnLogin as reconcileSteamOnLogin } from './steam/mirror';
 import { TickProfiler } from './tick_profiler';
 import { hrtimeToMs, TickRateMeter } from './tick_rate_meter';
@@ -962,6 +972,7 @@ const PLAYTIME_GRANT_MS = 5 * 60_000;
 const PLAYTIME_POINTS = 10;
 const DAILY_REWARD_ACTIVITY_MS = 60_000;
 const RELAY_COOLDOWN_MS = 8_000; // min gap between a player's "!" community posts
+const SOCIAL_REFRESH_MIN_INTERVAL_MS = 1_000;
 const ADMIN_LOCATION_POI_RADIUS = 32;
 
 export interface ClientSession {
@@ -1034,6 +1045,8 @@ export interface ClientSession {
   // refusals above the far-above-human budget drop and tally into the same
   // abuse window.
   listReadGuard: ListReadGuardState;
+  lastSocialRefreshAt: number;
+  socialMutationGuard: SocialMutationGuardState;
   // Token bucket for the five guild bank ops (Guild Bank Phase 3 QA): every
   // allowed op is a keep-forever bank_ledger write plus an unflushed-delta
   // log entry, so the rate is capped far above human banking cadence and
@@ -1778,6 +1791,10 @@ export class GameServer {
   private readonly ipBlockList = new IpBlockList();
   private readonly socialDb = new PgSocialDb(pool);
   readonly social: SocialService;
+  // DB-backed snapshots have global admission and per-character coalescing.
+  private readonly socialSnapshotFlights = new SocialSnapshotFlights<number>();
+  private readonly socialSnapshotAdmission = new SocialSnapshotAdmission();
+  private readonly socialSnapshotFirstJoin = new Set<number>();
   // Guild creation fees reserved at the guild_create dispatch gate (Guild Bank
   // Phase 3 QA, reserve-at-gate), keyed by character id and consumed by
   // exactly one of: the create's committed success arm (onGuildCreated writes
@@ -2679,28 +2696,28 @@ export class GameServer {
   }
 
   private async sendSocialSnapshot(charId: number, firstJoin = false): Promise<void> {
+    if (firstJoin) this.socialSnapshotFirstJoin.add(charId);
+    await this.socialSnapshotFlights.request(charId, async () => {
+      const joined = this.socialSnapshotFirstJoin.delete(charId);
+      await this.sendSocialSnapshotOnce(charId, joined);
+    });
+    this.socialSnapshotFirstJoin.delete(charId);
+  }
+
+  private async sendSocialSnapshotOnce(charId: number, firstJoin = false): Promise<void> {
     const session = this.sessionByCharacterId(charId);
     if (!session) return;
+    let release: SocialSnapshotRelease | null = null;
     try {
-      // Capture the stamp fence BEFORE the DB read: if a synchronous
-      // membership stamp (onGuildMembershipChanged) lands while the snapshot
-      // is in flight, this read may be staler than the live stamps and must
-      // not overwrite them below.
+      release = await this.socialSnapshotAdmission.acquire(firstJoin ? 'join' : 'normal');
+      if (!release) return;
+      if (this.sessionByCharacterId(charId) !== session) return;
+      // Fence synchronous membership stamps against an older in-flight read.
       const seqBefore = session.guildStampSeq;
       const snap = await this.social.snapshot(charId);
       this.send(session, { t: 'social', ...snap });
-      // Stamp the guild name onto the player's world entity so it rides the
-      // identity wire and shows under their nameplate for everyone nearby,
-      // PAIRED with the session-only membership stamp the guild bank's
-      // officer-plus gate reads (the two must never diverge). This chokepoint
-      // is hit on join and on every membership change; committed mutations
-      // ALSO stamp synchronously at their SocialService call sites, and the
-      // fence check keeps this async arm from rolling one of those back.
-      // On the FIRST join-time stamp (firstJoin), a pre-existing guild arrives a
-      // beat after addPlayer's retro pass (the name lives in the social DB, not
-      // the blob), so retroDeeds re-credits soc_guild_joined silently instead of
-      // firing the live banner for an existing member; later changes are genuine
-      // live joins and pass firstJoin false.
+      // Stamp nameplate and bank membership together. On first join, retroDeeds
+      // silently restores the existing guild deed after the social DB read.
       if (session.guildStampSeq === seqBefore) {
         this.sim.setPlayerGuild(session.pid, snap.guild?.name ?? '', { retroDeeds: firstJoin });
         this.sim.setPlayerGuildMembership(
@@ -2715,6 +2732,8 @@ export class GameServer {
       ];
     } catch (err) {
       console.error('social snapshot failed:', err);
+    } finally {
+      release?.();
     }
   }
 
@@ -3824,6 +3843,8 @@ export class GameServer {
       msgRate: createMsgRateBucket(Date.now() / 1000),
       msgLanes: createMsgLanes(Date.now() / 1000),
       listReadGuard: createListReadGuard(Date.now() / 1000),
+      lastSocialRefreshAt: 0,
+      socialMutationGuard: createSocialMutationGuard(Date.now() / 1000),
       guildBankOpGuard: createGuildBankOpGuard(Date.now() / 1000),
       cosmeticOpGuard: createCosmeticOpGuard(Date.now() / 1000),
       chatMutedUntil: meta.mutedUntil ? new Date(meta.mutedUntil).getTime() : null,
@@ -6436,6 +6457,16 @@ export class GameServer {
     return false;
   }
 
+  private consumeSocialMutation(session: ClientSession, nowSec: number): boolean {
+    if (consumeSocialMutationToken(session.socialMutationGuard, nowSec)) return true;
+    gameMetricsCounters().wsMessageDropped('social_mutation');
+    if (tallyDrop(session.msgRate, nowSec) === 'kick') {
+      gameMetricsCounters().wsRateKick();
+      void this.kickSession(session, MSG_RATE_KICK_REASON, 'message flood');
+    }
+    return false;
+  }
+
   /** Draw a guild-bank op guard token (Guild Bank Phase 3 QA): every allowed
    *  op can write a keep-forever bank_ledger row, so ops above the
    *  far-above-human budget are dropped and tally into the same abuse window
@@ -7509,31 +7540,50 @@ export class GameServer {
         break;
       // social: friends / ignore / guild (persistent, account-scoped)
       case 'friend_add':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
         if (typeof msg.name === 'string')
           void this.social.friendAdd(this.actorFor(session), msg.name).catch(logSocialErr);
         break;
+      case 'friend_accept':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
+        if (typeof msg.name === 'string')
+          void this.social.friendAccept(this.actorFor(session), msg.name).catch(logSocialErr);
+        break;
+      case 'friend_decline':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
+        if (typeof msg.name === 'string')
+          void this.social.friendDecline(this.actorFor(session), msg.name).catch(logSocialErr);
+        break;
       case 'friend_remove':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
         if (typeof msg.name === 'string')
           void this.social.friendRemove(this.actorFor(session), msg.name).catch(logSocialErr);
         break;
       case 'block_add':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
         if (typeof msg.name === 'string')
           void this.social.blockAdd(this.actorFor(session), msg.name).catch(logSocialErr);
         break;
       case 'block_remove':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
         if (typeof msg.name === 'string')
           void this.social.blockRemove(this.actorFor(session), msg.name).catch(logSocialErr);
         break;
       case 'ignore_add':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
         if (typeof msg.name === 'string')
           void this.social.ignoreAdd(this.actorFor(session), msg.name).catch(logSocialErr);
         break;
       case 'ignore_remove':
+        if (!this.consumeSocialMutation(session, receivedAtMs / 1000)) break;
         if (typeof msg.name === 'string')
           void this.social.ignoreRemove(this.actorFor(session), msg.name).catch(logSocialErr);
         break;
       case 'social_refresh':
-        void this.sendSocialSnapshot(session.characterId);
+        if (receivedAtMs - session.lastSocialRefreshAt >= SOCIAL_REFRESH_MIN_INTERVAL_MS) {
+          session.lastSocialRefreshAt = receivedAtMs;
+          void this.sendSocialSnapshot(session.characterId);
+        }
         break;
       case 'guild_create':
         if (typeof msg.name === 'string') {
@@ -9092,6 +9142,8 @@ export class GameServer {
     // session receives both, then they ride only on earn/spend changes.
     maybe('honor', meta.honor);
     maybe('lhonor', meta.lifetimeHonor);
+    maybe('fame', meta.fame);
+    maybe('pk', meta.pkMarked ? 1 : 0);
     if (this.sim.tickCount - session.lastArenaWireTick >= ARENA_WIRE_INTERVAL_TICKS) {
       session.lastArenaWireTick = this.sim.tickCount;
       maybe('arena', this.sim.arenaInfoFor(anchorSession.pid));

@@ -1021,6 +1021,9 @@ export const da_DK: EnTranslations = {
       "characterTitle": "Character",
       "awaitingState": "Waiting for authoritative character data...",
       "combatPowerLine": "Combat Power {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "Aeldrune appearance with class-specific combat attributes",
       "equipmentTierGrade": "Imported source tier {tier}, grade {grade}",
       "equipmentRequiredLevel": "Crafted equipment has no character level requirement; legacy catalog level {level} is ignored.",
@@ -3691,6 +3694,7 @@ export const da_DK: EnTranslations = {
     "social": {
       "lastSeen": "Sidst set: {when}",
       "lastSeenNever": "aldrig",
+      "friendRequest": "Friend request",
       "ignoredTab": "Ignorerede",
       "blockedTab": "Blokerede",
       "ignoredEmpty": "Du ignorerer ingen.",

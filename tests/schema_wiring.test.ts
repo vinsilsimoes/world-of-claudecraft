@@ -640,6 +640,7 @@ describe('ensureSchema wires every schema module at boot', () => {
       'bank_ledger_container_recent',
       'player_reports_retention_created',
       'chat_violations_retention_created',
+      'blocks_blocked_id',
     ]);
     const guildPrefix = CONCURRENT_INDEX_MIGRATIONS.find(
       (m) => m.name === 'guilds_realm_lower_name_prefix',
@@ -706,6 +707,10 @@ describe('ensureSchema wires every schema module at boot', () => {
     expect(chatViolationsRetention?.dropSql).toBe(
       'DROP INDEX CONCURRENTLY IF EXISTS chat_violations_retention_created',
     );
+    const blocksBlockedId = CONCURRENT_INDEX_MIGRATIONS.find((m) => m.name === 'blocks_blocked_id');
+    expect(blocksBlockedId?.createSql).toContain('ON blocks(blocked_id)');
+    expect(blocksBlockedId?.checkSql).toContain("to_regclass('blocks_blocked_id')");
+    expect(blocksBlockedId?.dropSql).toBe('DROP INDEX CONCURRENTLY IF EXISTS blocks_blocked_id');
   });
 
   it('applies the rate-limit schema idempotently (a second boot re-issues the same DDL)', async () => {
@@ -759,6 +764,31 @@ describe('ensureSchema wires every schema module at boot', () => {
     // upsert, so a re-run is a no-op.
     expect(applied).toContain('INTO world_state');
     expect(applied).toContain('ON CONFLICT (key) DO UPDATE');
+  });
+
+  it('runs the versioned social privacy repair once, outside repeated social DDL', async () => {
+    await ensureSchema();
+    const socialDdl = h.calls.find((sql) =>
+      sql.includes('CREATE TABLE IF NOT EXISTS friend_requests'),
+    );
+    expect(socialDdl).toBeDefined();
+    expect(socialDdl).not.toContain('DELETE FROM friendships');
+
+    const markerProbe = h.calls.findIndex((sql) =>
+      sql.includes('SELECT 1 FROM world_state WHERE key = $1'),
+    );
+    const repair = h.calls.findIndex(
+      (sql) => sql.includes('DELETE FROM friendships f') && sql.includes('USING friend_requests r'),
+    );
+    const markerWrite = h.calls.findIndex(
+      (sql) =>
+        sql.includes('INSERT INTO world_state') && sql.includes('ON CONFLICT (key) DO NOTHING'),
+    );
+    const commit = h.calls.indexOf('COMMIT');
+    expect(markerProbe).toBeGreaterThan(-1);
+    expect(repair).toBeGreaterThan(markerProbe);
+    expect(markerWrite).toBeGreaterThan(repair);
+    expect(commit).toBeGreaterThan(markerWrite);
   });
 
   it('opens the market write gate only after the boot transaction commits', async () => {

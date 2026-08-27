@@ -110,6 +110,7 @@ export function applyEntityPresentationIdentity(
   const mir4 = decodeMir4EquipmentPresentationWire(wire);
   entity.mir4VisualClassId = entity.kind === 'player' ? mir4.classId : undefined;
   entity.mir4VisualArmorMask = entity.kind === 'player' ? mir4.armorMask : undefined;
+  entity.pkMarked = entity.kind === 'player' && wire.pk === 1;
 }
 
 export function applyEntityPresentationDynamic(

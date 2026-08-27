@@ -1312,6 +1312,7 @@ function blankEntity(id: number): Entity {
     templateId: '',
     name: '',
     level: 1,
+    pkMarked: false,
     mendTimer: 0,
     wardTimer: 0,
     channelTimer: 0,
@@ -1610,6 +1611,8 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
   dungeonFinderBoard: import('../world_api').DungeonFinderBoard | null = null;
   honor = 0;
   lifetimeHonor = 0;
+  fame = 2_000;
+  pkMarked = false;
   // --- IWorldCardMinigame: Card Duel queue/match state, mirrored from the
   // snapshot self (`s.cardDuel`, delta-omitted). ---
   cardMinigameInfo: CardMinigameInfo = { queued: false, available: true, match: null };
@@ -2673,6 +2676,7 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
     if (msg.t === 'social') {
       this.socialInfo = {
         friends: msg.friends ?? [],
+        friendRequests: msg.friendRequests ?? [],
         blocks: msg.blocks ?? [],
         ignores: msg.ignores ?? [],
         guild: msg.guild ?? null,
@@ -3744,6 +3748,8 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
       if (s.cardDuel !== undefined) this.cardMinigameInfo = s.cardDuel;
       if (s.honor !== undefined) this.honor = s.honor ?? 0;
       if (s.lhonor !== undefined) this.lifetimeHonor = s.lhonor ?? 0;
+      if (s.fame !== undefined) this.fame = s.fame ?? 2_000;
+      if (s.pk !== undefined) this.pkMarked = s.pk === 1;
       if (s.vcup !== undefined) this.lastVcupRemainder = s.vcup as VcViewerReadout | null;
       if (s.vcupb !== undefined) this.lastVcupShared = s.vcupb as VcSharedCupInfo | null;
       if (s.vcup !== undefined || s.vcupb !== undefined) this.recomputeCupInfo();
@@ -5010,6 +5016,12 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
   // social/socialpos frames; searchCharacters is a GET, not a cmd(). ---
   friendAdd(name: string): void {
     this.cmd({ cmd: 'friend_add', name });
+  }
+  friendAccept(name: string): void {
+    this.cmd({ cmd: 'friend_accept', name });
+  }
+  friendDecline(name: string): void {
+    this.cmd({ cmd: 'friend_decline', name });
   }
   friendRemove(name: string): void {
     this.cmd({ cmd: 'friend_remove', name });

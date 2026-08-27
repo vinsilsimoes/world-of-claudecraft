@@ -183,6 +183,8 @@ const W9_TAGS: Readonly<Record<string, string>> = {
   arena_leave: 'IWorldDuelArena',
   arena_augment: 'IWorldDuelArena',
   friend_add: 'IWorldSocialGraph',
+  friend_accept: 'IWorldSocialGraph',
+  friend_decline: 'IWorldSocialGraph',
   friend_remove: 'IWorldSocialGraph',
   block_add: 'IWorldSocialGraph',
   block_remove: 'IWorldSocialGraph',

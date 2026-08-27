@@ -55,6 +55,11 @@ import {
   PLAYER_REPORTS_RETENTION_INVALID_INDEX_CHECK_SQL,
   PLAYER_REPORTS_RETENTION_INVALID_INDEX_DROP_SQL,
 } from './player_reports_retention_index';
+import {
+  BLOCKS_BLOCKED_ID_INDEX_SQL,
+  BLOCKS_BLOCKED_ID_INVALID_INDEX_CHECK_SQL,
+  BLOCKS_BLOCKED_ID_INVALID_INDEX_DROP_SQL,
+} from './social_db_indexes';
 
 export interface ConcurrentIndexMigration {
   name: string;
@@ -130,5 +135,13 @@ export const CONCURRENT_INDEX_MIGRATIONS: readonly ConcurrentIndexMigration[] = 
     createSql: CHAT_VIOLATIONS_RETENTION_INDEX_SQL,
     checkSql: CHAT_VIOLATIONS_RETENTION_INVALID_INDEX_CHECK_SQL,
     dropSql: CHAT_VIOLATIONS_RETENTION_INVALID_INDEX_DROP_SQL,
+  },
+  // Reverse FK lookup for blocks(blocked_id). Appended because migration order
+  // is pinned and existing live block rows require a non-blocking build.
+  {
+    name: 'blocks_blocked_id',
+    createSql: BLOCKS_BLOCKED_ID_INDEX_SQL,
+    checkSql: BLOCKS_BLOCKED_ID_INVALID_INDEX_CHECK_SQL,
+    dropSql: BLOCKS_BLOCKED_ID_INVALID_INDEX_DROP_SQL,
   },
 ];

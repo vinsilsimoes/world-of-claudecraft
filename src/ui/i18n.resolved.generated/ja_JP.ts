@@ -1021,6 +1021,9 @@ export const ja_JP: EnTranslations = {
       "characterTitle": "キャラクター",
       "awaitingState": "権威サーバーのキャラクターデータを待機中…",
       "combatPowerLine": "戦闘力 {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "Aeldruneの外観とMIR4の戦闘属性",
       "equipmentTierGrade": "ティア{tier}、等級{grade}",
       "equipmentRequiredLevel": "必要レベル：{level}",
@@ -3691,6 +3694,7 @@ export const ja_JP: EnTranslations = {
     "social": {
       "lastSeen": "最終ログイン: {when}",
       "lastSeenNever": "なし",
+      "friendRequest": "Friend request",
       "ignoredTab": "無視中",
       "blockedTab": "ブロック",
       "ignoredEmpty": "誰も無視していません。",

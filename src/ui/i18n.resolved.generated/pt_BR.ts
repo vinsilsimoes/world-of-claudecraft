@@ -1021,6 +1021,9 @@ export const pt_BR: EnTranslations = {
       "characterTitle": "Personagem",
       "awaitingState": "Aguardando dados autoritativos do personagem...",
       "combatPowerLine": "Poder de Combate {value}",
+      "fameLine": "Fama: {value}",
+      "pkStatusSafe": "Status: pacífico",
+      "pkStatusMarked": "Status: PK - todos os atributos reduzidos em 50%",
       "equipmentVisualShell": "Aparência do Aeldrune com atributos de combate MIR4",
       "equipmentTierGrade": "Tier {tier}, Grau {grade}",
       "equipmentRequiredLevel": "Requer nível {level}",
@@ -3691,6 +3694,7 @@ export const pt_BR: EnTranslations = {
     "social": {
       "lastSeen": "Visto por último: {when}",
       "lastSeenNever": "nunca",
+      "friendRequest": "Pedido de amizade",
       "ignoredTab": "Ignorados",
       "blockedTab": "Bloqueados",
       "ignoredEmpty": "Você não está ignorando ninguém.",

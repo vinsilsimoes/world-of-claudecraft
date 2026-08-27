@@ -1021,6 +1021,9 @@ export const zh_CN: EnTranslations = {
       "characterTitle": "角色",
       "awaitingState": "正在等待权威角色数据……",
       "combatPowerLine": "战力 {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "采用 Aeldrune 外观与 MIR4 战斗属性",
       "equipmentTierGrade": "阶层 {tier}，品级 {grade}",
       "equipmentRequiredLevel": "需要等级 {level}",
@@ -3691,6 +3694,7 @@ export const zh_CN: EnTranslations = {
     "social": {
       "lastSeen": "最后在线: {when}",
       "lastSeenNever": "从未",
+      "friendRequest": "Friend request",
       "ignoredTab": "已忽略",
       "blockedTab": "屏蔽",
       "ignoredEmpty": "你没有忽略任何人。",

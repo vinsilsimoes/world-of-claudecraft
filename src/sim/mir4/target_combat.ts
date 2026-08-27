@@ -97,6 +97,11 @@ export function retaliateMir4TargetCombat(
   const meta = ctx.players.get(pid);
   const player = ctx.entities.get(pid);
   const attacker = ctx.entities.get(attackerId);
+  const attackerController = attacker ? ctx.pvpController(attacker) : null;
+  const admittedPlayerAggressor =
+    !!attackerController &&
+    player?.openWorldPvpAggressorId === attackerController.id &&
+    (player.openWorldPvpAggressionUntil ?? Number.NEGATIVE_INFINITY) >= ctx.time;
   if (
     !meta ||
     !player ||
@@ -105,7 +110,7 @@ export function retaliateMir4TargetCombat(
     !attacker ||
     attacker.dead ||
     attacker.id === player.id ||
-    !ctx.isHostileTo(player, attacker)
+    (!admittedPlayerAggressor && !ctx.isHostileTo(player, attacker))
   ) {
     return false;
   }
@@ -155,6 +160,13 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
     const player = ctx.entities.get(meta.entityId);
     if (!player?.autoAttack) {
       meta.mir4TargetCombat = undefined;
+      continue;
+    }
+    if (
+      state.owner === 'retaliation' &&
+      (player.openWorldPvpDefenseRights?.get(state.targetId) ?? Number.NEGATIVE_INFINITY) < ctx.time
+    ) {
+      clearMir4TargetCombat(ctx, player);
       continue;
     }
 

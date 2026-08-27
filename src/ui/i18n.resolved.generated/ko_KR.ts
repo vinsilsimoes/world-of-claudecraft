@@ -1021,6 +1021,9 @@ export const ko_KR: EnTranslations = {
       "characterTitle": "캐릭터",
       "awaitingState": "권한 서버의 캐릭터 데이터를 기다리는 중…",
       "combatPowerLine": "전투력 {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "Aeldrune 외형과 MIR4 전투 속성",
       "equipmentTierGrade": "티어 {tier}, 등급 {grade}",
       "equipmentRequiredLevel": "필요 레벨: {level}",
@@ -3691,6 +3694,7 @@ export const ko_KR: EnTranslations = {
     "social": {
       "lastSeen": "마지막 접속: {when}",
       "lastSeenNever": "없음",
+      "friendRequest": "Friend request",
       "ignoredTab": "무시됨",
       "blockedTab": "차단",
       "ignoredEmpty": "아무도 무시하고 있지 않습니다.",

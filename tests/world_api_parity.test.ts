@@ -201,6 +201,8 @@ export const IWORLD_MEMBERS = [
   { name: 'arenaInfo', kind: 'data' },
   { name: 'honor', kind: 'data' },
   { name: 'lifetimeHonor', kind: 'data' },
+  { name: 'fame', kind: 'data' },
+  { name: 'pkMarked', kind: 'data' },
   // --- Thornhollow Fields battleground (IWorldBattleground) ---
   { name: 'bgInfo', kind: 'data' },
   { name: 'cardMinigameInfo', kind: 'data' },
@@ -240,6 +242,8 @@ export const IWORLD_MEMBERS = [
   { name: 'socialInfo', kind: 'data' },
   // --- social graph commands + async search ---
   { name: 'friendAdd', kind: 'method' },
+  { name: 'friendAccept', kind: 'method' },
+  { name: 'friendDecline', kind: 'method' },
   { name: 'friendRemove', kind: 'method' },
   { name: 'blockAdd', kind: 'method' },
   { name: 'blockRemove', kind: 'method' },
@@ -601,7 +605,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // two (selectedMount + selectMount) for 273; the v0.32.0 base merge adds
     // activeMasterLootRolls, leaving 274; the packet's slotted tool effects add
     // toolEffectSlots (data) and slotToolEffect (method) for 276, the
-    // acquisition craft's recharge command (rechargeToolEffect) makes 277,
+    // acquisition craft's recharge command (rechargeToolEffect) makes 279,
     // and the UX pass's node respawn countdown read (nodeRespawnSeconds)
     // makes 278; the v0.33.0 sync merges bring the rift floor timer HUD's
     // riftEventMsRemaining, the instance-payload pipes' marketListInstance,
@@ -651,9 +655,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(364);
-    expect(DATA_MEMBERS.length).toBe(86);
-    expect(METHOD_MEMBERS.length).toBe(278);
+    expect(IWORLD_MEMBERS.length).toBe(368);
+    expect(DATA_MEMBERS.length).toBe(88);
+    expect(METHOD_MEMBERS.length).toBe(280);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -779,9 +783,12 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'equipItemToSlot',
       'equipment',
       'equipmentInstances',
+      'fame',
       'feedPet',
       'forfeitCardDuel',
+      'friendAccept',
       'friendAdd',
+      'friendDecline',
       'friendRemove',
       'friendlyTabTarget',
       'gatheringProficiency',
@@ -913,6 +920,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'petTaunt',
       'petWaterJet',
       'pickUpObject',
+      'pkMarked',
       'placeMobileStation',
       'playCardInDuel',
       'playEmote',
@@ -1069,6 +1077,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'entities',
       'equipment',
       'equipmentInstances',
+      'fame',
       'gatheringProficiency',
       'guildBankInfo',
       'hobbyCraft',
@@ -1091,6 +1100,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'moveInput',
       'partyInfo',
       'petSpecialCommandsSupported',
+      'pkMarked',
       'player',
       'playerId',
       'playtimeSeconds',
@@ -1205,7 +1215,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'equipItemToSlot',
       'feedPet',
       'forfeitCardDuel',
+      'friendAccept',
       'friendAdd',
+      'friendDecline',
       'friendRemove',
       'friendlyTabTarget',
       'guildAccept',
@@ -1677,6 +1689,8 @@ const FACET_DUEL_ARENA = [
   'arenaInfo',
   'honor',
   'lifetimeHonor',
+  'fame',
+  'pkMarked',
   'arenaQueueJoin',
   'arenaQueueLeave',
   'arenaAugmentPick',
@@ -1710,6 +1724,8 @@ type _ExhaustCardMinigame = AssertNever<
 const FACET_SOCIAL_GRAPH = [
   'socialInfo',
   'friendAdd',
+  'friendAccept',
+  'friendDecline',
   'friendRemove',
   'blockAdd',
   'blockRemove',
@@ -2058,8 +2074,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(364);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(364);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(368);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(368);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

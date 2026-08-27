@@ -18,6 +18,8 @@ function entity(overrides: Partial<Entity>): Entity {
     mobFamily: 'dragonkin',
     mobElite: true,
     mobBoss: true,
+    equippedItems: {},
+    equippedInstances: {},
     ...overrides,
   } as Entity;
 }
@@ -54,6 +56,18 @@ describe('entity presentation wire encoder', () => {
     applyEntityPresentationIdentity(mirror, { mvc: 99, mva: 99 });
     expect(mirror.mir4VisualClassId).toBeUndefined();
     expect(mirror.mir4VisualArmorMask).toBeUndefined();
+  });
+
+  it('round-trips the authoritative PK mark and clears it from a later identity record', () => {
+    const marked = entity({ kind: 'player', pkMarked: true });
+    const wire = entityIdentityFields(marked);
+    expect(wire.pk).toBe(1);
+
+    const mirror = entity({ kind: 'player', pkMarked: false });
+    applyEntityPresentationIdentity(mirror, wire);
+    expect(mirror.pkMarked).toBe(true);
+    applyEntityPresentationIdentity(mirror, {});
+    expect(mirror.pkMarked).toBe(false);
   });
 
   it('rounds an active MIR4 shield and omits an expired shield', () => {

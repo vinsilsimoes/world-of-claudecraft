@@ -73,6 +73,7 @@ export function entityIdentityFields(entity: Entity): Record<string, unknown> {
   }
   if (entity.aiAccount) out.ai = 1;
   if (entity.cheaterMark) out.chm = 1;
+  if (entity.pkMarked) out.pk = 1;
   if (entity.streamerLinks && hasStreamerLink(entity.streamerLinks)) out.slk = entity.streamerLinks;
   if (entity.guild) out.gd = entity.guild;
   if (entity.title) out.title = entity.title;

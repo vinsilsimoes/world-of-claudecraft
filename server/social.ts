@@ -96,6 +96,7 @@ export interface GuildView {
 
 export interface SocialSnapshot {
   friends: FriendEntry[];
+  friendRequests?: CharInfo[];
   blocks: CharRef[];
   ignores: CharRef[];
   guild: GuildView | null;
@@ -106,15 +107,36 @@ export interface SocialSnapshot {
 export interface SocialDb {
   findCharacterByName(name: string): Promise<CharInfo | null>;
   getCharacter(id: number): Promise<CharInfo | null>;
-  // friends (one-directional, classic style: no acceptance needed)
-  addFriend(charId: number, friendId: number): Promise<void>;
-  removeFriend(charId: number, friendId: number): Promise<void>;
+  // Legacy friend rows may remain one-directional. New requests grant no friend
+  // visibility until acceptance, which creates both relationship rows.
   // activeTitle is the friend's selected Book of Deeds title (a deed id the
   // client localizes, never English; the charactersForDeedsBoard read shape).
   listFriends(charId: number): Promise<(CharInfo & { activeTitle: string | null })[]>;
   whoFriended(charId: number): Promise<number[]>; // reverse lookup
-  // blocks (one-directional ignore)
-  addBlock(charId: number, blockedId: number): Promise<void>;
+  requestFriendship(
+    requesterId: number,
+    recipientId: number,
+  ): Promise<
+    | 'requested'
+    | 'accepted'
+    | 'duplicate'
+    | 'recipient_full'
+    | 'requester_full'
+    | 'friend_full'
+    | 'target_friend_full'
+    | 'blocked'
+  >;
+  acceptFriendRequest(
+    recipientId: number,
+    requesterId: number,
+  ): Promise<'accepted' | 'missing' | 'friend_full' | 'target_friend_full' | 'blocked'>;
+  declineFriendRequest(recipientId: number, requesterId: number): Promise<boolean>;
+  listFriendRequests(recipientId: number): Promise<CharInfo[]>;
+  removeFriendPair(firstId: number, secondId: number): Promise<void>;
+  removeFriendRequestsBetween(firstId: number, secondId: number): Promise<void>;
+  // blocks (one-directional ignore); addBlock atomically clears the actor's
+  // outgoing friendship plus pending requests in either direction.
+  addBlock(charId: number, blockedId: number): Promise<'added' | 'list_full'>;
   removeBlock(charId: number, blockedId: number): Promise<void>;
   listBlocks(charId: number): Promise<CharRef[]>;
   blockedIds(charId: number): Promise<number[]>;
@@ -344,8 +366,9 @@ export type CalendarResultCode =
 // Guild billboard command outcomes ('set' is the success; the rest refusals).
 export type MotdResultCode = 'set' | 'notInGuild' | 'notOfficer';
 
-const FRIEND_LIMIT = 50;
-const BLOCK_LIMIT = 50;
+export const FRIEND_LIMIT = 50;
+export const FRIEND_REQUEST_LIMIT = 50;
+export const BLOCK_LIMIT = 50;
 const IGNORE_LIMIT = 50;
 // Exported because the admin guild backoffice enforces the same roster cap: the
 // detail read pages the roster at it and the rename guard refuses above it. Two
@@ -429,8 +452,9 @@ export class SocialService {
   // -------------------------------------------------------------------------
 
   async snapshot(charId: number): Promise<SocialSnapshot> {
-    const [friends, blocks, ignores, membership] = await Promise.all([
+    const [friends, friendRequests, blocks, ignores, membership] = await Promise.all([
       this.db.listFriends(charId),
+      this.db.listFriendRequests(charId),
       this.db.listBlocks(charId),
       this.db.listIgnores(charId),
       this.db.guildMembership(charId),
@@ -466,6 +490,9 @@ export class SocialService {
           ...this.presence(charId, f.id, blockedByViewer),
         }))
         .sort((a, b) => Number(b.online) - Number(a.online) || a.name.localeCompare(b.name)),
+      friendRequests: friendRequests
+        .map(withPublicRealm)
+        .sort((a, b) => a.name.localeCompare(b.name)),
       blocks,
       ignores,
       guild,
@@ -643,9 +670,94 @@ export class SocialService {
       this.err(actor.characterId, 'Your friends list is full.');
       return;
     }
-    await this.db.addFriend(actor.characterId, target.id);
-    this.info(actor.characterId, `${target.name} added to friends.`);
+    const result = await this.db.requestFriendship(actor.characterId, target.id);
+    if (result === 'recipient_full') {
+      this.err(actor.characterId, `${target.name} has too many pending friend requests.`);
+      return;
+    }
+    if (result === 'requester_full') {
+      this.err(actor.characterId, 'You have too many pending friend requests.');
+      return;
+    }
+    if (result === 'friend_full') {
+      this.err(actor.characterId, 'Your friends list is full.');
+      return;
+    }
+    if (result === 'target_friend_full') {
+      this.err(actor.characterId, `${target.name}'s friends list is full.`);
+      return;
+    }
+    if (result === 'blocked') {
+      this.err(actor.characterId, `You cannot add ${target.name} as a friend.`);
+      return;
+    }
+    if (result === 'duplicate') {
+      this.err(actor.characterId, `A friend request to ${target.name} is already pending.`);
+      return;
+    }
+    if (result === 'accepted') {
+      this.info(actor.characterId, `${target.name} added to friends.`);
+      this.info(target.id, `${actor.name} added to friends.`);
+      this.push(target.id);
+    } else {
+      this.info(actor.characterId, `Friend request sent to ${target.name}.`);
+      this.info(target.id, `${actor.name} sent you a friend request.`);
+      this.push(target.id);
+    }
     this.push(actor.characterId);
+  }
+
+  async friendAccept(actor: SocialActor, name: string): Promise<void> {
+    const target = await this.resolveTarget(actor, name);
+    if (!target) return;
+    const [friends, targetFriends] = await Promise.all([
+      this.db.listFriends(actor.characterId),
+      this.db.listFriends(target.id),
+    ]);
+    if (friends.length >= FRIEND_LIMIT && !friends.some((friend) => friend.id === target.id)) {
+      this.err(actor.characterId, 'Your friends list is full.');
+      return;
+    }
+    if (
+      targetFriends.length >= FRIEND_LIMIT &&
+      !targetFriends.some((friend) => friend.id === actor.characterId)
+    ) {
+      this.err(actor.characterId, `${target.name}'s friends list is full.`);
+      return;
+    }
+    const accepted = await this.db.acceptFriendRequest(actor.characterId, target.id);
+    if (accepted === 'friend_full') {
+      this.err(actor.characterId, 'Your friends list is full.');
+      return;
+    }
+    if (accepted === 'target_friend_full') {
+      this.err(actor.characterId, `${target.name}'s friends list is full.`);
+      return;
+    }
+    if (accepted === 'blocked') {
+      this.err(actor.characterId, `You cannot add ${target.name} as a friend.`);
+      return;
+    }
+    if (accepted === 'missing') {
+      this.err(actor.characterId, `You have no friend request from ${target.name}.`);
+      return;
+    }
+    this.info(actor.characterId, `${target.name} added to friends.`);
+    this.info(target.id, `${actor.name} accepted your friend request.`);
+    this.push(actor.characterId);
+    this.push(target.id);
+  }
+
+  async friendDecline(actor: SocialActor, name: string): Promise<void> {
+    const target = await this.resolveTarget(actor, name);
+    if (!target) return;
+    if (!(await this.db.declineFriendRequest(actor.characterId, target.id))) {
+      this.err(actor.characterId, `You have no friend request from ${target.name}.`);
+      return;
+    }
+    this.info(actor.characterId, `Friend request from ${target.name} declined.`);
+    this.push(actor.characterId);
+    this.push(target.id);
   }
 
   async friendRemove(actor: SocialActor, name: string): Promise<void> {
@@ -659,9 +771,10 @@ export class SocialService {
       this.err(actor.characterId, `${target.name} is not on your friends list.`);
       return;
     }
-    await this.db.removeFriend(actor.characterId, target.id);
+    await this.db.removeFriendPair(actor.characterId, target.id);
     this.info(actor.characterId, `${target.name} removed from friends.`);
     this.push(actor.characterId);
+    this.push(target.id);
   }
 
   // Called by game.ts when a character logs in/out, so friends watching them
@@ -735,9 +848,13 @@ export class SocialService {
       this.err(actor.characterId, 'Your block list is full.');
       return;
     }
-    await this.db.addBlock(actor.characterId, target.id);
-    // blocking someone also drops them from your friends list
-    await this.db.removeFriend(actor.characterId, target.id);
+    const added = await this.db.addBlock(actor.characterId, target.id);
+    if (added === 'list_full') {
+      this.err(actor.characterId, 'Your block list is full.');
+      return;
+    }
+    // PgSocialDb performs friendship/request cleanup in the same pair-locked
+    // transaction as the block insert, so a concurrent accept cannot resurrect it.
     this.info(actor.characterId, `${target.name} is now blocked.`);
     this.tx.onBlocksChanged(actor.characterId, await this.db.blockedIds(actor.characterId));
     this.push(actor.characterId);

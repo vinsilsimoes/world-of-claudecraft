@@ -6078,6 +6078,10 @@
     color: var(--color-text-muted);
     margin-top: 0;
   }
+  .panel-title.char-title-portrait .char-fame-status.is-pk {
+    color: var(--color-hostile);
+    border-color: var(--color-hostile);
+  }
   .panel-title.char-title-portrait .portrait-chip {
     flex: 0 0 auto;
   }

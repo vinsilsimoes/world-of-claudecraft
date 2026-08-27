@@ -1,7 +1,6 @@
-// Refresh signature for the character sheet's PROGRESSION block: the worn Book
-// of Deeds cosmetics (active title line, border badge row's worn word), the
-// earned border badges themselves, and the Reliquary completion pair plus
-// Curator rank.
+// Refresh signature for mutable cold-window character-sheet readouts: the worn
+// Book of Deeds cosmetics, earned border badges, Reliquary completion, and the
+// Aeldrune fame/PK header added by the MIR4 profile.
 //
 // Why this exists at all: the character sheet is a COLD window. It repaints on
 // open and on the handful of edges that call renderIfOpen, and it is absent from
@@ -67,13 +66,13 @@
 // it directly.
 
 /**
- * Compact signature of everything the character sheet's progression block reads
- * that can move while the sheet is open: the active title deed id and the active
+ * Compact signature of the mutable cold readouts that can move while the sheet
+ * is open: the active title deed id and the active
  * border deed id (both null for "nothing worn"), the earned-deed count behind the
  * border badge row, and the three character-scoped Reliquary ownership sizes
  * behind the completion pair and Curator rank. Byte-stable for equal input (a
- * fixed six-element array through JSON.stringify), so a latch comparing two
- * signatures moves exactly when one of the six moves.
+ * fixed eight-element array through JSON.stringify), so a latch comparing two
+ * signatures moves exactly when one of the eight moves.
  */
 export function charSheetRefreshSig(parts: {
   activeTitle: string | null;
@@ -86,6 +85,10 @@ export function charSheetRefreshSig(parts: {
   marks: number;
   /** ownedMounts().length: Horizons mount relics behind the pair. */
   mounts: number;
+  /** Aeldrune open-world reputation shown in the MIR4-profile header. */
+  fame: number;
+  /** Hysteresis-backed PK state shown beside fame. */
+  pkMarked: boolean;
 }): string {
   return JSON.stringify([
     parts.activeTitle,
@@ -94,5 +97,7 @@ export function charSheetRefreshSig(parts: {
     parts.itemsDiscovered,
     parts.marks,
     parts.mounts,
+    parts.fame,
+    parts.pkMarked,
   ]);
 }

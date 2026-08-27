@@ -84,6 +84,7 @@ import { GAME_PROFILE, REALM, REALM_DIRECTORY } from './realm';
 import { chooseArchiveName } from './reclaim_name';
 import { SEEKER_ENTITLEMENT_SCHEMA } from './seeker_entitlement_db';
 import { SOCIAL_SCHEMA } from './social_db';
+import { runSocialPrivacyMigration } from './social_privacy_migration';
 import { UNSTUCK_SCHEMA } from './unstuck_db';
 import { USER_ASSETS_SCHEMA } from './user_assets_db';
 
@@ -1365,6 +1366,17 @@ export async function ensureSchema(): Promise<void> {
     if (backfill.ran) {
       console.log(
         `[market-backfill] applied for realm ${REALM} (legacyRowFound=${backfill.legacyRowFound})`,
+      );
+    }
+    // One-shot privacy repair for a short-lived development build that wrote a
+    // requester -> recipient friendship before the recipient accepted. Keep
+    // this after the market dry-run halt above: an operator-requested dry run
+    // promises no world_state writes of any kind. The marker makes every later
+    // boot an O(1) probe instead of repeating a global DELETE/join.
+    const socialPrivacy = await runSocialPrivacyMigration(client);
+    if (socialPrivacy.ran) {
+      console.log(
+        `[social-privacy-migration] removed ${socialPrivacy.removedProvisionalEdges} provisional friend edge(s)`,
       );
     }
     await client.query('COMMIT');

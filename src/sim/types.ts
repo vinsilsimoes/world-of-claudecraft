@@ -4782,6 +4782,16 @@ export interface Entity extends ClientMirroredEntityFields {
    *  mark; never true offline, never user-settable. Cosmetic: nothing reads it
    *  for power, and the countdown lives on the mark's own aura. */
   cheaterMark?: boolean;
+  /** Aeldrune open-world player-killer mark, mirrored to nearby clients. */
+  pkMarked: boolean;
+  /** Server-authoritative controller of the latest landed open-world PvP hit.
+   *  Stamped when damage is admitted so later target/party/position changes
+   *  cannot erase the fame consequence of a delayed lethal effect. */
+  openWorldPvpAggressorId?: number;
+  openWorldPvpAggressionUntil?: number;
+  /** Per-opponent self-defence waivers (opponent id -> expiry sim time). A map
+   *  prevents a second aggressor from erasing the first waiver. */
+  openWorldPvpDefenseRights?: Map<number, number>;
   /** True for a mob spawned BY a delve affix (e.g. Restless Graves' Raised
    *  Bonewalker). Affix re-trigger checks exclude these so an affix-spawned mob's
    *  own death can never re-trigger the same affix (would otherwise chain forever). */
@@ -4861,6 +4871,8 @@ export interface Entity extends ClientMirroredEntityFields {
   // Sim time of the last "level too low" rift denial shown to this player, so
   // standing inside the portal trigger radius does not spam the toast per tick.
   riftDeniedAt?: number;
+  /** Last denied campaign-portal notice, for the 20 Hz walk-in trigger. */
+  campaignPortalDeniedAt?: number;
   // Sim time of the last "pool full" / "event already cleared" denial shown to
   // this player on walk-in, so a 20 Hz trigger does not spam the error toast.
   riftPoolFullAt?: number;

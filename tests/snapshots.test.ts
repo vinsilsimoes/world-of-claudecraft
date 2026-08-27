@@ -4233,6 +4233,7 @@ const ALL_DELTA_KEYS = [
   'einst',
   'ench',
   'equip',
+  'fame',
   'gprof',
   'guildBank',
   'hbl',
@@ -4261,6 +4262,7 @@ const ALL_DELTA_KEYS = [
   'mst',
   'ncd',
   'party',
+  'pk',
   'prk',
   'prof',
   'ptime',
@@ -4361,6 +4363,7 @@ const TERSE_TO_IWORLD: Record<string, string> = {
   mres: 'maxResource',
   mst: 'activeMobileStationCraft',
   party: 'partyInfo',
+  pk: 'pkMarked',
   prk: 'prestigeRank',
   prof: 'professionsState',
   ptime: 'playtimeSeconds',
@@ -5207,7 +5210,7 @@ describe('gather node cooldown wire round trip (ncd)', () => {
 });
 
 describe('delta-key contract pins (anti-drift)', () => {
-  it('ALL_DELTA_KEYS contains exactly 88 unique keys in sorted order', () => {
+  it('ALL_DELTA_KEYS contains exactly 90 unique keys in sorted order', () => {
     // +1: guildBank (Guild Bank Phase 2), +1: the battleground bg key, +1: the
     // commission order board's corder key (issue #1298), +1: the character
     // sheet's lifetime played-time key ptime, for 67, then +16: the static
@@ -5220,12 +5223,13 @@ describe('delta-key contract pins (anti-drift)', () => {
     // broadcast loop skips the viewer's own entity, and which is heavy and
     // immutable so it rides this channel instead of re-serializing per tick),
     // for 86, plus the profile-scoped authoritative `mir4` state for 87 and
-    // its separately revisioned `mir4Codex` state for 88. Every
+    // its separately revisioned `mir4Codex` state for 88, plus the Aeldrune
+    // fame and PK-mark state for 90. Every
     // v0.36.0 sync conflicts here because each side pins its own
     // additions alone; the merged tree carries all of them, and this number
     // came from a run on the merged tree.
-    expect(ALL_DELTA_KEYS).toHaveLength(88);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(88);
+    expect(ALL_DELTA_KEYS).toHaveLength(90);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(90);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -5257,8 +5261,8 @@ describe('delta-key contract pins (anti-drift)', () => {
     // for 83, then reliq (Reliquary Phase 3 sparse blob) for 84, the nameplate
     // border echo aborder for 85, the authored modular look `app` for 86, and
     // the profile-scoped authoritative MIR4 block for 87 and its dedicated
-    // Codex delta for 88.
-    expect(scraped.size).toBe(88);
+    // Codex delta for 88, plus fame and the PK mark for 90.
+    expect(scraped.size).toBe(90);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

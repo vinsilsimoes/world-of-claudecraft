@@ -1021,6 +1021,9 @@ export const ru_RU: EnTranslations = {
       "characterTitle": "Персонаж",
       "awaitingState": "Ожидание подтверждённых данных персонажа…",
       "combatPowerLine": "Боевая мощь: {value}",
+      "fameLine": "Fame: {value}",
+      "pkStatusSafe": "Status: peaceful",
+      "pkStatusMarked": "Status: PK - all stats reduced by 50%",
       "equipmentVisualShell": "Внешний вид Aeldrune с боевыми параметрами MIR4",
       "equipmentTierGrade": "Ранг {tier}, качество {grade}",
       "equipmentRequiredLevel": "Требуется уровень {level}",
@@ -3691,6 +3694,7 @@ export const ru_RU: EnTranslations = {
     "social": {
       "lastSeen": "Последний вход: {when}",
       "lastSeenNever": "никогда",
+      "friendRequest": "Friend request",
       "ignoredTab": "Игнорируемые",
       "blockedTab": "Заблокированные",
       "ignoredEmpty": "Вы никого не игнорируете.",

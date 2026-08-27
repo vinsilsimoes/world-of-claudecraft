@@ -60,6 +60,7 @@ export interface GuildInfo {
 
 export interface SocialInfo {
   friends: FriendInfo[];
+  friendRequests?: Pick<FriendInfo, 'id' | 'name' | 'cls' | 'level' | 'realm'>[];
   blocks: { id: number; name: string }[];
   // personal chat ignores: hides their public chat from you and nothing else.
   // A block is the heavy tool (invites, whispers, mail, /who all die with it).
@@ -95,6 +96,8 @@ export interface IWorldSocialGraph {
   // persistent social: friends, ignore/block, guilds (online play only)
   socialInfo: SocialInfo | null;
   friendAdd(name: string): void;
+  friendAccept(name: string): void;
+  friendDecline(name: string): void;
   friendRemove(name: string): void;
   blockAdd(name: string): void;
   blockRemove(name: string): void;

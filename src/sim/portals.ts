@@ -11,6 +11,11 @@
 import { DUNGEON_X_THRESHOLD, PORTALS } from './data';
 import { MIR4_GAME_PROFILE } from './game_profile';
 import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
+import {
+  isMir4CampaignMapUnlocked,
+  type Mir4PortalDirection,
+  mir4PortalDestinationMapId,
+} from './mir4/map_unlocks';
 import { mir4ArcPortalsForWorld } from './mir4/travel';
 import { cancelProfessionSessionOnDisplacement } from './professions/session_teardown';
 import type { SimContext } from './sim_context';
@@ -49,6 +54,24 @@ function teleport(ctx: SimContext, p: Entity, to: PortalSide, text: string): voi
   }
 }
 
+function canTraverseCampaignPortal(
+  ctx: SimContext,
+  p: Entity,
+  portalId: string,
+  direction: Mir4PortalDirection,
+): boolean {
+  if (ctx.gameProfile !== MIR4_GAME_PROFILE) return true;
+  const destinationMapId = mir4PortalDestinationMapId(portalId, direction);
+  if (!destinationMapId) return true;
+  const meta = ctx.players.get(p.id);
+  if (isMir4CampaignMapUnlocked(destinationMapId, meta?.mir4ArcQuests)) return true;
+  if (ctx.time - (p.campaignPortalDeniedAt ?? Number.NEGATIVE_INFINITY) >= 2) {
+    p.campaignPortalDeniedAt = ctx.time;
+    ctx.error(p.id, 'The passage is sealed.');
+  }
+  return false;
+}
+
 export function updatePortalTriggers(ctx: SimContext, p: Entity): void {
   if (p.kind !== 'player') return;
   if (p.pos.x > DUNGEON_X_THRESHOLD) return; // instances have their own exits
@@ -57,10 +80,12 @@ export function updatePortalTriggers(ctx: SimContext, p: Entity): void {
   for (const portal of portals) {
     const radius = portal.radius > 0 ? portal.radius : PORTAL_TRIGGER_RADIUS;
     if (dist2dTo(p, portal.a) < radius) {
+      if (!canTraverseCampaignPortal(ctx, p, portal.id, 'a-to-b')) return;
       teleport(ctx, p, portal.b, portal.enterText);
       return;
     }
     if (dist2dTo(p, portal.b) < radius) {
+      if (!canTraverseCampaignPortal(ctx, p, portal.id, 'b-to-a')) return;
       teleport(ctx, p, portal.a, portal.leaveText);
       return;
     }

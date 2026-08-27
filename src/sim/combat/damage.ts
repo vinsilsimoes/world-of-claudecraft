@@ -37,6 +37,7 @@ import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
 import { grantMir4Xp } from '../mir4/combat';
 import { settleMir4KillLoot } from '../mir4/kill_loot';
 import { mir4MonsterRespawnSeconds } from '../mir4/monster_respawn';
+import { recalcMir4ProfilePlayerStats } from '../mir4/profile_player';
 import { mir4FragileGatherEntityIdFromCast } from '../mir4/quest_objective_cast';
 import { grantMir4KnowledgeFragment } from '../mir4/skill_materials';
 import { retaliateMir4TargetCombat } from '../mir4/target_combat';
@@ -47,6 +48,15 @@ import { grantAbilityDevotion } from '../paladin_devotion';
 import { PET_AGGRESSIVE_RANGE } from '../pet/pet_ai';
 import { snapshotPetOnOwnerDeath } from '../pet/pet_owner_revive';
 import { pvpDamageMultiplier } from '../pvp';
+import {
+  adjustFame,
+  ELIGIBLE_MONSTER_KILL_FAME,
+  INNOCENT_PLAYER_KILL_FAME,
+  OPEN_WORLD_PVP_MIN_LEVEL,
+  OPEN_WORLD_PVP_SELF_DEFENSE_SECONDS,
+  PK_PLAYER_KILL_FAME,
+  rememberOpenWorldPvpDefenseRight,
+} from '../pvp/infamy';
 import { resolveRespawnSeconds } from '../respawn_policy';
 import { aurasSurvivingDeath } from '../resurrection';
 import type { PlayerMeta } from '../sim';
@@ -929,6 +939,7 @@ export function dealDamage(
   // (preHp - target.hp) is post-mitigation and post-absorb by construction, so fully
   // absorbed / avoided / overkill damage never enters the history. Players only.
   if (target.kind === 'player') recordDamageTaken(target, preHp - target.hp, ctx.tickCount);
+  stampOpenWorldPvpAggression(ctx, source, target, preHp - target.hp);
   ctx.emit({
     type: 'damage',
     sourceId: source?.id ?? -1,
@@ -1341,12 +1352,116 @@ function reflectSpellWard(
   );
 }
 
+function isStructuredPlayerFight(ctx: SimContext, attacker: Entity, victim: Entity): boolean {
+  const duel = ctx.duels.get(attacker.id);
+  if (
+    duel?.state === 'active' &&
+    duel.endedTick === undefined &&
+    ((duel.a === attacker.id && duel.b === victim.id) ||
+      (duel.b === attacker.id && duel.a === victim.id))
+  ) {
+    return true;
+  }
+  const arena = ctx.arenaMatches.get(attacker.id);
+  if (arena?.state === 'active' && ctx.arenaMatches.get(victim.id) === arena) return true;
+  const battleground = ctx.bgMatches.get(attacker.id);
+  if (battleground?.state === 'active' && ctx.bgMatches.get(victim.id) === battleground)
+    return true;
+  if (ctx.vcup.match && vcupBothSeated(ctx.vcup.match, attacker.id, victim.id)) return true;
+  return attacker.jailed === true || victim.jailed === true;
+}
+
+/** Remember the disposition of actual landed player damage. Once an open-world
+ *  hit is stamped, mutable UI selection, party membership, position, or mode
+ *  changes cannot launder a later DoT/projectile death. A landed structured hit
+ *  by the same controller clears its older stamp, so a later arena/duel kill is
+ *  never charged from stale overworld combat. */
+function stampOpenWorldPvpAggression(
+  ctx: SimContext,
+  source: Entity | null,
+  target: Entity,
+  landedHpLoss: number,
+): void {
+  if (
+    ctx.gameProfile !== MIR4_GAME_PROFILE ||
+    target.kind !== 'player' ||
+    landedHpLoss <= 0 ||
+    !source
+  ) {
+    return;
+  }
+  const attacker = ctx.pvpController(source);
+  if (!attacker || attacker.id === target.id) return;
+  if (isStructuredPlayerFight(ctx, attacker, target)) {
+    if (target.openWorldPvpAggressorId === attacker.id) {
+      target.openWorldPvpAggressorId = undefined;
+      target.openWorldPvpAggressionUntil = undefined;
+      target.openWorldPvpDefenseRights?.delete(attacker.id);
+    }
+    return;
+  }
+  if (attacker.level >= OPEN_WORLD_PVP_MIN_LEVEL && target.level >= OPEN_WORLD_PVP_MIN_LEVEL) {
+    const attackerIsDefending =
+      (attacker.openWorldPvpDefenseRights?.get(target.id) ?? Number.NEGATIVE_INFINITY) >= ctx.time;
+    target.openWorldPvpAggressorId = attacker.id;
+    target.openWorldPvpAggressionUntil = ctx.time + OPEN_WORLD_PVP_SELF_DEFENSE_SECONDS;
+    // A legal reply does not make the original aggressor a defender. Only the
+    // first unlawful direction establishes/refreshes the reciprocal waiver.
+    if (!attackerIsDefending) {
+      target.openWorldPvpDefenseRights = rememberOpenWorldPvpDefenseRight(
+        target.openWorldPvpDefenseRights,
+        attacker.id,
+        ctx.time + OPEN_WORLD_PVP_SELF_DEFENSE_SECONDS,
+        ctx.time,
+      );
+    }
+  }
+}
+
 export function handleDeath(
   ctx: SimContext,
   e: Entity,
   killer: Entity | null,
   killerAbility?: string | null,
 ): void {
+  if (ctx.gameProfile === MIR4_GAME_PROFILE && e.kind === 'player' && killer) {
+    const attacker = ctx.pvpController(killer);
+    const attackerMeta = attacker ? ctx.players.get(attacker.id) : null;
+    const victimMeta = ctx.players.get(e.id);
+    if (
+      attacker &&
+      attackerMeta &&
+      victimMeta &&
+      attacker.id !== e.id &&
+      e.openWorldPvpAggressorId === attacker.id &&
+      (e.openWorldPvpAggressionUntil ?? Number.NEGATIVE_INFINITY) >= ctx.time
+    ) {
+      const selfDefense =
+        (attacker.openWorldPvpDefenseRights?.get(e.id) ?? Number.NEGATIVE_INFINITY) >= ctx.time;
+      const fameDelta = victimMeta.pkMarked
+        ? PK_PLAYER_KILL_FAME
+        : selfDefense
+          ? 0
+          : INNOCENT_PLAYER_KILL_FAME;
+      const next = adjustFame(
+        { fame: attackerMeta.fame, pkMarked: attackerMeta.pkMarked },
+        fameDelta,
+      );
+      const markChanged = next.pkMarked !== attackerMeta.pkMarked;
+      attackerMeta.fame = next.fame;
+      attackerMeta.pkMarked = next.pkMarked;
+      attacker.pkMarked = next.pkMarked;
+      if (markChanged) recalcMir4ProfilePlayerStats(ctx.gameProfile, attacker, attackerMeta);
+      if (selfDefense) {
+        attacker.openWorldPvpDefenseRights?.delete(e.id);
+      }
+    }
+  }
+  if (e.kind === 'player') {
+    e.openWorldPvpAggressorId = undefined;
+    e.openWorldPvpAggressionUntil = undefined;
+    e.openWorldPvpDefenseRights?.clear();
+  }
   if (e.kind === 'player') {
     clearSpiritmendCurrents(ctx, e.id);
     clearShamanTalentState(ctx, e);
@@ -1646,9 +1761,28 @@ export function handleDeath(
     const rewardInstance = ctx.instances.find(
       (inst) => inst.partyKey !== null && inst.mobIds.includes(e.id),
     );
+    const tmpl = MOBS[e.templateId];
     let heroicRewardRecipients: PlayerMeta[] = [];
     if (meta && creditEntity && !meta.leaving) {
-      const tmpl = MOBS[e.templateId];
+      if (
+        ctx.gameProfile === MIR4_GAME_PROFILE &&
+        e.hostile &&
+        (tmpl?.xpMult ?? 1) > 0 &&
+        tmpl?.dummy !== true &&
+        tmpl?.ambient !== true &&
+        e.friendlyPracticeTarget !== true &&
+        e.level >= creditEntity.level
+      ) {
+        const next = adjustFame(
+          { fame: meta.fame, pkMarked: meta.pkMarked },
+          ELIGIBLE_MONSTER_KILL_FAME,
+        );
+        const markChanged = next.pkMarked !== meta.pkMarked;
+        meta.fame = next.fame;
+        meta.pkMarked = next.pkMarked;
+        creditEntity.pkMarked = next.pkMarked;
+        if (markChanged) recalcMir4ProfilePlayerStats(ctx.gameProfile, creditEntity, meta);
+      }
       // xpMult 0 marks a puzzle-object mob (the 1 HP spider egg-sac): killable
       // in one hit by design, so it must not pay full kill XP.
       const eliteMult = (tmpl?.elite ? 2 : 1) * (tmpl?.xpMult ?? 1);

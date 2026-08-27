@@ -802,7 +802,7 @@ describe("R3: the flood-kick reason maps to the client matcher's exact bytes", (
     const kickArms = gameSrc.match(
       /kickSession\(session, MSG_RATE_KICK_REASON, 'message flood'\)/g,
     );
-    expect(kickArms, 'all five flood kick arms must pass MSG_RATE_KICK_REASON').toHaveLength(5);
+    expect(kickArms, 'all six flood kick arms must pass MSG_RATE_KICK_REASON').toHaveLength(6);
     expect(gameSrc).toContain("kickSession(session, 'rejected by server', 'disconnected')");
 
     // The matcher arm recognizes the same bytes and returns the loading key. A

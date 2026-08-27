@@ -473,6 +473,9 @@ export const hudChromeStrings = {
     characterTitle: 'Character',
     awaitingState: 'Waiting for authoritative character data...',
     combatPowerLine: 'Combat Power {value}',
+    fameLine: 'Fame: {value}',
+    pkStatusSafe: 'Status: peaceful',
+    pkStatusMarked: 'Status: PK - all stats reduced by 50%',
     equipmentVisualShell: 'Aeldrune appearance with class-specific combat attributes',
     equipmentTierGrade: 'Imported source tier {tier}, grade {grade}',
     equipmentRequiredLevel:
@@ -4278,6 +4281,7 @@ export const hudChromeStrings = {
   social: {
     lastSeen: 'Last seen: {when}',
     lastSeenNever: 'never',
+    friendRequest: 'Friend request',
     // The two PLAYER chat-filter tiers get a tab each. Ignored is chat-only;
     // Blocked also stops whispers, invites and mail. (Neither is the admin mute.)
     ignoredTab: 'Ignored',

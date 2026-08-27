@@ -65,6 +65,8 @@ function harness() {
   const world = {
     cfg: { gameProfile: 'mir4-gameplay-port', playerClass: 'warrior' },
     player: { id: 1, name: 'Asha', level: 10, skin: 0, skinCatalog: 'class' },
+    fame: 2_000,
+    pkMarked: false,
     copper: 12_345,
     mir4PlayerState: () => state,
     mir4EquipItem,
@@ -124,6 +126,8 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     ).toBe(true);
 
     expect(root.textContent).toContain('Combat Power');
+    expect(root.textContent).toContain('Fame: 2,000');
+    expect(root.textContent).toContain('Status: peaceful');
     expect(root.textContent).toContain('Boss Damage');
     expect(root.textContent).toContain('Monster Damage Reduction');
     expect(root.textContent).toContain('Recovery Potion Boost');
@@ -149,6 +153,29 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     );
     root.querySelector<HTMLButtonElement>('[data-act="mir4-unequip-1"]')?.click();
     expect(mir4UnequipSlot).toHaveBeenCalledWith(1);
+  });
+
+  it('makes the PK penalty visible on the character sheet', () => {
+    const { world } = harness();
+    Object.assign(world, { fame: 500, pkMarked: true });
+    const root = document.createElement('section');
+
+    paintMir4CharacterWindow({
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      renderPreview: vi.fn(),
+      afterEquipmentChange: vi.fn(),
+      restoreFocus: vi.fn(),
+      focusedAct: null,
+      hadFocus: false,
+    });
+
+    expect(root.textContent).toContain('Fame: 500');
+    expect(root.textContent).toContain('Status: PK - all stats reduced by 50%');
+    expect(root.querySelector('.char-fame-status')?.classList.contains('is-pk')).toBe(true);
   });
 
   it('paints unequipped WoC visual shells and MIR4 materials into #bags', () => {
