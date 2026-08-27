@@ -83,6 +83,12 @@ const STATUS_KEYS: Readonly<Record<number, TranslationKey>> = {
 // MIR4 material balances keep their native semantic keys, while the UI uses
 // existing Aeldrune reagent art as the visual shell.
 const MATERIAL_VISUAL_ITEM_IDS: Readonly<Record<Mir4MaterialView['key'], keyof typeof ITEMS>> = {
+  metalCommon: 'copper_ore',
+  metalUncommon: 'iron_ore',
+  metalRare: 'fine_iron_ore',
+  metalEpic: 'thorium_ore',
+  metalLegendary: 'fine_thorium_ore',
+  metalMythic: 'arcanite_bar',
   sunStone: 'thorium_ore',
   moonStone: 'copper_ore',
   solarScroll: 'arcanite_bar',
@@ -136,6 +142,12 @@ const MATERIAL_VISUAL_ITEM_IDS: Readonly<Record<Mir4MaterialView['key'], keyof t
 
 const MATERIAL_QUALITY: Readonly<Record<Mir4MaterialView['key'], NonNullable<ItemDef['quality']>>> =
   {
+    metalCommon: 'common',
+    metalUncommon: 'uncommon',
+    metalRare: 'rare',
+    metalEpic: 'epic',
+    metalLegendary: 'legendary',
+    metalMythic: 'legendary',
     sunStone: 'common',
     moonStone: 'common',
     solarScroll: 'common',
@@ -232,13 +244,19 @@ export function mir4EquipmentTooltipHtml(item: Mir4PaperdollItemView): string {
     )
     .join('');
   const enhancement = item.enhancement > 0 ? ` +${fmt(item.enhancement)}` : '';
+  const rarityKey = item.craftingRarity
+    ? item.craftingRarity === 'mythic'
+      ? 'game.milestone.mythic'
+      : (`itemUi.quality.${item.craftingRarity}` as TranslationKey)
+    : null;
+  const progressionLine = item.craftingRarity
+    ? t('hudChrome.mir4.equipmentCraftingRarity', {
+        rarity: rarityKey ? t(rarityKey) : item.craftingRarity,
+      })
+    : t('hudChrome.mir4.equipmentStarter');
   return `<div class="tt-title">${esc(name)}${enhancement}</div><div class="tt-sub">${esc(
     t('hudChrome.mir4.equipmentVisualShell'),
-  )}</div><div>${esc(
-    t('hudChrome.mir4.equipmentTierGrade', { tier: fmt(item.tier), grade: fmt(item.grade) }),
-  )}</div><div>${esc(
-    t('hudChrome.mir4.equipmentRequiredLevel', { level: fmt(item.requiredLevel) }),
-  )}</div>${attributes}`;
+  )}</div><div>${esc(progressionLine)}</div>${attributes}`;
 }
 
 function statCellValue(key: TranslationKey, value: string): string {

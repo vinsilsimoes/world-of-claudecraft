@@ -63,7 +63,7 @@ import { json } from './http_util';
 import type { LiveReportTarget } from './moderation_db';
 import { recordUsageMetric } from './provider_usage';
 import { publicReadRateLimited } from './ratelimit';
-import { REALM, REALM_DIRECTORY } from './realm';
+import { PUBLIC_REALM_NAME, publicRealmCounts, REALM_DIRECTORY } from './realm';
 import { steamEnabled } from './steam/config';
 
 // ---------------------------------------------------------------------------
@@ -384,7 +384,8 @@ export async function readRealms(
   realm: string,
   directory: readonly unknown[],
 ): Promise<{ current: string; realms: readonly unknown[]; characters: Record<string, number> }> {
-  const characters = accountId !== null ? await db.characterCountsByRealm(accountId) : {};
+  const characters =
+    accountId !== null ? publicRealmCounts(await db.characterCountsByRealm(accountId)) : {};
   return { current: realm, realms: directory, characters };
 }
 
@@ -512,7 +513,7 @@ async function leaderboardHandler(ctx: Ctx): Promise<void> {
     const entries = await rt.getGuildLeaderboard(scope);
     const page = decodePage(firstQueryValue(ctx.query.page));
     const pageSize = decodePageSize(firstQueryValue(ctx.query.pageSize));
-    json(ctx.res, 200, buildGuildBoard(REALM, scope, entries, page, pageSize));
+    json(ctx.res, 200, buildGuildBoard(PUBLIC_REALM_NAME, scope, entries, page, pageSize));
     return;
   }
   // The developer (open-source contributor) fork, byte-identical to the legacy
@@ -523,7 +524,7 @@ async function leaderboardHandler(ctx: Ctx): Promise<void> {
     const entries = await rt.getDevLeaderboard();
     const page = decodePage(firstQueryValue(ctx.query.page));
     const pageSize = decodePageSize(firstQueryValue(ctx.query.pageSize));
-    json(ctx.res, 200, buildDevBoard(REALM, scope, entries, page, pageSize));
+    json(ctx.res, 200, buildDevBoard(PUBLIC_REALM_NAME, scope, entries, page, pageSize));
     return;
   }
   // The Renown (deeds) board fork. GLOBAL-ONLY like the dev board is
@@ -543,19 +544,23 @@ async function leaderboardHandler(ctx: Ctx): Promise<void> {
       const page = decodePage(firstQueryValue(ctx.query.page));
       const pageSize = decodePageSize(firstQueryValue(ctx.query.pageSize));
       const self = ctx.account ? await rt.deedsSelfRank(ctx.account.accountId) : null;
-      json(ctx.res, 200, buildDeedsBoard(REALM, entries, page, pageSize, self));
+      json(ctx.res, 200, buildDeedsBoard(PUBLIC_REALM_NAME, entries, page, pageSize, self));
     });
     return;
   }
   const entries = await rt.getLeaderboard(scope);
   const limitParam = firstQueryValue(ctx.query.limit);
   if (limitParam !== undefined) {
-    json(ctx.res, 200, buildLegacyLimitBoard(REALM, scope, entries, decodeLegacyLimit(limitParam)));
+    json(
+      ctx.res,
+      200,
+      buildLegacyLimitBoard(PUBLIC_REALM_NAME, scope, entries, decodeLegacyLimit(limitParam)),
+    );
     return;
   }
   const page = decodePage(firstQueryValue(ctx.query.page));
   const pageSize = decodePageSize(firstQueryValue(ctx.query.pageSize));
-  json(ctx.res, 200, buildStandardBoard(REALM, scope, entries, page, pageSize));
+  json(ctx.res, 200, buildStandardBoard(PUBLIC_REALM_NAME, scope, entries, page, pageSize));
 }
 
 /** GET /api/arena/leaderboard: the public all-time Ashen Coliseum ladder,
@@ -603,7 +608,7 @@ async function projectStatsHandler(ctx: Ctx): Promise<void> {
     accounts_created: accountsCreated,
     characters_created: charactersCreated,
     players_online: rt.playersOnline(),
-    realm: REALM,
+    realm: PUBLIC_REALM_NAME,
   });
 }
 
@@ -630,7 +635,7 @@ async function statusHandler(ctx: Ctx): Promise<void> {
   const rt = useRuntime();
   json(ctx.res, 200, {
     ok: true,
-    realm: REALM,
+    realm: PUBLIC_REALM_NAME,
     players_online: rt.playersOnline(),
     players_cap: rt.playersCap(),
     steam: { enabled: steamEnabled() },
@@ -683,7 +688,7 @@ async function searchHandler(ctx: Ctx): Promise<void> {
  */
 async function realmsHandler(ctx: Ctx): Promise<void> {
   const accountId = ctx.account?.accountId ?? null;
-  json(ctx.res, 200, await readRealms(dbReads, accountId, REALM, REALM_DIRECTORY));
+  json(ctx.res, 200, await readRealms(dbReads, accountId, PUBLIC_REALM_NAME, REALM_DIRECTORY));
 }
 
 /**
@@ -712,7 +717,7 @@ async function publicSheetHandler(ctx: Ctx): Promise<void> {
   }
   const rt = useRuntime();
   const result = await readPublicSheet(dbReads, decodedRouteName(ctx.params.name), {
-    realm: REALM,
+    realm: PUBLIC_REALM_NAME,
     origin: rt.publicOrigin(ctx.req),
     toSheetRank: rt.toSheetRank,
   });

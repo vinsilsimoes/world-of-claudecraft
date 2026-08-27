@@ -39,7 +39,9 @@ describe('MIR4 character persistence', () => {
     expect(saved.mir4DisabledAutoSkills).toEqual([1102, 1104]);
 
     const target = makeMir4Sim(393, true);
-    const restoredPid = target.addPlayer('warrior', 'Automatic Skills', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Automatic Skills', {
+      state: saved,
+    });
     expect(target.players.get(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1104]);
     expect(target.mir4PlayerState(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1104]);
   });
@@ -59,7 +61,9 @@ describe('MIR4 character persistence', () => {
 
     const saved = source.serializeCharacter(source.playerId)!;
     const target = makeMir4Sim(396, true);
-    const restoredPid = target.addPlayer('warrior', 'Hundred Spirits', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Hundred Spirits', {
+      state: saved,
+    });
     const restored = target.players.get(restoredPid)?.mir4Spirits;
 
     expect(restored?.pending).toHaveLength(100);
@@ -82,7 +86,9 @@ describe('MIR4 character persistence', () => {
 
     const saved = source.serializeCharacter(source.playerId)!;
     const target = makeMir4Sim(398, true);
-    const restoredPid = target.addPlayer('warrior', 'Full Mount Stable', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Full Mount Stable', {
+      state: saved,
+    });
     const restored = target.players.get(restoredPid)?.mir4Mounts;
 
     expect(restored?.pending).toHaveLength(MIR4_MOUNT_PENDING_LIMIT);
@@ -113,7 +119,9 @@ describe('MIR4 character persistence', () => {
     expect(saved).not.toHaveProperty('mir4NarrativeDialogue');
 
     const target = makeMir4Sim(397, true);
-    const restoredPid = target.addPlayer('warrior', 'Fresh Conversation', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Fresh Conversation', {
+      state: saved,
+    });
     expect(target.players.get(restoredPid)?.mir4NarrativeDialogue).toBeUndefined();
   });
 
@@ -126,7 +134,9 @@ describe('MIR4 character persistence', () => {
     expect(saved.mir4DungeonTickets).toEqual(meta.mir4DungeonTickets);
 
     const target = makeMir4Sim(398, true);
-    const restoredPid = target.addPlayer('warrior', 'Ticket Restore', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Ticket Restore', {
+      state: saved,
+    });
     expect(target.players.get(restoredPid)?.mir4DungeonTickets).toEqual(meta.mir4DungeonTickets);
   });
 
@@ -148,7 +158,9 @@ describe('MIR4 character persistence', () => {
       world,
       noPlayer: true,
     });
-    const pid = target.addPlayer('warrior', 'Legacy Position', { state: saved });
+    const pid = target.addPlayer('warrior', 'Legacy Position', {
+      state: saved,
+    });
     const player = target.entities.get(pid)!;
 
     expect(mir4ArcRegionAt(player.pos)).not.toBeNull();
@@ -207,7 +219,9 @@ describe('MIR4 character persistence', () => {
     saved.level = savedLevel;
 
     const target = makeMir4Sim(400, true);
-    const pid = target.addPlayer('warrior', 'Level Restore', { state: saved });
+    const pid = target.addPlayer('warrior', 'Level Restore', {
+      state: saved,
+    });
 
     expect(target.entities.get(pid)?.level).toBe(expectedLevel);
   });
@@ -216,7 +230,12 @@ describe('MIR4 character persistence', () => {
     const source = makeMir4Sim(400);
     const meta = source.players.get(source.playerId)!;
     meta.mir4ArcQuests = {
-      'M01-Q02': { questId: 'M01-Q02', stageIndex: 2, stageProgress: 1, state: 'active' },
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 2,
+        stageProgress: 1,
+        state: 'active',
+      },
     };
     meta.mir4AutoQuest = {
       questId: 'M01-Q02',
@@ -235,7 +254,9 @@ describe('MIR4 character persistence', () => {
     });
 
     const target = makeMir4Sim(401, true);
-    const restoredPid = target.addPlayer('warrior', 'Journey', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Journey', {
+      state: saved,
+    });
     expect(target.players.get(restoredPid)?.mir4AutoQuest).toEqual(saved.mir4AutoQuest);
   });
 
@@ -251,7 +272,12 @@ describe('MIR4 character persistence', () => {
       stalledTicks: 3,
     };
     meta.mir4ArcQuests = {
-      'M01-Q02': { questId: 'M01-Q02', stageIndex: 2, stageProgress: 1, state: 'active' },
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 2,
+        stageProgress: 1,
+        state: 'active',
+      },
     };
     meta.autoBattle = {
       mode: 'battle',
@@ -278,7 +304,9 @@ describe('MIR4 character persistence', () => {
     expect(saved.mir4AutoQuest).not.toHaveProperty('battleOwned');
 
     const target = makeMir4Sim(4002, true);
-    const restoredPid = target.addPlayer('warrior', 'Sessionless Automation', { state: saved });
+    const restoredPid = target.addPlayer('warrior', 'Sessionless Automation', {
+      state: saved,
+    });
     const restored = target.players.get(restoredPid)!;
     expect(restored.autoBattle).toBeUndefined();
     expect(restored.mir4AutoQuest).not.toHaveProperty('route');
@@ -295,8 +323,14 @@ describe('MIR4 character persistence', () => {
       acquireRadiusYards: 36,
       suspended: false,
     };
+    legacy.mir4AutoPotion = { health: 65, mana: 40 };
     legacy.mir4ArcQuests = {
-      'M01-Q02': { questId: 'M01-Q02', stageIndex: 4, stageProgress: 0, state: 'active' },
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 4,
+        stageProgress: 0,
+        state: 'active',
+      },
     };
     legacy.mir4AutoQuest = {
       questId: 'M01-Q02',
@@ -307,9 +341,12 @@ describe('MIR4 character persistence', () => {
     };
 
     const target = makeMir4Sim(4004, true);
-    const pid = target.addPlayer('warrior', 'Legacy Battle Owner', { state: legacy });
+    const pid = target.addPlayer('warrior', 'Legacy Battle Owner', {
+      state: legacy,
+    });
     const restored = target.players.get(pid)!;
     expect(restored.autoBattle?.mode).toBe('battle');
+    expect(restored.mir4AutoPotion).toEqual({ health: 65, mana: 40 });
     expect(restored.mir4AutoQuest?.battleOwned).toBe(true);
 
     target.tick();
@@ -318,6 +355,7 @@ describe('MIR4 character persistence', () => {
     expect(restored.mir4AutoQuest?.battleOwned).toBeUndefined();
     const healed = target.serializeCharacter(pid)!;
     expect(healed.autoBattle?.mode).toBe('off');
+    expect(healed.mir4AutoPotion).toEqual({ health: 65, mana: 40 });
     expect(healed.mir4AutoQuest?.battleOwned).toBeUndefined();
   });
 
@@ -332,11 +370,17 @@ describe('MIR4 character persistence', () => {
       acquireRadiusYards: 48,
       suspended: true,
     };
+    meta.mir4AutoPotion = { health: 70, mana: 45 };
     meta.mir4Quests = {
       mir4_m01_q01: { state: 'ready', inspected: [0, 1, 2] },
     };
     meta.mir4ArcQuests = {
-      'M01-Q02': { questId: 'M01-Q02', stageIndex: 2, stageProgress: 1, state: 'active' },
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 2,
+        stageProgress: 1,
+        state: 'active',
+      },
     };
     meta.mir4ArcRewards = {
       items: { 'material-tecido': 2 },
@@ -373,6 +417,12 @@ describe('MIR4 character persistence', () => {
     };
     meta.mir4Materials = {
       ...MIR4_EMPTY_MATERIALS,
+      metalCommon: 1,
+      metalUncommon: 2,
+      metalRare: 3,
+      metalEpic: 4,
+      metalLegendary: 5,
+      metalMythic: 6,
       moonStone: 5,
       lunarSeal: 2,
       solarWard: 1,
@@ -410,6 +460,7 @@ describe('MIR4 character persistence', () => {
 
     const saved = source.serializeCharacter(pid)! as any;
     expect(saved.autoBattle).toEqual(meta.autoBattle);
+    expect(saved.mir4AutoPotion).toEqual(meta.mir4AutoPotion);
     expect(saved.mir4Quests).toEqual(meta.mir4Quests);
     expect(saved.mir4ArcQuests).toEqual(meta.mir4ArcQuests);
     expect(saved.mir4ArcRewards).toEqual(meta.mir4ArcRewards);
@@ -456,9 +507,12 @@ describe('MIR4 character persistence', () => {
     expect(saved.mir4Spirits.owned['spirit-uncommon-01']).toBe(1);
 
     const target = makeMir4Sim(402, true);
-    const restoredPid = target.addPlayer('elementalist', 'Elyra', { state: saved });
+    const restoredPid = target.addPlayer('elementalist', 'Elyra', {
+      state: saved,
+    });
     const restored = target.players.get(restoredPid)!;
     expect(restored.autoBattle).toEqual(saved.autoBattle);
+    expect(restored.mir4AutoPotion).toEqual(saved.mir4AutoPotion);
     expect(restored.mir4Quests).toEqual(saved.mir4Quests);
     expect(restored.mir4ArcQuests).toEqual(saved.mir4ArcQuests);
     expect(restored.mir4ArcRewards).toEqual(saved.mir4ArcRewards);
@@ -489,7 +543,9 @@ describe('MIR4 character persistence', () => {
     const saved = source.serializeCharacter(sourcePid)!;
 
     const target = makeMir4Sim(404, true);
-    const restoredPid = target.addPlayer('elementalist', 'Leveled Elyra', { state: saved });
+    const restoredPid = target.addPlayer('elementalist', 'Leveled Elyra', {
+      state: saved,
+    });
 
     expect(target.entities.get(restoredPid)?.level).toBe(33);
     expect(target.entities.get(restoredPid)?.mir4?.classId).toBe(2);
@@ -502,14 +558,18 @@ describe('MIR4 character persistence', () => {
     invalid.mir4UltGauge = 999;
     invalid.mir4SpiritSkillCooldownRemaining = -5;
     const cappedTarget = makeMir4Sim(411, true);
-    const cappedPid = cappedTarget.addPlayer('warrior', 'Capped', { state: invalid });
+    const cappedPid = cappedTarget.addPlayer('warrior', 'Capped', {
+      state: invalid,
+    });
     expect(cappedTarget.entities.get(cappedPid)?.mir4UltGauge).toBe(100);
     expect(cappedTarget.players.get(cappedPid)?.mir4SpiritSkillReadyAt).toBeUndefined();
 
     delete invalid.mir4UltGauge;
     delete invalid.mir4SpiritSkillCooldownRemaining;
     const legacyTarget = makeMir4Sim(412, true);
-    const legacyPid = legacyTarget.addPlayer('warrior', 'Legacy', { state: invalid });
+    const legacyPid = legacyTarget.addPlayer('warrior', 'Legacy', {
+      state: invalid,
+    });
     expect(legacyTarget.entities.get(legacyPid)?.mir4UltGauge).toBe(0);
     expect(legacyTarget.players.get(legacyPid)?.mir4SpiritSkillReadyAt).toBeUndefined();
   });
@@ -535,9 +595,24 @@ describe('MIR4 character persistence', () => {
       suspended: false,
     };
     saved.mir4ArcQuests = {
-      unknown: { questId: 'unknown', stageIndex: 0, stageProgress: 9, state: 'done' },
-      'M01-Q01': { questId: 'M01-Q01', stageIndex: 999, stageProgress: -1, state: 'active' },
-      'M01-Q02': { questId: 'M01-Q02', stageIndex: 1, stageProgress: 2, state: 'active' },
+      unknown: {
+        questId: 'unknown',
+        stageIndex: 0,
+        stageProgress: 9,
+        state: 'done',
+      },
+      'M01-Q01': {
+        questId: 'M01-Q01',
+        stageIndex: 999,
+        stageProgress: -1,
+        state: 'active',
+      },
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 1,
+        stageProgress: 2,
+        state: 'active',
+      },
     };
     saved.mir4ArcRewards = {
       items: { 'material-tecido': 2.9, injected: 999 },
@@ -552,12 +627,23 @@ describe('MIR4 character persistence', () => {
     };
     saved.mir4AchievementClears = { 201: 99, 999: 2 };
     saved.mir4Currencies = { darksteel: 1_000.9, energy: 500.9, injected: 999 };
-    saved.mir4Equipment = { weapon: 200201000, 1: 991010201, 2: 991010101, 99: 991010101 };
+    saved.mir4Equipment = {
+      weapon: 200201000,
+      1: 991010201,
+      2: 991010101,
+      99: 991010101,
+    };
     saved.mir4EquipmentInstances = {
       991010201: { itemId: 991010201, enhancement: 99 },
       123: { itemId: 123, enhancement: 15 },
     };
     saved.mir4Materials = {
+      metalCommon: 1.9,
+      metalUncommon: -1,
+      metalRare: Number.POSITIVE_INFINITY,
+      metalEpic: 1_000_000_001,
+      metalLegendary: Number.NaN,
+      metalMythic: 6,
       sunStone: 4.9,
       moonStone: -4,
       solarScroll: Number.POSITIVE_INFINITY,
@@ -601,7 +687,12 @@ describe('MIR4 character persistence', () => {
     });
     expect(restored.mir4AutoQuest).toBeUndefined();
     expect(restored.mir4ArcQuests).toEqual({
-      'M01-Q02': { questId: 'M01-Q02', stageIndex: 1, stageProgress: 2, state: 'active' },
+      'M01-Q02': {
+        questId: 'M01-Q02',
+        stageIndex: 1,
+        stageProgress: 2,
+        state: 'active',
+      },
     });
     expect(restored.mir4ArcRewards).toEqual({
       items: { 'material-tecido': 2 },
@@ -609,7 +700,10 @@ describe('MIR4 character persistence', () => {
       tickets: { 'mount-ticket-dawn': 1 },
     });
     expect(restored.mir4SkillLevels).toBeUndefined();
-    expect(restored.mir4SkillResources).toEqual({ effectPoints: 400, skillTomes: 0 });
+    expect(restored.mir4SkillResources).toEqual({
+      effectPoints: 400,
+      skillTomes: 0,
+    });
     expect(restored.mir4AchievementClears).toBeUndefined();
     expect(restored.mir4Currencies).toEqual({ darksteel: 1_000, energy: 500 });
     expect(restored.mir4Equipment).toEqual({ 1: 200201000 });
@@ -618,6 +712,9 @@ describe('MIR4 character persistence', () => {
     });
     expect(restored.mir4Materials).toEqual({
       ...MIR4_EMPTY_MATERIALS,
+      metalCommon: 1,
+      metalEpic: 1_000_000_000,
+      metalMythic: 6,
       sunStone: 4,
       lunarSeal: 2,
       solarWard: 1,
@@ -659,7 +756,11 @@ describe('MIR4 character persistence', () => {
 
   it('does not add MIR4 keys to classic character saves', () => {
     setActiveWorldContent(null);
-    const classic = new Sim({ seed: 407, playerClass: 'warrior', playerName: 'Classic' });
+    const classic = new Sim({
+      seed: 407,
+      playerClass: 'warrior',
+      playerName: 'Classic',
+    });
     const meta = classic.players.get(classic.playerId)!;
     meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, sunStone: 9 };
     const saved = classic.serializeCharacter(classic.playerId)! as any;

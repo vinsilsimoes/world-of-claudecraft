@@ -3,6 +3,10 @@
 // before they can affect quests, automation, skills, equipment, or materials.
 
 import type { Mir4AutoBattleState } from '../auto_battle/core';
+import {
+  type Mir4AutoPotionSettings,
+  resolveMir4AutoPotionThresholds,
+} from '../auto_battle/potion_thresholds';
 import type { Mir4AutoQuestState } from '../auto_quest/core';
 import { mir4ArcQuest } from '../content/mir4/arc_campaign';
 import type { Mir4ClassId } from '../content/mir4/classes';
@@ -32,6 +36,7 @@ import { markMir4CodexWireDirty, markMir4WireDirty } from './wire_revision';
 
 export interface Mir4PersistedPlayerState {
   autoBattle?: Mir4AutoBattleState;
+  mir4AutoPotion?: Mir4AutoPotionSettings;
   /** Skill ids explicitly excluded from both automatic combat rotations. */
   mir4DisabledAutoSkills?: number[];
   mir4Quests?: Record<string, Mir4QuestProgress>;
@@ -119,6 +124,15 @@ function sanitizeAutoBattle(value: unknown): Mir4AutoBattleState | undefined {
     acquireRadiusYards: radius,
     suspended: value.suspended,
   };
+}
+
+function sanitizeAutoPotion(value: unknown): Mir4AutoPotionSettings | undefined {
+  if (!isRecord(value)) return undefined;
+  const thresholds = resolveMir4AutoPotionThresholds({
+    health: finiteNumber(value.health) ?? undefined,
+    mana: finiteNumber(value.mana) ?? undefined,
+  });
+  return thresholds;
 }
 
 function sanitizeQuests(value: unknown): Record<string, Mir4QuestProgress> | undefined {
@@ -434,6 +448,7 @@ function sanitizeMir4PlayerStateProjection(
 ): Mir4PersistedPlayerState {
   if (!isRecord(value)) return {};
   const autoBattle = sanitizeAutoBattle(value.autoBattle);
+  const mir4AutoPotion = sanitizeAutoPotion(value.mir4AutoPotion);
   const mir4DisabledAutoSkills = sanitizeMir4DisabledAutoSkills(
     value.mir4DisabledAutoSkills,
     classId,
@@ -476,6 +491,7 @@ function sanitizeMir4PlayerStateProjection(
       : Math.min(60, rawSpiritCooldown);
   return {
     ...(autoBattle ? { autoBattle } : {}),
+    ...(mir4AutoPotion ? { mir4AutoPotion } : {}),
     ...(mir4DisabledAutoSkills ? { mir4DisabledAutoSkills } : {}),
     ...(mir4Quests ? { mir4Quests } : {}),
     ...(mir4ArcQuests ? { mir4ArcQuests } : {}),
@@ -544,6 +560,7 @@ export function restoreMir4PlayerState(
 ): Mir4PersistedPlayerState {
   const restored = sanitizeMir4PlayerState(state, classId);
   meta.autoBattle = restored.autoBattle;
+  meta.mir4AutoPotion = restored.mir4AutoPotion;
   meta.mir4DisabledAutoSkills = restored.mir4DisabledAutoSkills;
   meta.mir4Quests = restored.mir4Quests;
   meta.mir4ArcQuests = restored.mir4ArcQuests;

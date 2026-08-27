@@ -2,13 +2,17 @@
 // WoC owns physical seating and ecology anchors. MIR4 owns actor identity,
 // combat templates, levels, drops, quests and progression.
 
+import { PORTAL_CLEAR_RADIUS } from '../dungeon_door_clearance';
 import type { CampDef, MobTemplate, NpcDef, ZoneDef } from '../types';
 
 const NPC_MIN_SPACING = 5;
 const NPC_SAFE_RADIUS = 18;
-const DUNGEON_SAFE_RADIUS = 24;
-const GRIND_COUNT_MULTIPLIER = 2;
-const GRIND_MIN_PER_CAMP = 6;
+const TRANSIT_SAFE_RADIUS = PORTAL_CLEAR_RADIUS;
+// The MIR4 population was already 2x the authored WoC ecology. Raising both
+// the scale and floor by 40% keeps that increase uniform across small and large
+// grind camps after integer rounding.
+const GRIND_COUNT_MULTIPLIER = 2.8;
+const GRIND_MIN_PER_CAMP = 9;
 const GRIND_MIN_RADIUS = 6;
 const GRIND_MAX_RADIUS = 30;
 const OBJECTIVE_INTERACTION_CLEAR_RADIUS = 4;
@@ -145,14 +149,14 @@ function clearOf(
 function maximumSafeFootprintRadius(
   point: Readonly<{ x: number; z: number }>,
   protectedActors: readonly Readonly<{ x: number; z: number }>[],
-  dungeonDoors: readonly Readonly<{ x: number; z: number }>[],
+  protectedTransitPoints: readonly Readonly<{ x: number; z: number }>[],
 ): number {
   let maximum = GRIND_MAX_RADIUS;
   for (const actor of protectedActors) {
     maximum = Math.min(maximum, distance(point, actor) - NPC_SAFE_RADIUS);
   }
-  for (const door of dungeonDoors) {
-    maximum = Math.min(maximum, distance(point, door) - DUNGEON_SAFE_RADIUS);
+  for (const transitPoint of protectedTransitPoints) {
+    maximum = Math.min(maximum, distance(point, transitPoint) - TRANSIT_SAFE_RADIUS);
   }
   return maximum;
 }
@@ -168,7 +172,7 @@ export function buildMir4GrindPopulation(
   zones: readonly ZoneDef[],
   storyNpcs: Readonly<Record<string, NpcDef>>,
   protectedServices: readonly Readonly<{ x: number; z: number }>[],
-  dungeonDoors: readonly Readonly<{ x: number; z: number }>[],
+  protectedTransitPoints: readonly Readonly<{ x: number; z: number }>[],
   isPlayableAnchor: (point: Readonly<{ x: number; z: number }>) => boolean = () => true,
   interactionSites: readonly Readonly<{ x: number; z: number; clearRadius?: number }>[] = [],
 ): CampDef[] {
@@ -192,7 +196,7 @@ export function buildMir4GrindPopulation(
     if (usedCenters.has(centerKey)) continue;
     usedCenters.add(centerKey);
     if (!clearOf(anchor.center, protectedActors, NPC_SAFE_RADIUS)) continue;
-    if (!clearOf(anchor.center, dungeonDoors, DUNGEON_SAFE_RADIUS)) continue;
+    if (!clearOf(anchor.center, protectedTransitPoints, TRANSIT_SAFE_RADIUS)) continue;
     const zone = zoneForPoint(zones, anchor.center);
     const candidates = zone ? candidatesByZone.get(zone.id) : undefined;
     if (!candidates || candidates.length === 0) continue;
@@ -208,7 +212,7 @@ export function buildMir4GrindPopulation(
     );
     const radius = Math.min(
       desiredRadius,
-      maximumSafeFootprintRadius(anchor.center, protectedActors, dungeonDoors),
+      maximumSafeFootprintRadius(anchor.center, protectedActors, protectedTransitPoints),
     );
     if (radius < GRIND_MIN_RADIUS) continue;
     const overlappingInteractionSites = interactionSites.flatMap((site, index) =>
@@ -218,7 +222,7 @@ export function buildMir4GrindPopulation(
         : [],
     );
     // A mission object may be guarded, but not by several doubled WoC camps
-    // whose aggregate kill time exceeds the 60-second trash respawn. Keep one
+    // whose aggregate kill time exceeds the shortened trash respawn. Keep one
     // six-creature guard pack: weak players still must intervene, while a
     // successful clear creates a real two/five-second interaction window.
     if (overlappingInteractionSites.some((index) => guardedInteractionSites.has(index))) continue;
@@ -242,7 +246,8 @@ export function buildMir4GrindPopulation(
 export const MIR4_WOC_POPULATION_RULES = Object.freeze({
   npcMinSpacing: NPC_MIN_SPACING,
   npcSafeRadius: NPC_SAFE_RADIUS,
-  dungeonSafeRadius: DUNGEON_SAFE_RADIUS,
+  dungeonSafeRadius: TRANSIT_SAFE_RADIUS,
+  portalSafeRadius: TRANSIT_SAFE_RADIUS,
   grindCountMultiplier: GRIND_COUNT_MULTIPLIER,
   grindMinPerCamp: GRIND_MIN_PER_CAMP,
   grindMinRadius: GRIND_MIN_RADIUS,

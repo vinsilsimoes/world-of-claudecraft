@@ -287,10 +287,19 @@ function placePlayerInClaim(
   p.prevFacing = 0;
   p.targetId = null;
   p.autoAttack = false;
+  settlePlayerAfterDungeonTeleport(p);
   inst.emptyFor = 0;
   inst.enteredBy.add(r.meta.entityId);
   // An arena queue must never form while its member stands in any instance.
   arenaQueueLeave(ctx, r.meta.entityId);
+}
+
+/** A dungeon transition is a teleport, never a continuation of the previous jump arc. */
+function settlePlayerAfterDungeonTeleport(p: Entity): void {
+  p.vy = 0;
+  p.jumping = false;
+  p.onGround = true;
+  p.fallStartY = p.pos.y;
 }
 
 export function enterDungeon(
@@ -569,6 +578,7 @@ export function leaveDungeon(ctx: SimContext, pid?: number): boolean {
   ctx.rebucket(p);
   p.targetId = null;
   p.autoAttack = false;
+  settlePlayerAfterDungeonTeleport(p);
   // Scripted rooms are narrated by their owning campaign stage. Their static
   // DungeonDef text is an engine fallback, not player-facing journey prose.
   if (!scriptedReturn) {

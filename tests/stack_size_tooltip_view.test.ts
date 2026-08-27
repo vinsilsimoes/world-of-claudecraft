@@ -21,16 +21,16 @@ import { stackSizeTooltipLine } from '../src/ui/stack_size_tooltip_view';
 describe('stackSizeTooltipLine', () => {
   afterEach(() => setLanguage('en'));
 
-  it('a vendor potion states the default 20-per-slot cap', () => {
+  it('a vendor potion states the 5000-per-slot cap', () => {
     expect(stackSizeTooltipLine(ITEMS.minor_healing_potion)).toBe(
-      '<div class="tt-sub">Max stack: 20</div>',
+      '<div class="tt-sub">Max stack: 5,000</div>',
     );
   });
 
-  it('every potion and elixir in the item catalog states the same cap', () => {
+  it('potions state 5000 while elixirs retain the ordinary 20 cap', () => {
     // The warlock overhaul's Soul Stone is kind 'potion' with a deliberate
     // authored 3-cap (a class utility, not part of the alchemy ladders), so
-    // it is exempt from the shared 20 sweep and pinned separately below.
+    // it is exempt from the shared potion sweep and pinned separately below.
     const consumables = Object.values(ITEMS).filter(
       (def) => (def.kind === 'potion' || def.kind === 'elixir') && def.id !== 'soul_stone',
     );
@@ -39,8 +39,9 @@ describe('stackSizeTooltipLine', () => {
     // content does not break an unrelated tooltip sweep.
     expect(consumables.length).toBeGreaterThanOrEqual(16);
     for (const def of consumables) {
+      const expected = def.kind === 'potion' ? '5,000' : '20';
       expect(stackSizeTooltipLine(def), `${def.id} must state its stack cap`).toBe(
-        '<div class="tt-sub">Max stack: 20</div>',
+        `<div class="tt-sub">Max stack: ${expected}</div>`,
       );
     }
     expect(stackSizeTooltipLine(ITEMS.soul_stone)).toBe('<div class="tt-sub">Max stack: 3</div>');
@@ -122,7 +123,7 @@ describe('stackSizeTooltipLine', () => {
 
   it('a mergeable signed payload keeps the line: same-signer copies really stack', () => {
     expect(stackSizeTooltipLine(ITEMS.sunpetal_healing_draught, { signer: 'Adventurer' })).toBe(
-      '<div class="tt-sub">Max stack: 20</div>',
+      '<div class="tt-sub">Max stack: 5,000</div>',
     );
   });
 
@@ -133,18 +134,19 @@ describe('stackSizeTooltipLine', () => {
     // locale tables load lazily, so each probe awaits its table first; a
     // hardcoded-English reimplementation of the view also dies here.
     const fills: Array<[string, string]> = [
-      ['zh_CN', '最大堆叠：20'],
-      ['zh_TW', '最大堆疊：20'],
-      ['ja_JP', 'スタック上限: 20'],
-      ['ko_KR', '최대 중첩: 20'],
-      ['ru_RU', 'Максимум в стопке: 20'],
+      ['zh_CN', '最大堆叠：'],
+      ['zh_TW', '最大堆疊：'],
+      ['ja_JP', 'スタック上限: '],
+      ['ko_KR', '최대 중첩: '],
+      ['ru_RU', 'Максимум в стопке: '],
     ];
     for (const [locale, text] of fills) {
       const lang = locale as Parameters<typeof setLanguage>[0];
       await ensureLocaleLoaded(lang);
       setLanguage(lang);
+      const count = formatNumber(5000, { maximumFractionDigits: 0 });
       expect(stackSizeTooltipLine(ITEMS.minor_healing_potion), locale).toBe(
-        `<div class="tt-sub">${text}</div>`,
+        `<div class="tt-sub">${text}${count}</div>`,
       );
     }
   });

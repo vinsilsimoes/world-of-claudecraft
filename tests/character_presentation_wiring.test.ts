@@ -105,11 +105,38 @@ describe('modular recompose guard (source pin)', () => {
 // reason as above (a DOM-and-real-portrait-asset pipeline nothing here stands
 // up), pinned as source in the same style.
 describe('char-select roster wiring (source pins)', () => {
+  it('renders MIR4 roster portraits and turntables from native presentation instead of the shared shell', () => {
+    const start = main.indexOf('function showCharselectCharacter(c: CharacterSummary): void {');
+    const end = main.indexOf('/** The one-shot appearance redesign editor', start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const block = main.slice(start, end);
+
+    expect(block).toContain('const presentation = entryClassPresentation(c.class);');
+    expect(block).toContain('class: presentation.visualClass,');
+    expect(block).toContain('armorSet: presentation.armorSet ?? undefined,');
+    expect(block).toContain('presentation.visualClass,');
+    expect(block).toContain('c.mainhandItemId ?? presentation.starterWeaponItemId,');
+  });
+
+  it('builds the creation outfit from both class and selected body', () => {
+    const start = main.indexOf('function creationLoadout(');
+    const end = main.indexOf('\n}', start);
+    expect(start).toBeGreaterThan(-1);
+    const block = main.slice(start, end);
+    expect(block).toContain("gender: ModularAppearance['gender']");
+    expect(block).toContain('creationArmorSet(cls, gender)');
+    expect(main).toContain('genderedProfileArmorSet(baseSet, gender)');
+    expect(main).toContain('creationLoadout(cls, modularAppearance.gender)');
+    expect(main).toContain('creationLoadout(cls, app.gender)');
+    expect(main).toContain('creationArmorSet(panelClass(), modularAppearance.gender)');
+  });
+
   it('captures the redesign opener before selectRow moves focus, and passes it to open()', () => {
     const start = main.indexOf(
       "row.querySelector('.reroll-char-btn')?.addEventListener('click', (e) => {",
     );
-    const openCall = 'redesignEditor.open({ ...c, class: entryShellClass(c.class) }, opener);';
+    const openCall = 'redesignEditor.open(';
     const end = main.indexOf(openCall, start);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
@@ -122,6 +149,7 @@ describe('char-select roster wiring (source pins)', () => {
     expect(openerAt).toBeGreaterThan(-1);
     expect(selectRowAt).toBeGreaterThan(openerAt);
     expect(openAt).toBeGreaterThan(selectRowAt);
+    expect(main.slice(start + openAt, start + openAt + 500)).toContain('opener,');
   });
 
   it('re-arms crest fallbacks after the composed-chip outerHTML swap', () => {

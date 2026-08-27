@@ -112,35 +112,35 @@ describe('MIR4 Training resource loop on WoC world surfaces', () => {
 
   it('turns ore in authored danger districts into status-scaled Darksteel', () => {
     expect(MIR4_DARKSTEEL_MINING_ZONES).toContain('veiled_hollow');
+    const node = GATHER_NODES.find(
+      (candidate) => candidate.type === 'ore' && candidate.zoneId === 'veiled_hollow',
+    );
+    if (!node) throw new Error('missing Veiled Hollow ore');
     const target = {
       mir4Currencies: { darksteel: 5, energy: 7 },
       mir4Materials: { ...MIR4_EMPTY_MATERIALS },
     };
-    expect(
-      grantMir4GatherProgressionReward(
-        target,
-        { type: 'ore', zoneId: 'veiled_hollow' },
-        'rare',
-        2,
-        { 87: 2_000 },
-      ),
-    ).toEqual({ amount: 0, darksteel: 960 });
+    expect(grantMir4GatherProgressionReward(target, node, 'rare', 2, { 87: 2_000 })).toMatchObject({
+      material: 'metalUncommon',
+      amount: 2,
+      darksteel: 960,
+    });
     expect(target.mir4Currencies).toEqual({ darksteel: 965, energy: 7 });
+    expect(target.mir4Materials.metalUncommon).toBe(2);
   });
 
   it('keeps the first Solitude attempt inside a bounded same-zone mining loop', () => {
+    const node = GATHER_NODES.find(
+      (candidate) => candidate.type === 'ore' && candidate.zoneId === 'nightbloom',
+    );
+    if (!node) throw new Error('missing Nightbloom ore');
     const target = {
       mir4Currencies: { darksteel: 0, energy: 0 },
       mir4Materials: { ...MIR4_EMPTY_MATERIALS },
     };
 
     for (let harvest = 0; harvest < 10; harvest += 1) {
-      grantMir4GatherProgressionReward(
-        target,
-        { type: 'ore', zoneId: 'nightbloom' },
-        'common',
-        1,
-      );
+      grantMir4GatherProgressionReward(target, node, 'common', 1);
     }
 
     expect(target.mir4Currencies.darksteel).toBe(1_000);
@@ -163,6 +163,7 @@ describe('MIR4 Training resource loop on WoC world surfaces', () => {
     expect(sim.harvestNode('ore_veiled_hollow_1', undefined, pid)).toBe(true);
     completeGatherNow(sim, pid);
     expect(meta.mir4Currencies.darksteel).toBeGreaterThan(0);
+    expect(meta.mir4Materials?.metalUncommon).toBeGreaterThan(0);
   });
 
   it('maps monster ecology to deterministic hunting materials for pill crafting', () => {
@@ -187,8 +188,15 @@ describe('MIR4 Training resource loop on WoC world surfaces', () => {
   it('raises Unihorn rarity with dangerous beast level and rank', () => {
     const target = { mir4Materials: { ...MIR4_EMPTY_MATERIALS } };
     grantMir4TrainingCombatMaterial(target, { family: 'beast', level: 95 });
-    grantMir4TrainingCombatMaterial(target, { family: 'dragonkin', boss: true, level: 110 });
-    expect(target.mir4Materials).toMatchObject({ unihornEpic: 1, unihornLegendary: 1 });
+    grantMir4TrainingCombatMaterial(target, {
+      family: 'dragonkin',
+      boss: true,
+      level: 110,
+    });
+    expect(target.mir4Materials).toMatchObject({
+      unihornEpic: 1,
+      unihornLegendary: 1,
+    });
   });
 
   it('routes an XP-bearing beast kill through the real damage funnel into the wallet', () => {

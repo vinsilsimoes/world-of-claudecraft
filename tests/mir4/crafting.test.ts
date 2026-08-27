@@ -31,6 +31,37 @@ afterAll(() => {
 });
 
 describe('material crafting', () => {
+  it('converts exactly ten metals into one metal of the next rarity', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim();
+    const meta = playerMeta(sim);
+    meta.mir4Materials = {
+      ...MIR4_EMPTY_MATERIALS,
+      metalCommon: 10,
+      metalUncommon: 10,
+      metalRare: 10,
+      metalEpic: 10,
+      metalLegendary: 10,
+    };
+    for (const recipeId of [
+      'metal-uncommon',
+      'metal-rare',
+      'metal-epic',
+      'metal-legendary',
+      'metal-mythic',
+    ]) {
+      expect(mir4Craft(sim.ctx, sim.playerId, recipeId).ok).toBe(true);
+    }
+    expect(meta.mir4Materials).toMatchObject({
+      metalCommon: 0,
+      metalUncommon: 1,
+      metalRare: 1,
+      metalEpic: 1,
+      metalLegendary: 1,
+      metalMythic: 1,
+    });
+  });
+
   it('pins the equipment recipes and the complete knowledge-tome chain', () => {
     expect(MIR4_CRAFT_RECIPES['solar-scroll']).toEqual({
       recipeId: 'solar-scroll',
@@ -255,7 +286,10 @@ describe('material crafting', () => {
     const meta = playerMeta(sim);
     meta.copper = 99999;
     meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, moonStone: 4 };
-    expect(mir4Craft(sim.ctx, sim.playerId, 'nope')).toEqual({ ok: false, code: 'unknown-recipe' });
+    expect(mir4Craft(sim.ctx, sim.playerId, 'nope')).toEqual({
+      ok: false,
+      code: 'unknown-recipe',
+    });
     expect(mir4Craft(sim.ctx, sim.playerId, 'lunar-seal')).toEqual({
       ok: false,
       code: 'no-materials',

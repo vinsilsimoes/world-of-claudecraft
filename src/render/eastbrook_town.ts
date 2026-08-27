@@ -15,6 +15,7 @@ import {
   setEastbrookCivicMask,
   updateEastbrookCivicBeaconMotion,
 } from './eastbrook_civic_beacon';
+import { buildEastbrookHarbor } from './eastbrook_harbor';
 import {
   applyEastbrookTownSurfaceDetail,
   EASTBROOK_SURFACE_ATLAS_URL,
@@ -1072,12 +1073,14 @@ export function buildEastbrookTownView(seed: number): EastbrookTownView {
     return buildFromTemplates(preparedTemplates, () => 0, false, undefined);
   }
   prepareTemplates(loadedSources, preparedTemplates, true);
-  return buildFromTemplates(
+  const view = buildFromTemplates(
     preparedTemplates,
     (x, z) => terrainHeight(x, z, seed),
     true,
     eastbrookSurfaceAtlasTexture(),
   );
+  view.group.add(buildEastbrookHarbor(seed));
+  return view;
 }
 
 function sameNumber(left: number, right: number): boolean {

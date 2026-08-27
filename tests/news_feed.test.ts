@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GITHUB_RELEASES_URL,
   loadNewsInto,
   markNewReleases,
   type NewsReleaseEntry,
@@ -9,6 +10,15 @@ import {
   renderReleaseBody,
   stripReleaseNotesPreamble,
 } from '../src/ui/news_feed';
+
+describe('Aeldrune news source', () => {
+  it('reads releases from the Aeldrune repository instead of the WoC upstream', () => {
+    expect(GITHUB_RELEASES_URL).toBe(
+      'https://github.com/vinsilsimoes/world-of-claudecraft/releases',
+    );
+    expect(GITHUB_RELEASES_URL).not.toContain('levy-street');
+  });
+});
 
 describe('renderReleaseBody', () => {
   it('escapes raw HTML in the source markdown', () => {
@@ -274,8 +284,7 @@ describe('stripReleaseNotesPreamble', () => {
 
 describe('compact news strips the redundant preamble at render time', () => {
   it('renders neither the Release Notes h1 nor the metadata rows', () => {
-    const body =
-      '# Aeldrune v0.26.0 Release Notes\n\n**Release:** v0.26.0\n\nThe real intro.';
+    const body = '# Aeldrune v0.26.0 Release Notes\n\n**Release:** v0.26.0\n\nThe real intro.';
     const html = renderCompactNews(
       [
         {

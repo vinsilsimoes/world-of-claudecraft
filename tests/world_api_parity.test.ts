@@ -451,7 +451,9 @@ export const IWORLD_MEMBERS = [
   // authoritative on both hosts through the self snapshot.
   { name: 'mir4PlayerState', kind: 'method' },
   { name: 'mir4AutoBattleActive', kind: 'method' },
+  { name: 'mir4AutoPotionThresholds', kind: 'method' },
   { name: 'setMir4AutoBattle', kind: 'method' },
+  { name: 'setMir4AutoPotionThreshold', kind: 'method' },
   { name: 'setMir4AutoSkillEnabled', kind: 'method' },
   { name: 'mir4AutoQuestActive', kind: 'method' },
   { name: 'setMir4AutoQuest', kind: 'method' },
@@ -648,9 +650,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(361);
+    expect(IWORLD_MEMBERS.length).toBe(363);
     expect(DATA_MEMBERS.length).toBe(86);
-    expect(METHOD_MEMBERS.length).toBe(275);
+    expect(METHOD_MEMBERS.length).toBe(277);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -850,6 +852,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketSellPriceCheck',
       'mir4AcknowledgeTutorial',
       'mir4AutoBattleActive',
+      'mir4AutoPotionThresholds',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
       'mir4BuyVillageEquipment',
@@ -965,6 +968,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setItemLocked',
       'setMarker',
       'setMir4AutoBattle',
+      'setMir4AutoPotionThreshold',
       'setMir4AutoQuest',
       'setMir4AutoSkillEnabled',
       'setPartyLootMaster',
@@ -1252,6 +1256,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketSellPriceCheck',
       'mir4AcknowledgeTutorial',
       'mir4AutoBattleActive',
+      'mir4AutoPotionThresholds',
       'mir4AutoQuestActive',
       'mir4BasicAttack',
       'mir4BuyVillageEquipment',
@@ -1347,6 +1352,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setItemLocked',
       'setMarker',
       'setMir4AutoBattle',
+      'setMir4AutoPotionThreshold',
       'setMir4AutoQuest',
       'setMir4AutoSkillEnabled',
       'setPartyLootMaster',
@@ -1938,6 +1944,7 @@ const FACET_MIR4 = [
   'mir4AcknowledgeTutorial',
   'mir4SkipNarrativeDialogue',
   'mir4AutoBattleActive',
+  'mir4AutoPotionThresholds',
   'mir4AutoQuestActive',
   'mir4BasicAttack',
   'mir4CampaignProfession',
@@ -1969,6 +1976,7 @@ const FACET_MIR4 = [
   'mir4ResolveItemLayer',
   'mir4RollItemLayer',
   'setMir4AutoBattle',
+  'setMir4AutoPotionThreshold',
   'setMir4AutoSkillEnabled',
   'setMir4AutoQuest',
   'mir4UnequipWeapon',
@@ -2046,8 +2054,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(361);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(361);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(363);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(363);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

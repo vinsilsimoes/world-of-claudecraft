@@ -9,9 +9,10 @@ export const MIR4_WOC_TUTORIAL_PORTALS: readonly PortalDef[] = Object.freeze([
   Object.freeze({
     id: 'mir4_woc_tutorial_m02_waypoint',
     a: Object.freeze({
-      x: -400,
-      z: 250,
-      landing: Object.freeze({ x: -393, z: 255, facing: 0.95 }),
+      // Western clearing outside the Hexb cottage footprint.
+      x: -460,
+      z: 220,
+      landing: Object.freeze({ x: -468, z: 220, facing: -Math.PI / 2 }),
     }),
     b: Object.freeze({
       x: 35,
@@ -25,18 +26,19 @@ export const MIR4_WOC_TUTORIAL_PORTALS: readonly PortalDef[] = Object.freeze([
   Object.freeze({
     id: 'mir4_woc_tutorial_m09_waypoint',
     a: Object.freeze({
-      // Keep the lesson beside the Palafita das Luzes clearing. The former
-      // (-55, 330) site sat across a narrow prop collider from the last clue,
-      // so a player following the tutorial arrow could be held in place even
-      // though the arch looked only a few yards away.
-      x: -13,
-      z: 330,
-      landing: Object.freeze({ x: -13, z: 337, facing: 0 }),
+      // Keep the lesson in its own clearing north of the Palafita buildings.
+      // The former (-13, 330) site overlapped the scout lodge itself, making
+      // the portal read as part of the house and routing players through its
+      // collider instead of toward an isolated world transition.
+      x: -18,
+      z: 362,
+      landing: Object.freeze({ x: -18, z: 370, facing: 0 }),
     }),
     b: Object.freeze({
-      x: 90,
-      z: -90,
-      landing: Object.freeze({ x: 83, z: -83, facing: -0.79 }),
+      // The previous marker occupied a bandit campsite, directly on its fire.
+      x: 70,
+      z: -114,
+      landing: Object.freeze({ x: 62, z: -114, facing: -Math.PI / 2 }),
     }),
     radius: 2,
     enterText: 'Travelled to Vila do Vau.',
@@ -60,9 +62,9 @@ export const MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS: readonly PortalDef[] = Object.fr
       landing: Object.freeze({ x: -236, z: 434, facing: -Math.PI / 2 }),
     }),
     b: Object.freeze({
-      x: 374,
-      z: 776,
-      landing: Object.freeze({ x: 368, z: 782, facing: -Math.PI / 4 }),
+      x: 390,
+      z: 788,
+      landing: Object.freeze({ x: 398, z: 792, facing: Math.PI / 2 }),
     }),
     radius: 2,
     enterText: 'The Fenway opens onto the Garden road.',
@@ -96,13 +98,16 @@ export const MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS: readonly PortalDef[] = Object.fr
       landing: Object.freeze({ x: -394, z: 1630, facing: Math.PI / 2 }),
     }),
     b: Object.freeze({
-      // Keep the return arch on the south side spur below Galecrest. The old
+      // Keep the return arch on the isolated west-side approach to Galecrest. The old
       // (390, 362) endpoint sat directly on the road from Captain Brum to the
       // first M08 objective: Auto Journey walked back through it and bounced
       // between M07 and M08 forever after accepting the chapter.
-      x: 408,
+      x: 352,
       z: 338,
-      landing: Object.freeze({ x: 408, z: 346, facing: 0 }),
+      // Arrive north of the arch, already moving away from its trigger toward
+      // Captain Brum. The former east-side placement occupied the townhall's
+      // fence network and was visually indistinguishable from the settlement.
+      landing: Object.freeze({ x: 352, z: 346, facing: 0 }),
     }),
     radius: 2,
     enterText: 'The Ossuary wind opens onto the Galecrest road.',
@@ -118,7 +123,7 @@ export const MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS: readonly PortalDef[] = Object.fr
       // every M12 story route so earlier objectives cannot trigger it.
       x: 330,
       z: 110,
-      landing: Object.freeze({ x: 324, z: 104, facing: -Math.PI / 4 }),
+      landing: Object.freeze({ x: 330, z: 122, facing: 0 }),
     }),
     b: Object.freeze({
       // A quiet Amberfall shoulder outside all six M13 story routes.
@@ -142,7 +147,7 @@ export const MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS: readonly PortalDef[] = Object.fr
     b: Object.freeze({
       x: 260,
       z: 1600,
-      landing: Object.freeze({ x: 268, z: 1602, facing: Math.PI / 2 }),
+      landing: Object.freeze({ x: 260, z: 1590, facing: Math.PI }),
     }),
     radius: 2,
     enterText: 'The Amberfall seal opens at the gates of Akhet.',

@@ -33,4 +33,11 @@ describe('character view visibility hysteresis', () => {
       /characterViewOutsideHysteresis\(\s*v\.group\.visible,\s*d2,\s*this\.entityViewCreateRangeSq,\s*this\.entityViewDestroyRangeSq,\s*\)/,
     );
   });
+
+  it('pins the distance-cull exemption beside the visibility hysteresis', () => {
+    const renderer = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
+    expect(renderer).toMatch(
+      /characterViewOutsideHysteresis\(\s*v\.group\.visible,\s*d2,\s*this\.entityViewCreateRangeSq,\s*this\.entityViewDestroyRangeSq,\s*\)\s*&&\s*!isDistanceCullExemptObject\(e\)/,
+    );
+  });
 });

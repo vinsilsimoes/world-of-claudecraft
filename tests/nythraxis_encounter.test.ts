@@ -332,6 +332,29 @@ describe('Nythraxis encounter module (N1)', () => {
     expect(b.hp).toBe(250);
   });
 
+  it('does not let source damage reduction save an unstacked player from heroic Soul Rend', () => {
+    const { ctx, boss, dps } = setup({ difficulty: 'heroic', dpsCount: 7 });
+    const st = nythraxis.initNythraxisEncounter(boss);
+    st.phase = 2;
+    const [marked] = dps;
+    marked.maxHp = marked.hp = 1000;
+    st.soulRendMarks = [{ playerId: marked.id, remaining: 0 }];
+    ctx.applyAura(boss, {
+      id: 'demoralizing_shout_ap',
+      name: 'Direhowl',
+      kind: 'buff_dmg_done',
+      remaining: 20,
+      duration: 20,
+      value: -0.4,
+      sourceId: marked.id,
+      school: 'physical',
+    });
+
+    nythraxis.updateNythraxisSoulRend(ctx, boss, st);
+
+    expect(marked.dead).toBe(true);
+  });
+
   it('heroic Deathless Rage is lethal on a failed wardstone channel (115% max hp)', () => {
     const heroic = setup({ difficulty: 'heroic' });
     let st = nythraxis.initNythraxisEncounter(heroic.boss);
@@ -357,6 +380,75 @@ describe('Nythraxis encounter module (N1)', () => {
     for (const p of [normal.tank, ...normal.dps]) {
       expect(p.dead).toBe(false);
       expect(p.hp).toBe(180);
+    }
+  });
+
+  it('does not let Direhowl save the raid from failed heroic Deathless Rage', () => {
+    const heroic = setup({ difficulty: 'heroic' });
+    const st = nythraxis.initNythraxisEncounter(heroic.boss);
+    st.phase = 2;
+    st.deathlessCastRemaining = 0.01;
+    for (const player of [heroic.tank, ...heroic.dps]) player.maxHp = player.hp = 1000;
+    heroic.ctx.applyAura(heroic.boss, {
+      id: 'demoralizing_shout_ap',
+      name: 'Direhowl',
+      kind: 'buff_dmg_done',
+      remaining: 20,
+      duration: 20,
+      value: -0.2,
+      sourceId: heroic.tank.id,
+      school: 'physical',
+    });
+
+    nythraxis.updateNythraxisDeathlessRage(heroic.ctx, heroic.boss, st);
+
+    for (const player of [heroic.tank, ...heroic.dps]) expect(player.dead).toBe(true);
+  });
+
+  it('does not let Veilbound Mark save its caster from failed heroic Deathless Rage', () => {
+    const heroic = setup({ difficulty: 'heroic' });
+    const st = nythraxis.initNythraxisEncounter(heroic.boss);
+    st.phase = 2;
+    st.deathlessCastRemaining = 0.01;
+    heroic.tank.maxHp = heroic.tank.hp = 1000;
+    heroic.ctx.applyAura(heroic.boss, {
+      id: 'veilbound_mark',
+      name: 'Veilbound Mark',
+      kind: 'dot',
+      remaining: 6,
+      duration: 6,
+      value: 12,
+      sourceId: heroic.tank.id,
+      school: 'holy',
+    });
+
+    nythraxis.updateNythraxisDeathlessRage(heroic.ctx, heroic.boss, st);
+
+    expect(heroic.tank.dead).toBe(true);
+  });
+
+  it('still lets Direhowl mitigate normal Deathless Rage', () => {
+    const normal = setup();
+    const st = nythraxis.initNythraxisEncounter(normal.boss);
+    st.phase = 2;
+    st.deathlessCastRemaining = 0.01;
+    for (const player of [normal.tank, ...normal.dps]) player.maxHp = player.hp = 1000;
+    normal.ctx.applyAura(normal.boss, {
+      id: 'demoralizing_shout_ap',
+      name: 'Direhowl',
+      kind: 'buff_dmg_done',
+      remaining: 20,
+      duration: 20,
+      value: -0.2,
+      sourceId: normal.tank.id,
+      school: 'physical',
+    });
+
+    nythraxis.updateNythraxisDeathlessRage(normal.ctx, normal.boss, st);
+
+    for (const player of [normal.tank, ...normal.dps]) {
+      expect(player.dead).toBe(false);
+      expect(player.hp).toBe(344);
     }
   });
 

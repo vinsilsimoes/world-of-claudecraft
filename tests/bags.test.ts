@@ -51,12 +51,27 @@ function fillBags(sim: Sim): void {
 }
 
 describe('stack sizes and stacking math', () => {
-  it('gear, bags, and tools never stack; consumables stack to 20', () => {
+  it('gear stays unstacked, ordinary consumables stack to 20, and potions stack to 5000', () => {
     expect(stackSizeOf(ITEMS.worn_sword)).toBe(1);
     expect(stackSizeOf(ITEMS.linen_pouch)).toBe(1);
     expect(stackSizeOf(ITEMS.simple_fishing_pole)).toBe(1);
     expect(stackSizeOf(ITEMS.baked_bread)).toBe(20);
-    expect(stackSizeOf(ITEMS.minor_healing_potion)).toBe(20);
+    expect(stackSizeOf(ITEMS.minor_healing_potion)).toBe(5000);
+    expect(stackSizeOf(ITEMS.sunpetal_mana_draught)).toBe(5000);
+    expect(stackSizeOf(ITEMS.soul_stone)).toBe(3);
+  });
+
+  it('splits potion quantities only after the 5000-copy cap', () => {
+    const inv: InvSlot[] = [];
+    addStacked(inv, 'minor_healing_potion', 5001);
+    expect(inv).toEqual([
+      { itemId: 'minor_healing_potion', count: 5000 },
+      { itemId: 'minor_healing_potion', count: 1 },
+    ]);
+  });
+
+  it('uses the same 5000 cap when sanitizing a loaded potion instance', () => {
+    expect(instancedCountCap(ITEMS.minor_healing_potion, { locked: true })).toBe(5000);
   });
 
   it('addStacked tops up existing stacks then splits into fresh ones', () => {

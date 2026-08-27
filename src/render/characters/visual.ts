@@ -1829,6 +1829,11 @@ export class CharacterVisual {
     return this.far;
   }
 
+  /** True only once the linked frozen mesh is actually standing in for the rig. */
+  get isStaticFarShown(): boolean {
+    return farMeshShown(this.far, this.farMesh !== null, this.farCompilePending);
+  }
+
   setGhost(on: boolean, style: GhostStyle = 'spirit'): void {
     if (on === this.ghosted && style === this.ghostStyle) return;
     this.ghosted = on;

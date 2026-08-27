@@ -3,14 +3,24 @@ import { CLASSES } from '../sim/data';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { isMir4ClassKey, mir4ShellClassFor } from '../sim/mir4/stats';
 import type { Mir4ClassKey, PlayableClass, PlayerClass } from '../sim/types';
+import { classIconUrl } from './class_icon_art';
 import { classDisplayName } from './entity_i18n';
 import { formatNumber, type TranslationKey, t } from './i18n';
+import { iconDataUrl } from './icons';
+import {
+  type ProfileClassPresentation,
+  profileClassPresentation,
+} from './profile_class_presentation';
 import { mir4ClassDetailsView, profileClassOptions } from './profile_class_select';
 
 export const ACTIVE_GAME_PROFILE = browserGameProfile();
 
 export function entryShellClass(cls: PlayableClass): PlayerClass {
   return mir4ShellClassFor(cls, ACTIVE_GAME_PROFILE);
+}
+
+export function entryClassPresentation(cls: PlayableClass): ProfileClassPresentation {
+  return profileClassPresentation(cls, ACTIVE_GAME_PROFILE);
 }
 
 export function profileClassDisplayName(cls: PlayableClass): string {
@@ -37,6 +47,7 @@ export function installProfileClassChips(): void {
           const chip = document.createElement(elementName);
           chip.className = 'mini-class';
           chip.dataset.class = option.key;
+          chip.dataset.visualClass = option.visualClass;
           chip.dataset.i18n = option.labelKey;
           chip.dataset.i18nAria = option.ariaKey;
           chip.textContent = t(option.labelKey);
@@ -50,6 +61,33 @@ export function installProfileClassChips(): void {
           return chip;
         }),
       );
+    });
+}
+
+/** Paint the entry rails with the profile presentation emblem, never the
+ * simulation shell used to host the class. */
+export function decorateProfileClassChips(root: ParentNode = document): void {
+  root
+    .querySelectorAll<HTMLElement>('#charcreate-panel .mini-class, #offline-select .mini-class')
+    .forEach((chip) => {
+      if (chip.querySelector('.mini-class-portrait')) return;
+      const visualClass =
+        (chip.dataset.visualClass as PlayerClass | undefined) ??
+        entryClassPresentation(chip.dataset.class as PlayableClass).visualClass;
+      const key = chip.dataset.i18n;
+      const label = document.createElement('span');
+      label.className = 'mini-class-label';
+      if (key) label.dataset.i18n = key;
+      label.textContent = (chip.textContent ?? '').trim();
+      chip.removeAttribute('data-i18n');
+      chip.textContent = '';
+      const img = document.createElement('img');
+      img.className = 'mini-class-portrait';
+      img.alt = '';
+      img.decoding = 'async';
+      img.src = classIconUrl(visualClass) ?? iconDataUrl('crest', `class_${visualClass}`, 96);
+      chip.append(img, label);
+      chip.classList.add('has-portrait');
     });
 }
 

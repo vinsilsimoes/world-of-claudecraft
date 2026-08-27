@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DUNGEON_LIST } from '../../src/sim/data';
 import {
   dungeonAdmissionKind,
+  dungeonContentPolicy,
   MIR4_DUNGEON_TICKET_POLICY,
   MIR4_TICKETED_DUNGEON_CATALOG,
   mir4DungeonIdForQuest,
@@ -23,6 +24,13 @@ describe('MIR4 and WoC dungeon admission families', () => {
     }
     expect(dungeonAdmissionKind('nythraxis_boss_arena')).toBe('woc-open');
     expect(dungeonAdmissionKind('campaign_trial_room')).toBe('unknown');
+    expect(dungeonContentPolicy('hollow_crypt')).toEqual({
+      source: 'woc',
+      admission: 'open',
+      tuningProfile: 'aeldrune-open-dungeon',
+      rewardProfile: 'aeldrune-grind',
+    });
+    expect(dungeonContentPolicy('campaign_trial_room')).toBeNull();
   });
 
   it('pins the source-backed MIR4 type-3 ticket policy and six-dungeon catalog', () => {
@@ -97,6 +105,12 @@ describe('MIR4 and WoC dungeon admission families', () => {
       },
     ]);
     expect(dungeonAdmissionKind(101)).toBe('mir4-ticketed');
+    expect(dungeonContentPolicy(101)).toEqual({
+      source: 'mir4',
+      admission: 'ticketed',
+      tuningProfile: 'aeldrune-ticket-dungeon',
+      rewardProfile: 'mir4-premium',
+    });
   });
 
   it('binds the five campaign dungeon lessons to source dungeon identities', () => {

@@ -55,6 +55,16 @@ describe('mountPrewarmKeys', () => {
   });
 });
 
+describe('mountPrewarmResumeKeys', () => {
+  it('does not stream unshown mount GLBs into live low-tier gameplay', async () => {
+    const { mountPrewarmResumeKeys } = await importMountPrewarm(
+      vi.fn(() => Promise.resolve(stubGltf())),
+    );
+    expect(mountPrewarmResumeKeys(MOUNT_KEYS.slice(0, 3), true)).toEqual([]);
+    expect(mountPrewarmResumeKeys(MOUNT_KEYS.slice(0, 3), false)).toEqual(MOUNT_KEYS.slice(0, 3));
+  });
+});
+
 describe('buildMountPrewarmVisual', () => {
   it('lazily fetches the mount GLB and builds a hidden, off-screen, prewarm-tagged rig', async () => {
     const loadGltf = vi.fn(() => Promise.resolve(stubGltf()));

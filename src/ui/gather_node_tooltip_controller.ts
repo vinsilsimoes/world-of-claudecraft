@@ -101,8 +101,11 @@ export function gatherNodeTooltipHtml(model: GatherNodeTooltipModel): string {
   }
   if (model.mir4Reward?.kind === 'training-material') {
     html += `<div class="tt-green">${esc(t('hudChrome.mir4.training.title'))}: ${esc(mir4MaterialName(model.mir4Reward.material))} (${esc(t(`itemUi.quality.${model.mir4Reward.rarity}`))})</div>`;
-  } else if (model.mir4Reward?.kind === 'darksteel') {
-    html += `<div class="tt-green">${esc(t('hudChrome.mir4.currencies.darksteel'))}</div>`;
+  } else if (model.mir4Reward?.kind === 'ore') {
+    const suffix = model.mir4Reward.darksteel
+      ? ` + ${t('hudChrome.mir4.currencies.darksteel')}`
+      : '';
+    html += `<div class="tt-green">${esc(mir4MaterialName(model.mir4Reward.material))}${esc(suffix)}</div>`;
   }
   // The state line: a live countdown when the world put a number on the
   // respawn timer, the untimed word for a null read (an unknown remaining is
@@ -111,7 +114,9 @@ export function gatherNodeTooltipHtml(model: GatherNodeTooltipModel): string {
     html += `<div class="tt-green">${esc(t('hudChrome.gathering.stateReady'))}</div>`;
   } else if (model.respawnSeconds !== undefined) {
     html += `<div class="tt-sub">${esc(
-      t('hudChrome.gathering.stateCooldownTimed', { time: respawnClock(model.respawnSeconds) }),
+      t('hudChrome.gathering.stateCooldownTimed', {
+        time: respawnClock(model.respawnSeconds),
+      }),
     )}</div>`;
   } else {
     html += `<div class="tt-sub">${esc(t('hudChrome.gathering.stateCooldown'))}</div>`;
@@ -127,7 +132,10 @@ function respawnClock(totalSeconds: number): string {
   const minutes = Math.floor(whole / 60);
   const seconds = whole % 60;
   return t('hudChrome.gathering.respawnClock', {
-    minutes: formatNumber(minutes, { maximumFractionDigits: 0, useGrouping: false }),
+    minutes: formatNumber(minutes, {
+      maximumFractionDigits: 0,
+      useGrouping: false,
+    }),
     seconds: String(seconds).padStart(2, '0'),
   });
 }

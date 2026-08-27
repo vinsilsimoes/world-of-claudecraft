@@ -86,6 +86,22 @@ describe('mir4 auto battle', () => {
     const p = sim.entities.get(sim.playerId)!;
     expect(p.targetId).toBe(wolf.id);
   });
+  it('pursues before using the lancer starter area skill on a distant target', () => {
+    const sim = makeSim(3132, 'lancer');
+    placePlayerInOpenField(sim);
+    const p = sim.player;
+    const wolf = spawnTankWolf(sim, p.pos.x + 20, p.pos.z, 'distant_lancer_target');
+    const before = { ...p.pos };
+    sim.ctx.hasLineOfSight = () => true;
+    sim.setMir4AutoBattleMode('battle');
+
+    updateMir4AutoBattle(sim.ctx);
+
+    expect(Math.hypot(p.pos.x - before.x, p.pos.z - before.z)).toBeGreaterThan(0);
+    expect(p.cooldowns.has('5201')).toBe(false);
+    expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
+    expect(wolf.hp).toBe(wolf.maxHp);
+  });
   it('is deterministic: same seed, same hunt, same end state', () => {
     const run = () => {
       const sim = makeSim(77);
@@ -381,7 +397,10 @@ describe('mir4 auto battle', () => {
       const p = sim.entities.get(sim.playerId)!;
       p.level = 40;
       p.hp = Math.floor(p.maxHp * 0.45);
-      p.cooldowns.set('mir4_potion_hp', 10);
+      // Automatic potion use now shares the canonical inventory-consumable
+      // deadline with manual potion use. Keep the potion unavailable so this
+      // case isolates the class survival skill rotation.
+      p.potionCooldownUntil = sim.time + 10;
       if (skillId === 2503) p.cooldowns.set('2301', 10);
       const wolf = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, `test_${kind}_target`);
       sim.setMir4AutoBattleMode('battle');

@@ -47,15 +47,18 @@ export const BACKPACK_SLOTS = 16;
 export const BAG_SOCKETS = 4;
 /** Default stack cap for stackable kinds (consumables, junk, quest drops). */
 const DEFAULT_STACK = 20;
+/** Potions are long-session supplies and share one large bag stack. */
+const POTION_STACK = 5000;
 
 /** Kinds that never stack: each copy occupies its own slot, classic style. */
 const UNSTACKED_KINDS = new Set(['weapon', 'armor', 'held_offhand', 'bag', 'tool']);
 
 /** Max copies of an item per inventory slot. Explicit `stackSize` wins;
- *  gear/bags/tools default to 1, everything else to 20. */
+ *  potions default to 5000, gear/bags/tools to 1, and everything else to 20. */
 export function stackSizeOf(def: ItemDef | undefined): number {
   if (!def) return DEFAULT_STACK;
   if (def.stackSize && def.stackSize > 0) return Math.floor(def.stackSize);
+  if (def.kind === 'potion') return POTION_STACK;
   return UNSTACKED_KINDS.has(def.kind) ? 1 : DEFAULT_STACK;
 }
 

@@ -4,6 +4,27 @@
 
 export type DungeonAdmissionKind = 'woc-open' | 'mir4-ticketed' | 'unknown';
 
+export interface DungeonContentPolicy {
+  source: 'woc' | 'mir4';
+  admission: 'open' | 'ticketed';
+  tuningProfile: 'aeldrune-open-dungeon' | 'aeldrune-ticket-dungeon';
+  rewardProfile: 'aeldrune-grind' | 'mir4-premium';
+}
+
+const WOC_OPEN_POLICY: DungeonContentPolicy = Object.freeze({
+  source: 'woc',
+  admission: 'open',
+  tuningProfile: 'aeldrune-open-dungeon',
+  rewardProfile: 'aeldrune-grind',
+});
+
+const MIR4_TICKETED_POLICY: DungeonContentPolicy = Object.freeze({
+  source: 'mir4',
+  admission: 'ticketed',
+  tuningProfile: 'aeldrune-ticket-dungeon',
+  rewardProfile: 'mir4-premium',
+});
+
 export interface Mir4TicketedDungeonDef {
   dungeonId: number;
   stageId: number;
@@ -109,8 +130,16 @@ const campaignDungeonByQuest = new Map<string, number>([
 ]);
 
 export function dungeonAdmissionKind(dungeonId: string | number): DungeonAdmissionKind {
-  if (typeof dungeonId === 'string' && wocOpenIds.has(dungeonId)) return 'woc-open';
-  return typeof dungeonId === 'number' && ticketedIds.has(dungeonId) ? 'mir4-ticketed' : 'unknown';
+  const policy = dungeonContentPolicy(dungeonId);
+  if (!policy) return 'unknown';
+  return policy.admission === 'open' ? 'woc-open' : 'mir4-ticketed';
+}
+
+/** Reviewed source, admission, tuning, and reward ownership for one dungeon. */
+export function dungeonContentPolicy(dungeonId: string | number): DungeonContentPolicy | null {
+  if (typeof dungeonId === 'string' && wocOpenIds.has(dungeonId)) return WOC_OPEN_POLICY;
+  if (typeof dungeonId === 'number' && ticketedIds.has(dungeonId)) return MIR4_TICKETED_POLICY;
+  return null;
 }
 
 export function mir4StoryDungeonIdForQuest(questId: string): number | null {

@@ -4429,7 +4429,7 @@ export const fr_FR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.unitFrame.targetLabel': 'Votre cible',
   'seo.officialLabel': 'Site officiel de Aeldrune',
   'seo.officialBody':
-    'worldofclaudecraft.com est le MMO gratuit officiel sur navigateur du monde Claudemoon. Jouez en ligne avec un personnage persistant, explorez en solo hors ligne, lisez le wiki et suivez les liens communautaires vérifiés depuis ce site.',
+    'Aeldrune est le MMO gratuit officiel sur navigateur du monde Aelvarin. Jouez en ligne avec un personnage persistant, explorez en solo hors ligne, lisez le wiki et suivez les liens communautaires vérifiés depuis ce site.',
   'hudChrome.questShare.notShareable': 'Cette quête ne peut pas être partagée.',
   'hudChrome.questShare.notInSharerParty':
     'Vous devez être dans le groupe de {name} pour accepter cette quête.',
@@ -4794,7 +4794,7 @@ export const fr_FR: Partial<Record<TranslationKey, string>> = {
   'stats.playersOnline': 'Joueurs en ligne',
   'stats.realmName': 'Nom du monde',
   'footer.copyright': '2026 Aeldrune',
-  'footer.githubLink': 'https://github.com/levy-street/world-of-claudecraft',
+  'footer.githubLink': '#',
   'footer.githubLabel': 'Projet open source',
   'footer.whitepaper': 'Livre blanc',
   'footer.terms': "Conditions d'utilisation",
@@ -5226,7 +5226,7 @@ export const fr_FR: Partial<Record<TranslationKey, string>> = {
   'serverUnavailable.eyebrow': 'Maintenance du monde',
   'serverUnavailable.heading': 'Le monde est temporairement indisponible.',
   'serverUnavailable.body':
-    'Nous redémarrons le service de jeu et Claudemoon devrait revenir bientôt. Cette page continuera de vérifier automatiquement.',
+    'Nous redémarrons le service de jeu et Aelvarin devrait revenir bientôt. Cette page continuera de vérifier automatiquement.',
   'serverUnavailable.status': 'Bientôt de retour',
   'hud.core.elite': 'ÉLITE',
   'hud.core.boss': 'BOSS',
@@ -9814,7 +9814,7 @@ export const fr_FR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.discord.swag.titleDiscordian': 'Titre: Discordien',
   'hudChrome.discord.swag.titleSquire': 'Titre: Écuyer du Royaume',
   'hudChrome.discord.swag.chromaBlurple': 'Chroma Mech Blurple',
-  'hudChrome.discord.swag.titleChampion': 'Titre: Champion de Claudemoon',
+  'hudChrome.discord.swag.titleChampion': 'Titre: Champion de Aelvarin',
   'hudChrome.discord.swag.swagStickers': "Pack d'autocollants (expédié)",
   'hudChrome.discord.swag.swagTee': 'T-shirt (expédié)',
   'hudChrome.discord.relay.tooFast': 'Vous publiez trop vite. Patientez un instant et réessayez.',

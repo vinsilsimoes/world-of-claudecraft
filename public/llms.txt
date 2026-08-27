@@ -1,24 +1,27 @@
 # Aeldrune
 
-> A classic-style micro-MMO you play free in your browser. Quest, group up, and explore a
-> hand-built world across nine classes and three zones, with dungeons, a raid, an arena,
-> and a shared online realm. The whole game is open source and free to the level cap.
+> A persistent 3D browser MMORPG set in Aelvarin. The current implementation has five
+> classes, a twenty-region campaign from level 1 to 200, 230 authored quests, open and
+> ticketed dungeons, class equipment, skill progression, crafting, training, spirits,
+> mounts and permanent collections.
 
-This file indexes the official guide for AI answer engines and crawlers. The guide is a
-curated, spoiler-light handbook. The community-edited encyclopedia lives at /wiki.
+This file indexes the official Aeldrune wiki. It describes the current game data and
+does not advertise unimplemented systems or unpublished community channels.
 
-## Guide
+## Wiki
 
-- [How to Play](https://worldofclaudecraft.com/wiki/how-to-play): The newcomer walkthrough, from making a character to your first quest, combat, and leveling.
-- [Classes](https://worldofclaudecraft.com/wiki/classes): The nine playable classes, their roles (tank, healer, damage), resources, and signature abilities.
-- [Bestiary](https://worldofclaudecraft.com/wiki/bestiary): The creatures of the open world, grouped by family, with level bands.
-- [World](https://worldofclaudecraft.com/wiki/world): The three zones laid south to north, their hubs, and notable places.
-- [Quests](https://worldofclaudecraft.com/wiki/quests): How quests work and why they are the fastest way to level.
-- [Dungeons and Raids](https://worldofclaudecraft.com/wiki/dungeons): Instanced group content for a party of five, plus the ten-player raid.
-- [FAQ](https://worldofclaudecraft.com/wiki/faq): The questions new players ask most often, with plain answers.
-- [Glossary](https://worldofclaudecraft.com/wiki/reference/glossary): Short definitions of the MMO terms used across the guide and in chat.
+- [How to Play](/wiki/how-to-play): Character creation, the early tutorial and the automation rules.
+- [Classes](/wiki/classes): Guerreiro, Elementalista, Taoista, Besteiro and Lanceiro.
+- [World](/wiki/world): The twenty campaign regions and their level bands.
+- [Quests](/wiki/quests): Main, side, repeatable, city and profession quests.
+- [Gear and Items](/wiki/gear): Class equipment, six progression ranks and the Codex.
+- [Training and Collections](/wiki/systems): Training, crafting, gathering and permanent collections.
+- [Spirits and Mounts](/wiki/companions): Summon, confirmation, collection and fusion.
+- [Dungeons](/wiki/dungeons): Open world-linked dungeons and limited ticket instances.
+- [Combat](/wiki/reference/combat): Single-target attack, auto-battle, auto skills, retaliation and potions.
+- [Controls](/wiki/reference/controls): Current mouse-camera controls and system panels.
+- [FAQ](/wiki/faq): Answers based on the current implementation.
 
-## Play and community
+## Play
 
-- [Play now](https://worldofclaudecraft.com/play): Launch the game directly in your browser, online realm or instant offline mode.
-- [Community wiki](https://worldofclaudecraft.com/wiki): The community-edited encyclopedia with deeper, player-maintained detail.
+- [Play Aeldrune](/play): Launch the local or configured online game client.

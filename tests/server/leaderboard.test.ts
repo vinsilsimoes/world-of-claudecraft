@@ -123,7 +123,7 @@ function characterRow(id: number, name: string): CharacterRow {
   };
 }
 
-const REALM_NAME = 'Claudemoon';
+const REALM_NAME = 'Aelvarin';
 
 function fakeRuntime(overrides: Partial<LeaderboardRuntime> = {}): LeaderboardRuntime {
   return {

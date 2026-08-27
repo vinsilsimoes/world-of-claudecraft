@@ -1131,8 +1131,8 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     kind: 'potion',
     quality: 'common',
     potionHp: 110,
-    sellValue: 8,
-    buyValue: 40,
+    sellValue: 1,
+    buyValue: 4,
   },
   minor_mana_potion: {
     id: 'minor_mana_potion',
@@ -1140,8 +1140,8 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     kind: 'potion',
     quality: 'common',
     potionMana: 145,
-    sellValue: 8,
-    buyValue: 40,
+    sellValue: 1,
+    buyValue: 4,
   },
   // --- battle elixir: a temporary stat buff on use (classic flask/elixir staple).
   // Drops from the Mirefen brutes; +Stamina helps anyone push deeper into the marsh.

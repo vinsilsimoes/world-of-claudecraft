@@ -1,4 +1,4 @@
-import { DELVES, ITEMS, NPCS, QUESTS, questRewardItem } from '../../../sim/data';
+import { DELVES, ITEMS, npcDefinition, QUESTS, questRewardItem } from '../../../sim/data';
 import { CHRONICLER_TEMPLATE_IDS } from '../../../sim/deeds';
 import { MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import { craftsForPairTarget } from '../../../sim/professions/archetype';
@@ -32,10 +32,15 @@ const gossipRowSig = (rows: { questId: string; kind: QuestMarkerKind }[]): strin
   rows.map((r) => `${r.questId}:${r.kind}`).join('|');
 
 export interface QuestDialogTextPort {
-  npcName(templateId: string): string;
+  npcName(templateId: string, source?: string): string;
   mobName(templateId: string): string;
-  npcTitle(templateId: string): string;
-  npcGreeting(templateId: string, playerClass: IWorld['cfg']['playerClass'], name: string): string;
+  npcTitle(templateId: string, source?: string): string;
+  npcGreeting(
+    templateId: string,
+    playerClass: IWorld['cfg']['playerClass'],
+    name: string,
+    source?: string,
+  ): string;
   delveName(delveId: string): string;
   questTitle(questId: string): string;
   questNarrative(questId: string, field: 'text' | 'completion', playerName: string): string;
@@ -132,7 +137,7 @@ export class QuestDialogController {
       this.renderMir4Dialogue(npc);
       return;
     }
-    if (NPCS[npc.templateId]?.banker) {
+    if (npcDefinition(npc.templateId, world.cfg.world)?.banker) {
       world.targetEntity(npc.id);
       world.interact();
       return;
@@ -352,7 +357,7 @@ export class QuestDialogController {
 
   private renderGossip(npc: Entity, closeIfEmpty = false): void {
     const world = this.deps.world();
-    const definition = NPCS[npc.templateId];
+    const definition = npcDefinition(npc.templateId, world.cfg.world);
     const interesting = this.offerableRows(npc);
     this.lastGossipRowSig = gossipRowSig(interesting);
     const discussionQuests = [...world.questLog.values()]
@@ -396,7 +401,8 @@ export class QuestDialogController {
     // buyback list is per PLAYER (PlayerMeta.vendorBuyback), not per NPC, so
     // anything sold earlier is still bought back at any other vendor in the world.
     const hasWarfareVendor = isWarfareVendorNpc(definition);
-    const hasVendor = npc.vendorItems.length > 0 && !hasWarfareVendor;
+    const vendorItems = npc.vendorItems.length > 0 ? npc.vendorItems : definition?.vendorItems;
+    const hasVendor = (vendorItems?.length ?? 0) > 0 && !hasWarfareVendor;
     // Station master (Professions 2.0): the resident master of a
     // crafting station (stations content masterNpcId) offers recipe training.
     const hasTraining = isStationMasterNpc(npc.templateId, world.stationPlacements);
@@ -429,11 +435,11 @@ export class QuestDialogController {
     this.detailQuestId = null;
     markDialogRoot(this.deps.element, { labelledBy: 'quest-dialog-title' });
     const npcName = definition
-      ? this.deps.text.npcName(npc.templateId)
+      ? this.deps.text.npcName(npc.templateId, definition.name)
       : this.deps.text.mobName(npc.templateId);
-    const npcTitle = definition ? this.deps.text.npcTitle(definition.id) : '';
+    const npcTitle = definition ? this.deps.text.npcTitle(definition.id, definition.title) : '';
     let html = `<div class="panel-title"><span id="quest-dialog-title">${esc(npcName)}<span class="quest-muted"> &lt;${esc(npcTitle)}&gt;</span></span><button type="button" class="x-btn" data-close aria-label="${esc(t('questUi.dialog.close'))}">${svgIcon('close')}</button></div>`;
-    html += `<div class="qd-text">"${esc(definition ? this.deps.text.npcGreeting(definition.id, world.cfg.playerClass, world.player.name) : t('questUi.dialog.greetingFallback'))}"</div>`;
+    html += `<div class="qd-text">"${esc(definition ? this.deps.text.npcGreeting(definition.id, world.cfg.playerClass, world.player.name, definition.greeting) : t('questUi.dialog.greetingFallback'))}"</div>`;
     // Locked-quest hint row: a profession master's
     // dialog points a pre-q_prof_intro viewer at the intro quest's giver, so
     // the Guild trend letter never lands on a greeting-plus-vendor dead end.
@@ -556,6 +562,9 @@ export class QuestDialogController {
       this.close();
       return;
     }
+    const definition = npcDefinition(npc.templateId, world.cfg.world);
+    const vendorItems = npc.vendorItems.length > 0 ? npc.vendorItems : definition?.vendorItems;
+    const hasVendor = !view.autoNarrative && (vendorItems?.length ?? 0) > 0;
     this.npcId = npc.id;
     this.detailQuestId = null;
     this.lastIntroHintVisible = null;
@@ -569,7 +578,15 @@ export class QuestDialogController {
     let html = `<div class="panel-title"><span id="quest-dialog-title">${esc(view.npcName)}</span>${closeButton}</div>`;
     if (view.questTitle) html += `<div class="qd-sub">${esc(view.questTitle)}</div>`;
     if (view.lines.length === 0) {
-      html += `<div class="qd-text">"${esc(t('questUi.dialog.greetingFallback'))}"</div>`;
+      const greeting = definition
+        ? this.deps.text.npcGreeting(
+            definition.id,
+            world.cfg.playerClass,
+            world.player.name,
+            definition.greeting,
+          )
+        : t('questUi.dialog.greetingFallback');
+      html += `<div class="qd-text">"${esc(greeting)}"</div>`;
     } else {
       for (const line of view.lines) {
         html += `<div class="qd-text"><strong>${esc(line.speaker)}:</strong> ${esc(line.text)}</div>`;
@@ -581,6 +598,9 @@ export class QuestDialogController {
         ? ` ${this.deps.text.number(view.progress.current)}/${this.deps.text.number(view.progress.total)}`
         : '';
       html += `<div class="qd-obj">${esc(view.objectiveText)}${esc(progress)}</div>`;
+    }
+    if (hasVendor) {
+      html += `<button type="button" class="qd-list-item" data-vendor="1" aria-label="${esc(t('questUi.dialog.browseGoodsAria', { name: view.npcName }))}">${currencyIconHtml('coin_gold')} ${esc(t('questUi.dialog.browseGoods'))}</button>`;
     }
     this.deps.element.innerHTML = html;
     if (view.autoNarrative && state?.mir4NarrativeDialogue) {
@@ -629,6 +649,7 @@ export class QuestDialogController {
       });
       this.deps.element.appendChild(button);
     }
+    this.bindRoute('[data-vendor]', (opener) => this.deps.openVendor(npc.id, opener));
     this.bindClose();
     this.showAndFocus();
   }

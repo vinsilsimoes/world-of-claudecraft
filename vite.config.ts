@@ -151,6 +151,7 @@ function staticPageAliasPlugin() {
 function i18nModulepreloadPlugin() {
   let outDir = path.resolve(root, 'dist');
   let base = '/';
+  let templated = false;
   return {
     name: 'woc-i18n-modulepreload',
     apply: 'build' as const,
@@ -160,8 +161,13 @@ function i18nModulepreloadPlugin() {
         ? cfg.build.outDir
         : path.resolve(cfg.root, cfg.build.outDir);
     },
-    closeBundle() {
+    writeBundle() {
+      // Vite 8/Rolldown can invoke closeBundle before emitted files are available.
+      // writeBundle guarantees that both the manifest and HTML have been written.
+      // Guard repeated output passes because the first one replaces the sentinel.
+      if (templated) return;
       const { map } = templateModulepreload({ root, outDir, base });
+      templated = true;
       // eslint-disable-next-line no-console
       console.log(
         `[i18n] modulepreload: templated ${Object.keys(map).length} locale chunk URLs into index.html`,

@@ -1,3 +1,7 @@
+a[href="#"][aria-disabled="true"] {
+  pointer-events: none;
+}
+
 /* Self-hosted webfonts (SIL OFL): Cinzel, Alegreya, Alegreya Sans, subset per
    unicode-range so a page only downloads the scripts it renders. Replaces the
    Google Fonts CDN so the wiki is fully self-contained. See CREDITS.md. */

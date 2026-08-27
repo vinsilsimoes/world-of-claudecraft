@@ -129,6 +129,23 @@ describe('static prop merging', () => {
     ]);
   });
 
+  it('keeps distant props in separate spatial cells even on the same side of the world', () => {
+    const group = new THREE.Group();
+    const material = new THREE.MeshStandardMaterial();
+    const near = new THREE.Mesh(indexedQuad(), material);
+    const distant = new THREE.Mesh(indexedQuad(), material);
+    near.position.set(-10, 0, 20);
+    distant.position.set(-200, 0, 20);
+    group.add(near, distant);
+
+    const merged = propStaticMergeInternalsForTest.mergeStaticMeshes(group, new Set());
+
+    expect(merged).toHaveLength(2);
+    expect(
+      merged.map((mesh) => mesh.geometry.boundingBox?.getCenter(new THREE.Vector3()).x).sort(),
+    ).toEqual([-199.5, -9.5]);
+  });
+
   it('de-interleaves indexed source attributes without mutating the shared geometry', () => {
     const group = new THREE.Group();
     const material = new THREE.MeshStandardMaterial();

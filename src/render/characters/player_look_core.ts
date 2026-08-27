@@ -22,6 +22,7 @@ import {
 } from '../../sim/mir4/native_class_presentation';
 import type { Entity, PlayerClass } from '../../sim/types';
 import { sameAppearance } from '../../world_api/appearance';
+import { genderedProfileArmorSet } from './gendered_profile_outfit';
 import {
   type ArmorLoadout,
   type ArmorSetId,
@@ -38,6 +39,9 @@ import {
  *  importing the net layer. */
 export interface RosterLookRow {
   class: PlayerClass;
+  /** Profile-owned outfit. MIR4 identities share a simulation shell, so their
+   *  visible set cannot be derived from `class`. */
+  armorSet?: ArmorSetId;
   /** The character's stored look (its own DB column), null for a character
    *  authored before the modular creator. */
   appearance?: Record<string, unknown> | null;
@@ -101,7 +105,10 @@ export function mir4InWorldLookFor(e: Entity): ModularLook | null {
   const classId = e.mir4VisualClassId;
   if (classId === undefined) return null;
   const profile = mir4NativeClassPresentation(classId);
-  const armorSet = profile.armorSet;
+  const app = normalizeAppearance(
+    (e.modularAppearance ?? DEFAULT_APPEARANCE) as Partial<ModularAppearance>,
+  );
+  const armorSet = genderedProfileArmorSet(profile.armorSet, app.gender);
   const mask = (e.mir4VisualArmorMask ?? 0) | profile.baselineArmorMask;
   const worn: ArmorLoadout = {};
   if ((mask & MIR4_NATIVE_ARMOR_MASK.chest) !== 0) {
@@ -113,9 +120,6 @@ export function mir4InWorldLookFor(e: Entity): ModularLook | null {
   if ((mask & MIR4_NATIVE_ARMOR_MASK.head) !== 0 && !e.helmHidden) worn.head = armorSet;
   if ((mask & MIR4_NATIVE_ARMOR_MASK.hands) !== 0) worn.hands = armorSet;
   if ((mask & MIR4_NATIVE_ARMOR_MASK.feet) !== 0) worn.feet = armorSet;
-  const app = normalizeAppearance(
-    (e.modularAppearance ?? DEFAULT_APPEARANCE) as Partial<ModularAppearance>,
-  );
   return { app, worn };
 }
 
@@ -155,7 +159,11 @@ export function armorSetSourceFor(
  */
 export function charselectLook(c: RosterLookRow): ModularLook | null {
   if (c.skinCatalog === 'mech') return null;
-  return composedLook(c.appearance, classArmorSet(c.class), c.helmHidden === true);
+  const baseSet = c.armorSet ?? classArmorSet(c.class);
+  const armorSet = c.armorSet
+    ? genderedProfileArmorSet(baseSet, c.appearance?.gender === 'female' ? 'female' : 'male')
+    : baseSet;
+  return composedLook(c.appearance, armorSet, c.helmHidden === true);
 }
 
 /**

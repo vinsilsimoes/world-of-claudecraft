@@ -3,21 +3,44 @@ import { MIR4_EQUIPMENT_CATALOG, type Mir4EquipmentItemDef } from './equipment_c
 
 export interface Mir4ItemProgressionRank {
   readonly catalogRank: number;
-  readonly requiredLevel: number;
-  readonly tier: number;
-  readonly grade: number;
-  readonly campaignQuestId: string;
+  readonly rarity: Mir4EquipmentRarity;
+  readonly metal: Mir4EquipmentMetal;
+  readonly metalCount: 50;
+  readonly darksteelCost: number;
+  readonly previousCatalogRank: number | null;
   readonly itemsByClass: Readonly<Record<Mir4ClassId, readonly Mir4EquipmentItemDef[]>>;
+  readonly previousItemsByClass: Readonly<Record<Mir4ClassId, readonly Mir4EquipmentItemDef[]>>;
 }
 
-const CAMPAIGN_QUEST_BY_RANK = [
-  'M01-Q06',
-  'M02-Q06',
-  'M03-Q06',
-  'M05-Q06',
-  'M07-Q06',
-  'M09-Q06',
+export type Mir4EquipmentRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
+
+export type Mir4EquipmentMetal =
+  | 'metalCommon'
+  | 'metalUncommon'
+  | 'metalRare'
+  | 'metalEpic'
+  | 'metalLegendary'
+  | 'metalMythic';
+
+const RARITY_BY_RANK: readonly Mir4EquipmentRarity[] = [
+  'common',
+  'uncommon',
+  'rare',
+  'epic',
+  'legendary',
+  'mythic',
 ] as const;
+
+const METAL_BY_RANK: readonly Mir4EquipmentMetal[] = [
+  'metalCommon',
+  'metalUncommon',
+  'metalRare',
+  'metalEpic',
+  'metalLegendary',
+  'metalMythic',
+] as const;
+
+const DARKSTEEL_BY_RANK = [100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000] as const;
 
 function itemsForClassAndRank(
   classId: Mir4ClassId,
@@ -35,22 +58,35 @@ function itemsForClassAndRank(
 }
 
 function progressionRank(catalogRank: number): Mir4ItemProgressionRank {
-  const sample = MIR4_EQUIPMENT_CATALOG.find((item) => item.catalogRank === catalogRank);
-  const campaignQuestId = CAMPAIGN_QUEST_BY_RANK[catalogRank - 1];
-  if (!sample || !campaignQuestId) {
+  const rarity = RARITY_BY_RANK[catalogRank - 1];
+  const metal = METAL_BY_RANK[catalogRank - 1];
+  const darksteelCost = DARKSTEEL_BY_RANK[catalogRank - 1];
+  if (!rarity || !metal || darksteelCost === undefined) {
     throw new Error(`MIR4 equipment progression rank ${catalogRank} is incomplete`);
   }
+  const previousCatalogRank = catalogRank > 1 ? catalogRank - 1 : null;
+  const itemsByClass = Object.freeze(
+    Object.fromEntries(
+      MIR4_CLASS_IDS.map((classId) => [classId, itemsForClassAndRank(classId, catalogRank)]),
+    ) as Record<Mir4ClassId, readonly Mir4EquipmentItemDef[]>,
+  );
+  const previousItemsByClass = Object.freeze(
+    Object.fromEntries(
+      MIR4_CLASS_IDS.map((classId) => [
+        classId,
+        previousCatalogRank === null ? [] : itemsForClassAndRank(classId, previousCatalogRank),
+      ]),
+    ) as Record<Mir4ClassId, readonly Mir4EquipmentItemDef[]>,
+  );
   return Object.freeze({
     catalogRank,
-    requiredLevel: sample.requiredLevel,
-    tier: sample.tier,
-    grade: sample.grade,
-    campaignQuestId,
-    itemsByClass: Object.freeze(
-      Object.fromEntries(
-        MIR4_CLASS_IDS.map((classId) => [classId, itemsForClassAndRank(classId, catalogRank)]),
-      ) as Record<Mir4ClassId, readonly Mir4EquipmentItemDef[]>,
-    ),
+    rarity,
+    metal,
+    metalCount: 50,
+    darksteelCost,
+    previousCatalogRank,
+    itemsByClass,
+    previousItemsByClass,
   });
 }
 
@@ -61,4 +97,8 @@ export const MIR4_ITEM_PROGRESSION_RANKS: readonly Mir4ItemProgressionRank[] = O
 
 export function mir4ItemProgressionRank(catalogRank: number): Mir4ItemProgressionRank | null {
   return MIR4_ITEM_PROGRESSION_RANKS.find((rank) => rank.catalogRank === catalogRank) ?? null;
+}
+
+export function mir4EquipmentRarityForRank(catalogRank: number): Mir4EquipmentRarity | null {
+  return mir4ItemProgressionRank(catalogRank)?.rarity ?? null;
 }

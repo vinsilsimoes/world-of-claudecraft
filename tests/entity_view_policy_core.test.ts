@@ -5,10 +5,12 @@ import {
   entityViewDistanceSq,
   entityViewIsAdmitted,
   entityViewShouldDrop,
+  isDistanceCullExemptObject,
   isPersistentPortalObject,
   viewBuildClass,
 } from '../src/render/entity_view_policy_core';
 import type { QuestObjectGate } from '../src/render/quest_object_gate_core';
+import { DUNGEONS, instanceOrigin } from '../src/sim/data';
 import type { Entity, QuestProgress } from '../src/sim/types';
 
 function entity(id: number, kind: Entity['kind'], overrides: Partial<Entity> = {}): Entity {
@@ -22,6 +24,19 @@ function entity(id: number, kind: Entity['kind'], overrides: Partial<Entity> = {
     pos: { x: 0, y: 0, z: 0 },
     ...overrides,
   } as Entity;
+}
+
+const NYTHRAXIS_ARENA = DUNGEONS.nythraxis_boss_arena;
+const nythraxisOrigin = instanceOrigin(NYTHRAXIS_ARENA.index, 0);
+
+function nythraxisWardstonePos(name: string): Entity['pos'] {
+  const wardstone = (NYTHRAXIS_ARENA.objects ?? []).find((object) => object.name === name);
+  if (!wardstone) throw new Error(`no Nythraxis dungeon object named ${name}`);
+  return {
+    x: nythraxisOrigin.x + wardstone.x,
+    y: 0,
+    z: nythraxisOrigin.z + wardstone.z,
+  };
 }
 
 describe('entity view candidate priority', () => {
@@ -54,6 +69,20 @@ describe('entity view candidate priority', () => {
       expect(entityViewCandidatePriority(portal, player, 10_000)).toBe(2);
     }
     expect(isPersistentPortalObject(entity(3, 'object', { templateId: 'mailbox' }))).toBe(false);
+  });
+
+  it('exempts Nythraxis wardstones from distance culling only inside their dungeon', () => {
+    const wardstone = entity(3, 'object', {
+      objectItemId: 'bastion_ward_stone',
+      pos: nythraxisWardstonePos('Left Wardstone'),
+    });
+    const overworldPickup = entity(4, 'object', {
+      objectItemId: 'bastion_ward_stone',
+      pos: { x: 0, y: 0, z: 0 },
+    });
+
+    expect(isDistanceCullExemptObject(wardstone)).toBe(true);
+    expect(isDistanceCullExemptObject(overworldPickup)).toBe(false);
   });
 });
 
@@ -124,6 +153,15 @@ describe('entity view retirement', () => {
         ),
       ).toBe(false);
     }
+  });
+
+  it('retains a distant Nythraxis wardstone view', () => {
+    const wardstone = entity(3, 'object', {
+      objectItemId: 'bastion_ward_stone',
+      pos: nythraxisWardstonePos('Right Wardstone'),
+    });
+
+    expect(entityViewShouldDrop(wardstone, player, questLog, showAll, 100)).toBe(false);
   });
 });
 

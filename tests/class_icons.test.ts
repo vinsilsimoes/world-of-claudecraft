@@ -107,11 +107,8 @@ describe('class emblem art', () => {
   });
 
   it('is what the class picker paints its chips with', () => {
-    // The chips are built in main.ts (decorateClassChips), which is far too entangled to
-    // import here; pin the seam instead, so swapping the emblems back out for headshots
-    // has to come through this test.
-    const main = readFileSync(path.join(repoRoot, 'src/main.ts'), 'utf8');
-    expect(main).toContain('img.src = classIconUrl(cls)');
+    const shell = readFileSync(path.join(repoRoot, 'src/ui/profile_class_shell.ts'), 'utf8');
+    expect(shell).toContain('img.src = classIconUrl(visualClass)');
   });
 
   it('keeps the class-art converter directly callable without invalidating package fingerprints', () => {

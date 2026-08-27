@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { ClientWorld } from '../../src/net/online';
+import { MIR4_VILLAGE_PROVISIONER_NPC_ID } from '../../src/sim/content/mir4/village_provisioner';
 import { BUILTIN_WORLD, getActiveWorldContent, setActiveWorldContent } from '../../src/sim/data';
 import { MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
 import { activateWorldForGameProfile, worldForGameProfile } from '../../src/sim/game_profile_world';
@@ -106,5 +107,49 @@ describe('game-profile world selection', () => {
     const classic = constructClient('woc-classic');
     expect(getActiveWorldContent()).toBe(BUILTIN_WORLD);
     expect(classic.cfg.world).toBeUndefined();
+  });
+
+  it('hydrates transplanted NPC services from the active MIR4 world on the online client', () => {
+    const client = constructClient(MIR4_GAME_PROFILE);
+    // Vite can replace data.ts during a development HMR update after the
+    // ClientWorld has already captured its profile world. The session-owned
+    // cfg.world must remain the source for wire identity hydration even if the
+    // process-wide registry is reset meanwhile.
+    setActiveWorldContent(null);
+    const wire = client as unknown as { applySnapshot(snapshot: unknown): void };
+    wire.applySnapshot({
+      t: 'snap',
+      self: {
+        id: 1,
+        k: 'player',
+        tid: 'warrior',
+        nm: 'Tester',
+        lv: 1,
+        x: 0,
+        y: 0,
+        z: 0,
+        f: 0,
+        hp: 100,
+        mhp: 100,
+      },
+      ents: [
+        {
+          id: 77,
+          k: 'npc',
+          tid: MIR4_VILLAGE_PROVISIONER_NPC_ID,
+          nm: 'Sara das Ervas',
+          lv: 1,
+          x: 0,
+          y: 0,
+          z: 0,
+          f: 0,
+          hp: 100,
+          mhp: 100,
+          vi: ['spring_water'],
+        },
+      ],
+    });
+
+    expect(client.entities.get(77)?.vendorItems).toEqual(['spring_water']);
   });
 });

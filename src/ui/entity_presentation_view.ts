@@ -1,5 +1,5 @@
 import { isNecromancyUndead } from '../sim/combat/necromancy';
-import { MOBS, NPCS } from '../sim/data';
+import { MOBS, npcDefinition } from '../sim/data';
 import type { Entity, MobFamily } from '../sim/types';
 import { tEntity } from './entity_i18n';
 import { localizeSimAuraName } from './sim_i18n';
@@ -33,7 +33,7 @@ export function entityDisplayName(entity: Entity): string {
       : entity.name;
   }
   if (entity.kind === 'npc') {
-    return NPCS[entity.templateId]
+    return npcDefinition(entity.templateId)
       ? tEntity({ kind: 'npc', id: entity.templateId, field: 'name' })
       : entity.name;
   }

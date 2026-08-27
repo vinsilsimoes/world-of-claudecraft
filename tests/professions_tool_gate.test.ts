@@ -909,12 +909,12 @@ describe('the HUD actually feeds the viewer proficiency into the view', () => {
     const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|\s)\/\/.*$/gm, '$1');
-    const call = source.slice(source.indexOf('buildVendorView('));
+    const callStart = source.indexOf('buildVendorView(');
+    const call = source.slice(callStart, source.indexOf('this.vendorQtyMultiple', callStart));
     expect(call.startsWith('buildVendorView(')).toBe(true);
-    const args = call.slice(0, call.indexOf('),\n'));
-    expect(args).toContain('gatheringProficiency:');
+    expect(call).toContain('gatheringProficiency:');
     // and it comes from the world, not from a literal.
-    expect(args).toMatch(/gatheringProficiency:\s*this\.sim\.gatheringProficiency/);
+    expect(call).toMatch(/gatheringProficiency:\s*this\.sim\.gatheringProficiency/);
   });
 
   it('closes its service windows on the shared constant, never on an inlined number', () => {

@@ -26,6 +26,7 @@ describe('mir4 character view', () => {
     expect(view?.slots.map((slot) => slot.slotId)).toEqual(MIR4_EQUIPMENT_SLOT_IDS);
     expect(view?.slots.filter((slot) => slot.item !== null)).toHaveLength(2);
     expect(view?.slots[0]?.item?.enhancement).toBe(2);
+    expect(view?.slots[0]?.item?.craftingRarity).toBe('common');
     expect(ITEMS[view?.slots[0]?.item?.visualItemId ?? '']).toBeDefined();
     expect(view?.slots[0]?.item?.visualSlot).toBe('mainhand');
     expect(view?.slots[0]?.item?.runtimeAttributes).toEqual(
@@ -52,6 +53,7 @@ describe('mir4 character view', () => {
       itemId: 200202000,
       visualItemId: 'gnarled_staff',
       visualSlot: 'mainhand',
+      craftingRarity: null,
     });
     expect(view?.slots[4]?.item).toMatchObject({
       itemId: 301202000,

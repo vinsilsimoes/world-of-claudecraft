@@ -104,6 +104,7 @@ const NYTHRAXIS_SOUL_REND_MARKS_HEROIC = 6;
 const NYTHRAXIS_SOUL_REND_HEROIC_MULT = 1.5;
 const NYTHRAXIS_DEATHLESS_PCT = 0.82;
 const NYTHRAXIS_DEATHLESS_PCT_HEROIC = 1.15;
+const VEILBOUND_MARK_ID = 'veilbound_mark';
 
 // Whether this boss's claimed instance is heroic (the arena instance is found
 // the same way the add spawns find it: by mobIds membership).
@@ -1125,6 +1126,10 @@ export function updateNythraxisSoulRend(
       'Soul Rend',
       'hit',
       true,
+      undefined,
+      true,
+      false,
+      rendMult / share > 1,
     );
     p.auras = p.auras.filter((a) => a.id !== 'nythraxis_soul_rend');
     ctx.emit({
@@ -1225,22 +1230,44 @@ export function updateNythraxisDeathlessRage(
   // The cast resolved uninterrupted: the wardens task fails for this attempt.
   deedsMod.onDeathlessRageResolvedForDeeds(ctx, boss);
   for (const p of playersInNythraxisRoom(ctx, boss)) {
-    ctx.dealDamage(
-      boss,
-      p,
-      Math.ceil(p.maxHp * ragePct),
-      false,
-      'shadow',
-      'Deathless Rage',
-      'hit',
-      true,
-    );
+    dealNythraxisDeathlessRageHit(ctx, boss, p, ragePct);
   }
   // Heroic: an uninterrupted Deathless Rage (the pillar cast) raises the court
   // right after it lands, and it repeats each Deathless Rage cycle in phase 2 -
   // but only once the previous court has fallen, so the adds never stack.
   if (isHeroicNythraxis(ctx, boss) && !nythraxisHeroicCourtPending(ctx, st)) {
     startNythraxisHeroicSummon(ctx, boss, st);
+  }
+}
+
+function dealNythraxisDeathlessRageHit(
+  ctx: SimContext,
+  boss: Entity,
+  target: Entity,
+  ragePct: number,
+): void {
+  const alreadyFinal = ragePct > 1;
+  const suppressedVeilboundMarks = alreadyFinal
+    ? boss.auras.filter((aura) => aura.id === VEILBOUND_MARK_ID && aura.sourceId === target.id)
+    : [];
+  for (const aura of suppressedVeilboundMarks) aura.id = `${VEILBOUND_MARK_ID}_suppressed`;
+  try {
+    ctx.dealDamage(
+      boss,
+      target,
+      Math.ceil(target.maxHp * ragePct),
+      false,
+      'shadow',
+      'Deathless Rage',
+      'hit',
+      true,
+      undefined,
+      true,
+      false,
+      alreadyFinal,
+    );
+  } finally {
+    for (const aura of suppressedVeilboundMarks) aura.id = VEILBOUND_MARK_ID;
   }
 }
 

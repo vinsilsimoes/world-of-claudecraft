@@ -3,55 +3,21 @@
 // It deliberately does not model either toggle as an ability or HotbarAction.
 
 import { type GameProfile, MIR4_GAME_PROFILE } from '../../../sim/game_profile';
-import type { InvSlot, ItemDef } from '../../../sim/types';
+import {
+  MIR4_ACTION_POTION_SLOTS,
+  type Mir4PotionLookup,
+  mir4PotionBarItems,
+} from '../../../sim/mir4/potion_inventory';
+import type { InvSlot } from '../../../sim/types';
 
-export const MIR4_ACTION_POTION_SLOTS = 2;
-
-type PotionItem = Pick<ItemDef, 'id' | 'kind' | 'potionHp' | 'potionMana'>;
-export type Mir4PotionLookup = (itemId: string) => PotionItem | undefined;
-
-function strongerPotion(
-  current: PotionItem | null,
-  candidate: PotionItem,
-  potency: (item: PotionItem) => number,
-): PotionItem {
-  if (current === null) return candidate;
-  const currentPotency = potency(current);
-  const candidatePotency = potency(candidate);
-  if (candidatePotency !== currentPotency) {
-    return candidatePotency > currentPotency ? candidate : current;
-  }
-  return candidate.id < current.id ? candidate : current;
-}
+export type { Mir4PotionLookup };
+export { MIR4_ACTION_POTION_SLOTS, mir4PotionBarItems };
 
 /**
  * Fill the fixed MIR4 potion seats with the strongest carried healing potion,
  * then the strongest carried mana potion. Food, drinks and elixirs stay in the
  * existing consumables surface; a missing role leaves its seat empty.
  */
-export function mir4PotionBarItems(
-  inventory: readonly Pick<InvSlot, 'itemId'>[],
-  lookup: Mir4PotionLookup,
-  out: (string | null)[],
-): (string | null)[] {
-  let healing: PotionItem | null = null;
-  let mana: PotionItem | null = null;
-  for (const slot of inventory) {
-    const item = lookup(slot.itemId);
-    if (item?.kind !== 'potion') continue;
-    if ((item.potionHp ?? 0) > 0) {
-      healing = strongerPotion(healing, item, (candidate) => candidate.potionHp ?? 0);
-    }
-    if ((item.potionMana ?? 0) > 0) {
-      mana = strongerPotion(mana, item, (candidate) => candidate.potionMana ?? 0);
-    }
-  }
-  out.length = MIR4_ACTION_POTION_SLOTS;
-  out[0] = healing?.id ?? null;
-  out[1] = mana && mana.id !== healing?.id ? mana.id : null;
-  return out;
-}
-
 export interface Mir4ActionToolsInput {
   profile: GameProfile | undefined;
   autoBattleActive: boolean;

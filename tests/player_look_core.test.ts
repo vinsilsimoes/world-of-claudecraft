@@ -12,6 +12,10 @@
 //  - a hostile or stale wire payload reaching the compose path unclamped.
 
 import { describe, expect, it, vi } from 'vitest';
+import {
+  FEMALE_PROFILE_ARMOR_SET,
+  genderedProfileArmorSet,
+} from '../src/render/characters/gendered_profile_outfit';
 import { type ArmorSetId, DEFAULT_APPEARANCE } from '../src/render/characters/modular';
 import {
   armorSetSourceFor,
@@ -32,6 +36,16 @@ function playerEntity(over: Partial<Entity> = {}): Entity {
 }
 
 const CLASS_KIT = (cls: PlayerClass): ArmorSetId => (cls === 'mage' ? 'mage' : 'knight');
+
+describe('gendered MIR4 profile outfits', () => {
+  it('keeps masculine class sets and assigns a distinct native WoC set to every feminine set', () => {
+    for (const [baseSet, femaleSet] of Object.entries(FEMALE_PROFILE_ARMOR_SET)) {
+      expect(femaleSet).not.toBe(baseSet);
+      expect(genderedProfileArmorSet(baseSet as ArmorSetId, 'male')).toBe(baseSet);
+      expect(genderedProfileArmorSet(baseSet as ArmorSetId, 'female')).toBe(femaleSet);
+    }
+  });
+});
 
 describe('composedLook', () => {
   it('returns null with nothing authored, so the caller keeps the class rig', () => {
@@ -109,6 +123,21 @@ describe('mir4InWorldLookFor', () => {
     expect(mir4VisualClassForEntity(e)).toBe('hunter');
     expect(look?.app.gender).toBe('female');
     expect(look?.worn).toEqual({
+      chest: 'rogue',
+      arms: 'rogue',
+      legs: 'rogue',
+      back: 'rogue',
+      hands: 'rogue',
+    });
+  });
+
+  it('keeps the masculine MIR4 outfit on the native class armor set', () => {
+    const e = playerEntity({
+      modularAppearance: { gender: 'male' },
+      mir4VisualClassId: 4,
+      mir4VisualArmorMask: 1 | 4,
+    });
+    expect(mir4InWorldLookFor(e)?.worn).toEqual({
       chest: 'ranger',
       arms: 'ranger',
       legs: 'ranger',
@@ -145,6 +174,7 @@ describe('charselectLook', () => {
   it('composes a roster row that has a stored look', () => {
     const look = charselectLook({ class: 'rogue', appearance: { gender: 'female' } });
     expect(look?.app.gender).toBe('female');
+    expect(look?.worn.chest).toBe('rogue');
   });
 
   it('returns null for a pre-creator row', () => {
@@ -183,6 +213,17 @@ describe('charselectLook', () => {
       CLASS_KIT,
     );
     expect(row).toEqual(world);
+  });
+
+  it('uses the feminine 3D outfit paired with a profile-owned armor set', () => {
+    const row = charselectLook({
+      class: 'warrior',
+      armorSet: 'druid',
+      appearance: { gender: 'female' },
+    });
+    expect(row?.worn.chest).toBe('mage');
+    expect(row?.worn.arms).toBe('mage');
+    expect(row?.worn.legs).toBe('mage');
   });
 });
 

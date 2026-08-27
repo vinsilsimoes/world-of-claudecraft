@@ -51,40 +51,40 @@ function secondsUntilRespawn(sim: Sim, mob: Entity, maxSeconds: number): number 
 }
 
 describe('MIR4 monster respawn cadence', () => {
-  it('halves every finite schedule and preserves non-respawning sentinels', () => {
-    expect(MIR4_MONSTER_RESPAWN_SPEED_MULTIPLIER).toBe(2);
-    expect(mir4MonsterRespawnSeconds(60)).toBe(30);
-    expect(mir4MonsterRespawnSeconds(10)).toBe(5);
-    expect(mir4MonsterRespawnSeconds(1_800)).toBe(900);
+  it('quarters every finite schedule and preserves non-respawning sentinels', () => {
+    expect(MIR4_MONSTER_RESPAWN_SPEED_MULTIPLIER).toBe(4);
+    expect(mir4MonsterRespawnSeconds(60)).toBe(15);
+    expect(mir4MonsterRespawnSeconds(10)).toBe(2.5);
+    expect(mir4MonsterRespawnSeconds(1_800)).toBe(450);
     expect(mir4MonsterRespawnSeconds(Number.POSITIVE_INFINITY)).toBe(Number.POSITIVE_INFINITY);
   });
 
-  it('halves ordinary and explicit schedules without changing WoC classic', () => {
+  it('quarters ordinary and explicit schedules without changing WoC classic', () => {
     const classic = slainMob('woc-classic', 'forest_wolf', { respawnSeconds: 60 }).mob;
     const mir4 = slainMob(MIR4_GAME_PROFILE, 'forest_wolf', { respawnSeconds: 60 }).mob;
     const classicExplicit = slainMob('woc-classic', 'training_dummy').mob;
     const mir4Explicit = slainMob(MIR4_GAME_PROFILE, 'training_dummy').mob;
 
     expect(classic.respawnTimer).toBe(60);
-    expect(mir4.respawnTimer).toBe(30);
-    expect(mir4.respawnTimer).toBeLessThanOrEqual(classic.respawnTimer / 2);
+    expect(mir4.respawnTimer).toBe(15);
+    expect(mir4.respawnTimer).toBeLessThanOrEqual(classic.respawnTimer / 4);
     expect(mir4.corpseTimer).toBeLessThanOrEqual(mir4.respawnTimer);
     expect(classicExplicit.respawnTimer).toBe(10);
-    expect(mir4Explicit.respawnTimer).toBe(5);
+    expect(mir4Explicit.respawnTimer).toBe(2.5);
   });
 
-  it('halves rare fixed and random schedules through the real death path', () => {
+  it('quarters rare fixed and random schedules through the real death path', () => {
     const classicRare = slainMob('woc-classic', 'old_greyjaw').mob;
     const mir4Rare = slainMob(MIR4_GAME_PROFILE, 'old_greyjaw').mob;
     const classicWindow = slainMob('woc-classic', 'grix_the_tunnelking').mob;
     const mir4Window = slainMob(MIR4_GAME_PROFILE, 'grix_the_tunnelking').mob;
 
     expect(classicRare.respawnTimer).toBe(100);
-    expect(mir4Rare.respawnTimer).toBe(50);
+    expect(mir4Rare.respawnTimer).toBe(25);
     expect(classicWindow.respawnTimer).toBeGreaterThanOrEqual(900);
     expect(classicWindow.respawnTimer).toBeLessThan(1_800);
-    expect(mir4Window.respawnTimer).toBeGreaterThanOrEqual(450);
-    expect(mir4Window.respawnTimer).toBeLessThan(900);
+    expect(mir4Window.respawnTimer).toBeGreaterThanOrEqual(225);
+    expect(mir4Window.respawnTimer).toBeLessThan(450);
   });
 
   it('preserves non-respawning run and world-boss sentinels through the real death path', () => {
@@ -97,14 +97,14 @@ describe('MIR4 monster respawn cadence', () => {
     expect(worldBoss.respawnTimer).toBe(Number.POSITIVE_INFINITY);
   });
 
-  it('actually returns a ten-second monster in half the classic wall-clock time', () => {
+  it('actually returns a ten-second monster in one quarter of the classic wall-clock time', () => {
     const classic = slainMob('woc-classic', 'training_dummy');
     const mir4 = slainMob(MIR4_GAME_PROFILE, 'training_dummy');
     const classicSeconds = secondsUntilRespawn(classic.sim, classic.mob, 11);
-    const mir4Seconds = secondsUntilRespawn(mir4.sim, mir4.mob, 6);
+    const mir4Seconds = secondsUntilRespawn(mir4.sim, mir4.mob, 3);
 
     expect(classicSeconds).toBeGreaterThanOrEqual(10);
-    expect(mir4Seconds).toBeLessThanOrEqual(5 + DT * 1.1);
-    expect(mir4Seconds).toBeLessThanOrEqual(classicSeconds / 2 + DT * 1.1);
+    expect(mir4Seconds).toBeLessThanOrEqual(2.5 + DT * 1.1);
+    expect(mir4Seconds).toBeLessThanOrEqual(classicSeconds / 4 + DT * 1.1);
   });
 });

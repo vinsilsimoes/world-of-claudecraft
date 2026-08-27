@@ -4,74 +4,34 @@
 
 import { esc } from '../../ui/esc';
 import { t } from '../../ui/i18n';
-import { arena } from './arena';
-import { bestiary } from './bestiary';
-import { classes } from './classes';
-import { combat } from './combat';
-import { commands } from './commands';
-import { controls } from './controls';
-import { deeds } from './deeds';
-import { delves } from './delves';
-import { dungeons } from './dungeons';
-import { economy } from './economy';
-import { editor } from './editor';
-import { faq } from './faq';
-import { gear } from './gear';
-import { glossary } from './glossary';
-import { home } from './home';
-import { howToPlay } from './how_to_play';
-import { interfacePage } from './interface';
-import { models } from './models';
-import { mounts } from './mounts';
-import { professions } from './professions';
-import { progression } from './progression';
-import { quests } from './quests';
-import { reliquary } from './reliquary';
-import { rifts } from './rifts';
-import { settings } from './settings';
-import { social } from './social';
-import { stats } from './stats';
-import { talents } from './talents';
-import { thornhollowFields } from './thornhollow_fields';
+import { classes } from './aeldrune_classes';
+import { combat } from './aeldrune_combat';
+import { companions } from './aeldrune_companions';
+import { controls } from './aeldrune_controls';
+import { dungeons } from './aeldrune_dungeons';
+import { faq } from './aeldrune_faq';
+import { gear } from './aeldrune_gear';
+import { home } from './aeldrune_home';
+import { howToPlay } from './aeldrune_how_to_play';
+import { quests } from './aeldrune_quests';
+import { systems } from './aeldrune_systems';
+import { world } from './aeldrune_world';
 import type { GuidePage, PageContext } from './types';
-import { valeCup } from './vale_cup';
-import { wishIKnew } from './wish_i_knew';
-import { world } from './world';
 
 export type { GuidePage, PageContext } from './types';
 
 const PAGES: Record<string, GuidePage> = {
   home,
   'how-to-play': howToPlay,
-  'wish-i-knew': wishIKnew,
-  social,
   classes,
-  bestiary,
-  models,
   world,
   gear,
-  professions,
-  economy,
   quests,
+  systems,
+  companions,
   dungeons,
-  delves,
-  rifts,
-  mounts,
-  arena,
-  'thornhollow-fields': thornhollowFields,
-  'vale-cup': valeCup,
-  deeds,
-  reliquary,
   combat,
-  stats,
-  progression,
   controls,
-  commands,
-  interface: interfacePage,
-  settings,
-  talents,
-  glossary,
-  editor,
   faq,
 };
 

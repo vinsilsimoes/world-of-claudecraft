@@ -4,8 +4,8 @@
 // pattern in scripts/wiki/build_content.mjs (never import raw .ts): routes.ts pulls a
 // type-only import from ui/i18n, which esbuild erases, so the bundle is data-only.
 //
-// It REPLACES only the <url> entries whose <loc> contains "/guide", preserving every
-// other entry (home, play, links, merch, legal pages) byte-for-byte. Deterministic:
+// It replaces guide entries and keeps only currently published Aeldrune static pages.
+// Legacy marketing pages remain available locally but are deliberately not advertised.
 // reads the route data + the existing sitemap, writes the file. Run via
 // `node scripts/build_sitemap.mjs`; wired into `npm run build`.
 
@@ -15,11 +15,12 @@ import * as esbuild from 'esbuild';
 
 const root = process.cwd();
 const sitemapPath = path.join(root, 'public', 'sitemap.xml');
-const ORIGIN = 'https://worldofclaudecraft.com';
+// The local project has no production infrastructure yet. Keep the generated sitemap
+// branded but deliberately non-routable until release automation supplies the real host.
+const ORIGIN = process.env.AELDRUNE_SITE_ORIGIN ?? 'https://aeldrune.invalid';
 
 const entrySource = `
   export { GUIDE_ROUTES, hrefFor } from './src/guide/routes.ts';
-  export { GUIDE_CLASSES, GUIDE_PROF_PAGES } from './src/guide/content.generated.ts';
 `;
 
 const built = await esbuild.build({
@@ -31,12 +32,13 @@ const built = await esbuild.build({
   logLevel: 'silent',
 });
 const dataUrl = `data:text/javascript;base64,${Buffer.from(built.outputFiles[0].text).toString('base64')}`;
-const { GUIDE_ROUTES, hrefFor, GUIDE_CLASSES, GUIDE_PROF_PAGES } = await import(dataUrl);
+const { GUIDE_ROUTES, hrefFor } = await import(dataUrl);
 
 // Per-route crawl hints. The overview lands a notch above the section pages; class detail
 // pages sit just below their index. Anything unlisted falls back to the section default.
 const PRIORITY = { home: '0.7', section: '0.6', detail: '0.55' };
 const CHANGEFREQ = { home: 'weekly', section: 'monthly', detail: 'monthly' };
+const PUBLISHED_STATIC_PATHS = new Set(['/', '/play', '/privacy', '/terms', '/data-deletion']);
 
 function urlEntry(loc, changefreq, priority) {
   return [
@@ -55,20 +57,6 @@ for (const route of GUIDE_ROUTES) {
   const loc = ORIGIN + hrefFor(route.sub);
   const tier = route.id === 'home' ? 'home' : 'section';
   guideEntries.push(urlEntry(loc, CHANGEFREQ[tier], PRIORITY[tier]));
-  // Class detail pages hang off the classes index.
-  if (route.id === 'classes') {
-    for (const c of GUIDE_CLASSES) {
-      const detailLoc = ORIGIN + hrefFor(`classes/${c.id}`);
-      guideEntries.push(urlEntry(detailLoc, CHANGEFREQ.detail, PRIORITY.detail));
-    }
-  }
-  // Professions detail pages hang off the professions hub.
-  if (route.id === 'professions') {
-    for (const id of GUIDE_PROF_PAGES) {
-      const detailLoc = ORIGIN + hrefFor(`professions/${id}`);
-      guideEntries.push(urlEntry(detailLoc, CHANGEFREQ.detail, PRIORITY.detail));
-    }
-  }
 }
 
 // Read the existing sitemap and split its <url> blocks, keeping every non-guide entry
@@ -98,16 +86,45 @@ const isGuideBlock = (block) => {
   );
 };
 
-const nonGuide = blocks.filter((b) => !isGuideBlock(b));
+const isPublishedStaticBlock = (block) => {
+  const m = block.match(/<loc>\s*([^<]*?)\s*<\/loc>/);
+  if (!m) return false;
+  try {
+    return PUBLISHED_STATIC_PATHS.has(new URL(m[1]).pathname);
+  } catch {
+    return PUBLISHED_STATIC_PATHS.has(m[1]);
+  }
+};
+const useConfiguredOrigin = (block) =>
+  block.replace(/<loc>\s*([^<]*?)\s*<\/loc>/, (_match, value) => {
+    let pathname;
+    try {
+      pathname = new URL(value).pathname;
+    } catch {
+      pathname = value;
+    }
+    return `<loc>${ORIGIN}${pathname}</loc>`;
+  });
+const nonGuide = blocks
+  .filter((b) => !isGuideBlock(b) && isPublishedStaticBlock(b))
+  .map(useConfiguredOrigin);
 // Place the regenerated guide block where the first guide entry used to be, so the file's
-// ordering stays stable (home/links/merch/play, then guide, then legal pages).
+// ordering stays stable (home/play, then guide, then legal pages).
 const firstGuideIndex = blocks.findIndex(isGuideBlock);
 const before =
   firstGuideIndex === -1
     ? blocks
-    : blocks.slice(0, firstGuideIndex).filter((b) => !isGuideBlock(b));
+    : blocks
+        .slice(0, firstGuideIndex)
+        .filter((b) => !isGuideBlock(b) && isPublishedStaticBlock(b))
+        .map(useConfiguredOrigin);
 const after =
-  firstGuideIndex === -1 ? [] : blocks.slice(firstGuideIndex).filter((b) => !isGuideBlock(b));
+  firstGuideIndex === -1
+    ? []
+    : blocks
+        .slice(firstGuideIndex)
+        .filter((b) => !isGuideBlock(b) && isPublishedStaticBlock(b))
+        .map(useConfiguredOrigin);
 const merged =
   firstGuideIndex === -1 ? [...nonGuide, ...guideEntries] : [...before, ...guideEntries, ...after];
 

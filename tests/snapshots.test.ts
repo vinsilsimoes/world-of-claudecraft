@@ -2130,7 +2130,7 @@ describe('/who command', () => {
     server.handleMessage(self, JSON.stringify({ t: 'cmd', cmd: 'chat', text: '/who' }));
 
     const text = eventTexts(fc.sent).join('\n');
-    expect(text).toContain('Who: 2 players online on Claudemoon.');
+    expect(text).toContain('Who: 2 players online on Aelvarin.');
     expect(text).toContain('Aleph - level 1 warrior - Eastbrook Vale');
     expect(text).toContain('Bet - level 7 mage - Eastbrook Vale');
   });
@@ -2150,7 +2150,7 @@ describe('/who command', () => {
     server.handleMessage(self, JSON.stringify({ t: 'cmd', cmd: 'chat', text: '/who' }));
 
     const text = eventTexts(fc.sent).join('\n');
-    expect(text).toContain('Who: 1 player online on Claudemoon.');
+    expect(text).toContain('Who: 1 player online on Aelvarin.');
     expect(text).toContain('Aleph - level 1 warrior - Eastbrook Vale');
     expect(text).not.toContain('Bet');
     expect(text).not.toContain('Gimel');
@@ -2182,7 +2182,7 @@ describe('/who command', () => {
     server.handleMessage(self, JSON.stringify({ t: 'cmd', cmd: 'chat', text: '/who' }));
 
     const text = eventTexts(fc.sent).join('\n');
-    expect(text).toContain('Who: 1 player online on Claudemoon.');
+    expect(text).toContain('Who: 1 player online on Aelvarin.');
     expect(text).toContain('Aleph - level 1 warrior - Eastbrook Vale');
     expect(text).not.toContain('Bet');
   });

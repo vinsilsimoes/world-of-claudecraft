@@ -732,6 +732,15 @@ export const BUILTIN_WORLD: WorldContent = {
 };
 
 let activeWorld: WorldContent = BUILTIN_WORLD;
+const npcDefinitionsByWorld = new WeakMap<WorldContent, ReadonlyMap<string, NpcDef>>();
+
+function indexNpcDefinitions(world: WorldContent): ReadonlyMap<string, NpcDef> {
+  const indexed = new Map(Object.values(world.npcs).map((npc) => [npc.id, npc]));
+  npcDefinitionsByWorld.set(world, indexed);
+  return indexed;
+}
+
+let activeNpcsById = indexNpcDefinitions(activeWorld);
 // Bumped on every content swap so content-derived caches (the terrain
 // steepness memo in world.ts) can drop stale cells; monotone per process.
 let contentGeneration = 0;
@@ -740,6 +749,22 @@ let contentGeneration = 0;
 // the built-in world; the editor swaps it for a custom map during play-test.
 export function getActiveWorldContent(): WorldContent {
   return activeWorld;
+}
+
+/** Resolve an NPC against the playable world currently selected by the host.
+ * The builtin fallback preserves dynamic classic NPC definitions when a custom
+ * world deliberately reuses them without copying the entire NPC catalog. */
+export function npcDefinition(
+  templateId: string,
+  world: WorldContent = activeWorld,
+): NpcDef | undefined {
+  const indexed =
+    world === activeWorld
+      ? activeNpcsById
+      : (npcDefinitionsByWorld.get(world) ?? indexNpcDefinitions(world));
+  return (
+    indexed.get(templateId) ?? (Object.hasOwn(NPCS, templateId) ? NPCS[templateId] : undefined)
+  );
 }
 
 export function getContentGeneration(): number {
@@ -759,6 +784,7 @@ export function isBuiltinWorldActive(): boolean {
 // through getActiveWorldContent. Spawns come from SimConfig.world too (sim.ts ctor).
 export function setActiveWorldContent(world: WorldContent | null): void {
   activeWorld = world ?? BUILTIN_WORLD;
+  activeNpcsById = indexNpcDefinitions(activeWorld);
   contentGeneration++;
 }
 

@@ -10472,7 +10472,7 @@ export const GUIDE_PROF_GATHERING: GuideProfGathering[] = [
         "zone": "The Drakelands",
         "tier": 1,
         "toolTier": 1,
-        "count": 2,
+        "count": 5,
         "material": "Osmium Ore"
       },
       {
@@ -10493,7 +10493,7 @@ export const GUIDE_PROF_GATHERING: GuideProfGathering[] = [
         "zone": "The Frostveil Reach",
         "tier": 1,
         "toolTier": 1,
-        "count": 2,
+        "count": 6,
         "material": "Osmium Ore"
       },
       {
@@ -10507,7 +10507,7 @@ export const GUIDE_PROF_GATHERING: GuideProfGathering[] = [
         "zone": "The Nightbloom",
         "tier": 1,
         "toolTier": 1,
-        "count": 2,
+        "count": 6,
         "material": "Osmium Ore"
       },
       {
@@ -10521,7 +10521,7 @@ export const GUIDE_PROF_GATHERING: GuideProfGathering[] = [
         "zone": "The Veiled Hollow",
         "tier": 1,
         "toolTier": 1,
-        "count": 2,
+        "count": 5,
         "material": "Osmium Ore"
       },
       {
@@ -10535,7 +10535,7 @@ export const GUIDE_PROF_GATHERING: GuideProfGathering[] = [
         "zone": "The Wraithwood",
         "tier": 1,
         "toolTier": 1,
-        "count": 2,
+        "count": 5,
         "material": "Osmium Ore"
       },
       {

@@ -1287,16 +1287,16 @@ describe('rod synergy is literal-pinned on one shared draw (QA pins)', () => {
   // literals pin FISH_BITE_DELAY_MIN_SEC and the 1.5 s/tier max-side
   // reduction in BOTH directions (the sampled-bounds arms above catch only
   // a shrink of the reduction, not a growth).
-  it('first-cast delay ticks at seed 4242: tier-1 pole 136, tier-2 rod 113, tier-3 rod 91', () => {
-    // Re-recorded after the Galecrest quest-camp content pass (its four new
-    // camps shift the shared rng stream at Sim construction and move the delay
-    // draw; prior: 136/113/91 after zones 1-3 quest-dedupe). Property
+  it('first-cast delay ticks at seed 4242: tier-1 pole 115, tier-2 rod 99, tier-3 rod 82', () => {
+    // Re-recorded after the Aeldrune world-content pass (its gathering nodes
+    // shift the shared rng stream at Sim construction and move the delay
+    // draw; prior: 136/113/91 after Galecrest camps). Property
     // unchanged: one seed, one hidden draw, monotonically shorter with each
     // rod tier.
     for (const [rod, ticks] of [
-      [null, 136],
-      ['ironreel_fishing_rod', 113],
-      ['silverstream_fishing_rod', 91],
+      [null, 115],
+      ['ironreel_fishing_rod', 99],
+      ['silverstream_fishing_rod', 82],
     ] as [string | null, number][]) {
       const sim = makeSim(4242);
       const meta = mustMeta(sim, sim.playerId);

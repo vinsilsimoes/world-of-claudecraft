@@ -12,7 +12,9 @@ import { existsSync } from 'node:fs';
 
 // Edit this list to add/remove local realms. type: Normal | PvP | RP | RP-PvP
 const REALMS = [
-  { name: 'Claudemoon', port: 8787, type: 'Normal' },
+  // Aelvarin keeps the original local storage key so existing characters and
+  // progression survive the authored world rename.
+  { name: 'Aelvarin', storageName: 'Claudemoon', port: 8787, type: 'Normal' },
   { name: 'Highwatch', port: 8788, type: 'PvP' },
   { name: 'Stormhaven', port: 8789, type: 'RP' },
 ];
@@ -33,7 +35,8 @@ for (const [i, realm] of REALMS.entries()) {
   const child = spawn(process.execPath, [SERVER], {
     env: {
       ...process.env,
-      REALM_NAME: realm.name,
+      REALM_NAME: realm.storageName ?? realm.name,
+      REALM_DISPLAY_NAME: realm.name,
       REALM_TYPE: realm.type,
       PORT: String(realm.port),
       REALMS: directory,

@@ -270,6 +270,9 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     expect(html).toContain('Physical Attack');
     expect(html).toContain('+25');
     expect(html).toContain('Aeldrune appearance');
+    expect(html).toContain('Crafting rarity: Common');
+    expect(html).not.toContain('Required level');
+    expect(html).not.toContain('MIR4');
     expect(html).not.toContain(def!.name);
   });
 

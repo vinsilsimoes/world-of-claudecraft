@@ -366,6 +366,17 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       expect(outside.mir4Effects?.active ?? []).toHaveLength(0);
     },
   );
+  it('refuses the lancer actor-centered skill when no hostile is inside its area', () => {
+    const sim = makeClassSim(5853, 'lancer');
+    const p = sim.player;
+    const distant = spawnTankWolf(sim, p.pos.x + 20, p.pos.z, '5201_distant_only');
+    const resourceBefore = p.resource;
+
+    expect(sim.mir4CastSkill(5201, distant.id)).toEqual({ ok: false, reason: 'no-target' });
+    expect(p.resource).toBe(resourceBefore);
+    expect(p.cooldowns.has('5201')).toBe(false);
+    expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
+  });
   it.each([
     ['elementalist', 2501, 'freeze', 8],
     ['taoist', 3506, 'root', 7],

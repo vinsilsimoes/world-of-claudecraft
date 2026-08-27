@@ -404,7 +404,7 @@ function canonicalStage(
       ? {
           ...stage,
           target: 'sara-das-ervas',
-          text: 'Fale com Sara das Ervas para conhecer poções, artigos gerais e equipamentos iniciais da sua classe.',
+          text: 'Fale com Sara das Ervas, na ala oeste da Vila do Vau, para conhecer poções, artigos gerais e equipamentos iniciais da sua classe.',
         }
       : stage;
   const effectiveStage = {

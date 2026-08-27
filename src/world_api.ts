@@ -129,7 +129,10 @@ export type {
 // previous geometry, so both rolling-deploy directions must fail closed.
 // 12 = MIR4 collection-ticket redemption now carries an optional authoritative
 // batch count. Epoch 11 servers would silently interpret a 10/100 summon as one.
-export const ONLINE_WORLD_LAYOUT_VERSION = 12 as const;
+// 13 = MIR4/WoC inter-map portals and their protected monster-free approaches
+// moved away from settlements. Epoch 12 peers would render and route to the old
+// coordinates while the authoritative simulation triggers the new locations.
+export const ONLINE_WORLD_LAYOUT_VERSION = 13 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI

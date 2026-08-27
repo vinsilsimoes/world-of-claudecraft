@@ -250,6 +250,7 @@ import {
   entityViewCandidatePriority,
   entityViewDistanceSq,
   entityViewIsAdmitted,
+  isDistanceCullExemptObject,
   isPersistentPortalObject,
   entityViewShouldDrop as shouldDropView,
   viewBuildClass,
@@ -395,6 +396,7 @@ import { buildMotes, type MotesView } from './motes';
 import { MountBeacon } from './mount_beacon';
 import {
   mountPrewarmKeys,
+  mountPrewarmResumeKeys,
   stageMountPrewarmVisual,
   stageResidentMountPrewarmVisual,
 } from './mount_prewarm';
@@ -518,6 +520,7 @@ import {
   prewarmEntryShouldDefer,
   prewarmResumeIsDebt,
   prewarmSubmitShouldStop,
+  resolvePrewarmCompileBatchRoots,
   resolvePrewarmEntryStatus,
   resolvePrewarmPolicy,
   skyAssetInlineWaitMs,
@@ -4660,7 +4663,7 @@ export class Renderer {
       const required = e.id === center.id || e.id === center.targetId;
       if (required && !includeRequired) continue;
       const d2 = entityViewDistanceSq(e, center);
-      if (!required && d2 > rangeSq) continue;
+      if (!required && d2 > rangeSq && !isDistanceCullExemptObject(e)) continue;
       writeViewCandidate(
         this.viewCandidatePool,
         this.viewCandidates,
@@ -5697,7 +5700,11 @@ export class Renderer {
       ? VIEW_PREWARM_HARD_MAX_MS_CONSTRAINED
       : (pacing.knobs.hardMaxMs ?? VIEW_PREWARM_HARD_MAX_MS);
     const hardMaxMs = Math.max(maxMs, options.hardMaxMs ?? defaultHardMaxMs);
-    const compileBatchRoots = pacing.knobs.compileBatchRoots ?? PREWARM_COMPILE_BATCH_ROOTS;
+    const compileBatchRoots = resolvePrewarmCompileBatchRoots(
+      this.lowGfx,
+      pacing.knobs.compileBatchRoots,
+      PREWARM_COMPILE_BATCH_ROOTS,
+    );
     this.gpuHitchPacing = { controller: pacing, compileBatchRoots, hardMaxMs };
     const started = performance.now();
     const deadline = started + maxMs;
@@ -6224,7 +6231,7 @@ export class Renderer {
     const settleMinPasses = this.lowGfx ? 8 : 10;
 
     const mountPrewarmResumeUnits = (): PrewarmResumeUnit[] =>
-      [...mountPrewarmPendingKeys].map((key) => ({
+      mountPrewarmResumeKeys(mountPrewarmPendingKeys, this.lowGfx).map((key) => ({
         id: `mount:${key}`,
         run: async () => {
           const staged = await stageMountPrewarmVisual(this.scene, mountPrewarmGroup, key);
@@ -10578,7 +10585,8 @@ export class Renderer {
           d2,
           this.entityViewCreateRangeSq,
           this.entityViewDestroyRangeSq,
-        )
+        ) &&
+        !isDistanceCullExemptObject(e)
       ) {
         v.group.visible = false;
         continue;

@@ -212,7 +212,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
         target: 'M01-Q02',
         goal: 1,
         lesson: 'mercador, poções e atalho de consumíveis',
-        text: 'Coloque uma das 3 Poções Menores no atalho de vida. Use-a quando estiver ferido; Maela vende reposições na Vila do Vau.',
+        text: 'Coloque uma das 20 Poções Menores no atalho de vida. Use-a quando estiver ferido; Sara das Ervas vende reposições na ala oeste da Vila do Vau.',
       },
       {
         kind: 'collect-quest-wallet',
@@ -269,7 +269,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
       items: [
         {
           itemId: 'potion-minor-bound',
-          quantity: 3,
+          quantity: 20,
           binding: 'character',
           grantId: 'tutorial-m01-q02-potions',
         },

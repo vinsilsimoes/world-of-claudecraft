@@ -20,9 +20,9 @@ const item = (over: Partial<ItemDef>): ItemDef =>
 
 describe('bulkBuyQuantity', () => {
   it('buys the full stack size when fully affordable', () => {
-    // Default stack for a non-unstacked kind (bags.ts DEFAULT_STACK) is 20.
+    // Potions use the large long-session stack owned by bags.ts.
     const def = item({});
-    expect(bulkBuyQuantity(def, 10, 10_000)).toBe(20);
+    expect(bulkBuyQuantity(def, 10, 50_000)).toBe(5000);
   });
 
   it('buys a smaller floor-affordable quantity when short on copper', () => {
@@ -152,9 +152,9 @@ describe('maxBuyCount (the custom prompt cap, Q19: countFit in row units)', () =
   const empty: InvSlot[] = [];
 
   it('caps at bag fit in row units for a stacking single-unit row', () => {
-    // minor_healing_potion: default stack 20, row unit 1. 16 free slots hold
-    // 320 units, so 320 purchases fit.
-    expect(maxBuyCount(empty, 16, ITEMS.minor_healing_potion)).toBe(320);
+    // minor_healing_potion: potion stack 5000, row unit 1. 16 free slots hold
+    // 80,000 units, so 80,000 purchases fit.
+    expect(maxBuyCount(empty, 16, ITEMS.minor_healing_potion)).toBe(80_000);
   });
 
   it('divides unit fit by the food row unit of 5', () => {

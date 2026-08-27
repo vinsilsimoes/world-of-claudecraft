@@ -32,6 +32,10 @@ function isSelfUtility(skill: Mir4SkillDef): boolean {
   return skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
 }
 
+function isActorCenteredOffense(skill: Mir4SkillDef): boolean {
+  return !skill.requiresTarget && (skill.effect?.areaRadiusPx ?? 0) > 0 && !isSelfUtility(skill);
+}
+
 function skillReady(p: Entity, skill: Mir4SkillDef): boolean {
   if (p.cooldowns.has(String(skill.skillId))) return false;
   const cost = mir4SkillManaCost(p.mir4?.manaCostStat ?? 0, skill.skillCost, skill.skillCostType);
@@ -41,6 +45,17 @@ function skillReady(p: Entity, skill: Mir4SkillDef): boolean {
   }
   if (skill.effect?.effect === 'heal-pulse' && p.hp >= p.maxHp) return false;
   return true;
+}
+
+function repeatsActiveEffect(target: Entity, skill: Mir4SkillDef): boolean {
+  const effectName = skill.effect?.effect;
+  return Boolean(
+    effectName &&
+      !isSelfUtility(skill) &&
+      target.mir4Effects?.active.some(
+        (effect) => effect.effectId === `mir4_${skill.skillId}_${effectName}`,
+      ),
+  );
 }
 
 function hostileCountInSkillArea(
@@ -121,23 +136,32 @@ export function pickMir4AutoBattleSkill(
       }
       if (phase === 'execution' && !(wants(roles, phase) && targetHpPercent <= 30)) continue;
       if (phase === 'single-target' && !wants(roles, phase)) continue;
-      const effectName = skill.effect?.effect;
-      if (
-        effectName &&
-        !isSelfUtility(skill) &&
-        target.mir4Effects?.active.some(
-          (effect) => effect.effectId === `mir4_${skill.skillId}_${effectName}`,
-        )
-      ) {
-        continue;
-      }
+      if (repeatsActiveEffect(target, skill)) continue;
       return {
         skillId: skill.skillId,
         selfUtility: isSelfUtility(skill),
-        actorCentered:
-          !skill.requiresTarget && (skill.effect?.areaRadiusPx ?? 0) > 0 && !isSelfUtility(skill),
+        actorCentered: isActorCenteredOffense(skill),
       };
     }
+  }
+
+  // Role thresholds optimize the rotation; they must not silently disable a
+  // skill the player explicitly left on. This matters most for the Arbalist's
+  // level-one Burst: it is tagged as AoE, but is the class's only unlocked
+  // skill until level 10. Against a lone target, use any remaining ready
+  // offensive skill before falling back to the basic attack.
+  for (const skill of order) {
+    if (!skillReady(p, skill) || isSelfUtility(skill) || repeatsActiveEffect(target, skill)) {
+      continue;
+    }
+    if (isActorCenteredOffense(skill) && hostileCountInSkillArea(ctx, p, target, skill, area) < 1) {
+      continue;
+    }
+    return {
+      skillId: skill.skillId,
+      selfUtility: false,
+      actorCentered: isActorCenteredOffense(skill),
+    };
   }
   return null;
 }

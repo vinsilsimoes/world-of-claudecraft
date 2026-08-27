@@ -4,6 +4,7 @@
 
 import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { mir4ArcObjectiveVisibleTo } from '../sim/mir4/arc_objectives';
+import { isInteractOnlyInstanceObject } from '../sim/quest_gated_entity';
 import type { Entity, QuestProgress } from '../sim/types';
 import { interactionLandmarkViewPriority } from './prewarm_policy';
 import type { QuestObjectGate } from './quest_object_gate_core';
@@ -12,6 +13,14 @@ export function isPersistentPortalObject(entity: Entity): boolean {
   return (
     entity.kind === 'object' &&
     (entity.templateId === 'dungeon_door' || entity.templateId === 'dungeon_exit')
+  );
+}
+
+/** Objects that remain relevant across an entire instance rather than one draw-radius cell. */
+export function isDistanceCullExemptObject(entity: Entity): boolean {
+  return (
+    entity.kind === 'object' &&
+    (isPersistentPortalObject(entity) || isInteractOnlyInstanceObject(entity))
   );
 }
 
@@ -73,7 +82,7 @@ export function entityViewShouldDrop(
 ): boolean {
   if (!entity || !entityViewIsAdmitted(entity, questLog, questObjectHidden, viewerId)) return true;
   return (
-    !isPersistentPortalObject(entity) &&
+    !isDistanceCullExemptObject(entity) &&
     entity.id !== player.id &&
     entity.id !== player.targetId &&
     entityViewDistanceSq(entity, player) > destroyRangeSq

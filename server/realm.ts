@@ -10,22 +10,59 @@ import { DEFAULT_RAID_RESET_TIME_ZONE, isSupportedTimeZone } from './raid_reset'
 // value, so two processes with different REALM_NAME share a DB yet form fully
 // isolated worlds. Defaults to a single realm for local dev / single-shard prod.
 
-export const DEFAULT_REALM_NAME = 'Claudemoon';
+/** The authored Aeldrune world name shown to players. */
+export const DEFAULT_REALM_NAME = 'Aelvarin';
+
+/**
+ * Stable storage scope used by installations that predate the Aeldrune rename.
+ *
+ * Realm names are part of character, guild, market, and progression keys. Keeping
+ * this legacy value behind the public identity prevents a cosmetic rename from
+ * making an existing account look empty. New deployments can opt into a different
+ * storage scope with REALM_NAME; REALM_DISPLAY_NAME never changes persistence.
+ */
+export const LEGACY_DEFAULT_REALM_STORAGE_NAME = 'Claudemoon';
 export const GAME_PROFILE: GameProfile = requireGameProfile(
   process.env.GAME_PROFILE,
   'GAME_PROFILE',
 );
 
-export function resolveRealm(rawName: string | undefined): string {
+export function resolveRealm(
+  rawName: string | undefined,
+  fallback: string = DEFAULT_REALM_NAME,
+): string {
   const raw = (rawName ?? '').trim();
   // realm names are short, human display strings (letters, digits, spaces, a
   // couple of punctuation marks à la "Area 52" / "Mal'Ganis"); fall back rather
   // than boot a process with a nonsense realm
   if (raw && raw.length <= 24 && /^[A-Za-z0-9][A-Za-z0-9 '_-]*$/.test(raw)) return raw;
-  return DEFAULT_REALM_NAME;
+  return fallback;
 }
 
-export const REALM = resolveRealm(process.env.REALM_NAME);
+/** Internal persistence key. Do not expose this value directly to players. */
+export const REALM = resolveRealm(process.env.REALM_NAME, LEGACY_DEFAULT_REALM_STORAGE_NAME);
+
+/** Public world identity. Legacy Claudemoon installs become Aelvarin automatically. */
+export const PUBLIC_REALM_NAME = resolveRealm(
+  process.env.REALM_DISPLAY_NAME ??
+    (REALM === LEGACY_DEFAULT_REALM_STORAGE_NAME ? undefined : REALM),
+);
+
+/** Translate the active storage key in account-scoped maps before sending it to clients. */
+export function publicRealmName(realm: string): string {
+  return realm === REALM ? PUBLIC_REALM_NAME : realm;
+}
+
+export function publicRealmCounts(
+  counts: Readonly<Record<string, number>>,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [realm, count] of Object.entries(counts)) {
+    const publicName = publicRealmName(realm);
+    out[publicName] = (out[publicName] ?? 0) + count;
+  }
+  return out;
+}
 
 // Classic-MMO realm types. Normal == PvE.
 export type RealmType = 'Normal' | 'PvP' | 'RP' | 'RP-PvP';
@@ -89,7 +126,7 @@ export interface RealmEntry {
 // The realm directory drives the client's classic-MMO-style realm-list screen.
 // Configure it with REALMS as a comma-separated list of `Name=https://host=Type`
 // entries (Type optional, defaults Normal), e.g.
-//   REALMS="Claudemoon=https://claudemoon.example.com=Normal,Highwatch=https://highwatch.example.com=PvP"
+//   REALMS="Aelvarin=https://aelvarin.example.com=Normal,Highwatch=https://highwatch.example.com=PvP"
 // Every realm process shares the same DATABASE_URL and serves the same
 // directory, so a client on any of them can discover and switch to the others.
 // Unset → a single same-origin realm (this process), i.e. no cross-realm UI.
@@ -100,7 +137,7 @@ function parseRealms(raw: string | undefined): RealmEntry[] {
     if (!seg) continue;
     const fields = seg.split('=').map((s) => s.trim());
     if (fields.length < 2) continue;
-    const name = resolveRealm(fields[0]);
+    const name = publicRealmName(resolveRealm(fields[0]));
     const rawUrl = fields[1];
     const url = resolvePublicOrigin(rawUrl);
     if (rawUrl && !url) continue; // must be a bare origin
@@ -112,7 +149,7 @@ function parseRealms(raw: string | undefined): RealmEntry[] {
 
 export const REALM_DIRECTORY: RealmEntry[] = (() => {
   const parsed = parseRealms(process.env.REALMS);
-  return parsed.length > 0 ? parsed : [{ name: REALM, url: '', type: REALM_TYPE }];
+  return parsed.length > 0 ? parsed : [{ name: PUBLIC_REALM_NAME, url: '', type: REALM_TYPE }];
 })();
 
 // Cross-origin requests from these realm origins are allowed (CORS), so a
@@ -148,7 +185,7 @@ export function publicOriginForRealm(realm: string, directory: readonly RealmEnt
 
 export const CONFIGURED_PUBLIC_ORIGIN = resolvePublicOrigin(process.env.PUBLIC_ORIGIN);
 export const REALM_PUBLIC_ORIGIN =
-  CONFIGURED_PUBLIC_ORIGIN || publicOriginForRealm(REALM, REALM_DIRECTORY);
+  CONFIGURED_PUBLIC_ORIGIN || publicOriginForRealm(PUBLIC_REALM_NAME, REALM_DIRECTORY);
 
 const DEFAULT_PRODUCTION_PUBLIC_ORIGIN = 'https://worldofclaudecraft.com';
 const TRUSTED_PUBLIC_HOST_ORIGINS = new Map([

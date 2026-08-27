@@ -16,7 +16,7 @@
 // stylesheet; the per-quality reward color comes from the shared QUALITY_COLOR
 // map, the fallback is a CSS token, so there is no literal hex/px in TS).
 
-import { ITEMS, NPCS } from '../../../sim/data';
+import { ITEMS, npcDefinition } from '../../../sim/data';
 import { MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import type { IWorld } from '../../../world_api';
 import { markDialogRoot } from '../../dialog_root';
@@ -349,7 +349,7 @@ export class QuestLogWindow {
       const qColor = QUALITY_COLOR[item.quality ?? 'common'] ?? QUALITY_DEFAULT_COLOR;
       html += `<div class="qd-reward-row" data-reward><span class="qd-reward-label">${esc(t('questUi.detail.itemReward'))}</span>${this.deps.itemIcon(item)}<span class="qd-reward-name" style="color:${qColor}">${esc(itemDisplayName(item))}</span></div>`;
     }
-    const giver = NPCS[d.turnInNpcId];
+    const giver = npcDefinition(d.turnInNpcId);
     html += `<div class="qd-obj quest-return">${esc(t('questUi.log.returnTo', { name: giver ? this.npcDisplayName(giver.id) : '?' }))}</div>`;
     const body = document.createElement('div');
     body.className = 'ql-detail-body';

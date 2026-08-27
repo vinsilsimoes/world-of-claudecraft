@@ -330,7 +330,9 @@ import { createPgRateLimitStore } from './ratelimit_db';
 import {
   GAME_PROFILE,
   isPublicCorsPath,
+  PUBLIC_REALM_NAME,
   publicOriginFromRequest,
+  publicRealmCounts,
   REALM,
   REALM_DIRECTORY,
 } from './realm';
@@ -1806,7 +1808,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         characterSheet({
           row,
           visibility: 'public',
-          realm: REALM,
+          realm: PUBLIC_REALM_NAME,
           origin: publicOrigin(req),
           guild,
           rank: toSheetRank(rank),
@@ -1832,7 +1834,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         characterSheet({
           row,
           visibility: 'owner',
-          realm: REALM,
+          realm: PUBLIC_REALM_NAME,
           origin: publicOrigin(req),
           guild,
           rank: toSheetRank(rank),
@@ -1985,8 +1987,13 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
       // optionally authenticated: with a token we also return how many
       // characters the account has on each realm (for the realm-list screen)
       const accountId = await bearerAccount(req);
-      const characters = accountId !== null ? await characterCountsByRealm(accountId) : {};
-      return json(res, 200, { current: REALM, realms: REALM_DIRECTORY, characters });
+      const characters =
+        accountId !== null ? publicRealmCounts(await characterCountsByRealm(accountId)) : {};
+      return json(res, 200, {
+        current: PUBLIC_REALM_NAME,
+        realms: REALM_DIRECTORY,
+        characters,
+      });
     }
     if (req.method === 'GET' && url === '/api/search') {
       const accountId = await bearerAccount(req);
@@ -2100,7 +2107,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         accounts_created: accountsCreated,
         characters_created: charactersCreated,
         players_online: liveGame().clients.size,
-        realm: REALM,
+        realm: PUBLIC_REALM_NAME,
       });
     }
     if (req.method === 'GET' && url === '/api/status') {
@@ -2116,7 +2123,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
       // EPIC_ENABLED=1 (pinned in tests/server/http/parity.test.ts).
       return json(res, 200, {
         ok: true,
-        realm: REALM,
+        realm: PUBLIC_REALM_NAME,
         players_online: liveGame().clients.size,
         // The configured realm player cap so the client realm list can display
         // honestly; 0 means the cap is disabled. Dual-arm edit: the migrated
@@ -2172,7 +2179,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         const guildPage = Number(params.get('page')) || 0;
         const guildSlice = paginateGuildLeaderboard(guildEntries, guildPage, guildPageSize);
         return json(res, 200, {
-          realm: REALM,
+          realm: PUBLIC_REALM_NAME,
           scope,
           board: 'guilds',
           metric: 'guildLifetimeXp',
@@ -2190,7 +2197,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         const devPage = Number(params.get('page')) || 0;
         const devSlice = paginateDevLeaderboard(devEntries, devPage, devPageSize);
         return json(res, 200, {
-          realm: REALM,
+          realm: PUBLIC_REALM_NAME,
           scope,
           board: 'devs',
           metric: 'landedCommits',
@@ -2212,7 +2219,11 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         const deedsPage = Number(params.get('page')) || 0;
         const bearer = await bearerScopeAccount(req).catch(() => null);
         const self = bearer ? await deedsSelfRank(bearer.accountId) : null;
-        return json(res, 200, buildDeedsBoard(REALM, deedsEntries, deedsPage, deedsPageSize, self));
+        return json(
+          res,
+          200,
+          buildDeedsBoard(PUBLIC_REALM_NAME, deedsEntries, deedsPage, deedsPageSize, self),
+        );
       }
       const entries = await getLeaderboard(scope);
       // Legacy ?limit=N (home-page board): top N as a single page, no paging UI.
@@ -2224,7 +2235,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
         );
         const leaders = entries.slice(0, limit);
         return json(res, 200, {
-          realm: REALM,
+          realm: PUBLIC_REALM_NAME,
           scope,
           metric: 'lifetimeXp',
           leaders,
@@ -2238,7 +2249,12 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse): P
       const pageSize = Number(params.get('pageSize')) || LEADERBOARD_PAGE_SIZE;
       const page = Number(params.get('page')) || 0;
       const slice = paginateLeaderboard(entries, page, pageSize);
-      return json(res, 200, { realm: REALM, scope, metric: 'lifetimeXp', ...slice });
+      return json(res, 200, {
+        realm: PUBLIC_REALM_NAME,
+        scope,
+        metric: 'lifetimeXp',
+        ...slice,
+      });
     }
     if (req.method === 'GET' && url === '/api/releases') {
       recordUsageMetric('github.releases.api');

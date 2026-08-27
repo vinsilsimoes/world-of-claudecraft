@@ -1,12 +1,9 @@
 // Vila do Vau's authored starter shop. It uses existing WoC consumables and
-// MIR4's rank-one equipment catalog, filtered to the player's active class.
+// Aeldrune's separate starter loadout, filtered to the player's active class.
 
 import type { Mir4ClassId } from './classes';
-import { MIR4_EQUIPMENT_CATALOG, type Mir4EquipmentItemDef } from './equipment_catalog';
-import {
-  MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS,
-  mir4M01QuestEquipmentRewards,
-} from './starter_quest_equipment';
+import type { Mir4EquipmentItemDef } from './equipment_catalog';
+import { MIR4_ITEMS, MIR4_STARTER_LOADOUT_BY_CLASS } from './items';
 
 export const MIR4_VILLAGE_PROVISIONER_NPC_ID = 'mir4_m01_vila_do_vau_sara_das_ervas';
 
@@ -36,7 +33,9 @@ export interface Mir4VillageEquipmentOffer {
 export function mir4VillageEquipmentOffers(
   classId: Mir4ClassId,
 ): readonly Mir4VillageEquipmentOffer[] {
-  return MIR4_EQUIPMENT_CATALOG.filter((item) => item.classId === classId && item.catalogRank === 1)
+  const loadout = MIR4_STARTER_LOADOUT_BY_CLASS[classId];
+  return [MIR4_ITEMS[loadout.weapon], MIR4_ITEMS[loadout.armorTop]]
+    .filter((item): item is Mir4EquipmentItemDef => item !== undefined)
     .sort((left, right) => left.equipSlot - right.equipSlot)
     .map((item) => ({ item, copper: PRICE_BY_SLOT[item.equipSlot] ?? 100 }));
 }
@@ -50,16 +49,7 @@ interface Mir4VillageQuestProgress {
  * paper-doll progression and exposing the complete set on the second quest. */
 export function mir4VillageEquipmentOffersForProgress(
   classId: Mir4ClassId,
-  quests: Readonly<Record<string, Mir4VillageQuestProgress>> | undefined,
+  _quests: Readonly<Record<string, Mir4VillageQuestProgress>> | undefined,
 ): readonly Mir4VillageEquipmentOffer[] {
-  const unlockedItemIds = new Set<number>();
-  for (const questId of MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS) {
-    if (!quests?.[questId]) continue;
-    for (const item of mir4M01QuestEquipmentRewards(questId, classId)) {
-      unlockedItemIds.add(item.itemId);
-    }
-  }
-  return mir4VillageEquipmentOffers(classId).filter((offer) =>
-    unlockedItemIds.has(offer.item.itemId),
-  );
+  return mir4VillageEquipmentOffers(classId);
 }

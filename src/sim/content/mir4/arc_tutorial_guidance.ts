@@ -62,11 +62,11 @@ export const MIR4_ARC_TUTORIAL_GUIDANCE: readonly Mir4ArcTutorialGuidance[] = [
   guide('M01-Q02', {
     ...BAGS,
     steps: [
-      'Fale com Sara das Ervas e abra Mercadorias para ver poções, artigos gerais e equipamento inicial da sua classe.',
-      'Abra as Bolsas e localize as 3 Poções Menores recebidas com a missão.',
+      'Fale com Sara das Ervas, na ala oeste da Vila do Vau, e abra Mercadorias para ver poções, artigos gerais e equipamento inicial da sua classe.',
+      'Abra as Bolsas e localize as 20 Poções Menores recebidas com a missão.',
       'Coloque uma poção no atalho e use-a depois de sofrer dano durante a coleta.',
     ],
-    requirements: [{ kind: 'material', id: 'minorHealthPotion', quantity: 3 }],
+    requirements: [{ kind: 'material', id: 'minorHealthPotion', quantity: 20 }],
   }),
   guide('M01-Q03', {
     ...BAGS,

@@ -3,7 +3,7 @@
 // MIR4's numeric equipment ledger needs this profile-specific purchase leaf.
 
 import type { Mir4ClassId } from '../content/mir4/classes';
-import { MIR4_EQUIPMENT_CATALOG } from '../content/mir4/equipment_catalog';
+import { MIR4_ITEMS } from '../content/mir4/items';
 import {
   MIR4_VILLAGE_PROVISIONER_NPC_ID,
   mir4VillageEquipmentOffers,
@@ -55,9 +55,7 @@ export function mir4BuyVillageEquipment(
     (candidate) => candidate.item.itemId === itemId,
   );
   if (!offer) {
-    const catalogItem = MIR4_EQUIPMENT_CATALOG.find(
-      (item) => item.itemId === itemId && item.catalogRank === 1,
-    );
+    const catalogItem = MIR4_ITEMS[itemId];
     return catalogItem && catalogItem.classId !== classId ? 'wrong-class' : 'unavailable';
   }
   if (mir4OwnsEquipmentItem(meta, itemId)) return 'already-owned';

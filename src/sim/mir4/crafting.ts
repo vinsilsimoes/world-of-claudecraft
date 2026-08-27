@@ -8,6 +8,11 @@
 import type { SimContext } from '../sim_context';
 import { creditMir4ArcTutorialReceipt } from './arc_receipts';
 import { MIR4_EMPTY_MATERIALS, type Mir4Materials } from './equipment';
+import {
+  MIR4_EQUIPMENT_CRAFT_RECIPES,
+  type Mir4EquipmentCraftResult,
+  mir4CraftEquipment,
+} from './equipment_crafting';
 import { markMir4WireDirty } from './wire_revision';
 
 export interface Mir4CraftRecipe {
@@ -21,6 +26,46 @@ export interface Mir4CraftRecipe {
 }
 
 export const MIR4_CRAFT_RECIPES: Readonly<Record<string, Mir4CraftRecipe>> = Object.freeze({
+  'metal-uncommon': Object.freeze({
+    recipeId: 'metal-uncommon',
+    label: 'Uncommon Metal',
+    output: 'metalUncommon',
+    outputCount: 1,
+    materials: { metalCommon: 10 },
+    copperCost: 0,
+  }),
+  'metal-rare': Object.freeze({
+    recipeId: 'metal-rare',
+    label: 'Rare Metal',
+    output: 'metalRare',
+    outputCount: 1,
+    materials: { metalUncommon: 10 },
+    copperCost: 0,
+  }),
+  'metal-epic': Object.freeze({
+    recipeId: 'metal-epic',
+    label: 'Epic Metal',
+    output: 'metalEpic',
+    outputCount: 1,
+    materials: { metalRare: 10 },
+    copperCost: 0,
+  }),
+  'metal-legendary': Object.freeze({
+    recipeId: 'metal-legendary',
+    label: 'Legendary Metal',
+    output: 'metalLegendary',
+    outputCount: 1,
+    materials: { metalEpic: 10 },
+    copperCost: 0,
+  }),
+  'metal-mythic': Object.freeze({
+    recipeId: 'metal-mythic',
+    label: 'Mythic Metal',
+    output: 'metalMythic',
+    outputCount: 1,
+    materials: { metalLegendary: 10 },
+    copperCost: 0,
+  }),
   'solar-scroll': Object.freeze({
     recipeId: 'solar-scroll',
     label: 'Pergaminho Solar',
@@ -201,14 +246,19 @@ export const MIR4_CRAFT_RECIPES: Readonly<Record<string, Mir4CraftRecipe>> = Obj
 
 export type Mir4CraftResult =
   | { ok: true; output: keyof Mir4Materials; count: number }
-  | { ok: false; code: 'unknown-recipe' | 'no-materials' | 'no-copper' };
+  | { ok: false; code: 'unknown-recipe' | 'no-materials' | 'no-copper' }
+  | Mir4EquipmentCraftResult;
 
 /** Craft one recipe: atomic consume of materials + copper, credit the output. */
 export function mir4Craft(ctx: SimContext, pid: number, recipeId: string): Mir4CraftResult {
   const meta = ctx.players.get(pid);
   if (!meta) return { ok: false, code: 'unknown-recipe' };
   const recipe = MIR4_CRAFT_RECIPES[recipeId];
-  if (!recipe) return { ok: false, code: 'unknown-recipe' };
+  if (!recipe) {
+    return MIR4_EQUIPMENT_CRAFT_RECIPES[recipeId]
+      ? mir4CraftEquipment(ctx, pid, recipeId)
+      : { ok: false, code: 'unknown-recipe' };
+  }
   const wallet = { ...MIR4_EMPTY_MATERIALS, ...meta.mir4Materials };
   for (const [key, needed] of Object.entries(recipe.materials)) {
     if (wallet[key as keyof Mir4Materials] < (needed ?? 0)) {

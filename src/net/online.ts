@@ -34,7 +34,7 @@ import {
   abilitiesKnownAt,
   CLASSES,
   getActiveWorldContent,
-  NPCS,
+  npcDefinition,
   resolveDelveShopOffers,
 } from '../sim/data';
 import { deadTargetSelectable } from '../sim/dead_target';
@@ -180,6 +180,7 @@ import {
 import {
   applyEntityPresentationDynamic,
   applyEntityPresentationIdentity,
+  decodeNpcVendorItemsWire,
 } from './entity_presentation_wire';
 import { decodeGuildBankLogFrame, GUILD_BANK_LOG_TTL_MS } from './guild_bank_log_wire';
 import { INPUT_SEND_TIMER_INTERVAL_MS, inputFlushGateOpen } from './input_send_cadence';
@@ -3100,9 +3101,10 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
         e.title = w.title ?? null; // Book of Deeds active title (a deed id)
         e.border = w.border ?? null; // Book of Deeds nameplate border (a deed id)
         if (e.kind === 'npc') {
-          const def = NPCS[e.templateId];
+          const def = npcDefinition(e.templateId, this.cfg.world);
           e.questIds = def ? [...def.questIds] : [];
-          e.vendorItems = def?.vendorItems ? [...def.vendorItems] : [];
+          e.vendorItems =
+            decodeNpcVendorItemsWire(w.vi) ?? (def?.vendorItems ? [...def.vendorItems] : []);
         }
       }
       // interpolation bases: re-anchor at the pose the renderer last drew,

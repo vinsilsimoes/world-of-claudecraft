@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import {
@@ -76,10 +76,6 @@ const supportHtml = readFileSync(
   new URL('../public/support.html', import.meta.url),
   'utf8',
 ).replace(/\r\n/g, '\n');
-const whitepaperUrl = new URL(
-  '../public/World-of-ClaudeCraft-Whitepaper-v1.0.pdf',
-  import.meta.url,
-);
 const viteConfig = readFileSync(new URL('../vite.config.ts', import.meta.url), 'utf8').replace(
   /\r\n/g,
   '\n',
@@ -891,67 +887,42 @@ describe('client HTML shell', () => {
     expect(html).toContain(
       '<meta name="robots" content="index, follow, max-image-preview:large" />',
     );
-    expect(html).toContain('<link rel="canonical" href="https://worldofclaudecraft.com/" />');
+    expect(html).not.toContain('rel="canonical"');
     expect(html).toContain('<meta property="og:site_name" content="Aeldrune" />');
     expect(html).not.toContain('"alternateName"');
-    expect(html).toContain('"https://github.com/levy-street/world-of-claudecraft"');
     expect(mainTs).not.toContain('alternateName:');
-    expect(mainTs).toContain("'https://github.com/levy-street/world-of-claudecraft'");
-    expect(robotsTxt.trim()).toBe(
-      'User-agent: *\nAllow: /\n\nSitemap: https://worldofclaudecraft.com/sitemap.xml\nSitemap: https://worldofclaudecraft.com/sitemap-characters.xml',
-    );
-    expect(robotsTxt).toContain('Sitemap: https://worldofclaudecraft.com/sitemap.xml');
-    // The dynamic per-character sitemap (served by the game server) is advertised too.
-    expect(robotsTxt).toContain('Sitemap: https://worldofclaudecraft.com/sitemap-characters.xml');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/</loc>');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/links</loc>');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/play</loc>');
-    expect(playHtml).toContain(
-      '<link rel="canonical" href="https://worldofclaudecraft.com/play" />',
-    );
-    expect(playHtml).toContain(
-      '<meta property="og:url" content="https://worldofclaudecraft.com/play" />',
-    );
-    expect(playHtml).toContain('"url": "https://worldofclaudecraft.com/play"');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/privacy</loc>');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/terms</loc>');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/data-deletion</loc>');
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/support</loc>');
-    expect(privacyHtml).toContain(
-      '<link rel="canonical" href="https://worldofclaudecraft.com/privacy" />',
-    );
+    expect(robotsTxt).toContain('User-agent: *\nAllow: /');
+    expect(robotsTxt).not.toContain('worldofclaudecraft');
+    expect(robotsTxt).not.toContain('Sitemap:');
+    for (const path of ['/', '/play', '/privacy', '/terms', '/data-deletion']) {
+      expect(sitemapXml).toContain(`<loc>https://aeldrune.invalid${path}</loc>`);
+    }
+    for (const path of ['/links', '/merch', '/press', '/support']) {
+      expect(sitemapXml).not.toContain(`<loc>https://aeldrune.invalid${path}</loc>`);
+    }
+    expect(playHtml).toContain('<meta property="og:url" content="/play" />');
+    expect(playHtml).toContain('"url": "/play"');
+    expect(playHtml).not.toContain('worldofclaudecraft');
+    expect(privacyHtml).toContain('<link rel="canonical" href="/privacy" />');
     expect(privacyHtml).toContain('<h1>Privacy Policy</h1>');
     expect(privacyHtml).toContain('href="/support">Support</a>');
     expect(privacyHtml).toContain('href="/data-deletion">Data Deletion</a>');
-    expect(termsHtml).toContain(
-      '<link rel="canonical" href="https://worldofclaudecraft.com/terms" />',
-    );
+    expect(termsHtml).toContain('<link rel="canonical" href="/terms" />');
     expect(termsHtml).toContain('<h1>Terms and Conditions</h1>');
     expect(termsHtml).toContain('href="/support">Support</a>');
     expect(termsHtml).toContain('href="/data-deletion">Data Deletion</a>');
-    expect(dataDeletionHtml).toContain(
-      '<link rel="canonical" href="https://worldofclaudecraft.com/data-deletion" />',
-    );
+    expect(dataDeletionHtml).toContain('<link rel="canonical" href="/data-deletion" />');
     expect(dataDeletionHtml).toContain('<h1>Data Deletion</h1>');
-    expect(dataDeletionHtml).toContain('href="mailto:woc@levystreet.com"');
-    expect(dataDeletionHtml).toContain('href="https://discord.com/invite/worldofclaudecraft"');
+    expect(dataDeletionHtml).not.toContain('mailto:');
+    expect(dataDeletionHtml).not.toContain('discord.com');
     expect(dataDeletionHtml).toContain('href="/support">Support</a>');
-    expect(supportHtml).toContain(
-      '<link rel="canonical" href="https://worldofclaudecraft.com/support" />',
-    );
+    expect(supportHtml).toContain('<link rel="canonical" href="/support" />');
     expect(supportHtml).toContain('<h1>Support</h1>');
-    expect(supportHtml).toContain('href="mailto:woc@levystreet.com"');
-    expect(supportHtml).toContain('href="https://discord.com/invite/worldofclaudecraft"');
+    expect(supportHtml).not.toContain('mailto:');
+    expect(supportHtml).not.toContain('discord.com');
     expect(supportHtml).toContain('href="/data-deletion">Data Deletion page</a>');
     expect(supportHtml).toContain('"@type": "ContactPage"');
-    expect(html).toContain(
-      'href="/World-of-ClaudeCraft-Whitepaper-v1.0.pdf" class="footer-link" data-i18n="footer.whitepaper"',
-    );
-    expect(html.indexOf('data-i18n="footer.whitepaper"')).toBeLessThan(
-      html.indexOf('data-i18n="footer.terms"'),
-    );
-    expect(existsSync(whitepaperUrl)).toBe(true);
-    expect(statSync(whitepaperUrl).size).toBeGreaterThan(0);
+    expect(html).not.toContain('World-of-ClaudeCraft-Whitepaper');
     expect(html).toContain('href="/terms" class="footer-link" data-i18n="footer.terms"');
     expect(html).toContain('href="/privacy" class="footer-link" data-i18n="footer.privacy"');
     expect(viteConfig).toContain("['/privacy', '/privacy.html']");
@@ -1119,11 +1090,7 @@ describe('client HTML shell', () => {
     expect(html).toContain('aria-label="Quest Log"');
   });
 
-  it('offers Discord and Donate entries in the mobile drawer of BOTH entries', () => {
-    // Mobile has no keyboard, so the U-key Discord panel toggle is unreachable;
-    // this drawer button is the touch path to Discord (the account panel when
-    // available, else the community invite). Donate mirrors the desktop shell's
-    // Ko-fi community link.
+  it('keeps unpublished Discord and donation actions hidden in both mobile entries', () => {
     for (const [name, entry] of [
       ['index.html', html],
       ['play.html', playHtml],
@@ -1131,34 +1098,18 @@ describe('client HTML shell', () => {
       expect(entry, name).toContain('id="mobile-discord"');
       // Carries the icon hook (hydrateIcons swaps [data-icon] for the inline SVG).
       expect(entry, name).toMatch(/id="mobile-discord"[^>]*data-icon="discord"/);
-      // Starts hidden; main.ts reveals it at boot on any build with Discord UI
-      // enabled (it stays hidden in the native-app build).
       expect(entry, name).toMatch(/id="mobile-discord"\s+hidden/);
       expect(entry, name).toContain('id="mobile-donate"');
       expect(entry, name).toMatch(/id="mobile-donate"[^>]*data-icon="donate"/);
-      // Donate is never gated on the web: no hidden attribute on it.
-      expect(entry, name).not.toMatch(/id="mobile-donate"\s+hidden/);
+      expect(entry, name).toMatch(/id="mobile-donate"\s+hidden/);
+      expect(entry, name).not.toContain('ko-fi.com/worldofclaudecraft');
+      expect(entry, name).not.toContain('discord.com/invite/worldofclaudecraft');
     }
     // The native-app build strips every donation link (store payment-steering
     // policy); the tray entry joins the same suppression block as the desktop
     // .donate links in hud.css.
     expect(hudCss).toContain('body.native-app #mobile-donate,');
-    // The tap targets: the account panel with the invite as the logged-out /
-    // offline fallback (discordInviteUrl() itself falls back to
-    // DEFAULT_DISCORD_INVITE_URL in discord_status.ts), and the Ko-fi page,
-    // pinned to the shells' URLs.
-    expect(mainTs).toContain("const DONATE_URL = 'https://ko-fi.com/worldofclaudecraft';");
-    expect(mainTs).toContain("window.open(discordInviteUrl(), '_blank', 'noopener,noreferrer');");
-    expect(mainTs).toContain(
-      "onDonate: () => window.open(DONATE_URL, '_blank', 'noopener,noreferrer'),",
-    );
-    for (const [name, entry] of [
-      ['index.html', html],
-      ['play.html', playHtml],
-    ] as const) {
-      expect(entry.match(/href="https:\/\/ko-fi\.com\/worldofclaudecraft"/g), name).toHaveLength(3);
-      expect(entry, name).not.toContain('https://github.com/sponsors/levy-street');
-    }
+    expect(mainTs).not.toContain('ko-fi.com/worldofclaudecraft');
   });
 
   it('offers a desktop micro-menu Discord entry in BOTH entries (not keybind-only)', () => {

@@ -28,6 +28,78 @@ function mount(value?: Partial<ModularAppearance>) {
 }
 
 describe('creator: body proportions are Fit Studio only', () => {
+  it('starts the female body with a complete feminine look instead of the male scalp cut', () => {
+    const { host, ui, changed } = mount({
+      ...DEFAULT_APPEARANCE,
+      hair: 'highpony',
+      brows: 'bushy',
+      eyeShape: 'cat',
+      mouth: 'smile',
+    });
+    const female = [...host.querySelectorAll<HTMLButtonElement>('.ac-seg-btn')].find(
+      (button) => button.textContent === 'Female',
+    );
+    expect(female).toBeTruthy();
+
+    female?.click();
+
+    expect(changed()).toMatchObject({
+      gender: 'female',
+      hair: 'longwavy',
+      brows: 'arched',
+      eyeShape: 'doe',
+      mouth: 'lips',
+      beard: 'none',
+      lashes: true,
+      outfit: 'rose',
+    });
+    expect(host.querySelector<HTMLSelectElement>('select[aria-label="Hair"]')?.value).toBe(
+      'longwavy',
+    );
+    expect(
+      [...host.querySelectorAll<HTMLButtonElement>('.ac-mk-swatch')]
+        .find((button) => button.title === 'Rose')
+        ?.getAttribute('aria-pressed'),
+    ).toBe('true');
+    ui.destroy();
+    host.remove();
+  });
+
+  it('loads the complete male preset when changing from a customized female body', () => {
+    const { host, ui, changed } = mount({
+      ...DEFAULT_APPEARANCE,
+      gender: 'female',
+      hair: 'highpony',
+      brows: 'bushy',
+      eyeShape: 'cat',
+      mouth: 'smile',
+      lashes: true,
+    });
+    const male = [...host.querySelectorAll<HTMLButtonElement>('.ac-seg-btn')].find(
+      (button) => button.textContent === 'Male',
+    );
+    male?.click();
+
+    expect(changed()).toMatchObject({
+      gender: 'male',
+      hair: 'crew',
+      brows: 'soft',
+      eyeShape: 'almond',
+      mouth: 'neutral',
+      beard: 'none',
+      lashes: false,
+      outfit: 'classic',
+    });
+    expect(host.querySelector<HTMLSelectElement>('select[aria-label="Hair"]')?.value).toBe('crew');
+    expect(
+      [...host.querySelectorAll<HTMLButtonElement>('.ac-mk-swatch')]
+        .find((button) => button.title === 'Classic')
+        ?.getAttribute('aria-pressed'),
+    ).toBe('true');
+    ui.destroy();
+    host.remove();
+  });
+
   it('offers no control for any body slider', () => {
     const { host, ui } = mount();
     // Every control that can move a value carries an accessible name; none of

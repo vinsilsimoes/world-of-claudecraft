@@ -3950,7 +3950,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.unitFrame.targetLabel': 'Seu alvo',
   'seo.officialLabel': 'Site oficial de Aeldrune',
   'seo.officialBody':
-    'worldofclaudecraft.com é o MMO de navegador gratuito oficial do mundo Claudemoon. Jogue online com um personagem persistente, explore solo offline, leia a wiki e siga os links verificados da comunidade a partir deste site.',
+    'Aeldrune é o MMORPG oficial de navegador ambientado em Aelvarin. Crie um personagem persistente, siga a campanha e consulte a wiki do jogo.',
   'hudChrome.questShare.notShareable': 'Esta missão não pode ser compartilhada.',
   'hudChrome.questShare.notInSharerParty':
     'Você precisa estar no grupo de {name} para aceitar essa missão.',
@@ -4308,7 +4308,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'stats.playersOnline': 'Jogadores online',
   'stats.realmName': 'Nome do mundo',
   'footer.copyright': '2026 Aeldrune',
-  'footer.githubLink': 'https://github.com/levy-street/world-of-claudecraft',
+  'footer.githubLink': '#',
   'footer.githubLabel': 'Projeto de código aberto',
   'footer.whitepaper': 'Whitepaper',
   'footer.terms': 'Termos de serviço',
@@ -4360,7 +4360,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'auth.enterWorld': 'Entrar no mundo',
   'auth.offlineCharacter': 'Personagem offline',
   'auth.create': 'Criar',
-  'wallet.label': 'Carteira $WOC',
+  'wallet.label': 'Carteira',
   'wallet.connect': 'Verificar carteira',
   'wallet.connectTitle': 'Verifique sua carteira Solana',
   'wallet.connectAria': 'Verifique sua carteira Solana',
@@ -4734,7 +4734,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'serverUnavailable.eyebrow': 'Manutenção do mundo',
   'serverUnavailable.heading': 'O mundo está temporariamente indisponível.',
   'serverUnavailable.body':
-    'Estamos reiniciando o serviço do jogo e esperamos que Claudemoon volte em breve. Esta página continuará verificando automaticamente.',
+    'Estamos reiniciando o serviço do jogo e esperamos que Aelvarin volte em breve. Esta página continuará verificando automaticamente.',
   'serverUnavailable.status': 'Voltamos em breve',
   'hud.core.elite': 'ELITE',
   'hud.core.boss': 'CHEFE',
@@ -7444,7 +7444,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.account.sectionCharacters': 'Personagens',
   'hudChrome.account.sectionDanger': 'Zona de perigo',
   'hudChrome.account.sectionSettings': 'Configurações da conta',
-  'hudChrome.account.sectionWallet': 'Carteira $WOC',
+  'hudChrome.account.sectionWallet': 'Carteira',
   'hudChrome.account.title': 'Conta',
   'hudChrome.account.walletSummary':
     'Verifique uma carteira Solana para exibir o destaque de titular no seu cartão de jogador.',
@@ -9204,7 +9204,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.discord.swag.titleDiscordian': 'Título: Discordiano',
   'hudChrome.discord.swag.titleSquire': 'Título: Escudeiro do Reino',
   'hudChrome.discord.swag.chromaBlurple': 'Croma Mech Blurple',
-  'hudChrome.discord.swag.titleChampion': 'Título: Campeão de Claudemoon',
+  'hudChrome.discord.swag.titleChampion': 'Título: Campeão de Aelvarin',
   'hudChrome.discord.swag.swagStickers': 'Pacote de Adesivos (enviado)',
   'hudChrome.discord.swag.swagTee': 'Camiseta (enviada)',
   'hudChrome.discord.relay.tooFast':

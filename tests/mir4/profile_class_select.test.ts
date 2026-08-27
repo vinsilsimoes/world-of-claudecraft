@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { profileClassOptions } from '../../src/ui/profile_class_select';
 
 describe('profile class select view', () => {
-  it('maps every MIR4 identity to a safe renderer shell without losing its key', () => {
-    expect(profileClassOptions('mir4-gameplay-port')).toEqual([
-      expect.objectContaining({ key: 'warrior', shellClass: 'warrior' }),
-      expect.objectContaining({ key: 'elementalist', shellClass: 'warrior' }),
-      expect.objectContaining({ key: 'taoist', shellClass: 'warrior' }),
-      expect.objectContaining({ key: 'arbalist', shellClass: 'warrior' }),
-      expect.objectContaining({ key: 'lancer', shellClass: 'warrior' }),
+  it('keeps the simulation shell while assigning every MIR4 identity its native presentation', () => {
+    expect(profileClassOptions('mir4-gameplay-port')).toMatchObject([
+      { key: 'warrior', shellClass: 'warrior', visualClass: 'warrior', armorSet: 'knight' },
+      { key: 'elementalist', shellClass: 'warrior', visualClass: 'mage', armorSet: 'mage' },
+      { key: 'taoist', shellClass: 'warrior', visualClass: 'shaman', armorSet: 'druid' },
+      { key: 'arbalist', shellClass: 'warrior', visualClass: 'hunter', armorSet: 'ranger' },
+      { key: 'lancer', shellClass: 'warrior', visualClass: 'paladin', armorSet: 'paladin' },
     ]);
   });
 
@@ -16,5 +16,7 @@ describe('profile class select view', () => {
     const options = profileClassOptions('woc-classic');
     expect(options).toHaveLength(9);
     expect(options.every((option) => option.key === option.shellClass)).toBe(true);
+    expect(options.every((option) => option.key === option.visualClass)).toBe(true);
+    expect(options.every((option) => option.armorSet === null)).toBe(true);
   });
 });

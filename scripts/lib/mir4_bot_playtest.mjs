@@ -81,8 +81,8 @@ const MIR4_BOT_UI_TUTORIAL_STAGE_INDEX = Object.freeze({ 'M05-Q02': 4 });
 // targets local and pin them against MIR4_WOC_TUTORIAL_PORTALS in the unit
 // suite. They use the same portal runtime as the original Duskfall passage.
 export const MIR4_BOT_PORTAL_TUTORIAL_TARGETS = Object.freeze({
-  'M02-Q01': Object.freeze({ x: -400, z: 250 }),
-  'M09-Q04': Object.freeze({ x: -13, z: 330 }),
+  'M02-Q01': Object.freeze({ x: -460, z: 220 }),
+  'M09-Q04': Object.freeze({ x: -18, z: 362 }),
 });
 
 function alphaFingerprint(value) {

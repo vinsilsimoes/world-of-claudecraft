@@ -98,6 +98,7 @@ import {
   shadowRowVisible,
   shadowVolumeMoved,
 } from './foliage_shadow_core';
+import { foliageSpatialBucket } from './foliage_spatial_bucket_core';
 import {
   gardenLushGrassAt,
   gardenMeadowTintAt,
@@ -147,10 +148,10 @@ import { applySurfaceDetail, foliageWornFamilyFor } from './worn_stone';
 // - Placement still comes from the deterministic generateDecorations(seed)
 //   field (sim untouched): kind 'tree' = pine, 'tree2' = oak (marsh: swamp
 //   trees split between twisted + dead models), 'rock' = boulders.
-// - Trees/rocks stay InstancedMeshes bucketed per (2 x-halves x 200u z-band)
-//   so frustum/fog culling drops whole off-screen forests. Each bucket picks
-//   a small deterministic subset of the model variants (hash of the bucket
-//   coords) so variety stays high without exploding draw calls.
+// - Trees/rocks stay InstancedMeshes. Full tiers preserve the established two
+//   x-halves by 240u z-bands; lean foliage uses local 192u square cells so one
+//   nearby tree does not submit a half-world slab on an integrated GPU. Each
+//   bucket picks a deterministic model subset from its coordinates.
 // - glTF node transforms are baked into extracted BufferGeometries once;
 //   attributes are converted to float32 because the shipped GLBs are
 //   meshopt-quantized (writing world-space values back into normalized int16
@@ -212,10 +213,6 @@ const GRASS_WIND_STRENGTH = 0.16;
 // sphere target keeps the shaded side lit through the sky term while giving
 // the canopy a real lit side and shade side.
 const LEAF_UP_NORMAL_BLEND = 0.7;
-// two x-halves x 240u z-bands: bucket count x variants-per-bucket is the
-// foliage draw budget — see the perBucket caps in the species specs
-const BUCKET_DEPTH = 240;
-
 const MODEL_DIR = 'models/foliage/';
 const FOLIAGE_MODEL_URLS_HIGH = {
   // pine_3 is shipped but unused: its 462-tri canopy reads as a dead pole
@@ -1718,9 +1715,7 @@ function buildTrees(
     : decos.filter((d) => survivesLeanDecimation(d, hashAt(d.x, d.z, 83), GFX.standardMaterials));
   const buckets = new Map<string, Bucket>();
   for (const d of sourceDecos) {
-    const col = d.x < 0 ? 0 : 1;
-    const band = Math.floor((d.z - WORLD_MIN_Z) / BUCKET_DEPTH);
-    const key = `${band}:${col}`;
+    const { band, col, key } = foliageSpatialBucket(d.x, d.z, WORLD_MIN_Z, GFX.leanFoliage);
     let bucket = buckets.get(key);
     if (!bucket) {
       bucket = { band, col, items: [] };
@@ -2333,7 +2328,7 @@ function buildDressing(
     : null;
   const buckets = new Map<string, DressingSpot[]>();
   for (const spot of generateDressing(seed)) {
-    const key = `${Math.floor((spot.z - WORLD_MIN_Z) / BUCKET_DEPTH)}:${spot.x < 0 ? 0 : 1}`;
+    const { key } = foliageSpatialBucket(spot.x, spot.z, WORLD_MIN_Z, GFX.leanFoliage);
     const list = buckets.get(key);
     if (list) list.push(spot);
     else buckets.set(key, [spot]);

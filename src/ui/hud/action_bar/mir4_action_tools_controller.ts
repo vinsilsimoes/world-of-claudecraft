@@ -18,13 +18,22 @@ import { ActionBarPainter, type ActionBarSlotElements } from './action_bar_paint
 import { type ActionBarWorldInput, createActionBarView, inventoryCount } from './action_bar_view';
 import { Mir4ActionToolsPainter } from './mir4_action_tools_painter';
 import { createMir4ActionToolsView } from './mir4_action_tools_view';
+import { buildMir4PotionThresholdController } from './mir4_potion_threshold_controller';
 
 const HEALTH_SLOT = 0;
 
 export interface Mir4ActionToolsDeps {
   writers: PainterHostWriters;
   actionBar: HTMLElement;
-  world: Pick<IWorld, 'cfg' | 'mir4AutoBattleActive' | 'setMir4AutoBattle' | 'useItem'>;
+  world: Pick<
+    IWorld,
+    | 'cfg'
+    | 'mir4AutoBattleActive'
+    | 'setMir4AutoBattle'
+    | 'mir4AutoPotionThresholds'
+    | 'setMir4AutoPotionThreshold'
+    | 'useItem'
+  >;
   autoCollectActive(): boolean;
   setAutoCollect(on: boolean): void;
   keyCap(actionId: string): string;
@@ -97,11 +106,14 @@ export function buildMir4ActionTools(
   const potionGroup = document.createElement('div');
   potionGroup.className = 'mir4-potion-group';
   const potionButtons = Array.from({ length: 2 }, (_, index) => {
+    const seat = document.createElement('div');
+    seat.className = 'mir4-potion-seat';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `action-btn mir4-potion-btn empty potion-${index === HEALTH_SLOT ? 'health' : 'mana'}`;
-    potionGroup.appendChild(button);
-    return { button, elements: slotElements(button) };
+    seat.appendChild(button);
+    potionGroup.appendChild(seat);
+    return { seat, button, elements: slotElements(button) };
   });
   root.append(toolGroup, potionGroup);
   host.insertBefore(root, deps.actionBar);
@@ -152,6 +164,16 @@ export function buildMir4ActionTools(
     { container: potionGroup, slots: potionButtons.map((slot) => slot.elements) },
     deps.iconBackground,
   );
+  const thresholdController = buildMir4PotionThresholdController({
+    root,
+    slots: potionButtons.map((slot, index) => ({
+      seat: slot.seat,
+      kind: index === HEALTH_SLOT ? 'health' : 'mana',
+    })),
+    thresholds: () => deps.world.mir4AutoPotionThresholds(),
+    setThreshold: (kind, percent) => deps.world.setMir4AutoPotionThreshold(kind, percent),
+    hideTooltip: deps.hideTooltip,
+  });
 
   const usePotion = (index: number): void => {
     const itemId = potionIds[index];
@@ -176,7 +198,22 @@ export function buildMir4ActionTools(
       }
       return (
         deps.itemTooltip(item) +
-        `<div class="tt-sub">${esc(t('hudChrome.mir4.actionTools.inBags', { count: formatAbilityNumber(inventoryCount(inventory, item.id)) }))}</div>`
+        `<div class="tt-sub">${esc(t('hudChrome.mir4.actionTools.inBags', { count: formatAbilityNumber(inventoryCount(inventory, item.id)) }))}</div>` +
+        `<div class="tt-sub">${esc(
+          t('hudChrome.mir4.actionTools.autoUseThreshold', {
+            percent: formatNumber(
+              deps.world.mir4AutoPotionThresholds()[index === HEALTH_SLOT ? 'health' : 'mana'] /
+                100,
+              { style: 'percent', maximumFractionDigits: 0 },
+            ),
+            resource: t(
+              index === HEALTH_SLOT
+                ? 'hudChrome.mir4.actionTools.healthResource'
+                : 'hudChrome.mir4.actionTools.manaResource',
+            ),
+          }),
+        )}</div>` +
+        `<div class="tt-sub">${esc(t('hudChrome.mir4.actionTools.thresholdHint'))}</div>`
       );
     });
   }
@@ -217,6 +254,7 @@ export function buildMir4ActionTools(
     if (mobileCollect instanceof HTMLElement) mobileCollect.title = collectLabel;
     battle.button.setAttribute('aria-label', battleLabel);
     battle.button.title = battleLabel;
+    thresholdController.relocalize();
   };
   relocalize();
 

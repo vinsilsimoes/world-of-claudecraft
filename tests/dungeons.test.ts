@@ -163,6 +163,48 @@ describe('dungeons: door-trigger entry/exit', () => {
     expect(inst.exitId).not.toBeNull();
   });
 
+  it('lands a jumping player safely when a dungeon door teleports them', () => {
+    const sim = makeSim();
+    const pid = sim.addPlayer('warrior', 'Jumper');
+    const p = sim.entities.get(pid) as AnyEntity;
+    p.maxHp = p.hp = 100_000;
+    const door = hollowDoor(sim);
+    teleport(sim, p, door.pos.x, door.pos.z);
+    p.onGround = false;
+    p.jumping = true;
+    p.vy = -1;
+    p.fallStartY = p.pos.y + 30;
+
+    updateDoorTriggers(sim.ctx, p);
+    expect(sim.instanceSlotAt(p.pos)).not.toBeNull();
+
+    sim.tick();
+
+    expect(p.hp).toBe(100_000);
+    expect(p.vy).toBe(0);
+    expect(p.onGround).toBe(true);
+    expect(p.jumping).toBe(false);
+    expect(p.fallStartY).toBeCloseTo(p.pos.y, 5);
+  });
+
+  it('lands a jumping player safely when leaving a dungeon', () => {
+    const sim = makeSim();
+    const pid = sim.addPlayer('warrior', 'ReturningJumper');
+    const p = sim.entities.get(pid) as AnyEntity;
+    expect(enterDungeon(sim.ctx, 'hollow_crypt', pid)).toBe(true);
+    p.onGround = false;
+    p.jumping = true;
+    p.vy = -1;
+    p.fallStartY = p.pos.y + 30;
+
+    expect(leaveDungeon(sim.ctx, pid)).toBe(true);
+
+    expect(p.vy).toBe(0);
+    expect(p.onGround).toBe(true);
+    expect(p.jumping).toBe(false);
+    expect(p.fallStartY).toBeCloseTo(p.pos.y, 5);
+  });
+
   it('lets a MIR4 player enter an original WoC dungeon without a MIR4 ticket gate', () => {
     const sim = new Sim({
       seed: 99,

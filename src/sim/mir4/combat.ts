@@ -225,6 +225,9 @@ export function castMir4Skill(
   const actorCenteredTargets = isActorCenteredAoE
     ? mir4AoEHostileTargets(ctx, p, p, areaRadiusYards, Math.max(1, maxSecondaryTargets + 1))
     : [];
+  if (isActorCenteredAoE && actorCenteredTargets.length === 0) {
+    return { ok: false, reason: 'no-target' };
+  }
   const target = isSelfUtility
     ? null
     : isActorCenteredAoE

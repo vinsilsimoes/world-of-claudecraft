@@ -55,47 +55,45 @@
      by src/main.ts only when VITE_TURNSTILE_SITEKEY is configured. -->
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
-<!-- Canonical URL -->
-<link rel="canonical" href="https://worldofclaudecraft.com/" />
-
-<!-- GEO / Multilingual Alternates -->
-<link rel="alternate" hreflang="en" href="https://worldofclaudecraft.com/" />
-<link rel="alternate" hreflang="es" href="https://worldofclaudecraft.com/?lang=es" />
-<link rel="alternate" hreflang="es-ES" href="https://worldofclaudecraft.com/?lang=es_ES" />
-<link rel="alternate" hreflang="fr-FR" href="https://worldofclaudecraft.com/?lang=fr_FR" />
-<link rel="alternate" hreflang="fr-CA" href="https://worldofclaudecraft.com/?lang=fr_CA" />
-<link rel="alternate" hreflang="en-CA" href="https://worldofclaudecraft.com/?lang=en_CA" />
-<link rel="alternate" hreflang="it-IT" href="https://worldofclaudecraft.com/?lang=it_IT" />
-<link rel="alternate" hreflang="de-DE" href="https://worldofclaudecraft.com/?lang=de_DE" />
-<link rel="alternate" hreflang="zh-CN" href="https://worldofclaudecraft.com/?lang=zh_CN" />
-<link rel="alternate" hreflang="zh-TW" href="https://worldofclaudecraft.com/?lang=zh_TW" />
-<link rel="alternate" hreflang="ko-KR" href="https://worldofclaudecraft.com/?lang=ko_KR" />
-<link rel="alternate" hreflang="ja-JP" href="https://worldofclaudecraft.com/?lang=ja_JP" />
-<link rel="alternate" hreflang="pt-BR" href="https://worldofclaudecraft.com/?lang=pt_BR" />
-<link rel="alternate" hreflang="ru-RU" href="https://worldofclaudecraft.com/?lang=ru_RU" />
-<link rel="alternate" hreflang="cs-CZ" href="https://worldofclaudecraft.com/?lang=cs_CZ" />
-<link rel="alternate" hreflang="nl-NL" href="https://worldofclaudecraft.com/?lang=nl_NL" />
-<link rel="alternate" hreflang="pl-PL" href="https://worldofclaudecraft.com/?lang=pl_PL" />
-<link rel="alternate" hreflang="id-ID" href="https://worldofclaudecraft.com/?lang=id_ID" />
-<link rel="alternate" hreflang="tr-TR" href="https://worldofclaudecraft.com/?lang=tr_TR" />
-<link rel="alternate" hreflang="sv-SE" href="https://worldofclaudecraft.com/?lang=sv_SE" />
-<link rel="alternate" hreflang="vi-VN" href="https://worldofclaudecraft.com/?lang=vi_VN" />
-<link rel="alternate" hreflang="da-DK" href="https://worldofclaudecraft.com/?lang=da_DK" />
-<link rel="alternate" hreflang="x-default" href="https://worldofclaudecraft.com/" />
+<!-- Aeldrune uses same-origin language alternates until a production domain is
+     assigned. Vite must leave these navigation URLs out of its asset pipeline. -->
+<link vite-ignore rel="alternate" hreflang="en" href="/" />
+<link vite-ignore rel="alternate" hreflang="es" href="/?lang=es" />
+<link vite-ignore rel="alternate" hreflang="es-ES" href="/?lang=es_ES" />
+<link vite-ignore rel="alternate" hreflang="fr-FR" href="/?lang=fr_FR" />
+<link vite-ignore rel="alternate" hreflang="fr-CA" href="/?lang=fr_CA" />
+<link vite-ignore rel="alternate" hreflang="en-CA" href="/?lang=en_CA" />
+<link vite-ignore rel="alternate" hreflang="it-IT" href="/?lang=it_IT" />
+<link vite-ignore rel="alternate" hreflang="de-DE" href="/?lang=de_DE" />
+<link vite-ignore rel="alternate" hreflang="zh-CN" href="/?lang=zh_CN" />
+<link vite-ignore rel="alternate" hreflang="zh-TW" href="/?lang=zh_TW" />
+<link vite-ignore rel="alternate" hreflang="ko-KR" href="/?lang=ko_KR" />
+<link vite-ignore rel="alternate" hreflang="ja-JP" href="/?lang=ja_JP" />
+<link vite-ignore rel="alternate" hreflang="pt-BR" href="/?lang=pt_BR" />
+<link vite-ignore rel="alternate" hreflang="ru-RU" href="/?lang=ru_RU" />
+<link vite-ignore rel="alternate" hreflang="cs-CZ" href="/?lang=cs_CZ" />
+<link vite-ignore rel="alternate" hreflang="nl-NL" href="/?lang=nl_NL" />
+<link vite-ignore rel="alternate" hreflang="pl-PL" href="/?lang=pl_PL" />
+<link vite-ignore rel="alternate" hreflang="id-ID" href="/?lang=id_ID" />
+<link vite-ignore rel="alternate" hreflang="tr-TR" href="/?lang=tr_TR" />
+<link vite-ignore rel="alternate" hreflang="sv-SE" href="/?lang=sv_SE" />
+<link vite-ignore rel="alternate" hreflang="vi-VN" href="/?lang=vi_VN" />
+<link vite-ignore rel="alternate" hreflang="da-DK" href="/?lang=da_DK" />
+<link vite-ignore rel="alternate" hreflang="x-default" href="/" />
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Aeldrune" />
 <meta property="og:title" data-i18n-content="seo.title" content="Aeldrune: Classic-Style Web MMO" />
 <meta property="og:description" data-i18n-content="seo.description" content="Embark on an epic adventure in Aeldrune, a classic-style micro-MMO playable directly in your browser. Join a persistent shared world, level up classes, and defeat enemies!" />
-<meta property="og:image" content="https://worldofclaudecraft.com/aeldrune-logo.png" />
-<meta property="og:url" content="https://worldofclaudecraft.com/" />
+<meta property="og:image" content="/aeldrune-logo.png" />
+<meta property="og:url" content="/" />
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" data-i18n-content="seo.title" content="Aeldrune: Classic-Style Web MMO" />
 <meta name="twitter:description" data-i18n-content="seo.description" content="Embark on an epic adventure in Aeldrune, a classic-style micro-MMO playable directly in your browser. Join a persistent shared world, level up classes, and defeat enemies!" />
-<meta name="twitter:image" content="https://worldofclaudecraft.com/aeldrune-logo.png" />
+<meta name="twitter:image" content="/aeldrune-logo.png" />
 
 <!-- Structured Data (Schema.org JSON-LD) -->
 <script id="structured-data" type="application/ld+json">
@@ -104,51 +102,33 @@
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://worldofclaudecraft.com/#website",
+      "@id": "/#website",
       "name": "Aeldrune",
-      "url": "https://worldofclaudecraft.com/",
+      "url": "/",
       "inLanguage": "en",
       "description": "Embark on an epic adventure in Aeldrune, a classic-style micro-MMO playable directly in your browser. Join a persistent shared world, level up classes, and defeat enemies!",
-      "publisher": { "@id": "https://worldofclaudecraft.com/#organization" }
+      "publisher": { "@id": "/#organization" }
     },
     {
       "@type": "Organization",
-      "@id": "https://worldofclaudecraft.com/#organization",
+      "@id": "/#organization",
       "name": "Aeldrune",
-      "url": "https://worldofclaudecraft.com/",
-      "logo": "https://worldofclaudecraft.com/aeldrune-logo.png",
-      "sameAs": [
-        "https://github.com/levy-street/world-of-claudecraft",
-        "https://discord.com/invite/worldofclaudecraft",
-        "https://www.youtube.com/@WoClaudeCraft",
-        "https://x.com/WoClaudecraft",
-        "https://www.instagram.com/worldofclaudecraft/",
-        "https://www.tiktok.com/@worldofclaudecraft",
-        "https://www.reddit.com/r/WorldofClaudecraft/"
-      ]
+      "url": "/",
+      "logo": "/aeldrune-logo.png"
     },
     {
       "@type": "VideoGame",
-      "@id": "https://worldofclaudecraft.com/#game",
+      "@id": "/#game",
       "name": "Aeldrune",
       "genre": "MMORPG",
       "playMode": "MultiPlayer",
       "applicationCategory": "Game",
       "operatingSystem": "Web Browser",
-      "url": "https://worldofclaudecraft.com/",
-      "image": "https://worldofclaudecraft.com/aeldrune-logo.png",
+      "url": "/",
+      "image": "/aeldrune-logo.png",
       "description": "Embark on an epic adventure in Aeldrune, a classic-style micro-MMO playable directly in your browser. Join a persistent shared world, level up classes, and defeat enemies!",
       "inLanguage": "en",
-      "publisher": { "@id": "https://worldofclaudecraft.com/#organization" },
-      "sameAs": [
-        "https://github.com/levy-street/world-of-claudecraft",
-        "https://discord.com/invite/worldofclaudecraft",
-        "https://www.youtube.com/@WoClaudeCraft",
-        "https://x.com/WoClaudecraft",
-        "https://www.instagram.com/worldofclaudecraft/",
-        "https://www.tiktok.com/@worldofclaudecraft",
-        "https://www.reddit.com/r/WorldofClaudecraft/"
-      ]
+      "publisher": { "@id": "/#organization" }
     }
   ]
 }
@@ -322,11 +302,11 @@
                the Discord (U) icon-rail button (#mm-discord), which opens the richer
                account-linking/rank panel and (for an unlinked player) still offers a
                plain "join the server" action, so this tray does not duplicate it. -->
-          <a class="community-link github" href="https://github.com/levy-street/world-of-claudecraft" target="_blank" rel="noopener noreferrer" data-i18n-title="a11y.githubProject" data-i18n-aria="a11y.githubProject" title="Open the Aeldrune GitHub project" aria-label="Open the Aeldrune GitHub project">
+          <a class="community-link github" href="#" aria-disabled="true" tabindex="-1" data-i18n-title="a11y.githubProject" data-i18n-aria="a11y.githubProject" title="Aeldrune GitHub coming later" aria-label="Aeldrune GitHub coming later">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
             <span>GitHub</span>
           </a>
-          <a class="community-link donate" href="https://ko-fi.com/worldofclaudecraft" target="_blank" rel="noopener noreferrer" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Support the project" aria-label="Donate to support Aeldrune">
+          <a class="community-link donate" href="#" aria-disabled="true" tabindex="-1" hidden data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Aeldrune support page coming later" aria-label="Aeldrune support page coming later">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             <span data-i18n="nav.donate">Donate</span>
           </a>
@@ -715,10 +695,10 @@
                 <button type="button" class="nav-link" id="nav-btn-wiki" aria-pressed="false" data-i18n="nav.wiki">Wiki</button>
               </li>
               <li class="nav-item">
-                <button type="button" class="nav-link" id="nav-btn-news" aria-pressed="false" data-i18n="nav.news">News</button>
+                <button type="button" class="nav-link" id="nav-btn-news" aria-pressed="false" hidden aria-hidden="true" tabindex="-1" data-i18n="nav.news">News</button>
               </li>
               <li class="nav-item">
-                <button type="button" class="nav-link" id="nav-btn-download" aria-pressed="false" data-i18n="nav.download">Download</button>
+                <button type="button" class="nav-link" id="nav-btn-download" aria-pressed="false" hidden aria-hidden="true" tabindex="-1" data-i18n="nav.download">Download</button>
               </li>
               <li class="nav-item">
                 <button type="button" class="nav-link" id="nav-btn-login" aria-pressed="false" data-i18n="nav.loginRegister">Login/Register</button>
@@ -734,7 +714,7 @@
 
         <div class="header-actions">
           <button type="button" class="homepage-music-btn" id="homepage-music-toggle" data-i18n-title="hud.options.music" data-i18n-aria="hud.options.music" title="Music" aria-label="Music" aria-pressed="true" data-icon="music"></button>
-          <a class="donate-cta" href="https://ko-fi.com/worldofclaudecraft" target="_blank" rel="noopener noreferrer" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Support the project" aria-label="Donate to support Aeldrune">
+          <a class="donate-cta" href="#" hidden aria-disabled="true" tabindex="-1" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Aeldrune support page coming later" aria-label="Aeldrune support page coming later">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             <span data-i18n="nav.donate">Donate</span>
           </a>
@@ -751,7 +731,7 @@
 
         <section class="official-site-copy" aria-labelledby="official-site-copy-heading">
           <p class="official-site-copy__label" id="official-site-copy-heading" data-i18n="seo.officialLabel">Official Aeldrune website</p>
-          <p class="official-site-copy__body" data-i18n="seo.officialBody">worldofclaudecraft.com is the official free browser MMO for the Claudemoon world. Play online with a persistent character, explore solo offline, read the wiki, and follow verified community links from this site.</p>
+          <p class="official-site-copy__body" data-i18n="seo.officialBody">Aeldrune is the official browser MMORPG set in Aelvarin. Create a persistent character, follow the campaign and consult the in-game wiki.</p>
         </section>
 
         <div id="mode-select">
@@ -807,18 +787,6 @@
                tours / E2E scripts use to drive the online & offline flows directly. -->
           <button type="button" id="btn-online" class="play-compat-trigger" tabindex="-1" aria-hidden="true"></button>
           <button type="button" id="btn-offline" class="play-compat-trigger" tabindex="-1" aria-hidden="true"></button>
-
-          <div id="token-ca">
-            <span class="token-ca-label" data-i18n="mode.caLabel">$WOC Contract Address</span>
-            <button type="button" id="btn-copy-ca" class="token-ca-pill" data-ca="3WjLscH2JsXLEFJZRA9z8ti8yRGxWGKbqymPd7UicRth" data-i18n-aria="mode.caCopyAria" aria-label="Copy contract address">
-              <code class="token-ca-addr">3WjLscH2JsXLEFJZRA9z8ti8yRGxWGKbqymPd7UicRth</code>
-              <span class="token-ca-copy" aria-hidden="true">
-                <svg class="icon-clipboard" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                <svg class="icon-check" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              </span>
-            </button>
-            <p class="token-ca-note" data-i18n="mode.caNote">WOC is our community token. It is not needed to play. Join Discord to discuss the WOC utility and flywheel.</p>
-          </div>
 
           <!-- Tip — part of the same play container (divider above). -->
           <div class="play-tip">
@@ -1088,7 +1056,7 @@
                 </div>
               </div>
               <div class="cs-wallet cs-wallet-group">
-                <span class="cs-wallet-label" data-i18n="wallet.label">$WOC Wallet</span>
+                <span class="cs-wallet-label" data-i18n="wallet.label">Wallet</span>
                 <div class="cs-wallet-main">
                   <div class="cs-wallet-actions">
                     <button type="button" class="wallet-cta" id="btn-wallet" data-i18n-title="wallet.connectTitle" data-i18n-aria="wallet.connectAria" title="Verify your Solana wallet" aria-label="Verify your Solana wallet">
@@ -1334,19 +1302,19 @@
             <a
               class="btn btn-primary desktop-download-link"
               data-platform="mac"
-              href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.39.0-mac-universal.dmg"
+              href="#"
               data-i18n="download.macCta"
             >Download for macOS</a>
             <a
               class="btn btn-primary desktop-download-link"
               data-platform="win"
-              href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.39.0-win-x64.exe"
+              href="#"
               data-i18n="download.windowsCta"
             >Download for Windows</a>
             <a
               class="btn btn-primary desktop-download-link"
               data-platform="linux"
-              href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.39.0-linux-x86_64.AppImage"
+              href="#"
               data-i18n="download.linuxCta"
             >Download for Linux</a>
           </div>
@@ -1479,9 +1447,9 @@
               </div>
             </section>
 
-            <!-- Wallet / $WOC -->
+            <!-- Optional wallet integration -->
             <section class="account-card account-wallet-card">
-              <h3 class="account-card-title" data-i18n="hudChrome.account.sectionWallet">$WOC Wallet</h3>
+              <h3 class="account-card-title" data-i18n="hudChrome.account.sectionWallet">Wallet</h3>
               <p class="account-summary" data-i18n="hudChrome.account.walletSummary">Verify a Solana wallet to show holder flair on your player card.</p>
               <button type="button" class="btn btn-secondary" id="account-manage-wallet" data-i18n="hudChrome.account.manageWallet">Manage Wallet</button>
             </section>
@@ -1542,15 +1510,11 @@
       <div class="footer-bar">
       <div class="footer-left">
       <div class="footer-social-row">
-        <a class="social-link" href="https://github.com/levy-street/world-of-claudecraft" target="_blank" rel="noopener noreferrer" data-i18n-aria="a11y.githubProject" aria-label="Open the Aeldrune GitHub project">
+        <a class="social-link" href="#" aria-disabled="true" tabindex="-1" data-i18n-aria="a11y.githubProject" aria-label="Aeldrune GitHub coming later">
           <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
           <span data-i18n="footer.githubLabel">Open Source Project</span>
         </a>
-        <a class="social-link" href="https://discord.com/invite/worldofclaudecraft" target="_blank" rel="noopener noreferrer" data-i18n-aria="a11y.discordCommunity" aria-label="Join the Aeldrune Discord community">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M20.32 4.37A19.8 19.8 0 0 0 15.36 2.8a13.66 13.66 0 0 0-.64 1.32 18.47 18.47 0 0 0-5.45 0 13.02 13.02 0 0 0-.65-1.32 19.73 19.73 0 0 0-4.96 1.58C.53 9.03-.32 13.56.1 18.02a19.9 19.9 0 0 0 6.08 3.08c.49-.67.93-1.38 1.3-2.13-.72-.27-1.41-.6-2.06-.98.17-.13.34-.26.5-.4a14.16 14.16 0 0 0 12.16 0c.16.14.33.27.5.4-.65.39-1.34.72-2.07.99.38.74.81 1.45 1.31 2.12a19.86 19.86 0 0 0 6.08-3.08c.5-5.17-.85-9.66-3.58-13.65ZM8.02 15.28c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Zm7.96 0c-1.18 0-2.15-1.08-2.15-2.41 0-1.33.95-2.42 2.15-2.42 1.2 0 2.17 1.1 2.15 2.42 0 1.33-.95 2.41-2.15 2.41Z"/></svg>
-          <span data-i18n="footer.discordLabel">Join the Discord</span>
-        </a>
-        <a class="social-link donate" href="https://ko-fi.com/worldofclaudecraft" target="_blank" rel="noopener noreferrer" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Support the project" aria-label="Donate to support Aeldrune">
+        <a class="social-link donate" href="#" hidden aria-disabled="true" tabindex="-1" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Aeldrune support page coming later" aria-label="Aeldrune support page coming later">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           <span data-i18n="nav.donate">Donate</span>
         </a>
@@ -1558,7 +1522,6 @@
       <div id="game-version">v0.39.0</div>
       </div>
       <div class="footer-legal-row">
-        <a href="/World-of-ClaudeCraft-Whitepaper-v1.0.pdf" class="footer-link" data-i18n="footer.whitepaper">Whitepaper</a>
         <a href="/terms" class="footer-link" data-i18n="footer.terms">Terms of Service</a>
         <a href="/privacy" class="footer-link" data-i18n="footer.privacy">Privacy Policy</a>
       </div>
@@ -1746,7 +1709,7 @@
           <button type="button" class="mobile-btn" id="mobile-bar-editor" data-i18n-title="hudChrome.mobile.barEditorAria" data-i18n-aria="hudChrome.mobile.barEditorAria" title="Edit the action bar layout" aria-label="Edit the action bar layout" data-icon="swap"><span class="mobile-label" data-i18n="hudChrome.mobile.barEditor">Edit Bars</span></button>
           <button type="button" class="mobile-btn" id="mobile-chat" data-i18n-title="hud.keybinds.actions.chat" data-i18n-aria="hud.keybinds.actions.chat" title="Open Chat" aria-label="Open Chat" data-icon="chat"><span class="mobile-label" data-i18n="hud.core.mobileChat">Chat</span></button>
           <button type="button" class="mobile-btn" id="mobile-discord" hidden data-i18n-title="hudChrome.discord.title" data-i18n-aria="hudChrome.discord.title" title="Discord" aria-label="Discord" data-icon="discord"><span class="mobile-label" data-i18n="hudChrome.discord.title">Discord</span></button>
-          <button type="button" class="mobile-btn" id="mobile-donate" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Support the project" aria-label="Donate to support Aeldrune" data-icon="donate"><span class="mobile-label" data-i18n="nav.donate">Donate</span></button>
+          <button type="button" class="mobile-btn" id="mobile-donate" hidden aria-hidden="true" tabindex="-1" data-i18n-title="a11y.donateProject" data-i18n-aria="a11y.donateProject" title="Aeldrune support page coming later" aria-label="Aeldrune support page coming later" data-icon="donate"><span class="mobile-label" data-i18n="nav.donate">Donate</span></button>
           <button type="button" class="mobile-btn" id="mobile-wiki" data-i18n-title="nav.wiki" data-i18n-aria="nav.wiki" title="Wiki" aria-label="Wiki" data-icon="wiki"><span class="mobile-label" data-i18n="nav.wiki">Wiki</span></button>
           <button type="button" class="mobile-btn" id="mobile-emote" data-i18n-title="hudChrome.emoteWheel.label" data-i18n-aria="hudChrome.emoteWheel.label" title="Emotes" aria-label="Emotes" data-icon="emote"><span class="mobile-label" data-i18n="hudChrome.emoteWheel.label">Emotes</span></button>
           <button type="button" class="mobile-btn" id="mobile-arena" data-i18n-title="hudChrome.pvp.launcherTitle" data-i18n-aria="hudChrome.pvp.launcherTitle" title="PvP: Thornhollow Fields and the Arenas" aria-label="PvP: Thornhollow Fields and the Arenas" data-icon="arena"><span class="mobile-label" data-i18n="hudChrome.pvp.mobileLabel">PvP</span></button>

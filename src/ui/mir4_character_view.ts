@@ -3,7 +3,14 @@
 // renderer or network host.
 
 import { type Mir4ClassKey, mir4ClassById } from '../sim/content/mir4/classes';
-import type { Mir4EquipmentItemDef } from '../sim/content/mir4/equipment_catalog';
+import {
+  type Mir4EquipmentItemDef,
+  mir4EquipmentItem,
+} from '../sim/content/mir4/equipment_catalog';
+import {
+  type Mir4EquipmentRarity,
+  mir4EquipmentRarityForRank,
+} from '../sim/content/mir4/item_progression';
 import { mir4EquipmentDefinition } from '../sim/content/mir4/items';
 import { mir4MountById } from '../sim/content/mir4/mounts_catalog';
 import { mir4SpiritById } from '../sim/content/mir4/spirits_catalog';
@@ -33,6 +40,7 @@ export interface Mir4PaperdollItemView {
   tier: number;
   grade: number;
   requiredLevel: number;
+  craftingRarity: Mir4EquipmentRarity | null;
   enhancement: number;
   attributes: readonly (readonly [number, number])[];
   runtimeAttributes: readonly Readonly<{ statusId: number; value: number }>[];
@@ -118,9 +126,15 @@ export function buildMir4EquipmentItemView(
     tier: def.tier,
     grade: def.grade,
     requiredLevel: def.requiredLevel,
+    craftingRarity: mir4EquipmentItem(def.itemId)
+      ? mir4EquipmentRarityForRank(def.catalogRank)
+      : null,
     enhancement: instance?.enhancement ?? 0,
     attributes,
-    runtimeAttributes: [...effective].map(([statusId, value]) => ({ statusId, value })),
+    runtimeAttributes: [...effective].map(([statusId, value]) => ({
+      statusId,
+      value,
+    })),
     visualItemId: visualItem.id,
     visualSlot: MIR4_TO_WOC_EQUIP_SLOT[def.equipSlot as Mir4EquipmentSlotId],
   };

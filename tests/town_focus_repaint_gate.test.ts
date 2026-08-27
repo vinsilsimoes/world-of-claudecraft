@@ -840,6 +840,11 @@ function makeFocusHud(
   } as unknown as TownFocusFocusHarness['sim'];
   hud.townFocusDraft = null;
   hud.lastTownFocusSig = '';
+  (
+    hud as unknown as {
+      mir4Systems: { closeByRootId(rootId: string): boolean };
+    }
+  ).mir4Systems = { closeByRootId: () => false };
   // Object.create skips field initializers, so build the bridge by hand out of
   // the SAME two pieces the field declares: makeWindowFocus over a FocusManager.
   // Two things this seeding cannot see, both covered by source pins below

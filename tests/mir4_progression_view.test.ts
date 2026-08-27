@@ -77,6 +77,57 @@ describe('MIR4 progression view', () => {
     });
   });
 
+  it('classifies every generic crafting recipe into its player-facing category', () => {
+    const view = buildMir4ProgressionView(
+      { classId: 1, ultimateGauge: 0, mir4Materials: { ...MIR4_EMPTY_MATERIALS } },
+      0,
+    );
+    const categories = Object.fromEntries(
+      view.recipes.map((recipe) => [recipe.recipeId, recipe.category]),
+    );
+
+    for (const recipeId of [
+      'metal-uncommon',
+      'metal-rare',
+      'metal-epic',
+      'metal-legendary',
+      'metal-mythic',
+    ]) {
+      expect(categories[recipeId]).toBe('metals');
+    }
+    for (const recipeId of [
+      'knowledge-tome-common',
+      'knowledge-tome-rare',
+      'knowledge-tome-epic',
+      'knowledge-tome-legendary',
+    ]) {
+      expect(categories[recipeId]).toBe('tomes');
+    }
+    for (const recipeId of [
+      'greater-yang-pill',
+      'greater-yin-pill',
+      'lesser-yang-pill',
+      'lesser-yin-pill',
+      'greater-yang-pill-rare',
+      'greater-yang-pill-epic',
+      'greater-yang-pill-legendary',
+      'greater-yin-pill-rare',
+      'greater-yin-pill-epic',
+      'greater-yin-pill-legendary',
+      'lesser-yang-pill-rare',
+      'lesser-yang-pill-epic',
+      'lesser-yang-pill-legendary',
+      'lesser-yin-pill-rare',
+      'lesser-yin-pill-epic',
+      'lesser-yin-pill-legendary',
+    ]) {
+      expect(categories[recipeId]).toBe('consumables');
+    }
+    for (const recipeId of ['solar-scroll', 'lunar-seal']) {
+      expect(categories[recipeId]).toBe('enhancement');
+    }
+  });
+
   it('projects an active campaign profession order from authoritative logical materials', () => {
     const view = buildMir4ProgressionView(
       {

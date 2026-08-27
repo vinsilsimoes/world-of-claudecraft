@@ -204,6 +204,21 @@ export interface PrewarmPolicy {
 }
 
 /**
+ * Root count submitted in one shader-compile unit. Low-tier integrated GPUs
+ * pay a measurable synchronous Three.js/driver prologue even when the actual
+ * link continues through KHR_parallel_shader_compile, so their default unit
+ * stays small. An explicit diagnostics override remains authoritative.
+ */
+export function resolvePrewarmCompileBatchRoots(
+  lowGfx: boolean,
+  configured: number | null,
+  fallback: number,
+): number {
+  if (configured !== null) return configured;
+  return lowGfx ? Math.min(4, fallback) : fallback;
+}
+
+/**
  * What a manifest entry actually got done before a deadline (or a pending
  * asset prefetch) stopped it. `trimmed` is the load-bearing bit: it means the
  * entry deliberately stopped or deferred with planned work remaining, so the

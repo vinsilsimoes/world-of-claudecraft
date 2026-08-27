@@ -12,12 +12,20 @@ import {
   type Mir4EquipmentInstanceState,
   type Mir4Materials,
 } from '../sim/mir4/equipment';
+import { mir4NextEquipmentCraftRecipes } from '../sim/mir4/equipment_crafting';
 import { mir4ModifiedEnhancementChance } from '../sim/mir4/status_effects';
 import type { Mir4StatusRecord } from '../sim/mir4/status_values';
 import type { Mir4PlayerUiState } from '../sim/mir4/ui_state';
 import { buildMir4EquipmentItemView, type Mir4PaperdollItemView } from './mir4_character_view';
 
 export type Mir4ProgressionTab = 'refinement' | 'enchantment' | 'blessing' | 'crafting';
+export type Mir4CraftingCategory = 'equipment' | 'metals' | 'tomes' | 'consumables' | 'enhancement';
+export type Mir4EquipmentCraftingCategory =
+  | 'weapons'
+  | 'armor'
+  | 'legwear'
+  | 'shields'
+  | 'accessories';
 
 export interface Mir4ProgressionItemView {
   item: Mir4PaperdollItemView;
@@ -44,16 +52,64 @@ export interface Mir4EnhancementAttributeView {
 
 export interface Mir4CraftRecipeView {
   recipeId: string;
+  category: Exclude<Mir4CraftingCategory, 'equipment'>;
   output: keyof Mir4Materials;
   outputCount: number;
-  materials: readonly Readonly<{ key: keyof Mir4Materials; needed: number; held: number }>[];
+  materials: readonly Readonly<{
+    key: keyof Mir4Materials;
+    needed: number;
+    held: number;
+  }>[];
   copperCost: number;
   affordable: boolean;
+}
+
+const METAL_OUTPUTS = new Set<keyof Mir4Materials>([
+  'metalUncommon',
+  'metalRare',
+  'metalEpic',
+  'metalLegendary',
+  'metalMythic',
+]);
+const TOME_OUTPUTS = new Set<keyof Mir4Materials>([
+  'knowledgeTomeCommon',
+  'knowledgeTomeRare',
+  'knowledgeTomeEpic',
+  'knowledgeTomeLegendary',
+]);
+
+function craftRecipeCategory(
+  output: keyof Mir4Materials,
+): Exclude<Mir4CraftingCategory, 'equipment'> {
+  if (METAL_OUTPUTS.has(output)) return 'metals';
+  if (TOME_OUTPUTS.has(output)) return 'tomes';
+  if (output.includes('Pill')) return 'consumables';
+  return 'enhancement';
+}
+
+export interface Mir4EquipmentCraftRecipeView {
+  recipeId: string;
+  category: Mir4EquipmentCraftingCategory;
+  item: Mir4PaperdollItemView;
+  previousItem: Mir4PaperdollItemView | null;
+  metal: Readonly<{ key: keyof Mir4Materials; needed: number; held: number }>;
+  darksteelCost: number;
+  darksteelHeld: number;
+  affordable: boolean;
+}
+
+function equipmentCraftingCategory(slotId: number): Mir4EquipmentCraftingCategory {
+  if (slotId === 1) return 'weapons';
+  if (slotId === 4) return 'shields';
+  if (slotId === 8) return 'legwear';
+  if (slotId === 2 || slotId === 3) return 'accessories';
+  return 'armor';
 }
 
 export interface Mir4ProgressionView {
   items: readonly Mir4ProgressionItemView[];
   recipes: readonly Mir4CraftRecipeView[];
+  equipmentRecipes: readonly Mir4EquipmentCraftRecipeView[];
   wallet: Readonly<Mir4Materials>;
   campaignProfession: Mir4CampaignProfessionView | null;
 }
@@ -87,7 +143,10 @@ export function buildMir4ProgressionView(
       const nextItem =
         nextEnhancement === null
           ? null
-          : buildMir4EquipmentItemView(def, { ...instance, enhancement: nextEnhancement });
+          : buildMir4EquipmentItemView(def, {
+              ...instance,
+              enhancement: nextEnhancement,
+            });
       const nextAttributes = new Map(
         (nextItem?.runtimeAttributes ?? item.runtimeAttributes).map((attribute) => [
           attribute.statusId,
@@ -140,6 +199,7 @@ export function buildMir4ProgressionView(
     }));
     return {
       recipeId: recipe.recipeId,
+      category: craftRecipeCategory(recipe.output),
       output: recipe.output,
       outputCount: recipe.outputCount,
       materials,
@@ -148,6 +208,49 @@ export function buildMir4ProgressionView(
         copper >= recipe.copperCost && materials.every((cost) => cost.held >= cost.needed),
     };
   });
+  const rewardItems = state.mir4ArcRewards?.items ?? {};
+  const ownedItemIds = new Set<number>(
+    Object.values(state.mir4EquipmentInstances ?? {})
+      .filter((instance) => !instance.destroyed)
+      .map((instance) => instance.itemId),
+  );
+  for (const [itemId, count] of Object.entries(rewardItems)) {
+    const numeric = Number(itemId);
+    if (Number.isSafeInteger(numeric) && count > 0 && mir4EquipmentDefinition(numeric)) {
+      ownedItemIds.add(numeric);
+    }
+  }
+  const darksteelHeld = state.mir4Currencies?.darksteel ?? 0;
+  const equipmentRecipes = mir4NextEquipmentCraftRecipes(state.classId, ownedItemIds).flatMap(
+    (recipe): Mir4EquipmentCraftRecipeView[] => {
+      const def = mir4EquipmentDefinition(recipe.itemId);
+      const previousDef =
+        recipe.previousItemId === null ? null : mir4EquipmentDefinition(recipe.previousItemId);
+      if (!def || (recipe.previousItemId !== null && !previousDef)) return [];
+      const previousInstance =
+        recipe.previousItemId === null
+          ? undefined
+          : state.mir4EquipmentInstances?.[recipe.previousItemId];
+      const held = wallet[recipe.metal];
+      return [
+        {
+          recipeId: recipe.recipeId,
+          category: equipmentCraftingCategory(def.equipSlot),
+          item: buildMir4EquipmentItemView(def, previousInstance),
+          previousItem: previousDef
+            ? buildMir4EquipmentItemView(previousDef, previousInstance)
+            : null,
+          metal: { key: recipe.metal, needed: recipe.metalCount, held },
+          darksteelCost: recipe.darksteelCost,
+          darksteelHeld,
+          affordable:
+            held >= recipe.metalCount &&
+            darksteelHeld >= recipe.darksteelCost &&
+            (recipe.previousItemId === null || ownedItemIds.has(recipe.previousItemId)),
+        },
+      ];
+    },
+  );
   const logicalItems = state.mir4ArcRewards?.items ?? {};
   let campaignProfession: Mir4CampaignProfessionView | null = null;
   for (const progress of Object.values(state.mir4ArcQuests ?? {})) {
@@ -185,5 +288,5 @@ export function buildMir4ProgressionView(
     };
     break;
   }
-  return { items, recipes, wallet, campaignProfession };
+  return { items, recipes, equipmentRecipes, wallet, campaignProfession };
 }

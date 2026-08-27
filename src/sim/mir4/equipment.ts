@@ -43,6 +43,12 @@ export interface Mir4EquipmentInstanceState {
 
 /** The material wallet (runtime until the shared inventory lands). */
 export interface Mir4Materials {
+  metalCommon: number;
+  metalUncommon: number;
+  metalRare: number;
+  metalEpic: number;
+  metalLegendary: number;
+  metalMythic: number;
   sunStone: number;
   moonStone: number;
   solarScroll: number;
@@ -95,6 +101,12 @@ export interface Mir4Materials {
 }
 
 export const MIR4_EMPTY_MATERIALS: Mir4Materials = {
+  metalCommon: 0,
+  metalUncommon: 0,
+  metalRare: 0,
+  metalEpic: 0,
+  metalLegendary: 0,
+  metalMythic: 0,
   sunStone: 0,
   moonStone: 0,
   solarScroll: 0,
@@ -221,7 +233,10 @@ function instanceFor(
   let inst = meta.mir4EquipmentInstances?.[itemId];
   if (!inst) {
     inst = { itemId, enhancement: 0 };
-    meta.mir4EquipmentInstances = { ...meta.mir4EquipmentInstances, [itemId]: inst };
+    meta.mir4EquipmentInstances = {
+      ...meta.mir4EquipmentInstances,
+      [itemId]: inst,
+    };
     markMir4WireDirty(meta);
   }
   return inst;
@@ -285,7 +300,7 @@ export function mir4UnequipWeapon(ctx: SimContext, pid: number): string {
   return 'Weapon unequipped.';
 }
 
-/** Equip any catalog item into its source slot, validating class and level. */
+/** Equip any owned catalog item into its source slot, validating its class. */
 export function mir4EquipItem(ctx: SimContext, pid: number, itemId: number): string {
   const meta = ctx.players.get(pid);
   const p = ctx.entities.get(pid);
@@ -294,7 +309,6 @@ export function mir4EquipItem(ctx: SimContext, pid: number, itemId: number): str
   if (!def) return 'Unknown item.';
   if (!mir4OwnsEquipmentItem(meta, itemId)) return 'Unknown item.';
   if (def.classId !== p.mir4?.classId) return 'Your class cannot use this.';
-  if (p.level < def.requiredLevel) return 'Your level is too low.';
   const nextInstance = instanceFor(meta, itemId);
   const inheritedSources = Object.values(meta.mir4EquipmentInstances ?? {})
     .filter((instance) => {
@@ -316,7 +330,9 @@ export function mir4EquipItem(ctx: SimContext, pid: number, itemId: number): str
   if (inheritedEnchantment || inheritedBlessing) {
     nextInstance.affixes = {
       ...(inheritedEnchantment
-        ? { enchantment: inheritedEnchantment.map((affix) => [...affix] as const) }
+        ? {
+            enchantment: inheritedEnchantment.map((affix) => [...affix] as const),
+          }
         : {}),
       ...(inheritedBlessing
         ? { blessing: inheritedBlessing.map((affix) => [...affix] as const) }
@@ -347,7 +363,10 @@ export type Mir4EnhanceOutcome =
       protected: boolean;
       effectiveChanceBps: number;
     }
-  | { ok: false; code: 'unknown-item' | 'not-enhanceable' | 'max-level' | 'no-materials' };
+  | {
+      ok: false;
+      code: 'unknown-item' | 'not-enhanceable' | 'max-level' | 'no-materials';
+    };
 
 /**
  * The enhancement attempt: 1 Solar Scroll per try; above +5 an unwarded

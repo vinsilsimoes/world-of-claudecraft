@@ -41,6 +41,7 @@ import { dawnholdLift, dawnholdPadTarget, dawnholdPadWeight } from './dawnhold_l
 import { dockLocalPoint, dockSectionAtLocal, dockSurfaceLine, dockSurfaceYAt } from './dock_layout';
 import { dungeonFloorLift } from './dungeon_floor';
 import { dawnholdKeepLiftAt, lastKeepLiftAt } from './dungeon_layout';
+import { eastbrookDeckSurface } from './eastbrook_harbor';
 import {
   EMBER_FLAT_POOLS,
   EMBER_LAVA_LINKS,
@@ -71,6 +72,7 @@ import { cragLayer, highlandMask, reliefBase, ridged2, warpedCoords } from './te
 import type { BiomeId, HeightStamp, WorldContent, ZoneDef } from './types';
 import { isInSowfieldShell, SOWFIELD_FLAT, sowfieldStandLift } from './vale_cup_layout';
 import { wildheartFieldHeight } from './wildheart_field';
+import { usesBuiltinWorldPresentation } from './world_presentation';
 
 export {
   GLACIER_TARN_ICEMANTLE_APPROACH,
@@ -3748,6 +3750,17 @@ function dockSurfaceHeight(x: number, z: number, seed: number): number {
     (sampleX, sampleZ) => terrainHeight(sampleX, sampleZ, seed),
     WATER_LEVEL,
   );
+  if (usesBuiltinWorldPresentation(getActiveWorldContent())) {
+    surface = Math.max(
+      surface,
+      eastbrookDeckSurface(
+        x,
+        z,
+        (sampleX, sampleZ) => terrainHeight(sampleX, sampleZ, seed),
+        WATER_LEVEL,
+      ),
+    );
+  }
   // ...and the Palmreach's river bridges and lagoon decks, the same idiom
   surface = Math.max(
     surface,
@@ -5287,10 +5300,17 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
   ) {
     return null;
   }
-  // No rock or stunted tree grows up through Wickharbor's boardwalk planks.
+  // No rock or stunted tree grows up through the authored harbor decks.
   if (
     builtinTopology &&
     galeDeckSurface(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL) !== -Infinity
+  ) {
+    return null;
+  }
+  if (
+    builtinTopology &&
+    usesBuiltinWorldPresentation(getActiveWorldContent()) &&
+    eastbrookDeckSurface(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL) !== -Infinity
   ) {
     return null;
   }

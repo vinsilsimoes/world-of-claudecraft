@@ -80,6 +80,12 @@ export function entityIdentityFields(entity: Entity): Record<string, unknown> {
   if (entity.dungeonId) out.dgn = entity.dungeonId;
   if (entity.riftTier) out.rt = entity.riftTier;
   if (entity.objectItemId) out.obj = entity.objectItemId;
+  // Vendor stock is authoritative server gameplay state. It rides the sparse
+  // identity record so online clients do not have to reconstruct services from
+  // a potentially stale local world bundle after HMR or a content bridge swap.
+  if (entity.kind === 'npc' && entity.vendorItems.length > 0) {
+    out.vi = [...entity.vendorItems];
+  }
   if (entity.scale !== 1) out.sc = entity.scale;
   if (entity.color !== 0xffffff) out.c = entity.color;
   return out;

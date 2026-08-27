@@ -477,6 +477,8 @@ describe('the mir4 WS envelope dispatch', () => {
       sim.playerId,
     );
     handleMir4Command(sim, { m: 'craftMaterial', recipeId: 'lunar-seal' }, sim.playerId);
+    handleMir4Command(sim, { m: 'craftMaterial', recipeId: 'metal-uncommon' }, sim.playerId);
+    handleMir4Command(sim, { m: 'craftMaterial', recipeId: 'equipment-991020101' }, sim.playerId);
     handleMir4Command(sim, { m: 'redeemTicket', ticketId: 'mount-ticket-dawn' }, sim.playerId);
     handleMir4Command(
       sim,
@@ -515,7 +517,9 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(enhance).toHaveBeenCalledOnce();
     expect(roll).toHaveBeenCalledWith(991010101, 'blessing', sim.playerId);
     expect(resolve).toHaveBeenCalledWith(991010101, 'blessing', 'roll-1', false, sim.playerId);
-    expect(craft).toHaveBeenCalledWith('lunar-seal', sim.playerId);
+    expect(craft).toHaveBeenNthCalledWith(1, 'lunar-seal', sim.playerId);
+    expect(craft).toHaveBeenNthCalledWith(2, 'metal-uncommon', sim.playerId);
+    expect(craft).toHaveBeenNthCalledWith(3, 'equipment-991020101', sim.playerId);
     expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', 1, sim.playerId);
     expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', 10, sim.playerId);
     expect(redeem).toHaveBeenCalledWith('mount-ticket-dawn', 100, sim.playerId);
@@ -544,6 +548,7 @@ describe('the mir4 WS envelope dispatch', () => {
       sim.playerId,
     );
     handleMir4Command(sim, { m: 'craftMaterial', recipeId: 'unknown' }, sim.playerId);
+    handleMir4Command(sim, { m: 'craftMaterial', recipeId: 1 }, sim.playerId);
     for (const ticketId of ['spirit-ticket-celestial', 'mount-ticket-sunset', '', 1]) {
       handleMir4Command(sim, { m: 'redeemTicket', ticketId }, sim.playerId);
     }
@@ -580,7 +585,7 @@ describe('the mir4 WS envelope dispatch', () => {
     expect(enhance).toHaveBeenCalledTimes(1);
     expect(roll).toHaveBeenCalledTimes(1);
     expect(resolve).toHaveBeenCalledTimes(1);
-    expect(craft).toHaveBeenCalledTimes(1);
+    expect(craft).toHaveBeenCalledTimes(3);
     expect(redeem).toHaveBeenCalledTimes(5);
     expect(confirmSpirit).toHaveBeenCalledTimes(1);
     expect(equipSpirit).toHaveBeenCalledTimes(2);

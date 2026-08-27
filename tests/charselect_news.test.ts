@@ -21,7 +21,7 @@ class FakeStorage {
   }
 }
 
-const LAST_SEEN_KEY = 'woc.welcome.lastSeenReleaseId';
+const LAST_SEEN_KEY = 'aeldrune.news.lastSeenReleaseId';
 
 function release(id: number): NewsReleaseEntry {
   return {

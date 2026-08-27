@@ -2,6 +2,12 @@ import type { Mir4Materials } from '../sim/mir4/equipment';
 import { type TranslationKey, t } from './i18n';
 
 const MIR4_MATERIAL_KEYS = {
+  metalCommon: 'hudChrome.mir4.materials.metalCommon',
+  metalUncommon: 'hudChrome.mir4.materials.metalUncommon',
+  metalRare: 'hudChrome.mir4.materials.metalRare',
+  metalEpic: 'hudChrome.mir4.materials.metalEpic',
+  metalLegendary: 'hudChrome.mir4.materials.metalLegendary',
+  metalMythic: 'hudChrome.mir4.materials.metalMythic',
   sunStone: 'hudChrome.mir4.materials.sunStone',
   moonStone: 'hudChrome.mir4.materials.moonStone',
   solarScroll: 'hudChrome.mir4.materials.solarScroll',

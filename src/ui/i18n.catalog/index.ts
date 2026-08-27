@@ -638,7 +638,7 @@ export const en = {
     },
   },
   wallet: {
-    label: '$WOC Wallet',
+    label: 'Wallet',
     connect: 'Verify Wallet',
     connectTitle: 'Connect a Solana wallet',
     connectAria: 'Connect a Solana wallet',

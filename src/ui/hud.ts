@@ -69,7 +69,7 @@ import {
   ITEM_SETS,
   ITEMS,
   MOBS,
-  NPCS,
+  npcDefinition,
   QUESTS,
   WORLD_MAX_X,
   WORLD_MAX_Z,
@@ -1342,6 +1342,11 @@ export class Hud {
   private mobileConsumableSeat: MobileConsumableSeat | undefined;
   private mir4ActionTools: Mir4ActionToolsController | undefined;
   private mir4AutoSkillToggles: Mir4AutoSkillToggleController | undefined;
+  // The ONE shared focus manager: trap (Tab/Shift+Tab cycle) + focus-first +
+  // return-to-opener, unifying the former ad-hoc Hud focus helpers. See
+  // ./focus_manager. Escape is NOT handled here: it stays with the existing unified
+  // dispatcher (main.ts game input -> hud.closeAll()), so there is one Escape path.
+  private readonly focusManager = new FocusManager();
   private readonly mir4Systems = new Mir4HudSystems(document, {
     world: () => this.sim,
     closeOthers: (selector) => this.closeOtherWindows(selector),
@@ -1470,11 +1475,6 @@ export class Hud {
   private readonly chatAnnouncer = new ChatAnnouncer((summary) => {
     this.chatLiveEl.textContent = summary;
   });
-  // The ONE shared focus manager: trap (Tab/Shift+Tab cycle) + focus-first +
-  // return-to-opener, unifying the former ad-hoc Hud focus helpers. See
-  // ./focus_manager. Escape is NOT handled here: it stays with the existing unified
-  // dispatcher (main.ts game input -> hud.closeAll()), so there is one Escape path.
-  private readonly focusManager = new FocusManager();
   private readonly mobileMoreDialog = new MobileMoreDialogController(this.focusManager, {
     trigger: () => document.getElementById('mobile-more'),
     dialog: () => document.getElementById('mobile-extra-controls'),
@@ -15254,7 +15254,9 @@ export class Hud {
       $('#vendor-window'),
       entityDisplayName(npc),
       buildVendorView(
-        npc.vendorItems,
+        npc.vendorItems.length > 0
+          ? npc.vendorItems
+          : (npcDefinition(npc.templateId, this.sim.cfg.world)?.vendorItems ?? []),
         this.sim.vendorBuyback,
         ITEMS,
         {
@@ -16325,7 +16327,7 @@ export class Hud {
     for (const e of this.sim.entities.values()) {
       if (
         e.kind === 'npc' &&
-        NPCS[e.templateId]?.market &&
+        npcDefinition(e.templateId)?.market &&
         dist2d(p.pos, e.pos) <= NPC_WINDOW_CLOSE_RANGE
       ) {
         return e;
@@ -18977,20 +18979,26 @@ function mobDisplayName(mobId: string): string {
   return tEntity({ kind: 'mob', id: mobId, field: 'name' });
 }
 
-function npcDisplayName(npcId: string): string {
-  return tEntity({ kind: 'npc', id: npcId, field: 'name' });
+function npcDisplayName(npcId: string, source?: string): string {
+  return tEntity({ kind: 'npc', id: npcId, field: 'name', source });
 }
 
-function npcDisplayTitle(npcId: string): string {
-  return tEntity({ kind: 'npc', id: npcId, field: 'title' });
+function npcDisplayTitle(npcId: string, source?: string): string {
+  return tEntity({ kind: 'npc', id: npcId, field: 'title', source });
 }
 
-function npcGreeting(npcId: string, playerClass: PlayerClass, playerName: string): string {
+function npcGreeting(
+  npcId: string,
+  playerClass: PlayerClass,
+  playerName: string,
+  source?: string,
+): string {
   const className = classDisplayName(playerClass);
   return tEntity({
     kind: 'npc',
     id: npcId,
     field: 'greeting',
+    source,
     values: {
       className,
       classNameLower: className.toLocaleLowerCase(),

@@ -18,9 +18,9 @@ import {
   renderCompactNews,
 } from './news_feed';
 
-// Kept verbatim from the retired Welcome Screen so each player's seen-state
-// (which releases still show a NEW badge) survives the move to this panel.
-const LAST_SEEN_RELEASE_KEY = 'woc.welcome.lastSeenReleaseId';
+// Aeldrune owns an independent seen-state so its first release is never hidden
+// by release ids stored by the retired WoC feed.
+const LAST_SEEN_RELEASE_KEY = 'aeldrune.news.lastSeenReleaseId';
 /** Reads the persisted "last seen release" marker (localStorage; survives across sessions). */
 function readLastSeenReleaseId(storage: Storage): number | null {
   const raw = storage.getItem(LAST_SEEN_RELEASE_KEY);

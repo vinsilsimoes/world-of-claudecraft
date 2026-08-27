@@ -11,7 +11,7 @@ describe('MIR4 campaign tutorial guidance', () => {
   it('pins the exact existing destination, tab and requirement contract for all 30 lessons', () => {
     const expected = `
 M01-Q01|mm-map|map|-|action:discover-waypoint:1
-M01-Q02|mm-bag|bags|-|material:minorHealthPotion:3
+M01-Q02|mm-bag|bags|-|material:minorHealthPotion:20
 M01-Q03|mm-bag|bags|-|equipment:starterWeapon:1
 M01-Q04|mm-crafting|crafting|crafting|material:sunStone:1,material:solarScroll:1
 M01-Q06|mm-crafting|crafting|refinement|material:sunStone:2,material:solarScroll:2,enhancement:weapon:2

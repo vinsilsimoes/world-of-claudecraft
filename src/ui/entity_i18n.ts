@@ -17,6 +17,7 @@ import {
   ITEMS,
   MOBS,
   NPCS,
+  npcDefinition,
   QUESTS,
   ZONES,
 } from '../sim/data';
@@ -320,7 +321,7 @@ function canonicalEntityText(request: EntityTranslationRequest): string {
     case 'mob':
       return ownEntry(MOBS, request.id)?.name ?? request.source ?? request.id;
     case 'npc': {
-      const npc = ownEntry(NPCS, request.id);
+      const npc = npcDefinition(request.id);
       if (!npc) return request.source ?? request.id;
       if (request.field === 'title') return npc.title;
       if (request.field === 'greeting') return npc.greeting;

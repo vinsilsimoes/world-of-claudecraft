@@ -3,7 +3,15 @@
 // IWorld method names while the profile-specific orchestration stays out of the
 // central Sim class.
 
-import { setMir4AutoBattleMode } from '../auto_battle/core';
+import {
+  mir4AutoPotionThresholds,
+  setMir4AutoBattleMode,
+  setMir4AutoPotionThreshold,
+} from '../auto_battle/core';
+import type {
+  Mir4AutoPotionKind,
+  Mir4AutoPotionThresholds,
+} from '../auto_battle/potion_thresholds';
 import {
   mir4AutoQuestStatus,
   mir4FullCampaignAvailable,
@@ -68,6 +76,8 @@ export interface Mir4SimFacade {
   mir4TalkOrInspect(pid?: number): string;
   setMir4AutoQuest(on: boolean, questId?: string, pid?: number): void;
   mir4AutoBattleActive(pid?: number): boolean;
+  mir4AutoPotionThresholds(pid?: number): Mir4AutoPotionThresholds;
+  setMir4AutoPotionThreshold(kind: Mir4AutoPotionKind, percent: number, pid?: number): void;
   mir4PlayerState(pid?: number): Mir4PlayerUiState | null;
   setMir4AutoBattle(on: boolean, pid?: number): void;
   setMir4AutoSkillEnabled(skillId: number, enabled: boolean, pid?: number): boolean;
@@ -163,6 +173,12 @@ export const mir4SimFacade = defineMir4SimFacade({
   },
   mir4AutoBattleActive(this: Mir4SimFacadeHost, pid = this.playerId) {
     return this.ctx.players.get(pid)?.autoBattle?.mode === 'battle';
+  },
+  mir4AutoPotionThresholds(this: Mir4SimFacadeHost, pid = this.playerId) {
+    return mir4AutoPotionThresholds(this.ctx, pid);
+  },
+  setMir4AutoPotionThreshold(this: Mir4SimFacadeHost, kind, percent, pid = this.playerId) {
+    setMir4AutoPotionThreshold(this.ctx, pid, kind, percent);
   },
   mir4PlayerState(this: Mir4SimFacadeHost, pid = this.playerId) {
     const player = this.ctx.entities.get(pid);

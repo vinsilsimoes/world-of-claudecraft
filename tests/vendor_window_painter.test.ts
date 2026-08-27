@@ -94,7 +94,12 @@ describe('renderVendorWindow / renderHeroicVendorWindow: dialog root (accessible
         mir4ArcQuests: Object.fromEntries(
           MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS.map((questId) => [
             questId,
-            { questId, stageIndex: 0, stageProgress: 0, state: 'active' as const },
+            {
+              questId,
+              stageIndex: 0,
+              stageProgress: 0,
+              state: 'active' as const,
+            },
           ]),
         ),
       },
@@ -105,12 +110,18 @@ describe('renderVendorWindow / renderHeroicVendorWindow: dialog root (accessible
     renderVendorWindow(
       el,
       'Sara das Ervas',
-      { goods: [], buyback: [], honorBalance: 0, hasHonorGoods: false, multiple: 1 },
+      {
+        goods: [],
+        buyback: [],
+        honorBalance: 0,
+        hasHonorGoods: false,
+        multiple: 1,
+      },
       deps({ mir4Equipment, onBuyMir4Equipment }),
     );
 
     const rows = el.querySelectorAll<HTMLButtonElement>('.mir4-village-equipment');
-    expect(rows).toHaveLength(8);
+    expect(rows).toHaveLength(2);
     expect(rows[0]?.disabled).toBe(true);
     rows[1]?.click();
     expect(onBuyMir4Equipment).toHaveBeenCalledWith(mir4VillageEquipmentOffers(1)[1]!.item.itemId);
@@ -138,7 +149,13 @@ describe('renderVendorWindow / renderHeroicVendorWindow: dialog root (accessible
     renderVendorWindow(
       el,
       'Sara das Ervas',
-      { goods: [], buyback: [], honorBalance: 0, hasHonorGoods: false, multiple: 1 },
+      {
+        goods: [],
+        buyback: [],
+        honorBalance: 0,
+        hasHonorGoods: false,
+        multiple: 1,
+      },
       deps({ mir4Equipment, onBuyMir4Equipment: vi.fn() }),
     );
 
@@ -228,7 +245,14 @@ describe('vendor painters: painted currency identities', () => {
 
   it('renders Heroic Mark art independently in the quartermaster balance and item price', () => {
     const view: HeroicShopView = {
-      rows: [{ itemId: 'heroic_blade', item: item('heroic_blade'), marks: 11, affordable: true }],
+      rows: [
+        {
+          itemId: 'heroic_blade',
+          item: item('heroic_blade'),
+          marks: 11,
+          affordable: true,
+        },
+      ],
       balance: 29,
     };
     const el = document.createElement('div');
@@ -367,7 +391,10 @@ describe('renderVendorWindow: goods/buyback grid wrapping', () => {
         affordable: true,
         requirementUnmet: true,
         // An id with no entry in the shared name table.
-        requirement: { professionId: 'not_a_profession' as never, proficiency: 40 },
+        requirement: {
+          professionId: 'not_a_profession' as never,
+          proficiency: 40,
+        },
       },
     ];
     const view: VendorView = {
@@ -1059,8 +1086,20 @@ describe('renderVendorWindow: focus across the rebuild (the R22 advisory widenin
     // The positional-key design, pinned instead of hand-checked: buyBackItem
     // compacts the list, so after reclaiming slot 0 the old second item now
     // holds buyback:0 and the exact-key match lands on it.
-    const sword = { itemId: 'sword', item: item('sword'), count: 1, price: 10, index: 0 };
-    const shield = { itemId: 'shield', item: item('shield'), count: 1, price: 12, index: 1 };
+    const sword = {
+      itemId: 'sword',
+      item: item('sword'),
+      count: 1,
+      price: 10,
+      index: 0,
+    };
+    const shield = {
+      itemId: 'shield',
+      item: item('shield'),
+      count: 1,
+      price: 12,
+      index: 1,
+    };
     const before: VendorView = {
       goods: [],
       buyback: [sword, shield],
@@ -1203,7 +1242,13 @@ describe('renderVendorWindow: the 1x/5x/10x/custom control row (phase 21)', () =
     };
   }
   function view(goods: VendorGoodsRow[], multiple: VendorView['multiple']): VendorView {
-    return { goods, buyback: [], honorBalance: 0, hasHonorGoods: false, multiple };
+    return {
+      goods,
+      buyback: [],
+      honorBalance: 0,
+      hasHonorGoods: false,
+      multiple,
+    };
   }
 
   it('renders the four controls with focus keys and aria-pressed on the selection', () => {
@@ -1272,7 +1317,9 @@ describe('renderVendorWindow: the 1x/5x/10x/custom control row (phase 21)', () =
             quantity: 5,
             countBuy: { count: 5, copper: 125, affordable: true },
           }),
-          goodsRow('water', { countBuy: { count: 5, copper: 250, affordable: false } }),
+          goodsRow('water', {
+            countBuy: { count: 5, copper: 250, affordable: false },
+          }),
         ],
         5,
       ),
@@ -1302,7 +1349,14 @@ describe('renderVendorWindow: the 1x/5x/10x/custom control row (phase 21)', () =
     renderVendorWindow(
       el,
       'Vendor',
-      view([goodsRow('bread', { countBuy: { count: 5, copper: 125, affordable: true } })], 5),
+      view(
+        [
+          goodsRow('bread', {
+            countBuy: { count: 5, copper: 125, affordable: true },
+          }),
+        ],
+        5,
+      ),
       deps({ onBuy: (id, opts) => calls.push([id, opts]) }),
     );
     const row = el.querySelector<HTMLButtonElement>('.vendor-item')!;
@@ -1358,7 +1412,10 @@ describe('renderVendorWindow: the custom-amount prompt (phase 21, Q19)', () => {
         hasHonorGoods: false,
         multiple: 'custom',
       },
-      deps({ onBuy: (id, opts) => calls.push([id, opts]), buyCustomMax: () => 64 }),
+      deps({
+        onBuy: (id, opts) => calls.push([id, opts]),
+        buyCustomMax: () => 64,
+      }),
     );
     el.querySelector<HTMLButtonElement>('.vendor-item')!.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
@@ -1423,7 +1480,10 @@ describe('renderVendorWindow: the custom-amount prompt (phase 21, Q19)', () => {
         hasHonorGoods: false,
         multiple: 'custom',
       },
-      deps({ onBuy: (id, opts) => calls.push([id, opts]), buyCustomMax: () => 10 }),
+      deps({
+        onBuy: (id, opts) => calls.push([id, opts]),
+        buyCustomMax: () => 10,
+      }),
     );
     el.querySelector<HTMLButtonElement>('.vendor-item')!.dispatchEvent(
       new MouseEvent('click', { bubbles: true }),
@@ -1463,7 +1523,10 @@ describe('renderVendorWindow: the custom-amount prompt (phase 21, Q19)', () => {
           hasHonorGoods: false,
           multiple: 'custom',
         },
-        deps({ onBuy: (id, opts) => calls.push([id, opts]), buyCustomMax: () => 10 }),
+        deps({
+          onBuy: (id, opts) => calls.push([id, opts]),
+          buyCustomMax: () => 10,
+        }),
       );
       el.querySelector<HTMLButtonElement>('.vendor-item')!.dispatchEvent(
         new MouseEvent('click', { bubbles: true }),
@@ -1520,7 +1583,13 @@ describe('buy_quantity_prompt_window: force-close backstop and focus landing net
     };
   }
   function customView(goods: VendorGoodsRow[]): VendorView {
-    return { goods, buyback: [], honorBalance: 0, hasHonorGoods: false, multiple: 'custom' };
+    return {
+      goods,
+      buyback: [],
+      honorBalance: 0,
+      hasHonorGoods: false,
+      multiple: 'custom',
+    };
   }
   function mountStack(): HTMLElement {
     for (const n of document.querySelectorAll('#prompt-stack')) n.remove();

@@ -7,6 +7,7 @@ import {
 import {
   applyEntityPresentationIdentity,
   decodeMir4EquipmentPresentationWire,
+  decodeNpcVendorItemsWire,
 } from '../../src/net/entity_presentation_wire';
 import type { Entity } from '../../src/sim/types';
 
@@ -108,5 +109,35 @@ describe('entity presentation wire encoder', () => {
     });
     expect(JSON.stringify(out)).not.toContain('boundTo');
     expect(JSON.stringify(out)).not.toContain('charges');
+  });
+
+  it('projects authoritative NPC vendor stock only when the service is present', () => {
+    expect(
+      entityIdentityFields(
+        entity({
+          kind: 'npc',
+          name: 'Sara das Ervas',
+          level: 10,
+          vendorItems: ['minor_healing_potion', 'minor_mana_potion'],
+        }),
+      ),
+    ).toMatchObject({
+      k: 'npc',
+      vi: ['minor_healing_potion', 'minor_mana_potion'],
+    });
+
+    expect(
+      entityIdentityFields(entity({ kind: 'npc', name: 'Guide', level: 10, vendorItems: [] })),
+    ).not.toHaveProperty('vi');
+  });
+
+  it('accepts bounded vendor catalogs and rejects malformed wire stock', () => {
+    expect(decodeNpcVendorItemsWire(['minor_healing_potion', 'minor_mana_potion'])).toEqual([
+      'minor_healing_potion',
+      'minor_mana_potion',
+    ]);
+    expect(decodeNpcVendorItemsWire([])).toBeUndefined();
+    expect(decodeNpcVendorItemsWire(['valid', 3])).toBeUndefined();
+    expect(decodeNpcVendorItemsWire(Array.from({ length: 257 }, () => 'item'))).toBeUndefined();
   });
 });

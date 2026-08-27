@@ -88,7 +88,7 @@ import {
 import { requireOwned } from './http/middleware/require_owned';
 import type { Ctx, Middleware, RouteDef } from './http/types';
 import { isUniqueViolation, json, moderationErrorBody } from './http_util';
-import { REALM } from './realm';
+import { PUBLIC_REALM_NAME } from './realm';
 
 // ---------------------------------------------------------------------------
 // Ported response bodies (the exact legacy { error } identities). Named constants so
@@ -357,7 +357,7 @@ export function buildCharacterList(
   weaponSkinLoadout: Record<string, string>,
 ): unknown {
   return {
-    realm: REALM,
+    realm: PUBLIC_REALM_NAME,
     characters: chars.map((c) => ({
       id: c.id,
       name: c.name,
@@ -736,7 +736,7 @@ async function ownerSheetHandler(ctx: Ctx): Promise<void> {
     characterSheet({
       row,
       visibility: 'owner',
-      realm: REALM,
+      realm: PUBLIC_REALM_NAME,
       origin: rt.publicOrigin(ctx.req),
       guild,
       rank: toSheetRank(rank),

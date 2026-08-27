@@ -1,5 +1,5 @@
 {
-  "body": "{\"dev_commands\":false,\"epic\":{\"enabled\":false},\"names\":[],\"ok\":true,\"players_cap\":5000,\"players_online\":0,\"profiler_invulnerability\":false,\"realm\":\"Claudemoon\",\"steam\":{\"enabled\":false}}",
+  "body": "{\"dev_commands\":false,\"epic\":{\"enabled\":false},\"names\":[],\"ok\":true,\"players_cap\":5000,\"players_online\":0,\"profiler_invulnerability\":false,\"realm\":\"Aelvarin\",\"steam\":{\"enabled\":false}}",
   "headers": {
     "content-length": 186,
     "content-type": "application/json",

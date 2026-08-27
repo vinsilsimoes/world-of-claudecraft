@@ -5,7 +5,7 @@
 // locale BEFORE the main module parses (kills the main-then-locale request waterfall).
 //
 // Pure, zero-dep helpers (unit-tested by tests/i18n_modulepreload.test.ts) plus a
-// thin FS orchestrator (templateModulepreload) the Vite closeBundle plugin in
+// thin FS orchestrator (templateModulepreload) the Vite writeBundle plugin in
 // vite.config.ts calls. The runtime selects the locale at runtime, so Vite cannot
 // auto-inject a modulepreload hint for it - this build hook supplies the hashed name.
 

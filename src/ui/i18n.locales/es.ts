@@ -4039,7 +4039,7 @@ export const es: Partial<Record<TranslationKey, string>> = {
   'hudChrome.unitFrame.targetLabel': 'Tu objetivo',
   'seo.officialLabel': 'Sitio web oficial de Aeldrune',
   'seo.officialBody':
-    'worldofclaudecraft.com es el MMO de navegador gratuito oficial del mundo Claudemoon. Juega en línea con un personaje persistente, explora en solitario sin conexión, lee la wiki y sigue los enlaces comunitarios verificados desde este sitio.',
+    'Aeldrune es el MMO de navegador gratuito oficial del mundo Aelvarin. Juega en línea con un personaje persistente, explora en solitario sin conexión, lee la wiki y sigue los enlaces comunitarios verificados desde este sitio.',
   'hudChrome.questShare.notShareable': 'Esta misión no se puede compartir.',
   'hudChrome.questShare.notInSharerParty':
     'Debes estar en el grupo de {name} para aceptar esa misión.',
@@ -4403,7 +4403,7 @@ export const es: Partial<Record<TranslationKey, string>> = {
   'stats.playersOnline': 'Jugadores en Línea',
   'stats.realmName': 'Nombre del Mundo',
   'footer.copyright': '2026 Aeldrune',
-  'footer.githubLink': 'https://github.com/levy-street/world-of-claudecraft',
+  'footer.githubLink': '#',
   'footer.githubLabel': 'Proyecto de Código Abierto',
   'footer.whitepaper': 'Libro blanco',
   'footer.terms': 'Términos de Servicio',
@@ -4832,7 +4832,7 @@ export const es: Partial<Record<TranslationKey, string>> = {
   'serverUnavailable.eyebrow': 'Mantenimiento del mundo',
   'serverUnavailable.heading': 'El mundo no está disponible temporalmente.',
   'serverUnavailable.body':
-    'Estamos reiniciando el servicio del juego y esperamos que Claudemoon vuelva pronto. Esta página seguirá comprobándolo automáticamente.',
+    'Estamos reiniciando el servicio del juego y esperamos que Aelvarin vuelva pronto. Esta página seguirá comprobándolo automáticamente.',
   'serverUnavailable.status': 'Volvemos pronto',
   'hud.core.elite': 'ÉLITE',
   'hud.core.boss': 'JEFE',
@@ -9391,7 +9391,7 @@ export const es: Partial<Record<TranslationKey, string>> = {
   'hudChrome.discord.swag.titleDiscordian': 'Título: Discordiano',
   'hudChrome.discord.swag.titleSquire': 'Título: Escudero del Reino',
   'hudChrome.discord.swag.chromaBlurple': 'Cromática Mech Blurple',
-  'hudChrome.discord.swag.titleChampion': 'Título: Campeón de Claudemoon',
+  'hudChrome.discord.swag.titleChampion': 'Título: Campeón de Aelvarin',
   'hudChrome.discord.swag.swagStickers': 'Pack de stickers (envío físico)',
   'hudChrome.discord.swag.swagTee': 'Camiseta (envío físico)',
   'hudChrome.discord.relay.tooFast':

@@ -8,8 +8,10 @@ import {
   characterLodBandsInto,
   crowdLodScaleSq,
   FAR_ANIM_RANGE_SCALE_MAX,
+  FAR_MOB_FULL_PRESENTATION_CADENCE,
   farAnimCadence,
   farAnimRangeScale,
+  farMobPresentationMode,
   midAnimCadence,
   showsStaticFarMesh,
 } from '../src/render/crowd_lod';
@@ -320,5 +322,61 @@ describe('showsStaticFarMesh', () => {
     const pressured = characterLodBands(48, SHADOW_BASE_SQ, LOD_BASE_SQ, 1, 4);
     expect(showsStaticFarMesh(yd(50), pressured, true)).toBe(false);
     expect(showsStaticFarMesh(yd(50), pressured, false)).toBe(true);
+  });
+});
+
+describe('farMobPresentationMode', () => {
+  const idleMob = {
+    id: 7,
+    kind: 'mob',
+    dead: false,
+    ghost: false,
+    mobElite: false,
+    mobBoss: false,
+    hp: 100,
+    maxHp: 100,
+    aiState: 'idle',
+    auras: [] as readonly unknown[],
+    castingAbility: null,
+    channeling: false,
+    inCombat: false,
+    ownerId: null,
+    targetId: null,
+    aggroTargetId: null,
+    tappedById: null,
+  };
+
+  it('enters through one full refresh before using transform-only frames', () => {
+    expect(farMobPresentationMode(idleMob, true, false, false, 0)).toBe('full-refresh');
+    expect(farMobPresentationMode(idleMob, true, true, false, 0)).toBe('transform-only');
+  });
+
+  it('stagger-refreshes eligible mobs on a bounded cadence', () => {
+    const dueFrame =
+      FAR_MOB_FULL_PRESENTATION_CADENCE - (idleMob.id % FAR_MOB_FULL_PRESENTATION_CADENCE);
+    expect(farMobPresentationMode(idleMob, true, true, false, dueFrame)).toBe('full-refresh');
+    expect(farMobPresentationMode(idleMob, true, true, false, dueFrame + 1)).toBe('transform-only');
+  });
+
+  it.each([
+    ['near or linking stand-in', idleMob, false, false],
+    ['actionable', idleMob, true, true],
+    ['elite', { ...idleMob, mobElite: true }, true, false],
+    ['boss', { ...idleMob, mobBoss: true }, true, false],
+    ['dead', { ...idleMob, dead: true }, true, false],
+    ['ghost', { ...idleMob, ghost: true }, true, false],
+    ['damaged', { ...idleMob, hp: 99 }, true, false],
+    ['affected by an aura', { ...idleMob, auras: [{}] }, true, false],
+    ['casting', { ...idleMob, castingAbility: 'fireball' }, true, false],
+    ['channeling', { ...idleMob, channeling: true }, true, false],
+    ['in combat', { ...idleMob, inCombat: true }, true, false],
+    ['owned pet', { ...idleMob, ownerId: 1 }, true, false],
+    ['selected target', { ...idleMob, targetId: 1 }, true, false],
+    ['aggro target', { ...idleMob, aggroTargetId: 1 }, true, false],
+    ['tapped', { ...idleMob, tappedById: 1 }, true, false],
+    ['active AI', { ...idleMob, aiState: 'chase' }, true, false],
+    ['non-mob', { ...idleMob, kind: 'npc' }, true, false],
+  ])('keeps %s on the complete presentation path', (_label, entity, staticFarShown, actionable) => {
+    expect(farMobPresentationMode(entity, staticFarShown, true, actionable, 0)).toBe('full-active');
   });
 });

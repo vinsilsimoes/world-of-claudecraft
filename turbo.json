@@ -73,6 +73,7 @@
     "OUT",
     "PERF_TICK_LOG",
     "PROBE",
+    "REALM_DISPLAY_NAME",
     "RIFT_FORGE_ENABLED",
     "SCAN",
     "SHOT_EXPECT_PICKER",

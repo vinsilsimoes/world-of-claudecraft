@@ -14,13 +14,12 @@ export const GUIDE_BASE = '/wiki';
 // past the point a sidebar stays scannable. It is split by what a reader came for:
 // where they are (world), who they are (character), what they run at the top
 // (endgame), and how they fight other players (compete).
-export type GuideGroup = 'start' | 'world' | 'character' | 'endgame' | 'compete' | 'reference';
+export type GuideGroup = 'start' | 'world' | 'character' | 'systems' | 'reference';
 export const GUIDE_GROUP_ORDER: GuideGroup[] = [
   'start',
   'world',
   'character',
-  'endgame',
-  'compete',
+  'systems',
   'reference',
 ];
 
@@ -65,48 +64,12 @@ export const GUIDE_ROUTES: GuideRoute[] = [
     descKey: 'guide.howToPlay.intro',
   },
   {
-    id: 'wish-i-knew',
-    sub: 'wish-i-knew',
-    navKey: 'guide.nav.wishIKnew',
-    group: 'start',
-    descKey: 'guide.wishPage.intro',
-  },
-  {
-    id: 'faq',
-    sub: 'faq',
-    navKey: 'guide.nav.faq',
-    group: 'start',
-    descKey: 'guide.faqPage.intro',
-  },
-  {
-    id: 'social',
-    sub: 'social',
-    navKey: 'guide.nav.social',
-    group: 'start',
-    descKey: 'guide.social.intro',
-  },
-  {
     id: 'classes',
     sub: 'classes',
     navKey: 'guide.nav.classes',
     group: 'character',
     topbar: true,
-    descKey: 'guide.classList.sub',
-  },
-  {
-    id: 'bestiary',
-    sub: 'bestiary',
-    navKey: 'guide.nav.bestiary',
-    group: 'world',
-    topbar: true,
-    descKey: 'guide.bestiary.intro',
-  },
-  {
-    id: 'models',
-    sub: 'models',
-    navKey: 'guide.nav.models',
-    group: 'world',
-    descKey: 'guide.models.intro',
+    descKey: 'guide.aeldrune.classes.lead',
   },
   {
     id: 'world',
@@ -114,176 +77,69 @@ export const GUIDE_ROUTES: GuideRoute[] = [
     navKey: 'guide.nav.world',
     group: 'world',
     topbar: true,
-    descKey: 'guide.worldPage.intro',
-  },
-  {
-    id: 'gear',
-    sub: 'gear',
-    navKey: 'guide.nav.gear',
-    group: 'character',
-    descKey: 'guide.gear.intro',
-  },
-  {
-    id: 'professions',
-    sub: 'professions',
-    navKey: 'guide.nav.professions',
-    group: 'character',
-    descKey: 'guide.professions.intro',
-  },
-  {
-    id: 'economy',
-    sub: 'economy',
-    navKey: 'guide.nav.economy',
-    group: 'character',
-    descKey: 'guide.economy.intro',
+    descKey: 'guide.aeldrune.world.lead',
   },
   {
     id: 'quests',
     sub: 'quests',
     navKey: 'guide.nav.quests',
     group: 'world',
-    descKey: 'guide.questsPage.intro',
+    descKey: 'guide.aeldrune.quests.lead',
+  },
+  {
+    id: 'gear',
+    sub: 'gear',
+    navKey: 'guide.nav.gear',
+    group: 'character',
+    descKey: 'guide.aeldrune.gear.lead',
+  },
+  {
+    id: 'systems',
+    sub: 'systems',
+    navKey: 'guide.aeldrune.nav.systems',
+    group: 'systems',
+    descKey: 'guide.aeldrune.systems.lead',
+  },
+  {
+    id: 'companions',
+    sub: 'companions',
+    navKey: 'guide.aeldrune.nav.companions',
+    group: 'systems',
+    descKey: 'guide.aeldrune.companions.lead',
   },
   {
     id: 'dungeons',
     sub: 'dungeons',
     navKey: 'guide.nav.dungeons',
-    group: 'endgame',
-    descKey: 'guide.dungeonsPage.intro',
-  },
-  {
-    id: 'delves',
-    sub: 'delves',
-    navKey: 'guide.nav.delves',
-    group: 'endgame',
-    descKey: 'guide.delvesPage.intro',
-  },
-  {
-    id: 'rifts',
-    sub: 'rifts',
-    navKey: 'guide.nav.rifts',
-    group: 'endgame',
-    descKey: 'guide.riftsPage.intro',
-  },
-  {
-    id: 'mounts',
-    sub: 'mounts',
-    navKey: 'guide.nav.mounts',
-    group: 'world',
-    descKey: 'guide.mountsPage.intro',
-  },
-  {
-    id: 'arena',
-    sub: 'arena',
-    navKey: 'guide.nav.arena',
-    group: 'compete',
-    descKey: 'guide.arenaPage.intro',
-  },
-  {
-    id: 'vale-cup',
-    sub: 'vale-cup',
-    navKey: 'guide.nav.valeCup',
-    group: 'compete',
-    descKey: 'guide.valeCupPage.intro',
-  },
-  {
-    id: 'thornhollow-fields',
-    sub: 'thornhollow-fields',
-    navKey: 'guide.nav.thornhollow',
-    group: 'compete',
-    descKey: 'guide.thornhollowPage.intro',
-  },
-  {
-    id: 'deeds',
-    sub: 'deeds',
-    navKey: 'guide.nav.deeds',
-    group: 'endgame',
-    descKey: 'guide.deedsPage.intro',
-  },
-  {
-    id: 'reliquary',
-    sub: 'reliquary',
-    navKey: 'guide.nav.reliquary',
-    // Filed with deeds/dungeons/delves/rifts: the release's sidebar regroup
-    // retired the old catch-all 'compendium' this page was authored into.
-    group: 'endgame',
-    descKey: 'guide.reliquaryPage.intro',
-  },
-  {
-    id: 'controls',
-    sub: 'reference/controls',
-    navKey: 'guide.nav.controls',
-    group: 'reference',
-    descKey: 'guide.controls.intro',
-  },
-  {
-    id: 'interface',
-    sub: 'reference/interface',
-    navKey: 'guide.nav.interface',
-    group: 'reference',
-    descKey: 'guide.interfacePage.intro',
-  },
-  {
-    id: 'settings',
-    sub: 'reference/settings',
-    navKey: 'guide.nav.settings',
-    group: 'reference',
-    descKey: 'guide.settingsPage.intro',
+    group: 'systems',
+    descKey: 'guide.aeldrune.dungeons.lead',
   },
   {
     id: 'combat',
     sub: 'reference/combat',
     navKey: 'guide.nav.combat',
     group: 'reference',
-    descKey: 'guide.combat.intro',
+    descKey: 'guide.aeldrune.combat.lead',
   },
   {
-    id: 'stats',
-    sub: 'reference/stats',
-    navKey: 'guide.nav.stats',
+    id: 'controls',
+    sub: 'reference/controls',
+    navKey: 'guide.nav.controls',
     group: 'reference',
-    descKey: 'guide.stats.intro',
+    descKey: 'guide.aeldrune.controls.lead',
   },
   {
-    id: 'progression',
-    sub: 'reference/progression',
-    navKey: 'guide.nav.progression',
-    group: 'reference',
-    descKey: 'guide.progression.intro',
-  },
-  {
-    id: 'talents',
-    sub: 'reference/talents',
-    navKey: 'guide.nav.talents',
-    group: 'reference',
-    descKey: 'guide.talentsPage.intro',
-  },
-  {
-    id: 'commands',
-    sub: 'reference/commands',
-    navKey: 'guide.nav.commands',
-    group: 'reference',
-    descKey: 'guide.commandsPage.intro',
-  },
-  {
-    id: 'glossary',
-    sub: 'reference/glossary',
-    navKey: 'guide.nav.glossary',
-    group: 'reference',
-    descKey: 'guide.glossary.intro',
-  },
-  {
-    id: 'editor',
-    sub: 'reference/editor',
-    navKey: 'guide.nav.editor',
-    group: 'reference',
-    descKey: 'guide.editorPage.intro',
+    id: 'faq',
+    sub: 'faq',
+    navKey: 'guide.nav.faq',
+    group: 'start',
+    descKey: 'guide.aeldrune.faq.lead',
   },
 ];
 
 export interface RouteMatch {
   route: GuideRoute;
-  /** Path segments after the matched route, e.g. ['warrior'] for /guide/classes/warrior. */
+  /** Reserved for future authored detail routes; current public routes are exact. */
   params: string[];
 }
 
@@ -298,9 +154,9 @@ export function toSub(pathname: string): string {
 }
 
 /**
- * Match a pathname to a route. Prefers the longest exact sub match; a route may also
- * claim deeper segments as params (e.g. 'classes' matches 'classes/warrior' with
- * params ['warrior']). Returns null when nothing matches (caller renders notFound).
+ * Match a pathname to an authored public route. The current Aeldrune wiki has no
+ * dynamic detail routes, so an unknown suffix must render notFound instead of being
+ * silently canonicalized to its parent section.
  */
 export function matchRoute(pathname: string): RouteMatch | null {
   const sub = toSub(pathname);
@@ -310,19 +166,6 @@ export function matchRoute(pathname: string): RouteMatch | null {
   const exact = GUIDE_ROUTES.find((r) => r.sub === sub);
   if (exact) return { route: exact, params: [] };
 
-  // Prefix match: the route whose sub is the longest prefix of the path.
-  const segs = sub.split('/');
-  let best: GuideRoute | null = null;
-  for (const r of GUIDE_ROUTES) {
-    if (!r.sub) continue;
-    const rSegs = r.sub.split('/');
-    const isPrefix = rSegs.every((s, i) => segs[i] === s);
-    if (isPrefix && (!best || r.sub.length > best.sub.length)) best = r;
-  }
-  if (best) {
-    const depth = best.sub.split('/').length;
-    return { route: best, params: segs.slice(depth) };
-  }
   return null;
 }
 

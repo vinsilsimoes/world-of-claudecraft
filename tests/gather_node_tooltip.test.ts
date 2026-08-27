@@ -116,9 +116,18 @@ describe('gatherNodeTooltipHtml', () => {
         }),
       ),
     ).toContain('Training: Herb Root (Uncommon)');
-    expect(gatherNodeTooltipHtml(model({ mir4Reward: { kind: 'darksteel' } }))).toContain(
-      'Darksteel',
-    );
+    expect(
+      gatherNodeTooltipHtml(
+        model({
+          mir4Reward: {
+            kind: 'ore',
+            material: 'metalRare',
+            mapId: 'M09',
+            darksteel: true,
+          },
+        }),
+      ),
+    ).toContain('Rare Metal + Darksteel');
   });
 
   it('each node family resolves its own name key', () => {
@@ -151,7 +160,10 @@ describe('gatherNodeToolGateFor', () => {
     proficiency: Record<string, number> = {},
   ): IWorld {
     // The plain counter map the wield-filtered scan reads (R22).
-    return { inventory, gatheringProficiency: proficiency } as unknown as IWorld;
+    return {
+      inventory,
+      gatheringProficiency: proficiency,
+    } as unknown as IWorld;
   }
 
   it('resolves the viewer tier from bags and bakes the localized denial line per family', () => {

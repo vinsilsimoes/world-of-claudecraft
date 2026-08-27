@@ -27,7 +27,100 @@ function distanceToSegment(
   return Math.hypot(point.x - (a.x + t * dx), point.z - (a.z + t * dz));
 }
 
+function distanceToBuilding(
+  point: Readonly<{ x: number; z: number }>,
+  building: (typeof BUILTIN_WORLD.props.buildings)[number],
+): number {
+  const dx = point.x - building.x;
+  const dz = point.z - building.z;
+  const cos = Math.cos(-building.rot);
+  const sin = Math.sin(-building.rot);
+  const localX = dx * cos - dz * sin;
+  const localZ = dx * sin + dz * cos;
+  const outsideX = Math.max(Math.abs(localX) - building.w / 2, 0);
+  const outsideZ = Math.max(Math.abs(localZ) - building.d / 2, 0);
+  return Math.hypot(outsideX, outsideZ);
+}
+
+function distanceToObb(
+  point: Readonly<{ x: number; z: number }>,
+  obb: Readonly<{ x: number; z: number; w: number; d: number; rot: number }>,
+): number {
+  const dx = point.x - obb.x;
+  const dz = point.z - obb.z;
+  const cos = Math.cos(-obb.rot);
+  const sin = Math.sin(-obb.rot);
+  const localX = dx * cos - dz * sin;
+  const localZ = dx * sin + dz * cos;
+  return Math.hypot(
+    Math.max(Math.abs(localX) - obb.w / 2, 0),
+    Math.max(Math.abs(localZ) - obb.d / 2, 0),
+  );
+}
+
+function distanceToConstruction(point: Readonly<{ x: number; z: number }>): number {
+  const props = BUILTIN_WORLD.props;
+  const distances = [
+    ...props.buildings.map((building) => distanceToBuilding(point, building)),
+    ...props.wells.map((well) => Math.hypot(point.x - well.x, point.z - well.z) - well.r),
+    ...props.stalls.map((stall) => Math.hypot(point.x - stall.x, point.z - stall.z) - stall.r),
+    ...props.mines.map((mine) => Math.hypot(point.x - mine.x, point.z - mine.z) - 6),
+    ...props.docks.map((dock) => Math.hypot(point.x - dock.x, point.z - dock.z) - 8),
+    ...props.tents.map((tent) => Math.hypot(point.x - tent.x, point.z - tent.z) - 1.5 * tent.scale),
+    ...props.crates.map(([x, z]) => Math.hypot(point.x - x, point.z - z) - 1),
+    ...props.campfires.map(([x, z]) => Math.hypot(point.x - x, point.z - z) - 0.85),
+    ...props.mudHuts.map(([x, z]) => Math.hypot(point.x - x, point.z - z) - 1.1),
+    ...props.ruinRings.flatMap((ring) =>
+      Array.from({ length: ring.columns }, (_, index) => {
+        const angle = (index / ring.columns) * Math.PI * 2;
+        const x = ring.x + Math.sin(angle) * ring.ringR;
+        const z = ring.z + Math.cos(angle) * ring.ringR;
+        return Math.hypot(point.x - x, point.z - z) - 0.6;
+      }),
+    ),
+    ...props.fences.map(
+      (fence) =>
+        distanceToSegment(point, { x: fence.x1, z: fence.z1 }, { x: fence.x2, z: fence.z2 }) -
+        (fence.width ?? 0.4) / 2,
+    ),
+    ...(props.benches ?? []).map((bench) => distanceToObb(point, bench)),
+    ...(props.walls ?? []).map((wall) => distanceToObb(point, wall)),
+    ...props.graveyards.map(
+      (graveyard) => Math.hypot(point.x - graveyard.x, point.z - graveyard.z) - 8,
+    ),
+    ...(props.decorProps ?? [])
+      .filter(
+        (prop) =>
+          prop.r !== undefined &&
+          !(prop.key === 'gardenArch' && prop.x === point.x && prop.z === point.z),
+      )
+      .map((prop) => Math.hypot(point.x - prop.x, point.z - prop.z) - (prop.r ?? 0)),
+  ];
+  return Math.min(...distances);
+}
+
 describe('MIR4 tutorial portals on the WoC campaign map', () => {
+  it('keeps every inter-map portal and arrival point out of nearby constructions', () => {
+    const portals = [...MIR4_WOC_TUTORIAL_PORTALS, ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS];
+
+    for (const portal of portals) {
+      for (const [sideName, side] of [
+        ['a', portal.a],
+        ['b', portal.b],
+      ] as const) {
+        for (const [pointName, point] of [
+          ['portal', side],
+          ['arrival', side.landing],
+        ] as const) {
+          const nearest = distanceToConstruction(point);
+          expect
+            .soft(nearest, `${portal.id}:${sideName}:${pointName} is too close to a construction`)
+            .toBeGreaterThanOrEqual(24);
+        }
+      }
+    }
+  });
+
   it('uses two reciprocal links on dry ground away from ordinary travel roads', () => {
     expect(MIR4_WOC_TUTORIAL_PORTALS.map((portal) => portal.id)).toEqual([
       'mir4_woc_tutorial_m02_waypoint',
@@ -53,7 +146,7 @@ describe('MIR4 tutorial portals on the WoC campaign map', () => {
     });
   });
 
-  it('keeps the M09 waypoint directly reachable from the final clue clearing', () => {
+  it('keeps the M09 waypoint reachable from the final clue clearing', () => {
     const world = buildMir4WocCampaignWorld();
     const portal = MIR4_WOC_TUTORIAL_PORTALS.find(
       (candidate) => candidate.id === 'mir4_woc_tutorial_m09_waypoint',
@@ -62,12 +155,18 @@ describe('MIR4 tutorial portals on the WoC campaign map', () => {
 
     setActiveWorldContent(world);
     try {
-      // This is the exact final-clue position from the clean Elementalist
-      // campaign. The former waypoint at (-55, 330) was visually close but a
-      // narrow prop collider held the character at this position forever.
-      const from = { x: -18.357103784972423, z: 326.9597895430174 };
-      const reached = resolveMovement(WORLD_SEED, from.x, from.z, portal.a.x, portal.a.z, 0.45);
+      const projection = world.mir4ArcMapProjections?.find(
+        (candidate) => candidate.mapId === 'm09-pantano-das-lanternas',
+      );
+      const from = projection?.controlPoints?.[7]?.target;
+      if (!from) throw new Error('M09 final clue clearing is required');
+      const route = findReachablePlayerPath(WORLD_SEED, from, portal.a, 256);
+      let reached = { ...from };
+      for (const waypoint of route) {
+        reached = resolveMovement(WORLD_SEED, reached.x, reached.z, waypoint.x, waypoint.z, 0.45);
+      }
 
+      expect(route.length).toBeGreaterThan(0);
       expect(Math.hypot(reached.x - portal.a.x, reached.z - portal.a.z)).toBeLessThanOrEqual(
         portal.radius,
       );
@@ -112,7 +211,7 @@ describe('MIR4 tutorial portals on the WoC campaign map', () => {
 
     expect(portal).toMatchObject({
       a: { x: -230, z: 434, landing: { x: -236, z: 434 } },
-      b: { x: 374, z: 776, landing: { x: 368, z: 782 } },
+      b: { x: 390, z: 788, landing: { x: 398, z: 792 } },
       radius: 2,
     });
 
@@ -195,7 +294,7 @@ describe('MIR4 tutorial portals on the WoC campaign map', () => {
 
     expect(portal).toMatchObject({
       a: { x: -400, z: 1630, landing: { x: -394, z: 1630 } },
-      b: { x: 408, z: 338, landing: { x: 408, z: 346 } },
+      b: { x: 352, z: 338, landing: { x: 352, z: 346 } },
       radius: 2,
     });
     expect(mir4PortalRouteGoal(m07TurnIn, m08Giver, available, undefined, world)).toEqual({
@@ -265,7 +364,7 @@ describe('MIR4 tutorial portals on the WoC campaign map', () => {
     const available = mir4ArcPortalsForWorld(world);
 
     expect(portal).toMatchObject({
-      a: { x: 330, z: 110, landing: { x: 324, z: 104 } },
+      a: { x: 330, z: 110, landing: { x: 330, z: 122 } },
       b: { x: -320, z: 2120, landing: { x: -326, z: 2114 } },
       radius: 2,
     });
@@ -322,7 +421,7 @@ describe('MIR4 tutorial portals on the WoC campaign map', () => {
 
     expect(portal).toMatchObject({
       a: { x: -400, z: 2160, landing: { x: -400, z: 2152 } },
-      b: { x: 260, z: 1600, landing: { x: 268, z: 1602 } },
+      b: { x: 260, z: 1600, landing: { x: 260, z: 1590 } },
       radius: 2,
     });
     expect(mir4PortalRouteGoal(m13TurnIn, m14Giver, available, undefined, world)).toEqual({

@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://worldofclaudecraft.com/sitemap.xml
-Sitemap: https://worldofclaudecraft.com/sitemap-characters.xml
+# Production sitemap origin will be added when Aeldrune receives its public domain.

@@ -7,7 +7,7 @@ import {
 import { buildingCameraHeight } from '../sim/building_layout';
 import { mineMoundFootprint, STALL_HALF_D, STALL_HALF_W } from '../sim/colliders';
 import { MOUNT_RACE_JUMP_FIXTURES } from '../sim/content/mounts';
-import { getActiveWorldContent, WORLD_MIN_Z } from '../sim/data';
+import { getActiveWorldContent } from '../sim/data';
 import {
   DOCK_SECTION_LOCAL_Z,
   DOCK_SECTION_SURFACE_Y,
@@ -26,7 +26,7 @@ import {
 } from '../sim/prop_layout';
 import { hash2 } from '../sim/rng';
 import type { BuildingDef } from '../sim/types';
-import { terrainHeight, WATER_LEVEL, waterLevel } from '../sim/world';
+import { terrainHeight, waterLevel } from '../sim/world';
 import { usesBuiltinWorldPresentation } from '../sim/world_presentation';
 import { loadGltf, releaseGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
@@ -124,7 +124,7 @@ export interface PropsResult {
   revealRoots(key: string): readonly THREE.Object3D[];
 }
 
-const mergeBandDepth = (): number => (GFX.standardMaterials ? 180 : 90);
+const mergeBandDepth = (): number => (GFX.standardMaterials ? 180 : 60);
 
 // ---------------------------------------------------------------------------
 // Asset registry — loads kick off at module import; main.ts awaits
@@ -1559,7 +1559,7 @@ export function buildProps(seed: number, delveLabel?: (delveId: string) => strin
     return holder;
   }
 
-  // ---- instancing: repeated kinds collect matrices per (asset × z-band) ----
+  // ---- instancing: repeated kinds collect matrices per (asset × spatial cell) ----
   const instanceBatches = new Map<string, { key: PropKey; mats: THREE.Matrix4[] }>();
   const tmpPos = new THREE.Vector3();
   const tmpQuat = new THREE.Quaternion();
@@ -1577,11 +1577,12 @@ export function buildProps(seed: number, delveLabel?: (delveId: string) => strin
     tmpQuat.setFromEuler(typeof rot === 'number' ? new THREE.Euler(0, rot, 0) : rot);
     if (typeof scale === 'number') tmpScale.setScalar(scale);
     else tmpScale.set(scale[0], scale[1], scale[2]);
-    const band = Math.floor((z - WORLD_MIN_Z) / mergeBandDepth());
-    // Split bands into x-halves (the foliage bucket pattern): a world-wide
-    // band's bounding sphere always intersects the shadow frustum, so it
-    // re-submits into the shadow map every frame; half-bands cull.
-    const bucketKey = `${key}:${x < 0 ? 'w' : 'e'}:${band}`;
+    // A half-world bucket still submits every placement on that side when one
+    // corner reaches the fog. Mirror Lake exposed the failure sharply: one low
+    // tier bucket contributed millions of off-screen triangles at the harbor.
+    // Square cells keep the existing material/asset instancing while giving
+    // frustum and fog culling a local bound.
+    const bucketKey = `${key}:${propCellKey(x, z, mergeBandDepth())}`;
     let bucket = instanceBatches.get(bucketKey);
     if (!bucket) {
       bucket = { key, mats: [] };
@@ -3109,10 +3110,11 @@ function mergeStaticMeshes(group: THREE.Group, keep: Set<THREE.Object3D>): THREE
     const material = mesh.material as THREE.Material;
     const worldX = mesh.matrixWorld.elements[12];
     const worldZ = mesh.matrixWorld.elements[14];
-    const band = Math.floor((worldZ - WORLD_MIN_Z) / mergeBandDepth());
-    // x-halved like the instance batches above: world-wide merged bands
-    // defeat shadow-frustum culling (their bounds always intersect it).
-    const key = `${material.uuid}:${mesh.castShadow ? 1 : 0}:${worldX < 0 ? 'w' : 'e'}:${band}`;
+    const cellKey = propCellKey(worldX, worldZ, mergeBandDepth());
+    // Merge inside a local square rather than a half-world strip. The strip's
+    // large bound made one visible prop pull unrelated geometry through both
+    // fog and frustum culling, especially along Mirror Lake.
+    const key = `${material.uuid}:${mesh.castShadow ? 1 : 0}:${cellKey}`;
     let bucket = buckets.get(key);
     if (!bucket) {
       bucket = { material, castShadow: mesh.castShadow, geoms: [] };

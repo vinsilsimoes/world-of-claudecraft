@@ -19,6 +19,8 @@ import {
 import { mir4MaterialName } from './mir4_material_i18n';
 import {
   buildMir4ProgressionView,
+  type Mir4CraftingCategory,
+  type Mir4EquipmentCraftingCategory,
   type Mir4ProgressionItemView,
   type Mir4ProgressionTab,
 } from './mir4_progression_view';
@@ -33,7 +35,57 @@ const TAB_KEYS: Readonly<Record<Mir4ProgressionTab, TranslationKey>> = {
   crafting: 'hudChrome.mir4.progression.crafting',
 };
 const TABS = Object.keys(TAB_KEYS) as Mir4ProgressionTab[];
+const CRAFTING_CATEGORY_KEYS: Readonly<Record<Mir4CraftingCategory, TranslationKey>> = {
+  equipment: 'hudChrome.mir4.progression.craftingCategoryEquipment',
+  metals: 'hudChrome.mir4.progression.craftingCategoryMetals',
+  tomes: 'hudChrome.mir4.progression.craftingCategoryTomes',
+  consumables: 'hudChrome.mir4.progression.craftingCategoryConsumables',
+  enhancement: 'hudChrome.mir4.progression.craftingCategoryEnhancement',
+};
+const CRAFTING_CATEGORIES = Object.keys(CRAFTING_CATEGORY_KEYS) as Mir4CraftingCategory[];
+const EQUIPMENT_CRAFTING_CATEGORY_KEYS: Readonly<
+  Record<Mir4EquipmentCraftingCategory, TranslationKey>
+> = {
+  weapons: 'hudChrome.mir4.progression.equipmentCategoryWeapons',
+  armor: 'hudChrome.mir4.progression.equipmentCategoryArmor',
+  legwear: 'hudChrome.mir4.progression.equipmentCategoryLegwear',
+  shields: 'hudChrome.mir4.progression.equipmentCategoryShields',
+  accessories: 'hudChrome.mir4.progression.equipmentCategoryAccessories',
+};
+const EQUIPMENT_CRAFTING_CATEGORIES = Object.keys(
+  EQUIPMENT_CRAFTING_CATEGORY_KEYS,
+) as Mir4EquipmentCraftingCategory[];
 const fmt = (value: number) => formatNumber(value, { maximumFractionDigits: 0 });
+
+function bindRovingTabs(
+  buttons: readonly HTMLButtonElement[],
+  activate: (button: HTMLButtonElement) => void,
+): void {
+  const selectedIndex = Math.max(
+    0,
+    buttons.findIndex((button) => button.getAttribute('aria-selected') === 'true'),
+  );
+  for (const [index, button] of buttons.entries()) {
+    button.tabIndex = index === selectedIndex ? 0 : -1;
+    button.addEventListener('click', () => activate(button));
+    button.addEventListener('keydown', (event) => {
+      let nextIndex: number | null = null;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        nextIndex = (index + 1) % buttons.length;
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        nextIndex = (index - 1 + buttons.length) % buttons.length;
+      } else if (event.key === 'Home') {
+        nextIndex = 0;
+      } else if (event.key === 'End') {
+        nextIndex = buttons.length - 1;
+      }
+      if (nextIndex === null) return;
+      event.preventDefault();
+      const nextButton = buttons[nextIndex];
+      if (nextButton) activate(nextButton);
+    });
+  }
+}
 
 export interface Mir4ProgressionWindowDeps extends PainterHostPresentation {
   root: HTMLElement;
@@ -90,7 +142,9 @@ function refinementRow(
 ): HTMLElement {
   const row = deps.root.ownerDocument.createElement('div');
   row.className = 'vendor-item crafting-recipe-item';
-  const chance = formatNumber(view.successBps / 1000, { maximumFractionDigits: 1 });
+  const chance = formatNumber(view.successBps / 1000, {
+    maximumFractionDigits: 1,
+  });
   const hasScroll = (deps.world.mir4PlayerState()?.mir4Materials?.solarScroll ?? 0) > 0;
   const canEnhance = view.nextEnhancement !== null && hasScroll;
   const risk = view.destroysOnFailure
@@ -145,7 +199,9 @@ function layerRow(
           ? 'hudChrome.mir4.progression.rollCostEnchantment'
           : 'hudChrome.mir4.progression.rollCostBlessing',
       )
-    : t('hudChrome.mir4.progression.layerUnsupported', { layer: t(TAB_KEYS[layer]) });
+    : t('hudChrome.mir4.progression.layerUnsupported', {
+        layer: t(TAB_KEYS[layer]),
+      });
   const action = pendingThisLayer
     ? `<div class="crafting-reagents"><b>${esc(t('hudChrome.mir4.progression.preview'))}</b>${effectsHtml(pendingThisLayer.affixes)}</div><div class="crafting-actions"><button type="button" class="crafting-qty-btn" data-resolve="accept" data-focus-key="resolve:${layer}:${view.item.itemId}:accept">${esc(t('hudChrome.mir4.progression.acceptPreview'))}</button><button type="button" class="crafting-qty-btn" data-resolve="keep" data-focus-key="resolve:${layer}:${view.item.itemId}:keep">${esc(t('hudChrome.mir4.progression.keepCurrent'))}</button></div>`
     : `${detailsHtml([blockedByOther ? esc(t('hudChrome.mir4.progression.pendingOtherLayer', { layer: t(TAB_KEYS[otherLayer]) })) : esc(rollReason)])}<button type="button" class="vendor-item crafting-recipe-btn" data-roll="${view.item.itemId}" data-focus-key="roll:${layer}:${view.item.itemId}" aria-label="${esc(`${t('hudChrome.mir4.progression.roll')}. ${rollReason}`)}"${canRoll ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.roll'))}</span></button>`;
@@ -181,23 +237,42 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
   const selected = TABS.includes(root.dataset.mir4ProgressionTab as Mir4ProgressionTab)
     ? (root.dataset.mir4ProgressionTab as Mir4ProgressionTab)
     : 'refinement';
+  const craftingCategory = CRAFTING_CATEGORIES.includes(
+    root.dataset.mir4CraftingCategory as Mir4CraftingCategory,
+  )
+    ? (root.dataset.mir4CraftingCategory as Mir4CraftingCategory)
+    : 'equipment';
+  const equipmentCraftingCategory = EQUIPMENT_CRAFTING_CATEGORIES.includes(
+    root.dataset.mir4EquipmentCraftingCategory as Mir4EquipmentCraftingCategory,
+  )
+    ? (root.dataset.mir4EquipmentCraftingCategory as Mir4EquipmentCraftingCategory)
+    : 'weapons';
   const signature = JSON.stringify([
     selected,
+    craftingCategory,
+    equipmentCraftingCategory,
     deps.world.copper,
     t('hudChrome.mir4.progression.title'),
     state?.mir4Equipment,
     state?.mir4EquipmentInstances,
     state?.mir4Materials,
+    state?.mir4Currencies,
     state?.mir4ArcQuests,
     state?.mir4ArcRewards?.items,
     deps.world.player?.mir4?.statusValues,
   ]);
   if (root.dataset.mir4ProgressionSignature === signature) return true;
+  root.dataset.mir4CraftingCategory = craftingCategory;
+  root.dataset.mir4EquipmentCraftingCategory = equipmentCraftingCategory;
   root.dataset.mir4ProgressionSignature = signature;
   const focusKey = captureFocusKey(root);
   const previousScrollTop = root.querySelector('.crafting-body')?.scrollTop ?? 0;
-  const previousTabsScrollLeft = root.querySelector('.crafting-tabs')?.scrollLeft ?? 0;
-  root.innerHTML = `<div class="panel-title"><span>${esc(t('hudChrome.mir4.progression.title'))}</span><button type="button" class="x-btn" data-close data-focus-key="close" aria-label="${esc(t('itemUi.bags.close'))}">${svgIcon('close')}</button></div><div class="crafting-tabs" role="tablist">${TABS.map((tab) => `<button type="button" class="crafting-tab${tab === selected ? ' sel' : ''}" data-tab="${tab}" data-focus-key="tab:${tab}" role="tab" aria-selected="${tab === selected}">${esc(t(TAB_KEYS[tab]))}</button>`).join('')}</div><div class="crafting-body"></div>`;
+  const previousTabsScrollLeft = root.querySelector('.crafting-primary-tabs')?.scrollLeft ?? 0;
+  const previousCategoryTabsScrollLeft =
+    root.querySelector('.crafting-category-tabs')?.scrollLeft ?? 0;
+  const previousEquipmentTabsScrollLeft =
+    root.querySelector('.crafting-equipment-category-tabs')?.scrollLeft ?? 0;
+  root.innerHTML = `<div class="panel-title"><span>${esc(t('hudChrome.mir4.progression.title'))}</span><button type="button" class="x-btn" data-close data-focus-key="close" aria-label="${esc(t('itemUi.bags.close'))}">${svgIcon('close')}</button></div><div class="crafting-tabs crafting-primary-tabs" role="tablist">${TABS.map((tab) => `<button type="button" class="crafting-tab${tab === selected ? ' sel' : ''}" data-tab="${tab}" data-focus-key="tab:${tab}" role="tab" aria-selected="${tab === selected}">${esc(t(TAB_KEYS[tab]))}</button>`).join('')}</div><div class="crafting-body"></div>`;
   root.querySelector('[data-close]')?.addEventListener('click', deps.close);
   for (const button of root.querySelectorAll<HTMLButtonElement>('[data-tab]')) {
     button.addEventListener('click', () => {
@@ -210,8 +285,12 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
   if (!body) return true;
   const restoreInteractionState = (): void => {
     body.scrollTop = previousScrollTop;
-    const tabs = root.querySelector<HTMLElement>('.crafting-tabs');
+    const tabs = root.querySelector<HTMLElement>('.crafting-primary-tabs');
     if (tabs) tabs.scrollLeft = previousTabsScrollLeft;
+    const categoryTabs = root.querySelector<HTMLElement>('.crafting-category-tabs');
+    if (categoryTabs) categoryTabs.scrollLeft = previousCategoryTabsScrollLeft;
+    const equipmentTabs = root.querySelector<HTMLElement>('.crafting-equipment-category-tabs');
+    if (equipmentTabs) equipmentTabs.scrollLeft = previousEquipmentTabsScrollLeft;
     if (focusKey === null) return;
     const keyed = [...root.querySelectorAll<HTMLElement>('[data-focus-key]')];
     restoreFirstEnabled([
@@ -231,6 +310,72 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
     deps.world.player?.mir4?.statusValues,
   );
   if (selected === 'crafting') {
+    const categoryCounts: Readonly<Record<Mir4CraftingCategory, number>> = {
+      equipment: view.equipmentRecipes.length,
+      metals: view.recipes.filter((recipe) => recipe.category === 'metals').length,
+      tomes: view.recipes.filter((recipe) => recipe.category === 'tomes').length,
+      consumables: view.recipes.filter((recipe) => recipe.category === 'consumables').length,
+      enhancement: view.recipes.filter((recipe) => recipe.category === 'enhancement').length,
+    };
+    body.insertAdjacentHTML(
+      'beforeend',
+      `<div class="crafting-tabs crafting-category-tabs" role="tablist" aria-label="${esc(t('hudChrome.mir4.progression.craftingCategoryAria'))}">${CRAFTING_CATEGORIES.map((category) => `<button type="button" id="mir4-craft-category-${category}" class="crafting-tab crafting-category-tab${category === craftingCategory ? ' sel' : ''}" data-craft-category="${category}" data-focus-key="craft-category:${category}" role="tab" aria-selected="${category === craftingCategory}" aria-controls="mir4-crafting-category-panel"><span>${esc(t(CRAFTING_CATEGORY_KEYS[category]))}</span><span class="crafting-tab-count">${esc(fmt(categoryCounts[category]))}</span></button>`).join('')}</div>`,
+    );
+    bindRovingTabs(
+      [...body.querySelectorAll<HTMLButtonElement>('[data-craft-category]')],
+      (button) => {
+        body.scrollTop = 0;
+        root.dataset.mir4CraftingCategory = button.dataset.craftCategory;
+        paintMir4ProgressionWindow(deps);
+        root
+          .querySelector<HTMLButtonElement>(
+            `[data-craft-category="${button.dataset.craftCategory}"]`,
+          )
+          ?.focus();
+      },
+    );
+    const categoryPanel = root.ownerDocument.createElement('div');
+    categoryPanel.id = 'mir4-crafting-category-panel';
+    categoryPanel.className = 'crafting-category-panel';
+    categoryPanel.setAttribute('role', 'tabpanel');
+    categoryPanel.setAttribute('aria-labelledby', `mir4-craft-category-${craftingCategory}`);
+    body.appendChild(categoryPanel);
+    if (craftingCategory === 'equipment') {
+      const equipmentCategoryCounts = Object.fromEntries(
+        EQUIPMENT_CRAFTING_CATEGORIES.map((category) => [
+          category,
+          view.equipmentRecipes.filter((recipe) => recipe.category === category).length,
+        ]),
+      ) as Record<Mir4EquipmentCraftingCategory, number>;
+      categoryPanel.insertAdjacentHTML(
+        'beforeend',
+        `<div class="crafting-tabs crafting-equipment-category-tabs" role="tablist" aria-label="${esc(t('hudChrome.mir4.progression.equipmentCategoryAria'))}">${EQUIPMENT_CRAFTING_CATEGORIES.map((category) => `<button type="button" id="mir4-equipment-craft-category-${category}" class="crafting-tab crafting-equipment-category-tab${category === equipmentCraftingCategory ? ' sel' : ''}" data-equipment-craft-category="${category}" data-focus-key="equipment-craft-category:${category}" role="tab" aria-selected="${category === equipmentCraftingCategory}" aria-controls="mir4-crafting-results"><span>${esc(t(EQUIPMENT_CRAFTING_CATEGORY_KEYS[category]))}</span><span class="crafting-tab-count">${esc(fmt(equipmentCategoryCounts[category]))}</span></button>`).join('')}</div>`,
+      );
+      bindRovingTabs(
+        [...categoryPanel.querySelectorAll<HTMLButtonElement>('[data-equipment-craft-category]')],
+        (button) => {
+          body.scrollTop = 0;
+          root.dataset.mir4EquipmentCraftingCategory = button.dataset.equipmentCraftCategory;
+          paintMir4ProgressionWindow(deps);
+          root
+            .querySelector<HTMLButtonElement>(
+              `[data-equipment-craft-category="${button.dataset.equipmentCraftCategory}"]`,
+            )
+            ?.focus();
+        },
+      );
+    }
+    const results = root.ownerDocument.createElement('div');
+    results.id = 'mir4-crafting-results';
+    results.className = 'crafting-category-results';
+    results.setAttribute('role', 'tabpanel');
+    results.setAttribute(
+      'aria-labelledby',
+      craftingCategory === 'equipment'
+        ? `mir4-equipment-craft-category-${equipmentCraftingCategory}`
+        : `mir4-craft-category-${craftingCategory}`,
+    );
+    categoryPanel.appendChild(results);
     if (view.campaignProfession) {
       const campaign = view.campaignProfession;
       const row = root.ownerDocument.createElement('div');
@@ -241,13 +386,68 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
         ?.addEventListener('click', () =>
           operation(deps, () => deps.world.mir4CampaignProfession()),
         );
-      body.appendChild(row);
+      results.appendChild(row);
     }
-    body.insertAdjacentHTML(
+    results.insertAdjacentHTML(
       'beforeend',
-      `<div class="bag-section-header">${esc(t('hudChrome.mir4.progression.materialRecipes'))}</div>`,
+      `<div class="bag-section-header">${esc(t(craftingCategory === 'equipment' ? EQUIPMENT_CRAFTING_CATEGORY_KEYS[equipmentCraftingCategory] : CRAFTING_CATEGORY_KEYS[craftingCategory]))}</div>`,
     );
-    for (const recipe of view.recipes) {
+    const equipmentCategoryRecipes =
+      craftingCategory === 'equipment'
+        ? view.equipmentRecipes.filter((recipe) => recipe.category === equipmentCraftingCategory)
+        : [];
+    for (const recipe of equipmentCategoryRecipes) {
+      const row = root.ownerDocument.createElement('div');
+      row.className = 'vendor-item crafting-recipe-item';
+      const visual = mir4EquipmentVisualItem(recipe.item);
+      const outputName = mir4EquipmentDisplayName(recipe.item);
+      const previousName = recipe.previousItem
+        ? mir4EquipmentDisplayName(recipe.previousItem)
+        : t('hudChrome.mir4.progression.noPreviousItem');
+      const costs = [
+        t('hudChrome.mir4.progression.previousItemCost', {
+          item: previousName,
+        }),
+        t('hudChrome.mir4.progression.materialCost', {
+          held: fmt(recipe.metal.held),
+          needed: fmt(recipe.metal.needed),
+          material: mir4MaterialName(recipe.metal.key),
+        }),
+        t('hudChrome.mir4.progression.darksteelCost', {
+          held: fmt(recipe.darksteelHeld),
+          needed: fmt(recipe.darksteelCost),
+        }),
+      ];
+      const creates = t('hudChrome.mir4.progression.createsEquipment', {
+        item: outputName,
+      });
+      row.innerHTML = `<div class="vendor-item">${visual ? `<span class="crafting-recipe-socket">${deps.itemIcon(visual)}</span>` : ''}<span class="vi-name"><span class="crafting-recipe-name">${esc(creates)}</span>${costs.map((cost) => `<span class="vi-sub crafting-reagent-line">${esc(cost)}</span>`).join('')}</span></div><button type="button" class="vendor-item crafting-recipe-btn" data-recipe="${esc(recipe.recipeId)}" data-focus-key="recipe:${esc(recipe.recipeId)}" aria-label="${esc(t('hudChrome.mir4.progression.createEquipmentAria', { item: outputName }))}"${recipe.affordable ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.create'))}</span></button>`;
+      const preview = row.querySelector<HTMLElement>(':scope > .vendor-item');
+      if (preview) {
+        preview.tabIndex = 0;
+        preview.dataset.focusKey = `recipe-info:${recipe.recipeId}`;
+        preview.setAttribute('aria-label', outputName);
+        const tooltipHtml = mir4EquipmentTooltipHtml(recipe.item);
+        const description = root.ownerDocument.createElement('span');
+        description.id = `mir4-crafting-description-${recipe.recipeId}`;
+        description.className = 'sr-only';
+        description.innerHTML = tooltipHtml;
+        preview.setAttribute('aria-describedby', description.id);
+        row.appendChild(description);
+        deps.attachTooltip(preview, () => tooltipHtml);
+      }
+      row
+        .querySelector<HTMLButtonElement>('[data-recipe]')
+        ?.addEventListener('click', () =>
+          operation(deps, () => deps.world.mir4CraftMaterial(recipe.recipeId)),
+        );
+      results.appendChild(row);
+    }
+    const categoryRecipes =
+      craftingCategory === 'equipment'
+        ? []
+        : view.recipes.filter((recipe) => recipe.category === craftingCategory);
+    for (const recipe of categoryRecipes) {
       const row = root.ownerDocument.createElement('div');
       row.className = 'vendor-item crafting-recipe-item';
       const output = mir4MaterialName(recipe.output);
@@ -259,7 +459,11 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
         }),
       );
       if (recipe.copperCost > 0)
-        costs.push(t('hudChrome.mir4.progression.copperCost', { amount: fmt(recipe.copperCost) }));
+        costs.push(
+          t('hudChrome.mir4.progression.copperCost', {
+            amount: fmt(recipe.copperCost),
+          }),
+        );
       const creates = t('hudChrome.mir4.progression.creates', {
         count: fmt(recipe.outputCount),
         material: output,
@@ -270,7 +474,16 @@ export function paintMir4ProgressionWindow(deps: Mir4ProgressionWindowDeps): boo
         ?.addEventListener('click', () =>
           operation(deps, () => deps.world.mir4CraftMaterial(recipe.recipeId)),
         );
-      body.appendChild(row);
+      results.appendChild(row);
+    }
+    if (
+      (craftingCategory === 'equipment' && equipmentCategoryRecipes.length === 0) ||
+      (craftingCategory !== 'equipment' && categoryRecipes.length === 0)
+    ) {
+      results.insertAdjacentHTML(
+        'beforeend',
+        `<div class="empty-state">${esc(t('hudChrome.mir4.progression.noCategoryRecipes'))}</div>`,
+      );
     }
     restoreInteractionState();
     return true;

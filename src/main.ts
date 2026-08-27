@@ -270,6 +270,7 @@ import {
   preloadMechAssets,
   startStreamedCharacterPreloads,
 } from './render/characters/assets';
+import { genderedProfileArmorSet } from './render/characters/gendered_profile_outfit';
 import { skinCount, weaponSkinModelUrl } from './render/characters/manifest';
 import {
   ARMOR_SETS,
@@ -380,7 +381,6 @@ import { loadCharselectNews } from './ui/charselect_news';
 import { CharselectRedesignEditor } from './ui/charselect_redesign';
 import { ChatCommandMenu } from './ui/chat_command_menu';
 import { CLASS_DETAILS, SIGNATURE_ABILITIES } from './ui/class_details_data';
-import { classIconUrl } from './ui/class_icon_art';
 import { claudiumBalanceAddress, currentWocDiscountBps } from './ui/claudium_view';
 import { isDevGuiCommand } from './ui/dev_command_view';
 import { devTierByIndex, devTierDisplayName } from './ui/dev_tier';
@@ -464,6 +464,8 @@ import { type PerfOverlayConfig, PerfOverlayConfigStore } from './ui/perf_overla
 import { buildPerfOverlayView, FrameMeter } from './ui/perf_overlay_model';
 import { hydratePortraits, portraitChipHtml } from './ui/portrait_chip';
 import {
+  decorateProfileClassChips,
+  entryClassPresentation,
   entryShellClass,
   installProfileClassChips,
   isActiveMir4Class,
@@ -5404,37 +5406,6 @@ function renderSkinPicker(
   });
 }
 
-/** Give each class button its painted class emblem (class_icon_art.ts), so the
- *  rail reads as "pick a class" rather than "pick a face" - the 3D headshot this
- *  once showed was the same subject as the turntable directly above it. Falls
- *  back to the procedural crest for an id with no art, which for the static
- *  markup in both entry documents means never. A plain <img src> needs no asset
- *  barrier; one-shot per chip via the .mini-class-portrait guard below, so it is
- *  safe to call again. */
-function decorateClassChips(): void {
-  document
-    .querySelectorAll<HTMLElement>('#charcreate-panel .mini-class, #offline-select .mini-class')
-    .forEach((li) => {
-      if (li.querySelector('.mini-class-portrait')) return;
-      const cls = entryShellClass(li.dataset.class as PlayableClass);
-      const key = li.dataset.i18n;
-      const label = document.createElement('span');
-      label.className = 'mini-class-label';
-      if (key) label.dataset.i18n = key;
-      label.textContent = (li.textContent ?? '').trim();
-      li.removeAttribute('data-i18n'); // moved onto the label so i18n won't wipe the emblem
-      li.textContent = '';
-      const img = document.createElement('img');
-      img.className = 'mini-class-portrait';
-      img.alt = '';
-      img.decoding = 'async';
-      img.src = classIconUrl(cls) ?? iconDataUrl('crest', `class_${cls}`, 96);
-      li.appendChild(img);
-      li.appendChild(label);
-      li.classList.add('has-portrait');
-    });
-}
-
 function selectedSkin(rowId: string, fallback: number): number {
   const selected = document.querySelector(`${rowId} .skin-swatch.sel`) as HTMLElement | null;
   const raw = selected?.dataset.skin;
@@ -5526,8 +5497,8 @@ function readStoredArmorSet(cls: PlayerClass): ArmorSetId {
 /** The composed appearance a class renders with. Reads `modularAppearance`
  *  live, so editing the look in creation is reflected the next time a visual
  *  is built. */
-function modularLookForClass(cls: PlayerClass): ModularLook | null {
-  return { app: modularAppearance, worn: creationLoadout(cls) };
+function modularLookForClass(cls: PlayableClass): ModularLook | null {
+  return { app: modularAppearance, worn: creationLoadout(cls, modularAppearance.gender) };
 }
 
 /** The armour set an entity's composed body wears: the core's decision
@@ -5545,8 +5516,17 @@ let creationHelm = false;
 /** The creation loadout for a class's set: everything it has, MINUS the helm
  *  unless it has been switched back on, so the player can see the face, hair
  *  and skin tone they are picking. */
-function creationLoadout(cls: PlayerClass): ArmorLoadout {
-  const set = readStoredArmorSet(cls);
+function creationArmorSet(
+  cls: PlayableClass,
+  gender: ModularAppearance['gender'] = modularAppearance.gender,
+): ArmorSetId {
+  const presentation = entryClassPresentation(cls);
+  const baseSet = presentation.armorSet ?? readStoredArmorSet(presentation.visualClass);
+  return presentation.armorSet ? genderedProfileArmorSet(baseSet, gender) : baseSet;
+}
+
+function creationLoadout(cls: PlayableClass, gender: ModularAppearance['gender']): ArmorLoadout {
+  const set = creationArmorSet(cls, gender);
   const full = fullSet(set);
   return creationHelm ? full : { ...full, head: null };
 }
@@ -5554,11 +5534,19 @@ function creationLoadout(cls: PlayerClass): ArmorLoadout {
 /** Drive the creation/offline turntable for a class chip: every class composes
  *  from the stored appearance, wearing its class kit, through its own modular
  *  def (class clips + starter weapons). */
-function previewClassBody(cls: PlayerClass): void {
+function previewProfileAppearance(cls: PlayableClass, app: ModularAppearance): void {
   if (!characterPreview) return;
-  const look = modularLookForClass(cls);
-  if (look) characterPreview.setModular(look.app, look.worn, cls);
-  else characterPreview.setClass(cls);
+  const presentation = entryClassPresentation(cls);
+  characterPreview.setModular(
+    app,
+    creationLoadout(cls, app.gender),
+    presentation.visualClass,
+    presentation.starterWeaponItemId,
+  );
+}
+
+function previewClassBody(cls: PlayableClass): void {
+  previewProfileAppearance(cls, modularAppearance);
 }
 
 /** The class each panel's customizer is currently editing. The customizer
@@ -5566,14 +5554,14 @@ function previewClassBody(cls: PlayerClass): void {
  *  agnostic), so its closures must read the panel's live class from here
  *  rather than capture the class they mounted under; a captured one would
  *  keep previewing the first class's kit and weapons after a switch. */
-const appearancePanelClass = new Map<string, PlayerClass>();
+const appearancePanelClass = new Map<string, PlayableClass>();
 
 /** Mount (or tear down) the appearance customizer under a class-details panel.
  *  Locale staleness (the customizer bakes its labels at mount, and the create
  *  panel mounts before the locale chunk resolves) is tracked by
  *  src/ui/appearance_panel_locale.ts, which the redesign editor registers with
  *  too so one relocalize pass covers both. */
-function syncAppearanceUi(panelId: string, cls: PlayerClass): void {
+function syncAppearanceUi(panelId: string, cls: PlayableClass): void {
   const hostSel = APPEARANCE_HOSTS[panelId];
   if (!hostSel) return;
   const host = document.querySelector(hostSel) as HTMLElement | null;
@@ -5609,18 +5597,16 @@ function syncAppearanceUi(panelId: string, cls: PlayerClass): void {
       onChange: (next) => {
         modularAppearance = next;
         storeAppearance(next);
-        const c = panelClass();
-        characterPreview?.setModular(next, creationLoadout(c), c);
+        previewProfileAppearance(panelClass(), next);
       },
       helm: creationHelm,
       onHelm: (on) => {
         creationHelm = on;
-        const c = panelClass();
-        characterPreview?.setModular(modularAppearance, creationLoadout(c), c);
+        previewProfileAppearance(panelClass(), modularAppearance);
       },
       // The chips must preview against the set the composed body actually
       // wears: the stored override when one exists, not the class default.
-      armorSet: () => readStoredArmorSet(panelClass()),
+      armorSet: () => creationArmorSet(panelClass(), modularAppearance.gender),
     }),
   );
 }
@@ -5710,7 +5696,7 @@ function updatePreviewContainer(panelId: string): void {
     } else {
       const row = document.querySelector('#char-list .char-row.sel') as HTMLElement | null;
       const cls = (row?.dataset.class as PlayableClass) ?? 'warrior';
-      previewClassBody(entryShellClass(cls));
+      previewClassBody(cls);
       characterPreview.setSkin(Number(row?.dataset.skin ?? 0) || 0);
     }
     syncPreviewAfterPanelLayout();
@@ -5724,10 +5710,10 @@ function updatePreviewContainer(panelId: string): void {
   const selEl = document.querySelector(selSelector) as HTMLElement | null;
   if (selEl) {
     const cls = selEl.dataset.class as PlayableClass;
-    const shellClass = entryShellClass(cls);
-    previewClassBody(shellClass);
-    if (panelId === '#charcreate-panel') refreshOnlineSkins(shellClass);
-    else refreshOfflineSkins(shellClass);
+    const presentation = entryClassPresentation(cls);
+    previewClassBody(cls);
+    if (panelId === '#charcreate-panel') refreshOnlineSkins(presentation.visualClass);
+    else refreshOfflineSkins(presentation.visualClass);
   }
 
   syncPreviewAfterPanelLayout();
@@ -6780,8 +6766,12 @@ async function refreshCharacters(): Promise<void> {
       row.setAttribute('aria-selected', 'false');
       row.dataset.class = c.class;
       row.dataset.skin = String(c.skin ?? 0);
-      const shellClass = entryShellClass(c.class);
-      const rosterLook = { ...c, class: shellClass };
+      const presentation = entryClassPresentation(c.class);
+      const rosterLook = {
+        ...c,
+        class: presentation.visualClass,
+        armorSet: presentation.armorSet ?? undefined,
+      };
       const className = profileClassDisplayName(c.class);
       // Online characters explain themselves on their own hint line (below the
       // class) instead of the terse "(in world)" suffix, so the reason for the
@@ -6799,7 +6789,7 @@ async function refreshCharacters(): Promise<void> {
       // (or the mech cosmetic), matching the 3D stage and the world.
       const chipHtml = () =>
         portraitChipHtml({
-          cls: shellClass,
+          cls: presentation.visualClass,
           skin: c.skin ?? 0,
           name: c.name,
           variant: 'sm',
@@ -6898,7 +6888,16 @@ async function refreshCharacters(): Promise<void> {
         // Select the row first so the stage, name, and Enter World button all
         // agree on which character is being redesigned.
         selectRow();
-        redesignEditor.open({ ...c, class: entryShellClass(c.class) }, opener);
+        const presentation = entryClassPresentation(c.class);
+        redesignEditor.open(
+          {
+            ...c,
+            class: presentation.visualClass,
+            armorSet: presentation.armorSet ?? undefined,
+            mainhandItemId: c.mainhandItemId ?? presentation.starterWeaponItemId,
+          },
+          opener,
+        );
       });
       // Double-click a row to jump straight into the world (classic-select
       // muscle memory). It routes through the shared desktop Enter World button
@@ -7154,8 +7153,12 @@ const activeClassDetailsTimeouts: Record<string, number | null> = {};
  *  with a unit test. */
 function showCharselectCharacter(c: CharacterSummary): void {
   if (!characterPreview) return;
-  const shellClass = entryShellClass(c.class);
-  const look = charselectLook({ ...c, class: shellClass });
+  const presentation = entryClassPresentation(c.class);
+  const look = charselectLook({
+    ...c,
+    class: presentation.visualClass,
+    armorSet: presentation.armorSet ?? undefined,
+  });
   if (!look) {
     characterPreview.setAppearance(charselectAppearance(c));
     return;
@@ -7166,8 +7169,8 @@ function showCharselectCharacter(c: CharacterSummary): void {
   characterPreview.setModular(
     look.app,
     look.worn,
-    shellClass,
-    c.mainhandItemId ?? null,
+    presentation.visualClass,
+    c.mainhandItemId ?? presentation.starterWeaponItemId,
     c.offhandItemId ?? null,
   );
   characterPreview.setWeaponSkin(c.weaponSkinId ?? null);
@@ -7203,11 +7206,12 @@ function charselectAppearance(c: CharacterSummary): PreviewAppearance {
   // preview built in the race window shows the base weapon and picks the skin
   // up on the next selection change.
   ensureCharacterUrl(weaponSkinModelUrl(c.weaponSkinId ?? null));
+  const presentation = entryClassPresentation(c.class);
   return {
-    cls: entryShellClass(c.class),
+    cls: presentation.visualClass,
     skin: c.skin ?? 0,
     skinCatalog: c.skinCatalog ?? 'class',
-    mainhandItemId: c.mainhandItemId ?? null,
+    mainhandItemId: c.mainhandItemId ?? presentation.starterWeaponItemId ?? null,
     offhandItemId: c.offhandItemId ?? null,
     weaponSkinId: c.weaponSkinId ?? null,
   };
@@ -7229,13 +7233,13 @@ function renderClassDetails(
   // offline pickers pass none and rebuild the class body only when the class changes.
   if (characterPreview) {
     if (preview) characterPreview.setAppearance(preview);
-    else if (currentlyRenderedClass[panelId] !== className) previewClassBody(shellClass);
+    else if (currentlyRenderedClass[panelId] !== className) previewClassBody(className);
   }
 
   // Show the part/colour pickers for a composed body, hide them for a fixed
   // class rig. Runs BEFORE the redundancy return so the first render of a
   // panel mounts them (the class has not "changed" at that point).
-  if (!preview) syncAppearanceUi(panelId, shellClass);
+  if (!preview) syncAppearanceUi(panelId, className);
 
   // Redundant render check (class details panel content only)
   if (currentlyRenderedClass[panelId] === className) return;
@@ -8538,12 +8542,12 @@ function flashWalletError(message: string): void {
 // linked, so the button can show the verified ✓ state.
 // ── Discord login/onboarding ─────────────────────────────────────────────────
 // Discord UI is available on web and native unless explicitly disabled at build time.
-const DISCORD_BUILD_ENABLED = String(import.meta.env.VITE_DISCORD_DISABLED ?? '').trim() !== '1';
+const DISCORD_BUILD_ENABLED = String(import.meta.env.VITE_DISCORD_ENABLED ?? '').trim() === '1';
 // Community links for the mobile More tray. discordInviteUrl() itself now
 // falls back to DEFAULT_DISCORD_INVITE_URL (discord_status.ts) when the
 // server-fed value is not known yet (logged out, offline), so every caller
 // gets the fail-open behavior for free.
-const DONATE_URL = 'https://ko-fi.com/worldofclaudecraft';
+const DONATE_URL = '#';
 const DISCORD_ONBOARD_KEY = 'woc_discord_onboard';
 let discordPopup: Window | null = null;
 
@@ -9996,7 +10000,7 @@ function wireStartScreens(): void {
       const cls = (card as HTMLElement).dataset.class as PlayableClass;
       renderClassDetails('offline-class-details', cls);
       btnStartOffline.removeAttribute('disabled');
-      refreshOfflineSkins(entryShellClass(cls));
+      refreshOfflineSkins(entryClassPresentation(cls).visualClass);
     };
     card.addEventListener('click', handleClassSelect);
     card.addEventListener('keydown', (e) =>
@@ -10452,7 +10456,7 @@ function wireStartScreens(): void {
 
       const cls = (el as HTMLElement).dataset.class as PlayableClass;
       renderClassDetails('charcreate-class-details', cls);
-      refreshOnlineSkins(entryShellClass(cls));
+      refreshOnlineSkins(entryClassPresentation(cls).visualClass);
     };
     el.addEventListener('click', handleMiniClassSelect);
     el.addEventListener('keydown', (e) =>
@@ -11378,7 +11382,7 @@ function wireStartScreens(): void {
   // on a canvas, so unlike the 3D headshots this once waited on they need no
   // character-asset barrier at all - and no asset failure can leave a chip a
   // plain label for the rest of the page's life.
-  decorateClassChips();
+  decorateProfileClassChips();
 
   // Initialize 3D character preview once its assets are ready. Gated on the
   // narrower charactersReady() (with its own retries), not the site-wide
@@ -11424,7 +11428,7 @@ function wireStartScreens(): void {
               : '#charcreate-panel .mini-class.sel';
           const selEl = document.querySelector(selSelector) as HTMLElement | null;
           const cls = selEl ? (selEl.dataset.class as PlayableClass) : 'warrior';
-          previewClassBody(entryShellClass(cls));
+          previewClassBody(cls);
         }
       }
     })

@@ -6305,6 +6305,44 @@
   .crafting-tab.sel .crafting-tab-count {
     color: var(--color-text-light);
   }
+  .crafting-category-tabs {
+    position: sticky;
+    top: -10px;
+    z-index: 3;
+    flex-wrap: nowrap;
+    margin: -10px 0 2px;
+    padding: 10px 0 8px;
+    overflow-x: auto;
+    background: var(--panel-base);
+  }
+  .crafting-category-tab {
+    flex: 1 0 auto;
+    min-width: 112px;
+    justify-content: center;
+  }
+  .crafting-equipment-category-tabs {
+    flex-wrap: nowrap;
+    margin: -2px 0 2px;
+    padding: 6px 0;
+    overflow-x: auto;
+    background: var(--panel-base);
+  }
+  .crafting-category-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .crafting-category-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .crafting-equipment-category-tab {
+    flex: 1 0 auto;
+    min-width: 104px;
+    justify-content: center;
+    font-size: 11px;
+  }
   /* The scrolling recipe pane: the selected craft's header, learn hint, and
      recipe cards, breathing on an 8px rhythm. */
   .crafting-body {

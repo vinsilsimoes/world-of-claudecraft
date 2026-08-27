@@ -8,14 +8,14 @@ import {
 } from '../../src/sim/mir4/auto_skills';
 import { mir4WireRevision } from '../../src/sim/mir4/wire_revision';
 import { Sim } from '../../src/sim/sim';
-import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
+import { type Mir4ClassKey, PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 import { EMPTY_TEST_WORLD } from '../sim_shared';
 
-function makeSim(): Sim {
+function makeSim(playerClassMir4: Mir4ClassKey = 'warrior'): Sim {
   return new Sim({
     seed: 9133,
     playerClass: 'warrior',
-    playerClassMir4: 'warrior',
+    playerClassMir4,
     playerName: 'Aldric',
     gameProfile: 'mir4-gameplay-port',
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
@@ -137,5 +137,29 @@ describe('MIR4 per-skill automatic use', () => {
     expect([1104, 1304, 1401].some((skillId) => sim.player.cooldowns.has(String(skillId)))).toBe(
       true,
     );
+  });
+
+  it('uses an enabled area-tagged starter skill against one target when no higher-priority action qualifies', () => {
+    const sim = makeSim('arbalist');
+    const target = createMob(
+      sim.nextId++,
+      {
+        ...MIR4_MOBS.mir4_forest_wolf,
+        id: 'arbalist_starter_auto_skill_target',
+        hpBase: 5000,
+        hpPerLevel: 0,
+        moveSpeed: 0,
+      } as never,
+      1,
+      sim.groundPos(sim.player.pos.x + 2, sim.player.pos.z),
+    );
+    target.wanderTimer = 999999;
+    sim.addEntity(target);
+
+    sim.setMir4AutoBattle(true);
+    sim.tick();
+
+    expect(sim.player.cooldowns.has('4101')).toBe(true);
+    expect(sim.player.cooldowns.has('mir4_basic')).toBe(false);
   });
 });

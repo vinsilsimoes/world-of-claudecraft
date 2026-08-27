@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { resolveRealm } from '../server/realm';
+import {
+  DEFAULT_REALM_NAME,
+  LEGACY_DEFAULT_REALM_STORAGE_NAME,
+  PUBLIC_REALM_NAME,
+  publicRealmCounts,
+  REALM,
+  REALM_DIRECTORY,
+  resolveRealm,
+} from '../server/realm';
 import {
   type CharInfo,
   type CharRef,
@@ -412,10 +420,21 @@ describe('resolveRealm', () => {
     expect(resolveRealm('  Ironforge  ')).toBe('Ironforge');
   });
   it('falls back to the default for empty or invalid names', () => {
-    expect(resolveRealm(undefined)).toBe('Claudemoon');
-    expect(resolveRealm('')).toBe('Claudemoon');
-    expect(resolveRealm('x'.repeat(25))).toBe('Claudemoon');
-    expect(resolveRealm('drop;table')).toBe('Claudemoon');
+    expect(resolveRealm(undefined)).toBe('Aelvarin');
+    expect(resolveRealm('')).toBe('Aelvarin');
+    expect(resolveRealm('x'.repeat(25))).toBe('Aelvarin');
+    expect(resolveRealm('drop;table')).toBe('Aelvarin');
+  });
+
+  it('publishes Aelvarin without orphaning characters stored under the legacy scope', () => {
+    expect(DEFAULT_REALM_NAME).toBe('Aelvarin');
+    expect(PUBLIC_REALM_NAME).toBe('Aelvarin');
+    expect(REALM_DIRECTORY[0]?.name).toBe('Aelvarin');
+    expect(REALM).toBe(LEGACY_DEFAULT_REALM_STORAGE_NAME);
+    expect(publicRealmCounts({ [LEGACY_DEFAULT_REALM_STORAGE_NAME]: 3, Highwatch: 1 })).toEqual({
+      Aelvarin: 3,
+      Highwatch: 1,
+    });
   });
 });
 

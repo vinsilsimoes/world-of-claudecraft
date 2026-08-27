@@ -233,7 +233,7 @@ import * as lockpickMod from './delves/lockpick_controller';
 import * as runsMod from './delves/runs';
 import { CASCADE_SCENARIO } from './dev/cascade_playtest';
 import { despawnMobsForDev } from './dev_commands';
-import { projectOutsideDungeonDoors } from './dungeon_door_clearance';
+import { projectOutsideWorldTransit } from './dungeon_door_clearance';
 import { arenaMapForSlot } from './dungeon_layout';
 import * as nythraxis from './encounters/nythraxis';
 // A3: ARENA_SPAWNS_A_2v2/B_2v2 (read only by the moved fiestaRevive) now live with
@@ -337,6 +337,7 @@ import {
 // biome-ignore format: keep the extracted save migration behind one import in the Sim firewall
 import { mir4SavedPositionIsStale, recoverMir4CorpsePosition } from './mir4/saved_position_migration';
 import { type Mir4SimFacade, mir4SimFacade } from './mir4/sim_facade';
+import { starterItemGrants } from './mir4/starter_consumables';
 import { mir4ShellClassFor } from './mir4/stats';
 import { updateMir4Systems } from './mir4/systems';
 import {
@@ -2035,6 +2036,8 @@ export class Sim {
   declare mir4TalkOrInspect: Mir4SimFacade['mir4TalkOrInspect'];
   declare setMir4AutoQuest: Mir4SimFacade['setMir4AutoQuest'];
   declare mir4AutoBattleActive: Mir4SimFacade['mir4AutoBattleActive'];
+  declare mir4AutoPotionThresholds: Mir4SimFacade['mir4AutoPotionThresholds'];
+  declare setMir4AutoPotionThreshold: Mir4SimFacade['setMir4AutoPotionThreshold'];
   declare mir4PlayerState: Mir4SimFacade['mir4PlayerState'];
   declare setMir4AutoBattle: Mir4SimFacade['setMir4AutoBattle'];
   declare setMir4AutoSkillEnabled: Mir4SimFacade['setMir4AutoSkillEnabled'];
@@ -2531,18 +2534,22 @@ export class Sim {
         const jitterAngle = campRng.range(0, Math.PI * 2);
         const jitterFrac = campRng.next();
         const off = campSpawnOffset(i, camp.count, camp.radius, jitterAngle, jitterFrac);
-        // Keep camp mobs out of every dungeon door's clear ring so approaching or
-        // zoning out of a dungeon never lands the player in a pack's aggro radius.
+        // Keep camp mobs out of every dungeon door and inter-map portal approach
+        // so transitioning never lands the player inside a grind pack.
         // Pure geometry on the already-rolled point: it draws no rng, so the spawn
         // loop's own draw order is untouched (mob positions do shift, which moves
         // their later idle-wander draws, but that is downstream in the drive phase).
-        const cleared = projectOutsideDungeonDoors(camp.center.x + off.x, camp.center.z + off.z);
+        const cleared = projectOutsideWorldTransit(
+          camp.center.x + off.x,
+          camp.center.z + off.z,
+          worldContent.travelPortals,
+        );
         // findSafePos's inward spiral can walk a shore-side ring-edge point back
         // toward land, i.e. back INTO the ring; re-project the safe point so the
-        // "never inside a door ring" guarantee holds for every seed, not just the
+        // "never inside a transit ring" guarantee holds for every seed, not just the
         // shipped one. Still pure and rng-free.
         const grounded = this.findSafePos(cleared.x, cleared.z, minHeight);
-        const safe = projectOutsideDungeonDoors(grounded.x, grounded.z);
+        const safe = projectOutsideWorldTransit(grounded.x, grounded.z, worldContent.travelPortals);
         const pos = this.groundPos(safe.x, safe.z);
         const level = rollCampMobLevel(template, camp, campRng);
         const mob = createMob(this.nextId++, template, level, pos);
@@ -3178,8 +3185,8 @@ export class Sim {
     // A fresh character sets out provisioned (class-defined starter rations);
     // a saved character loads its own bags from savedState below.
     if (!savedState) {
-      for (const it of classDef.startItems) {
-        meta.inventory.push({ itemId: it.itemId, count: it.count });
+      for (const it of starterItemGrants(this.cfg.gameProfile, classDef.startItems)) {
+        addStacked(meta.inventory, it.itemId, it.count);
       }
     }
     this.players.set(player.id, meta);

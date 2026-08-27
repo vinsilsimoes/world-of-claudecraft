@@ -794,7 +794,7 @@ export const M01_VILA_DO_VAU_BLUEPRINT: Mir4M01WorldBlueprint = {
     {
       id: 'm01-vila-do-vau-sara-das-ervas',
       name: 'Sara das Ervas',
-      title: 'Curandeira',
+      title: 'Poções e Artigos Gerais',
       pos: { x: 2577, z: -13 },
       facing: 1.4,
       greeting: 'Uma poção usada na hora certa vale mais que uma bolsa cheia.',

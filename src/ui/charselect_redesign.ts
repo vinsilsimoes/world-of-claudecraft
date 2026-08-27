@@ -107,7 +107,7 @@ export class CharselectRedesignEditor {
   /** The kit the draft is previewed over: the class set, head piece dropped
    *  while the helm is hidden. */
   private loadout(c: RedesignTarget): ArmorLoadout {
-    const full = fullSet(classArmorSet(c.class));
+    const full = fullSet(c.armorSet ?? classArmorSet(c.class));
     return this.helmHidden ? { ...full, head: null } : full;
   }
 
@@ -225,7 +225,7 @@ export class CharselectRedesignEditor {
         this.helmHidden = !on;
         this.drivePreview();
       },
-      armorSet: () => classArmorSet(c.class),
+      armorSet: () => c.armorSet ?? classArmorSet(c.class),
     });
     noteAppearancePanelMounted(PANEL_ID, () => {
       const stillHosted = document.getElementById('charselect-reroll-host');

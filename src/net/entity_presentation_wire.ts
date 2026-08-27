@@ -31,6 +31,30 @@ export interface Mir4EquipmentPresentationWire {
   armorMask?: number;
 }
 
+const MAX_VENDOR_WIRE_ITEMS = 256;
+const MAX_VENDOR_ITEM_ID_LENGTH = 128;
+
+/** Decode the authoritative NPC shop catalog carried by a sparse identity
+ * record. Invalid or oversized payloads fail closed to the local-content
+ * compatibility path instead of allocating an attacker-controlled list. */
+export function decodeNpcVendorItemsWire(value: unknown): string[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_VENDOR_WIRE_ITEMS) {
+    return undefined;
+  }
+  const decoded: string[] = [];
+  for (const itemId of value) {
+    if (
+      typeof itemId !== 'string' ||
+      itemId.length === 0 ||
+      itemId.length > MAX_VENDOR_ITEM_ID_LENGTH
+    ) {
+      return undefined;
+    }
+    decoded.push(itemId);
+  }
+  return decoded;
+}
+
 export function decodeMir4EquipmentPresentationWire(
   wire: Record<string, unknown>,
 ): Mir4EquipmentPresentationWire {

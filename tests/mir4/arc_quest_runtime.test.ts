@@ -97,7 +97,7 @@ describe('MIR4 authoritative campaign host', () => {
     )!;
     sim.talkToNpc(maela.id);
     expect(meta.mir4ArcQuests['M01-Q02']).toBeDefined();
-    expect(meta.mir4ArcRewards?.items?.['potion-minor-bound']).toBe(3);
+    expect(meta.mir4ArcRewards?.items?.['potion-minor-bound']).toBe(20);
   });
 
   it('reuses the shared Interact key and requires every authored 3D clue anchor', () => {
@@ -299,8 +299,8 @@ describe('MIR4 authoritative campaign host', () => {
     updateMir4ArcQuestTravel(sim.ctx);
     updateMir4ArcQuestTravel(sim.ctx);
 
-    expect(meta.mir4EquipmentInstances?.[991010101]).toEqual({
-      itemId: 991010101,
+    expect(meta.mir4EquipmentInstances?.[200201000]).toEqual({
+      itemId: 200201000,
       enhancement: 0,
     });
     expect(meta.mir4ArcRewards?.items?.['991010101']).toBeUndefined();

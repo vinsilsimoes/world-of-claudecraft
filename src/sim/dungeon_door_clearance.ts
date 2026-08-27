@@ -10,12 +10,17 @@
 
 import { DUNGEONS } from './data';
 import { MAX_AGGRO_RADIUS } from './mob/locomotion';
+import type { PortalDef } from './types';
 
 // The clear radius around a door is exactly the aggro-radius clamp (imported, not a
 // re-typed literal), so a mob spawned strictly outside this ring can never aggro a
 // player standing on the door. Retuning the clamp in locomotion.ts moves this in
 // lockstep, and the guard test pins the same imported constant.
 export const DOOR_CLEAR_RADIUS = MAX_AGGRO_RADIUS;
+// Inter-map arrivals get a wider authored buffer than ordinary dungeon doors:
+// the extra four yards keep dense grind packs and their nameplates out of the
+// portal presentation even when their aggro clamp itself remains 20 yards.
+export const PORTAL_CLEAR_RADIUS = 24;
 
 // Every dungeon's overworld door, deduped (some share one entrance, e.g. the
 // Nythraxis crypt + raid arena). Computed once at module load from the merged table.
@@ -54,5 +59,57 @@ export function projectOutsideDungeonDoors(x: number, z: number): { x: number; z
       pz = door.z + dz * s;
     }
   }
+  return { x: px, z: pz };
+}
+
+export function portalClearancePoints(
+  portals: readonly PortalDef[] | undefined,
+): ReadonlyArray<{ x: number; z: number }> {
+  return (portals ?? []).flatMap((portal) => [
+    portal.a,
+    portal.a.landing,
+    portal.b,
+    portal.b.landing,
+  ]);
+}
+
+// Camp centers are filtered before construction, but the final sunflower jitter
+// and findSafePos shore recovery can still move an individual spawn into a portal
+// approach. Project the final authored position outside every endpoint and arrival
+// ring so the safety rule holds for the entity the player actually encounters.
+export function projectOutsideWorldTransit(
+  x: number,
+  z: number,
+  portals: readonly PortalDef[] | undefined,
+): { x: number; z: number } {
+  const clearances = [
+    ...DUNGEON_DOORS.map((point) => ({ point, radius: DOOR_CLEAR_RADIUS })),
+    ...portalClearancePoints(portals).map((point) => ({ point, radius: PORTAL_CLEAR_RADIUS })),
+  ];
+  let px = x;
+  let pz = z;
+
+  // Overlapping rings can push a point into a ring already visited. Iterate to a
+  // fixed point with a deterministic upper bound; no rng or clock is involved.
+  for (let pass = 0; pass < Math.max(1, clearances.length * 2); pass++) {
+    let changed = false;
+    for (const { point, radius } of clearances) {
+      const dx = px - point.x;
+      const dz = pz - point.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist >= radius) continue;
+      changed = true;
+      if (dist < 1e-6) {
+        px = point.x + radius;
+        pz = point.z;
+      } else {
+        const scale = radius / dist;
+        px = point.x + dx * scale;
+        pz = point.z + dz * scale;
+      }
+    }
+    if (!changed) break;
+  }
+
   return { x: px, z: pz };
 }

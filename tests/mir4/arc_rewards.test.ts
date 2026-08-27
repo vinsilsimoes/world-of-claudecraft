@@ -35,10 +35,11 @@ describe('MIR4 campaign reward ledger', () => {
     const sim = makeSim();
     const meta = sim.players.get(sim.playerId)!;
     const potionQuest = mir4ArcQuest('M01-Q02')!;
+    const starterPotions = sim.countItem('minor_healing_potion');
     grantMir4ArcAcceptGrants(sim.ctx, meta, potionQuest);
     grantMir4ArcAcceptGrants(sim.ctx, meta, potionQuest);
-    expect(meta.mir4ArcRewards?.items).toEqual({ 'potion-minor-bound': 3 });
-    expect(sim.countItem('minor_healing_potion')).toBe(3);
+    expect(meta.mir4ArcRewards?.items).toEqual({ 'potion-minor-bound': 20 });
+    expect(sim.countItem('minor_healing_potion')).toBe(starterPotions + 20);
 
     grantMir4ArcAcceptGrants(sim.ctx, meta, mir4ArcQuest('M03-Q01')!);
     expect(meta.mir4Materials?.moonStone).toBe(5);
@@ -63,7 +64,10 @@ describe('MIR4 campaign reward ledger', () => {
     const meta = sim.players.get(sim.playerId)!;
     const quest = mir4ArcQuest('M01-Q04')!;
     meta.bags = [null, null, null, null];
-    meta.inventory = Array.from({ length: 16 }, () => ({ itemId: 'worn_sword', count: 1 }));
+    meta.inventory = Array.from({ length: 16 }, () => ({
+      itemId: 'worn_sword',
+      count: 1,
+    }));
     meta.mir4ArcQuests = {
       'M01-Q04': {
         questId: 'M01-Q04',
@@ -101,18 +105,20 @@ describe('MIR4 campaign reward ledger', () => {
       world: buildMir4ArcWorld(1),
       noPlayer: true,
     });
-    const restoredPid = restored.addPlayer('warrior', 'Restored tools', { state: saved });
+    const restoredPid = restored.addPlayer('warrior', 'Restored tools', {
+      state: saved,
+    });
     expect(restored.countItem('copper_mining_pick', restoredPid)).toBe(1);
     expect(restored.countItem('gathering_sickle', restoredPid)).toBe(1);
   });
 
-  it('grants each class its recovered rank-one weapon when M01-Q03 is accepted', () => {
+  it('recovers only each class starter weapon when M01-Q03 is accepted', () => {
     const classes = [
-      ['warrior', 991010101],
-      ['elementalist', 991010201],
-      ['taoist', 991010301],
-      ['arbalist', 991010401],
-      ['lancer', 991010501],
+      ['warrior', 200201000],
+      ['elementalist', 200202000],
+      ['taoist', 200203000],
+      ['arbalist', 200204000],
+      ['lancer', 200205000],
     ] as const;
 
     for (const [playerClass, itemId] of classes) {
@@ -129,7 +135,7 @@ describe('MIR4 campaign reward ledger', () => {
     }
   });
 
-  it('grants class-specific basic equipment throughout the first main quests', () => {
+  it('does not grant crafted equipment throughout the first main quests', () => {
     const classes = [
       ['warrior', 1],
       ['elementalist', 2],
@@ -149,18 +155,7 @@ describe('MIR4 campaign reward ledger', () => {
       const granted = MIR4_EQUIPMENT_CATALOG.filter(
         (item) => item.catalogRank === 1 && meta.mir4EquipmentInstances?.[item.itemId],
       );
-      expect(granted, playerClass).toHaveLength(8);
-      expect(
-        granted.every((item) => item.classId === classId),
-        playerClass,
-      ).toBe(true);
-      expect(new Set(granted.map((item) => item.equipSlot)), playerClass).toEqual(
-        new Set([1, 2, 3, 4, 5, 6, 7, 8]),
-      );
-      expect(
-        granted.every((item) => meta.mir4ArcRewards?.items?.[String(item.itemId)] === undefined),
-        playerClass,
-      ).toBe(true);
+      expect(granted, `${playerClass} class ${classId}`).toEqual([]);
     }
   });
 
@@ -175,11 +170,14 @@ describe('MIR4 campaign reward ledger', () => {
 
     grantMir4ArcQuestRewards(sim.ctx, meta, mir4ArcQuest('M01-Q01')!);
 
-    expect(meta.mir4EquipmentInstances[itemId]).toEqual({ itemId, enhancement: 0 });
+    expect(meta.mir4EquipmentInstances[itemId]).toEqual({
+      itemId,
+      enhancement: 0,
+    });
     expect(meta.mir4ArcRewards?.items?.[String(itemId)]).toBeUndefined();
   });
 
-  it('repairs a destroyed old-save instance as a usable quest reward', () => {
+  it('does not recreate a destroyed crafted item from quest progress', () => {
     const sim = makeSim();
     const meta = sim.players.get(sim.playerId)!;
     const itemId = 991080101;
@@ -196,12 +194,16 @@ describe('MIR4 campaign reward ledger', () => {
       },
     };
 
-    expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(true);
-    expect(meta.mir4EquipmentInstances[itemId]).toEqual({ itemId, enhancement: 0 });
+    expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(false);
+    expect(meta.mir4EquipmentInstances[itemId]).toEqual({
+      itemId,
+      enhancement: 9,
+      destroyed: true,
+    });
     expect(meta.mir4ArcRewards?.items?.[String(itemId)]).toBeUndefined();
   });
 
-  it('migrates already-claimed legacy quest and milestone equipment through a save round trip', () => {
+  it('preserves legacy crafted-item ownership without minting replacement instances', () => {
     const sim = makeSim();
     const meta = sim.players.get(sim.playerId)!;
     const bootsItemId = 991080101;
@@ -228,16 +230,17 @@ describe('MIR4 campaign reward ledger', () => {
       claimedGrantIds: ['campaign-equipment-m01-q01-class-1', 'campaign-equipment-rank-2-class-1'],
     };
 
-    expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(true);
+    expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(false);
     expect(meta.mir4EquipmentInstances[bootsItemId]).toEqual({
       itemId: bootsItemId,
-      enhancement: 0,
+      enhancement: 7,
+      destroyed: true,
     });
-    expect(meta.mir4EquipmentInstances[rankTwoWeaponId]).toEqual({
-      itemId: rankTwoWeaponId,
-      enhancement: 0,
+    expect(meta.mir4EquipmentInstances[rankTwoWeaponId]).toBeUndefined();
+    expect(meta.mir4ArcRewards.items).toEqual({
+      [bootsItemId]: 1,
+      [rankTwoWeaponId]: 1,
     });
-    expect(meta.mir4ArcRewards.items).toBeUndefined();
     expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(false);
 
     const saved = sim.serializeCharacter(sim.playerId)!;
@@ -251,17 +254,15 @@ describe('MIR4 campaign reward ledger', () => {
       world: buildMir4ArcWorld(1),
       noPlayer: true,
     });
-    const restoredPid = restored.addPlayer('warrior', 'Restored equipment', { state: saved });
+    const restoredPid = restored.addPlayer('warrior', 'Restored equipment', {
+      state: saved,
+    });
     const restoredMeta = restored.players.get(restoredPid)!;
-    expect(restoredMeta.mir4EquipmentInstances?.[bootsItemId]).toEqual({
-      itemId: bootsItemId,
-      enhancement: 0,
+    expect(restoredMeta.mir4EquipmentInstances?.[rankTwoWeaponId]).toBeUndefined();
+    expect(restoredMeta.mir4ArcRewards?.items).toEqual({
+      [bootsItemId]: 1,
+      [rankTwoWeaponId]: 1,
     });
-    expect(restoredMeta.mir4EquipmentInstances?.[rankTwoWeaponId]).toEqual({
-      itemId: rankTwoWeaponId,
-      enhancement: 0,
-    });
-    expect(restoredMeta.mir4ArcRewards?.items).toBeUndefined();
   });
 
   it('pays XP, copper, logical materials, unlocks and mount tickets from authored rewards', () => {
@@ -317,7 +318,7 @@ describe('MIR4 campaign reward ledger', () => {
     expect(meta.counters.xpGained).toBe(repairedXp);
   });
 
-  it('grants native catalog loadouts at campaign milestones and repairs old saves once', () => {
+  it('never grants catalog loadouts from campaign milestones', () => {
     const sim = makeSim();
     const meta = sim.players.get(sim.playerId)!;
     meta.mir4ArcQuests = {
@@ -359,14 +360,16 @@ describe('MIR4 campaign reward ledger', () => {
       },
     };
 
-    expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(true);
+    expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(false);
     for (const itemId of [
       991010106, 991020106, 991030106, 991040106, 991050106, 991060106, 991070106, 991080106,
     ]) {
-      expect(meta.mir4EquipmentInstances?.[itemId]).toEqual({ itemId, enhancement: 0 });
+      expect(meta.mir4EquipmentInstances?.[itemId]).toBeUndefined();
       expect(meta.mir4ArcRewards?.items?.[String(itemId)]).toBeUndefined();
     }
-    expect(meta.mir4ArcRewards?.claimedGrantIds).toContain('campaign-equipment-rank-6-class-1');
+    expect(meta.mir4ArcRewards?.claimedGrantIds ?? []).not.toContain(
+      'campaign-equipment-rank-6-class-1',
+    );
     expect(ensureMir4ArcEquipmentMilestones(sim.ctx, meta)).toBe(false);
   });
 

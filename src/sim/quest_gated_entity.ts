@@ -44,7 +44,7 @@ function collectQuestForObject(entity: Entity): string | null {
 /** Whether the instance this object stands in declares its item an interact-only
  *  mechanic (`DungeonObjectSpawn.interactOnly`). Overworld objects have no dungeon and
  *  are never exempt this way. */
-function isInteractOnlyInstanceObject(entity: Entity): boolean {
+export function isInteractOnlyInstanceObject(entity: Entity): boolean {
   const dungeon = dungeonAt(entity.pos.x);
   if (!dungeon?.objects) return false;
   return dungeon.objects.some((o) => o.interactOnly === true && o.itemId === entity.objectItemId);

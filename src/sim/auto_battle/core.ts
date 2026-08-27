@@ -10,7 +10,7 @@
 // run this system (the tick phase is profile-gated in sim.ts).
 
 import { advanceMir4AutomationRoute, type Mir4AutomationRouteState } from '../auto_quest/route';
-import { castMir4Skill, mir4BasicAttack, mir4Ultimate, mir4UsePotion } from '../mir4/combat';
+import { castMir4Skill, mir4BasicAttack, mir4Ultimate } from '../mir4/combat';
 import { MIR4_ULTIMATE_UNLOCK_LEVEL } from '../mir4/skill_progression';
 import { markMir4WireDirty } from '../mir4/wire_revision';
 import { findReachablePlayerPath } from '../pathfind';
@@ -18,6 +18,12 @@ import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import { DT, dist2d } from '../types';
 import { mir4AutomationActionBlocked, mir4AutomationRunSpeed } from './admission';
+import {
+  type Mir4AutoPotionKind,
+  type Mir4AutoPotionThresholds,
+  normalizeMir4AutoPotionThreshold,
+  resolveMir4AutoPotionThresholds,
+} from './potion_thresholds';
 import { mir4AutoBattleActionRange, pickMir4AutoBattleSkill } from './rotation';
 import {
   blockMir4AutoBattleTarget,
@@ -82,6 +88,27 @@ export function setMir4AutoBattleMode(
     meta.autoBattle.mode = 'off';
     markMir4WireDirty(meta);
   }
+}
+
+export function mir4AutoPotionThresholds(ctx: SimContext, pid: number): Mir4AutoPotionThresholds {
+  return resolveMir4AutoPotionThresholds(ctx.players.get(pid)?.mir4AutoPotion);
+}
+
+export function setMir4AutoPotionThreshold(
+  ctx: SimContext,
+  pid: number,
+  kind: Mir4AutoPotionKind,
+  percent: number,
+): void {
+  const meta = ctx.players.get(pid);
+  const player = ctx.entities.get(pid);
+  if (!meta || !player) return;
+  const current = resolveMir4AutoPotionThresholds(meta.mir4AutoPotion)[kind];
+  const next = normalizeMir4AutoPotionThreshold(percent, current);
+  if (current === next && meta.mir4AutoPotion?.[kind] === next) return;
+  const thresholds = resolveMir4AutoPotionThresholds(meta.mir4AutoPotion);
+  meta.mir4AutoPotion = { ...thresholds, [kind]: next };
+  markMir4WireDirty(meta);
 }
 
 function livingHostileMobAt(
@@ -266,14 +293,6 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
         st.route = undefined;
       }
       continue;
-    }
-
-    // Auto-potion (source defaults): HP first at <=50%, then MP at <=35%.
-    // It is valid while closing distance, so survival never waits for melee.
-    if (p.hp / p.maxHp <= 0.5) {
-      if (mir4UsePotion(ctx, p.id, 'hp')) continue;
-    } else if (p.maxResource > 0 && p.resource / p.maxResource <= 0.35) {
-      if (mir4UsePotion(ctx, p.id, 'mp')) continue;
     }
 
     const area = {

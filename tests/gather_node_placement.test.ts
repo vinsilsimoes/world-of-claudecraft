@@ -337,7 +337,7 @@ for (const zone of ZONES) {
 // Named points used as counter-examples below. Every one is measured, not
 // assumed, and each is asserted to genuinely have the property it stands for, so
 // an arm can never pass because its counter-example quietly stopped being one.
-const ON_MIRROR_LAKE_FLOOR = { x: -86, z: 90 }; // where herb_eastbrook_1 used to sit
+const ON_MIRROR_LAKE_FLOOR = { x: -92, z: 90 }; // deep centre of Mirror Lake
 const IN_GLIMMERMERE_SHALLOWS = { x: -55, z: 765 }; // where wood_thornpeak_1 used to sit
 // The deliberate-geometry screens the slope arm applies to every node. Since
 // v0.32.0 nearSteepWalls paints a broad ADVISORY band around every border

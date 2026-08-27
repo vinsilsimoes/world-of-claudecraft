@@ -2562,6 +2562,110 @@
     border-radius: 50%;
     overflow: hidden;
   }
+  .mir4-potion-seat {
+    position: relative;
+    width: 48px;
+    height: 48px;
+  }
+  .mir4-potion-config {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    z-index: 4;
+    display: grid;
+    width: 19px;
+    height: 19px;
+    padding: 3px;
+    place-items: center;
+    color: #eadcae;
+    border: 1px solid #8d7537;
+    border-radius: 50%;
+    background: #121017;
+    box-shadow: 0 1px 4px #000c;
+    cursor: var(--cursor-point);
+  }
+  .mir4-potion-config:hover,
+  .mir4-potion-config:focus-visible {
+    color: #fff7d8;
+    border-color: var(--gold);
+    outline: 2px solid color-mix(in srgb, var(--gold) 58%, transparent);
+    outline-offset: 1px;
+  }
+  .mir4-potion-config svg {
+    width: 100%;
+    height: 100%;
+  }
+  .mir4-potion-threshold-popover {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 12px);
+    z-index: 30;
+    width: 290px;
+    padding: 12px;
+    color: #e7ddc7;
+    border: 1px solid color-mix(in srgb, var(--gold) 62%, #241b0e);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #1a1722fa, #0b0a10fa);
+    box-shadow:
+      inset 0 1px 0 #ffffff12,
+      0 8px 24px #000d;
+    white-space: normal;
+  }
+  .mir4-potion-threshold-popover[hidden] {
+    display: none;
+  }
+  .mir4-potion-threshold-header,
+  .mir4-potion-threshold-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mir4-potion-threshold-header {
+    justify-content: space-between;
+    color: var(--gold);
+    font: 600 14px / 1.25 var(--ui-font);
+    text-transform: uppercase;
+  }
+  .mir4-potion-threshold-close {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    padding: 5px;
+    place-items: center;
+    color: #d9cda9;
+    border: 1px solid #655631;
+    border-radius: 4px;
+    background: #16131b;
+    cursor: var(--cursor-point);
+  }
+  .mir4-potion-threshold-close:hover,
+  .mir4-potion-threshold-close:focus-visible {
+    color: #fff8df;
+    border-color: var(--gold);
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+  .mir4-potion-threshold-close svg {
+    width: 100%;
+    height: 100%;
+  }
+  .mir4-potion-threshold-popover p {
+    margin: 9px 0 12px;
+    color: #bfb49b;
+    font: 12px / 1.4 var(--ui-font);
+  }
+  .mir4-potion-threshold-range input[type="range"] {
+    min-width: 0;
+    flex: 1;
+    accent-color: var(--gold);
+    cursor: var(--cursor-point);
+  }
+  .mir4-potion-threshold-value {
+    min-width: 44px;
+    color: #fff3c7;
+    font: 700 14px / 1 var(--ui-font);
+    text-align: right;
+  }
   .mir4-potion-btn.action-btn .icon-label,
   .mir4-potion-btn.action-btn .cd-overlay {
     border-radius: 50%;

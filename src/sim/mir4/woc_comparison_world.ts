@@ -33,10 +33,18 @@ import {
   MIR4_WOC_TUTORIAL_PORTAL_ARCHES,
   MIR4_WOC_TUTORIAL_PORTALS,
 } from './woc_campaign_portals';
+import { composeAeldruneWorld } from './woc_world_layers';
 
 const CENTRAL_WORLD_X_MIN = -180;
 const CENTRAL_WORLD_X_MAX = 180;
 const CHAPTER_LOCAL_SCALE = 0.08;
+
+export const AELDRUNE_EASTBROOK_HARBOR_POI = Object.freeze({
+  id: 'aeldrune-eastbrook-harbor',
+  x: -62,
+  z: 88,
+  label: 'Porto do Lago do Espelho',
+});
 
 interface Point2 {
   x: number;
@@ -303,6 +311,15 @@ function buildMir4WocCampaignWorldFromBuiltinTerrain(
   const dungeonDoors = DUNGEON_LIST.filter((dungeon) => dungeon.overworldDoor !== false).map(
     (dungeon) => dungeon.doorPos,
   );
+  const travelPortals = Object.freeze([
+    ...PORTALS,
+    ...MIR4_WOC_TUTORIAL_PORTALS,
+    ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS,
+  ]);
+  const protectedTransitPoints = [
+    ...dungeonDoors,
+    ...travelPortals.flatMap((portal) => [portal.a, portal.a.landing, portal.b, portal.b.landing]),
+  ];
   const graveyards = (source.services?.graveyards ?? []).flatMap((graveyard) => {
     const pos = projectPoint(projections, graveyard);
     return pos ? [{ ...graveyard, ...pos }] : [];
@@ -337,56 +354,53 @@ function buildMir4WocCampaignWorldFromBuiltinTerrain(
     BUILTIN_WORLD.zones,
     npcs,
     protectedServices,
-    dungeonDoors,
+    protectedTransitPoints,
     (point) =>
       terrainHeight(point.x, point.z, terrainSeed) >=
       waterLevelAt(point.x, point.z, terrainSeed) + 0.2,
     interactionSites,
   );
-  const zones = buildMir4WocCampaignZones(BUILTIN_WORLD.zones, source.zones, projections);
+  const zones = buildMir4WocCampaignZones(BUILTIN_WORLD.zones, source.zones, projections).map(
+    (zone) =>
+      zone.id === 'eastbrook_vale'
+        ? { ...zone, pois: [...zone.pois, AELDRUNE_EASTBROOK_HARBOR_POI] }
+        : zone,
+  );
 
-  return {
-    // Geometry remains the original WoC world. Zones are shallow-cloned only
-    // where campaign landmark names replace the old cartography; their bounds,
-    // terrain and painted map inputs remain unchanged.
-    zones,
-    roads: BUILTIN_WORLD.roads,
-    travelPortals: Object.freeze([
-      ...PORTALS,
-      ...MIR4_WOC_TUTORIAL_PORTALS,
-      ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTALS,
-    ]),
-    litRoads: BUILTIN_WORLD.litRoads,
-    dryCrossings: BUILTIN_WORLD.dryCrossings,
-    props: {
-      ...BUILTIN_WORLD.props,
-      decorProps: [
-        ...(BUILTIN_WORLD.props.decorProps ?? []),
-        ...MIR4_WOC_TUTORIAL_PORTAL_ARCHES,
-        ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTAL_ARCHES,
+  return composeAeldruneWorld({
+    geometry: BUILTIN_WORLD,
+    geometryOverrides: {
+      props: {
+        ...BUILTIN_WORLD.props,
+        decorProps: [
+          ...(BUILTIN_WORLD.props.decorProps ?? []),
+          ...MIR4_WOC_TUTORIAL_PORTAL_ARCHES,
+          ...MIR4_WOC_CAMPAIGN_TRANSIT_PORTAL_ARCHES,
+        ],
+      },
+      terrainModel: 'builtin',
+      presentationModel: 'builtin',
+    },
+    gameplay: {
+      // Bounds stay tied to WoC geometry, while names, levels, and campaign
+      // landmarks are explicitly adapted by buildMir4WocCampaignZones.
+      zones,
+      camps,
+      npcs,
+      groundObjects: [
+        ...projectGroundObjects(source.groundObjects, projections),
+        ...mir4EnergyGroundObjects(projections),
       ],
+      travelPortals,
+      playerStart,
+      services: {
+        noticeboards,
+        musterBoards: BUILTIN_WORLD.services?.musterBoards,
+        graveyards,
+      },
+      mir4ArcMapProjections: projections,
     },
-    terrainEdits: BUILTIN_WORLD.terrainEdits,
-    placements: BUILTIN_WORLD.placements,
-    blockers: BUILTIN_WORLD.blockers,
-    biomePaint: BUILTIN_WORLD.biomePaint,
-    waterLevel: BUILTIN_WORLD.waterLevel,
-    terrainModel: 'builtin',
-    presentationModel: 'builtin',
-    camps,
-    npcs,
-    groundObjects: [
-      ...projectGroundObjects(source.groundObjects, projections),
-      ...mir4EnergyGroundObjects(projections),
-    ],
-    playerStart,
-    services: {
-      noticeboards,
-      musterBoards: BUILTIN_WORLD.services?.musterBoards,
-      graveyards,
-    },
-    mir4ArcMapProjections: projections,
-  };
+  });
 }
 
 export function buildMir4WocCampaignWorld(

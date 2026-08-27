@@ -10,6 +10,7 @@
 
 import type { ChatSenderFlair } from '../src/sim/account_flair';
 import type { PlayerClass } from '../src/sim/types';
+import { publicRealmName } from './realm';
 
 export type GuildRank = 'leader' | 'officer' | 'member';
 
@@ -64,6 +65,10 @@ export interface GuildMemberEntry extends CharInfo {
   status?: PresenceStatus;
   x?: number;
   z?: number;
+}
+
+function withPublicRealm<T extends CharInfo>(character: T): T {
+  return { ...character, realm: publicRealmName(character.realm) };
 }
 
 // One guild calendar event. `day` is a UTC 'YYYY-MM-DD'; `hour` is 0-23 UTC
@@ -446,14 +451,20 @@ export class SocialService {
         motd: motd.motd,
         motdSetBy: motd.motdSetBy,
         members: members
-          .map((m) => ({ ...m, ...this.presence(charId, m.id, blockedByViewer) }))
+          .map((m) => ({
+            ...withPublicRealm(m),
+            ...this.presence(charId, m.id, blockedByViewer),
+          }))
           .sort((a, b) => rankOrder(a.rank) - rankOrder(b.rank) || a.name.localeCompare(b.name)),
         events,
       };
     }
     return {
       friends: friends
-        .map((f) => ({ ...f, ...this.presence(charId, f.id, blockedByViewer) }))
+        .map((f) => ({
+          ...withPublicRealm(f),
+          ...this.presence(charId, f.id, blockedByViewer),
+        }))
         .sort((a, b) => Number(b.online) - Number(a.online) || a.name.localeCompare(b.name)),
       blocks,
       ignores,

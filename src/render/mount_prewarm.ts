@@ -58,6 +58,16 @@ export function mountPrewarmKeys(owned: readonly MountKey[] = []): MountKey[] {
   return (Object.keys(MOUNT_VISUAL_SPECS) as MountKey[]).filter((key) => wanted.has(key));
 }
 
+/**
+ * Missing mount assets are optional speculation after world entry. On low
+ * tier, streaming every owned mount causes texture uploads and shader work in
+ * live gameplay even though none of those mounts may be visible. The existing
+ * live mount gate prepares an asset when it actually appears.
+ */
+export function mountPrewarmResumeKeys(pending: Iterable<MountKey>, lowGfx: boolean): MountKey[] {
+  return lowGfx ? [] : [...pending];
+}
+
 function createReadyMountPrewarmVisual(key: MountKey): CharacterVisual | null {
   const { visualKey } = MOUNT_VISUAL_SPECS[key];
   if (!mountAssetsReady(visualKey)) return null;

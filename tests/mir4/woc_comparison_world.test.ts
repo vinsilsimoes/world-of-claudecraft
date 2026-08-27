@@ -18,13 +18,20 @@ import {
   MOBS,
   setActiveWorldContent,
 } from '../../src/sim/data';
+import { PORTAL_CLEAR_RADIUS, portalClearancePoints } from '../../src/sim/dungeon_door_clearance';
 import { mir4ArcStageAnchor } from '../../src/sim/mir4/arc_quest_runtime';
 import { mir4QuestCurrentStage } from '../../src/sim/mir4/arc_quests';
 import { mir4CampaignMapIdsForWorld } from '../../src/sim/mir4/campaign_availability';
 import { mir4ArcPortalsForWorld, mir4PortalRouteGoal } from '../../src/sim/mir4/travel';
-import { MIR4_WOC_POPULATION_RULES } from '../../src/sim/mir4/woc_campaign_population';
+import {
+  buildMir4GrindPopulation,
+  MIR4_WOC_POPULATION_RULES,
+} from '../../src/sim/mir4/woc_campaign_population';
 import { MIR4_WOC_TUTORIAL_PORTALS } from '../../src/sim/mir4/woc_campaign_portals';
-import { buildMir4WocComparisonWorld } from '../../src/sim/mir4/woc_comparison_world';
+import {
+  AELDRUNE_EASTBROOK_HARBOR_POI,
+  buildMir4WocComparisonWorld,
+} from '../../src/sim/mir4/woc_comparison_world';
 import { findPlayerPath } from '../../src/sim/pathfind';
 import { Sim } from '../../src/sim/sim';
 import { terrainHeight, waterLevelAt } from '../../src/sim/world';
@@ -33,6 +40,81 @@ import { WORLD_SEED } from '../../src/sim/world_seed';
 afterEach(() => setActiveWorldContent(null));
 
 describe('MIR4 local comparison on the original WoC map', () => {
+  it('raises every ordinary WoC camp by exactly 40% over the prior MIR4 population', () => {
+    const combatAnchor = BUILTIN_WORLD.camps.find((camp) => {
+      const template = MOBS[camp.mobId];
+      return !!template && !template.dummy && !template.ambient && !template.friendlyPracticeTarget;
+    });
+    const source = buildMir4ArcWorld(1).camps[0];
+    const baseZone = BUILTIN_WORLD.zones[0];
+    if (!combatAnchor || !source || !baseZone) throw new Error('Population fixtures are required');
+    const zone = {
+      ...baseZone,
+      xMin: -100,
+      xMax: 100,
+      zMin: 0,
+      zMax: 100,
+    };
+    const authoredCounts = [1, 3, 4, 5];
+    const anchors = authoredCounts.map((count, index) => ({
+      ...combatAnchor,
+      center: { x: -30 + index * 20, z: 50 },
+      radius: 6,
+      count,
+    }));
+
+    const population = buildMir4GrindPopulation(
+      [{ ...source, center: { x: 0, z: 50 } }],
+      anchors,
+      MOBS,
+      [zone],
+      {},
+      [],
+      [],
+    );
+
+    // Previous MIR4 counts were max(6, ceil(authored * 2)): 6, 6, 8, 10.
+    // Their exact 40%-larger integer populations are therefore 9, 9, 12, 14.
+    expect(population.map((camp) => camp.count)).toEqual([9, 9, 12, 14]);
+  });
+
+  it('keeps an objective interaction guarded by one independently capped six-creature pack', () => {
+    const combatAnchor = BUILTIN_WORLD.camps.find((camp) => {
+      const template = MOBS[camp.mobId];
+      return !!template && !template.dummy && !template.ambient && !template.friendlyPracticeTarget;
+    });
+    const source = buildMir4ArcWorld(1).camps[0];
+    const baseZone = BUILTIN_WORLD.zones[0];
+    if (!combatAnchor || !source || !baseZone) throw new Error('Population fixtures are required');
+    const center = { x: 0, z: 50 };
+    const zone = {
+      ...baseZone,
+      xMin: -100,
+      xMax: 100,
+      zMin: 0,
+      zMax: 100,
+    };
+
+    const population = buildMir4GrindPopulation(
+      [{ ...source, center }],
+      [
+        { ...combatAnchor, center, radius: 6, count: 5 },
+        { ...combatAnchor, center: { x: 8, z: 50 }, radius: 6, count: 5 },
+      ],
+      MOBS,
+      [zone],
+      {},
+      [],
+      [],
+      undefined,
+      [{ ...center, clearRadius: 4 }],
+    );
+
+    expect(MIR4_WOC_POPULATION_RULES.objectiveGuardMaxCount).toBe(6);
+    expect(population).toHaveLength(1);
+    expect(population[0]?.count).toBe(6);
+  });
+
   it('keeps the original WoC geometry while replacing its actors with MIR4 content', () => {
     const originalNpcCount = Object.keys(BUILTIN_WORLD.npcs).length;
     const originalCampCount = BUILTIN_WORLD.camps.length;
@@ -70,6 +152,7 @@ describe('MIR4 local comparison on the original WoC map', () => {
     expect(world.blockers).toBe(BUILTIN_WORLD.blockers);
     expect(world.biomePaint).toBe(BUILTIN_WORLD.biomePaint);
     expect(world.waterLevel).toBe(BUILTIN_WORLD.waterLevel);
+    expect(world.zones[0]?.pois).toContainEqual(AELDRUNE_EASTBROOK_HARBOR_POI);
     const source = buildMir4ArcWorld(4);
     expect(Object.keys(world.npcs).sort()).toEqual(Object.keys(source.npcs).sort());
     expect(Object.values(world.npcs).every((npc) => npc.id.startsWith('mir4_'))).toBe(true);
@@ -639,10 +722,14 @@ describe('MIR4 local comparison on the original WoC map', () => {
         })
         .map((camp) => `${camp.center.x}:${camp.center.z}`),
     );
-    // Duplicate native camps occupied already-guarded objectives and two road
-    // chokes. Removing only those overlaps leaves more than eleven hundred
-    // monsters while guaranteeing finite clear windows before trash respawns.
-    expect(world.camps.length).toBeGreaterThanOrEqual(148);
+    expect(MIR4_WOC_POPULATION_RULES.grindCountMultiplier).toBe(2.8);
+    expect(MIR4_WOC_POPULATION_RULES.grindMinPerCamp).toBe(9);
+
+    // Duplicate native camps occupied already-guarded objectives, two road
+    // chokes, and two portal safety envelopes. Removing only those overlaps
+    // leaves more than fourteen hundred monsters while guaranteeing finite
+    // clear windows and safe arrival areas before trash respawns.
+    expect(world.camps.length).toBeGreaterThanOrEqual(146);
     expect(new Set(world.camps.map((camp) => `${camp.center.x}:${camp.center.z}`)).size).toBe(
       world.camps.length,
     );
@@ -650,7 +737,7 @@ describe('MIR4 local comparison on the original WoC map', () => {
       world.camps.every((camp) => nativeCampCenters.has(`${camp.center.x}:${camp.center.z}`)),
     ).toBe(true);
     expect(world.camps.reduce((total, camp) => total + camp.count, 0)).toBeGreaterThanOrEqual(
-      1_100,
+      1_400,
     );
     expect(Math.min(...world.camps.map((camp) => camp.radius))).toBeGreaterThanOrEqual(6);
     for (const zone of world.zones) {
@@ -665,7 +752,7 @@ describe('MIR4 local comparison on the original WoC map', () => {
       expect(
         camps.reduce((total, camp) => total + camp.count, 0),
         zone.id,
-      ).toBeGreaterThanOrEqual(30);
+      ).toBeGreaterThanOrEqual(42);
     }
 
     setActiveWorldContent(world);
@@ -677,13 +764,13 @@ describe('MIR4 local comparison on the original WoC map', () => {
       noPlayer: true,
     });
     const spawnedMobs = [...sim.entities.values()].filter((entity) => entity.kind === 'mob');
-    expect(spawnedMobs.length).toBeGreaterThanOrEqual(1_100);
+    expect(spawnedMobs.length).toBeGreaterThanOrEqual(1_400);
     expect(new Set(spawnedMobs.map((mob) => `${mob.pos.x}:${mob.pos.z}`)).size).toBe(
       spawnedMobs.length,
     );
   });
 
-  it('keeps grind packs clear of story actors and every original WoC dungeon entrance', () => {
+  it('keeps grind packs clear of story actors, dungeon entrances and travel portals', () => {
     const world = buildMir4WocComparisonWorld();
     const dungeonDoors = DUNGEON_LIST.filter((dungeon) => dungeon.overworldDoor !== false).map(
       (dungeon) => dungeon.doorPos,
@@ -699,6 +786,12 @@ describe('MIR4 local comparison on the original WoC map', () => {
         { id: `${board.id}:front`, ...board.frontStandingPoint },
       ]),
     ];
+    const portalSafetyPoints = (world.travelPortals ?? []).flatMap((portal) => [
+      { id: `${portal.id}:a`, x: portal.a.x, z: portal.a.z },
+      { id: `${portal.id}:a:arrival`, x: portal.a.landing.x, z: portal.a.landing.z },
+      { id: `${portal.id}:b`, x: portal.b.x, z: portal.b.z },
+      { id: `${portal.id}:b:arrival`, x: portal.b.landing.x, z: portal.b.landing.z },
+    ]);
 
     for (const camp of world.camps) {
       for (const npc of Object.values(world.npcs)) {
@@ -719,8 +812,47 @@ describe('MIR4 local comparison on the original WoC map', () => {
           `${camp.mobId} blocks dungeon door ${door.x},${door.z}`,
         ).toBeGreaterThanOrEqual(24 + camp.radius);
       }
+      for (const portal of portalSafetyPoints) {
+        expect(
+          Math.hypot(camp.center.x - portal.x, camp.center.z - portal.z),
+          `${camp.mobId} respawns inside portal safety radius ${portal.id}`,
+        ).toBeGreaterThanOrEqual(24 + camp.radius);
+      }
     }
   });
+
+  it.each([7, WORLD_SEED])(
+    'keeps every spawned monster outside portal endpoints and arrivals for seed %i',
+    (seed) => {
+      const world = buildMir4WocComparisonWorld();
+      setActiveWorldContent(world);
+      const sim = new Sim({
+        seed,
+        playerClass: 'warrior',
+        gameProfile: 'mir4-gameplay-port',
+        world,
+        noPlayer: true,
+      });
+      const portalPoints = portalClearancePoints(world.travelPortals);
+      const spawnedMobs = [...sim.entities.values()].filter((entity) => entity.kind === 'mob');
+
+      expect(portalPoints.length).toBeGreaterThan(0);
+      expect(spawnedMobs.length).toBeGreaterThan(0);
+      for (const mob of spawnedMobs) {
+        for (const point of portalPoints) {
+          for (const [kind, position] of [
+            ['position', mob.pos],
+            ['respawn', mob.spawnPos],
+          ] as const) {
+            expect(
+              Math.hypot(position.x - point.x, position.z - point.z),
+              `${mob.templateId} ${kind} is inside portal safety radius at ${point.x},${point.z}`,
+            ).toBeGreaterThanOrEqual(PORTAL_CLEAR_RADIUS - 1e-6);
+          }
+        }
+      }
+    },
+  );
 
   it('keeps an M03 death in Evergarden instead of releasing into the stronger M06 zone', () => {
     const world = buildMir4WocComparisonWorld();

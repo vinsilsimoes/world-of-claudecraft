@@ -787,7 +787,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.unitFrame.targetLabel': 'あなたのターゲット',
   'seo.officialLabel': 'Aeldrune 公式サイト',
   'seo.officialBody':
-    'worldofclaudecraft.com は Claudemoon ワールドの公式無料ブラウザMMOです。永続キャラクターでオンラインプレイし、オフラインでソロ探索し、wikiを読み、このサイトから確認済みのコミュニティリンクをたどれます。',
+    'Aeldrune は Aelvarin ワールドの公式無料ブラウザMMOです。永続キャラクターでオンラインプレイし、オフラインでソロ探索し、wikiを読み、このサイトから確認済みのコミュニティリンクをたどれます。',
   'hudChrome.questShare.notShareable': 'このクエストは共有できません。',
   'hudChrome.questShare.notInSharerParty':
     '{name} のパーティに参加していないと、このクエストを受諾できません。',
@@ -1514,7 +1514,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'stats.playersOnline': 'オンラインプレイヤー数',
   'stats.realmName': 'ワールド名',
   'footer.copyright': '2026 Aeldrune',
-  'footer.githubLink': 'https://github.com/levy-street/world-of-claudecraft',
+  'footer.githubLink': '#',
   'footer.githubLabel': 'オープンソースプロジェクト',
   'footer.whitepaper': 'ホワイトペーパー',
   'footer.terms': '利用規約',
@@ -2026,7 +2026,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'serverUnavailable.eyebrow': 'ワールドメンテナンス',
   'serverUnavailable.heading': 'ワールドは一時的に利用できません。',
   'serverUnavailable.body':
-    'ゲームサービスを再起動しています。Claudemoonはまもなく戻る予定です。このページは自動的に確認を続けます。',
+    'ゲームサービスを再起動しています。Aelvarinはまもなく戻る予定です。このページは自動的に確認を続けます。',
   'serverUnavailable.status': 'まもなく復帰',
   'hud.core.elite': 'エリート',
   'hud.core.boss': 'ボス',
@@ -7748,7 +7748,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.discord.swag.titleDiscordian': '称号：Discordian',
   'hudChrome.discord.swag.titleSquire': '称号：レルムの従者',
   'hudChrome.discord.swag.chromaBlurple': 'Blurpleメックカラー',
-  'hudChrome.discord.swag.titleChampion': '称号：Claudemoonのチャンピオン',
+  'hudChrome.discord.swag.titleChampion': '称号：Aelvarinのチャンピオン',
   'hudChrome.discord.swag.swagStickers': 'ステッカーパック（発送）',
   'hudChrome.discord.swag.swagTee': 'Tシャツ（発送）',
   'hudChrome.discord.relay.tooFast': '投稿が速すぎます。少し待ってからもう一度お試しください。',

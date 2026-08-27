@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../server/db', () => ({
   pool: { query: vi.fn(async () => ({ rows: [] })) },
@@ -21,7 +21,7 @@ vi.mock('../../server/db', () => ({
 }));
 
 import { GameServer } from '../../server/game';
-import { MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
+import { DEFAULT_GAME_PROFILE, MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
 import {
   gameProfileAllowsCommand,
   gameProfileAllowsWireCommand,
@@ -30,6 +30,8 @@ import {
 } from '../../src/sim/game_profile_commands';
 import { COMMAND_NAMES, type CommandName } from '../../src/world_api';
 import { fakeWs } from '../helpers/bare_client';
+
+afterEach(() => vi.restoreAllMocks());
 
 describe('game-profile command authority', () => {
   it('classifies the append-only wire vocabulary exactly once and fails closed for MIR4', () => {
@@ -100,19 +102,31 @@ describe('game-profile command authority', () => {
 
     const sortInventory = vi.spyOn(server.sim, 'sortInventory');
     const autoBattle = vi.spyOn(server.sim, 'setMir4AutoBattle');
+    const autoPotion = vi.spyOn(server.sim, 'setMir4AutoPotionThreshold');
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'inv_sort' }));
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'auto', on: true }));
+    server.handleMessage(
+      session,
+      JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'autoPotion', kind: 'health', percent: 65 }),
+    );
+    server.handleMessage(
+      session,
+      JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'autoPotion', kind: 'mana', percent: 63 }),
+    );
 
     expect(sortInventory).toHaveBeenCalledWith(session.pid);
     expect(autoBattle).toHaveBeenCalledWith(true, session.pid);
+    expect(autoPotion).toHaveBeenCalledTimes(1);
+    expect(autoPotion).toHaveBeenCalledWith('health', 65, session.pid);
   });
 
   it('rejects the MIR4 envelope before its Sim verb runs in a classic realm', () => {
-    const server = new GameServer();
+    const server = new GameServer(undefined, DEFAULT_GAME_PROFILE);
     const client = fakeWs();
     const session = server.join(client.ws, 1, 1, 'Classic Gate', 'warrior', null, false, {});
     if ('error' in session) throw new Error(session.error);
     const autoBattle = vi.spyOn(server.sim, 'setMir4AutoBattle');
+    autoBattle.mockClear();
 
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'mir4', m: 'auto', on: true }));
 

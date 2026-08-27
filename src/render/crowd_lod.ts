@@ -57,6 +57,13 @@ const FAR_ANIM_CADENCE_MID = 5;
 const FAR_ANIM_CADENCE_DENSE = 6;
 /** Frozen-mesh band: the mixer only ticks to keep the pose warm for re-entry. */
 const STATIC_LOD_CADENCE = 6;
+/**
+ * Full presentation refresh cadence for an ordinary idle mob whose linked
+ * frozen mesh is already standing in. Transform interpolation still runs every
+ * frame; this bounds the expensive cosmetic state walk without changing what
+ * the simulation updates or what the player can act on.
+ */
+export const FAR_MOB_FULL_PRESENTATION_CADENCE = STATIC_LOD_CADENCE;
 // Frame-budget pressure (render_budget.ts: 1 means "at the drop threshold") over
 // which the extension eases out, so the extra articulated rigs are the FIRST
 // thing surrendered on a machine that is already struggling.
@@ -256,4 +263,65 @@ export function animCadenceFrames(distSq: number, bands: CharacterLodBands): num
   if (distSq <= bands.lodRangeSq) return bands.midCadence;
   if (distSq <= bands.staticRangeSq) return bands.farCadence;
   return STATIC_LOD_CADENCE;
+}
+
+export interface FarMobPresentationEntity {
+  readonly id: number;
+  readonly kind: string;
+  readonly dead: boolean;
+  readonly ghost: boolean;
+  readonly mobElite?: boolean;
+  readonly mobBoss?: boolean;
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly aiState: string;
+  readonly auras: readonly unknown[];
+  readonly castingAbility: string | null;
+  readonly channeling: boolean;
+  readonly inCombat: boolean;
+  readonly ownerId: number | null;
+  readonly targetId: number | null;
+  readonly aggroTargetId: number | null;
+  readonly tappedById: number | null;
+}
+
+export type FarMobPresentationMode = 'full-active' | 'full-refresh' | 'transform-only';
+
+/**
+ * Decide whether a far mob may skip the expensive cosmetic presentation walk.
+ * The caller has already updated its world transform. Only an ordinary,
+ * untouched, fully healthy idle mob with a linked static stand-in qualifies.
+ * Every gameplay-relevant transition falls through to the full path on the
+ * same frame; the first eligible frame also refreshes once before throttling.
+ */
+export function farMobPresentationMode(
+  entity: FarMobPresentationEntity,
+  staticFarShown: boolean,
+  wasEligible: boolean,
+  actionable: boolean,
+  frameIndex: number,
+): FarMobPresentationMode {
+  const eligible =
+    entity.kind === 'mob' &&
+    staticFarShown &&
+    !actionable &&
+    !entity.dead &&
+    !entity.ghost &&
+    !entity.mobElite &&
+    !entity.mobBoss &&
+    entity.hp >= entity.maxHp &&
+    entity.aiState === 'idle' &&
+    entity.auras.length === 0 &&
+    entity.castingAbility === null &&
+    !entity.channeling &&
+    !entity.inCombat &&
+    entity.ownerId === null &&
+    entity.targetId === null &&
+    entity.aggroTargetId === null &&
+    entity.tappedById === null;
+  if (!eligible) return 'full-active';
+  if (!wasEligible || (frameIndex + entity.id) % FAR_MOB_FULL_PRESENTATION_CADENCE === 0) {
+    return 'full-refresh';
+  }
+  return 'transform-only';
 }

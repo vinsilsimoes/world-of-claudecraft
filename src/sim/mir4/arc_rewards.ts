@@ -6,10 +6,8 @@ import { bagCapacity, fitsAll } from '../bags';
 import { MIR4_QUESTS_ARC, type Mir4ArcQuest } from '../content/mir4/arc_campaign';
 import type { Mir4ClassId } from '../content/mir4/classes';
 import { MIR4_EQUIPMENT_CATALOG } from '../content/mir4/equipment_catalog';
-import {
-  MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS,
-  mir4M01QuestEquipmentRewards,
-} from '../content/mir4/starter_quest_equipment';
+import { MIR4_STARTER_LOADOUT_BY_CLASS } from '../content/mir4/items';
+import { MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS } from '../content/mir4/starter_quest_equipment';
 import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
 import { MIR4_EMPTY_MATERIALS, MIR4_MATERIAL_IDS, type Mir4Materials } from './equipment';
@@ -55,19 +53,6 @@ export const MIR4_ARC_DYNAMIC_GRANT_IDS = Object.freeze([
   ]),
 ]);
 const MIR4_NATIVE_ACCEPT_ITEMS = new Set(['copper_mining_pick', 'gathering_sickle']);
-const EQUIPMENT_MILESTONE_RANK = new Map<string, number>([
-  ['M01-Q06', 1],
-  ['M02-Q06', 2],
-  ['M03-Q06', 3],
-  ['M05-Q06', 4],
-  ['M07-Q06', 5],
-  ['M09-Q06', 6],
-]);
-const M01_Q03_WEAPON_BY_CLASS = new Map(
-  MIR4_EQUIPMENT_CATALOG.filter((item) => item.equipSlot === 1 && item.catalogRank === 1).map(
-    (item) => [item.classId, item.itemId] as const,
-  ),
-);
 const materialKeyById = new Map<number, keyof Mir4Materials>(
   Object.entries(MIR4_MATERIAL_IDS).map(([key, id]) => [id, key as keyof Mir4Materials]),
 );
@@ -303,56 +288,15 @@ function grantPendingNativeAcceptItems(
   return changed;
 }
 
-function grantMir4ArcEquipmentMilestone(
-  ctx: SimContext,
-  meta: PlayerMeta,
-  questId: string,
-): boolean {
-  const rank = EQUIPMENT_MILESTONE_RANK.get(questId);
-  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId as Mir4ClassId | undefined;
-  if (rank === undefined || classId === undefined) return false;
-  const grantId = `campaign-equipment-rank-${rank}-class-${classId}`;
-  const newlyClaimed = claimOnce(meta, grantId);
-  let changed = newlyClaimed;
-  for (const item of MIR4_EQUIPMENT_CATALOG) {
-    if (item.classId !== classId || item.catalogRank !== rank) continue;
-    if (grantNativeEquipmentReward(meta, item.itemId, newlyClaimed)) changed = true;
-  }
-  return changed;
-}
-
-function grantMir4M01QuestEquipment(ctx: SimContext, meta: PlayerMeta, questId: string): boolean {
-  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId as Mir4ClassId | undefined;
-  if (classId === undefined) return false;
-  const rewards = mir4M01QuestEquipmentRewards(questId, classId);
-  if (rewards.length === 0) return false;
-  const grantId = `campaign-equipment-${questId.toLowerCase()}-class-${classId}`;
-  const newlyClaimed = claimOnce(meta, grantId);
-  let changed = newlyClaimed;
-  for (const item of rewards) {
-    if (grantNativeEquipmentReward(meta, item.itemId, newlyClaimed)) changed = true;
-  }
-  return changed;
-}
-
-/** Backfills native catalog sets for characters that cleared a milestone
- * before equipment progression was connected to the imported campaign. */
-export function ensureMir4ArcEquipmentMilestones(ctx: SimContext, meta: PlayerMeta): boolean {
-  let changed = false;
-  for (const questId of MIR4_M01_EQUIPMENT_REWARD_QUEST_IDS) {
-    if (meta.mir4ArcQuests?.[questId]?.state !== 'done') continue;
-    if (grantMir4M01QuestEquipment(ctx, meta, questId)) changed = true;
-  }
-  for (const [questId] of EQUIPMENT_MILESTONE_RANK) {
-    if (meta.mir4ArcQuests?.[questId]?.state !== 'done') continue;
-    if (grantMir4ArcEquipmentMilestone(ctx, meta, questId)) changed = true;
-  }
-  return changed;
+/** Crafted equipment is never backfilled from level or campaign progress.
+ * Existing instances remain valid, but completed quests cannot mint a tier. */
+export function ensureMir4ArcEquipmentMilestones(_ctx: SimContext, _meta: PlayerMeta): boolean {
+  return false;
 }
 
 function grantM01Q03RecoveredWeapon(ctx: SimContext, meta: PlayerMeta): boolean {
-  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId;
-  const itemId = M01_Q03_WEAPON_BY_CLASS.get(classId as 1 | 2 | 3 | 4 | 5);
+  const classId = ctx.entities.get(meta.entityId)?.mir4?.classId as Mir4ClassId | undefined;
+  const itemId = classId ? MIR4_STARTER_LOADOUT_BY_CLASS[classId]?.weapon : undefined;
   if (itemId === undefined) return false;
   const newlyClaimed = claimOnce(meta, M01_Q03_WEAPON_GRANT_ID);
   return grantNativeEquipmentReward(meta, itemId, newlyClaimed) || newlyClaimed;
@@ -463,8 +407,6 @@ export function grantMir4ArcQuestRewards(
 ): void {
   const rewards = quest.rewards;
   const rewardStatuses = ctx.entities.get(meta.entityId)?.mir4?.statusValues;
-  grantMir4M01QuestEquipment(ctx, meta, quest.questId);
-  grantMir4ArcEquipmentMilestone(ctx, meta, quest.questId);
   // Campaign XP grows into the billions from the middle chapters onward. It is
   // a progression currency, not an inventory stack, so applying MAX_COUNT here
   // silently underpays every later quest. The authored table remains within the

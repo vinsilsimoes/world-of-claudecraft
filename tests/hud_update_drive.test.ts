@@ -1288,52 +1288,16 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the reused MIR4 Quest Log, converged on authoritative auto-journey and progression snapshot echoes',
   },
   {
-    call: 'this.mir4MountCodexWindow.refreshIfChanged',
+    call: 'this.mir4Systems.refreshIfChanged',
     band: 'slow',
     gate: '',
     surface: 'window',
     guard: {
       kind: 'module',
-      module: 'mir4_mount_codex_window.ts',
-      proof: 'if (signature !== this.lastDataSignature) this.render();',
+      module: 'mir4_hud_systems.ts',
+      proof: 'for (const window of this.windows()) window.refreshIfChanged();',
     },
-    why: 'the MIR4 Mount system, converged on authoritative collection, summon and fusion snapshot echoes',
-  },
-  {
-    call: 'this.mir4SpiritCodexWindow.refreshIfChanged',
-    band: 'slow',
-    gate: '',
-    surface: 'window',
-    guard: {
-      kind: 'module',
-      module: 'mir4_spirit_codex_window.ts',
-      proof: 'if (signature === this.lastDataSignature) return;',
-    },
-    why: 'the MIR4 Spirit system, converged on authoritative collection, summon and fusion snapshot echoes',
-  },
-  {
-    call: 'this.mir4CodexWindow.refreshIfChanged',
-    band: 'slow',
-    gate: '',
-    surface: 'window',
-    guard: {
-      kind: 'module',
-      module: 'mir4_codex_window.ts',
-      proof: 'if (signature !== this.lastDataSignature) this.render();',
-    },
-    why: 'the MIR4 Codex system, converged on authoritative material, equipment, Mount and Spirit snapshot echoes',
-  },
-  {
-    call: 'this.mir4GrowthWindow.refreshIfChanged',
-    band: 'slow',
-    gate: '',
-    surface: 'window',
-    guard: {
-      kind: 'module',
-      module: 'mir4_growth_window.ts',
-      proof: 'if (signature !== this.lastDataSignature) this.render();',
-    },
-    why: 'the MIR4 Training systems, converged on authoritative resources and progression snapshot echoes',
+    why: 'the grouped MIR4 Mount, Spirit, Codex and Training systems, each converged by its authoritative snapshot guard',
   },
   {
     call: 'this.deedsWindow.refreshIfChanged',
@@ -1748,9 +1712,9 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // arithmetic across a merge. The numbers below were set from a suite run
       // on the merged tree, not from either side's narrative.
       // chrome 84 -> 86: the MIR4 action-tools and auto-skill painters beside the desktop bar.
-      // window 47 -> 53: the MIR4 Quest Log, Mount/Spirit/Codex/Training windows and
+      // window 47 -> 50: the MIR4 Quest Log, grouped MIR4 systems coordinator and
       // profile-aware character-sheet latches.
-    ).toEqual({ window: 53, chrome: 86, none: 18 });
+    ).toEqual({ window: 50, chrome: 86, none: 18 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
@@ -1762,10 +1726,10 @@ describe('Hud.update() drives exactly the registered set, on the registered band
     for (const row of HUD_UPDATE_DRIVES)
       if (row.guard) byKind[row.guard.kind] = (byKind[row.guard.kind] ?? 0) + 1;
     expect(byKind, 'a guard kind changed: say why in the PR, not only in the table').toEqual({
-      // Reliquary and MIR4 Mount cold windows (module) plus craft-cast
-      // single-surface strip (hud) land on this pin.
-      // 29 = the merged 24 plus the MIR4 Quest Log and four system guards.
-      module: 29,
+      // Reliquary and the grouped MIR4 systems coordinator (module) plus
+      // craft-cast single-surface strip (hud) land on this pin.
+      // 26 = the merged 24 plus the MIR4 Quest Log and systems coordinator.
+      module: 26,
       // 7 = Phase 20's refreshCharSheetIfChanged. Its latch is a HUD field
       // (lastCharSheetSig), like its profession sibling, because the cold
       // char_window painter holds no signature of its own to diff.
@@ -1824,10 +1788,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'mailbox_window.ts: if (sig === this.lastSig) return;',
         'market_window.ts: if (sig === this.lastSig) return;',
         'meters.ts: if (!this.isOpen || now - this.lastRender < 250) return;',
-        'mir4_codex_window.ts: if (signature !== this.lastDataSignature) this.render();',
-        'mir4_growth_window.ts: if (signature !== this.lastDataSignature) this.render();',
-        'mir4_mount_codex_window.ts: if (signature !== this.lastDataSignature) this.render();',
-        'mir4_spirit_codex_window.ts: if (signature === this.lastDataSignature) return;',
+        'mir4_hud_systems.ts: for (const window of this.windows()) window.refreshIfChanged();',
         'mount_race_controls.ts: if (!button || mode === this.buttonMode) return;',
         'mount_race_strip.ts: if (view.raceId !== this.lastRaceId || view.phase !== this.lastPhase || second !== this.lastSecond) {',
         // The professions guard hashes the freshly built input inline (no local
@@ -1870,6 +1831,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       'dungeon_finder_proposal_popup.ts',
       'hud/battleground/battleground_proposal_popup.ts',
       'meters.ts',
+      'mir4_hud_systems.ts',
       'mount_race_controls.ts',
       'mount_race_strip.ts',
       'vale_cup_betting.ts',

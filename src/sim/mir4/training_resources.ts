@@ -5,6 +5,7 @@
 
 import type { GatherNodeDef, MobFamily } from '../types';
 import { MIR4_EMPTY_MATERIALS, type Mir4Materials } from './equipment';
+import { mir4MetalForNode } from './equipment_mining';
 import { type Mir4SolitudeMaterialFamily, mir4SolitudeMaterialKey } from './solitude_training';
 import { mir4ModifiedProgressionReward } from './status_effects';
 import type { Mir4StatusRecord } from './status_values';
@@ -33,7 +34,12 @@ export type Mir4GatherProgressionSource =
       material: keyof Mir4Materials;
       rarity: Mir4TrainingMaterialRarity;
     }>
-  | Readonly<{ kind: 'darksteel' }>;
+  | Readonly<{
+      kind: 'ore';
+      material: keyof Mir4Materials;
+      mapId: string;
+      darksteel: boolean;
+    }>;
 
 /** Curated resource districts on the original WoC map. The node positions and
  * visuals remain native; these rows decide which Training plant grows there. */
@@ -82,8 +88,14 @@ export const MIR4_SOLITUDE_HERBALISM_AREAS: readonly Readonly<{
   zoneIds: readonly string[];
 }>[] = Object.freeze([
   { family: 'noirsoulHerb', zoneIds: ['nightbloom', 'wraithwood'] },
-  { family: 'flowerOil', zoneIds: ['veiled_hollow', 'drakelands', 'amberfall'] },
-  { family: 'centuryFruit', zoneIds: ['willowfen', 'galecrest', 'palmreach', 'evergarden'] },
+  {
+    family: 'flowerOil',
+    zoneIds: ['veiled_hollow', 'drakelands', 'amberfall'],
+  },
+  {
+    family: 'centuryFruit',
+    zoneIds: ['willowfen', 'galecrest', 'palmreach', 'evergarden'],
+  },
 ]);
 
 function saturatingCredit(current: number, amount: number): number {
@@ -117,28 +129,47 @@ export function mir4HerbalismZonesForMaterial(material: keyof Mir4Materials): re
 }
 
 export function mir4GatherProgressionSourceForNode(
-  node: Pick<GatherNodeDef, 'type' | 'zoneId'>,
+  node: Pick<GatherNodeDef, 'type' | 'zoneId'> & Partial<Pick<GatherNodeDef, 'id' | 'pos'>>,
 ): Mir4GatherProgressionSource | null {
   if (node.type === 'herb') {
     const area = mir4HerbalismAreaForZone(node.zoneId);
     return area
-      ? { kind: 'training-material', material: area.material, rarity: area.rarity }
+      ? {
+          kind: 'training-material',
+          material: area.material,
+          rarity: area.rarity,
+        }
       : null;
   }
-  return node.type === 'ore' &&
-    (MIR4_DARKSTEEL_MINING_ZONES as readonly string[]).includes(node.zoneId)
-    ? { kind: 'darksteel' }
+  if (node.type !== 'ore') return null;
+  if (!node.id || !node.pos) return null;
+  const metal = mir4MetalForNode({
+    id: node.id,
+    zoneId: node.zoneId,
+    pos: node.pos,
+  });
+  return metal
+    ? {
+        kind: 'ore',
+        material: metal.material,
+        mapId: metal.mapId,
+        darksteel: (MIR4_DARKSTEEL_MINING_ZONES as readonly string[]).includes(node.zoneId),
+      }
     : null;
 }
 
 /** Credits the MIR4 reward paired with one already-completed WoC harvest. */
 export function grantMir4GatherProgressionReward(
   target: Mir4TrainingResourceTarget,
-  node: Pick<GatherNodeDef, 'type' | 'zoneId'>,
+  node: Pick<GatherNodeDef, 'type' | 'zoneId'> & Partial<Pick<GatherNodeDef, 'id' | 'pos'>>,
   rolledRarity: Mir4GatherRewardRarity,
   grantedQty: number,
   statuses?: Mir4StatusRecord,
-): Readonly<{ material?: keyof Mir4Materials; amount: number; darksteel: number }> {
+): Readonly<{
+  material?: keyof Mir4Materials;
+  amount: number;
+  darksteel: number;
+}> {
   const qty = Math.max(0, Math.floor(grantedQty));
   if (qty <= 0) return { amount: 0, darksteel: 0 };
 
@@ -158,7 +189,14 @@ export function grantMir4GatherProgressionReward(
     return { material: source.material, amount, darksteel: 0 };
   }
 
-  if (source?.kind === 'darksteel') {
+  if (source?.kind === 'ore') {
+    const wallet = { ...MIR4_EMPTY_MATERIALS, ...target.mir4Materials };
+    wallet[source.material] = saturatingCredit(wallet[source.material], qty);
+    target.mir4Materials = wallet;
+    if (!source.darksteel) {
+      markMir4WireDirty(target);
+      return { material: source.material, amount: qty, darksteel: 0 };
+    }
     const rarityMultiplier: Readonly<Record<Mir4GatherRewardRarity, number>> = {
       common: 1,
       uncommon: 2,
@@ -179,7 +217,7 @@ export function grantMir4GatherProgressionReward(
       darksteel: saturatingCredit(currencies.darksteel, amount),
     };
     markMir4WireDirty(target);
-    return { amount: 0, darksteel: amount };
+    return { material: source.material, amount: qty, darksteel: amount };
   }
 
   return { amount: 0, darksteel: 0 };
@@ -187,7 +225,12 @@ export function grantMir4GatherProgressionReward(
 
 export function grantMir4TrainingCombatMaterial(
   target: Mir4TrainingResourceTarget,
-  source: Readonly<{ family?: MobFamily; elite?: boolean; boss?: boolean; level?: number }>,
+  source: Readonly<{
+    family?: MobFamily;
+    elite?: boolean;
+    boss?: boolean;
+    level?: number;
+  }>,
 ): keyof Mir4Materials | null {
   let key: keyof Mir4Materials | null = null;
   if (source.boss || source.elite) key = 'boundlessShard';

@@ -333,7 +333,13 @@ import { PartyFrameProjectionCache } from './party_frame_projection';
 import { applyBoostKitToPlayer, pbeBoostEnabled } from './pbe_boost';
 import { recordFtueDeath, recordFtueQuest, recordLevelUp } from './progress_events';
 import { nextRaidResetMs, resetDayKey } from './raid_reset';
-import { GAME_PROFILE, REALM, REALM_PUBLIC_ORIGIN, REALM_RESET_TIME_ZONE } from './realm';
+import {
+  GAME_PROFILE,
+  PUBLIC_REALM_NAME,
+  REALM,
+  REALM_PUBLIC_ORIGIN,
+  REALM_RESET_TIME_ZONE,
+} from './realm';
 import { createRealmReadoutMemo, realmReadoutJson, realmReadoutObject } from './realm_readout_memo';
 import { RiftAssetCoordinator, riftAssetConfigFromEnv } from './rift_assets';
 import { refusedRiftForgeCommand } from './rift_forge_gate';
@@ -2081,7 +2087,7 @@ export class GameServer {
     // drain, inert unless PARSE_CAPTURE=1 and an ingest URL is configured.
     this.parseCapture = createParseSubsystem({
       sim: this.sim,
-      realm: REALM,
+      realm: PUBLIC_REALM_NAME,
       build: readBuildVersion(),
       resolveParticipant: (pid) => this.resolveParseParticipant(pid),
     });
@@ -3206,7 +3212,7 @@ export class GameServer {
       characterName: session.name,
       level: e?.level ?? 1,
       className: cls,
-      realm: REALM,
+      realm: PUBLIC_REALM_NAME,
       zone,
       message,
       profileUrl: REALM_PUBLIC_ORIGIN
@@ -3949,7 +3955,7 @@ export class GameServer {
       seed: this.sim.cfg.seed,
       name,
       cls,
-      realm: REALM,
+      realm: PUBLIC_REALM_NAME,
       gameProfile: this.sim.cfg.gameProfile,
       // Staff advert for admin-gated client surfaces (the /dev Spawns tab).
       // Every gated command is re-checked server-side, so a forged true is inert.
@@ -4113,7 +4119,7 @@ export class GameServer {
       seed: this.sim.cfg.seed,
       name: session.name,
       cls,
-      realm: REALM,
+      realm: PUBLIC_REALM_NAME,
       gameProfile: this.sim.cfg.gameProfile,
       admin: session.isAdmin,
       softWords: this.chatFilter.softWords(),
@@ -9757,7 +9763,7 @@ export class GameServer {
             kind: 'levelup',
             accountIds: [s.accountId],
             names: [s.name],
-            realm: REALM,
+            realm: PUBLIC_REALM_NAME,
             profileUrl: this.profileUrlFor(s.name),
             level: ev.level,
           },
@@ -9775,7 +9781,7 @@ export class GameServer {
             kind: 'rareloot',
             accountIds: s ? [s.accountId] : [],
             names: s ? [s.name] : [],
-            realm: REALM,
+            realm: PUBLIC_REALM_NAME,
             profileUrl: s ? this.profileUrlFor(s.name) : null,
             itemName: ev.itemName,
             quality: ev.quality,
@@ -9813,7 +9819,7 @@ export class GameServer {
                 kind: 'masterwork',
                 accountIds: [accountId],
                 names: [name],
-                realm: REALM,
+                realm: PUBLIC_REALM_NAME,
                 profileUrl,
                 itemName,
               },
@@ -9848,7 +9854,7 @@ export class GameServer {
             kind: 'duel',
             accountIds,
             names,
-            realm: REALM,
+            realm: PUBLIC_REALM_NAME,
             profileUrl: this.profileUrlFor(ev.winnerName),
             winnerName: ev.winnerName,
             loserName: ev.loserName,
@@ -9876,7 +9882,7 @@ export class GameServer {
             kind: 'arena',
             accountIds: [s.accountId],
             names: [s.name],
-            realm: REALM,
+            realm: PUBLIC_REALM_NAME,
             profileUrl: this.profileUrlFor(s.name),
             ratingDelta: ev.ratingAfter - ev.ratingBefore,
           },
@@ -9958,7 +9964,7 @@ export class GameServer {
             kind: 'vale_cup',
             accountIds,
             names,
-            realm: REALM,
+            realm: PUBLIC_REALM_NAME,
             profileUrl: this.profileUrlFor(s.name),
             bracket: match.bracket,
             scoreA: match.scoreA,
@@ -10506,7 +10512,7 @@ export class GameServer {
               kind: 'deed',
               accountIds: [accountId],
               names: [name],
-              realm: REALM,
+              realm: PUBLIC_REALM_NAME,
               profileUrl,
               deedId,
               ...feed,
@@ -10717,8 +10723,8 @@ export class GameServer {
     }
     const total = rows.length;
     const header = filter
-      ? `Who: ${total} ${total === 1 ? 'player' : 'players'} matching "${filter}" on ${REALM}.`
-      : `Who: ${total} ${total === 1 ? 'player' : 'players'} online on ${REALM}.`;
+      ? `Who: ${total} ${total === 1 ? 'player' : 'players'} matching "${filter}" on ${PUBLIC_REALM_NAME}.`
+      : `Who: ${total} ${total === 1 ? 'player' : 'players'} online on ${PUBLIC_REALM_NAME}.`;
     const list: { type: 'log'; text: string; color: string }[] = [
       {
         type: 'log',

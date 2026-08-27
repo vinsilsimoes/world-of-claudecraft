@@ -45,4 +45,19 @@ describe('start skin picker portrait readiness', () => {
     expect(portraitUrl).not.toHaveBeenCalled();
     expect(document.querySelector('#offline-skin-row img')).toBeNull();
   });
+
+  it('matches a MIR4 class chip by its native visual class', () => {
+    const portraitUrl = vi.fn(() => 'data:image/png;base64,elementalist');
+    const chip = document.querySelector<HTMLElement>('#charcreate-panel .mini-class');
+    if (!chip) throw new Error('missing online class chip fixture');
+    chip.dataset.class = 'elementalist';
+    chip.dataset.visualClass = 'mage';
+
+    refreshStartSkinPickerPortraits(document, 'player_mage', 1, portraitUrl);
+
+    expect(portraitUrl).toHaveBeenCalledWith('mage', 1);
+    expect(document.querySelector('#online-skin-row img')?.getAttribute('src')).toBe(
+      'data:image/png;base64,elementalist',
+    );
+  });
 });

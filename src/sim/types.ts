@@ -964,7 +964,7 @@ interface BaseItemDef {
   // the 4 bag sockets (see src/sim/bags.ts; the 16-slot backpack is implicit).
   bagSlots?: number;
   // Max copies per inventory slot. When omitted the default is derived from
-  // `kind` (weapon/armor/bag/tool: 1, everything else: 20); see stackSizeOf.
+  // `kind` (weapon/armor/bag/tool: 1, potion: 5000, everything else: 20); see stackSizeOf.
   stackSize?: number;
   requiredClass?: PlayerClass[];
   // Minimum character level needed to equip this piece. When omitted, the level

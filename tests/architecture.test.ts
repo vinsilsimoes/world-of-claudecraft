@@ -497,6 +497,7 @@ const RENDER_PURE_CORES = [
   'src/render/reveal_gate_core.ts',
   'src/render/town_reveal_core.ts',
   'src/render/foliage_bucket_reveal_core.ts',
+  'src/render/foliage_spatial_bucket_core.ts',
   'src/render/foliage_prewarm_twins_core.ts',
   'src/render/character_effect_prewarm_core.ts',
   'src/render/frame_ms_stats_core.ts',

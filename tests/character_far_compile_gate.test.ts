@@ -128,6 +128,7 @@ describe('the composed far bake links hidden behind the gate', () => {
     // ...but nothing is revealed yet: this is the whole fix. Before it, the
     // rig hid and the far mesh drew (and linked) in this same call.
     expect(fake.isFar).toBe(true);
+    expect(fake.isStaticFarShown).toBe(false);
     expect(fake.modelWrap.visible).toBe(true);
     expect(farMesh.visible).toBe(false);
     // The renderer's shadow plan asking for the proxy meanwhile does not show it
@@ -153,6 +154,7 @@ describe('the composed far bake links hidden behind the gate', () => {
     // Revealed: the far mesh stands in, the rig hides, the wanted proxy shows.
     expect(fake.modelWrap.visible).toBe(false);
     expect(farMesh.visible).toBe(true);
+    expect(fake.isStaticFarShown).toBe(true);
     expect(fake.shadowProxy.visible).toBe(true);
     // ...and every later far crossing is free: no gate, immediate handoff
     fake.setFar(false);

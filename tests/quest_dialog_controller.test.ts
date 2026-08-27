@@ -1,12 +1,20 @@
 // @vitest-environment happy-dom
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   mir4ArcNpcIdentity,
   mir4ArcNpcTemplateId,
   mir4ArcQuest,
 } from '../src/sim/content/mir4/arc_campaign';
-import { DELVES, NPCS, QUESTS, STATIONS } from '../src/sim/data';
+import { MIR4_VILLAGE_PROVISIONER_NPC_ID } from '../src/sim/content/mir4/village_provisioner';
+import {
+  BUILTIN_WORLD,
+  DELVES,
+  NPCS,
+  QUESTS,
+  STATIONS,
+  setActiveWorldContent,
+} from '../src/sim/data';
 import { CHRONICLER_TEMPLATE_IDS } from '../src/sim/deeds';
 import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import type { Entity } from '../src/sim/types';
@@ -112,6 +120,7 @@ function harness(
   const openUnbind = vi.fn();
   const openCrafting = vi.fn();
   const onOpenChange = vi.fn();
+  const npcGreeting = vi.fn(() => 'Hello');
   let now = 1_000;
   const controller = new QuestDialogController({
     element,
@@ -122,7 +131,7 @@ function harness(
       npcName: (id) => `npc:${id}`,
       mobName: (id) => `mob:${id}`,
       npcTitle: () => 'Title',
-      npcGreeting: () => 'Hello',
+      npcGreeting,
       delveName: (id) => `delve:${id}`,
       questTitle: (id) => `quest:${id}`,
       questNarrative: (id, field) => `${field}:${id}`,
@@ -183,6 +192,7 @@ function harness(
     openUnbind,
     openCrafting,
     onOpenChange,
+    npcGreeting,
     setNow: (value: number) => {
       now = value;
     },
@@ -193,6 +203,8 @@ describe('QuestDialogController', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
   });
+
+  afterEach(() => setActiveWorldContent(null));
 
   it('owns the normal gossip lifecycle and fades the greeting from NPC distance', () => {
     const test = harness();
@@ -220,8 +232,41 @@ describe('QuestDialogController', () => {
     expect(test.controller.isOpen).toBe(false);
   });
 
+  it('uses authored identity and services for an NPC from the active world', () => {
+    const templateId = 'active_world_sara';
+    const definition = {
+      ...NPCS[ordinaryNpcId()],
+      id: templateId,
+      name: 'Sara das Ervas',
+      title: 'Mercadora de utilidades',
+      greeting: 'Poções e provisões para sua jornada.',
+      vendorItems: ['minor_healing_potion', 'minor_mana_potion'],
+    };
+    const authoredWorld = {
+      ...BUILTIN_WORLD,
+      npcs: { ...BUILTIN_WORLD.npcs, [templateId]: definition },
+    };
+    setActiveWorldContent(authoredWorld);
+    const activeNpc = npc(72, templateId);
+    const test = harness(activeNpc);
+    (test.world.cfg as { world?: typeof authoredWorld }).world = authoredWorld;
+    setActiveWorldContent(null);
+
+    test.controller.open(activeNpc.id);
+
+    expect(test.element.textContent).toContain(`npc:${templateId}`);
+    expect(test.element.textContent).toContain('Hello');
+    const vendor = test.element.querySelector<HTMLButtonElement>('[data-vendor]');
+    expect(vendor).not.toBeNull();
+    vendor?.click();
+    expect(test.openVendor).toHaveBeenCalledWith(activeNpc.id, test.trapOpener);
+  });
+
   it('reuses the existing dialog for authored MIR4 conversations and authoritative talk', () => {
-    const quest = mir4ArcQuest('M01-Q01')!;
+    const quest = mir4ArcQuest('M01-Q01');
+    if (!quest?.purpose) throw new Error('M01-Q01 fixture missing');
+    const identity = mir4ArcNpcIdentity(quest.giverNpcId);
+    if (!identity) throw new Error('M01-Q01 NPC fixture missing');
     const contact = npc(70, mir4ArcNpcTemplateId(quest.giverNpcId));
     const test = harness(contact);
     (test.world.cfg as { gameProfile?: string }).gameProfile = 'mir4-gameplay-port';
@@ -231,9 +276,9 @@ describe('QuestDialogController', () => {
 
     test.controller.open(contact.id);
 
-    expect(test.element.textContent).toContain(mir4ArcNpcIdentity(quest.giverNpcId)!.name);
+    expect(test.element.textContent).toContain(identity.name);
     expect(test.element.textContent).toContain(quest.title);
-    expect(test.element.textContent).toContain('Observe o lugar');
+    expect(test.element.textContent).toContain(quest.purpose);
     const action = test.element.querySelector<HTMLButtonElement>('.btn');
     expect(action?.textContent).toBe(t('questUi.dialog.accept'));
 
@@ -241,6 +286,74 @@ describe('QuestDialogController', () => {
     expect(test.targetEntity).toHaveBeenCalledWith(contact.id);
     expect(test.interact).toHaveBeenCalledTimes(1);
     expect(test.element.style.display).toBe('none');
+  });
+
+  it('keeps Sara vendor services and authored greeting on the MIR4 campaign dialog path', () => {
+    const definition = {
+      ...NPCS[ordinaryNpcId()],
+      id: MIR4_VILLAGE_PROVISIONER_NPC_ID,
+      name: 'Sara das Ervas',
+      title: 'Poções e Artigos Gerais',
+      greeting: 'Uma poção usada na hora certa vale mais que uma bolsa cheia.',
+      vendorItems: ['minor_healing_potion', 'minor_mana_potion'],
+    };
+    const authoredWorld = {
+      ...BUILTIN_WORLD,
+      npcs: { ...BUILTIN_WORLD.npcs, sara: definition },
+    };
+    const contact = npc(73, MIR4_VILLAGE_PROVISIONER_NPC_ID);
+    const test = harness(contact);
+    (test.world.cfg as { gameProfile?: string; world?: typeof authoredWorld }).gameProfile =
+      'mir4-gameplay-port';
+    (test.world.cfg as { world?: typeof authoredWorld }).world = authoredWorld;
+    (
+      test.world as unknown as { mir4PlayerState(): Readonly<Mir4PlayerUiState> | null }
+    ).mir4PlayerState = () => ({ playerLevel: 5, mir4ArcQuests: {} }) as Mir4PlayerUiState;
+
+    test.controller.open(contact.id);
+
+    expect(test.element.textContent).toContain('Hello');
+    expect(test.npcGreeting).toHaveBeenCalledWith(
+      MIR4_VILLAGE_PROVISIONER_NPC_ID,
+      'warrior',
+      'Ari',
+      'Uma poção usada na hora certa vale mais que uma bolsa cheia.',
+    );
+    const vendor = test.element.querySelector<HTMLButtonElement>('[data-vendor]');
+    expect(vendor).not.toBeNull();
+    vendor?.click();
+    expect(test.openVendor).toHaveBeenCalledWith(contact.id, test.trapOpener);
+  });
+
+  it('keeps Sara commerce hidden until an automatic campaign dialogue finishes', () => {
+    const quest = mir4ArcQuest('M01-Q02')!;
+    const contact = npc(74, MIR4_VILLAGE_PROVISIONER_NPC_ID);
+    contact.vendorItems = ['minor_healing_potion', 'minor_mana_potion'];
+    const test = harness(contact);
+    (test.world.cfg as { gameProfile?: string }).gameProfile = 'mir4-gameplay-port';
+    (
+      test.world as unknown as { mir4PlayerState(): Readonly<Mir4PlayerUiState> | null }
+    ).mir4PlayerState = () =>
+      ({
+        playerLevel: 1,
+        mir4ArcQuests: {},
+        mir4NarrativeDialogue: {
+          id: `${quest.questId}:advance:0:${contact.id}`,
+          questId: quest.questId,
+          npcEntityId: contact.id,
+          npcTemplateId: contact.templateId,
+          action: 'advance',
+          beat: 'reveal',
+          startedAt: 10,
+          durationSeconds: 8,
+          completesAt: 18,
+        },
+      }) as Mir4PlayerUiState;
+
+    test.controller.refreshIfChanged();
+
+    expect(test.element.querySelector('[data-vendor]')).toBeNull();
+    expect(test.element.querySelector('.qd-dialogue-skip')).not.toBeNull();
   });
 
   it('opens the existing dialog for Auto Mission lore and skips through authority', () => {

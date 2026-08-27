@@ -28,6 +28,7 @@ import {
   prewarmResumeIsDebt,
   prewarmSubmitShouldStop,
   remainingPrewarmViewBudget,
+  resolvePrewarmCompileBatchRoots,
   resolvePrewarmEntryStatus,
   resolvePrewarmPolicy,
   skyAssetInlineWaitMs,
@@ -51,6 +52,14 @@ const BASE: PrewarmPolicyInput = {
   maxViewsHigh: 16,
   maxViewsConstrained: 2,
 };
+
+describe('resolvePrewarmCompileBatchRoots', () => {
+  it('uses smaller driver submissions on the low tier while preserving explicit diagnostics', () => {
+    expect(resolvePrewarmCompileBatchRoots(true, null, 16)).toBe(4);
+    expect(resolvePrewarmCompileBatchRoots(false, null, 16)).toBe(16);
+    expect(resolvePrewarmCompileBatchRoots(true, 8, 16)).toBe(8);
+  });
+});
 
 // Full-line // comments are stripped first, the tests/loopback_guard.test.ts
 // rule: the reveal ordering below is explained in prose right beside the code,

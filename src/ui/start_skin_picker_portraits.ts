@@ -33,7 +33,8 @@ export function refreshStartSkinPickerPortraits(
   for (const picker of PICKERS) {
     const row = document.querySelector<HTMLElement>(picker.row);
     const selectedClass = document.querySelector<HTMLElement>(picker.selectedClass);
-    if (!row || selectedClass?.dataset.class !== cls) continue;
+    const selectedVisualClass = selectedClass?.dataset.visualClass ?? selectedClass?.dataset.class;
+    if (!row || selectedVisualClass !== cls) continue;
     const swatch = row.querySelector<HTMLElement>(`.skin-swatch[data-skin="${skin}"]`);
     if (!swatch || swatch.querySelector('.skin-swatch-img')) continue;
     const img = document.createElement('img');

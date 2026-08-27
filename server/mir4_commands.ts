@@ -6,6 +6,8 @@
 // authority.
 
 import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
+import { MIR4_CRAFT_RECIPES } from '../src/sim/mir4/crafting';
+import { MIR4_EQUIPMENT_CRAFT_RECIPES } from '../src/sim/mir4/equipment_crafting';
 import type { Sim } from '../src/sim/sim';
 
 type Mir4WireMessage = Record<string, unknown> & { m?: unknown };
@@ -19,8 +21,16 @@ const isQuestId = (value: unknown): value is string =>
   typeof value === 'string' && /^M\d{2}-[PQRS]\d{2}$/.test(value);
 const isTicketRedeemCount = (value: unknown): value is 1 | 10 | 100 =>
   value === 1 || value === 10 || value === 100;
+const isAutoPotionPercent = (value: unknown): value is number =>
+  Number.isSafeInteger(value) &&
+  Number(value) >= 10 &&
+  Number(value) <= 90 &&
+  Number(value) % 5 === 0;
 const isCodexId = (value: unknown): value is string =>
   typeof value === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && value.length <= 80;
+const isCraftRecipeId = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  (Object.hasOwn(MIR4_CRAFT_RECIPES, value) || Object.hasOwn(MIR4_EQUIPMENT_CRAFT_RECIPES, value));
 
 export function handleMir4Command(
   sim: Sim,
@@ -34,6 +44,11 @@ export function handleMir4Command(
   switch (action) {
     case 'auto':
       if (typeof msg.on === 'boolean') sim.setMir4AutoBattle(msg.on, pid);
+      break;
+    case 'autoPotion':
+      if ((msg.kind === 'health' || msg.kind === 'mana') && isAutoPotionPercent(msg.percent)) {
+        sim.setMir4AutoPotionThreshold(msg.kind, msg.percent, pid);
+      }
       break;
     case 'autoSkill':
       if (isItemId(msg.skillId) && typeof msg.enabled === 'boolean') {
@@ -161,14 +176,7 @@ export function handleMir4Command(
       }
       break;
     case 'craftMaterial':
-      if (
-        msg.recipeId === 'solar-scroll' ||
-        msg.recipeId === 'lunar-seal' ||
-        msg.recipeId === 'knowledge-tome-common' ||
-        msg.recipeId === 'knowledge-tome-rare' ||
-        msg.recipeId === 'knowledge-tome-epic' ||
-        msg.recipeId === 'knowledge-tome-legendary'
-      ) {
+      if (isCraftRecipeId(msg.recipeId)) {
         sim.mir4CraftMaterial(msg.recipeId, pid);
       }
       break;

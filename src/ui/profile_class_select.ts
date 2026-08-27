@@ -3,13 +3,16 @@ import { mir4SkillsForClass } from '../sim/content/mir4/skills';
 import type { GameProfile } from '../sim/game_profile';
 import { classesForGameProfile } from '../sim/game_profile_roster';
 import { mir4SkillUnlockLevel } from '../sim/mir4/skill_progression';
-import { mir4ShellClassFor } from '../sim/mir4/stats';
 import type { Mir4ClassKey, PlayableClass, PlayerClass } from '../sim/types';
 import type { TranslationKey } from './i18n';
+import { profileClassPresentation } from './profile_class_presentation';
 
 export interface ProfileClassOption {
   key: PlayableClass;
   shellClass: PlayerClass;
+  visualClass: PlayerClass;
+  armorSet: ReturnType<typeof profileClassPresentation>['armorSet'];
+  starterWeaponItemId: string | null | undefined;
   labelKey: TranslationKey;
   ariaKey: TranslationKey;
 }
@@ -25,12 +28,14 @@ export interface Mir4ClassDetailsView {
 }
 
 export function profileClassOptions(profile: GameProfile): ProfileClassOption[] {
-  return classesForGameProfile(profile).map((key) => ({
-    key,
-    shellClass: mir4ShellClassFor(key, profile),
-    labelKey: `classes.${key}` as TranslationKey,
-    ariaKey: `classes.${key}Aria` as TranslationKey,
-  }));
+  return classesForGameProfile(profile).map((key) => {
+    const presentation = profileClassPresentation(key, profile);
+    return {
+      ...presentation,
+      labelKey: `classes.${key}` as TranslationKey,
+      ariaKey: `classes.${key}Aria` as TranslationKey,
+    };
+  });
 }
 
 export function mir4ClassDetailsView(key: Mir4ClassKey): Mir4ClassDetailsView {

@@ -165,10 +165,8 @@ describe('Guide routes', () => {
     expect(matchRoute('/wiki/reference/controls')?.route.id).toBe('controls');
   });
 
-  it('claims deeper segments as params (class/creature detail pages)', () => {
-    const m = matchRoute('/wiki/classes/warrior');
-    expect(m?.route.id).toBe('classes');
-    expect(m?.params).toEqual(['warrior']);
+  it('rejects retired detail segments instead of canonicalizing them to a section', () => {
+    expect(matchRoute('/wiki/classes/warrior')).toBeNull();
   });
 
   it('returns null for unknown paths so the app can render notFound', () => {
@@ -179,7 +177,7 @@ describe('Guide routes', () => {
     // Regression: the skip link href="#guide-main" must not route to notFound.
     expect(matchRoute('/wiki#guide-main')?.route.id).toBe('home');
     expect(matchRoute('/wiki/reference/controls#movement')?.route.id).toBe('controls');
-    expect(matchRoute('/wiki/classes/warrior?from=home')?.params).toEqual(['warrior']);
+    expect(matchRoute('/wiki/classes/warrior?from=home')).toBeNull();
     expect(toSub('/wiki/classes#kit')).toBe('classes');
   });
 
@@ -194,8 +192,7 @@ describe('Guide routes', () => {
       'start',
       'world',
       'character',
-      'endgame',
-      'compete',
+      'systems',
       'reference',
     ]);
     for (const g of groups)
@@ -234,7 +231,7 @@ describe('Guide entry wiring', () => {
   });
 
   it('lists the guide in the sitemap', () => {
-    expect(sitemapXml).toContain('<loc>https://worldofclaudecraft.com/wiki</loc>');
+    expect(sitemapXml).toContain('<loc>https://aeldrune.invalid/wiki</loc>');
   });
 
   // A route with no registered page silently renders the placeholder; a route or class
@@ -251,17 +248,11 @@ describe('Guide entry wiring', () => {
   // stray placeholder); it lives in its own file because the bestiary and models pages
   // paint procedural icons through a canvas and so need a DOM environment.
 
-  it('lists every route and class-detail page in the sitemap', () => {
-    const origin = 'https://worldofclaudecraft.com';
+  it('lists every public Aeldrune route in the sitemap', () => {
+    const origin = 'https://aeldrune.invalid';
     for (const r of GUIDE_ROUTES) {
       const loc = `${origin}${hrefFor(r.sub)}`;
       expect(sitemapXml, `sitemap missing route "${r.id}" (${loc})`).toContain(`<loc>${loc}</loc>`);
-    }
-    for (const c of GUIDE_CLASSES) {
-      const loc = `${origin}${hrefFor(`classes/${c.id}`)}`;
-      expect(sitemapXml, `sitemap missing class page "${c.id}" (${loc})`).toContain(
-        `<loc>${loc}</loc>`,
-      );
     }
   });
 });
@@ -274,12 +265,8 @@ describe('guide.html shell', () => {
   });
 
   it('ships crawlable canonical + social metadata for /wiki', () => {
-    expect(guideHtml).toContain(
-      '<link rel="canonical" href="https://worldofclaudecraft.com/wiki" />',
-    );
-    expect(guideHtml).toContain(
-      '<meta property="og:url" content="https://worldofclaudecraft.com/wiki" />',
-    );
+    expect(guideHtml).toContain('<link rel="canonical" href="/wiki" />');
+    expect(guideHtml).toContain('<meta property="og:url" content="/wiki" />');
     expect(guideHtml).toContain('content="index, follow, max-image-preview:large"');
   });
 
@@ -806,13 +793,9 @@ describe('Guide deeds spoiler safety', () => {
     expect(t('guide.deedsPage.featTag' as never)).toBe('Feat');
   });
 
-  it('pins the deeds route wiring to literals', () => {
+  it('does not publish the retired deeds page', () => {
     const route = GUIDE_ROUTES.find((r) => r.id === 'deeds');
-    expect(route?.sub).toBe('deeds');
-    expect(route?.navKey).toBe('guide.nav.deeds');
-    // 'compendium' was retired when it grew to seventeen entries and split; the Book of
-    // Deeds is endgame content, so it sits with the dungeons, delves and rifts.
-    expect(route?.group).toBe('endgame');
+    expect(route).toBeUndefined();
   });
 });
 
@@ -930,14 +913,10 @@ describe('Guide Reliquary spoiler-safe catalog', () => {
     expect(nonSlain.some((id) => id.startsWith('gather_event:'))).toBe(true);
   });
 
-  it('pins the reliquary route wiring to literals', () => {
+  it('does not publish the retired reliquary page', () => {
     const route = GUIDE_ROUTES.find((r) => r.id === 'reliquary');
-    expect(route?.sub).toBe('reliquary');
-    expect(route?.navKey).toBe('guide.nav.reliquary');
-    // 'endgame' since the release's sidebar regroup retired the catch-all
-    // compendium group: the page files beside deeds/dungeons/delves/rifts.
-    expect(route?.group).toBe('endgame');
-    expect(pageFor('reliquary')).toBe(reliquaryPage);
+    expect(route).toBeUndefined();
+    expect(pageFor('reliquary')).toBeNull();
   });
 
   it('renders shelves and every page name without inventing player progress chrome', () => {
@@ -1052,18 +1031,12 @@ describe('Guide deeds page render (continued)', () => {
 // a locale-agnostic toLowerCase, so a Turkish label that starts with the dotted
 // capital I still matches a query typed in plain ASCII (the deeds-window pattern).
 describe('Guide search locale-insensitive folding', () => {
-  it('matches a Turkish label typed without the dotted capital I (tr_TR)', async () => {
-    // 'Insansilar-with-dotted-capital-I'.toLowerCase() injects a combining dot
-    // after the i, so a locale-agnostic fold never matches a typed plain 'insan'.
+  it('keeps proper-noun Aeldrune content searchable in a loaded locale', async () => {
     await ensureLocaleLoaded('tr_TR');
     try {
       setLanguage('tr_TR');
-      const humanoid = t('guide.family.humanoid.name' as never);
-      // Guard the premise: the label really begins with the dotted capital I
-      // (U+0130), the letter whose locale-agnostic lowercase breaks the match.
-      expect(humanoid.charCodeAt(0)).toBe(0x0130);
-      const hits = rank(buildIndex(), 'insan');
-      expect(hits.some((e) => e.label === humanoid)).toBe(true);
+      const hits = rank(buildIndex(), 'elementalista');
+      expect(hits.some((e) => e.label === 'Elementalista')).toBe(true);
     } finally {
       setLanguage('en');
     }
@@ -1071,8 +1044,8 @@ describe('Guide search locale-insensitive folding', () => {
 
   it('still finds an English entry after the fold change (regression)', () => {
     setLanguage('en');
-    const hits = rank(buildIndex(), 'first steps');
-    expect(hits.some((e) => e.label === 'First Steps')).toBe(true);
+    const hits = rank(buildIndex(), 'primeiros rastros');
+    expect(hits.some((e) => e.label === 'Primeiros Rastros')).toBe(true);
   });
 });
 
@@ -1165,7 +1138,7 @@ describe('Guide module-graph spoiler containment', () => {
     // dropping the import() collection must red this line.
     expect(reached.size).toBeGreaterThan(50);
     expect(reached.has(resolve(repoRoot, 'src/sim/data.ts'))).toBe(true);
-    expect(reached.has(resolve(repoRoot, 'src/guide/viewer/scene.ts'))).toBe(true);
+    expect(reached.has(resolve(repoRoot, 'src/guide/viewer/scene.ts'))).toBe(false);
 
     let chain = '';
     if (reached.has(forbidden)) {
@@ -2421,21 +2394,21 @@ describe('Guide professions pages and routes', () => {
     }
   });
 
-  it('lists every professions detail page in the sitemap', () => {
-    const origin = 'https://worldofclaudecraft.com';
+  it('does not publish retired profession detail pages in the sitemap', () => {
+    const origin = 'https://aeldrune.invalid';
     for (const id of GUIDE_PROF_PAGES) {
       const loc = `${origin}${hrefFor(`professions/${id}`)}`;
-      expect(sitemapXml, `sitemap missing professions page "${id}"`).toContain(`<loc>${loc}</loc>`);
+      expect(sitemapXml).not.toContain(`<loc>${loc}</loc>`);
     }
   });
 
-  it('indexes the professions detail pages in site search', () => {
+  it('does not index retired profession detail pages', () => {
     setLanguage('en');
     const index = buildIndex();
-    expect(index.some((e) => e.href === hrefFor('professions/weaponcrafting'))).toBe(true);
-    expect(index.some((e) => e.href === hrefFor('professions/fishing'))).toBe(true);
+    expect(index.some((e) => e.href === hrefFor('professions/weaponcrafting'))).toBe(false);
+    expect(index.some((e) => e.href === hrefFor('professions/fishing'))).toBe(false);
     const hits = rank(index, 'weaponcrafting');
-    expect(hits.some((e) => e.href === hrefFor('professions/weaponcrafting'))).toBe(true);
+    expect(hits.some((e) => e.href === hrefFor('professions/weaponcrafting'))).toBe(false);
   });
 
   it('resolves the new professions keys in English', () => {

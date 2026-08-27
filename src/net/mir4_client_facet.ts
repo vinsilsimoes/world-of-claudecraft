@@ -1,4 +1,9 @@
 import type { GameProfile } from '../game_profile';
+import {
+  type Mir4AutoPotionKind,
+  type Mir4AutoPotionThresholds,
+  resolveMir4AutoPotionThresholds,
+} from '../sim/auto_battle/potion_thresholds';
 import { mir4AutoQuestStatus } from '../sim/auto_quest/core';
 import type { KnownAbility } from '../sim/content/classes';
 import type { Mir4LayerKind } from '../sim/mir4/affixes';
@@ -51,6 +56,10 @@ export class Mir4ClientFacet implements IWorldMir4 {
   readonly mir4PlayerState = (): Readonly<Mir4SnapshotState> | null => this.snapshot;
   readonly mir4AutoBattleActive = (): boolean => this.snapshot?.autoBattle?.mode === 'battle';
   readonly setMir4AutoBattle = (on: boolean): void => this.send({ cmd: 'mir4', m: 'auto', on });
+  readonly mir4AutoPotionThresholds = (): Mir4AutoPotionThresholds =>
+    resolveMir4AutoPotionThresholds(this.snapshot?.mir4AutoPotion);
+  readonly setMir4AutoPotionThreshold = (kind: Mir4AutoPotionKind, percent: number): void =>
+    this.send({ cmd: 'mir4', m: 'autoPotion', kind, percent });
   readonly setMir4AutoSkillEnabled = (skillId: number, enabled: boolean): void =>
     this.send({ cmd: 'mir4', m: 'autoSkill', skillId, enabled });
   readonly mir4AutoQuestActive = (): boolean => this.snapshot?.mir4AutoQuest !== undefined;
@@ -198,6 +207,12 @@ export abstract class Mir4ClientWorldBase implements IWorldMir4 {
   }
   setMir4AutoBattle(on: boolean): void {
     this.ensureMir4Facet().setMir4AutoBattle(on);
+  }
+  mir4AutoPotionThresholds(): Mir4AutoPotionThresholds {
+    return this.ensureMir4Facet().mir4AutoPotionThresholds();
+  }
+  setMir4AutoPotionThreshold(kind: Mir4AutoPotionKind, percent: number): void {
+    this.ensureMir4Facet().setMir4AutoPotionThreshold(kind, percent);
   }
   setMir4AutoSkillEnabled(skillId: number, enabled: boolean): void {
     this.ensureMir4Facet().setMir4AutoSkillEnabled(skillId, enabled);

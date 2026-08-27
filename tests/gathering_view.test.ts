@@ -129,7 +129,10 @@ describe('buildNearbyGatherNodes', () => {
   // CRITICAL acceptance criterion: two independent viewers asking about the
   // SAME node list get independently correct answers for the SAME node id.
   it('two independent per-viewer cooldown states produce independent results for the same node', () => {
-    const worldA = makeWorld({ pos: NODE.pos, harvestable: (id) => id === NODE.id });
+    const worldA = makeWorld({
+      pos: NODE.pos,
+      harvestable: (id) => id === NODE.id,
+    });
     const worldB = makeWorld({ pos: NODE.pos, harvestable: () => false });
 
     const nodesA = buildNearbyGatherNodes(worldA, 5);
@@ -191,9 +194,12 @@ describe('tool-tier lock dimension', () => {
     expect(isNodeToolLockedFor(makeWorld({}), { type: 'ore', tier: 2 })).toBe(true);
     // Owned but unearned: still locked (R22), the map lock agreeing with the
     // sim's wield denial.
-    expect(isNodeToolLockedFor(makeWorld({ inventory: PICK }), { type: 'ore', tier: 2 })).toBe(
-      true,
-    );
+    expect(
+      isNodeToolLockedFor(makeWorld({ inventory: PICK }), {
+        type: 'ore',
+        tier: 2,
+      }),
+    ).toBe(true);
     expect(
       isNodeToolLockedFor(makeWorld({ inventory: PICK, proficiency: MINING_40 }), {
         type: 'ore',
@@ -203,9 +209,12 @@ describe('tool-tier lock dimension', () => {
     // Bare hands never gather: even a tier-1 vein is locked without a pick,
     // and the tier-1 copper pick unlocks it at zero proficiency.
     expect(isNodeToolLockedFor(makeWorld({}), { type: 'ore', tier: 1 })).toBe(true);
-    expect(isNodeToolLockedFor(makeWorld({ inventory: T1_PICK }), { type: 'ore', tier: 1 })).toBe(
-      false,
-    );
+    expect(
+      isNodeToolLockedFor(makeWorld({ inventory: T1_PICK }), {
+        type: 'ore',
+        tier: 1,
+      }),
+    ).toBe(false);
   });
 
   it('a world with NO gatheringProficiency member at all reads 0 and locks (fail-closed)', () => {
@@ -248,10 +257,16 @@ describe('tool-tier lock dimension', () => {
       makeWorld({ pos: T2.pos, inventory: PICK, proficiency: MINING_40 }),
       5,
     );
-    expect(tooled.find((n) => n.id === T2.id)).toMatchObject({ tier: 2, locked: false });
+    expect(tooled.find((n) => n.id === T2.id)).toMatchObject({
+      tier: 2,
+      locked: false,
+    });
     // The R22 arm: owned-but-unearned reads locked on the map too.
     const unearned = buildNearbyGatherNodes(makeWorld({ pos: T2.pos, inventory: PICK }), 5);
-    expect(unearned.find((n) => n.id === T2.id)).toMatchObject({ tier: 2, locked: true });
+    expect(unearned.find((n) => n.id === T2.id)).toMatchObject({
+      tier: 2,
+      locked: true,
+    });
     // The tier-1 arm (#2343): locked toolless, unlocked with the tier-1 pick.
     const t1 = buildNearbyGatherNodes(makeWorld({}), 5).find((n) => n.id === NODE.id);
     expect(t1).toMatchObject({ tier: 1, locked: true });
@@ -304,10 +319,14 @@ describe('tool-tier lock dimension', () => {
     const mir4 = makeWorld({ gameProfile: 'mir4-gameplay-port' });
 
     expect(buildGatherNodeTooltip(mir4, herb.id)).toMatchObject({
-      mir4Reward: { kind: 'training-material', material: 'herbRoot', rarity: 'uncommon' },
+      mir4Reward: {
+        kind: 'training-material',
+        material: 'herbRoot',
+        rarity: 'uncommon',
+      },
     });
     expect(buildGatherNodeTooltip(mir4, ore.id)).toMatchObject({
-      mir4Reward: { kind: 'darksteel' },
+      mir4Reward: { kind: 'ore', darksteel: true },
     });
     expect(buildGatherNodeTooltip(makeWorld({}), herb.id)).not.toHaveProperty('mir4Reward');
   });
@@ -352,7 +371,11 @@ describe('tool-tier lock dimension', () => {
 
   it('gatherEffectPrompt asks exactly when a prompt-mode effect would fire', () => {
     const slotted = (
-      over: Partial<{ effectId: string; charges: number; confirmMode: 'always' | 'prompt' }> = {},
+      over: Partial<{
+        effectId: string;
+        charges: number;
+        confirmMode: 'always' | 'prompt';
+      }> = {},
     ) =>
       makeWorld({
         inventory: T1_PICK,
@@ -478,7 +501,10 @@ describe('tool-tier lock dimension', () => {
     // dialog never asks; the plain harvest command still goes out.
     const full = [
       ...T1_PICK,
-      ...Array.from({ length: 15 }, (_, i) => ({ itemId: `filler_${i}`, count: 1 })),
+      ...Array.from({ length: 15 }, (_, i) => ({
+        itemId: `filler_${i}`,
+        count: 1,
+      })),
     ];
     expect(full).toHaveLength(16);
     expect(gatherEffectPrompt(slotted({ inventory: full }), NODE.id)).toBeNull();
@@ -489,13 +515,23 @@ describe('tool-tier lock dimension', () => {
       makeWorld({
         inventory: T1_PICK,
         toolEffectSlots: [
-          { professionId: 'mining', effectId, charges, maxCharges: 30, confirmMode: 'always' },
+          {
+            professionId: 'mining',
+            effectId,
+            charges,
+            maxCharges: 30,
+            confirmMode: 'always',
+          },
         ],
       });
-    expect(buildGatherNodeTooltip(slotted(3), NODE.id)).toMatchObject({ fineUpgrade: true });
+    expect(buildGatherNodeTooltip(slotted(3), NODE.id)).toMatchObject({
+      fineUpgrade: true,
+    });
     // A spent slot (0 charges) previews the base grade: the adapter maps
     // charges onto durability, and applyEffectBonus refuses at zero.
-    expect(buildGatherNodeTooltip(slotted(0), NODE.id)).toMatchObject({ fineUpgrade: false });
+    expect(buildGatherNodeTooltip(slotted(0), NODE.id)).toMatchObject({
+      fineUpgrade: false,
+    });
     // An unknown (or prototype-key) effect id from a newer server drops the
     // row instead of throwing mid-hover.
     expect(buildGatherNodeTooltip(slotted(3, 'constructor'), NODE.id)).toMatchObject({
@@ -599,13 +635,17 @@ describe('tool-tier lock dimension', () => {
 
 describe('buildGatheringProficiencyRows', () => {
   it('returns one row per gathering profession, in the fixed order', () => {
-    const world = makeWorld({ proficiency: { mining: 3, logging: 0, herbalism: 7 } });
+    const world = makeWorld({
+      proficiency: { mining: 3, logging: 0, herbalism: 7 },
+    });
     const rows = buildGatheringProficiencyRows(world);
     expect(rows.map((r) => r.professionId)).toEqual(['mining', 'logging', 'herbalism', 'fishing']);
   });
 
   it('matches the input values exactly', () => {
-    const world = makeWorld({ proficiency: { mining: 12, logging: 4, herbalism: 0 } });
+    const world = makeWorld({
+      proficiency: { mining: 12, logging: 4, herbalism: 0 },
+    });
     const rows = buildGatheringProficiencyRows(world);
     expect(rows).toEqual([
       { professionId: 'mining', value: 12, displayValue: 12, maxSkill: 100 },

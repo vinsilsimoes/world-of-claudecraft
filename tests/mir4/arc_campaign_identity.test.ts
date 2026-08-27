@@ -48,7 +48,10 @@ describe('the Vila do Vau provisioner route', () => {
       target: 'm01-vila-do-vau-sara-das-ervas',
     });
     expect(quest?.stages[0]?.text).toContain('Sara das Ervas');
+    expect(quest?.stages[0]?.text).toContain('oeste da Vila do Vau');
     expect(quest?.stages[0]?.text).toContain('equipamentos iniciais');
+    expect(quest?.stages[3]?.text).toContain('20 Poções Menores');
+    expect(quest?.stages[3]?.text).toContain('Sara das Ervas');
     expect(quest?.dialogue).toContainEqual(
       expect.objectContaining({ beat: 'reveal', speaker: 'Sara das Ervas' }),
     );

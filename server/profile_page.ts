@@ -26,7 +26,7 @@ import {
 } from './db';
 import { logger } from './http/logger';
 import { publicReadRateLimited } from './ratelimit';
-import { publicOriginFromRequest, REALM } from './realm';
+import { PUBLIC_REALM_NAME, publicOriginFromRequest } from './realm';
 
 function publicOrigin(req: http.IncomingMessage): string {
   return publicOriginFromRequest(req);
@@ -96,7 +96,7 @@ export async function handleProfilePage(
     const sheet = characterSheet({
       row,
       visibility: 'public',
-      realm: REALM,
+      realm: PUBLIC_REALM_NAME,
       origin,
       guild,
       rank: toSheetRank(rank),

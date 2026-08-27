@@ -5,6 +5,10 @@
 // mir4_commands.ts). Client reads come from the authoritative self-snapshot;
 // the server re-validates every verb through the sim's own admission gates.
 
+import type {
+  Mir4AutoPotionKind,
+  Mir4AutoPotionThresholds,
+} from '../sim/auto_battle/potion_thresholds';
 import type { Mir4AchievementClaimResult } from '../sim/mir4/achievements';
 import type { Mir4LayerKind } from '../sim/mir4/affixes';
 import type { Mir4CastResult } from '../sim/mir4/combat';
@@ -17,6 +21,9 @@ export interface IWorldMir4 {
   /** Authoritative auto-battle read. */
   mir4AutoBattleActive(): boolean;
   setMir4AutoBattle(on: boolean): void;
+  /** Persisted percentages at or below which Auto Battle uses each potion role. */
+  mir4AutoPotionThresholds(): Mir4AutoPotionThresholds;
+  setMir4AutoPotionThreshold(kind: Mir4AutoPotionKind, percent: number): void;
   /** Include or exclude one regular skill from automatic rotations. */
   setMir4AutoSkillEnabled(skillId: number, enabled: boolean): void;
   /** Authoritative auto-quest journey read. */

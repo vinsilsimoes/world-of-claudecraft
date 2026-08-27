@@ -59,8 +59,12 @@ const worldInput = (inventory: ActionBarWorldInput['inventory']): ActionBarWorld
 function harness() {
   let autoCollect = false;
   let autoBattle = false;
+  let potionThresholds = { health: 50, mana: 35 };
   let canUseItem = false;
   const useItem = vi.fn();
+  const setMir4AutoPotionThreshold = vi.fn((kind: 'health' | 'mana', percent: number) => {
+    potionThresholds = { ...potionThresholds, [kind]: percent };
+  });
   const setAutoCollect = vi.fn((on: boolean) => {
     autoCollect = on;
   });
@@ -70,6 +74,7 @@ function harness() {
   const host = document.createElement('div');
   const actionBar = document.createElement('div');
   const mobileCollect = document.createElement('button');
+  const attachTooltip = vi.fn();
   mobileCollect.id = 'mobile-auto-collect';
   host.appendChild(actionBar);
   document.body.append(host, mobileCollect);
@@ -80,6 +85,8 @@ function harness() {
       cfg: { gameProfile: 'mir4-gameplay-port' },
       mir4AutoBattleActive: () => autoBattle,
       setMir4AutoBattle,
+      mir4AutoPotionThresholds: () => potionThresholds,
+      setMir4AutoPotionThreshold,
       useItem,
     } as unknown as IWorld,
     autoCollectActive: () => autoCollect,
@@ -89,7 +96,7 @@ function harness() {
     canUseItem: () => canUseItem,
     afterUseItem: vi.fn(),
     flash: vi.fn(),
-    attachTooltip: vi.fn(),
+    attachTooltip,
     itemTooltip: () => 'Potion',
     hideTooltip: vi.fn(),
   });
@@ -102,6 +109,8 @@ function harness() {
     mobileCollect,
     setAutoCollect,
     setMir4AutoBattle,
+    setMir4AutoPotionThreshold,
+    attachTooltip,
     useItem,
     allowItems,
   };
@@ -136,6 +145,38 @@ describe('MIR4 action tools controller', () => {
     test.allowItems();
     potion?.click();
     expect(test.useItem).toHaveBeenCalledWith('minor_healing_potion');
+  });
+
+  it('configures each automatic potion threshold from its tooltip control', () => {
+    const test = harness();
+    test.controller?.paint(
+      worldInput([
+        { itemId: 'minor_healing_potion', count: 2 },
+        { itemId: 'minor_mana_potion', count: 3 },
+      ]),
+    );
+
+    const healthButton = test.host.querySelector<HTMLButtonElement>('.potion-health');
+    const tooltip = test.attachTooltip.mock.calls.find(
+      ([element]) => element === healthButton,
+    )?.[1];
+    expect(tooltip?.()).toContain('50%');
+    expect(tooltip?.()).toContain('Automatically use this potion');
+    expect(tooltip?.()).not.toContain('During Auto Battle');
+
+    test.host.querySelector<HTMLButtonElement>('.potion-health-config')?.click();
+    const panel = test.host.querySelector<HTMLElement>('.mir4-potion-threshold-popover');
+    const slider = panel?.querySelector<HTMLInputElement>('input[type="range"]');
+    expect(panel?.hidden).toBe(false);
+    expect(slider?.value).toBe('50');
+
+    if (!slider) throw new Error('health potion threshold slider missing');
+    slider.value = '65';
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(test.setMir4AutoPotionThreshold).toHaveBeenLastCalledWith('health', 65);
+
+    test.host.querySelector<HTMLButtonElement>('.potion-mana-config')?.click();
+    expect(panel?.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe('35');
   });
 
   it('relocalizes accessible labels without rebuilding the dock', () => {

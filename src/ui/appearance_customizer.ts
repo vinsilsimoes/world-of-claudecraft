@@ -25,7 +25,6 @@ import {
   type BrowStyle,
   blushColor,
   DEFAULT_APPEARANCE,
-  defaultLashes,
   EAR_STYLES,
   EARRING_MATERIAL_IDS,
   EARRING_STYLES,
@@ -56,6 +55,10 @@ import {
   type ShadowShade,
   shadowColor,
 } from '../render/characters/modular';
+import {
+  appearanceAfterGenderSelection,
+  startingAppearanceForGender,
+} from './appearance_gender_defaults';
 import type { TranslationKey } from './i18n';
 import { t } from './i18n';
 
@@ -560,7 +563,7 @@ export function mountAppearanceCustomizer(
     'auth.resetLook',
     resetIcon(),
     () => {
-      value = normalizeAppearance({ gender: value.gender, lashes: defaultLashes(value.gender) });
+      value = startingAppearanceForGender(value.gender);
     },
     'auth.resetShort',
   );
@@ -670,7 +673,9 @@ export function mountAppearanceCustomizer(
       btn.setAttribute('aria-pressed', 'false');
       on(btn, 'click', () => {
         set(o);
-        sync();
+        // A body switch applies a complete authored preset, so every other
+        // control (hair, face, outfit, makeup...) must repaint as well.
+        syncAll();
         emit();
       });
       buttons.set(o, btn);
@@ -1065,7 +1070,7 @@ export function mountAppearanceCustomizer(
       // so without this, switching to female leaves her without them and the
       // "standard" is only true of a character created from scratch. The
       // switch on the Face tab still overrides it either way.
-      value = { ...value, gender: g, lashes: defaultLashes(g) };
+      value = appearanceAfterGenderSelection(value, g);
     },
   );
   colorRow(
