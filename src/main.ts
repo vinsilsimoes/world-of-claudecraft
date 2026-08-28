@@ -57,7 +57,6 @@ import { provisionDiagnosticsCollectionTickets } from './game/diagnostics_playte
 import { desktopPresenceOnFrame, pushDiscordPresenceEnabled } from './game/discord_presence';
 import { cycleHudFocus } from './game/dpad_focus_nav';
 import { takeEditorPlaytestRequest } from './game/editor_playtest';
-import type { GameProfile } from './sim/game_profile';
 import {
   clearEntryProbe,
   ENTRY_PROBE_STABLE_MS,
@@ -333,6 +332,7 @@ import {
   ZONES,
 } from './sim/data';
 import { canEquipItem } from './sim/equipment_rules';
+import type { GameProfile } from './sim/game_profile';
 import { MARKET_HOUSE_STOCK } from './sim/market';
 import { bagOwnedMounts } from './sim/mounts';
 import { findPlayerPath, resolvePlayerDestination } from './sim/pathfind';
