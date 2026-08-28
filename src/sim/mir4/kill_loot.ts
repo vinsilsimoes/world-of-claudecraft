@@ -10,6 +10,7 @@ import type { PlayerMeta } from '../sim';
 import type { SimContext } from '../sim_context';
 import { cloneItemInstancePayload, DT, type Entity, type LootSlot } from '../types';
 import { markWorldBossLooted } from '../world_boss';
+import { rollMir4EquipmentDrop } from './equipment_loot';
 
 export const MIR4_CORPSE_SECONDS = 10;
 
@@ -36,6 +37,9 @@ export function settleMir4KillLoot(
   primary: PlayerMeta | null,
   worldBoss: boolean,
 ): void {
+  // The ready-made Aeldrune equipment jackpot is personal to the credited
+  // player and independent from the reused template's filtered classic loot.
+  if (primary && !primary.leaving) rollMir4EquipmentDrop(ctx, mob, primary);
   const loot = mob.loot;
   if (loot) {
     if (primary && loot.copper > 0) distributeLootCopper(ctx, mob, primary);

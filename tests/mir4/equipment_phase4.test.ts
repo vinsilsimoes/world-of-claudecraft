@@ -87,10 +87,24 @@ describe('equipping catalog items', () => {
     expect(p.mir4?.accuracy).toBe(2);
   });
 
+  it('keeps crafted or traded higher-rank equipment unusable until its Aeldrune level gate', () => {
+    const sim = makeSim(1412, false);
+    const meta = sim.players.get(sim.playerId)!;
+    meta.mir4ArcRewards = { items: { '991010102': 1 } };
+    sim.player.level = 29;
+
+    expect(sim.mir4EquipItem(991010102)).toBe('You must be level 30 to equip that.');
+    expect(meta.mir4Equipment?.[1]).not.toBe(991010102);
+
+    sim.player.level = 30;
+    expect(sim.mir4EquipItem(991010102)).toBe('Machado do Bastião equipped.');
+    expect(meta.mir4Equipment?.[1]).toBe(991010102);
+  });
+
   it('inherits enhancement and resolved layers when a higher-rank native item replaces a slot', () => {
     const sim = makeSim(1411);
     const meta = sim.players.get(sim.playerId)!;
-    sim.player.level = 105;
+    sim.player.level = 200;
     meta.mir4ArcRewards = { items: { '991010101': 1, '991010106': 1 } };
     sim.mir4EquipItem(991010101);
     meta.mir4EquipmentInstances![991010101] = {

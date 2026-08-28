@@ -10,6 +10,7 @@ import {
   MIR4_EQUIPMENT_CATALOG,
   type Mir4EquipmentItemDef,
 } from '../content/mir4/equipment_catalog';
+import { mir4EquipmentRequiredLevelForRank } from '../content/mir4/item_progression';
 import { MIR4_STARTER_LOADOUT_BY_CLASS, mir4EquipmentDefinition } from '../content/mir4/items';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
@@ -347,6 +348,8 @@ export function mir4EquipItem(ctx: SimContext, pid: number, itemId: number): str
   if (!def) return 'Unknown item.';
   if (!mir4OwnsEquipmentItem(meta, itemId)) return 'Unknown item.';
   if (def.classId !== p.mir4?.classId) return 'Your class cannot use this.';
+  const requiredLevel = mir4EquipmentRequiredLevelForRank(def.catalogRank);
+  if (p.level < requiredLevel) return `You must be level ${requiredLevel} to equip that.`;
   const nextInstance = instanceFor(meta, itemId);
   const inheritedSources = Object.values(meta.mir4EquipmentInstances ?? {})
     .filter((instance) => {

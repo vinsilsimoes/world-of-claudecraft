@@ -25,6 +25,7 @@ import {
   stackSizeOf,
 } from './bags';
 import { isRawCookingCatch } from './content/items';
+import { mir4PotionRule } from './content/mir4/potions';
 import { ITEMS } from './data';
 import { markItemDiscovered } from './deeds';
 import { recalcPlayerStats } from './entity';
@@ -55,13 +56,9 @@ import { canStackInstancePayloads, itemInstancePayloadsEqual } from './item_inst
 import { meetsLevelRequirement, requiredLevelFor } from './item_level_req';
 import { isItemLocked } from './item_lock';
 import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
-import {
-  MIR4_HP_POTION_COOLDOWN_SECONDS,
-  MIR4_HP_POTION_HEAL_BPS,
-  MIR4_MP_POTION_COOLDOWN_SECONDS,
-  MIR4_MP_POTION_RESTORE,
-} from './mir4/combat';
+import { MIR4_HP_POTION_COOLDOWN_SECONDS, MIR4_MP_POTION_COOLDOWN_SECONDS } from './mir4/combat';
 import { mir4MountVisualKey } from './mir4/mounts';
+import { mir4ModifiedPotionAmount } from './mir4/status_effects';
 import { mountOwned, summonMountItem } from './mounts';
 import { learnRiding } from './mounts_training';
 import { battlefieldExperienceTrickle } from './professions/battlefield_xp';
@@ -830,12 +827,17 @@ export function useItem(
       ctx.error(meta.entityId, 'That potion is not ready yet.');
       return;
     }
-    const mir4HealingPotion =
-      ctx.gameProfile === MIR4_GAME_PROFILE && itemId === 'minor_healing_potion';
-    const mir4ManaPotion = ctx.gameProfile === MIR4_GAME_PROFILE && itemId === 'minor_mana_potion';
-    const manaRestore = mir4ManaPotion ? MIR4_MP_POTION_RESTORE : (def.potionMana ?? 0);
-    const restoresMana =
-      manaRestore > 0 && p.resourceType === 'mana' && p.resource < p.maxResource;
+    const mir4Potion = ctx.gameProfile === MIR4_GAME_PROFILE ? mir4PotionRule(itemId) : null;
+    if (mir4Potion && p.level < mir4Potion.requiredLevel) {
+      ctx.error(meta.entityId, `You must be level ${mir4Potion.requiredLevel} to use that potion.`);
+      return;
+    }
+    const mir4HealingPotion = mir4Potion?.kind === 'hp';
+    const mir4ManaPotion = mir4Potion?.kind === 'mp';
+    const manaRestore = mir4ManaPotion
+      ? Math.max(1, Math.round((p.maxResource * mir4Potion.restoreBps) / 10_000))
+      : (def.potionMana ?? 0);
+    const restoresMana = manaRestore > 0 && p.resourceType === 'mana' && p.resource < p.maxResource;
     const restoresHp = ((def.potionHp ?? 0) > 0 || (def.potionHpPctMax ?? 0) > 0) && p.hp < p.maxHp;
     if (!restoresHp && !restoresMana) {
       // M01-Q02 teaches the valid potion action, not the act of wasting a
@@ -885,13 +887,19 @@ export function useItem(
     let potionHeal = 0;
     if (restoresHp) {
       const baseHeal = mir4HealingPotion
-        ? (p.maxHp * MIR4_HP_POTION_HEAL_BPS) / 10_000
+        ? (p.maxHp * mir4Potion.restoreBps) / 10_000
         : (def.potionHp ?? 0) + p.maxHp * (def.potionHpPctMax ?? 0);
-      potionHeal = Math.min(Math.round(baseHeal * ctx.healingTakenMult(p)), p.maxHp - p.hp);
+      const modifiedHeal = mir4HealingPotion
+        ? mir4ModifiedPotionAmount(baseHeal, 'hp', p.mir4?.statusValues)
+        : baseHeal;
+      potionHeal = Math.min(Math.round(modifiedHeal * ctx.healingTakenMult(p)), p.maxHp - p.hp);
       p.hp += potionHeal;
     }
     if (restoresMana) {
-      p.resource = Math.min(p.maxResource, p.resource + manaRestore);
+      const modifiedMana = mir4ManaPotion
+        ? mir4ModifiedPotionAmount(manaRestore, 'mp', p.mir4?.statusValues)
+        : manaRestore;
+      p.resource = Math.min(p.maxResource, p.resource + modifiedMana);
     }
     // Always emit, even a pure-mana potion (potionHeal 0): this is what plays
     // the dedicated quaff sound (hud.ts), distinct from a real heal's
@@ -995,9 +1003,14 @@ export function buyItem(
   // Dev free-epic vendor: on a dev-command realm this vendor sells its whole
   // epic stock for free, bypassing the price requirement below.
   const freeVendor = ctx.devCommands && npc.devVendor === true;
+  const mir4PotionPrice =
+    ctx.gameProfile === MIR4_GAME_PROFILE ? mir4PotionRule(itemId)?.priceCopper : undefined;
+  const authoredCopperPrice = mir4PotionPrice ?? def?.buyValue;
   const copperUnitPrice =
-    def?.buyValue !== undefined && Number.isFinite(def.buyValue) && def.buyValue > 0
-      ? def.buyValue
+    authoredCopperPrice !== undefined &&
+    Number.isFinite(authoredCopperPrice) &&
+    authoredCopperPrice > 0
+      ? authoredCopperPrice
       : 0;
   const honorPrice =
     def?.priceHonor !== undefined && Number.isFinite(def.priceHonor) && def.priceHonor > 0

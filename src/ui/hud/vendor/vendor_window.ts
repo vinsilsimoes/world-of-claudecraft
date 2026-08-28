@@ -216,7 +216,15 @@ export function renderVendorWindow(
       quantity > 1
         ? ` ${t('itemUi.bags.stackCount', { count: formatNumber(quantity, { maximumFractionDigits: 0 }) })}`
         : '';
-    const requirement = goods.requirementUnmet ? requirementText(goods) : '';
+    const requirements = [
+      goods.requirementUnmet ? requirementText(goods) : '',
+      goods.requiredLevel !== undefined
+        ? t('hudChrome.bg.levelRequirement', {
+            level: formatNumber(goods.requiredLevel, { maximumFractionDigits: 0 }),
+          })
+        : '',
+    ].filter(Boolean);
+    const requirement = requirements.join(' · ');
     // Every row gets a buy aria-label (the purchase deny is retired, so the
     // promise is true of every row), and an aria-label REPLACES the button's
     // content as its accessible name: a requirement-unmet row must fold the

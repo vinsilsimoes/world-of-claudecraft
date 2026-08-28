@@ -4,6 +4,7 @@
 // automation toggle enters the ability/hotbar model.
 
 import { audio } from '../../../game/audio';
+import { mir4PotionRule } from '../../../sim/content/mir4/potions';
 import { ITEMS } from '../../../sim/data';
 import { MIR4_GAME_PROFILE } from '../../../sim/game_profile';
 import type { ItemDef } from '../../../sim/types';
@@ -196,8 +197,17 @@ export function buildMir4ActionTools(
         );
         return `<div class="tt-title">${esc(role)}</div><div class="tt-sub">${esc(t('hudChrome.mir4.actionTools.noPotion'))}</div>`;
       }
+      const rule = mir4PotionRule(item.id);
+      const requiredLevel = rule
+        ? `<div class="tt-sub">${esc(
+            t('hudChrome.bg.levelRequirement', {
+              level: formatNumber(rule.requiredLevel, { maximumFractionDigits: 0 }),
+            }),
+          )}</div>`
+        : '';
       return (
         deps.itemTooltip(item) +
+        requiredLevel +
         `<div class="tt-sub">${esc(t('hudChrome.mir4.actionTools.inBags', { count: formatAbilityNumber(inventoryCount(inventory, item.id)) }))}</div>` +
         `<div class="tt-sub">${esc(
           t('hudChrome.mir4.actionTools.autoUseThreshold', {
@@ -268,6 +278,7 @@ export function buildMir4ActionTools(
         autoBattleKeybind: deps.keyCap('toggleAutoBattle'),
         autoCollectKeybind: deps.keyCap('toggleAutoCollect'),
         inventory,
+        playerLevel: world.player.level,
       });
       potionIds = state.potionIds;
       toolsPainter.paint(state);

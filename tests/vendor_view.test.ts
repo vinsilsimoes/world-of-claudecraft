@@ -185,6 +185,26 @@ describe('buildVendorView goods', () => {
       buildVendorView(['blade'], [], items, { ...RICH, copper: 25, honor: 79 }).goods[0].affordable,
     ).toBe(false);
   });
+
+  it('projects profile-specific price and minimum use level for a potion row', () => {
+    const items = table(item('late_potion', { buyValue: 999, kind: 'potion', stackSize: 5_000 }));
+    const view = buildVendorView(
+      ['late_potion'],
+      [],
+      items,
+      RICH,
+      1,
+      () => 500,
+      () => 150,
+    );
+
+    expect(view.goods[0]).toMatchObject({
+      itemId: 'late_potion',
+      price: { copper: 500, honor: 0 },
+      requiredLevel: 150,
+    });
+    expect(view.goods[0].bulkQuantity).toBe(2_000);
+  });
 });
 
 describe('buildVendorView buyback', () => {

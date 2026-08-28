@@ -60,4 +60,17 @@ describe('MIR4 potion inventory policy', () => {
     expect(useMir4AutomaticPotion(sim.ctx, sim.playerId, 'hp')).toBe(false);
     expect(sim.player.hp).toBe(hpBefore);
   });
+
+  it('ignores carried potions above the player level and uses the strongest unlocked tier', () => {
+    const sim = makeSim(9254);
+    sim.player.level = 1;
+    sim.addItem('sunpetal_healing_draught', 1);
+    sim.player.hp = sim.player.maxHp * 0.4;
+    const minorBefore = sim.countItem('minor_healing_potion');
+    const lockedBefore = sim.countItem('sunpetal_healing_draught');
+
+    expect(useMir4AutomaticPotion(sim.ctx, sim.playerId, 'hp')).toBe(true);
+    expect(sim.countItem('minor_healing_potion')).toBe(minorBefore - 1);
+    expect(sim.countItem('sunpetal_healing_draught')).toBe(lockedBefore);
+  });
 });

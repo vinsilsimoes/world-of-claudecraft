@@ -185,6 +185,8 @@ export interface ActionBarDeps {
 /** The player fields the bar reads; a structural subset both worlds mirror. */
 export interface ActionBarPlayerInput {
   id: number;
+  /** Optional for test/minimal hosts; live entities always carry it. */
+  level?: number;
   autoAttack: boolean;
   dead: boolean;
   resource: number;

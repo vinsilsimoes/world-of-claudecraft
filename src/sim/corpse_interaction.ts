@@ -1,5 +1,6 @@
 import { corpseInteractionPresent } from './corpse_presence';
 import { MOBS } from './data';
+import { MIR4_GAME_PROFILE } from './game_profile';
 import { hasSharedLootRights as computeSharedLootRights, lootHasGoneFfa } from './loot/loot_ffa';
 import { isHarvestableCorpse } from './professions/gathering';
 import type { SimContext } from './sim_context';
@@ -22,7 +23,9 @@ export function corpseInteractionAvailability(
   }
 
   const harvestable =
-    isHarvestableCorpse(MOBS[mob.templateId]?.componentTags) && mob.harvestClaimedBy === null;
+    ctx.gameProfile !== MIR4_GAME_PROFILE &&
+    isHarvestableCorpse(MOBS[mob.templateId]?.componentTags) &&
+    mob.harvestClaimedBy === null;
   const tapperParty = mob.tappedById !== null ? ctx.partyOf(mob.tappedById) : null;
   const shared = computeSharedLootRights(
     entityId,

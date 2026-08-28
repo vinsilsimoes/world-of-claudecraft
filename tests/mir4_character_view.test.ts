@@ -27,12 +27,29 @@ describe('mir4 character view', () => {
     expect(view?.slots.filter((slot) => slot.item !== null)).toHaveLength(2);
     expect(view?.slots[0]?.item?.enhancement).toBe(2);
     expect(view?.slots[0]?.item?.craftingRarity).toBe('common');
+    expect(view?.slots[0]?.item?.requiredLevel).toBe(1);
     expect(ITEMS[view?.slots[0]?.item?.visualItemId ?? '']).toBeDefined();
     expect(view?.slots[0]?.item?.visualSlot).toBe('mainhand');
     expect(view?.slots[0]?.item?.runtimeAttributes).toEqual(
       expect.arrayContaining([expect.objectContaining({ statusId: 20 })]),
     );
     expect(view?.stats.combatPower).toBeGreaterThan(0);
+  });
+
+  it('shows the effective level-200 Aeldrune requirement instead of the imported catalog floor', () => {
+    const view = buildMir4CharacterView(
+      {
+        classId: 1,
+        ultimateGauge: 0,
+        mir4Equipment: { 1: 991010106 },
+        mir4EquipmentInstances: {
+          991010106: { itemId: 991010106, enhancement: 0 },
+        },
+      },
+      199,
+    );
+
+    expect(view?.slots[0]?.item?.requiredLevel).toBe(200);
   });
 
   it('projects the source-backed starter loadout through native WoC equipment visuals', () => {

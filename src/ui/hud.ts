@@ -50,6 +50,7 @@ import { warriorParryChance } from '../sim/combat/warrior_hit_table';
 import { DEED_ORDER, DEEDS } from '../sim/content/deeds';
 import { HEROIC_MARK_ITEM_ID } from '../sim/content/dungeon_difficulty';
 import { HEROIC_VENDOR_STOCK } from '../sim/content/heroic_vendor';
+import { mir4PotionRule } from '../sim/content/mir4/potions';
 import { isOnMountRaceStartPlatform, MOUNTS } from '../sim/content/mounts';
 import { recipeById } from '../sim/content/recipes';
 import { RELIQUARY_PAGES, RELIQUARY_PAGES_BY_ID } from '../sim/content/reliquary';
@@ -15270,6 +15271,12 @@ export class Hud {
           gatheringProficiency: this.sim.gatheringProficiency,
         },
         this.vendorQtyMultiple,
+        this.sim.cfg.gameProfile === MIR4_GAME_PROFILE
+          ? (itemId, item) => mir4PotionRule(itemId)?.priceCopper ?? item.buyValue
+          : undefined,
+        this.sim.cfg.gameProfile === MIR4_GAME_PROFILE
+          ? (itemId) => mir4PotionRule(itemId)?.requiredLevel
+          : undefined,
       ),
       {
         ...this.presentationBag,

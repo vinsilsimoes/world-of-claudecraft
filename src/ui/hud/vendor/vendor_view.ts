@@ -45,6 +45,8 @@ export interface VendorGoodsRow {
   /** The row's gate when it carries one, met or not, so the painter can name
    *  the requirement. Ids and numbers only; this core stays i18n-free. */
   requirement?: VendorRowGate;
+  /** Profile-specific minimum level to use the item after purchase. */
+  requiredLevel?: number;
   /** Present when a bulk ("Buy Stack") purchase is offered for this row: as many
    *  units as the buyer can currently afford in one purchase, capped at the
    *  item's real bag stack size (bulkBuyQuantity, the same helper buyItem uses
@@ -123,6 +125,9 @@ export interface VendorView {
   multiple: VendorMultiple;
 }
 
+export type VendorUnitCopperResolver = (itemId: string, item: ItemDef) => number | undefined;
+export type VendorRequiredLevelResolver = (itemId: string, item: ItemDef) => number | undefined;
+
 /**
  * Build the structured vendor view from raw inputs.
  *
@@ -144,14 +149,17 @@ export function buildVendorView(
   items: Record<string, ItemDef>,
   balances: VendorBalances,
   multiple: VendorMultiple = 1,
+  unitCopperResolver?: VendorUnitCopperResolver,
+  requiredLevelResolver?: VendorRequiredLevelResolver,
 ): VendorView {
   const goods: VendorGoodsRow[] = [];
   for (const itemId of vendorItemIds) {
     const item = items[itemId];
     if (!item) continue;
     const quantity = vendorStackSize(item);
+    const unitCopper = Math.max(0, unitCopperResolver?.(itemId, item) ?? item.buyValue ?? 0);
     const price: VendorPrice = {
-      copper: Math.max(0, item.buyValue ?? 0) * quantity,
+      copper: unitCopper * quantity,
       honor: Math.max(0, Math.floor(item.priceHonor ?? 0)),
     };
     if (price.copper <= 0 && price.honor <= 0) continue;
@@ -161,13 +169,13 @@ export function buildVendorView(
     // with the requirement the tool will actually ask. The buy path itself
     // runs no proficiency check any more (R22: counters sell ahead freely).
     const gate = resolveVendorRowGate(itemId, balances.gatheringProficiency);
+    const requiredLevel = requiredLevelResolver?.(itemId, item);
     // Bulk eligibility mirrors buyItem's server-side gate exactly (items.ts):
     // plain copper price, no Honor component, never a mount (buying several
     // copies of the same reins would only waste gold), never soulbound (the
     // buy path collapses a bulk request on a soulbound row to a single
     // vendorStackSize purchase, so the preview must never promise more), and
     // the item must actually stack in the bags.
-    const unitCopper = Math.max(0, item.buyValue ?? 0);
     const bulkEligible =
       item.kind !== 'mount' &&
       !item.soulbound &&
@@ -199,6 +207,9 @@ export function buildVendorView(
       affordable: balances.copper >= price.copper && balances.honor >= price.honor,
       requirementUnmet: gate.locked,
       ...(gate.requirement ? { requirement: gate.requirement } : {}),
+      ...(requiredLevel !== undefined && Number.isFinite(requiredLevel)
+        ? { requiredLevel: Math.max(1, Math.floor(requiredLevel)) }
+        : {}),
       ...(bulkQuantity !== undefined && {
         bulkQuantity,
         bulkAffordable: balances.copper >= unitCopper * bulkQuantity,

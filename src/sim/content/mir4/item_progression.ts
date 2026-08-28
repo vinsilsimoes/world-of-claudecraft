@@ -42,6 +42,10 @@ const METAL_BY_RANK: readonly Mir4EquipmentMetal[] = [
 
 const DARKSTEEL_BY_RANK = [100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000] as const;
 
+// Crafting is never level-gated, but equipping a traded or lucky-drop item is.
+// Stretch the six finished-item ranks across Aeldrune's full level-200 arc.
+const REQUIRED_LEVEL_BY_RANK = [1, 30, 70, 120, 160, 200] as const;
+
 function itemsForClassAndRank(
   classId: Mir4ClassId,
   catalogRank: number,
@@ -101,4 +105,8 @@ export function mir4ItemProgressionRank(catalogRank: number): Mir4ItemProgressio
 
 export function mir4EquipmentRarityForRank(catalogRank: number): Mir4EquipmentRarity | null {
   return mir4ItemProgressionRank(catalogRank)?.rarity ?? null;
+}
+
+export function mir4EquipmentRequiredLevelForRank(catalogRank: number): number {
+  return REQUIRED_LEVEL_BY_RANK[catalogRank - 1] ?? Number.POSITIVE_INFINITY;
 }

@@ -25,6 +25,7 @@ import { M01_VILA_DO_VAU_BLUEPRINT } from './m01_vila_do_vau_world';
 import { M02_TRILHA_DOS_JUNCOS_BLUEPRINT } from './m02_trilha_dos_juncos_world';
 import { M03_BOSQUE_DO_VALE_BLUEPRINT } from './m03_bosque_do_vale_world';
 import { M04_RUINAS_DA_ENCOSTA_BLUEPRINT } from './m04_ruinas_da_encosta_world';
+import { mir4PotionStockForMap } from './potions';
 import { MIR4_VILLAGE_GENERAL_GOODS } from './village_provisioner';
 import { MIR4_WORLD_ARC, type Mir4ArcMap } from './world_arc';
 
@@ -562,7 +563,7 @@ export function buildMir4ArcWorld(maps: number = MIR4_AUTHORED_MAP_IDS.length): 
               vendorItems:
                 npcId === 'm01-vila-do-vau-sara-das-ervas'
                   ? [...MIR4_VILLAGE_GENERAL_GOODS]
-                  : ['minor_healing_potion', 'minor_mana_potion'],
+                  : mir4PotionStockForMap(map.sequence),
             }
           : {}),
         greeting: authoredNpc?.greeting ?? `${map.name}, Act ${map.act}.`,

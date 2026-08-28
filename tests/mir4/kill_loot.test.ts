@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { bagCapacity } from '../../src/sim/bags';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { ITEMS, MOBS } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
 import { MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
+import { rollLoot } from '../../src/sim/loot/loot_roll';
 import { settleMir4KillLoot } from '../../src/sim/mir4/kill_loot';
 import { type PlayerMeta, Sim } from '../../src/sim/sim';
 import type { Entity, SimEvent } from '../../src/sim/types';
@@ -77,7 +78,7 @@ describe('MIR4 kill loot settlement', () => {
     expect(mob.loot).toBeNull();
     expect(mob.lootable).toBe(false);
     expect(mob.mir4CorpseVisible).toBe(true);
-    expect(mob.mir4CorpseTimer).toBe(10);
+    expect(mob.mir4CorpseTimer).toBe(10.05);
     const acquisitionEvents = sim.events.filter(
       (event): event is Extract<SimEvent, { type: 'loot' }> =>
         event.type === 'loot' &&
@@ -128,7 +129,7 @@ describe('MIR4 kill loot settlement', () => {
 
     expect(mob.loot).toBeNull();
     expect(mob.lootable).toBe(false);
-    expect(mob.mir4CorpseTimer).toBe(10);
+    expect(mob.mir4CorpseTimer).toBe(10.05);
     expect(mob.corpseTimer).toBe(30);
     const [roll] = [...sim.ctx.pendingLootRolls.values()];
     expect(roll?.itemId).toBe('moggers_copper_cudgel');
@@ -176,7 +177,7 @@ describe('MIR4 kill loot settlement', () => {
     settleMir4KillLoot(sim.ctx, mob, mustPlayer(sim, first), false);
 
     expect(mob.mir4CorpseVisible).toBe(true);
-    expect(mob.mir4CorpseTimer).toBe(10);
+    expect(mob.mir4CorpseTimer).toBe(10.05);
     expect(mob.loot).toBeNull();
     expect(mob.lootable).toBe(false);
   });
@@ -358,7 +359,7 @@ describe('MIR4 kill loot settlement', () => {
     expect(directDrops.every((event) => event.lootOrigin === 'monster-drop')).toBe(true);
   });
 
-  it('routes a marker-only body through the real interact command for harvesting', () => {
+  it('keeps an Aeldrune marker-only body free of WoC corpse-profession harvesting', () => {
     const { sim, first, mob } = partyFixture();
     const player = mustEntity(sim, first);
     player.pos = { ...mob.pos };
@@ -375,9 +376,48 @@ describe('MIR4 kill loot settlement', () => {
 
     mob.mir4CorpseVisible = true;
     sim.interact(first);
-    expect(mob.harvestClaimedBy).toBe(first);
+    expect(mob.harvestClaimedBy).toBeNull();
     expect(mob.corpseTimer).toBe(30);
     expect(mob.mir4CorpseTimer).toBe(10);
     expect(mob.lootable).toBe(false);
+  });
+
+  it('filters WoC profession and equipment rows before Aeldrune auto-loot settlement', () => {
+    const { sim, first, mob } = partyFixture();
+    const meta = mustPlayer(sim, first);
+
+    rollLoot(sim.ctx, mob, meta, [meta]);
+
+    expect(mob.loot?.copper).toBeGreaterThan(0);
+    expect(mob.loot?.items).toEqual([]);
+    settleMir4KillLoot(sim.ctx, mob, meta, false);
+    expect(sim.countItem('wolf_fang', first)).toBe(0);
+    expect(sim.countItem('milepost_boots', first)).toBe(0);
+    expect(sim.countItem('wolfhide_satchel', first)).toBe(0);
+  });
+
+  it('grants a successful ready-made roll as missing class-specific Aeldrune equipment', () => {
+    const { sim, first, mob } = partyFixture();
+    const meta = mustPlayer(sim, first);
+    mob.loot = null;
+    mob.level = 1;
+    vi.spyOn(sim.ctx.rng, 'next').mockReturnValueOnce(0.005).mockReturnValueOnce(0);
+
+    settleMir4KillLoot(sim.ctx, mob, meta, false);
+
+    expect(meta.mir4EquipmentInstances?.[991010101]).toEqual({
+      itemId: 991010101,
+      enhancement: 0,
+    });
+    expect(meta.mir4Equipment?.[1]).not.toBe(991010101);
+    expect(
+      sim.events.some(
+        (event) =>
+          event.type === 'loot' &&
+          event.pid === first &&
+          event.text.includes('Espada Gasta') &&
+          event.lootOrigin === 'monster-drop',
+      ),
+    ).toBe(true);
   });
 });

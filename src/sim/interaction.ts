@@ -304,9 +304,11 @@ export function harvestCorpse(
     ctx.error(meta.entityId, "You can't do that while dead.");
     return;
   }
+  // Aeldrune owns mining/herbalism nodes and its own kill rewards. Reused WoC
+  // corpse-component professions must never leak reagents into this profile.
+  if (ctx.gameProfile === MIR4_GAME_PROFILE) return;
   const mob = ctx.entities.get(mobId);
   if (mob?.kind !== 'mob' || !mob.dead) return;
-  if (ctx.gameProfile === MIR4_GAME_PROFILE && mob.mir4CorpseVisible !== true) return;
   const componentTags = MOBS[mob.templateId]?.componentTags;
   if (!isHarvestableCorpse(componentTags)) {
     ctx.error(meta.entityId, 'That corpse has nothing to harvest.');

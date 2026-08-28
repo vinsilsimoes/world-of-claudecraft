@@ -25,6 +25,7 @@ export interface Mir4ActionToolsInput {
   autoBattleKeybind: string;
   autoCollectKeybind: string;
   inventory: readonly Pick<InvSlot, 'itemId'>[];
+  playerLevel?: number;
 }
 
 export interface Mir4ActionToolsState {
@@ -58,7 +59,12 @@ export function createMir4ActionToolsView(lookup: Mir4PotionLookup): Mir4ActionT
       state.autoCollectActive = input.autoCollectActive;
       state.autoBattleKeybind = input.autoBattleKeybind;
       state.autoCollectKeybind = input.autoCollectKeybind;
-      mir4PotionBarItems(input.inventory, lookup, potionIds);
+      mir4PotionBarItems(
+        input.inventory,
+        lookup,
+        potionIds,
+        input.playerLevel ?? Number.MAX_SAFE_INTEGER,
+      );
       return state;
     },
   };

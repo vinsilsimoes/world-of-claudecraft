@@ -10,6 +10,7 @@ import {
 import {
   type Mir4EquipmentRarity,
   mir4EquipmentRarityForRank,
+  mir4EquipmentRequiredLevelForRank,
 } from '../sim/content/mir4/item_progression';
 import { mir4EquipmentDefinition } from '../sim/content/mir4/items';
 import { mir4MountById } from '../sim/content/mir4/mounts_catalog';
@@ -137,7 +138,9 @@ export function buildMir4EquipmentItemView(
     slotId: def.equipSlot as Mir4EquipmentSlotId,
     tier: def.tier,
     grade: def.grade,
-    requiredLevel: def.requiredLevel,
+    requiredLevel: mir4EquipmentItem(def.itemId)
+      ? mir4EquipmentRequiredLevelForRank(def.catalogRank)
+      : def.requiredLevel,
     craftingRarity: mir4EquipmentItem(def.itemId)
       ? mir4EquipmentRarityForRank(def.catalogRank)
       : null,

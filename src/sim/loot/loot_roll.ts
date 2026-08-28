@@ -38,6 +38,7 @@ import { formatMoney } from '../format_money';
 import { MIR4_GAME_PROFILE } from '../game_profile';
 import { itemLevel } from '../item_level';
 import { effectiveMasterLooter, meetsMasterThreshold } from '../loot_master';
+import { mir4AeldruneLootEntries } from '../mir4/loot_policy';
 import { mir4ModifiedDropChance, mir4ModifiedProgressionReward } from '../mir4/status_effects';
 import { isHarvestableCorpse } from '../professions/gathering';
 import type { PlayerMeta } from '../sim';
@@ -217,6 +218,10 @@ export function rollLoot(
     ctx.mir4RuntimeMobTemplates.get(mob.templateId) ??
     mir4ArcMobTemplate(mob.templateId);
   if (!template) return;
+  // Reused WoC maps/dungeons keep their creatures and currency, never their
+  // profession reagents, classic gear, quest tokens or grouped item tables.
+  const lootEntries =
+    ctx.gameProfile === MIR4_GAME_PROFILE ? mir4AeldruneLootEntries(template.loot) : template.loot;
   let copper = 0;
   const items: LootSlot[] = [];
   const rolledGroups = new Set<string>();
@@ -244,14 +249,14 @@ export function rollLoot(
     if (!variant) return id;
     return (itemLevel(variant) ?? 0) > (itemLevel(ITEMS[id]) ?? 0) ? variant.id : id;
   };
-  for (const entry of template.loot) {
+  for (const entry of lootEntries) {
     // Exclusive groups: a single rng draw is partitioned by the group
     // entries' chances, so at most one matching entry drops.
     // Exactly one rng.next() per group keeps replays deterministic.
     if (entry.rollGroup) {
       if (rolledGroups.has(entry.rollGroup)) continue;
       rolledGroups.add(entry.rollGroup);
-      const group = template.loot.filter((l) => l.rollGroup === entry.rollGroup);
+      const group = lootEntries.filter((l) => l.rollGroup === entry.rollGroup);
       const roll = ctx.rng.next();
       const winner = pickRollGroupWinner(roll, group, awardedItemIds);
       if (winner?.itemId) {
@@ -313,7 +318,8 @@ export function rollLoot(
   // happen ONLY for a heroic claim, so the normal loot trace and the parity
   // goldens are byte-identical. rollGroup names never overlap the base
   // table's, so sharing `rolledGroups` is safe.
-  const heroicEntries = HEROIC_BOSS_LOOT[mob.templateId];
+  const heroicEntries =
+    ctx.gameProfile === MIR4_GAME_PROFILE ? undefined : HEROIC_BOSS_LOOT[mob.templateId];
   if (heroicEntries) {
     if (heroicClaim) {
       for (const entry of heroicEntries) {
@@ -339,7 +345,7 @@ export function rollLoot(
     mob.lootable = true;
     // start the owner-lock countdown: after LOOT_FFA_DELAY the tap opens to all.
     mob.lootFfaTimer = LOOT_FFA_DELAY;
-  } else if (isHarvestableCorpse(template.componentTags)) {
+  } else if (ctx.gameProfile !== MIR4_GAME_PROFILE && isHarvestableCorpse(template.componentTags)) {
     // The regular loot table rolled empty (chance-based entries, no guaranteed
     // copper/item), but the corpse still owes a harvest. isHarvestableCorpse is
     // the single source of truth pruneCorpseLoot already uses to re-derive
