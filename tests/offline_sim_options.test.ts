@@ -40,7 +40,7 @@ describe('offlineSimOptions (main.ts Sim-options extraction)', () => {
       offlineSimOptions({
         playerClass: 'warrior',
         playerName: 'Aldric',
-        world: {} as WorldContent,
+        world: BUILTIN_WORLD,
       }).riftPortals,
     ).toBe(false);
   });

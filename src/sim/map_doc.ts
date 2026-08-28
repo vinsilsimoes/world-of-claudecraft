@@ -45,7 +45,9 @@ export const MAX_WATER_LEVEL = 40;
 // Playtest-cost bounds for gameplay arrays: the Sim spawns camp.count mobs per
 // camp and one ground object per position, so both are hard-clamped here (the
 // built-in camps top out at count 14; see src/sim/content/zone*.ts).
-export const MAX_CAMP_COUNT = 20;
+// The denser Aeldrune grind population legitimately reaches 23 actors in a
+// camp. Keep a bounded editor limit while preserving the canonical world.
+export const MAX_CAMP_COUNT = 32;
 export const MAX_CAMP_RADIUS = 100;
 export const MAX_CAMP_LEVEL = 250;
 export const MAX_OBJECT_POSITIONS = 100;
