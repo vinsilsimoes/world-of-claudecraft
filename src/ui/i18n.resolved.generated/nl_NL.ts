@@ -1283,9 +1283,19 @@ export const nl_NL: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Succes met verzwakken",
+        "debilitationResistance": "Weerstand tegen verzwakking",
+        "silenceSuccess": "Succes met stilte",
+        "silenceResistance": "Weerstand tegen stilte",
+        "healthDrain": "Levensaftap",
+        "manaDrain": "Mana-aftap",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Effect van gezondheidsdrank",
+        "manaPotionEffect": "Effect van manadrank",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Schade van basisaanval",
+        "basicDamageReduction": "Vermindering van schade door basisaanvallen",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const nl_NL: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Bescherming tegen verdedigingdoorboring",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "De hierboven weergegeven afkoeltijd is de basiswaarde. Afkoeltijdreductie van vaardigheden kan deze met maximaal 40% in PvE of 30% in PvP verlagen.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const nl_NL: EnTranslations = {
       "levelGate": "Alleen avonturiers van niveau {level} of hoger mogen deze rift betreden.",
       "deadEntry": "Je kunt geen rift betreden terwijl je dood bent.",
       "deadEntryCombat": "Je groep is nog in gevecht. De doden kunnen opnieuw binnengaan zodra het gevecht stopt.",
+      "corpseRezCombat": "Je groep is nog in gevecht. Je kunt herrijzen zodra het gevecht voorbij is.",
       "iceGoalLit": "Het vorstteken vlamt op. De weg beweegt.",
       "socketsShut": "De sokkels klemmen dicht. De weg beweegt.",
       "seqProgress": "De runen antwoorden op hun beurt ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const nl_NL: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const nl_NL: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const nl_NL: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const nl_NL: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

@@ -1492,6 +1492,7 @@ export interface Mir4PlayerCombatState {
   physicalDefense: number;
   magicDefense: number;
   penetrationBps: number;
+  penetrationDefenseBps: number;
   /** Source-profile equipped Mount speed, mirrored for deterministic prediction. */
   mountMoveSpeedBps: number;
   /** Basic-attack haste from the equipped logical Mount; active while dismounted. */
@@ -1510,6 +1511,7 @@ export type Mir4EffectKind =
   | 'root'
   | 'freeze'
   | 'slow'
+  | 'silence'
   | 'blind'
   | 'defense-break'
   | 'burn';
@@ -1521,6 +1523,12 @@ export interface Mir4ActiveEffect {
   duration: number;
   magnitude: number;
   sourceId: number;
+  /** Runtime-only periodic contact state used by MIR4 burn. */
+  tickRemaining?: number;
+  ticksRemaining?: number;
+  periodicRawDamage?: number;
+  name?: string;
+  channel?: 'physical' | 'magic';
 }
 
 export interface Mir4TargetEffects {
@@ -1528,6 +1536,16 @@ export interface Mir4TargetEffects {
   controlImmuneUntil: number;
   /** Runtime attribution for hard-control immunity tails; never persisted. */
   controlImmunityByEffectId?: Record<string, { sourceId: number; until: number }>;
+  /**
+   * Rolling hard-control applications used for MIR4 diminishing returns.
+   * Runtime-only and optional so bags created by older builds remain valid.
+   */
+  hardControlHistory?: Array<{
+    effectId: string;
+    sourceId: number;
+    appliedAt: number;
+    duration: number;
+  }>;
 }
 
 // A scheduled MIR4 contact: damage and skill effects resolve at the visible
@@ -1553,6 +1571,10 @@ export interface Mir4PendingImpact {
   actionLanded?: boolean;
   spiritProcAttempted?: boolean;
   requiresLandedImpact?: boolean;
+  /** Periodic contacts use the same defense/reduction resolver without rolls. */
+  forceHit?: boolean;
+  forceCritical?: boolean;
+  periodic?: boolean;
 }
 
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
@@ -1624,6 +1646,15 @@ export interface MobTemplate {
   // and source-definition/dungeon bosses use 500 bps in the original runtime.
   // The shared classic combat pipeline ignores this field.
   mir4BossDamageReductionBps?: number;
+  /**
+   * Optional MIR4 combat overrides. Omitted values use the level/family/rank
+   * profile in content/mir4/mobs.ts; an authored zero deliberately disables
+   * that lane (used by harmless tutorial creatures).
+   */
+  mir4PhysicalDefense?: number;
+  mir4MagicDefense?: number;
+  mir4Dodge?: number;
+  mir4AvoidCritical?: number;
   // Quest-gated destructible: when set, the mob is only damageable by a player who
   // has this quest active (state 'active' or 'ready'). Used for quest-exclusive
   // objects like Broodmother eggs so non-questers cannot grief the clutch.
@@ -4948,9 +4979,10 @@ export interface Entity extends ClientMirroredEntityFields {
   // every non-player entity. Owned by src/sim/spirit.ts.
   ghost: boolean;
   corpsePos: Vec3 | null;
-  // Unique exit entity of the live instance claim where corpsePos was captured.
-  // Null for world corpses and saved ghosts. Instance exits are recreated on
-  // every claim, so stale corpse coordinates cannot match a recycled slot.
+  // Unique exit entity of the live native-dungeon claim where corpsePos was
+  // captured. Null for world/Rift corpses. This id is boot-local and never
+  // persisted; same-process reconnect authority lives in Sim's durable-character
+  // binding map so stale coordinates cannot match a recycled slot.
   corpseInstanceId: number | null;
   scale: number;
   color: number;

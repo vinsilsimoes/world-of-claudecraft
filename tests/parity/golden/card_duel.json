@@ -29,7 +29,7 @@
       "tick": 5,
       "time": 0.25,
       "nextId": 969,
-      "state": "a037f703",
+      "state": "50d78ea5",
       "events": "84056da1",
       "rng": {
         "draws": 38,
@@ -40,7 +40,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 969,
-      "state": "591e80c8",
+      "state": "84a0889a",
       "events": "741638a5",
       "rng": {
         "draws": 38,
@@ -51,7 +51,7 @@
       "tick": 15,
       "time": 0.75,
       "nextId": 969,
-      "state": "4828d07e",
+      "state": "ff77a8c0",
       "events": "741638a5",
       "rng": {
         "draws": 38,
@@ -62,7 +62,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 969,
-      "state": "ecfc2a31",
+      "state": "bda84e19",
       "events": "d595937a",
       "rng": {
         "draws": 38,
@@ -73,7 +73,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 969,
-      "state": "b4ff4b36",
+      "state": "ae14527e",
       "events": "741638a5",
       "rng": {
         "draws": 38,
@@ -84,7 +84,7 @@
       "tick": 30,
       "time": 1.5,
       "nextId": 969,
-      "state": "7fe657d7",
+      "state": "2b11bf47",
       "events": "741638a5",
       "rng": {
         "draws": 38,
@@ -95,7 +95,7 @@
       "tick": 35,
       "time": 1.75,
       "nextId": 969,
-      "state": "69868b5f",
+      "state": "e0331e2f",
       "events": "741638a5",
       "rng": {
         "draws": 38,
@@ -106,7 +106,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 969,
-      "state": "89dd5842",
+      "state": "8d2799fa",
       "events": "741638a5",
       "rng": {
         "draws": 38,
@@ -117,7 +117,7 @@
       "tick": 41,
       "time": 2.05,
       "nextId": 969,
-      "state": "a8fbb24f",
+      "state": "d6929b9f",
       "events": "741638a5",
       "rng": {
         "draws": 44,
@@ -164,6 +164,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -222,6 +223,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [

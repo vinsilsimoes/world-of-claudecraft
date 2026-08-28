@@ -112,6 +112,7 @@ function makeCtx() {
       return dungeonDoorIds;
     },
     instances: [],
+    ghostInstanceBindings: new Map(),
     riftInstances: [],
     riftPortalIds: null,
     dungeonResetLocks: new Map(),

@@ -13130,4 +13130,19 @@ export const tr_TR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.challenging_roar.name': 'Uğursuz Kükreme',
   'entities.abilities.cheap_shot.descriptionNoStealth': 'Hedefe {damage} hasar vererek onu 4 sn sersemlet. 2 kombo puanı kazandırır.',
   'gpuNotice.bodyDiscreteInactive': 'Oyun, ayrık (oyun) GPU\'sunu kullanmıyor ve bunun yerine güç tasarruflu GPU üzerinde çalışıyor, bu yüzden performans düşecek. Grafik sürücülerini güncelleyip oyunu yeniden başlat. Windows\'ta ayrıca oyunu Ayarlar > Sistem > Ekran > Grafikler altında Yüksek performans olarak ayarla.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Zayıflatma Başarısı',
+  'hudChrome.mir4.stats.debilitationResistance': 'Zayıflatma Direnci',
+  'hudChrome.mir4.stats.silenceSuccess': 'Susturma Başarısı',
+  'hudChrome.mir4.stats.silenceResistance': 'Susturma Direnci',
+  'hudChrome.mir4.stats.healthDrain': 'Can Emilimi',
+  'hudChrome.mir4.stats.manaDrain': 'Mana Emilimi',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Can İksiri Etkisi',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Mana İksiri Etkisi',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Temel Saldırı Hasarı',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Temel Saldırı Hasarı Azaltma',
+  'hudChrome.mir4.stats.penetrationProtection': 'Savunma Delme Koruması',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Yukarıda gösterilen bekleme süresi temel değerdir. Beceri Bekleme Süresi Azaltma, bu süreyi PvE’de en fazla %40 veya PvP’de en fazla %30 azaltabilir.',
+  'sim.rift.corpseRezCombat':
+    'Grubun hâlâ savaşta. Savaş sona erdiğinde dirilebilirsin.',
 };

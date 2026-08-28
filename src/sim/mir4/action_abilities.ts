@@ -15,6 +15,7 @@ import {
 } from '../content/mir4';
 import type { ResolvedAbility } from '../sim';
 import type { AbilityDef, Entity } from '../types';
+import { MIR4_BURN_TICK_SECONDS } from './effects';
 import {
   mir4AuthorialSkillRankDamage,
   mir4CoefficientDamage,
@@ -31,6 +32,15 @@ import {
 const ACTION_PREFIX = 'mir4_skill_';
 const ULTIMATE_PREFIX = 'mir4_ultimate_';
 const PASSIVE_PREFIX = 'mir4_passive_';
+
+/**
+ * The shared ability tooltip has no hostile target yet, so it cannot know
+ * whether STATUS 95 will use the PvE or PvP cap. Keep the metadata's authored
+ * cooldown and disclose both contextual caps instead of presenting a false
+ * "current" value.
+ */
+export const MIR4_COOLDOWN_TOOLTIP_DISCLOSURE =
+  'The cooldown shown above is the base cooldown. Skill Cooldown Reduction can lower it by up to 40% in PvE or 30% in PvP.';
 
 export function refreshMir4KnownAbilities(
   entity: Entity,
@@ -143,10 +153,19 @@ function effectSentence(skill: Mir4SkillDef, rank = 1): string {
       return ` Slows the target by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
     case 'blind':
       return ` Reduces the target's damage by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
-    case 'defense-break':
-      return ` Increases damage taken by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
-    case 'burn':
-      return ` Increases damage taken by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
+    case 'defense-break': {
+      const appliesToArea =
+        effect.areaRadiusPx !== undefined && effect.maxSecondaryTargets !== undefined;
+      const stacking =
+        ' Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.';
+      return appliesToArea
+        ? ` Each enemy hit has its Physical and Magic Defense reduced by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.${stacking}`
+        : ` Reduces the target's Physical and Magic Defense by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.${stacking}`;
+    }
+    case 'burn': {
+      const ticks = Math.floor(seconds / MIR4_BURN_TICK_SECONDS);
+      return ` Burns the target for {burnPerTick} base damage every ${MIR4_BURN_TICK_SECONDS} sec (${ticks} ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.`;
+    }
     case 'magic-shield':
       return `Reduces damage taken by ${percent(mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), rank) / 10_000)} for ${seconds} sec.`;
     case 'heal-pulse': {
@@ -174,7 +193,35 @@ function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
   ) {
     text += ` Up to ${area.maxSecondaryTargets} other enemies within ${area.areaRadiusPx / 16} yards take ${area.secondaryDamageBasisPoints / 100}% damage.`;
   }
-  return text + utility;
+  return `${text + utility} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+}
+
+export interface Mir4BurnTooltipDamage {
+  readonly perTick: number;
+  readonly ticks: number;
+  readonly total: number;
+}
+
+/**
+ * Live pre-mitigation Burn values for the current character. Combat snapshots
+ * this exact authored Spell Power coefficient when the effect lands, then
+ * resolves each tick against the target's defenses.
+ */
+export function mir4ActionBurnTooltipDamage(
+  abilityId: string,
+  spellPower: number,
+): Mir4BurnTooltipDamage | null {
+  const skillId = mir4SkillIdFromAction(abilityId);
+  const skill = skillId === null ? null : mir4SkillById(skillId);
+  const effect = skill?.effect;
+  if (effect?.effect !== 'burn') return null;
+  const ticks = Math.floor((effect.durationMs ?? 0) / 1000 / MIR4_BURN_TICK_SECONDS);
+  if (ticks <= 0) return null;
+  const perTick = Math.max(
+    1,
+    Math.floor(Math.max(0, spellPower) * Math.max(0, effect.magnitude ?? 0)),
+  );
+  return { perTick, ticks, total: perTick * ticks };
 }
 
 export function mir4ActionId(skillId: number): string {
@@ -247,7 +294,7 @@ function ultimateActionDef(classId: Mir4ClassId): AbilityDef {
     requiresTarget: true,
     learnLevel: MIR4_ULTIMATE_UNLOCK_LEVEL,
     effects: [{ type: 'directDamage', min: 0, max: 0 }],
-    description: `Deals $d damage over ${impacts} impacts. Requires a full Ultimate gauge.`,
+    description: `Deals $d damage over ${impacts} impacts. Requires a full Ultimate gauge. ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`,
   };
 }
 

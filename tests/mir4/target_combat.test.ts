@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { mir4SkillIdFromAction } from '../../src/sim/mir4/action_abilities';
+import { applyMir4Effect } from '../../src/sim/mir4/effects';
+import { updateMir4TargetCombat } from '../../src/sim/mir4/target_combat';
 import { Sim } from '../../src/sim/sim';
 import type { Entity } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
@@ -170,6 +172,56 @@ describe('MIR4 focused target combat', () => {
         return skillId !== null && sim.player.cooldowns.has(String(skillId));
       }),
     ).toBe(false);
+  });
+
+  it('keeps focused combat on the selected target with basic attacks while silenced', () => {
+    const sim = makeSim(6216);
+    const selected = spawnWolf(sim, 2, 'silenced_focused_target', 5000);
+    expect(
+      applyMir4Effect(sim.ctx, sim.player, {
+        effectId: 'test_focused_silence',
+        kind: 'silence',
+        durationSeconds: 5,
+        magnitude: 0,
+        name: 'Test Silence',
+        sourceId: selected.id,
+      }),
+    ).toEqual({ ok: true });
+    sim.player.targetId = selected.id;
+
+    sim.startAutoAttack();
+    sim.tick();
+
+    expect(sim.player.cooldowns.has('mir4_basic')).toBe(true);
+    expect(['1102', '1104', '1304', '1401'].some((id) => sim.player.cooldowns.has(id))).toBe(false);
+    expect(sim.player.targetId).toBe(selected.id);
+  });
+
+  it('keeps a rooted out-of-range target contract without aging pursuit stalls', () => {
+    const sim = makeSim(62161);
+    const selected = spawnWolf(sim, 8, 'rooted_focused_target', 5000);
+    sim.player.targetId = selected.id;
+    sim.startAutoAttack();
+    expect(
+      applyMir4Effect(sim.ctx, sim.player, {
+        effectId: 'focused_root',
+        kind: 'root',
+        durationSeconds: 10,
+        magnitude: 0,
+        name: 'Focused Root',
+        sourceId: selected.id,
+      }),
+    ).toEqual({ ok: true });
+
+    for (let tick = 0; tick < 50; tick += 1) updateMir4TargetCombat(sim.ctx);
+
+    expect(sim.player.autoAttack).toBe(true);
+    expect(sim.player.targetId).toBe(selected.id);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toMatchObject({
+      targetId: selected.id,
+      owner: 'player',
+    });
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat?.pursuit).toBeUndefined();
   });
 
   it('skips only the opted-out skill and continues the focused rotation', () => {

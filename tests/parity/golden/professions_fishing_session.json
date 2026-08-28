@@ -18,7 +18,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "f3a1d8c8",
+      "state": "46cd9e21",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -63,6 +63,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -154,7 +155,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "4d87330c",
+      "state": "87eff90f",
       "events": "04788513",
       "rng": {
         "draws": 1,
@@ -200,6 +201,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -300,7 +302,7 @@
       "tick": 91,
       "time": 4.55,
       "nextId": 968,
-      "state": "116b3e5f",
+      "state": "ea03bcac",
       "events": "76f2af40",
       "rng": {
         "draws": 1,
@@ -346,6 +348,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -446,7 +449,7 @@
       "tick": 91,
       "time": 4.55,
       "nextId": 968,
-      "state": "e00bb4eb",
+      "state": "9afcf02a",
       "events": "f450bad9",
       "rng": {
         "draws": 2,
@@ -496,6 +499,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -602,7 +606,7 @@
       "tick": 99,
       "time": 4.95,
       "nextId": 968,
-      "state": "09cd77ba",
+      "state": "47da5e79",
       "events": "42fd0d47",
       "rng": {
         "draws": 3,
@@ -662,6 +666,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {
             "fishing": 1
           },

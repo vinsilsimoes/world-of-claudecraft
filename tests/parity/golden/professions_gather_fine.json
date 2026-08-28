@@ -18,7 +18,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "f3a1d8c8",
+      "state": "46cd9e21",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -63,6 +63,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -154,7 +155,7 @@
       "tick": 51,
       "time": 2.55,
       "nextId": 968,
-      "state": "e8a78289",
+      "state": "63d2a2e2",
       "events": "0fab9a55",
       "rng": {
         "draws": 2,
@@ -221,6 +222,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {
             "herbalism": 40,
             "mining": 70.5
@@ -333,7 +335,7 @@
       "tick": 104,
       "time": 5.2,
       "nextId": 968,
-      "state": "49eaff14",
+      "state": "8d9ef465",
       "events": "ee3f94ed",
       "rng": {
         "draws": 4,
@@ -401,6 +403,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {
             "herbalism": 40,
             "mining": 70.75
@@ -521,7 +524,7 @@
       "tick": 157,
       "time": 7.85,
       "nextId": 968,
-      "state": "7b8b1a8b",
+      "state": "6047b412",
       "events": "76f683cf",
       "rng": {
         "draws": 6,
@@ -591,6 +594,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {
             "herbalism": 41,
             "mining": 70.75
@@ -719,7 +723,7 @@
       "tick": 159,
       "time": 7.95,
       "nextId": 968,
-      "state": "8f30dc86",
+      "state": "f14a742f",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -789,6 +793,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {
             "herbalism": 41,
             "mining": 70.75

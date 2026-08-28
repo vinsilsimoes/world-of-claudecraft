@@ -665,7 +665,7 @@ describe('coverage: each scenario fires its subsystem', () => {
     expect(deaths.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('mir4_auto_battle_rng: actor AoE fan-out and the following authored stun keep draw order', () => {
+  it('mir4_auto_battle_rng: combat and build chances keep one shared draw order', () => {
     const { trace, rec } = record(
       SCENARIOS.find((scenario) => scenario.name === 'mir4_auto_battle_rng')!,
     );
@@ -673,6 +673,7 @@ describe('coverage: each scenario fires its subsystem', () => {
     const nearIds = rec.notes.nearIds as number[];
     const retainedId = rec.notes.retainedId as number;
     const friendlyId = rec.notes.friendlyId as number;
+    const contestedTargetId = rec.notes.contestedTargetId as number;
     const ecoTargets = events
       .filter((event) => event.type === 'damage' && event.ability === 'Eco Gêmeo')
       .map((event) => event.targetId);
@@ -701,8 +702,13 @@ describe('coverage: each scenario fires its subsystem', () => {
     const friendly = rec.sim.entities.get(friendlyId);
     expect(friendly?.hp).toBe(friendly?.maxHp);
     expect(friendly?.mir4Effects?.active ?? []).toHaveLength(0);
+    expect(contestedTargetId).toBe(nearIds[0]);
+    expect(rec.notes.spiritProcAttempted).toBe(true);
 
     expect(trace.frames.find((frame) => frame.label === 'actor-centered-4103')?.rng.draws).toBe(6);
     expect(trace.frames.find((frame) => frame.label === 'targeted-4106')?.rng.draws).toBe(9);
+    expect(trace.frames.find((frame) => frame.label === 'shared-build-chances')?.rng.draws).toBe(
+      13,
+    );
   });
 });

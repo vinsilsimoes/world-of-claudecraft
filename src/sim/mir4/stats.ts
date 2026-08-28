@@ -186,6 +186,7 @@ export function recalcMir4PlayerStats(
     physicalDefense: penalized(stats.physicalDefense),
     magicDefense: penalized(stats.magicDefense),
     penetrationBps: penalized(stats.penetrationBps),
+    penetrationDefenseBps: penalized(stats.penetrationDefenseBps),
     mountMoveSpeedBps: penalized(stats.mountMoveSpeedBps),
     mountBasicAttackSpeedBps: penalized(stats.mountBasicAttackSpeedBps),
   };

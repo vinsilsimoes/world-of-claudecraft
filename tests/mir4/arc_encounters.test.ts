@@ -3,6 +3,7 @@ import { isBlocked } from '../../src/sim/colliders';
 import { MIR4_QUESTS_MAIN, MIR4_QUESTS_SIDE } from '../../src/sim/content/mir4/arc_campaign';
 import { mir4ArcNormalXp } from '../../src/sim/content/mir4/arc_mobs';
 import { buildMir4ArcWorld } from '../../src/sim/content/mir4/arc_world';
+import { mir4MobBuildDefenses } from '../../src/sim/content/mir4/mobs';
 import { MIR4_WORLD_ARC_BY_MAP } from '../../src/sim/content/mir4/world_arc';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { updateMir4ArcDungeonEncounters } from '../../src/sim/mir4/arc_dungeons';
@@ -394,6 +395,8 @@ describe('MIR4 campaign encounter materializer', () => {
     ).toBe(false);
     const xpBeforeGuards = sim.players.get(sim.playerId)!.xp;
     const guardTemplate = sim.mir4RuntimeMobTemplates.get(guards[0]!.templateId)!;
+    expect(guardTemplate.boss).toBe(false);
+    expect(guardTemplate.mir4BossDamageReductionBps).toBe(0);
     const guardRawDamage =
       guardTemplate.dmgBase +
       guardTemplate.dmgPerLevel * (guards[0]!.level - (guardTemplate.statAnchorLevel ?? 1));
@@ -413,8 +416,16 @@ describe('MIR4 campaign encounter materializer', () => {
     expect(boss).toMatchObject({ hostile: true, runScoped: true, mobBoss: true });
     expect(bossTemplate.mir4BossDamageReductionBps).toBe(500);
     expect(bossTemplate.mir4XpReward).toBe(20_520);
-    expect(boss.maxHp / guards[0]!.maxHp).toBeGreaterThanOrEqual(6.9);
-    expect(boss.maxHp / guards[0]!.maxHp).toBeLessThanOrEqual(7.1);
+    const guardEffectiveHp =
+      guards[0]!.maxHp *
+      (1 +
+        mir4MobBuildDefenses(guards[0]!.level, guardTemplate.family, 'normal').physicalDefense /
+          100);
+    const bossEffectiveHp =
+      boss.maxHp *
+      (1 + mir4MobBuildDefenses(boss.level, bossTemplate.family, 'guardian').physicalDefense / 100);
+    expect(bossEffectiveHp / guardEffectiveHp).toBeGreaterThanOrEqual(6.9);
+    expect(bossEffectiveHp / guardEffectiveHp).toBeLessThanOrEqual(7.1);
     expect(bossRawDamage / guardRawDamage).toBeGreaterThanOrEqual(1.79);
     expect(bossRawDamage / guardRawDamage).toBeLessThanOrEqual(1.81);
     const xpBeforeBoss = sim.players.get(sim.playerId)!.xp;

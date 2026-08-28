@@ -410,7 +410,10 @@ describe('MIR4 local comparison on the original WoC map', () => {
   });
 
   it('lets Auto Journey reach the deliberate M01 tutorial checkpoint', () => {
-    const world = buildMir4WocComparisonWorld(4);
+    // This checkpoint exercises M01 only. Building later campaign projections
+    // makes the deterministic 741-tick journey needlessly approach Vitest's
+    // timeout under parallel load without adding coverage to this assertion.
+    const world = buildMir4WocComparisonWorld(1);
     setActiveWorldContent(world);
     const sim = new Sim({
       seed: 1790,

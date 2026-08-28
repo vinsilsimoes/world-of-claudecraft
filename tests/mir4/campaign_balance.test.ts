@@ -13,7 +13,11 @@ import {
   type Mir4ClassId,
 } from '../../src/sim/content/mir4/classes';
 import { mir4ItemProgressionRank } from '../../src/sim/content/mir4/item_progression';
-import { mir4MobAccuracy, mir4MobStats } from '../../src/sim/content/mir4/mobs';
+import {
+  mir4MobAccuracy,
+  mir4MobBuildDefenses,
+  mir4MobStats,
+} from '../../src/sim/content/mir4/mobs';
 import { MIR4_WORLD_ARC } from '../../src/sim/content/mir4/world_arc';
 import { createMob } from '../../src/sim/entity';
 import { MIR4_GAME_PROFILE } from '../../src/sim/game_profile';
@@ -421,6 +425,15 @@ describe('MIR4 monster pressure', () => {
         return {
           damageRatio: (beforeHp - sim.player.hp) / sim.player.maxHp,
           maxHp: mob.maxHp,
+          effectiveHp:
+            mob.maxHp *
+            (1 +
+              mir4MobBuildDefenses(
+                mob.level,
+                template.family,
+                template.boss ? 'guardian' : template.elite ? 'veteran' : 'normal',
+              ).physicalDefense /
+                100),
           reward: template.mir4XpReward,
         };
       });
@@ -436,8 +449,8 @@ describe('MIR4 monster pressure', () => {
     expect(veteran.damageRatio).toBeLessThanOrEqual(0.14);
     expect(guardian.damageRatio).toBeGreaterThanOrEqual(0.155);
     expect(guardian.damageRatio).toBeLessThanOrEqual(0.185);
-    expect(veteran.maxHp).toBeGreaterThan(normal.maxHp * 2);
-    expect(guardian.maxHp).toBeGreaterThanOrEqual(normal.maxHp * 7);
+    expect(veteran.effectiveHp).toBeGreaterThan(normal.effectiveHp * 2);
+    expect(guardian.effectiveHp).toBeGreaterThanOrEqual(normal.effectiveHp * 7);
     expect(veteran.reward).toBe((normal.reward ?? 0) * 5);
     expect(guardian.reward).toBe((normal.reward ?? 0) * 20);
     expect(run()).toEqual(run());
@@ -504,8 +517,14 @@ describe('MIR4 monster pressure', () => {
       forceCritical: false,
     });
 
-    expect(veteran.maxHp).toBeGreaterThanOrEqual(normal.maxHp * 2);
-    expect(guardian.maxHp).toBeGreaterThanOrEqual(normal.maxHp * 7);
+    const effectiveHp = (hp: number, grade: 'normal' | 'veteran' | 'guardian') =>
+      hp * (1 + mir4MobBuildDefenses(level, 'humanoid', grade).physicalDefense / 100);
+    expect(effectiveHp(veteran.maxHp, 'veteran')).toBeGreaterThanOrEqual(
+      effectiveHp(normal.maxHp, 'normal') * 2,
+    );
+    expect(effectiveHp(guardian.maxHp, 'guardian')).toBeGreaterThanOrEqual(
+      effectiveHp(normal.maxHp, 'normal') * 7,
+    );
     expect(veteran.attack).toBeGreaterThan(normal.attack);
     expect(guardian.attack).toBeGreaterThan(veteran.attack);
     expect(guardianHit.damage).toBeLessThan(playerHp * 0.2);

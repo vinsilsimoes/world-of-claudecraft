@@ -11,6 +11,7 @@
 
 import { advanceMir4AutomationRoute, type Mir4AutomationRouteState } from '../auto_quest/route';
 import { castMir4Skill, mir4BasicAttack, mir4Ultimate } from '../mir4/combat';
+import { mir4Silenced } from '../mir4/effects';
 import { MIR4_ULTIMATE_UNLOCK_LEVEL } from '../mir4/skill_progression';
 import { markMir4WireDirty } from '../mir4/wire_revision';
 import { findReachablePlayerPath } from '../pathfind';
@@ -308,6 +309,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
 
     const rangeYards = mir4AutoBattleActionRange(p, pick);
     const ultimateReady =
+      !mir4Silenced(p) &&
       p.level >= MIR4_ULTIMATE_UNLOCK_LEVEL &&
       (p.mir4UltGauge ?? 0) >= 100 &&
       !p.cooldowns.has('mir4_ult');
@@ -322,6 +324,10 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       // may attack an enemy already in range, but it must never add a second
       // moveToward step or pull the journey away from its authored route.
       if (journeyActive) continue;
+      // Root is a valid temporary movement lock, not evidence that this
+      // target is unreachable. Preserve pursuit memory until locomotion can
+      // make a real progress observation again.
+      if (mir4AutomationRunSpeed(ctx, p) <= 0) continue;
       const observed = observeMir4AutoBattlePursuit(
         st.pursuit,
         target.id,
@@ -344,7 +350,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
 
     // The ultimate first when the gauge is full (the source's selection
     // order), then the rotation cascade, else the basic filler.
-    if (p.level >= MIR4_ULTIMATE_UNLOCK_LEVEL && (p.mir4UltGauge ?? 0) >= 100) {
+    if (!mir4Silenced(p) && p.level >= MIR4_ULTIMATE_UNLOCK_LEVEL && (p.mir4UltGauge ?? 0) >= 100) {
       const result = mir4Ultimate(ctx, p.id, target.id);
       if (result.ok) continue;
     }
@@ -362,6 +368,8 @@ function moveAutoBattleToward(
   st: Mir4AutoBattleState,
   destination: { x: number; z: number },
 ): void {
+  const runSpeed = mir4AutomationRunSpeed(ctx, p);
+  if (runSpeed <= 0) return;
   const next = advanceMir4AutomationRoute(
     ctx.cfg.seed,
     p.pos,
@@ -370,9 +378,5 @@ function moveAutoBattleToward(
     ctx.riftCollisionToken,
   );
   st.route = next.route;
-  ctx.moveToward(
-    p,
-    { x: next.waypoint.x, y: p.pos.y, z: next.waypoint.z },
-    mir4AutomationRunSpeed(ctx, p),
-  );
+  ctx.moveToward(p, { x: next.waypoint.x, y: p.pos.y, z: next.waypoint.z }, runSpeed);
 }

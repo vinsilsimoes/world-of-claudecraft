@@ -13310,4 +13310,19 @@ export const pl_PL: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.challenging_roar.name': 'Złowieszczy ryk',
   'entities.abilities.cheap_shot.descriptionNoStealth': 'Uderz cel za {damage} obrażeń, ogłuszając go na 4 sekundy. Przyznaje 2 punkty combo.',
   'gpuNotice.bodyDiscreteInactive': 'Gra nie korzysta z dedykowanej karty graficznej (do gier) i zamiast tego działa na oszczędnej karcie graficznej, przez co wydajność ucierpi. Zaktualizuj sterowniki karty graficznej, a następnie zrestartuj grę. W systemie Windows ustaw także grę na Wysoką wydajność w Ustawienia > System > Ekran > Grafika.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Skuteczność osłabienia',
+  'hudChrome.mir4.stats.debilitationResistance': 'Odporność na osłabienie',
+  'hudChrome.mir4.stats.silenceSuccess': 'Skuteczność wyciszenia',
+  'hudChrome.mir4.stats.silenceResistance': 'Odporność na wyciszenie',
+  'hudChrome.mir4.stats.healthDrain': 'Wysysanie zdrowia',
+  'hudChrome.mir4.stats.manaDrain': 'Wysysanie many',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Efekt mikstury zdrowia',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Efekt mikstury many',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Obrażenia ataku podstawowego',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Redukcja obrażeń ataku podstawowego',
+  'hudChrome.mir4.stats.penetrationProtection': 'Ochrona przed przebiciem obrony',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Wyświetlony wyżej czas odnowienia jest wartością bazową. Skrócenie czasu odnowienia umiejętności może go zmniejszyć maksymalnie o 40% w PvE lub o 30% w PvP.',
+  'sim.rift.corpseRezCombat':
+    'Twoja grupa nadal walczy. Możesz się wskrzesić, gdy walka dobiegnie końca.',
 };

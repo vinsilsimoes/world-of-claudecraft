@@ -15,7 +15,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "2deb07bc",
+      "state": "014e4215",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -58,6 +58,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -137,7 +138,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 971,
-      "state": "727ae2a7",
+      "state": "fb3e5c20",
       "events": "9194c670",
       "rng": {
         "draws": 10,
@@ -148,7 +149,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 971,
-      "state": "17f5e5c8",
+      "state": "63bf4b27",
       "events": "741638a5",
       "rng": {
         "draws": 10,
@@ -159,7 +160,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 971,
-      "state": "f5c58e0a",
+      "state": "3393de5d",
       "events": "f8916688",
       "rng": {
         "draws": 174,
@@ -170,7 +171,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 971,
-      "state": "829bdc79",
+      "state": "7f930206",
       "events": "741638a5",
       "rng": {
         "draws": 339,
@@ -181,7 +182,7 @@
       "tick": 100,
       "time": 5,
       "nextId": 971,
-      "state": "95114ba4",
+      "state": "64b8c9d3",
       "events": "5a6f05ea",
       "rng": {
         "draws": 533,
@@ -192,7 +193,7 @@
       "tick": 120,
       "time": 6,
       "nextId": 971,
-      "state": "fbf512ef",
+      "state": "9c5252b8",
       "events": "741638a5",
       "rng": {
         "draws": 736,
@@ -203,7 +204,7 @@
       "tick": 120,
       "time": 6,
       "nextId": 971,
-      "state": "fbf512ef",
+      "state": "9c5252b8",
       "events": "741638a5",
       "rng": {
         "draws": 736,
@@ -268,6 +269,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [

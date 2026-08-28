@@ -13162,4 +13162,19 @@ export const cs_CZ: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.challenging_roar.name': 'Zlověstný řev',
   'entities.abilities.cheap_shot.descriptionNoStealth': 'Zasáhni cíl za {damage} poškození a omrač ho na 4 s. Udělí 2 combo body.',
   'gpuNotice.bodyDiscreteInactive': 'Hra nepoužívá samostatnou (herní) grafickou kartu a místo toho běží na úsporné grafické kartě, takže výkon utrpí. Aktualizuj ovladače grafiky a restartuj hru. Ve Windows navíc nastav hru na Vysoký výkon v Nastavení, Systém, Displej, Grafika.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Úspěšnost oslabení',
+  'hudChrome.mir4.stats.debilitationResistance': 'Odolnost vůči oslabení',
+  'hudChrome.mir4.stats.silenceSuccess': 'Úspěšnost umlčení',
+  'hudChrome.mir4.stats.silenceResistance': 'Odolnost vůči umlčení',
+  'hudChrome.mir4.stats.healthDrain': 'Vysávání zdraví',
+  'hudChrome.mir4.stats.manaDrain': 'Vysávání many',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Účinek lektvaru zdraví',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Účinek lektvaru many',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Poškození základního útoku',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Snížení poškození základního útoku',
+  'hudChrome.mir4.stats.penetrationProtection': 'Ochrana proti průniku obrany',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Výše zobrazená doba obnovení je základní hodnota. Zkrácení doby obnovení schopností ji může snížit až o 40 % v PvE nebo o 30 % v PvP.',
+  'sim.rift.corpseRezCombat':
+    'Tvoje skupina je stále v boji. Oživit se můžeš, jakmile boj skončí.',
 };

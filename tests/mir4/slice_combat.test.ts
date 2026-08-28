@@ -42,6 +42,30 @@ function spawnWolf(sim: Sim, offset = 2): Entity {
   return wolf;
 }
 
+/**
+ * The tutorial wolf intentionally has zero Evasion and therefore cannot miss.
+ * Contact-sequencing tests need an explicit contested defender while keeping
+ * mitigation neutral so their literal damage remains about landed contacts.
+ */
+function giveWolfContestedEvasion(sim: Sim, wolf: Entity): void {
+  const playerCombat = sim.player.mir4;
+  if (!playerCombat) throw new Error('MIR4 player combat state missing');
+  wolf.mir4 = {
+    ...playerCombat,
+    statusValues: Object.freeze({}),
+    dodge: 1,
+    avoidCritical: 0,
+    physicalDefense: 0,
+    magicDefense: 0,
+    penetrationDefenseBps: 0,
+    pvpDamageReductionBps: 0,
+    monsterDamageReductionBps: 0,
+    bossDamageReductionBps: 0,
+    allDamageReductionBps: 0,
+    skillDamageReductionBps: 0,
+  };
+}
+
 function ticks(sim: Sim, n: number): void {
   for (let i = 0; i < n; i++) sim.tick();
 }
@@ -124,6 +148,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
   it('applies a multi-hit effect when an earlier contact lands and the final one misses', () => {
     const sim = makeSliceSim(4_243);
     const wolf = spawnWolf(sim);
+    giveWolfContestedEvasion(sim, wolf);
     wolf.maxHp = 1_000;
     wolf.hp = 1_000;
     const draws = vi
@@ -151,6 +176,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
   it('applies no multi-hit effect when every damage contact misses', () => {
     const sim = makeSliceSim(4_246);
     const wolf = spawnWolf(sim);
+    giveWolfContestedEvasion(sim, wolf);
     wolf.maxHp = 1_000;
     wolf.hp = wolf.maxHp;
     const draws = vi.spyOn(sim.rng, 'next').mockReturnValue(0.9999);
@@ -169,6 +195,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
   it('attempts the equipped spirit once on the first landed contact after an opening miss', () => {
     const sim = makeSliceSim(4_245);
     const wolf = spawnWolf(sim);
+    giveWolfContestedEvasion(sim, wolf);
     wolf.maxHp = 2_000;
     wolf.hp = wolf.maxHp;
     const meta = sim.players.get(sim.playerId);

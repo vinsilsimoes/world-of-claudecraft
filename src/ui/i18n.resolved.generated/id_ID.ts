@@ -1283,9 +1283,19 @@ export const id_ID: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Keberhasilan debilitasi",
+        "debilitationResistance": "Ketahanan debilitasi",
+        "silenceSuccess": "Keberhasilan pembungkaman",
+        "silenceResistance": "Ketahanan pembungkaman",
+        "healthDrain": "Serapan kesehatan",
+        "manaDrain": "Serapan mana",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Efek ramuan kesehatan",
+        "manaPotionEffect": "Efek ramuan mana",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Kerusakan serangan dasar",
+        "basicDamageReduction": "Pengurangan kerusakan serangan dasar",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const id_ID: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Perlindungan penetrasi pertahanan",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "Waktu pemulihan yang ditampilkan di atas adalah nilai dasar. Pengurangan waktu pemulihan kemampuan dapat menguranginya hingga 40% di PvE atau 30% di PvP.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const id_ID: EnTranslations = {
       "levelGate": "Hanya petualang level {level} ke atas yang boleh memasuki rift ini.",
       "deadEntry": "Kamu tidak dapat memasuki rift saat tewas.",
       "deadEntryCombat": "Party-mu masih dalam pertempuran. Yang tewas dapat masuk kembali begitu pertarungan berhenti.",
+      "corpseRezCombat": "Kelompokmu masih bertempur. Kamu dapat bangkit kembali setelah pertempuran berakhir.",
       "iceGoalLit": "Sigil es menyala. Jalan pun bergerak.",
       "socketsShut": "Soket-soket berderit menutup. Jalan pun bergerak.",
       "seqProgress": "Rune-rune menjawab satu per satu ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const id_ID: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const id_ID: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const id_ID: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const id_ID: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

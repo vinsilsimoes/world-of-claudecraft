@@ -13462,4 +13462,19 @@ export const de_DE: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.challenging_roar.name': 'Unheilvolles Gebrüll',
   'entities.abilities.cheap_shot.descriptionNoStealth': 'Trefft das Ziel für {damage} Schaden und betäubt es 4 Sek. lang. Gewährt 2 Combopunkte.',
   'gpuNotice.bodyDiscreteInactive': 'Das Spiel nutzt nicht die dedizierte (Gaming-)GPU und läuft stattdessen auf der stromsparenden GPU, sodass die Leistung darunter leidet. Aktualisiere deine Grafiktreiber und starte das Spiel neu. Unter Windows stelle das Spiel außerdem unter Einstellungen > System > Anzeige > Grafik auf Hohe Leistung ein.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Debilitierungserfolg',
+  'hudChrome.mir4.stats.debilitationResistance': 'Debilitierungswiderstand',
+  'hudChrome.mir4.stats.silenceSuccess': 'Stilleerfolg',
+  'hudChrome.mir4.stats.silenceResistance': 'Stillewiderstand',
+  'hudChrome.mir4.stats.healthDrain': 'Lebensentzug',
+  'hudChrome.mir4.stats.manaDrain': 'Manaentzug',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Heiltrankwirkung',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Manatrankwirkung',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Schaden durch Standardangriffe',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Schadensreduktion gegen Standardangriffe',
+  'hudChrome.mir4.stats.penetrationProtection': 'Schutz vor Verteidigungsdurchdringung',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Die oben angezeigte Abklingzeit ist der Basiswert. Abklingzeitverringerung für Fähigkeiten kann sie im PvE um bis zu 40 % und im PvP um bis zu 30 % senken.',
+  'sim.rift.corpseRezCombat':
+    'Deine Gruppe ist noch im Kampf. Du kannst dich wiederbeleben, sobald der Kampf beendet ist.',
 };

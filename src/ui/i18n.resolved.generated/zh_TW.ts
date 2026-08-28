@@ -1283,9 +1283,19 @@ export const zh_TW: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "弱化成功",
+        "debilitationResistance": "弱化抗性",
+        "silenceSuccess": "沉默成功",
+        "silenceResistance": "沉默抗性",
+        "healthDrain": "生命吸取",
+        "manaDrain": "法力吸取",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "生命藥水效果",
+        "manaPotionEffect": "法力藥水效果",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "普通攻擊傷害",
+        "basicDamageReduction": "普通攻擊傷害減免",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const zh_TW: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "防禦穿透",
+        "penetrationProtection": "防禦穿透防護",
         "unknown": "戰鬥屬性"
       },
+      "skillCooldownDisclosure": "上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const zh_TW: EnTranslations = {
       "levelGate": "只有等級達到{level}級或以上的冒險者才能進入這道裂隙。",
       "deadEntry": "死亡狀態下無法進入裂隙。",
       "deadEntryCombat": "你的隊伍仍在戰鬥中。戰鬥結束後，死者方可重新進入。",
+      "corpseRezCombat": "你的隊伍仍在戰鬥中。戰鬥結束後即可復活。",
       "iceGoalLit": "霜之印記熊熊燃起。去路隨之震動。",
       "socketsShut": "凹槽隆隆合攏。去路隨之震動。",
       "seqProgress": "符文依次回應（{step}/{total}）。",
@@ -10115,7 +10128,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "衝撞",
-        "description": "對一名敵人造成 {damage} 點傷害。使其受到的傷害提高 12%，持續 4.5 秒。"
+        "description": "對一名敵人造成 {damage} 點傷害。使目標的物理和魔法防禦降低 12%，持續 4.5 秒。多個破防效果以乘法方式疊加，但防禦不會低於原始值的 20%。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
       },
       "mir4_skill_1401": {
         "name": "大地重擊",
@@ -10131,7 +10144,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "餘燼長槍",
-        "description": "對一名敵人造成 {damage} 點傷害。使其受到的傷害提高 8%，持續 4.5 秒。"
+        "description": "對一名敵人造成 {damage} 點傷害。灼燒目標，每 1 秒造成 {burnPerTick} 點基礎傷害（共 4 次，減傷前總計 {burnTotal} 點）。傷害取決於施加灼燒時你的法術強度。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
       },
       "mir4_skill_2301": {
         "name": "懲擊之印",
@@ -10147,7 +10160,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "印記連擊",
-        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使其受到的傷害提高 10%，持續 4 秒。"
+        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使每個命中的敵人的物理和魔法防禦降低 10%，持續 4 秒。多個破防效果以乘法方式疊加，但防禦不會低於原始值的 20%。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
       },
       "mir4_skill_3104": {
         "name": "圖騰 1010",
@@ -10191,7 +10204,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "橫掃 5104",
-        "description": "對一名敵人造成 {damage} 點傷害。使其受到的傷害提高 14%，持續 4.5 秒。"
+        "description": "對一名敵人造成 {damage} 點傷害。使目標的物理和魔法防禦降低 14%，持續 4.5 秒。多個破防效果以乘法方式疊加，但防禦不會低於原始值的 20%。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
       },
       "mir4_skill_5201": {
         "name": "打擊 5201",

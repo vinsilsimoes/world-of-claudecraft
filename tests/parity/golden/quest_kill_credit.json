@@ -16,7 +16,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "f3a1d8c8",
+      "state": "46cd9e21",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -61,6 +61,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -152,7 +153,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "4b8abdc1",
+      "state": "00460d56",
       "events": "686148fb",
       "rng": {
         "draws": 0,
@@ -197,6 +198,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -304,7 +306,7 @@
       "tick": 8,
       "time": 0.4,
       "nextId": 976,
-      "state": "ae50c9df",
+      "state": "43be6f5e",
       "events": "1756938e",
       "rng": {
         "draws": 40,
@@ -378,6 +380,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -487,7 +490,7 @@
       "tick": 8,
       "time": 0.4,
       "nextId": 976,
-      "state": "be0b575a",
+      "state": "da09f78b",
       "events": "13d5e263",
       "rng": {
         "draws": 40,
@@ -564,6 +567,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -662,7 +666,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 976,
-      "state": "a7f5cdb7",
+      "state": "4c472b9e",
       "events": "741638a5",
       "rng": {
         "draws": 40,
@@ -739,6 +743,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [

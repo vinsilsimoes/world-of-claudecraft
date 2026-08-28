@@ -6,6 +6,8 @@ import { cs_CZ } from '../src/ui/i18n.locales/cs_CZ';
 import { da_DK } from '../src/ui/i18n.locales/da_DK';
 import { de_DE } from '../src/ui/i18n.locales/de_DE';
 import { es } from '../src/ui/i18n.locales/es';
+import { es_ES } from '../src/ui/i18n.locales/es_ES';
+import { fr_CA } from '../src/ui/i18n.locales/fr_CA';
 import { fr_FR } from '../src/ui/i18n.locales/fr_FR';
 import { id_ID } from '../src/ui/i18n.locales/id_ID';
 import { it_IT } from '../src/ui/i18n.locales/it_IT';
@@ -27,6 +29,8 @@ const locales: Record<string, Partial<Record<TranslationKey, string>>> = {
   da_DK,
   de_DE,
   es,
+  es_ES,
+  fr_CA,
   fr_FR,
   id_ID,
   it_IT,
@@ -54,6 +58,144 @@ function expectStandaloneNumber(value: string, n: number) {
 }
 
 describe('reviewed localization semantics', () => {
+  it('keeps Portuguese MIR4 defense-break and burn tooltips aligned with live effects', () => {
+    expect(translation('pt_BR', 'entities.abilities.mir4_skill_1304.description')).toContain(
+      'Reduz as Defesas Física e Mágica do alvo em 12% por 4,5 s.',
+    );
+    const burn = translation('pt_BR', 'entities.abilities.mir4_skill_2111.description');
+    expect(burn).toContain('{burnPerTick} de dano base a cada 1 s');
+    expect(burn).toContain('4 acertos, {burnTotal} no total antes da mitigação');
+    expect(burn).toContain('Poder Mágico no momento em que a Queimadura é aplicada');
+    expect(translation('pt_BR', 'entities.abilities.mir4_skill_3101.description')).toContain(
+      'Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s.',
+    );
+    expect(translation('pt_BR', 'entities.abilities.mir4_skill_5104.description')).toContain(
+      'Reduz as Defesas Física e Mágica do alvo em 14% por 4,5 s.',
+    );
+    for (const skillId of [1304, 3101, 5104] as const) {
+      const defenseBreak = translation(
+        'pt_BR',
+        `entities.abilities.mir4_skill_${skillId}.description` as TranslationKey,
+      );
+      expect(defenseBreak).toContain('se acumulam multiplicativamente');
+      expect(defenseBreak).toContain('20% do valor original');
+    }
+  });
+
+  const mir4EffectTerms: Record<
+    string,
+    {
+      physicalDefense: string;
+      magicDefense: string;
+      areaTargetSet: string;
+      spellPower: string;
+      fourTicks: string;
+      multiplicative: string;
+      preMitigation: string;
+    }
+  > = {
+    ja_JP: {
+      physicalDefense: '物理防御',
+      magicDefense: '魔法防御',
+      areaTargetSet: '命中したすべての敵',
+      spellPower: '魔法力',
+      fourTicks: '4回',
+      multiplicative: '乗算',
+      preMitigation: '軽減前',
+    },
+    ko_KR: {
+      physicalDefense: '물리',
+      magicDefense: '마법 방어력',
+      areaTargetSet: '적중한 모든 적',
+      spellPower: '주문력',
+      fourTicks: '4회',
+      multiplicative: '곱연산',
+      preMitigation: '피해 감소 적용 전',
+    },
+    ru_RU: {
+      physicalDefense: 'физическ',
+      magicDefense: 'магическ',
+      areaTargetSet: 'каждого поражённого врага',
+      spellPower: 'силы заклинаний',
+      fourTicks: '4 срабатывания',
+      multiplicative: 'мультипликативно',
+      preMitigation: 'до снижения урона',
+    },
+    zh_CN: {
+      physicalDefense: '物理',
+      magicDefense: '魔法防御',
+      areaTargetSet: '每个命中的敌人',
+      spellPower: '法术强度',
+      fourTicks: '共 4 次',
+      multiplicative: '乘法',
+      preMitigation: '减伤前',
+    },
+    zh_TW: {
+      physicalDefense: '物理',
+      magicDefense: '魔法防禦',
+      areaTargetSet: '每個命中的敵人',
+      spellPower: '法術強度',
+      fourTicks: '共 4 次',
+      multiplicative: '乘法',
+      preMitigation: '減傷前',
+    },
+  };
+
+  for (const [locale, terms] of Object.entries(mir4EffectTerms)) {
+    it(`${locale} keeps MIR4 defense-break and burn tooltips aligned with live effects`, () => {
+      for (const [skillId, percentage] of [
+        [1304, '12%'],
+        [3101, '10%'],
+        [5104, '14%'],
+      ] as const) {
+        const value = translation(
+          locale,
+          `entities.abilities.mir4_skill_${skillId}.description` as TranslationKey,
+        );
+        const normalized = value.toLocaleLowerCase();
+        expect(normalized).toContain(terms.physicalDefense.toLocaleLowerCase());
+        expect(normalized).toContain(terms.magicDefense.toLocaleLowerCase());
+        expect(value).toContain(percentage);
+        expect(value).toContain(terms.multiplicative);
+        expect(value).toContain('20%');
+        if (skillId === 3101) {
+          expect(normalized).toContain(terms.areaTargetSet.toLocaleLowerCase());
+        }
+      }
+      const burn = translation(locale, 'entities.abilities.mir4_skill_2111.description');
+      expect(burn).toContain(terms.spellPower);
+      expect(burn).toContain('{burnPerTick}');
+      expect(burn).toContain('{burnTotal}');
+      expect(burn).toContain(terms.fourTicks);
+      expect(burn).toContain(terms.preMitigation);
+    });
+  }
+
+  const newMir4StatKeys = [
+    'hudChrome.mir4.stats.debilitationSuccess',
+    'hudChrome.mir4.stats.debilitationResistance',
+    'hudChrome.mir4.stats.silenceSuccess',
+    'hudChrome.mir4.stats.silenceResistance',
+    'hudChrome.mir4.stats.healthDrain',
+    'hudChrome.mir4.stats.manaDrain',
+    'hudChrome.mir4.stats.healthPotionEffect',
+    'hudChrome.mir4.stats.manaPotionEffect',
+    'hudChrome.mir4.stats.basicAttackDamage',
+    'hudChrome.mir4.stats.basicDamageReduction',
+    'hudChrome.mir4.stats.penetrationProtection',
+  ] as const satisfies readonly TranslationKey[];
+
+  for (const locale of Object.keys(locales)) {
+    it(`${locale} fills the new MIR4 build labels and shared combat disclosures`, () => {
+      for (const key of newMir4StatKeys) {
+        expect(translation(locale, key).trim(), `${locale}:${key}`).not.toBe('');
+      }
+      expect(translation(locale, 'hudChrome.mir4.skillCooldownDisclosure')).toMatch(/40/);
+      expect(translation(locale, 'hudChrome.mir4.skillCooldownDisclosure')).toMatch(/30/);
+      expect(translation(locale, 'sim.rift.corpseRezCombat').trim()).not.toBe('');
+    });
+  }
+
   it('English Frost guide hooks describe the retained mechanics', () => {
     expect(guideStrings.abilityHook.brain_freeze).toContain('skip its cooldown');
     expect(guideStrings.abilityHook.brain_freeze).not.toContain('harder-hitting');

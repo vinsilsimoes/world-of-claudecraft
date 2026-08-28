@@ -9,12 +9,13 @@ vi.mock('../src/ui/portrait_chip', () => ({
 }));
 
 import { mir4EquipmentItem } from '../src/sim/content/mir4/equipment_catalog';
-import { MIR4_EMPTY_MATERIALS } from '../src/sim/mir4/equipment';
+import { MIR4_EMPTY_MATERIALS, MIR4_SPECIAL_AFFIX_STATUS_IDS } from '../src/sim/mir4/equipment';
 import type { Mir4PlayerUiState } from '../src/sim/mir4/ui_state';
 import { buildMir4EquipmentItemView } from '../src/ui/mir4_character_view';
 import {
   mir4EquipmentTooltipHtml,
   mir4StatusLabel,
+  mir4StatusValue,
   paintMir4CharacterWindow,
   paintMir4InventoryWindow,
 } from '../src/ui/mir4_equipment_window_adapter';
@@ -24,6 +25,37 @@ describe('MIR4 Energy status labels', () => {
   it('uses the official Energy gain and gathering names', () => {
     expect(mir4StatusLabel(86)).toBe('Energy Gain Boost');
     expect(mir4StatusLabel(92)).toBe('Energy Gathering Boost');
+  });
+
+  it('labels and formats the two equipment penetration channels as percentages', () => {
+    expect(mir4StatusLabel(MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration)).toBe('Defense Penetration');
+    expect(mir4StatusLabel(MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense)).toBe(
+      'Defense Penetration Protection',
+    );
+    expect(mir4StatusValue(MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration, 250)).toBe('2.5%');
+    expect(mir4StatusValue(MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense, 175)).toBe('1.75%');
+  });
+
+  it.each([
+    [50, 'Debilitation Success'],
+    [51, 'Debilitation Resistance'],
+    [52, 'Silence Success'],
+    [53, 'Silence Resistance'],
+    [80, 'Health Drain'],
+    [81, 'Mana Drain'],
+    [95, 'Skill Cooldown Reduction'],
+    [143, 'Basic Attack Damage'],
+    [146, 'Health Potion Effect'],
+    [147, 'Mana Potion Effect'],
+    [160, 'Basic Attack Damage Reduction'],
+  ] as const)('labels status %i as %s and formats its affix value as basis points', (id, label) => {
+    expect(mir4StatusLabel(id)).toBe(label);
+    expect(mir4StatusValue(id, 250)).toBe('2.5%');
+  });
+
+  it('keeps critical damage and protection as ratings rather than percentages', () => {
+    expect(mir4StatusValue(32, 250)).toBe('250');
+    expect(mir4StatusValue(33, 175)).toBe('175');
   });
 });
 
@@ -39,8 +71,35 @@ function harness() {
       8: 991080101,
     },
     mir4EquipmentInstances: {
-      991010101: { itemId: 991010101, enhancement: 1 },
+      991010101: {
+        itemId: 991010101,
+        enhancement: 1,
+        affixes: {
+          blessing: [
+            [50, 100],
+            [52, 200],
+            [80, 300],
+            [81, 400],
+            [143, 500],
+            [159, 600],
+          ],
+        },
+      },
       991020101: { itemId: 991020101, enhancement: 3 },
+      991050101: {
+        itemId: 991050101,
+        enhancement: 0,
+        affixes: {
+          blessing: [
+            [33, 175],
+            [51, 700],
+            [53, 800],
+            [146, 900],
+            [147, 1_000],
+            [160, 1_100],
+          ],
+        },
+      },
     },
     mir4Materials: {
       ...MIR4_EMPTY_MATERIALS,
@@ -129,7 +188,21 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     expect(root.textContent).toContain('Fame: 2,000');
     expect(root.textContent).toContain('Status: peaceful');
     expect(root.textContent).toContain('Boss Damage');
+    expect(root.textContent).toContain('Defense Penetration');
+    expect(root.textContent).toContain('Defense Penetration Protection');
     expect(root.textContent).toContain('Monster Damage Reduction');
+    expect(root.textContent).toContain('Critical Damage Reduction 175');
+    expect(root.textContent).not.toContain('Critical Damage Reduction 1.75%');
+    expect(root.textContent).toContain('Debilitation Success 1%');
+    expect(root.textContent).toContain('Silence Success 2%');
+    expect(root.textContent).toContain('Health Drain 3%');
+    expect(root.textContent).toContain('Mana Drain 4%');
+    expect(root.textContent).toContain('Basic Attack Damage 11%');
+    expect(root.textContent).toContain('Debilitation Resistance 7%');
+    expect(root.textContent).toContain('Silence Resistance 8%');
+    expect(root.textContent).toContain('Health Potion Effect 9%');
+    expect(root.textContent).toContain('Mana Potion Effect 10%');
+    expect(root.textContent).toContain('Basic Attack Damage Reduction 11%');
     expect(root.textContent).toContain('Recovery Potion Boost');
     expect(root.querySelectorAll('.equip-slot')).toHaveLength(8);
     expect(renderPreview).toHaveBeenCalledWith(
@@ -301,6 +374,30 @@ describe('MIR4 equipment adapters reuse the existing WoC windows', () => {
     expect(html).not.toContain('Required level');
     expect(html).not.toContain('MIR4');
     expect(html).not.toContain(def!.name);
+  });
+
+  it('shows special affixes in the item tooltip instead of hiding live combat power', () => {
+    const weapon = mir4EquipmentItem(991010101)!;
+    const armor = mir4EquipmentItem(991050101)!;
+    const weaponHtml = mir4EquipmentTooltipHtml(
+      buildMir4EquipmentItemView(weapon, {
+        itemId: weapon.itemId,
+        enhancement: 0,
+        affixes: { enchantment: [[0, 250]] },
+      }),
+    );
+    const armorHtml = mir4EquipmentTooltipHtml(
+      buildMir4EquipmentItemView(armor, {
+        itemId: armor.itemId,
+        enhancement: 0,
+        affixes: { enchantment: [[0, 300]] },
+      }),
+    );
+
+    expect(weaponHtml).toContain('Defense Penetration');
+    expect(weaponHtml).toContain('+2.5%');
+    expect(armorHtml).toContain('Defense Penetration Protection');
+    expect(armorHtml).toContain('+3%');
   });
 
   it('labels and formats the native skill-damage attribute as basis points', () => {

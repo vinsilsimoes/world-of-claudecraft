@@ -13375,4 +13375,19 @@ export const nl_NL: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.challenging_roar.name': 'Onheilspellend Gebrul',
   'entities.abilities.cheap_shot.descriptionNoStealth': 'Treft het doelwit voor {damage} schade en verdooft het 4 sec. Levert 2 combopunten op.',
   'gpuNotice.bodyDiscreteInactive': 'Het spel gebruikt niet de game-GPU en draait in plaats daarvan op de energiezuinige GPU, waardoor de prestaties zullen lijden. Werk je grafische stuurprogramma\'s bij en herstart het spel. Stel op Windows ook het spel in op Hoge prestaties via Instellingen, Systeem, Beeldscherm, Afbeeldingen.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Succes met verzwakken',
+  'hudChrome.mir4.stats.debilitationResistance': 'Weerstand tegen verzwakking',
+  'hudChrome.mir4.stats.silenceSuccess': 'Succes met stilte',
+  'hudChrome.mir4.stats.silenceResistance': 'Weerstand tegen stilte',
+  'hudChrome.mir4.stats.healthDrain': 'Levensaftap',
+  'hudChrome.mir4.stats.manaDrain': 'Mana-aftap',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Effect van gezondheidsdrank',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Effect van manadrank',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Schade van basisaanval',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Vermindering van schade door basisaanvallen',
+  'hudChrome.mir4.stats.penetrationProtection': 'Bescherming tegen verdedigingdoorboring',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'De hierboven weergegeven afkoeltijd is de basiswaarde. Afkoeltijdreductie van vaardigheden kan deze met maximaal 40% in PvE of 30% in PvP verlagen.',
+  'sim.rift.corpseRezCombat':
+    'Je groep is nog in gevecht. Je kunt herrijzen zodra het gevecht voorbij is.',
 };

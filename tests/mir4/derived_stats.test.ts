@@ -37,6 +37,7 @@ describe('mir4 derived character stats', () => {
       stunResistanceBps: 0,
       manaCost: 204,
       penetrationBps: 0,
+      penetrationDefenseBps: 0,
       mountMoveSpeedBps: 0,
       mountBasicAttackSpeedBps: 0,
       combatPower: 2040,

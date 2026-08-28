@@ -244,6 +244,11 @@ function moveAutoQuestToward(
   repathGoalDistance?: number,
   preferAuthoredRoads = true,
 ): void {
+  const runSpeed = mir4AutomationRunSpeed(ctx, p);
+  // A root must pause this exact route cursor. Advancing the stall detector
+  // while movement is forbidden can skip authored waypoints or trigger a
+  // spurious repath before the player is allowed to move again.
+  if (runSpeed <= 0) return;
   const routeGoal = mir4PortalRouteGoal(
     p.pos,
     destination,
@@ -266,11 +271,7 @@ function moveAutoQuestToward(
     repathGoalDistance,
   );
   st.route = next.route;
-  ctx.moveToward(
-    p,
-    { x: next.waypoint.x, y: p.pos.y, z: next.waypoint.z },
-    mir4AutomationRunSpeed(ctx, p),
-  );
+  ctx.moveToward(p, { x: next.waypoint.x, y: p.pos.y, z: next.waypoint.z }, runSpeed);
 }
 
 function releaseLegacyAutoQuestBattle(ctx: SimContext, p: Entity, st: Mir4AutoQuestState): void {

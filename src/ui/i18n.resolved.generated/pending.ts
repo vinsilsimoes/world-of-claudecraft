@@ -7754,7 +7754,6 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.mir4.spiritUnequipHint",
     "hudChrome.mir4.stats.energyGain",
     "hudChrome.mir4.stats.energyGathering",
-    "hudChrome.mir4.stats.penetration",
     "hudChrome.mir4.training.tabsAria",
     "hudChrome.mir4.training.title",
     "hudChrome.mobile.actionRadial",

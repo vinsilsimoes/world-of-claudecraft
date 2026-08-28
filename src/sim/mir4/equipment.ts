@@ -41,6 +41,44 @@ export interface Mir4EquipmentInstanceState {
   destroyed?: boolean;
 }
 
+/**
+ * Stable ids stored in the existing [statusId, value] affix pairs. They live
+ * outside the official 1 to 164 status registry because penetration is a
+ * separate derived channel, not an official STATUS row.
+ */
+export const MIR4_SPECIAL_AFFIX_STATUS_IDS = Object.freeze({
+  penetration: 1_000_001,
+  penetrationDefense: 1_000_002,
+} as const);
+
+export type Mir4SpecialAffixStatusId =
+  (typeof MIR4_SPECIAL_AFFIX_STATUS_IDS)[keyof typeof MIR4_SPECIAL_AFFIX_STATUS_IDS];
+
+export interface Mir4SpecialAffixBonuses {
+  readonly penetrationBps: number;
+  readonly penetrationDefenseBps: number;
+}
+
+export function mir4IsSpecialAffixStatusId(statusId: number): statusId is Mir4SpecialAffixStatusId {
+  return (
+    statusId === MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration ||
+    statusId === MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense
+  );
+}
+
+/**
+ * Interpret the old status id 0 encoding, which discarded whether a special
+ * roll was offensive or defensive. Weapons infer offense and armor infers
+ * defense. Accessories split conservatively: slot 3 is offensive, slots 2 and
+ * 4 are defensive. This is a deterministic approximation, not a lossless
+ * migration; the persisted zero stays intact during the rollback bridge.
+ */
+export function mir4CanonicalAffixStatusId(statusId: number, equipSlot: number): number {
+  if (statusId !== 0) return statusId;
+  if (equipSlot === 1 || equipSlot === 3) return MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration;
+  return MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense;
+}
+
 /** The material wallet (runtime until the shared inventory lands). */
 export interface Mir4Materials {
   metalCommon: number;
@@ -470,9 +508,32 @@ export function mir4ItemAttributes(
     out.push([statusId, base + bonus]);
   }
   for (const layer of ['enchantment', 'blessing'] as const) {
-    for (const affix of inst?.affixes?.[layer] ?? []) out.push([affix[0], affix[1]]);
+    for (const affix of inst?.affixes?.[layer] ?? []) {
+      const statusId = mir4CanonicalAffixStatusId(affix[0], def.equipSlot);
+      if (!mir4IsSpecialAffixStatusId(statusId)) out.push([statusId, affix[1]]);
+    }
   }
   return out;
+}
+
+/** Special affix channels of one item, kept separate from official statuses. */
+export function mir4ItemSpecialAffixBonuses(
+  def: Mir4EquipmentItemDef,
+  inst: Mir4EquipmentInstanceState | undefined,
+): Mir4SpecialAffixBonuses {
+  let penetrationBps = 0;
+  let penetrationDefenseBps = 0;
+  for (const layer of ['enchantment', 'blessing'] as const) {
+    for (const [rawStatusId, rawValue] of inst?.affixes?.[layer] ?? []) {
+      const statusId = mir4CanonicalAffixStatusId(rawStatusId, def.equipSlot);
+      const value = Math.max(0, Math.floor(rawValue));
+      if (statusId === MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration) penetrationBps += value;
+      if (statusId === MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense) {
+        penetrationDefenseBps += value;
+      }
+    }
+  }
+  return { penetrationBps, penetrationDefenseBps };
 }
 
 /** Every equipped item's applied attributes (all slots, destroyed excluded). */
@@ -489,6 +550,25 @@ export function mir4EquippedAttributes(
     for (const attr of mir4ItemAttributes(def, instances?.[id])) out.push([attr[0], attr[1]]);
   }
   return out;
+}
+
+/** Every equipped item's separate penetration channels. */
+export function mir4EquippedSpecialAffixBonuses(
+  equipment: Mir4Equipment | undefined,
+  instances: Record<number, Mir4EquipmentInstanceState> | undefined,
+): Mir4SpecialAffixBonuses {
+  let penetrationBps = 0;
+  let penetrationDefenseBps = 0;
+  for (const id of Object.values(equipment ?? {})) {
+    if (id === undefined) continue;
+    const def = mir4EquipmentDefinition(id);
+    const inst = instances?.[id];
+    if (!def || inst?.destroyed) continue;
+    const bonuses = mir4ItemSpecialAffixBonuses(def, inst);
+    penetrationBps += bonuses.penetrationBps;
+    penetrationDefenseBps += bonuses.penetrationDefenseBps;
+  }
+  return { penetrationBps, penetrationDefenseBps };
 }
 
 /** The equipped weapon's applied attribute pairs (legacy starter path). */

@@ -35,6 +35,7 @@ import { createMob } from '../../src/sim/entity';
 import type { DelayedEvent } from '../../src/sim/entity_roster';
 import { solveLockActions } from '../../src/sim/lockpick';
 import type { PendingLootRoll } from '../../src/sim/loot/loot_roll';
+import { resolveMir4PlayerDamageWithSpirit } from '../../src/sim/mir4/spirit_combat';
 import { RIFT_MECHANIC_SPACING_SEC } from '../../src/sim/mob/mechanic_spacing';
 import { startFishing } from '../../src/sim/professions/fishing';
 import { gatherCastDurationSec, gatherNodeById } from '../../src/sim/professions/gathering';
@@ -5847,6 +5848,7 @@ function mir4AutoBattleRng(): Scenario {
     coverage: [
       'MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out',
       'MIR4 4106 hit/crit/effect draw order at its authored contact clock',
+      'MIR4 default control opposition and build-curve Spirit procs use the shared rng stream',
       'friendly proximity contributes neither targeting nor combat rng draws',
     ],
     sampleEvery: 1,
@@ -5903,6 +5905,43 @@ function mir4AutoBattleRng(): Scenario {
       sim.setMir4AutoBattleMode('off', pid);
       rec.tick(13);
       rec.snapshot('targeted-4106');
+
+      // A warrior's default-chance knockdown against live resistance keeps
+      // its hit/critical draws and adds one shared-stream control draw.
+      nearMiddle.mir4 = {
+        ...player.mir4!,
+        classId: 0,
+        statusValues: Object.freeze({ 120: 500 }),
+        dodge: 0,
+        physicalDefense: 0,
+        magicDefense: 0,
+      };
+      sim.setPlayerLevel(10, friendlyPid);
+      friendly.gcdRemaining = 0;
+      friendly.resource = friendly.maxResource;
+      sim.castMir4Skill(1104, friendlyPid, nearMiddle.id);
+
+      // A build-curve hit that the legacy formula rejected must still draw its
+      // Spirit proc chance from the same shared stream.
+      const meta = sim.players.get(pid)!;
+      meta.mir4Spirits = {
+        owned: { 'spirit-common-01': 1 },
+        discovered: ['spirit-common-01'],
+        equippedSpiritId: 'spirit-common-01',
+      };
+      const spiritResult = resolveMir4PlayerDamageWithSpirit(sim.ctx, player, retained, {
+        rawDamage: 1_000,
+        channel: 'physical',
+        attacker: { accuracy: 10, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+        defender: { dodge: 0, avoidCritical: 0, physicalDefense: 0 },
+        hitRoll: 9_700,
+        criticalRoll: 9_999,
+        allowSpiritProc: true,
+        buildBalance: { attackerLevel: 1, defenderLevel: 1 },
+      });
+      rec.notes.contestedTargetId = nearMiddle.id;
+      rec.notes.spiritProcAttempted = spiritResult.attempted;
+      rec.snapshot('shared-build-chances');
     },
   };
 }

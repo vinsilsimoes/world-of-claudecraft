@@ -1283,9 +1283,19 @@ export const cs_CZ: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Úspěšnost oslabení",
+        "debilitationResistance": "Odolnost vůči oslabení",
+        "silenceSuccess": "Úspěšnost umlčení",
+        "silenceResistance": "Odolnost vůči umlčení",
+        "healthDrain": "Vysávání zdraví",
+        "manaDrain": "Vysávání many",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Účinek lektvaru zdraví",
+        "manaPotionEffect": "Účinek lektvaru many",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Poškození základního útoku",
+        "basicDamageReduction": "Snížení poškození základního útoku",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const cs_CZ: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Ochrana proti průniku obrany",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "Výše zobrazená doba obnovení je základní hodnota. Zkrácení doby obnovení schopností ji může snížit až o 40 % v PvE nebo o 30 % v PvP.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const cs_CZ: EnTranslations = {
       "levelGate": "Do této trhliny mohou vstoupit jen dobrodruzi na úrovni {level} nebo vyšší.",
       "deadEntry": "Nemůžeš vstoupit do trhliny, když jsi mrtvý.",
       "deadEntryCombat": "Tvá skupina je stále v boji. Mrtví mohou vstoupit znovu, jakmile boj skončí.",
+      "corpseRezCombat": "Tvoje skupina je stále v boji. Oživit se můžeš, jakmile boj skončí.",
       "iceGoalLit": "Mrazivé znamení vzplane. Cesta se pohne.",
       "socketsShut": "Objímky se s vrzáním zavírají. Cesta se pohne.",
       "seqProgress": "Runy odpovídají popořadě ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const cs_CZ: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const cs_CZ: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const cs_CZ: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const cs_CZ: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

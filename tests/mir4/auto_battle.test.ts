@@ -297,7 +297,7 @@ describe('mir4 auto battle', () => {
     expect(p.targetId).toBe(visible.id);
   });
 
-  it.each(['stun', 'root', 'incapacitate'] as const)(
+  it.each(['stun', 'incapacitate'] as const)(
     'does not move or attack while the player is under %s control',
     (kind) => {
       const sim = makeSim(885);
@@ -327,6 +327,58 @@ describe('mir4 auto battle', () => {
       expect([...p.cooldowns.keys()].some((key) => /^\d+$/.test(key))).toBe(false);
     },
   );
+
+  it('stops rooted Auto Battle movement but still attacks an in-range target', () => {
+    const sim = makeSim(88501);
+    const p = sim.entities.get(sim.playerId)!;
+    const farWolf = spawnTankWolf(sim, p.pos.x + 8, p.pos.z, 'test_root_far_wolf');
+    const closeWolf = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'test_root_close_wolf');
+    p.auras.push({
+      id: 'test_root',
+      name: 'Test root',
+      kind: 'root',
+      remaining: 2,
+      duration: 2,
+      value: 0,
+      sourceId: farWolf.id,
+      school: 'physical',
+    });
+    sim.setMir4AutoBattleMode('battle');
+    const before = { ...p.pos };
+
+    updateMir4AutoBattle(sim.ctx);
+
+    expect(p.pos.x).toBe(before.x);
+    expect(p.pos.z).toBe(before.z);
+    expect(farWolf.hp).toBe(farWolf.maxHp);
+    expect(closeWolf.hp).toBeLessThan(closeWolf.maxHp);
+  });
+
+  it('does not blacklist an out-of-range target while root forbids pursuit', () => {
+    const sim = makeSim(88502);
+    const p = sim.player;
+    const wolf = spawnTankWolf(sim, p.pos.x + 8, p.pos.z, 'rooted_pursuit_target');
+    p.auras.push({
+      id: 'long_test_root',
+      name: 'Long Test Root',
+      kind: 'root',
+      remaining: 10,
+      duration: 10,
+      value: 0,
+      sourceId: wolf.id,
+      school: 'physical',
+    });
+    sim.setMir4AutoBattleMode('battle');
+
+    for (let tick = 0; tick < MIR4_AUTO_BATTLE_STALL_TICKS + 5; tick += 1) {
+      updateMir4AutoBattle(sim.ctx);
+    }
+
+    const state = sim.players.get(sim.playerId)?.autoBattle;
+    expect(p.targetId).toBe(wolf.id);
+    expect(state?.pursuit).toBeUndefined();
+    expect(mir4AutoBattleTargetBlocked(state!, wolf.id, sim.ctx.time)).toBe(false);
+  });
 
   it('applies the live movement-speed multiplier while pursuing under a slow', () => {
     const sim = makeSim(8851);
@@ -504,6 +556,34 @@ describe('mir4 auto battle', () => {
     expect(wolf.hp).toBe(wolf.maxHp);
   });
 
+  it('uses basic attacks while silenced instead of pursuing or spending skills and Ultimate', () => {
+    const sim = makeSim(8902);
+    const p = sim.player;
+    p.level = 50;
+    p.mir4UltGauge = 100;
+    const wolf = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'silenced_basic_target');
+    expect(
+      applyMir4Effect(sim.ctx, p, {
+        effectId: 'test_auto_battle_silence',
+        kind: 'silence',
+        durationSeconds: 5,
+        magnitude: 0,
+        name: 'Test Silence',
+        sourceId: wolf.id,
+      }),
+    ).toEqual({ ok: true });
+    const before = { ...p.pos };
+    sim.setMir4AutoBattleMode('battle');
+
+    updateMir4AutoBattle(sim.ctx);
+
+    expect(p.cooldowns.has('mir4_basic')).toBe(true);
+    expect(p.cooldowns.has('mir4_ult')).toBe(false);
+    expect(['1102', '1104', '1304', '1401'].some((id) => p.cooldowns.has(id))).toBe(false);
+    expect(p.mir4UltGauge).toBe(100);
+    expect({ x: p.pos.x, z: p.pos.z }).toEqual({ x: before.x, z: before.z });
+  });
+
   it('keeps a full Ultimate gauge untouched below level 50', () => {
     const sim = makeSim(8901);
     const p = sim.player;
@@ -600,7 +680,6 @@ describe('mir4 auto battle', () => {
     const sim = makeSim(892);
     const p = sim.entities.get(sim.playerId)!;
     const wolf = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'test_mir4_control_target');
-    p.ccImmune = true;
     expect(
       applyMir4Effect(sim.ctx, p, {
         effectId: 'test_mir4_freeze',
@@ -610,6 +689,7 @@ describe('mir4 auto battle', () => {
         sourceId: wolf.id,
       }),
     ).toEqual({ ok: true });
+    p.auras = p.auras.filter((aura) => aura.id !== 'test_mir4_freeze');
     expect(p.auras.some((aura) => aura.kind === 'stun')).toBe(false);
     sim.setMir4AutoBattleMode('battle');
 

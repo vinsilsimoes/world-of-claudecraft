@@ -16,7 +16,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "fae50bb5",
+      "state": "89764eec",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -60,6 +60,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -147,7 +148,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 982,
-      "state": "c2068e20",
+      "state": "7a900a11",
       "events": "c4223b9a",
       "rng": {
         "draws": 3,
@@ -158,7 +159,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 982,
-      "state": "16c83cea",
+      "state": "8e931fbf",
       "events": "155f3705",
       "rng": {
         "draws": 3,
@@ -169,7 +170,7 @@
       "tick": 30,
       "time": 1.5,
       "nextId": 982,
-      "state": "22e249e8",
+      "state": "b5bb7f29",
       "events": "741638a5",
       "rng": {
         "draws": 3,
@@ -180,7 +181,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 982,
-      "state": "b0b531be",
+      "state": "3e439973",
       "events": "741638a5",
       "rng": {
         "draws": 3,
@@ -191,7 +192,7 @@
       "tick": 50,
       "time": 2.5,
       "nextId": 982,
-      "state": "ca1abf00",
+      "state": "5af657f1",
       "events": "741638a5",
       "rng": {
         "draws": 3,
@@ -202,7 +203,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 982,
-      "state": "0dad47da",
+      "state": "94f2960f",
       "events": "741638a5",
       "rng": {
         "draws": 3,
@@ -213,7 +214,7 @@
       "tick": 69,
       "time": 3.45,
       "nextId": 983,
-      "state": "a0e7f67a",
+      "state": "c492e06b",
       "events": "9384acd8",
       "rng": {
         "draws": 5,
@@ -298,6 +299,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -425,7 +427,7 @@
       "tick": 70,
       "time": 3.5,
       "nextId": 983,
-      "state": "2bf31f0c",
+      "state": "7edb2169",
       "events": "741638a5",
       "rng": {
         "draws": 5,
@@ -436,7 +438,7 @@
       "tick": 71,
       "time": 3.55,
       "nextId": 983,
-      "state": "72001682",
+      "state": "dda26c63",
       "events": "741638a5",
       "rng": {
         "draws": 5,
@@ -521,6 +523,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [

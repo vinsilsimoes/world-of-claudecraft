@@ -87,6 +87,15 @@ export interface DamageResolution {
   landedHpLoss: number;
 }
 
+/**
+ * Boot-local authority for a released spirit's live instance. Entity and claim ids
+ * are deliberately never persisted: they are meaningful only inside this Sim.
+ * The map that owns these records is keyed by the durable character id.
+ */
+export type GhostInstanceBinding =
+  | { kind: 'dungeon'; claimId: number }
+  | { kind: 'rift'; instanceId: number; memberEntityId: number; floorIndex: number };
+
 // Live primitive views onto the running Sim. These are GETTERS, not snapshots:
 // `time`/`tickCount` advance every tick, and the `rng`/`entities` identities are
 // shared so a consumer observes the same mutable world the Sim does (the engine
@@ -164,6 +173,12 @@ export interface SimContextPrimitives {
   // reads/finds/iterates it and mutates slot fields in place; the array identity
   // stays Sim-owned (like delayedEvents/groundAoEs), so this is a live read-only view.
   readonly instances: InstanceSlot[];
+  /**
+   * Session-only instance bindings for dead characters. Coordinates identify a
+   * reusable slot, not its owner, so spirit reconnects must validate this exact
+   * claim/run identity before remaining inside instanced content.
+   */
+  readonly ghostInstanceBindings: Map<number, GhostInstanceBinding>;
   // Session-only manual-reset cooldowns keyed by durable character identity and
   // dungeon id. Unlike party instance keys, these survive relogs and party reforming.
   readonly dungeonResetLocks: Map<string, { availableAt: number; claimId: number }>;
@@ -534,6 +549,12 @@ export interface SimContextCallbacks {
   // paths read it too); exposed here so the extracted heal core can draw its crit.
   spellCrit(p: Entity): number;
   applyAura(target: Entity, aura: Aura): void;
+  /**
+   * Append-only admission variant for systems that must mirror state atomically.
+   * Optional so existing narrow SimContext test doubles and external hosts remain
+   * source-compatible while they migrate to the richer admission result.
+   */
+  tryApplyAura?(target: Entity, aura: Aura): boolean;
   // General control-aura predicate (stun/root/incapacitate/polymorph). STAYS on Sim
   // (the applyAura CC-immunity path reads it too); exposed so the extracted Nythraxis
   // encounter's isNythraxisControlAura (which adds 'slow') can consult it via the seam.
@@ -1227,6 +1248,9 @@ export function createSimContext(host: SimContextHost): SimContext {
     get instances() {
       return host.instances;
     },
+    get ghostInstanceBindings() {
+      return host.ghostInstanceBindings;
+    },
     get dungeonResetLocks() {
       return host.dungeonResetLocks;
     },
@@ -1500,6 +1524,7 @@ export function createSimContext(host: SimContextHost): SimContext {
     applyHeal: host.applyHeal,
     spellCrit: host.spellCrit,
     applyAura: host.applyAura,
+    tryApplyAura: host.tryApplyAura,
     isControlAura: host.isControlAura,
     applyRootAura: host.applyRootAura,
     applyKnockback: host.applyKnockback,

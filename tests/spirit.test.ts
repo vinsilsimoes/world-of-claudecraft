@@ -306,11 +306,12 @@ describe("spirit: The Keeper's Toll persistence", () => {
 });
 
 describe('spirit: dungeons', () => {
-  it('a dungeon death rises as a ghost at an OUTDOOR graveyard, not inside the instance', () => {
+  it('a dungeon death rises as a ghost at the entrance of the same instance', () => {
     const sim = makeSim();
     sim.setPlayerLevel(10);
     const p = sim.player as AnyEntity;
     sim.enterDungeon('hollow_crypt');
+    const entry = { ...p.pos };
     expect(p.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD); // inside the instance
     // walk deeper into the instance, then die there
     p.pos = { x: p.pos.x, y: p.pos.y, z: p.pos.z + 30 };
@@ -319,9 +320,11 @@ describe('spirit: dungeons', () => {
     p.dead = true;
     sim.releaseSpirit();
     expect(p.ghost).toBe(true);
-    // the corpse stays inside the instance, but the ghost rises OUTSIDE at an overworld graveyard
+    // Both the corpse and released spirit stay bound to the same live instance.
     expect((p.corpsePos as { x: number }).x).toBeGreaterThan(DUNGEON_X_THRESHOLD);
-    expect(p.pos.x).toBeLessThan(DUNGEON_X_THRESHOLD);
+    expect(p.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD);
+    expect(dist2d(p.pos, entry)).toBeLessThan(0.01);
+    expect(sim.instanceClaimIdAt(p.pos)).toBe(p.corpseInstanceId);
     // No Spirit Healer stands inside any instance: every angel is at an overworld
     // graveyard (there are exactly OVERWORLD_GRAVEYARDS of them, none past the threshold).
     const healers = [...sim.entities.values()].filter(
@@ -331,27 +334,29 @@ describe('spirit: dungeons', () => {
     expect(healers.every((h: AnyEntity) => h.pos.x < DUNGEON_X_THRESHOLD)).toBe(true);
   });
 
-  it('a ghost that re-enters the instance resurrects at the entrance, penalty-free', () => {
+  it('a dungeon ghost can run from the entrance to its corpse and resurrect penalty-free', () => {
     const sim = makeSim();
     sim.setPlayerLevel(10);
     const p = sim.player as AnyEntity;
     sim.enterDungeon('hollow_crypt');
-    const entry = { x: p.pos.x, y: p.pos.y, z: p.pos.z };
-    // die deep inside and release to the outdoor graveyard
+    // Die deep inside and release at the same instance's entrance.
     p.pos = { x: p.pos.x, y: p.pos.y, z: p.pos.z + 30 };
     p.prevPos = { ...p.pos };
     sim.rebucket(p);
     p.dead = true;
     sim.releaseSpirit();
     expect(p.ghost).toBe(true);
-    expect(p.pos.x).toBeLessThan(DUNGEON_X_THRESHOLD); // outside as a ghost
-    // run the spirit back and re-enter: resurrects at the entry, no Resurrection Sickness
-    sim.enterDungeon('hollow_crypt');
+    expect(p.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD);
+    const corpse = { ...p.corpsePos } as { x: number; y: number; z: number };
+    p.pos = { ...corpse };
+    p.prevPos = { ...p.pos };
+    sim.rebucket(p);
+    sim.resurrectAtCorpse();
     expect(p.dead).toBe(false);
     expect(p.ghost).toBe(false);
     expect(p.corpsePos).toBeNull();
-    expect(p.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD); // back inside
-    expect(dist2d(p.pos, entry)).toBeLessThan(3); // at the entrance
+    expect(p.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD);
+    expect(dist2d(p.pos, corpse)).toBeLessThan(0.01);
     expect(p.hp).toBe(Math.max(1, Math.round(p.maxHp * RES_HP_FRACTION))); // penalty-free half
     expect(p.auras.some((a: any) => a.id === RESURRECTION_SICKNESS_ID)).toBe(false);
   });

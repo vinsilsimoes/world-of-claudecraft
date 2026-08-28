@@ -30,7 +30,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 971,
-      "state": "09f0e53d",
+      "state": "8798c8a7",
       "events": "589c1631",
       "rng": {
         "draws": 0,
@@ -41,7 +41,7 @@
       "tick": 50,
       "time": 2.5,
       "nextId": 971,
-      "state": "282c26e2",
+      "state": "1bf2317c",
       "events": "b585a892",
       "rng": {
         "draws": 66,
@@ -52,7 +52,7 @@
       "tick": 75,
       "time": 3.75,
       "nextId": 971,
-      "state": "1f93f2c8",
+      "state": "7be2615a",
       "events": "4aac3c56",
       "rng": {
         "draws": 247,
@@ -63,7 +63,7 @@
       "tick": 100,
       "time": 5,
       "nextId": 971,
-      "state": "db64a351",
+      "state": "26b8306b",
       "events": "73428f7e",
       "rng": {
         "draws": 485,
@@ -74,7 +74,7 @@
       "tick": 125,
       "time": 6.25,
       "nextId": 971,
-      "state": "e6de3cf8",
+      "state": "5618b554",
       "events": "959be81b",
       "rng": {
         "draws": 755,
@@ -85,7 +85,7 @@
       "tick": 150,
       "time": 7.5,
       "nextId": 971,
-      "state": "da71c2e5",
+      "state": "f356b609",
       "events": "741638a5",
       "rng": {
         "draws": 1038,
@@ -96,7 +96,7 @@
       "tick": 163,
       "time": 8.15,
       "nextId": 971,
-      "state": "248e8972",
+      "state": "bda33ff6",
       "events": "8e9ed808",
       "rng": {
         "draws": 1176,
@@ -144,6 +144,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -215,6 +216,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -290,6 +292,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaAugments": [
             "aug_fleetfoot"
           ],
@@ -361,6 +364,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {

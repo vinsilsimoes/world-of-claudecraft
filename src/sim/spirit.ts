@@ -8,7 +8,8 @@
 //  2. releasePlayerSpirit: the spirit leaves the body. `dead` stays true but
 //     `ghost` becomes true (a ghost cannot fight or be hit, but it CAN move, runs
 //     faster, and is rendered translucent), and `corpsePos` records where the body
-//     is. The spirit appears at the nearest graveyard, where a Spirit Healer hovers.
+//     is. A dungeon spirit appears at that live claim's entrance; an overworld
+//     spirit appears at the nearest graveyard, where a Spirit Healer hovers.
 //  3a. resurrectAtCorpse: run the ghost back to its body; within CORPSE_REZ_RANGE
 //      it can resurrect with no penalty (RES_HP_FRACTION of its pools).
 //  3b. resurrectAtSpiritHealer: accept the angel's resurrection instead, instant and
@@ -32,6 +33,7 @@ import { BG_GRAVEYARDS } from './battleground_layout';
 import {
   battlegroundOrigin,
   DELVES,
+  DUNGEONS,
   dungeonAt,
   isDelvePos,
   isRiftPos,
@@ -58,16 +60,16 @@ import {
   UNSTUCK_SICKNESS_STAT_MULT,
   unstuckSicknessDuration,
 } from './resurrection';
-import type { PlayerMeta } from './sim';
-import type { SimContext } from './sim_context';
-import type { BgMatch } from './social/battleground';
 import {
-  dist2d,
-  type Entity,
-  emptyMoveInput,
-  type Vec3,
-  type WorldContent,
-} from './types';
+  rebindRiftInstanceMember,
+  riftInstanceAtPos,
+  riftInstanceInCombat,
+  riftSpiritEntryForInstance,
+} from './rift/runs';
+import type { PlayerMeta } from './sim';
+import type { GhostInstanceBinding, SimContext } from './sim_context';
+import type { BgMatch } from './social/battleground';
+import { dist2d, type Entity, emptyMoveInput, type Vec3, type WorldContent } from './types';
 
 // --- tuning -----------------------------------------------------------------
 // A released spirit runs faster than the living, ignoring slows (a ghost cannot be
@@ -162,11 +164,9 @@ function nearestWorldGraveyard(
   );
 }
 
-// The graveyard a released spirit appears at. A dungeon/raid death sends the spirit OUT
-// to the overworld graveyard nearest the instance door (never inside the instance): the
-// ghost runs its spirit back to the door and re-enters to resurrect at the entrance, so
-// no Spirit Healer stands inside an instance. Outdoors it is the nearest overworld
-// graveyard to where the body fell.
+// The fallback graveyard used outside ordinary spirit release. Unstuck inside an
+// instance still escapes to the overworld, while releasePlayerSpirit first checks
+// liveDungeonSpiritSpawn below and keeps the ghost in its live instance.
 function ghostGraveyard(
   ctx: SimContext,
   p: Entity,
@@ -211,15 +211,190 @@ function ghostGraveyard(
   return nearestWorldGraveyard(ctx, p.pos, graveyards, fallback);
 }
 
+/**
+ * Entry of the exact live dungeon claim containing the body.
+ *
+ * The claim id, not only the reusable dungeon/slot coordinates, is authoritative:
+ * a recycled slot must never receive a spirit belonging to its previous run. Scripted
+ * MIR4 campaign rooms use the same native claim model, so this one lookup also keeps
+ * their player position and minimap context inside the room after release.
+ */
+export function liveDungeonSpiritSpawn(
+  ctx: SimContext,
+  claimId: number,
+): { x: number; z: number } | null {
+  const inst = ctx.instances.find((candidate) => candidate.exitId === claimId);
+  if (!inst) return null;
+  const dungeon = DUNGEONS[inst.dungeonId];
+  if (!dungeon) return null;
+  const origin = ctx.instanceOriginOf(inst);
+  return {
+    x: origin.x + dungeon.entry.x,
+    z: origin.z + dungeon.entry.z,
+  };
+}
+
+export interface ResolvedGhostInstance {
+  binding: GhostInstanceBinding;
+  entry: { x: number; z: number };
+  /** New body anchor when the live Rift advanced while this character was offline. */
+  corpsePosOverride?: { x: number; z: number };
+  /** Native dungeon claim id used by corpse loot/resurrection gates. */
+  corpseInstanceId: number | null;
+}
+
+function resolveGhostInstanceBinding(
+  ctx: SimContext,
+  binding: GhostInstanceBinding,
+  corpsePos: Vec3,
+): ResolvedGhostInstance | null {
+  if (binding.kind === 'dungeon') {
+    // Position verifies that the saved body belongs to this exact claim. The
+    // equality is what rejects a later owner reusing the same coordinate slot.
+    if (ctx.instanceClaimIdAt(corpsePos) !== binding.claimId) return null;
+    const entry = liveDungeonSpiritSpawn(ctx, binding.claimId);
+    return entry ? { binding, entry, corpseInstanceId: binding.claimId } : null;
+  }
+  const inst = ctx.riftInstances.find(
+    (candidate) => candidate.partyKey !== null && candidate.instanceId === binding.instanceId,
+  );
+  if (!inst) return null;
+  const entry = riftSpiritEntryForInstance(
+    ctx,
+    binding.instanceId,
+    binding.memberEntityId,
+    corpsePos,
+    binding.floorIndex,
+  );
+  if (!entry) return null;
+  const floorAdvanced = binding.floorIndex !== inst.floorIndex;
+  return {
+    binding: { ...binding, floorIndex: inst.floorIndex },
+    entry,
+    ...(floorAdvanced ? { corpsePosOverride: entry } : {}),
+    corpseInstanceId: null,
+  };
+}
+
+/**
+ * Resolve a persisted corpse against its boot-local authority record. Missing or
+ * invalid authority is a safe miss: the caller sends the spirit to a healer and
+ * deletes the stale record instead of guessing from reusable coordinates.
+ */
+export function resolveSavedGhostInstance(
+  ctx: SimContext,
+  characterId: number | undefined,
+  corpsePos: Vec3 | null | undefined,
+): ResolvedGhostInstance | null {
+  if (characterId === undefined || !corpsePos) return null;
+  const binding = ctx.ghostInstanceBindings.get(characterId);
+  if (!binding) return null;
+  const resolved = resolveGhostInstanceBinding(ctx, binding, corpsePos);
+  if (!resolved) ctx.ghostInstanceBindings.delete(characterId);
+  else if (resolved.binding !== binding) {
+    ctx.ghostInstanceBindings.set(characterId, resolved.binding);
+  }
+  return resolved;
+}
+
+/**
+ * Replace a Rift's transient member id after a same-process reconnect. Native
+ * dungeon claims are keyed by their exact exit id and need no roster rewrite.
+ */
+export function rebindSavedGhostInstance(
+  ctx: SimContext,
+  characterId: number | undefined,
+  newEntityId: number,
+): boolean {
+  if (characterId === undefined) return false;
+  const binding = ctx.ghostInstanceBindings.get(characterId);
+  if (!binding) return false;
+  if (binding.kind === 'dungeon') return true;
+  if (!rebindRiftInstanceMember(ctx, binding.instanceId, binding.memberEntityId, newEntityId)) {
+    ctx.ghostInstanceBindings.delete(characterId);
+    return false;
+  }
+  ctx.ghostInstanceBindings.set(characterId, { ...binding, memberEntityId: newEntityId });
+  return true;
+}
+
+function discoverCurrentGhostInstance(
+  ctx: SimContext,
+  p: Entity,
+  corpsePos: Vec3,
+): GhostInstanceBinding | null {
+  const rift = riftInstanceAtPos(ctx, corpsePos);
+  if (rift?.memberIds.has(p.id)) {
+    return {
+      kind: 'rift',
+      instanceId: rift.instanceId,
+      memberEntityId: p.id,
+      floorIndex: rift.floorIndex,
+    };
+  }
+  const claimId = ctx.instanceClaimIdAt(corpsePos);
+  return claimId === null ? null : { kind: 'dungeon', claimId };
+}
+
+/**
+ * Capture authority while the dying entity still belongs to its live instance.
+ * When a reconnect already has a record, it is validated but never rediscovered
+ * from coordinates: an invalid old record must not bind to a new slot owner.
+ */
+export function rememberDeadPlayerInstance(
+  ctx: SimContext,
+  meta: PlayerMeta,
+  p: Entity,
+  corpsePos: Vec3,
+  allowDiscovery = true,
+): ResolvedGhostInstance | null {
+  const characterId = meta.characterId;
+  if (characterId !== undefined && ctx.ghostInstanceBindings.has(characterId)) {
+    return resolveSavedGhostInstance(ctx, characterId, corpsePos);
+  }
+  if (!allowDiscovery) return null;
+  const binding = discoverCurrentGhostInstance(ctx, p, corpsePos);
+  if (!binding) {
+    if (characterId !== undefined) ctx.ghostInstanceBindings.delete(characterId);
+    return null;
+  }
+  const resolved = resolveGhostInstanceBinding(ctx, binding, corpsePos);
+  if (!resolved) return null;
+  if (characterId !== undefined) ctx.ghostInstanceBindings.set(characterId, binding);
+  return resolved;
+}
+
+/**
+ * Safe recovery point when a saved instance ghost outlives its runtime claim.
+ * Native dungeons anchor the search at their outdoor door; generated Rift
+ * coordinates have no durable return point, so they fall back from world start.
+ * Prefer an authored graveyard (which has a Spirit Healer); worlds without one
+ * retain the established world-start fallback instead of stranding the ghost.
+ */
+export function instanceGhostFallbackGraveyard(
+  ctx: SimContext,
+  instancePos: Readonly<{ x: number; z: number }>,
+): { x: number; z: number } {
+  const anchor = dungeonAt(instancePos.x)?.doorPos ?? ctx.worldContent.playerStart;
+  return nearestWorldGraveyard(
+    ctx,
+    anchor,
+    ctx.worldContent.services?.graveyards ?? [],
+    ctx.worldContent.playerStart,
+  );
+}
+
 // --- release / resurrect ----------------------------------------------------
 
 // Release the spirit: leave the body where it fell and rise as a ghost at the
-// nearest graveyard. Replaces the old instant-respawn-at-graveyard behavior.
+// live dungeon entrance or nearest world graveyard. Replaces the old instant
+// respawn-at-graveyard behavior.
 export function releasePlayerSpirit(
   ctx: SimContext,
   pid?: number,
   graveyards: readonly { x: number; z: number }[] = OVERWORLD_GRAVEYARDS,
   fallback: { x: number; z: number } = PLAYER_START,
+  allowInstanceDiscovery = true,
 ): void {
   const r = ctx.resolve(pid);
   if (!r) return;
@@ -234,7 +409,7 @@ export function releasePlayerSpirit(
     releaseSpiritInDelve(ctx, meta.entityId);
     return;
   }
-  releaseAtNearestGraveyard(ctx, meta, p, graveyards, fallback);
+  releaseAtNearestGraveyard(ctx, meta, p, graveyards, fallback, allowInstanceDiscovery);
 }
 
 /**
@@ -323,11 +498,18 @@ function releaseAtNearestGraveyard(
   p: Entity,
   graveyards: readonly { x: number; z: number }[] = OVERWORLD_GRAVEYARDS,
   fallback: { x: number; z: number } = PLAYER_START,
+  allowInstanceDiscovery = true,
 ): void {
-  // Resolve the graveyard before moving the entity out of its instance band.
-  const gy = ghostGraveyard(ctx, p, graveyards, fallback);
-  p.corpsePos = { x: p.pos.x, y: p.pos.y, z: p.pos.z };
-  p.corpseInstanceId = ctx.instanceClaimIdAt(p.pos);
+  // Resolve the destination before moving the entity. Instance spirits remain at
+  // the entrance of their exact live dungeon/Rift claim. A missing or recycled
+  // claim falls through to the existing safe overworld graveyard behavior.
+  const corpsePos = { x: p.pos.x, y: p.pos.y, z: p.pos.z };
+  const instance = rememberDeadPlayerInstance(ctx, meta, p, corpsePos, allowInstanceDiscovery);
+  const gy = instance?.entry ?? ghostGraveyard(ctx, p, graveyards, fallback);
+  p.corpsePos = instance?.corpsePosOverride
+    ? ctx.groundPos(instance.corpsePosOverride.x, instance.corpsePosOverride.z)
+    : { x: p.pos.x, y: p.pos.y, z: p.pos.z };
+  p.corpseInstanceId = instance?.corpseInstanceId ?? null;
   p.ghost = true; // p.dead stays true
   p.pos = ctx.groundPos(gy.x, gy.z);
   p.prevPos = { ...p.pos };
@@ -390,6 +572,14 @@ export function resurrectAtCorpse(ctx: SimContext, pid?: number): void {
   if (ctx.bgMatches.has(p.id)) return; // Thornhollow Fields revives on the wave only
   // Server-authoritative range gate; the client only offers the button in range.
   if (dist2d(p.pos, p.corpsePos) > CORPSE_REZ_RANGE) return;
+  // Rift release now starts inside the live floor. Preserve the original
+  // anti-zerg rule that previously lived at the outdoor re-entry gate: a ghost
+  // may reach its body, but cannot stand back up while any encounter is engaged.
+  const rift = isRiftPos(p.pos.x) ? riftInstanceAtPos(ctx, p.pos) : null;
+  if (rift && riftInstanceInCombat(ctx, rift)) {
+    ctx.error(p.id, 'Your party is still in combat. You may resurrect once the fighting stops.');
+    return;
+  }
   // Revive where the ghost is standing (it ran back to within range of the body), not
   // teleported onto the exact corpse point.
   reviveAt(ctx, meta, p, p.pos, RES_HP_FRACTION, 'none');
@@ -462,6 +652,7 @@ function reviveAt(
   p.ghost = false;
   p.corpsePos = null;
   p.corpseInstanceId = null;
+  if (meta.characterId !== undefined) ctx.ghostInstanceBindings.delete(meta.characterId);
   // revivePlayerAt teleports even a LIVE target (wasDead only gates the
   // respawn event), so a running gather/fishing session must end here too.
   cancelProfessionSessionOnDisplacement(ctx, p);

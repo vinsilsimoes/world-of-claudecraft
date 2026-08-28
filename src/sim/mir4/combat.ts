@@ -20,13 +20,18 @@ import {
   mir4ClassRangeYards,
   mir4SkillById,
 } from '../content/mir4';
-import { mir4ArcMobTemplate } from '../content/mir4/arc_mobs';
-import { MIR4_MOBS, mir4MobAccuracy } from '../content/mir4/mobs';
+import { mir4MobAccuracy, mir4MobBuildDefenses } from '../content/mir4/mobs';
+import { resolveMobTemplate } from '../mob/template';
 import type { SimContext } from '../sim_context';
 import type { Entity, Mir4PendingImpact, PlayerClass } from '../types';
 import { dist2d } from '../types';
 import { refreshMir4KnownAbilities } from './action_abilities';
 import { mir4AnimationDurationForContactsMs } from './attack_timeline';
+import {
+  type Mir4BuildCombatContext,
+  mir4BuildAttackIntervalMs,
+  mir4BuildCapTempoAndDrain,
+} from './build_balance';
 import {
   mir4ControlChanceFromStatuses,
   mir4ControlDurationMs,
@@ -38,8 +43,11 @@ import {
   mir4AoESecondaryTargets,
   mir4AttackMultiplier,
   mir4DamageTakenAddend,
+  mir4DefenseMultiplier,
   mir4EffectKindOf,
+  mir4HardControlled,
   mir4SecondaryBps,
+  mir4Silenced,
 } from './effects';
 import {
   type Mir4CombatStats,
@@ -47,7 +55,6 @@ import {
   mir4AuthorialSkillRankDamage,
   mir4CoefficientDamage,
   mir4ResolveDamage,
-  mir4SkillDamageAfterBoost,
   mir4SkillManaCost,
   mir4SkillRankScaledInteger,
 } from './math';
@@ -82,8 +89,10 @@ const BASIC_ATTACK_COOLDOWN_KEY = 'mir4_basic';
 export function mir4BasicAttackCadenceSeconds(
   authoredCadenceMs: number,
   attackSpeedBps: number,
+  context: Mir4BuildCombatContext = 'pve',
 ): number {
-  return authoredCadenceMs / 1000 / (1 + Math.max(0, attackSpeedBps) / 10_000);
+  const capped = mir4BuildCapTempoAndDrain({ attackSpeedBps }, context);
+  return mir4BuildAttackIntervalMs(authoredCadenceMs, capped.attackSpeedBps) / 1_000;
 }
 
 function mir4AttackerStats(p: Entity): Partial<Mir4CombatStats> {
@@ -103,29 +112,58 @@ function mir4AttackerStats(p: Entity): Partial<Mir4CombatStats> {
   };
 }
 
-function mir4MobTemplateFor(ctx: SimContext, target: Entity) {
-  return (
-    MIR4_MOBS[target.templateId as string] ??
-    ctx.mir4RuntimeMobTemplates.get(target.templateId) ??
-    mir4ArcMobTemplate(target.templateId)
-  );
+function mir4TargetKind(ctx: SimContext, target: Entity): Mir4TargetKind {
+  if (target.kind === 'player' || target.ownerId !== null) return 'player';
+  const template = resolveMobTemplate(target.templateId, ctx.mir4RuntimeMobTemplates);
+  return template?.boss ? 'boss' : 'monster';
 }
 
-function mir4TargetKind(target: Entity): Mir4TargetKind {
-  if (target.kind === 'player') return 'player';
-  return target.mobBoss ? 'boss' : 'monster';
+function mir4CombatContextForTarget(target: Entity | null): Mir4BuildCombatContext {
+  return target && (target.kind === 'player' || target.ownerId !== null) ? 'pvp' : 'pve';
+}
+
+function mir4CombatContextForAction(
+  ctx: SimContext,
+  source: Entity,
+  target: Entity | null,
+): Mir4BuildCombatContext {
+  // An explicit target is authoritative. Only targetless utility actions may
+  // inherit the context of the hostile player currently selected by the user.
+  if (target !== null) return mir4CombatContextForTarget(target);
+  const selected = source.targetId === null ? null : ctx.entities.get(source.targetId);
+  return selected && !selected.dead && ctx.isHostileTo(source, selected)
+    ? mir4CombatContextForTarget(selected)
+    : 'pve';
 }
 
 function mir4DefenderStats(ctx: SimContext, target: Entity): Partial<Mir4CombatStats> {
   const s = target.mir4;
-  const template = target.mobBoss ? mir4MobTemplateFor(ctx, target) : undefined;
+  const template =
+    target.kind === 'mob'
+      ? resolveMobTemplate(target.templateId, ctx.mir4RuntimeMobTemplates)
+      : undefined;
+  const grade = template?.boss ? 'guardian' : template?.elite ? 'veteran' : 'normal';
+  const mobDefenses =
+    target.kind === 'mob'
+      ? mir4MobBuildDefenses(target.level, template?.family, grade, target.stats.armor, {
+          physicalDefense: template?.mir4PhysicalDefense,
+          magicDefense: template?.mir4MagicDefense,
+          dodge: template?.mir4Dodge,
+          avoidCritical: template?.mir4AvoidCritical,
+        })
+      : undefined;
+  const defenseMultiplier = mir4DefenseMultiplier(target);
   return {
-    dodge: s?.dodge ?? 0,
-    avoidCritical: s?.avoidCritical ?? 0,
+    dodge: s?.dodge ?? mobDefenses?.dodge ?? 0,
+    avoidCritical: s?.avoidCritical ?? mobDefenses?.avoidCritical ?? 0,
     criticalDamageReduction: mir4StatusRecordValue(s?.statusValues, 33),
-    physicalDefense: s?.physicalDefense ?? 0,
-    magicDefense: s?.magicDefense ?? 0,
-    penetrationDefenseBps: 0,
+    physicalDefense: Math.floor(
+      (s?.physicalDefense ?? mobDefenses?.physicalDefense ?? 0) * defenseMultiplier,
+    ),
+    magicDefense: Math.floor(
+      (s?.magicDefense ?? mobDefenses?.magicDefense ?? 0) * defenseMultiplier,
+    ),
+    penetrationDefenseBps: s?.penetrationDefenseBps ?? 0,
     pvpDamageReductionBps: s?.pvpDamageReductionBps ?? 0,
     monsterDamageReductionBps: s?.monsterDamageReductionBps ?? 0,
     bossDamageReductionBps:
@@ -136,9 +174,13 @@ function mir4DefenderStats(ctx: SimContext, target: Entity): Partial<Mir4CombatS
   };
 }
 
-function applyMir4Drain(player: Entity, landedDamage: number): void {
+function applyMir4Drain(player: Entity, target: Entity, landedDamage: number): void {
   if (landedDamage <= 0 || !player.mir4) return;
-  const drain = mir4DrainOnDamage(landedDamage, player.mir4.statusValues);
+  const drain = mir4DrainOnDamage(
+    landedDamage,
+    player.mir4.statusValues,
+    mir4CombatContextForTarget(target),
+  );
   if (drain.hp > 0) player.hp = Math.min(player.maxHp, player.hp + drain.hp);
   if (drain.mp > 0) {
     player.resource = Math.min(player.maxResource, player.resource + drain.mp);
@@ -191,6 +233,8 @@ export interface Mir4CastResult {
     | 'no-mp'
     | 'on-cooldown'
     | 'on-gcd'
+    | 'controlled'
+    | 'silenced'
     | 'utility-not-ready';
 }
 
@@ -214,6 +258,8 @@ export function castMir4Skill(
   if (p.level < mir4SkillUnlockLevel(skill.slot)) {
     return { ok: false, reason: 'not-unlocked' };
   }
+  if (ctx.isStunned(p) || mir4HardControlled(p)) return { ok: false, reason: 'controlled' };
+  if (mir4Silenced(p)) return { ok: false, reason: 'silenced' };
   // Self utilities need no target. Catalog rows that explicitly carry a
   // targetless area resolve around the actor and choose visible enemies
   // deterministically; other offensive rows still require a live target.
@@ -265,7 +311,11 @@ export function castMir4Skill(
   p.resource -= cost;
   p.cooldowns.set(
     String(skillId),
-    mir4ModifiedSkillCooldownSeconds(skill.cooldownMs / 1000, p.mir4?.statusValues),
+    mir4ModifiedSkillCooldownSeconds(
+      skill.cooldownMs / 1000,
+      p.mir4?.statusValues,
+      mir4CombatContextForAction(ctx, p, target),
+    ),
   );
   p.gcdRemaining = Math.max(p.gcdRemaining, MIR4_SKILL_GLOBAL_COOLDOWN_MS / 1000);
 
@@ -294,10 +344,7 @@ export function castMir4Skill(
   if (policy && target) {
     const phys = Math.floor((p.attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
     const magic = Math.floor((p.spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
-    totalRawDamage = mir4SkillDamageAfterBoost(
-      mir4AuthorialSkillRankDamage(Math.max(1, phys + magic), skillLevel),
-      p.mir4?.skillDamageBps,
-    );
+    totalRawDamage = mir4AuthorialSkillRankDamage(Math.max(1, phys + magic), skillLevel);
     primaryImpacts.push({
       target,
       rawDamage: totalRawDamage,
@@ -313,10 +360,7 @@ export function castMir4Skill(
     const magic = component.damageType === 2;
     const attackPower = magic ? p.spellPower : p.attackPower;
     const componentChannel = magic ? 'magic' : 'physical';
-    const coefficientDamage = mir4SkillDamageAfterBoost(
-      mir4CoefficientDamage(attackPower, coefficient),
-      p.mir4?.skillDamageBps,
-    );
+    const coefficientDamage = mir4CoefficientDamage(attackPower, coefficient);
     const impactCount = Math.max(1, component.impactCount);
     const perImpact =
       skill.damage?.allocationMode === 'row-total-impact-vector'
@@ -470,6 +514,7 @@ export function mir4BasicAttack(ctx: SimContext, pid: number, targetId?: number)
   if (!p || p.dead) return { ok: false, reason: 'no-target' };
   const target = resolveLivingHostileTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
   if (!target) return { ok: false, reason: 'no-target' };
+  if (ctx.isStunned(p) || mir4HardControlled(p)) return { ok: false, reason: 'controlled' };
   const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1];
   const rangeYards = mir4BasicAttackRangeYards(p);
   if (dist2d(p.pos, target.pos) > rangeYards) {
@@ -482,7 +527,11 @@ export function mir4BasicAttack(ctx: SimContext, pid: number, targetId?: number)
   cancelMir4QuestObjectiveCastForCombat(ctx, p);
   p.cooldowns.set(
     BASIC_ATTACK_COOLDOWN_KEY,
-    mir4BasicAttackCadenceSeconds(spec.basic.cadenceMs, p.mir4?.mountBasicAttackSpeedBps ?? 0),
+    mir4BasicAttackCadenceSeconds(
+      spec.basic.cadenceMs,
+      p.mir4?.mountBasicAttackSpeedBps ?? 0,
+      mir4CombatContextForTarget(target),
+    ),
   );
   ctx.emit({
     type: 'mir4AttackStart',
@@ -558,6 +607,8 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
   if (p.level < MIR4_ULTIMATE_UNLOCK_LEVEL) return { ok: false, reason: 'not-unlocked' };
   const target = resolveLivingHostileTarget(ctx, pid, targetId ?? p.targetId ?? undefined);
   if (!target) return { ok: false, reason: 'no-target' };
+  if (ctx.isStunned(p) || mir4HardControlled(p)) return { ok: false, reason: 'controlled' };
+  if (mir4Silenced(p)) return { ok: false, reason: 'silenced' };
   const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1];
   if ((p.mir4UltGauge ?? 0) < spec.ultimate.requiredGauge) {
     return { ok: false, reason: 'no-mp' };
@@ -573,13 +624,14 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
   p.mir4UltGauge = 0;
   p.cooldowns.set(
     ULTIMATE_COOLDOWN_KEY,
-    mir4ModifiedSkillCooldownSeconds(spec.ultimate.cooldownMs / 1000, p.mir4?.statusValues),
+    mir4ModifiedSkillCooldownSeconds(
+      spec.ultimate.cooldownMs / 1000,
+      p.mir4?.statusValues,
+      mir4CombatContextForTarget(target),
+    ),
   );
   const attackPower = spec.ultimate.channel === 'magic' ? p.spellPower : p.attackPower;
-  const damage = mir4SkillDamageAfterBoost(
-    mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient),
-    p.mir4?.skillDamageBps,
-  );
+  const damage = mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient);
   ctx.emit({
     type: 'mir4AttackStart',
     sourceId: p.id,
@@ -688,26 +740,42 @@ function applyMir4PendingSkillEffect(
   if (!kind || !ctx.isHostileTo(source, target)) return;
   let lands = true;
   const controlFamily = mir4ControlFamilyOf(kind);
+  const targetKind = mir4TargetKind(ctx, target);
   if (controlFamily) {
-    const baseChance =
-      target.kind === 'player' ? effect.pvpChanceBasisPoints : effect.pveChanceBasisPoints;
-    if (baseChance !== undefined) {
-      const chance = mir4ControlChanceFromStatuses(
-        baseChance,
-        controlFamily,
-        source.mir4?.statusValues,
-        target.mir4?.statusValues,
-        mir4TargetKind(target),
-      );
-      lands = rollBps(ctx) < chance;
-    }
+    const authoredBaseChance =
+      targetKind === 'player' ? effect.pvpChanceBasisPoints : effect.pveChanceBasisPoints;
+    const baseChance = authoredBaseChance ?? 10_000;
+    const chance = mir4ControlChanceFromStatuses(
+      baseChance,
+      controlFamily,
+      source.mir4?.statusValues,
+      target.mir4?.statusValues,
+      targetKind,
+    );
+    // Explicitly authored chance profiles (4106 included) preserve their
+    // production draw even at 100%. A default-chance control draws only when
+    // build opposition makes its result genuinely probabilistic.
+    lands =
+      authoredBaseChance !== undefined
+        ? rollBps(ctx) < chance
+        : chance >= 10_000
+          ? true
+          : chance <= 0
+            ? false
+            : rollBps(ctx) < chance;
   }
   if (!lands) return;
   const rankedDurationMs = effectOnly
     ? mir4SkillRankScaledInteger(effect.durationMs ?? 0, skillLevel)
     : (effect.durationMs ?? 0);
   const durationMs = controlFamily
-    ? mir4ControlDurationMs(rankedDurationMs, controlFamily, source.mir4?.statusValues)
+    ? mir4ControlDurationMs(
+        rankedDurationMs,
+        controlFamily,
+        source.mir4?.statusValues,
+        target.mir4?.statusValues,
+        targetKind,
+      )
     : rankedDurationMs;
   const magnitudeBasisPoints = effectOnly
     ? mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), skillLevel)
@@ -773,19 +841,25 @@ function resolveMir4PendingImpactBatch(
       }
       continue;
     }
-    const raw = Math.floor(impact.rawDamage * (1 + mir4DamageTakenAddend(target)));
-    const hitRoll = rollBps(ctx);
-    const criticalRoll = rollBps(ctx);
+    const raw = Math.floor(
+      impact.rawDamage * mir4AttackMultiplier(source) * (1 + mir4DamageTakenAddend(target)),
+    );
+    const hitRoll = impact.forceHit === undefined ? rollBps(ctx) : impact.forceHit ? 0 : 9_999;
+    const criticalRoll =
+      impact.forceCritical === undefined ? rollBps(ctx) : impact.forceCritical ? 0 : 9_999;
     const spiritDamage = resolveMir4PlayerDamageWithSpirit(ctx, source, target, {
       rawDamage: raw,
       channel: impact.channel,
       attacker: mir4AttackerStats(source),
       defender: mir4DefenderStats(ctx, target),
-      targetKind: mir4TargetKind(target),
+      targetKind: mir4TargetKind(ctx, target),
       attackKind: impact.attackKind,
       hitRoll,
       criticalRoll,
       allowSpiritProc: impact.spiritProcEligible === true && impact.spiritProcAttempted !== true,
+      buildBalance: { attackerLevel: source.level, defenderLevel: target.level },
+      forceHit: impact.forceHit,
+      forceCritical: impact.forceCritical,
     });
     if (spiritDamage.attempted) {
       patchMir4ActionGroup(owner, due, impact.actionGroupId, { spiritProcAttempted: true });
@@ -803,10 +877,10 @@ function resolveMir4PendingImpactBatch(
       'hit',
       true,
       undefined,
-      true,
+      !impact.periodic,
       impact.attackKind !== 'skill',
     );
-    applyMir4Drain(source, landedDamage);
+    if (!impact.periodic) applyMir4Drain(source, target, landedDamage);
     if (impact.gaugeGain > 0) {
       source.mir4UltGauge = Math.min(100, (source.mir4UltGauge ?? 0) + impact.gaugeGain);
     }
@@ -939,7 +1013,7 @@ export function mir4MobAttackPlayer(ctx: SimContext, mob: Entity, player: Entity
   // The classic shell materializes weapon.min = round(dmg*0.8), a variance the
   // source spawn formula does not have: read the mir4 template's own dmg
   // columns back, falling back to the weapon for unknown templates.
-  const template = mir4MobTemplateFor(ctx, mob);
+  const template = resolveMobTemplate(mob.templateId, ctx.mir4RuntimeMobTemplates);
   const baseAttack = template
     ? template.dmgBase + template.dmgPerLevel * (mob.level - (template.statAnchorLevel ?? 1))
     : mob.weapon.min;
@@ -953,6 +1027,7 @@ export function mir4MobAttackPlayer(ctx: SimContext, mob: Entity, player: Entity
     attackKind: 'basic',
     hitRoll: rollBps(ctx),
     criticalRoll: rollBps(ctx),
+    buildBalance: { attackerLevel: mob.level, defenderLevel: player.level },
   });
   ctx.dealDamage(mob, player, resolved.damage, resolved.critical, 'physical', null, 'hit', false);
 }

@@ -12,6 +12,17 @@
 // the sim integration can draw through the one shared Rng stream like every
 // other deterministic system.
 
+import {
+  MIR4_BUILD_DAMAGE_RULES,
+  type Mir4BuildCombatContext,
+  type Mir4BuildDamageBucketResult,
+  mir4BuildAccuracyVsEvasion,
+  mir4BuildCriticalChance,
+  mir4BuildCriticalMultiplier,
+  mir4BuildDamageBucket,
+  mir4BuildDirectPenetration,
+} from './build_balance';
+
 /** The source's basis-point scale: 10000 bps = 100%. */
 export const MIR4_BASIS_POINTS = 10_000;
 /** The source's mitigation scale: damage * 100 / (100 + effectiveDefense). */
@@ -285,6 +296,62 @@ export function mir4ContextualMultiplierBps(
   return clamp(MIR4_BASIS_POINTS + addend, 1000, 30_000);
 }
 
+/**
+ * Aeldrune build lane. Permanent offensive bonuses share one additive bucket;
+ * authored reduction percentages form a separate multiplicative layer.
+ * Skill Damage shares the offensive bucket with All and contextual damage so
+ * build bonuses add instead of multiplying one another accidentally.
+ */
+export function mir4BuildContextualMultiplierBps(
+  attacker: Parameters<typeof mir4ContextualMultiplierBps>[0],
+  defender: Parameters<typeof mir4ContextualMultiplierBps>[1],
+  targetKind: Mir4TargetKind,
+  attackKind: Mir4AttackKind | undefined,
+  defenderLevel: number,
+): number {
+  return mir4BuildContextualBucket(attacker, defender, targetKind, attackKind, defenderLevel)
+    .finalMultiplierBps;
+}
+
+function mir4BuildContextualBucket(
+  attacker: Parameters<typeof mir4ContextualMultiplierBps>[0],
+  defender: Parameters<typeof mir4ContextualMultiplierBps>[1],
+  targetKind: Mir4TargetKind,
+  attackKind: Mir4AttackKind | undefined,
+  defenderLevel: number,
+): Mir4BuildDamageBucketResult {
+  const offensiveAddendsBps = [integer(attacker.allDamageBps)];
+  let defensiveReductionBps = integer(defender.allDamageReductionBps);
+  if (attackKind === 'basic') {
+    offensiveAddendsBps.push(integer(attacker.basicDamageBps));
+    defensiveReductionBps += integer(defender.basicDamageReductionBps);
+  } else if (attackKind === 'skill') {
+    offensiveAddendsBps.push(integer(attacker.skillDamageBps));
+    defensiveReductionBps += integer(defender.skillDamageReductionBps);
+  }
+  if (targetKind === 'player') {
+    offensiveAddendsBps.push(integer(attacker.pvpDamageBps));
+    defensiveReductionBps += integer(defender.pvpDamageReductionBps);
+  } else if (targetKind === 'boss') {
+    offensiveAddendsBps.push(integer(attacker.bossDamageBps));
+    defensiveReductionBps += integer(defender.bossDamageReductionBps);
+  } else {
+    offensiveAddendsBps.push(integer(attacker.monsterDamageBps));
+    defensiveReductionBps += integer(defender.monsterDamageReductionBps);
+  }
+  return mir4BuildDamageBucket({
+    offensiveAddendsBps,
+    defensiveReductionBps,
+    level: defenderLevel,
+    context: targetKind === 'player' ? 'pvp' : 'pve',
+  });
+}
+
+export interface Mir4BuildDamageContext {
+  readonly attackerLevel: number;
+  readonly defenderLevel: number;
+}
+
 export interface Mir4ResolveDamageInput {
   rawDamage: number;
   channel?: 'physical' | 'magic';
@@ -297,6 +364,8 @@ export interface Mir4ResolveDamageInput {
   criticalRoll?: number;
   forceHit?: boolean;
   forceCritical?: boolean;
+  /** Opts the live Aeldrune runtime into level-scaled build contests. */
+  buildBalance?: Mir4BuildDamageContext;
 }
 
 export interface Mir4ResolvedDamage {
@@ -318,16 +387,29 @@ export interface Mir4ResolvedDamage {
 }
 
 /**
- * The full source resolution pipeline with caller-supplied rolls. Order of
- * operations is source-faithful: hit gate, crit multiplier, context multiplier,
- * then channel-keyed defense mitigation.
+ * The full source resolution pipeline with caller-supplied rolls. Legacy
+ * callers preserve the source-faithful crit-before-context rounding. The
+ * Aeldrune build pipeline resolves its shared additive/context bucket before
+ * the critical factor, then applies channel-keyed defense mitigation.
  */
 export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDamage {
   const rawDamage = integer(input.rawDamage);
   const channel = input.channel === 'magic' ? 'magic' : 'physical';
   const attacker = mir4NormalizeCombatStats(input.attacker);
   const defender = mir4NormalizeCombatStats(input.defender);
-  const hitChance = mir4HitChanceBps(attacker.accuracy, defender.dodge);
+  const targetKind: Mir4TargetKind =
+    input.targetKind === 'player' || input.targetKind === 'boss' ? input.targetKind : 'monster';
+  const buildContext: Mir4BuildCombatContext = targetKind === 'player' ? 'pvp' : 'pve';
+  const attackerLevel = input.buildBalance
+    ? integer(input.buildBalance.attackerLevel, 1, 1, 1_000)
+    : 1;
+  const defenderLevel = input.buildBalance
+    ? integer(input.buildBalance.defenderLevel, 1, 1, 1_000)
+    : 1;
+  const hitChance = input.buildBalance
+    ? mir4BuildAccuracyVsEvasion(attacker.accuracy, defender.dodge, attackerLevel, defenderLevel)
+        .hitChanceBps
+    : mir4HitChanceBps(attacker.accuracy, defender.dodge);
   const hitRoll =
     input.forceHit === true
       ? 0
@@ -335,7 +417,14 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
         ? MIR4_BASIS_POINTS - 1
         : integer(input.hitRoll ?? 0, 0, 0, MIR4_BASIS_POINTS - 1);
   const hit = rawDamage > 0 && hitRoll < hitChance;
-  const criticalChance = mir4CriticalChanceBps(attacker.critical, defender.avoidCritical);
+  const criticalChance = input.buildBalance
+    ? mir4BuildCriticalChance(
+        attacker.critical,
+        defender.avoidCritical,
+        attackerLevel,
+        defenderLevel,
+      ).chanceBps
+    : mir4CriticalChanceBps(attacker.critical, defender.avoidCritical);
   const criticalRoll =
     input.forceCritical === true
       ? 0
@@ -346,29 +435,83 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
     hit &&
     (input.forceCritical === true ||
       (input.forceCritical !== false && criticalChance > 0 && criticalRoll < criticalChance));
-  const criticalMultiplier = mir4CriticalMultiplierBps(
-    attacker.criticalOutcome,
-    defender.criticalDamageReduction,
-  );
-  const criticalDamage = critical
-    ? Math.max(1, Math.floor((rawDamage * criticalMultiplier) / MIR4_BASIS_POINTS))
-    : rawDamage;
-  const targetKind: Mir4TargetKind =
-    input.targetKind === 'player' || input.targetKind === 'boss' ? input.targetKind : 'monster';
-  const contextMultiplier = mir4ContextualMultiplierBps(
-    attacker,
-    defender,
-    targetKind,
-    input.attackKind,
-  );
+  const criticalMultiplier = input.buildBalance
+    ? mir4BuildCriticalMultiplier(
+        attacker.criticalOutcome,
+        defender.criticalDamageReduction,
+        attackerLevel,
+        buildContext,
+        defenderLevel,
+      ).multiplierBps
+    : mir4CriticalMultiplierBps(attacker.criticalOutcome, defender.criticalDamageReduction);
+  const buildContextBucket = input.buildBalance
+    ? mir4BuildContextualBucket(
+        attacker,
+        defender,
+        targetKind,
+        input.attackKind,
+        input.buildBalance.defenderLevel,
+      )
+    : null;
+  const contextMultiplier =
+    buildContextBucket?.finalMultiplierBps ??
+    mir4ContextualMultiplierBps(attacker, defender, targetKind, input.attackKind);
   const contextualDamage = hit
-    ? Math.max(1, Math.floor((criticalDamage * contextMultiplier) / MIR4_BASIS_POINTS))
+    ? buildContextBucket
+      ? (() => {
+          const bucket = buildContextBucket;
+          const damageAfterOffense = Math.max(
+            1,
+            Math.floor((rawDamage * bucket.offensiveMultiplierBps) / MIR4_BASIS_POINTS),
+          );
+          const damageAfterCritical = critical
+            ? Math.max(1, Math.floor((damageAfterOffense * criticalMultiplier) / MIR4_BASIS_POINTS))
+            : damageAfterOffense;
+          const damageAfterReduction = Math.max(
+            1,
+            Math.floor(
+              (damageAfterCritical * (MIR4_BASIS_POINTS - bucket.damageReductionBps)) /
+                MIR4_BASIS_POINTS,
+            ),
+          );
+          if (bucket.finalMultiplierBps > MIR4_BUILD_DAMAGE_RULES.minimumFinalMultiplierBps) {
+            return damageAfterReduction;
+          }
+          // Preserve the shared 25% safety floor without collapsing offense
+          // and reduction around the critical rounding stage.
+          const minimumContextDamage = Math.max(
+            1,
+            Math.floor(
+              (rawDamage * MIR4_BUILD_DAMAGE_RULES.minimumFinalMultiplierBps) / MIR4_BASIS_POINTS,
+            ),
+          );
+          const minimumAfterCritical = critical
+            ? Math.max(
+                1,
+                Math.floor((minimumContextDamage * criticalMultiplier) / MIR4_BASIS_POINTS),
+              )
+            : minimumContextDamage;
+          return Math.max(damageAfterReduction, minimumAfterCritical);
+        })()
+      : (() => {
+          const criticalDamage = critical
+            ? Math.max(1, Math.floor((rawDamage * criticalMultiplier) / MIR4_BASIS_POINTS))
+            : rawDamage;
+          return Math.max(1, Math.floor((criticalDamage * contextMultiplier) / MIR4_BASIS_POINTS));
+        })()
     : 0;
+  const penetration = input.buildBalance
+    ? mir4BuildDirectPenetration(
+        attacker.penetrationBps,
+        defender.penetrationDefenseBps,
+        buildContext,
+      )
+    : null;
   const mitigation = mir4DamageAfterDefense(
     contextualDamage,
     channel === 'magic' ? defender.magicDefense : defender.physicalDefense,
-    attacker.penetrationBps,
-    defender.penetrationDefenseBps,
+    penetration?.netPenetrationBps ?? attacker.penetrationBps,
+    penetration ? 0 : defender.penetrationDefenseBps,
   );
   return {
     channel,

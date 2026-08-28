@@ -1110,7 +1110,7 @@ describe('dungeons: heroic difficulty', () => {
     sim.releaseSpirit(pid);
     expect(player.ghost).toBe(true);
     expect(player.corpseInstanceId).toBe(inst.exitId);
-    expect(sim.instanceSlotAt(player.pos)).toBeNull();
+    expect(sim.instanceSlotAt(player.pos)).toBe(inst.slot);
     const claimId = inst.exitId;
     sim.setDungeonDifficulty('heroic', pid);
     sim.drainEvents();
@@ -1860,7 +1860,7 @@ describe('dungeons: heroic daily lockouts', () => {
     me.hp = 0;
     sim.releaseSpirit(member);
     expect(me.ghost).toBe(true);
-    expect(sim.instanceSlotAt(me.pos)).toBeNull();
+    expect(sim.instanceSlotAt(me.pos)).toBe(inst.slot);
     expect(me.corpseInstanceId).toBe(inst.exitId);
 
     (sim as any).dealDamage(le, morthen, morthen.hp + 10, false, 'physical', null, 'hit');
@@ -1932,7 +1932,7 @@ describe('dungeons: heroic daily lockouts', () => {
     qe.hp = 0;
     sim.releaseSpirit(quitter);
     expect(qe.ghost).toBe(true);
-    expect(sim.instanceSlotAt(qe.pos)).toBeNull();
+    expect(sim.instanceSlotAt(qe.pos)).toBe(inst.slot);
     expect(sim.instanceSlotAt(qe.corpsePos!)).toBe(inst.slot);
     sim.partyLeave(quitter);
 
@@ -1985,7 +1985,10 @@ describe('dungeons: heroic daily lockouts', () => {
     expect(se.corpseInstanceId).toBe(inst.exitId);
     // A freed and reused slot gets a different exit entity. Model that new
     // claim identity while leaving the old corpse at identical coordinates.
+    // Move the ghost out too: a spirit physically inside the current claim is
+    // correctly still a participant regardless of where an old corpse points.
     se.corpseInstanceId = (inst.exitId ?? 0) + 1;
+    teleport(sim, se, 0, 0);
     sim.partyLeave(stale);
 
     expect(instanceLockoutMetas(sim.ctx, inst).map((meta) => meta.entityId)).not.toContain(stale);
@@ -2325,7 +2328,7 @@ describe('dungeons: heroic Nythraxis raid arena', () => {
     expect(mailedMarks).toBe(3);
   });
 
-  it('lets a locked ghost return to its defeated heroic raid instance for loot', () => {
+  it('lets a locked ghost corpse-run inside its defeated heroic raid instance for loot', () => {
     const { sim, tank, raiders, inst } = raidSetup('heroic');
     const boss = mobInInstance(sim, inst, NYTHRAXIS_BOSS_ID);
     raiders.forEach((pid, i) => {
@@ -2349,16 +2352,16 @@ describe('dungeons: heroic Nythraxis raid arena', () => {
 
     sim.releaseSpirit(tank);
     expect(tankEntity.ghost).toBe(true);
-    expect(sim.instanceSlotAt(tankEntity.pos)).toBeNull();
+    expect(sim.instanceInfoAt(tankEntity.pos)).toEqual({
+      slot: inst.slot,
+      dungeonId: 'nythraxis_boss_arena',
+    });
     sim.drainEvents();
 
-    enterDungeon(sim.ctx, 'nythraxis_crypt', tank);
-
-    expect(tankEntity.dead).toBe(true);
-    expect(tankEntity.ghost).toBe(true);
-    expect(sim.instanceInfoAt(tankEntity.pos)?.dungeonId).toBe('nythraxis_crypt');
-
-    enterDungeon(sim.ctx, 'nythraxis_boss_arena', tank);
+    const corpse = tankEntity.corpsePos;
+    if (!corpse) throw new Error('release did not preserve the raid corpse position');
+    teleport(sim, tankEntity, corpse.x, corpse.z);
+    sim.resurrectAtCorpse(tank);
 
     expect(tankEntity.dead).toBe(false);
     expect(tankEntity.ghost).toBe(false);
@@ -2397,6 +2400,7 @@ describe('dungeons: heroic Nythraxis raid arena', () => {
     // A reclaimed slot creates a new exit entity while retaining the same
     // coordinates. Model that new claim identity around the old corpse.
     tankEntity.corpseInstanceId = (inst.exitId ?? 0) + 1;
+    teleport(sim, tankEntity, 0, 0);
     sim.drainEvents();
 
     enterDungeon(sim.ctx, 'nythraxis_boss_arena', tank);
@@ -2545,6 +2549,7 @@ describe('dungeons: heroic Nythraxis raid arena', () => {
       'hit',
     );
     sim.releaseSpirit(tank);
+    teleport(sim, tankEntity, 0, 0);
     raiders.slice(1).forEach((pid) => {
       teleport(sim, sim.entities.get(pid) as AnyEntity, 0, 0);
     });
@@ -2612,6 +2617,7 @@ describe('dungeons: heroic Nythraxis raid arena', () => {
     tankEntity.dead = true;
     tankEntity.hp = 0;
     sim.releaseSpirit(tank);
+    teleport(sim, tankEntity, 0, 0);
     sim.drainEvents();
 
     enterDungeon(sim.ctx, 'nythraxis_boss_arena', tank);
@@ -2675,16 +2681,17 @@ describe('dungeons: ghost corpse-run re-entry', () => {
     const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Solo');
     const p = sim.entities.get(pid) as AnyEntity;
-    // enter, die inside, release the spirit to the outdoor graveyard
+    // Enter, die inside, and release at this claim's own entrance.
     enterDungeon(sim.ctx, 'hollow_crypt', pid);
     expect(sim.instanceSlotAt(p.pos)).not.toBeNull();
     p.dead = true;
     sim.releaseSpirit(pid);
     expect(p.ghost).toBe(true);
-    expect(sim.instanceSlotAt(p.pos)).toBeNull(); // ghost is outside the instance
+    expect(sim.instanceSlotAt(p.pos)).not.toBeNull();
 
-    // stand the ghost on the door and tick once: the tick loop now runs door triggers
-    // for ghosts (sim.ts), so it is pulled back in and resurrected at the entrance.
+    // A legacy or externally displaced ghost can still stand on the outdoor door.
+    // The tick loop runs door triggers for ghosts, so it is pulled back in and
+    // resurrected at the entrance.
     const door = hollowDoor(sim);
     teleport(sim, p, door.pos.x, door.pos.z);
     sim.tick();
@@ -2709,7 +2716,7 @@ describe('dungeons: ghost corpse-run re-entry', () => {
     p.dead = true;
     sim.releaseSpirit(pid);
     expect(p.ghost).toBe(true);
-    expect(sim.instanceSlotAt(p.pos)).toBeNull();
+    expect(sim.instanceSlotAt(p.pos)).not.toBeNull();
 
     const door = [...sim.entities.values()].find(
       (e: AnyEntity) => e.templateId === 'dungeon_door' && e.dungeonId === 'nythraxis_crypt',

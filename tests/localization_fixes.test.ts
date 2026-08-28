@@ -1002,6 +1002,9 @@ describe('S3: every sim.ts emit is recognized (drift guard)', () => {
     // the two "<name> returns to your side." arms now live here.
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/pet/pet_return.ts'), 'utf8'),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/instances/dungeons.ts'), 'utf8'),
+    // Spirit release and resurrection refusals, including the Rift anti-zerg
+    // combat gate, are player-facing sim errors localized by sim_i18n.
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/spirit.ts'), 'utf8'),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/instances/heroic_vendor.ts'), 'utf8'),
     // Overworld portal transitions (the Veiled Hollow cave). The live flavor
     // lines are data-routed (PortalDef enterText/leaveText, matched by the

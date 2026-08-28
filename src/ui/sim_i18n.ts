@@ -11518,6 +11518,10 @@ const RULES: Rule[] = [
     build: () => t('sim.rift.deadEntryCombat'),
   },
   {
+    re: /^Your party is still in combat\. You may resurrect once the fighting stops\.$/,
+    build: () => t('sim.rift.corpseRezCombat'),
+  },
+  {
     re: /^The rift shudders\. A way home tears open behind the fallen\.$/,
     build: () => t('sim.rift.exitOpens'),
   },

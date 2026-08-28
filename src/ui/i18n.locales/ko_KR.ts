@@ -13232,6 +13232,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.stats.bossDamage': '보스 피해',
   'hudChrome.mir4.stats.skillDamage': '스킬 피해',
   'hudChrome.mir4.stats.penetration': '방어 관통',
+  'hudChrome.mir4.stats.penetrationProtection': '방어 관통 저항',
   'hudChrome.mir4.stats.unknown': '전투 속성',
   'hudChrome.mir4.materials.sunStone': '태양석',
   'hudChrome.mir4.materials.moonStone': '월석',
@@ -13366,7 +13367,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1104.description': '적 하나에게 {damage}의 피해를 주고 대상을 1.2초 동안 넘어뜨립니다.',
   'entities.abilities.mir4_skill_1304.name': '몸통 박치기',
   'entities.abilities.mir4_skill_1304.description':
-    '적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 12% 증가시킵니다.',
+    '적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상의 물리 및 마법 방어력을 12% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
   'entities.abilities.mir4_skill_1401.name': '대지 강타',
   'entities.abilities.mir4_skill_1401.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.8초 동안 넘어뜨립니다.',
@@ -13377,7 +13378,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.4초 동안 빙결시킵니다.',
   'entities.abilities.mir4_skill_2111.name': '잿불 창',
   'entities.abilities.mir4_skill_2111.description':
-    '적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 8% 증가시킵니다.',
+    '적 하나에게 {damage}의 피해를 줍니다. 대상을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
   'entities.abilities.mir4_skill_2301.name': '징벌의 인장',
   'entities.abilities.mir4_skill_2301.description':
     '적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다.',
@@ -13388,7 +13389,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_2503.description': '10초 동안 받는 피해가 22% 감소합니다.',
   'entities.abilities.mir4_skill_3101.name': '인장 연계',
   'entities.abilities.mir4_skill_3101.description':
-    '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 4초 동안 대상이 받는 피해를 10% 증가시킵니다.',
+    '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 적중한 모든 적의 물리 및 마법 방어력을 4초 동안 10% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
   'entities.abilities.mir4_skill_3104.name': '토템 1010',
   'entities.abilities.mir4_skill_3104.description': '적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다.',
   'entities.abilities.mir4_skill_3301.name': '토템 인장 II',
@@ -13415,7 +13416,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5101.description': '적 하나에게 {damage}의 피해를 주고 대상을 1초 동안 넘어뜨립니다.',
   'entities.abilities.mir4_skill_5104.name': '휩쓸기 5104',
   'entities.abilities.mir4_skill_5104.description':
-    '적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 14% 증가시킵니다.',
+    '적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상의 물리 및 마법 방어력을 14% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
   'entities.abilities.mir4_skill_5201.name': '타격 5201',
   'entities.abilities.mir4_skill_5201.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.1초 동안 기절시킵니다.',
@@ -13658,4 +13659,18 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-04': '창공의 무게',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-05': '심연 나선',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-06': '절대 순간',
+  'hudChrome.mir4.stats.debilitationSuccess': '약화 성공',
+  'hudChrome.mir4.stats.debilitationResistance': '약화 저항',
+  'hudChrome.mir4.stats.silenceSuccess': '침묵 성공',
+  'hudChrome.mir4.stats.silenceResistance': '침묵 저항',
+  'hudChrome.mir4.stats.healthDrain': '생명력 흡수',
+  'hudChrome.mir4.stats.manaDrain': '마나 흡수',
+  'hudChrome.mir4.stats.healthPotionEffect': '생명력 물약 효과',
+  'hudChrome.mir4.stats.manaPotionEffect': '마나 물약 효과',
+  'hudChrome.mir4.stats.basicAttackDamage': '기본 공격 피해',
+  'hudChrome.mir4.stats.basicDamageReduction': '기본 공격 피해 감소',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    '위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
+  'sim.rift.corpseRezCombat':
+    '파티가 아직 전투 중입니다. 전투가 끝나면 부활할 수 있습니다.',
 };

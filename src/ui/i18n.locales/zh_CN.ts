@@ -12991,6 +12991,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.stats.bossDamage': '首领伤害',
   'hudChrome.mir4.stats.skillDamage': '技能伤害',
   'hudChrome.mir4.stats.penetration': '防御穿透',
+  'hudChrome.mir4.stats.penetrationProtection': '防御穿透防护',
   'hudChrome.mir4.stats.unknown': '战斗属性',
   'hudChrome.mir4.materials.sunStone': '太阳石',
   'hudChrome.mir4.materials.moonStone': '月亮石',
@@ -13125,7 +13126,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1104.description': '对一名敌人造成 {damage} 点伤害。击倒目标 1.2 秒。',
   'entities.abilities.mir4_skill_1304.name': '冲撞',
   'entities.abilities.mir4_skill_1304.description':
-    '对一名敌人造成 {damage} 点伤害。使其受到的伤害提高 12%，持续 4.5 秒。',
+    '对一名敌人造成 {damage} 点伤害。使目标的物理和魔法防御降低 12%，持续 4.5 秒。多个破防效果以乘法方式叠加，但防御不会低于原始值的 20%。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
   'entities.abilities.mir4_skill_1401.name': '大地重击',
   'entities.abilities.mir4_skill_1401.description':
     '对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 70% 伤害。击倒目标 0.8 秒。',
@@ -13136,7 +13137,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
     '对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。冻结目标 1.4 秒。',
   'entities.abilities.mir4_skill_2111.name': '余烬长枪',
   'entities.abilities.mir4_skill_2111.description':
-    '对一名敌人造成 {damage} 点伤害。使其受到的伤害提高 8%，持续 4.5 秒。',
+    '对一名敌人造成 {damage} 点伤害。灼烧目标，每 1 秒造成 {burnPerTick} 点基础伤害（共 4 次，减伤前总计 {burnTotal} 点）。伤害取决于施加灼烧时你的法术强度。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
   'entities.abilities.mir4_skill_2301.name': '惩击之印',
   'entities.abilities.mir4_skill_2301.description':
     '对一名敌人造成 {damage} 点伤害。使目标造成的伤害降低 50%，持续 4 秒。',
@@ -13147,7 +13148,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_2503.description': '受到的伤害降低 22%，持续 10 秒。',
   'entities.abilities.mir4_skill_3101.name': '印记连击',
   'entities.abilities.mir4_skill_3101.description':
-    '对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。使其受到的伤害提高 10%，持续 4 秒。',
+    '对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。使每个命中的敌人的物理和魔法防御降低 10%，持续 4 秒。多个破防效果以乘法方式叠加，但防御不会低于原始值的 20%。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
   'entities.abilities.mir4_skill_3104.name': '图腾 1010',
   'entities.abilities.mir4_skill_3104.description': '影响一名敌人。使目标昏迷 1.4 秒。',
   'entities.abilities.mir4_skill_3301.name': '图腾之印 II',
@@ -13174,7 +13175,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5101.description': '对一名敌人造成 {damage} 点伤害。击倒目标 1 秒。',
   'entities.abilities.mir4_skill_5104.name': '横扫 5104',
   'entities.abilities.mir4_skill_5104.description':
-    '对一名敌人造成 {damage} 点伤害。使其受到的伤害提高 14%，持续 4.5 秒。',
+    '对一名敌人造成 {damage} 点伤害。使目标的物理和魔法防御降低 14%，持续 4.5 秒。多个破防效果以乘法方式叠加，但防御不会低于原始值的 20%。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
   'entities.abilities.mir4_skill_5201.name': '打击 5201',
   'entities.abilities.mir4_skill_5201.description':
     '对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 65% 伤害。使目标昏迷 1.1 秒。',
@@ -13422,4 +13423,18 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-04': '苍穹之重',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-05': '深渊螺旋',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-06': '绝对瞬间',
+  'hudChrome.mir4.stats.debilitationSuccess': '弱化成功',
+  'hudChrome.mir4.stats.debilitationResistance': '弱化抗性',
+  'hudChrome.mir4.stats.silenceSuccess': '沉默成功',
+  'hudChrome.mir4.stats.silenceResistance': '沉默抗性',
+  'hudChrome.mir4.stats.healthDrain': '生命吸取',
+  'hudChrome.mir4.stats.manaDrain': '法力吸取',
+  'hudChrome.mir4.stats.healthPotionEffect': '生命药水效果',
+  'hudChrome.mir4.stats.manaPotionEffect': '法力药水效果',
+  'hudChrome.mir4.stats.basicAttackDamage': '普通攻击伤害',
+  'hudChrome.mir4.stats.basicDamageReduction': '普通攻击伤害减免',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    '上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
+  'sim.rift.corpseRezCombat':
+    '你的队伍仍在战斗中。战斗结束后即可复活。',
 };

@@ -113,6 +113,37 @@ describe('MIR4 existing Crafting-window adapter', () => {
     expect(methods.mir4CraftMaterial).toHaveBeenCalledWith('solar-scroll');
   });
 
+  it('renders rollback-safe special affixes as live penetration properties', () => {
+    const { state, world } = harness();
+    state.mir4EquipmentInstances = {
+      991010101: {
+        itemId: 991010101,
+        enhancement: 0,
+        affixes: { enchantment: [[0, 250]] },
+      },
+      991050101: {
+        itemId: 991050101,
+        enhancement: 0,
+        affixes: { enchantment: [[0, 300]] },
+      },
+    };
+    const root = document.createElement('section');
+    paintMir4ProgressionWindow({
+      ...presentation,
+      root,
+      world,
+      close: vi.fn(),
+      hideTooltip: vi.fn(),
+      afterMutation: vi.fn(),
+      announce: vi.fn(),
+    });
+    root.querySelector<HTMLButtonElement>('[data-tab="enchantment"]')?.click();
+
+    expect(root.textContent).toContain('Defense Penetration: +2.5%');
+    expect(root.textContent).toContain('Defense Penetration Protection: +3%');
+    expect(root.textContent).not.toContain('Inactive effect');
+  });
+
   it('separates crafting recipes by category and exposes equipment properties on hover', () => {
     const { world } = harness();
     const root = document.createElement('section');

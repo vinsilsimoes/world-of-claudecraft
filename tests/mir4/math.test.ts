@@ -177,6 +177,121 @@ describe('mir4ResolveDamage (pipeline order)', () => {
   });
 });
 
+describe('mir4ResolveDamage (Aeldrune build balance)', () => {
+  const buildBalance = { attackerLevel: 80, defenderLevel: 80 } as const;
+
+  it('keeps legacy source formulas opt-in while using the level-scaled hit floor in live builds', () => {
+    const out = mir4ResolveDamage({
+      rawDamage: 100,
+      attacker: { accuracy: 0 },
+      defender: { dodge: 1_000_000 },
+      hitRoll: 9_999,
+      forceCritical: false,
+      buildBalance,
+    });
+    expect(out.hitChanceBps).toBe(5_000);
+    expect(out.hit).toBe(false);
+  });
+
+  it('multiplies additive offense by authored reduction instead of cancelling them', () => {
+    const out = mir4ResolveDamage({
+      rawDamage: 100,
+      attacker: { allDamageBps: 2_000, criticalOutcome: 0 },
+      defender: { allDamageReductionBps: 1_000 },
+      forceHit: true,
+      forceCritical: false,
+      buildBalance,
+    });
+    expect(out.contextMultiplierBps).toBe(10_800);
+    expect(out.damage).toBe(108);
+  });
+
+  it('adds Skill, All and contextual damage in one offensive bucket', () => {
+    const out = mir4ResolveDamage({
+      rawDamage: 100,
+      attacker: { skillDamageBps: 1_000, allDamageBps: 1_000, monsterDamageBps: 1_000 },
+      defender: {},
+      attackKind: 'skill',
+      targetKind: 'monster',
+      forceHit: true,
+      forceCritical: false,
+      buildBalance,
+    });
+    expect(out.contextMultiplierBps).toBe(13_000);
+    expect(out.damage).toBe(130);
+  });
+
+  it('rounds the additive/context bucket before the critical factor', () => {
+    const out = mir4ResolveDamage({
+      rawDamage: 5,
+      attacker: { allDamageBps: 2_000, criticalOutcome: 0 },
+      defender: {},
+      forceHit: true,
+      forceCritical: true,
+      buildBalance,
+    });
+    // floor(5 * 1.20) = 6, then floor(6 * the 1.50 critical floor) = 9.
+    // Reversing the stages would produce 8 because each stage rounds down.
+    expect(out.contextMultiplierBps).toBe(12_000);
+    expect(out.criticalMultiplierBps).toBe(15_000);
+    expect(out.damage).toBe(9);
+  });
+
+  it('rounds defensive reduction after the critical factor', () => {
+    const out = mir4ResolveDamage({
+      rawDamage: 5,
+      attacker: { allDamageBps: 2_000, criticalOutcome: 0 },
+      defender: { allDamageReductionBps: 1_000 },
+      forceHit: true,
+      forceCritical: true,
+      buildBalance,
+    });
+    // floor(5 * 1.20) = 6; floor(6 * 1.50) = 9; floor(9 * 0.90) = 8.
+    expect(out.contextMultiplierBps).toBe(10_800);
+    expect(out.damage).toBe(8);
+  });
+
+  it('uses independent critical avoidance and guard layers with a PvP burst ceiling', () => {
+    const open = mir4ResolveDamage({
+      rawDamage: 100,
+      attacker: { critical: 1_000_000, criticalOutcome: 1_000_000 },
+      defender: {},
+      targetKind: 'player',
+      forceHit: true,
+      forceCritical: true,
+      buildBalance,
+    });
+    const guarded = mir4ResolveDamage({
+      rawDamage: 100,
+      attacker: { critical: 1_000_000, criticalOutcome: 1_000_000 },
+      defender: { avoidCritical: 1_000_000, criticalDamageReduction: 1_000_000 },
+      targetKind: 'player',
+      forceHit: true,
+      forceCritical: true,
+      buildBalance,
+    });
+    expect(open.criticalMultiplierBps).toBe(17_500);
+    expect(guarded.criticalChanceBps).toBeLessThan(open.criticalChanceBps);
+    expect(guarded.criticalMultiplierBps).toBeGreaterThanOrEqual(10_000);
+    expect(guarded.criticalMultiplierBps).toBeLessThan(open.criticalMultiplierBps);
+  });
+
+  it('lets penetration protection cancel authored penetration before the PvP cap', () => {
+    const out = mir4ResolveDamage({
+      rawDamage: 100,
+      attacker: { penetrationBps: 5_000 },
+      defender: { physicalDefense: 100, penetrationDefenseBps: 1_500 },
+      targetKind: 'player',
+      forceHit: true,
+      forceCritical: false,
+      buildBalance,
+    });
+    expect(out.netPenetrationBps).toBe(3_500);
+    expect(out.effectiveDefense).toBe(65);
+    expect(out.damage).toBe(60);
+  });
+});
+
 describe('mir4SkillManaCost / mir4CoefficientDamage / mir4StunChanceBps', () => {
   it('cost type 2 scales the manaCost stat: the live 1102/3101/4106 costs', () => {
     expect(mir4SkillManaCost(204, 1800, 2)).toBe(36);

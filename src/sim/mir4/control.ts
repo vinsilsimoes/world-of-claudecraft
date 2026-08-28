@@ -24,9 +24,21 @@ const CONTROL_STATUS_IDS: Readonly<
   knockdown: { general: [119, 120], pvp: [127, 128], monster: [135, 136] },
 };
 
+function contextualControlValue(
+  record: Mir4StatusRecord | undefined,
+  pair: readonly [number, number],
+  contextPair: readonly [number, number],
+  lane: 0 | 1,
+): number {
+  return (
+    mir4StatusRecordValue(record, pair[lane]) + mir4StatusRecordValue(record, contextPair[lane])
+  );
+}
+
 export function mir4ControlFamilyOf(kind: Mir4EffectKind): Mir4ControlFamily | null {
   if (kind === 'stun') return 'stun';
   if (kind === 'knockdown') return 'knockdown';
+  if (kind === 'silence') return 'silence';
   if (kind === 'dazed' || kind === 'root' || kind === 'freeze' || kind === 'slow') {
     return 'debilitation';
   }
@@ -42,22 +54,29 @@ export function mir4ControlChanceFromStatuses(
 ): number {
   const ids = CONTROL_STATUS_IDS[family];
   const contextIds = targetKind === 'player' ? ids.pvp : ids.monster;
-  const success =
-    mir4StatusRecordValue(attacker, ids.general[0]) +
-    mir4StatusRecordValue(attacker, contextIds[0]);
-  const resistance =
-    mir4StatusRecordValue(defender, ids.general[1]) +
-    mir4StatusRecordValue(defender, contextIds[1]);
-  return mir4StunChanceBps(baseBps, success, resistance);
+  const success = contextualControlValue(attacker, ids.general, contextIds, 0);
+  const resistance = contextualControlValue(defender, ids.general, contextIds, 1);
+  const chance = mir4StunChanceBps(baseBps, success, resistance);
+  return targetKind === 'player' ? Math.min(9_500, chance) : chance;
 }
 
 export function mir4ControlDurationMs(
   baseDurationMs: number,
   family: Mir4ControlFamily,
   attacker: Mir4StatusRecord | undefined,
+  defender?: Mir4StatusRecord,
+  targetKind: Mir4TargetKind = 'monster',
 ): number {
   const statusId =
     family === 'stun' ? 153 : family === 'debilitation' ? 154 : family === 'silence' ? 155 : 0;
   const boost = statusId === 0 ? 0 : mir4StatusRecordValue(attacker, statusId);
-  return Math.max(0, Math.floor((Math.max(0, baseDurationMs) * (10_000 + boost)) / 10_000));
+  const ids = CONTROL_STATUS_IDS[family];
+  const contextIds = targetKind === 'player' ? ids.pvp : ids.monster;
+  const resistance = contextualControlValue(defender, ids.general, contextIds, 1);
+  const maximumMultiplierBps = targetKind === 'player' ? 12_500 : 15_000;
+  const durationMultiplierBps = Math.max(
+    3_500,
+    Math.min(maximumMultiplierBps, 10_000 + boost - resistance),
+  );
+  return Math.max(0, Math.floor((Math.max(0, baseDurationMs) * durationMultiplierBps) / 10_000));
 }

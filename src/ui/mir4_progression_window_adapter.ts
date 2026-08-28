@@ -5,6 +5,7 @@
 import { audio } from '../game/audio';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import type { Mir4LayerKind } from '../sim/mir4/affixes';
+import { mir4CanonicalAffixStatusId } from '../sim/mir4/equipment';
 import type { IWorld } from '../world_api';
 import { markDialogRoot } from './dialog_root';
 import { esc } from './esc';
@@ -15,6 +16,7 @@ import {
   mir4EquipmentTooltipHtml,
   mir4EquipmentVisualItem,
   mir4StatusLabel,
+  mir4StatusValue,
 } from './mir4_equipment_window_adapter';
 import { mir4MaterialName } from './mir4_material_i18n';
 import {
@@ -104,15 +106,14 @@ function operation(deps: Mir4ProgressionWindowDeps, act: () => void): void {
   deps.afterMutation();
 }
 
-function effectsHtml(effects: readonly (readonly [number, number])[]): string {
+function effectsHtml(effects: readonly (readonly [number, number])[], equipSlot: number): string {
   if (effects.length === 0)
     return `<div class="tt-sub">${esc(t('hudChrome.mir4.progression.noCurrentEffects'))}</div>`;
   return effects
-    .map(([statusId, value]) =>
-      statusId === 0
-        ? `<div class="tt-sub">${esc(t('hudChrome.mir4.progression.inactiveEffect'))}: +${esc(fmt(value))}</div>`
-        : `<div>${esc(mir4StatusLabel(statusId))}: <b>+${esc(fmt(value))}</b></div>`,
-    )
+    .map(([rawStatusId, value]) => {
+      const statusId = mir4CanonicalAffixStatusId(rawStatusId, equipSlot);
+      return `<div>${esc(mir4StatusLabel(statusId))}: <b>+${esc(mir4StatusValue(statusId, value))}</b></div>`;
+    })
     .join('');
 }
 
@@ -203,9 +204,9 @@ function layerRow(
         layer: t(TAB_KEYS[layer]),
       });
   const action = pendingThisLayer
-    ? `<div class="crafting-reagents"><b>${esc(t('hudChrome.mir4.progression.preview'))}</b>${effectsHtml(pendingThisLayer.affixes)}</div><div class="crafting-actions"><button type="button" class="crafting-qty-btn" data-resolve="accept" data-focus-key="resolve:${layer}:${view.item.itemId}:accept">${esc(t('hudChrome.mir4.progression.acceptPreview'))}</button><button type="button" class="crafting-qty-btn" data-resolve="keep" data-focus-key="resolve:${layer}:${view.item.itemId}:keep">${esc(t('hudChrome.mir4.progression.keepCurrent'))}</button></div>`
+    ? `<div class="crafting-reagents"><b>${esc(t('hudChrome.mir4.progression.preview'))}</b>${effectsHtml(pendingThisLayer.affixes, view.item.slotId)}</div><div class="crafting-actions"><button type="button" class="crafting-qty-btn" data-resolve="accept" data-focus-key="resolve:${layer}:${view.item.itemId}:accept">${esc(t('hudChrome.mir4.progression.acceptPreview'))}</button><button type="button" class="crafting-qty-btn" data-resolve="keep" data-focus-key="resolve:${layer}:${view.item.itemId}:keep">${esc(t('hudChrome.mir4.progression.keepCurrent'))}</button></div>`
     : `${detailsHtml([blockedByOther ? esc(t('hudChrome.mir4.progression.pendingOtherLayer', { layer: t(TAB_KEYS[otherLayer]) })) : esc(rollReason)])}<button type="button" class="vendor-item crafting-recipe-btn" data-roll="${view.item.itemId}" data-focus-key="roll:${layer}:${view.item.itemId}" aria-label="${esc(`${t('hudChrome.mir4.progression.roll')}. ${rollReason}`)}"${canRoll ? '' : ' disabled'}><span class="vi-price crafting-craft-chip">${esc(t('hudChrome.mir4.progression.roll'))}</span></button>`;
-  row.innerHTML = `${itemHeader(deps, view)}<div class="crafting-reagents"><b>${esc(t('hudChrome.mir4.progression.currentEffects'))}</b>${effectsHtml(current)}</div>${action}`;
+  row.innerHTML = `${itemHeader(deps, view)}<div class="crafting-reagents"><b>${esc(t('hudChrome.mir4.progression.currentEffects'))}</b>${effectsHtml(current, view.item.slotId)}</div>${action}`;
   deps.attachTooltip(row, () => mir4EquipmentTooltipHtml(view.item));
   row
     .querySelector<HTMLButtonElement>('[data-roll]')

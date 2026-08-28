@@ -13219,4 +13219,19 @@ export const da_DK: Partial<Record<TranslationKey, string>> = {
     'Slå målet for {damage} skade og bedøv det i 4 sek. Giver 2 combopoint.',
   'gpuNotice.bodyDiscreteInactive':
     'Spillet bruger ikke den dedikerede (gaming-)GPU og kører i stedet på den strømbesparende GPU, så ydeevnen forringes. Opdater dine grafikdrivere og genstart derefter spillet. På Windows skal du også indstille spillet til Høj ydeevne under Indstillinger, System, Skærm, Grafik.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Svækkelsessucces',
+  'hudChrome.mir4.stats.debilitationResistance': 'Modstand mod svækkelse',
+  'hudChrome.mir4.stats.silenceSuccess': 'Tavshedssucces',
+  'hudChrome.mir4.stats.silenceResistance': 'Modstand mod tavshed',
+  'hudChrome.mir4.stats.healthDrain': 'Livsdræn',
+  'hudChrome.mir4.stats.manaDrain': 'Manadræn',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Helbredelsesdrikseffekt',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Manadrikseffekt',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Skade fra basisangreb',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Skadereduktion mod basisangreb',
+  'hudChrome.mir4.stats.penetrationProtection': 'Beskyttelse mod forsvarsgennembrydning',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Nedkølingstiden vist ovenfor er grundværdien. Reduceret nedkølingstid for evner kan sænke den med op til 40 % i PvE eller 30 % i PvP.',
+  'sim.rift.corpseRezCombat':
+    'Din gruppe er stadig i kamp. Du kan genopstå, når kampen er slut.',
 };

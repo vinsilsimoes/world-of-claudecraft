@@ -2,6 +2,7 @@
 // costs, cooldowns and progression. Callers own admission, inventory and RNG;
 // this module only transforms an already-authored value.
 
+import { type Mir4BuildCombatContext, mir4BuildCapTempoAndDrain } from './build_balance';
 import { type Mir4StatusRecord, mir4ApplyRate, mir4StatusRecordValue } from './status_values';
 
 export type Mir4ProgressionRewardKind =
@@ -41,8 +42,12 @@ export function mir4ModifiedPotionAmount(
 export function mir4ModifiedSkillCooldownSeconds(
   baseSeconds: number,
   statuses: Mir4StatusRecord | undefined,
+  context: Mir4BuildCombatContext = 'pve',
 ): number {
-  const reduction = Math.max(0, Math.min(8_000, mir4StatusRecordValue(statuses, 95)));
+  const reduction = mir4BuildCapTempoAndDrain(
+    { cooldownReductionBps: mir4StatusRecordValue(statuses, 95) },
+    context,
+  ).cooldownReductionBps;
   return (Math.max(0, baseSeconds) * (10_000 - reduction)) / 10_000;
 }
 
@@ -83,11 +88,19 @@ export function mir4RecoveryPerTenSeconds(
 export function mir4DrainOnDamage(
   landedDamage: number,
   statuses: Mir4StatusRecord | undefined,
+  context: Mir4BuildCombatContext = 'pve',
 ): { hp: number; mp: number } {
   const damage = Math.max(0, Math.floor(landedDamage));
+  const capped = mir4BuildCapTempoAndDrain(
+    {
+      healthDrainBps: mir4StatusRecordValue(statuses, 80),
+      manaDrainBps: mir4StatusRecordValue(statuses, 81),
+    },
+    context,
+  );
   return {
-    hp: Math.floor((damage * mir4StatusRecordValue(statuses, 80)) / 10_000),
-    mp: Math.floor((damage * mir4StatusRecordValue(statuses, 81)) / 10_000),
+    hp: Math.floor((damage * capped.healthDrainBps) / 10_000),
+    mp: Math.floor((damage * capped.manaDrainBps) / 10_000),
   };
 }
 

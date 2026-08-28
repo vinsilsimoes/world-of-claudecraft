@@ -31,7 +31,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 971,
-      "state": "09f0e53d",
+      "state": "8798c8a7",
       "events": "f6243a75",
       "rng": {
         "draws": 0,
@@ -42,7 +42,7 @@
       "tick": 50,
       "time": 2.5,
       "nextId": 971,
-      "state": "282c26e2",
+      "state": "1bf2317c",
       "events": "b585a892",
       "rng": {
         "draws": 64,
@@ -53,7 +53,7 @@
       "tick": 75,
       "time": 3.75,
       "nextId": 971,
-      "state": "1f93f2c8",
+      "state": "7be2615a",
       "events": "4aac3c56",
       "rng": {
         "draws": 280,
@@ -64,7 +64,7 @@
       "tick": 100,
       "time": 5,
       "nextId": 971,
-      "state": "db64a351",
+      "state": "26b8306b",
       "events": "73428f7e",
       "rng": {
         "draws": 530,
@@ -75,7 +75,7 @@
       "tick": 101,
       "time": 5.05,
       "nextId": 971,
-      "state": "fce07614",
+      "state": "9cf5cf66",
       "events": "6c4069d1",
       "rng": {
         "draws": 542,
@@ -123,6 +123,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -192,6 +193,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -267,6 +269,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -335,6 +338,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -598,7 +602,7 @@
       "tick": 101,
       "time": 5.05,
       "nextId": 971,
-      "state": "23004fe4",
+      "state": "804f9442",
       "events": "e0f38cb9",
       "rng": {
         "draws": 542,
@@ -646,6 +650,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -715,6 +720,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -790,6 +796,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -858,6 +865,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1119,7 +1127,7 @@
       "tick": 101,
       "time": 5.05,
       "nextId": 971,
-      "state": "3e821ce9",
+      "state": "a2a585a7",
       "events": "d67c1707",
       "rng": {
         "draws": 542,
@@ -1168,6 +1176,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1239,6 +1248,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1315,6 +1325,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1383,6 +1394,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1644,7 +1656,7 @@
       "tick": 125,
       "time": 6.25,
       "nextId": 971,
-      "state": "806e3485",
+      "state": "d1d70513",
       "events": "741638a5",
       "rng": {
         "draws": 788,
@@ -1655,7 +1667,7 @@
       "tick": 142,
       "time": 7.1,
       "nextId": 971,
-      "state": "4575ae48",
+      "state": "11440d7e",
       "events": "741638a5",
       "rng": {
         "draws": 972,
@@ -1704,6 +1716,7 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1775,6 +1788,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1851,6 +1865,7 @@
             "offhand": "rusty_dagger"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {
@@ -1919,6 +1934,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "fiestaRestore": {
             "level": 1,
             "talents": {

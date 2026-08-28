@@ -42,6 +42,7 @@ function spawnWolf(sim: Sim): Entity {
     hpBase: 5000,
     hpPerLevel: 0,
   };
+  sim.mir4RuntimeMobTemplates.set(tanky.id, tanky);
   const wolf = createMob(
     sim.nextId++,
     tanky as never,

@@ -15,7 +15,7 @@ import { MIR4_ITEMS, mir4EquipmentDefinition } from '../content/mir4/items';
 import { MIR4_QUESTS } from '../content/mir4/quests';
 import { mir4SkillById } from '../content/mir4/skills';
 import type { Mir4AchievementClears, Mir4Currencies } from './achievements';
-import { MIR4_AFFIXES } from './affixes';
+import { MIR4_AFFIXES, mir4AffixPoolFor } from './affixes';
 import type { Mir4ArcQuestProgress } from './arc_quests';
 import { type Mir4ArcRewardState, sanitizeMir4ArcRewards } from './arc_rewards';
 import { sanitizeMir4DisabledAutoSkills } from './auto_skills';
@@ -23,7 +23,7 @@ import { type Mir4CodexState, sanitizeMir4CodexState } from './codex';
 import { type Mir4DungeonTicketState, sanitizeMir4DungeonTickets } from './dungeon_tickets';
 import { MIR4_ENERGY_CAP } from './energy';
 import type { Mir4Equipment, Mir4EquipmentInstanceState, Mir4Materials } from './equipment';
-import { MIR4_EMPTY_MATERIALS } from './equipment';
+import { MIR4_EMPTY_MATERIALS, mir4CanonicalAffixStatusId } from './equipment';
 import { type Mir4MountState, sanitizeMir4MountState } from './mounts';
 import type { Mir4NarrativeDialogueState } from './narrative_dialogue';
 import type { Mir4QuestProgress } from './quest';
@@ -78,10 +78,9 @@ const AUTO_QUEST_PHASES = new Set<Mir4AutoQuestState['phase']>([
 ]);
 const AFFIXES_BY_STATUS = new Map<number, (typeof MIR4_AFFIXES)[string][]>();
 for (const def of Object.values(MIR4_AFFIXES)) {
-  const statusId = def.statusId ?? 0;
-  const definitions = AFFIXES_BY_STATUS.get(statusId) ?? [];
+  const definitions = AFFIXES_BY_STATUS.get(def.statusId) ?? [];
   definitions.push(def);
-  AFFIXES_BY_STATUS.set(statusId, definitions);
+  AFFIXES_BY_STATUS.set(def.statusId, definitions);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -321,26 +320,40 @@ function sanitizeAffixPairs(
 ): readonly (readonly [number, number])[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const pairs: [number, number][] = [];
+  const seenStatusIds = new Set<number>();
+  const allowedStatusIds = new Set(
+    mir4AffixPoolFor(item.classId, item.equipSlot).map((definition) => definition.statusId),
+  );
   for (const raw of value) {
     if (!Array.isArray(raw) || raw.length !== 2) continue;
-    const statusId = raw[0];
+    const rawStatusId = raw[0];
     const amount = raw[1];
+    if (!Number.isInteger(rawStatusId)) continue;
+    const statusId = mir4CanonicalAffixStatusId(rawStatusId as number, item.equipSlot);
+    // Accepted legacy layers predate the current slot pools. Validate against
+    // the known encoding table without deleting an already accepted build.
     const matchingDefs = AFFIXES_BY_STATUS.get(statusId) ?? [];
     const maximum = matchingDefs.reduce((highest, def) => {
       const valueCap =
         def.unit === 'basis-points' ? def.max : def.max * (1 + 25 + item.tier + item.grade);
       return Math.max(highest, valueCap);
     }, 0);
+    const isLegacyAmbiguousSpecial = rawStatusId === 0;
     if (
-      !Number.isInteger(statusId) ||
       maximum === 0 ||
+      !allowedStatusIds.has(statusId) ||
+      (!isLegacyAmbiguousSpecial && seenStatusIds.has(statusId)) ||
       !Number.isFinite(amount) ||
       amount <= 0 ||
       amount > maximum
     ) {
       continue;
     }
-    pairs.push([statusId, Math.floor(amount)]);
+    if (!isLegacyAmbiguousSpecial) seenStatusIds.add(statusId);
+    // Preserve the old status-id 0 byte-for-byte during the rollback bridge.
+    // Runtime application canonicalizes it by slot, but an older binary can
+    // still load and resave this character without deleting the pair.
+    pairs.push([rawStatusId === 0 ? 0 : statusId, Math.floor(amount)]);
     if (pairs.length === maxPairs) break;
   }
   return pairs.length > 0 ? pairs : undefined;
@@ -369,7 +382,12 @@ function sanitizeEquipmentInstances(
     if (isRecord(raw.affixes)) {
       const enchantment = sanitizeAffixPairs(raw.affixes.enchantment, 2, def);
       const blessing = sanitizeAffixPairs(raw.affixes.blessing, 3, def);
-      if (enchantment || blessing) instance.affixes = { enchantment, blessing };
+      if (enchantment || blessing) {
+        instance.affixes = {
+          ...(enchantment ? { enchantment } : {}),
+          ...(blessing ? { blessing } : {}),
+        };
+      }
     }
     if (isRecord(raw.pendingRoll)) {
       const layer = raw.pendingRoll.layer;

@@ -136,6 +136,8 @@ function spawnGuards(
       name: `Seal Guardian ${index + 1}`,
       family: index === 1 ? 'beast' : 'humanoid',
       elite: false,
+      boss: false,
+      mir4BossDamageReductionBps: 0,
       scale: 1,
       mir4XpReward: 0,
       loot: [],

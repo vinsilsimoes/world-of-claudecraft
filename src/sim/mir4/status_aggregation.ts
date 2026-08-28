@@ -4,13 +4,19 @@
 
 import { mir4LevelRow } from '../content/mir4';
 import type { Mir4ClassId } from '../content/mir4/classes';
+import { mir4EquipmentDefinition } from '../content/mir4/items';
 import { aggregateMir4PassiveBonuses } from '../content/mir4/passives';
 import { type Mir4CodexState, mir4CodexBonuses } from './codex';
 import type { Mir4Equipment, Mir4EquipmentInstanceState } from './equipment';
-import { mir4EquippedAttributes } from './equipment';
+import { mir4EquippedSpecialAffixBonuses, mir4ItemAttributes } from './equipment';
 import { type Mir4MountState, mir4MountBonuses } from './mounts';
 import { type Mir4SpiritState, mir4SpiritBonuses } from './spirits';
-import { Mir4StatusAccumulator, type Mir4StatusValues } from './status_values';
+import {
+  type Mir4StatusContribution,
+  Mir4StatusLedger,
+  type Mir4StatusSource,
+} from './status_ledger';
+import type { Mir4StatusValues } from './status_values';
 import { type Mir4TrainingState, mir4TrainingStatusBonuses } from './training';
 
 const LEVEL_STATUS_COLUMNS = {
@@ -49,7 +55,9 @@ const ALBUM_STATUS_IDS = {
 
 export interface Mir4AggregatedCharacterStatuses {
   readonly values: Mir4StatusValues;
+  readonly contributions: readonly Mir4StatusContribution[];
   readonly penetrationBps: number;
+  readonly penetrationDefenseBps: number;
   readonly mountMoveSpeedBps: number;
   readonly mountBasicAttackSpeedBps: number;
 }
@@ -66,6 +74,36 @@ export interface Mir4StatusAggregationInput {
   readonly training?: Mir4TrainingState;
 }
 
+function source(sourceKind: Mir4StatusSource['sourceKind'], sourceId: string): Mir4StatusSource {
+  return { sourceKind, sourceId };
+}
+
+function addEquipmentContributions(
+  ledger: Mir4StatusLedger,
+  equipment: Mir4Equipment | undefined,
+  instances: Record<number, Mir4EquipmentInstanceState> | undefined,
+): void {
+  for (const [slot, itemId] of Object.entries(equipment ?? {})) {
+    if (itemId === undefined) continue;
+    const def = mir4EquipmentDefinition(itemId);
+    if (!def) continue;
+    const instance = instances?.[itemId];
+    if (instance?.destroyed) continue;
+
+    const attributes = mir4ItemAttributes(def, instance);
+    ledger.addAll(
+      source('gear', `equipment:${slot}:${itemId}`),
+      attributes.slice(0, def.baseAttributes.length),
+    );
+    for (const layer of ['enchantment', 'blessing'] as const) {
+      ledger.addAll(
+        source('affix', `equipment:${slot}:${itemId}:${layer}`),
+        instance?.affixes?.[layer] ?? [],
+      );
+    }
+  }
+}
+
 export function aggregateMir4CharacterStatuses(
   input: Mir4StatusAggregationInput,
 ): Mir4AggregatedCharacterStatuses {
@@ -73,12 +111,16 @@ export function aggregateMir4CharacterStatuses(
   if (!row) {
     throw new Error(`mir4 level row missing for class ${input.classId} level ${input.level}`);
   }
-  const statuses = new Mir4StatusAccumulator();
+  const ledger = new Mir4StatusLedger();
+  const levelSource = source('level', `level:${input.classId}:${input.level}`);
   for (const [rawStatusId, column] of Object.entries(LEVEL_STATUS_COLUMNS)) {
-    statuses.add(Number(rawStatusId), Number(row[column] ?? 0));
+    ledger.add(levelSource, Number(rawStatusId), Number(row[column] ?? 0));
   }
-  statuses.addAll(mir4EquippedAttributes(input.equipment, input.instances));
-  statuses.addAll(mir4TrainingStatusBonuses(input.classId, input.training));
+  addEquipmentContributions(ledger, input.equipment, input.instances);
+  ledger.addAll(
+    source('training', `training:${input.classId}`),
+    mir4TrainingStatusBonuses(input.classId, input.training),
+  );
 
   const spirit = mir4SpiritBonuses(input.spirits);
   const mount = mir4MountBonuses(input.mounts);
@@ -94,19 +136,34 @@ export function aggregateMir4CharacterStatuses(
   });
   for (const [key, statusId] of Object.entries(ALBUM_STATUS_IDS)) {
     const stat = key as keyof typeof ALBUM_STATUS_IDS;
-    statuses.add(statusId, spirit[stat] + mount[stat] + codex[stat]);
+    ledger.add(source('spirit', 'spirit:collection-equipped'), statusId, spirit[stat]);
+    ledger.add(source('mount', 'mount:collection-equipped'), statusId, mount[stat]);
+    ledger.add(source('codex', 'codex:completed-collections'), statusId, codex[stat]);
   }
 
   for (const [statusId, rateBps] of aggregateMir4PassiveBonuses(input.classId, input.level)) {
-    const current = statuses.value(statusId);
+    const current = ledger.value(statusId);
     if (rateBps > 0 && current > 0) {
-      statuses.add(statusId, Math.floor((current * rateBps) / 10_000));
+      const difference = Math.floor((current * rateBps) / 10_000);
+      ledger.add(
+        source('passive', `passive:${input.classId}:status:${statusId}`),
+        statusId,
+        difference,
+      );
     }
   }
 
+  const snapshot = ledger.snapshot();
+  const equipmentSpecials = mir4EquippedSpecialAffixBonuses(input.equipment, input.instances);
   return {
-    values: statuses.snapshot(),
-    penetrationBps: spirit.penetrationBps + mount.penetrationBps + codex.penetrationBps,
+    values: snapshot.values,
+    contributions: snapshot.contributions,
+    penetrationBps:
+      equipmentSpecials.penetrationBps +
+      spirit.penetrationBps +
+      mount.penetrationBps +
+      codex.penetrationBps,
+    penetrationDefenseBps: equipmentSpecials.penetrationDefenseBps,
     mountMoveSpeedBps: mount.moveSpeedBps,
     mountBasicAttackSpeedBps: mount.basicAttackSpeedBps,
   };

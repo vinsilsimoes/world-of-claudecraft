@@ -64,6 +64,11 @@ export function respawnMob(ctx: SimContext, mob: Entity): void {
   ctx.rebucket(mob);
   mob.hp = mob.maxHp;
   mob.auras = [];
+  // Entity ids are reused across lives; MIR4 effect/control history belongs
+  // to the defeated life and must not grant the respawn inherited CC, burn,
+  // defense break, shields, diminishing returns or immunity.
+  mob.mir4Effects = undefined;
+  mob.mir4Shield = undefined;
   mob.aiState = 'idle';
   mob.aggroTargetId = null;
   mob.inCombat = false;

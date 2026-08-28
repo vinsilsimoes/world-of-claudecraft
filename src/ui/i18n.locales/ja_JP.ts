@@ -13223,6 +13223,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.stats.bossDamage': 'ボスダメージ',
   'hudChrome.mir4.stats.skillDamage': 'スキルダメージ',
   'hudChrome.mir4.stats.penetration': '防御貫通',
+  'hudChrome.mir4.stats.penetrationProtection': '防御貫通耐性',
   'hudChrome.mir4.stats.unknown': '戦闘属性',
   'hudChrome.mir4.materials.sunStone': '太陽石',
   'hudChrome.mir4.materials.moonStone': '月石',
@@ -13357,7 +13358,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1104.description': '敵1体に{damage}ダメージを与え、対象を1.2秒間ノックダウンします。',
   'entities.abilities.mir4_skill_1304.name': '体当たり',
   'entities.abilities.mir4_skill_1304.description':
-    '敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを12%増加させます。',
+    '敵1体に{damage}ダメージを与え、4.5秒間、対象の物理防御と魔法防御を12%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
   'entities.abilities.mir4_skill_1401.name': '大地砕き',
   'entities.abilities.mir4_skill_1401.description':
     '敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に70%のダメージを与え、対象を0.8秒間ノックダウンします。',
@@ -13368,7 +13369,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.4秒間凍結します。',
   'entities.abilities.mir4_skill_2111.name': '残り火の槍',
   'entities.abilities.mir4_skill_2111.description':
-    '敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを8%増加させます。',
+    '敵1体に{damage}ダメージを与えます。対象を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
   'entities.abilities.mir4_skill_2301.name': '懲罰の印',
   'entities.abilities.mir4_skill_2301.description':
     '敵1体に{damage}ダメージを与え、4秒間、対象が与えるダメージを50%減少させます。',
@@ -13379,7 +13380,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_2503.description': '10秒間、受けるダメージを22%減少させます。',
   'entities.abilities.mir4_skill_3101.name': '印連撃',
   'entities.abilities.mir4_skill_3101.description':
-    '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、4秒間、対象が受けるダメージを10%増加させます。',
+    '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中したすべての敵の物理防御と魔法防御を4秒間10%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
   'entities.abilities.mir4_skill_3104.name': 'トーテム 1010',
   'entities.abilities.mir4_skill_3104.description': '敵1体に作用し、対象を1.4秒間スタンさせます。',
   'entities.abilities.mir4_skill_3301.name': 'トーテムの印 II',
@@ -13406,7 +13407,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5101.description': '敵1体に{damage}ダメージを与え、対象を1秒間ノックダウンします。',
   'entities.abilities.mir4_skill_5104.name': '薙ぎ払い 5104',
   'entities.abilities.mir4_skill_5104.description':
-    '敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを14%増加させます。',
+    '敵1体に{damage}ダメージを与え、4.5秒間、対象の物理防御と魔法防御を14%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
   'entities.abilities.mir4_skill_5201.name': '強撃 5201',
   'entities.abilities.mir4_skill_5201.description':
     '敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.1秒間スタンさせます。',
@@ -13654,4 +13655,18 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-04': '天穹の重み',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-05': '深淵螺旋',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-06': '絶対刹那',
+  'hudChrome.mir4.stats.debilitationSuccess': '弱体化成功率',
+  'hudChrome.mir4.stats.debilitationResistance': '弱体化耐性',
+  'hudChrome.mir4.stats.silenceSuccess': '沈黙成功率',
+  'hudChrome.mir4.stats.silenceResistance': '沈黙耐性',
+  'hudChrome.mir4.stats.healthDrain': 'HP吸収',
+  'hudChrome.mir4.stats.manaDrain': 'MP吸収',
+  'hudChrome.mir4.stats.healthPotionEffect': 'HPポーション効果',
+  'hudChrome.mir4.stats.manaPotionEffect': 'MPポーション効果',
+  'hudChrome.mir4.stats.basicAttackDamage': '通常攻撃ダメージ',
+  'hudChrome.mir4.stats.basicDamageReduction': '通常攻撃ダメージ軽減',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    '上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
+  'sim.rift.corpseRezCombat':
+    'パーティーはまだ戦闘中です。戦闘が終わると復活できます。',
 };

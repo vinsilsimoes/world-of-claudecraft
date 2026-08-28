@@ -19,7 +19,12 @@ import {
   MIR4_RUNTIME_STATUS_IDS,
   type Mir4DerivedPlayerStats,
 } from '../sim/mir4/derived_stats';
-import { type Mir4EquipmentInstanceState, mir4ItemAttributes } from '../sim/mir4/equipment';
+import {
+  MIR4_SPECIAL_AFFIX_STATUS_IDS,
+  type Mir4EquipmentInstanceState,
+  mir4ItemAttributes,
+  mir4ItemSpecialAffixBonuses,
+} from '../sim/mir4/equipment';
 import {
   MIR4_NATIVE_ARMOR_SET,
   MIR4_NATIVE_EQUIP_SLOT,
@@ -118,6 +123,13 @@ export function buildMir4EquipmentItemView(
     if (MIR4_RUNTIME_STATUS_IDS.has(statusId)) {
       effective.set(statusId, (effective.get(statusId) ?? 0) + value);
     }
+  }
+  const special = mir4ItemSpecialAffixBonuses(def, instance);
+  if (special.penetrationBps > 0) {
+    effective.set(MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration, special.penetrationBps);
+  }
+  if (special.penetrationDefenseBps > 0) {
+    effective.set(MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense, special.penetrationDefenseBps);
   }
   return {
     itemId: def.itemId,

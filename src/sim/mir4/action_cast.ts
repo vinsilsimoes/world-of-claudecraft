@@ -15,6 +15,8 @@ const ERROR_TEXT: Readonly<Record<NonNullable<Mir4CastResult['reason']>, string>
   'no-mp': 'Not enough MP.',
   'on-cooldown': 'That ability is not ready yet.',
   'on-gcd': 'Another action is not ready yet.',
+  controlled: 'You are stunned!',
+  silenced: 'You are silenced!',
   'utility-not-ready': 'That ability is not ready yet.',
 };
 

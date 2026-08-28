@@ -455,9 +455,9 @@ export function enterDungeon(
   }
   placePlayerInClaim(ctx, r, inst, dungeon);
   const p = r.e;
-  // A ghost that ran its spirit back and re-entered resurrects at the entrance,
-  // penalty-free: the re-entry IS the corpse run under the instance death model (no
-  // Spirit Healer inside an instance).
+  // A ghost outside its claim that re-enters resurrects at the entrance,
+  // penalty-free. Normal dungeon release starts inside the live claim, but this
+  // path remains necessary for legacy saves and externally displaced spirits.
   // Nythraxis has a nested entrance: a returning ghost must cross the approach crypt
   // before reaching the royal door. Keep that spirit released through the outer
   // transition and resurrect only after it reaches its defeated arena claim.
@@ -805,9 +805,9 @@ function claimInstance(
   exit.lootable = true;
   ctx.addEntity(exit);
   inst.exitId = exit.id;
-  // No Spirit Healer is spawned inside an instance: a ghost releases at the OUTDOOR
-  // graveyard nearest the door and runs its spirit back to re-enter and resurrect at
-  // the entrance (see enterDungeon / spirit.ts ghostGraveyard).
+  // No Spirit Healer is spawned inside an instance. A released spirit starts at
+  // this claim's entrance and runs to its corpse; the outdoor door re-entry path
+  // remains a compatibility fallback (see enterDungeon and spirit.ts).
 }
 
 function freeInstance(ctx: SimContext, inst: InstanceSlot): void {
@@ -825,6 +825,11 @@ function freeInstance(ctx: SimContext, inst: InstanceSlot): void {
     if (ctx.entities.has(id)) ctx.dropEntity(id);
   }
   if (claimId !== null) {
+    for (const [characterId, binding] of ctx.ghostInstanceBindings) {
+      if (binding.kind === 'dungeon' && binding.claimId === claimId) {
+        ctx.ghostInstanceBindings.delete(characterId);
+      }
+    }
     clearResetLocksForClaim(ctx, claimId);
     ctx.dropEntity(claimId);
   }

@@ -13416,4 +13416,19 @@ export const fr_FR: Partial<Record<TranslationKey, string>> = {
     'Frappe la cible pour {damage} points de dégâts, l\'étourdissant pendant 4 s. Confère 2 points de combo.',
   'gpuNotice.bodyDiscreteInactive':
     'Le jeu n\'utilise pas le GPU de jeu dédié et fonctionne à la place sur le GPU intégré (économie d\'énergie), ce qui nuira aux performances. Mettez à jour vos pilotes graphiques, puis redémarrez le jeu. Sous Windows, définissez également le jeu sur Performances élevées dans Paramètres, Système, Affichage, Graphiques.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Réussite d’affaiblissement',
+  'hudChrome.mir4.stats.debilitationResistance': 'Résistance à l’affaiblissement',
+  'hudChrome.mir4.stats.silenceSuccess': 'Réussite de silence',
+  'hudChrome.mir4.stats.silenceResistance': 'Résistance au silence',
+  'hudChrome.mir4.stats.healthDrain': 'Drain de points de vie',
+  'hudChrome.mir4.stats.manaDrain': 'Drain de mana',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Effet des potions de vie',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Effet des potions de mana',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Dégâts d’attaque de base',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Réduction des dégâts d’attaque de base',
+  'hudChrome.mir4.stats.penetrationProtection': 'Protection contre la pénétration de défense',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Le temps de recharge affiché ci-dessus est la valeur de base. La réduction du temps de recharge des compétences peut le réduire jusqu’à 40 % en JcE ou 30 % en JcJ.',
+  'sim.rift.corpseRezCombat':
+    'Votre groupe est encore en combat. Vous pourrez ressusciter lorsque le combat sera terminé.',
 };

@@ -8,7 +8,7 @@
 // runs unchanged. The MIR4 swing lane reads their authored damage directly and
 // resolves it through the MIR4 hit, critical, and defense pipeline.
 
-import type { MobTemplate } from '../../types';
+import type { MobFamily, MobTemplate } from '../../types';
 import { mir4LevelRow } from './class_levels';
 import { MIR4_CLASS_COMBAT_SPECS } from './classes';
 
@@ -16,6 +16,86 @@ import { MIR4_CLASS_COMBAT_SPECS } from './classes';
 export const MIR4_M01_RECOMMENDED_COMBAT_POWER = 2788;
 
 export type Mir4MobGrade = 'normal' | 'veteran' | 'guardian';
+
+export interface Mir4MobBuildDefenses {
+  physicalDefense: number;
+  magicDefense: number;
+  dodge: number;
+  avoidCritical: number;
+}
+
+const GRADE_DEFENSE_BPS: Record<Mir4MobGrade, number> = {
+  normal: 10_000,
+  veteran: 11_500,
+  guardian: 14_000,
+};
+
+const FAMILY_DEFENSE_BPS: Readonly<
+  Record<MobFamily, { physical: number; magic: number; dodge: number }>
+> = {
+  beast: { physical: 11_000, magic: 9_000, dodge: 13_000 },
+  humanoid: { physical: 10_000, magic: 10_000, dodge: 10_000 },
+  mudfin: { physical: 10_000, magic: 10_000, dodge: 9_000 },
+  spider: { physical: 9_000, magic: 10_500, dodge: 14_000 },
+  burrower: { physical: 11_000, magic: 9_000, dodge: 8_000 },
+  undead: { physical: 9_000, magic: 11_000, dodge: 8_000 },
+  troll: { physical: 12_000, magic: 8_500, dodge: 7_000 },
+  ogre: { physical: 12_500, magic: 8_000, dodge: 6_000 },
+  elemental: { physical: 8_000, magic: 12_500, dodge: 9_000 },
+  dragonkin: { physical: 11_500, magic: 10_500, dodge: 8_000 },
+  demon: { physical: 9_000, magic: 12_000, dodge: 10_000 },
+  reptile: { physical: 11_000, magic: 9_000, dodge: 12_000 },
+};
+
+function admittedMobLevel(level: number): number {
+  const parsed = Math.floor(Number(level));
+  return Number.isFinite(parsed) ? Math.max(1, Math.min(1_000, parsed)) : 1;
+}
+
+function admittedMobStat(value: number | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const parsed = Math.floor(Number(value));
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(1_000_000_000, parsed)) : 0;
+}
+
+/**
+ * Shared PvE opposition profile. Flat defense follows a saturating level curve
+ * (about 3/25/75/120 at levels 1/10/50/200), while classic WoC armor is
+ * converted to the equivalent MIR4 rating at equal level. Families trade
+ * Physical, Magic, and Evasion strengths instead of being recolored clones.
+ */
+export function mir4MobBuildDefenses(
+  level: number,
+  family: MobFamily = 'humanoid',
+  grade: Mir4MobGrade = 'normal',
+  classicArmor = 0,
+  overrides: Partial<Mir4MobBuildDefenses> = {},
+): Mir4MobBuildDefenses {
+  const safeLevel = admittedMobLevel(level);
+  const profile = FAMILY_DEFENSE_BPS[family] ?? FAMILY_DEFENSE_BPS.humanoid;
+  const safeArmor = admittedMobStat(classicArmor) ?? 0;
+  const curveDefense = Math.floor((150 * safeLevel) / (safeLevel + 50));
+  const physicalBase =
+    safeArmor > 0 ? Math.floor((100 * safeArmor) / (85 * safeLevel + 400)) : curveDefense;
+  const rankBps = GRADE_DEFENSE_BPS[grade] ?? GRADE_DEFENSE_BPS.normal;
+  const precisionK = 120 + (safeLevel - 1) * 8;
+  const criticalEvasionK = 140 + (safeLevel - 1) * 10;
+  const rankDodgeBps = grade === 'guardian' ? 7_500 : grade === 'veteran' ? 9_000 : 10_000;
+  const derived = {
+    physicalDefense: Math.floor((physicalBase * rankBps * profile.physical) / 100_000_000),
+    // Classic armor is physical-only. Magic always follows the new family
+    // curve unless a MIR4-specific template override explicitly replaces it.
+    magicDefense: Math.floor((curveDefense * rankBps * profile.magic) / 100_000_000),
+    dodge: Math.max(1, Math.floor((precisionK * profile.dodge * rankDodgeBps) / 2_000_000_000)),
+    avoidCritical: Math.max(1, Math.floor(criticalEvasionK * 0.035)),
+  };
+  return {
+    physicalDefense: admittedMobStat(overrides.physicalDefense) ?? derived.physicalDefense,
+    magicDefense: admittedMobStat(overrides.magicDefense) ?? derived.magicDefense,
+    dodge: admittedMobStat(overrides.dodge) ?? derived.dodge,
+    avoidCritical: admittedMobStat(overrides.avoidCritical) ?? derived.avoidCritical,
+  };
+}
 
 const GRADE_HP_MULTIPLIER: Record<Mir4MobGrade, number> = {
   normal: 1,
@@ -123,8 +203,13 @@ export function mir4MobTemplateProgression(
   const lo = mir4MobStats(admittedMin, grade);
   const hi = mir4MobStats(admittedMax, grade);
   const span = Math.max(1, admittedMax - admittedMin);
-  const hpAtMin = lo.maxHp / hpDivisor;
-  const hpAtMax = hi.maxHp / hpDivisor;
+  const loDefense = mir4MobBuildDefenses(admittedMin, 'humanoid', grade).physicalDefense;
+  const hiDefense = mir4MobBuildDefenses(admittedMax, 'humanoid', grade).physicalDefense;
+  // HP is authored as a target number of raw basic hits. Normalize it by the
+  // new defense layer so adding meaningful defenses does not turn grind mobs
+  // into accidental damage sponges.
+  const hpAtMin = (lo.maxHp * 100) / (100 + loDefense) / hpDivisor;
+  const hpAtMax = (hi.maxHp * 100) / (100 + hiDefense) / hpDivisor;
   const damageAtMin = lo.attack;
   const damageAtMax = hi.attack;
   const hpPerLevel = Math.max(1, Math.round((hpAtMax - hpAtMin) / span));
@@ -158,6 +243,12 @@ function forestWolfTemplate(): MobTemplate {
     moveSpeed: 3.5,
     aggroRadius: 0,
     mir4XpReward: 34, // m01 combatXpModel normalXp (was 22: the native catalog value)
+    // The first tutorial target intentionally preserves the exact source
+    // damage fixture; later field mobs use the shared opposition profile.
+    mir4PhysicalDefense: 0,
+    mir4MagicDefense: 0,
+    mir4Dodge: 0,
+    mir4AvoidCritical: 0,
     loot: [{ copper: 2, chance: 1 }],
     scale: 1,
     color: 0x8a7a66,

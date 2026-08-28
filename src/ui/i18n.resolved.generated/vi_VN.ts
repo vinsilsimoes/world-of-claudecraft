@@ -1283,9 +1283,19 @@ export const vi_VN: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Tỷ lệ gây suy yếu",
+        "debilitationResistance": "Kháng suy yếu",
+        "silenceSuccess": "Tỷ lệ gây câm lặng",
+        "silenceResistance": "Kháng câm lặng",
+        "healthDrain": "Hút Sinh lực",
+        "manaDrain": "Hút Mana",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Hiệu lực bình máu",
+        "manaPotionEffect": "Hiệu lực bình mana",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Sát thương đòn đánh thường",
+        "basicDamageReduction": "Giảm sát thương đòn đánh thường",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const vi_VN: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Kháng xuyên phòng thủ",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "Thời gian hồi chiêu hiển thị ở trên là giá trị cơ bản. Giảm Hồi Chiêu Kỹ Năng có thể giảm tối đa 40% trong PvE hoặc 30% trong PvP.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const vi_VN: EnTranslations = {
       "levelGate": "Chỉ những nhà thám hiểm cấp độ {level} trở lên mới có thể vào Rạn Nứt này.",
       "deadEntry": "Bạn không thể vào Rạn Nứt khi đang chết.",
       "deadEntryCombat": "Nhóm của bạn vẫn đang trong giao tranh. Người đã chết có thể vào lại khi trận chiến kết thúc.",
+      "corpseRezCombat": "Tổ đội của bạn vẫn đang chiến đấu. Bạn có thể hồi sinh khi giao tranh kết thúc.",
       "iceGoalLit": "Ấn băng bùng cháy. Con đường lay động.",
       "socketsShut": "Các hốc khóa kèn kẹt đóng lại. Con đường lay động.",
       "seqProgress": "Các rune lần lượt hồi đáp ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const vi_VN: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const vi_VN: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const vi_VN: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const vi_VN: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

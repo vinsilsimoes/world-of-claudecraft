@@ -84,9 +84,9 @@ function inIceZone(
   return ice !== null && Math.abs(lx - ice.x) <= ice.hw && Math.abs(lz - ice.z) <= ice.hd;
 }
 // Seconds with nobody inside before the slot frees. Long enough for a wiped
-// party to graveyard-run back for their corpses (dead members may re-enter an
-// out-of-combat run, enterRift's death rules): portals sit anywhere in the
-// world, so a 60s window regularly stranded corpses behind a freed slot.
+// party to reconnect or recover externally displaced ghosts. Ordinary release
+// now keeps the spirit inside the live floor; the dead re-entry rules remain a
+// compatibility path. A short timeout would still strand persisted corpses.
 const RIFT_EMPTY_TIMEOUT = 180;
 
 // Deterministic per-channel colour jitter (server-side; the result rides the
@@ -102,7 +102,9 @@ function jitterColor(ctx: SimContext, hex: number, amt: number): number {
 
 function riftKeyFor(ctx: SimContext, pid: number): string {
   const party = ctx.partyOf(pid);
-  return party ? `party:${party.id}` : `solo:${pid}`;
+  if (party) return `party:${party.id}`;
+  const characterId = ctx.players.get(pid)?.characterId;
+  return characterId !== undefined ? `solo:char:${characterId}` : `solo:${pid}`;
 }
 
 /** The nearest dry point to (x, z): the point itself when it is not inside a
@@ -148,6 +150,85 @@ export function riftInstanceAtPos(ctx: SimContext, pos: Vec3): RiftInstance | nu
     if (inRiftFloorRegion(pos, riftInstanceOrigin(inst.slot, inst.floorIndex))) return inst;
   }
   return null;
+}
+
+/**
+ * Safe spirit arrival for the exact live Rift floor containing the corpse.
+ *
+ * Membership is part of the check: reusable coordinate slots are not identity,
+ * and a spirit must never be placed into a run it did not enter. Returning null
+ * lets the shared death flow fall back to an overworld graveyard when the run has
+ * already expired or been recycled.
+ */
+export function riftSpiritEntry(
+  ctx: SimContext,
+  pid: number,
+  corpsePos: Vec3,
+): { x: number; z: number } | null {
+  const inst = riftInstanceAtPos(ctx, corpsePos);
+  if (!inst) return null;
+  return riftSpiritEntryForInstance(ctx, inst.instanceId, pid, corpsePos);
+}
+
+/**
+ * Resolve a spirit entry from exact run identity. A Rift slot and its coordinates
+ * are reusable, so reconnect recovery must validate the monotonic instance id,
+ * previous runtime membership, and the corpse's current floor together.
+ */
+export function riftSpiritEntryForInstance(
+  ctx: SimContext,
+  instanceId: number,
+  memberEntityId: number,
+  corpsePos: Vec3,
+  boundFloorIndex?: number,
+): { x: number; z: number } | null {
+  const inst = ctx.riftInstances.find(
+    (candidate) => candidate.partyKey !== null && candidate.instanceId === instanceId,
+  );
+  if (!inst?.memberIds.has(memberEntityId)) return null;
+  const corpseFloorIndex = boundFloorIndex ?? inst.floorIndex;
+  const corpseOnRecordedFloor =
+    Number.isInteger(corpseFloorIndex) &&
+    corpseFloorIndex >= 0 &&
+    corpseFloorIndex <= inst.floorIndex &&
+    inRiftFloorRegion(corpsePos, riftInstanceOrigin(inst.slot, corpseFloorIndex));
+  const corpseOnCurrentFloor = inRiftFloorRegion(
+    corpsePos,
+    riftInstanceOrigin(inst.slot, inst.floorIndex),
+  );
+  if (!corpseOnRecordedFloor && !corpseOnCurrentFloor) {
+    return null;
+  }
+  const origin = riftInstanceOrigin(inst.slot, inst.floorIndex);
+  const floor = floorForInstance(inst);
+  return {
+    x: origin.x + floor.entry.x,
+    z: origin.z + floor.entry.z,
+  };
+}
+
+/** Replace a disconnected entity id with its reconnect id inside one exact run. */
+export function rebindRiftInstanceMember(
+  ctx: SimContext,
+  instanceId: number,
+  oldEntityId: number,
+  newEntityId: number,
+): boolean {
+  const inst = ctx.riftInstances.find(
+    (candidate) => candidate.partyKey !== null && candidate.instanceId === instanceId,
+  );
+  if (!inst?.memberIds.has(oldEntityId)) return false;
+  inst.memberIds.delete(oldEntityId);
+  inst.memberIds.add(newEntityId);
+  const combatExit = inst.combatExitMemory.get(oldEntityId);
+  if (combatExit) {
+    inst.combatExitMemory.delete(oldEntityId);
+    inst.combatExitMemory.set(newEntityId, combatExit);
+  }
+  // Reconnect does not pass through enterRift(), so explicitly rebuild the
+  // authoritative client floor/minimap state for the newly minted entity id.
+  emitRiftState(ctx, newEntityId, inst, true);
+  return true;
 }
 
 function riftHazardTierAt(
@@ -478,6 +559,12 @@ function freeRiftFloorEntities(ctx: SimContext, inst: RiftInstance): void {
 
 function freeRiftInstance(ctx: SimContext, inst: RiftInstance): void {
   const eventId = inst.eventId;
+  const instanceId = inst.instanceId;
+  for (const [characterId, binding] of ctx.ghostInstanceBindings) {
+    if (binding.kind === 'rift' && binding.instanceId === instanceId) {
+      ctx.ghostInstanceBindings.delete(characterId);
+    }
+  }
   freeRiftFloorEntities(ctx, inst);
   inst.instanceId = 0;
   inst.eventId = null;
@@ -793,10 +880,10 @@ export function descendRift(ctx: SimContext, pid?: number): void {
   // CURRENT floor, far outside CORPSE_REZ_RANGE: the corpse run enterRift's
   // dead-entry arm exists to serve becomes unreachable through no fault of the
   // player. Swept over the run's whole roster, not just the descenders, because the
-  // member this strands is precisely the one NOT standing in the region: a released
-  // spirit waits at an overworld graveyard (the rift arm of spirit.ts ghostGraveyard)
-  // while their body stays behind. An UNRELEASED body needs nothing here; it rides
-  // the descent as an ordinary descender and stamps its corpse on arrival.
+  // member this strands is precisely one who is no longer standing in the region:
+  // a released spirit may have been externally displaced or disconnected while
+  // their body stayed behind. An UNRELEASED body needs nothing here; it rides the
+  // descent as an ordinary descender and stamps its corpse on arrival.
   //
   // Two orphan routes this deliberately does NOT cover, because they are reached
   // without a descent and want their own fix: a member who LOGGED OUT while dead has
@@ -899,6 +986,9 @@ function forceExitRiftPlayer(
 
 export function updateRiftTriggers(ctx: SimContext, p: Entity): void {
   if (p.kind !== 'player') return;
+  // Released spirits may move through the floor to reach their corpse, but they
+  // cannot solve runes, push boulders, open gates/orbs, descend, or use exits.
+  if (p.dead) return;
 
   if (isRiftPos(p.pos.x)) {
     const inst = riftInstanceAtPos(ctx, p.pos);

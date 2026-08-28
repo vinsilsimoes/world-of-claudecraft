@@ -627,7 +627,7 @@ const classAbilityNamesEn = {
       [
         'mir4_skill_1304',
         'Tackle',
-        'Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec.',
+        "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.",
       ],
       [
         'mir4_skill_1401',
@@ -643,7 +643,7 @@ const classAbilityNamesEn = {
       [
         'mir4_skill_2111',
         'Ember Spear',
-        'Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec.',
+        'Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.',
       ],
       [
         'mir4_skill_2301',
@@ -659,7 +659,7 @@ const classAbilityNamesEn = {
       [
         'mir4_skill_3101',
         'Seal Sequence',
-        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec.',
+        'Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.',
       ],
       ['mir4_skill_3104', 'Totem 1010', 'Affects an enemy. Stuns the target for 1.4 sec.'],
       [
@@ -706,7 +706,7 @@ const classAbilityNamesEn = {
       [
         'mir4_skill_5104',
         'Sweep 5104',
-        'Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec.',
+        "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.",
       ],
       [
         'mir4_skill_5201',

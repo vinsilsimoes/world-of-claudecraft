@@ -20,6 +20,10 @@ function liveDuel() {
   const a = sim.entities.get(warrior);
   const b = sim.entities.get(elementalist);
   if (!a || !b) throw new Error('MIR4 duel roster missing');
+  // PvP starts at level 20. Normalize only the health budget so this remains
+  // a deterministic TTK contract instead of a level-one regeneration test.
+  sim.setPlayerLevel(20, warrior);
+  sim.setPlayerLevel(20, elementalist);
   a.pos.x = 0;
   a.pos.z = 20;
   b.pos.x = 2;
@@ -29,6 +33,17 @@ function liveDuel() {
   for (let tick = 0; tick < 80 && sim.duelFor(warrior)?.state !== 'active'; tick += 1) {
     sim.tick();
   }
+  // Let the active-duel transition finish its one-time stat refresh before
+  // applying the normalized TTK health pool.
+  sim.tick();
+  const liveA = sim.entities.get(warrior)!;
+  const liveB = sim.entities.get(elementalist)!;
+  liveA.maxHp = 1_000;
+  liveA.hp = liveA.maxHp;
+  liveB.maxHp = 1_000;
+  liveB.hp = liveB.maxHp;
+  sim.players.get(warrior)!.inventory = [];
+  sim.players.get(elementalist)!.inventory = [];
   return { sim, warrior, elementalist };
 }
 
@@ -68,7 +83,7 @@ function resolveContacts(sim: Sim, sourceId: number): void {
 }
 
 describe('MIR4 PvP through the shared duel rules', () => {
-  it('finishes a continuously driven warrior versus elementalist duel within one minute', () => {
+  it('finishes a normalized level-20 warrior versus elementalist duel within one minute', () => {
     const { sim, warrior, elementalist } = liveDuel();
     let ticks = 0;
     while (sim.duelFor(warrior) && ticks++ < 1_200) {

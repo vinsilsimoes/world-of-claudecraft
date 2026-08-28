@@ -13459,4 +13459,19 @@ export const it_IT: Partial<Record<TranslationKey, string>> = {
     'Colpisci il bersaglio per {damage} danni, stordendolo per 4 sec. Conferisce 2 punti combo.',
   'gpuNotice.bodyDiscreteInactive':
     'Il gioco non sta usando la GPU dedicata (per il gioco) e sta girando invece sulla GPU a risparmio energetico, quindi le prestazioni ne risentiranno. Aggiorna i driver grafici, poi riavvia il gioco. Su Windows, imposta anche il gioco su Prestazioni elevate in Impostazioni > Sistema > Schermo > Grafica.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Successo debilitazione',
+  'hudChrome.mir4.stats.debilitationResistance': 'Resistenza alla debilitazione',
+  'hudChrome.mir4.stats.silenceSuccess': 'Successo silenzio',
+  'hudChrome.mir4.stats.silenceResistance': 'Resistenza al silenzio',
+  'hudChrome.mir4.stats.healthDrain': 'Assorbimento salute',
+  'hudChrome.mir4.stats.manaDrain': 'Assorbimento mana',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Effetto pozione salute',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Effetto pozione mana',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Danni attacco base',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Riduzione danni attacco base',
+  'hudChrome.mir4.stats.penetrationProtection': 'Protezione dalla penetrazione difesa',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Il tempo di recupero mostrato sopra è quello base. La riduzione del tempo di recupero delle abilità può ridurlo fino al 40% in PvE o al 30% in PvP.',
+  'sim.rift.corpseRezCombat':
+    'Il tuo gruppo è ancora in combattimento. Potrai resuscitare quando lo scontro sarà terminato.',
 };

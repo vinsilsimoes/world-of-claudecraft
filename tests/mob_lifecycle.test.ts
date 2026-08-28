@@ -142,6 +142,35 @@ describe('mob_lifecycle module: respawnMob + despawnSummonedAdds', () => {
     expect(mob.wanderTimer).toBeLessThanOrEqual(8);
   });
 
+  it('respawnMob clears MIR4 effects, shields and control history from the previous life', () => {
+    const sim = makeSim();
+    const mob = spawn(sim, 'forest_wolf', 5, 40, 40);
+    mob.dead = true;
+    mob.hp = 0;
+    mob.mir4Shield = { remaining: 10, magnitude: 0.5 };
+    mob.mir4Effects = {
+      active: [
+        {
+          effectId: 'old-life-burn',
+          kind: 'burn',
+          remaining: 4,
+          duration: 4,
+          magnitude: 0.08,
+          sourceId: sim.playerId,
+        },
+      ],
+      controlImmuneUntil: 99,
+      hardControlHistory: [
+        { effectId: 'old-life-stun', sourceId: sim.playerId, appliedAt: 0, duration: 2 },
+      ],
+    };
+
+    respawnMob(ctxOf(sim), mob);
+
+    expect(mob.mir4Effects).toBeUndefined();
+    expect(mob.mir4Shield).toBeUndefined();
+  });
+
   it('respawnMob despawns any adds the mob summoned this pull', () => {
     const sim = makeSim();
     const boss = spawn(sim, 'forest_wolf', 5, 40, 40);

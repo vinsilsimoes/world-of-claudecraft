@@ -5,6 +5,7 @@ import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
 import {
   mir4ActionAbilities,
+  mir4ActionBurnTooltipDamage,
   mir4ActionId,
   mir4ActionRawDamage,
   mir4UltimateActionId,
@@ -14,7 +15,7 @@ import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey, SimEvent } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 import { abilityDamageBonus } from '../../src/ui/ability_damage';
-import { abilityEffectText } from '../../src/ui/ability_description';
+import { abilityDisplayDescription, abilityEffectText } from '../../src/ui/ability_description';
 import { isAbilityActionBarEligible } from '../../src/ui/hud/action_bar/hotbar';
 
 function required<T>(value: T | undefined, label: string): T {
@@ -150,6 +151,109 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(shield.def.description).toContain('28.2%');
     expect(heal.def.description).toContain('23.04%');
     expect(totem.def.description).toContain('1.792 sec');
+  });
+
+  it('describes defense break and burn using their live mechanics', () => {
+    const warrior = required(
+      mir4ActionAbilities(1, 30, undefined, 204).find(
+        (ability) => ability.def.id === mir4ActionId(1304),
+      ),
+      'defense-break skill',
+    );
+    const elementalist = required(
+      mir4ActionAbilities(2, 30, undefined, 204).find(
+        (ability) => ability.def.id === mir4ActionId(2111),
+      ),
+      'burn skill',
+    );
+    const taoist = required(
+      mir4ActionAbilities(3, 30, undefined, 204).find(
+        (ability) => ability.def.id === mir4ActionId(3101),
+      ),
+      'area defense-break skill',
+    );
+    const lancer = required(
+      mir4ActionAbilities(5, 30, undefined, 204).find(
+        (ability) => ability.def.id === mir4ActionId(5104),
+      ),
+      'lancer defense-break skill',
+    );
+
+    expect(warrior.def.description).toContain(
+      "Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.",
+    );
+    expect(elementalist.def.description).toContain(
+      'Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.',
+    );
+    expect(taoist.def.description).toContain(
+      'Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.',
+    );
+    expect(lancer.def.description).toContain(
+      "Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.",
+    );
+    for (const action of [warrior, elementalist, taoist, lancer]) {
+      expect(action.def.description).toContain(
+        'The cooldown shown above is the base cooldown. Skill Cooldown Reduction can lower it by up to 40% in PvE or 30% in PvP.',
+      );
+    }
+  });
+
+  it.each([100, 255])(
+    'shows live Burn damage per tick and total at %i Spell Power, matching the applied snapshot',
+    (spellPower) => {
+      const sim = makeSim('elementalist', 911 + spellPower);
+      sim.setPlayerLevel(30);
+      const player = required(sim.entities.get(sim.playerId), 'player');
+      const target = spawnTarget(sim);
+      target.maxHp = 100_000;
+      target.hp = target.maxHp;
+      player.spellPower = spellPower;
+      if (!player.mir4) throw new Error('missing MIR4 player stats');
+      player.mir4.accuracy = 10_000;
+      player.mir4.critical = 0;
+      const action = required(
+        sim.known.find((ability) => ability.def.id === mir4ActionId(2111)),
+        'Ember Spear action',
+      );
+      const scaling = {
+        attackPower: player.attackPower,
+        spellPower: player.spellPower,
+        rangedPower: player.rangedPower,
+      };
+
+      sim.castAbility(action.def.id);
+
+      const appliedBurn = required(
+        target.mir4Effects?.active.find((effect) => effect.kind === 'burn'),
+        'applied Burn',
+      );
+      const appliedPerTick = required(appliedBurn.periodicRawDamage, 'applied Burn tick');
+      const appliedTicks = required(appliedBurn.ticksRemaining, 'applied Burn tick count');
+      const burn = required(
+        mir4ActionBurnTooltipDamage(action.def.id, spellPower) ?? undefined,
+        'Burn tooltip values',
+      );
+      const tooltip = abilityDisplayDescription(
+        action,
+        abilityEffectText(action, scaling),
+        scaling,
+      );
+
+      expect(burn.perTick).toBe(appliedPerTick);
+      expect(burn.ticks).toBe(appliedTicks);
+      expect(burn.total).toBe(appliedPerTick * appliedTicks);
+      expect(tooltip).toContain(
+        `Burns the target for ${burn.perTick} base damage every 1 sec (${burn.ticks} ticks, ${burn.total} total before mitigation).`,
+      );
+      expect(tooltip).toContain(
+        'The cooldown shown above is the base cooldown. Skill Cooldown Reduction can lower it by up to 40% in PvE or 30% in PvP.',
+      );
+    },
+  );
+
+  it('keeps the MIR4 Burn resolver closed to non-MIR4 and non-Burn actions', () => {
+    expect(mir4ActionBurnTooltipDamage('classic_fixture', 100)).toBeNull();
+    expect(mir4ActionBurnTooltipDamage(mir4ActionId(1102), 100)).toBeNull();
   });
 
   it('casts through the ordinary action-bar command and uses the MIR4 cooldown/resource keys', () => {
@@ -398,6 +502,8 @@ describe('MIR4 skills in the existing ability surface', () => {
     };
 
     expect(damageAgainst(false)).toBe(2_500);
-    expect(damageAgainst(true)).toBe(2_447);
+    // The two defensive sources now share the explicit additive reduction
+    // bucket before defense, rather than rounding separate hidden factors.
+    expect(damageAgainst(true)).toBe(2_444);
   });
 });

@@ -328,32 +328,81 @@ describe('rift sim: leaving never bounces the player back in (regression)', () =
   });
 });
 
-describe('rift sim: death returns to the entry zone cemetery', () => {
-  function dieAndRelease(sim: Sim): void {
+describe('rift sim: death keeps the spirit inside the live floor', () => {
+  function dieAndRelease(sim: Sim): SimEvent[] {
     sim.player.gm = false;
     sim.dealDamage(null, sim.player, 999999, false, 'physical', 'test', 'hit');
     expect(sim.player.dead).toBe(true);
     sim.releaseSpirit(sim.player.id);
     expect(sim.player.ghost).toBe(true);
+    return sim.tick();
   }
 
-  it('a rift entered from Eastbrook sends the spirit to an Eastbrook graveyard (not Thornpeak)', () => {
+  it('places the spirit at the current floor entry and keeps the rift presentation active', () => {
     const sim = makeSim();
-    // Enter with an Eastbrook-Vale overworld return position (zone 1, z ~ 0).
     sim.enterRift(SEED, 20, sim.player.id, { x: 0, z: 0 });
+    const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    const origin = riftInstanceOrigin(inst.slot, inst.floorIndex);
+    const floor = generateRiftFloor(inst.seed, inst.baseLevel, inst.floorIndex, inst.upgrade);
+    const corpse = { ...sim.player.pos };
+
+    const events = dieAndRelease(sim);
+
     expect(isRiftPos(sim.player.pos.x)).toBe(true);
-    dieAndRelease(sim);
-    // Eastbrook graveyards sit at z ~ -14/-56; Thornpeak's are z ~ 645+.
-    expect(sim.player.pos.z).toBeLessThan(100);
-    expect(isRiftPos(sim.player.pos.x)).toBe(false);
+    expect(sim.player.pos.x).toBeCloseTo(origin.x + floor.entry.x, 5);
+    expect(sim.player.pos.z).toBeCloseTo(origin.z + floor.entry.z, 5);
+    expect(sim.player.corpsePos).toMatchObject(corpse);
+    expect(sim.riftInstances.find((candidate) => candidate.instanceId === inst.instanceId)).toBe(
+      inst,
+    );
+    expect(events).not.toContainEqual(
+      expect.objectContaining({ type: 'riftState', active: false }),
+    );
   });
 
-  it('a rift entered from Thornpeak sends the spirit to a Thornpeak graveyard', () => {
+  it('allows the spirit to run back to its body and resurrect without leaving the rift', () => {
     const sim = makeSim();
-    // Enter with a Thornpeak-Heights overworld return position (zone 3, z ~ 838).
     sim.enterRift(SEED, 20, sim.player.id, { x: 138, z: 838 });
+    const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    const engaged = sim.entities.get(inst.mobIds[0])!;
+    const corpse = { ...sim.player.pos };
     dieAndRelease(sim);
-    expect(sim.player.pos.z).toBeGreaterThan(500);
+
+    sim.player.pos = { ...corpse };
+    sim.player.prevPos = { ...corpse };
+    engaged.inCombat = true;
+    sim.resurrectAtCorpse(sim.player.id);
+    expect(sim.player.dead).toBe(true);
+    expect(sim.player.ghost).toBe(true);
+
+    engaged.inCombat = false;
+    sim.resurrectAtCorpse(sim.player.id);
+
+    expect(sim.player.dead).toBe(false);
+    expect(sim.player.ghost).toBe(false);
+    expect(sim.player.corpsePos).toBeNull();
+    expect(isRiftPos(sim.player.pos.x)).toBe(true);
+  });
+
+  it('lets a spirit move through a Rift without activating its puzzle objects', () => {
+    const sim = makeSim(6); // floor 0 is an authored rune-pylon puzzle for this seed
+    sim.enterRift(6, 20, sim.player.id, { x: 0, z: 0 });
+    const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    expect(inst.pylonIds.length).toBeGreaterThan(0);
+    const pylon = sim.entities.get(inst.pylonIds[0])!;
+
+    dieAndRelease(sim);
+    sim.player.pos = { ...pylon.pos };
+    sim.player.prevPos = { ...pylon.pos };
+    sim.rebucket(sim.player);
+    const before = [...inst.litPylons];
+
+    sim.tick();
+
+    expect([...inst.litPylons]).toEqual(before);
+    expect(inst.puzzleSolved).toBe(false);
+    expect(sim.player.dead).toBe(true);
+    expect(sim.player.ghost).toBe(true);
   });
 });
 

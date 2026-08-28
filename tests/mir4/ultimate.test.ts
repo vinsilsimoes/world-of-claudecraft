@@ -156,6 +156,7 @@ describe('the impact clock and gauge (runtime)', () => {
       dmgPerLevel: 0,
       moveSpeed: 0,
     };
+    sim.mir4RuntimeMobTemplates.set(targetTemplate.id, targetTemplate);
     const wolf = createMob(
       sim.nextId++,
       targetTemplate as never,
@@ -178,6 +179,7 @@ describe('the impact clock and gauge (runtime)', () => {
     // A fat test wolf so the 450 total never clamps at the kill.
     const base = MIR4_MOBS.mir4_forest_wolf;
     const big = { ...base, id: 'test_big_wolf', hpBase: 600, hpPerLevel: 0 };
+    sim.mir4RuntimeMobTemplates.set(big.id, big);
     const p0 = sim.entities.get(sim.playerId)!;
     const wolf = createMob(sim.nextId++, big as never, 1, sim.groundPos(p0.pos.x + 2, p0.pos.z));
     wolf.swingTimer = 999;

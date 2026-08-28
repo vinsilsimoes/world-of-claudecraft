@@ -329,4 +329,19 @@ export const fr_CA: Partial<Record<TranslationKey, string>> = {
   'auth.designCodeErrVersion': "Ce code d'apparence vient d'une version plus récente du jeu.",
   'auth.designCodeErrMalformed':
     "Ce code d'apparence est endommagé. Copiez le code au complet et réessayez.",
+  'hudChrome.mir4.stats.debilitationSuccess': 'Réussite d’affaiblissement',
+  'hudChrome.mir4.stats.debilitationResistance': 'Résistance à l’affaiblissement',
+  'hudChrome.mir4.stats.silenceSuccess': 'Réussite de silence',
+  'hudChrome.mir4.stats.silenceResistance': 'Résistance au silence',
+  'hudChrome.mir4.stats.healthDrain': 'Drain de points de vie',
+  'hudChrome.mir4.stats.manaDrain': 'Drain de mana',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Effet des potions de vie',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Effet des potions de mana',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Dégâts d’attaque de base',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Réduction des dégâts d’attaque de base',
+  'hudChrome.mir4.stats.penetrationProtection': 'Protection contre la pénétration de défense',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Le temps de recharge affiché ci-dessus est la valeur de base. La réduction du temps de recharge des compétences peut le réduire jusqu’à 40 % en JcE ou 30 % en JcJ.',
+  'sim.rift.corpseRezCombat':
+    'Votre groupe est encore en combat. Vous pourrez ressusciter lorsque le combat sera terminé.',
 };

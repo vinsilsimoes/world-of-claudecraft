@@ -21,7 +21,8 @@ describe('MIR4 recovery and action modifiers', () => {
 
   it('caps skill cooldown and MP cost reduction without touching basic attacks', () => {
     expect(mir4ModifiedSkillCooldownSeconds(10, { 95: 2_500 })).toBe(7.5);
-    expect(mir4ModifiedSkillCooldownSeconds(10, { 95: 99_999 })).toBe(2);
+    expect(mir4ModifiedSkillCooldownSeconds(10, { 95: 99_999 })).toBe(6);
+    expect(mir4ModifiedSkillCooldownSeconds(10, { 95: 99_999 }, 'pvp')).toBe(7);
     expect(mir4ModifiedManaCost(101, { 97: 2_500 })).toBe(75);
     expect(mir4ModifiedManaCost(101, { 97: 99_999 })).toBe(10);
   });
@@ -39,6 +40,11 @@ describe('MIR4 recovery and action modifiers', () => {
       }),
     ).toEqual({ hp: 330, mp: 100 });
     expect(mir4DrainOnDamage(999, { 80: 500, 81: 250 })).toEqual({ hp: 49, mp: 24 });
+    expect(mir4DrainOnDamage(1_000, { 80: 9_999, 81: 9_999 })).toEqual({ hp: 200, mp: 150 });
+    expect(mir4DrainOnDamage(1_000, { 80: 9_999, 81: 9_999 }, 'pvp')).toEqual({
+      hp: 80,
+      mp: 60,
+    });
     expect(mir4ModifiedSkillHealing(1_000, { 148: 2_500 })).toBe(1_250);
     expect(mir4ManaRecoveredFromHealing(1_250, { 149: 1_000 })).toBe(125);
   });

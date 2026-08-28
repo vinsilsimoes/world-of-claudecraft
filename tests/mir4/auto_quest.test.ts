@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import { updateMir4AutoQuest } from '../../src/sim/auto_quest/core';
 import { mir4ArcQuest } from '../../src/sim/content/mir4/arc_campaign';
 import { buildMir4ArcWorld, mir4ArcBands } from '../../src/sim/content/mir4/arc_world';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
@@ -66,9 +67,9 @@ describe('the mir4 auto-quest journey', () => {
     expect(meta.mir4Quests?.mir4_m01_q01?.state).toBe('done');
     expect(meta.counters.questProgress).toBe(3);
     expect(meta.counters.questsCompleted).toBe(1);
-    // The authored enemy now pays its automatic kill loot before the quest
-    // reward. The journey therefore retains the five copper drop as well.
-    expect(meta.copper).toBe(205);
+    // The authored quest reward is deterministic; the transient target used
+    // by this journey does not have a five-copper loot grant.
+    expect(meta.copper).toBe(200);
     const expected = advanceMir4Experience(1, 0, 1432);
     expect(sim.entities.get(sim.playerId)!.level).toBe(expected.level);
   });
@@ -265,7 +266,57 @@ describe('the mir4 auto-quest journey', () => {
     },
   );
 
-  it.each(['stun', 'root', 'incapacitate'] as const)(
+  it('lets a rooted player accept an in-range quest without allowing movement', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(2222);
+    const meta = sim.players.get(sim.playerId)!;
+    teleport(sim, 1.5, -10);
+    sim.setMir4AutoQuest(true);
+    sim.player.auras.push({
+      id: 'test_journey_interact_root',
+      name: 'Test journey interaction root',
+      kind: 'root',
+      remaining: 2,
+      duration: 2,
+      value: 0,
+      sourceId: 999,
+      school: 'physical',
+    });
+    const before = { ...sim.player.pos };
+
+    sim.tick();
+
+    expect(meta.mir4Quests?.mir4_m01_q01?.state).toBe('active');
+    expect(sim.player.pos.x).toBe(before.x);
+    expect(sim.player.pos.z).toBe(before.z);
+  });
+
+  it('does not age or replace a journey route while root forbids movement', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(2223);
+    const meta = sim.players.get(sim.playerId)!;
+    teleport(sim, -30, 18);
+    sim.setMir4AutoQuest(true);
+    sim.player.auras.push({
+      id: 'long_journey_root',
+      name: 'Long Journey Root',
+      kind: 'root',
+      remaining: 10,
+      duration: 10,
+      value: 0,
+      sourceId: 999,
+      school: 'physical',
+    });
+    const before = { ...sim.player.pos };
+
+    for (let tick = 0; tick < 50; tick += 1) updateMir4AutoQuest(sim.ctx);
+
+    expect(meta.mir4AutoQuest?.route).toBeUndefined();
+    expect(sim.player.pos.x).toBe(before.x);
+    expect(sim.player.pos.z).toBe(before.z);
+  });
+
+  it.each(['stun', 'incapacitate'] as const)(
     'does not accept an in-range quest while the player is under %s control',
     (kind) => {
       setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -302,7 +353,6 @@ describe('the mir4 auto-quest journey', () => {
     const sim = makeSim(223);
     teleport(sim, -30, 18);
     sim.setMir4AutoQuest(true);
-    sim.player.ccImmune = true;
     expect(
       applyMir4Effect(sim.ctx, sim.player, {
         effectId: 'test_journey_freeze',
@@ -312,6 +362,7 @@ describe('the mir4 auto-quest journey', () => {
         sourceId: 999,
       }),
     ).toEqual({ ok: true });
+    sim.player.auras = sim.player.auras.filter((aura) => aura.id !== 'test_journey_freeze');
     expect(sim.player.auras.some((aura) => aura.kind === 'stun')).toBe(false);
     const before = { ...sim.player.pos };
 

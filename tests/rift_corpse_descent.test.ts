@@ -1,8 +1,8 @@
 // A rift corpse must come FORWARD with the run when the party descends.
 //
 // Rift floors are separate z-stacked regions (RIFT_FLOOR_SPACING in src/sim/data.ts,
-// detection regions deliberately non-overlapping), and a rift death sends the ghost
-// OUT to an overworld graveyard while the body stays on the floor. Before this fix
+// detection regions deliberately non-overlapping), and a rift death keeps the ghost
+// at the live instance entry while the body stays on the floor. Before this fix
 // descendRift advanced inst.floorIndex and touched no corpsePos, so a member who was
 // dead when the party moved on had their corpse orphaned a whole floor behind: the
 // region holds no live instance (riftInstanceAtPos returns null there, so no beacon
@@ -170,7 +170,7 @@ describe('a rift corpse follows the run when the party descends', () => {
     expect(leaderEntity.prevPos.x, 'prevPos stayed put').not.toBe(leaderEntity.pos.x);
   });
 
-  it('restores LOOT-ROLL eligibility for the graveyard-parked ghost (stated, not incidental)', () => {
+  it('restores LOOT-ROLL eligibility for the instance-parked ghost (stated, not incidental)', () => {
     // A CONSEQUENCE of moving the corpse, pinned here so it is deliberate rather than
     // silent. combat/damage.ts uses a released member's corpsePos as their kill-time
     // participation position within PARTY_XP_RANGE, on purpose ("releasing during the
@@ -178,8 +178,8 @@ describe('a rift corpse follows the run when the party descends', () => {
     // rift the instance arm of that check never binds (instanceClaimIdAt scans dungeon
     // slots only), so the corpse arm always applies. That rule already held WITHIN a
     // floor; before this fix a descent silently revoked it by stranding the corpse
-    // 340u back. Restoring it is the point, but it does mean a ghost parked at an
-    // overworld graveyard keeps loot rights on kills near each new floor's entry.
+    // 340u back. Restoring it is the point, and the ghost remains inside the exact
+    // live run rather than being sent to an unrelated overworld graveyard.
     //
     // Asserted on lootRecipientIds, NOT on xp: RIFT_MIN_LEVEL equals MAX_LEVEL (both
     // 20), so every rift participant is at the cap by construction and the xp half of
@@ -190,7 +190,8 @@ describe('a rift corpse follows the run when the party descends', () => {
     sim.releaseSpirit(victim);
     openDescent(sim, run);
     descendRift(sim.ctx, leader);
-    expect(isRiftPos(body.pos.x), 'the ghost itself is out in the overworld').toBe(false);
+    expect(isRiftPos(body.pos.x), 'the ghost itself remains inside the Rift').toBe(true);
+    expect(riftInstanceAtPos(sim.ctx, body.pos), 'the ghost is in the live run').toBe(run);
 
     const corpse = body.corpsePos!;
     const mob = run.mobIds.map((id) => sim.entities.get(id)).find((m) => m && !m.dead)!;
@@ -204,6 +205,151 @@ describe('a rift corpse follows the run when the party descends', () => {
       mob.lootRecipientIds,
       'the ghost is a kill-time loot recipient through their moved corpse',
     ).toContain(victim);
+  });
+
+  it('migrates an offline ghost and rebuilds its client floor state after descent', () => {
+    const { sim, leader, victim, run } = enterAsParty();
+    const characterId = 77_001;
+    sim.players.get(victim)!.characterId = characterId;
+    const body = kill(sim, victim);
+    sim.releaseSpirit(victim);
+    const state = sim.serializeCharacter(victim)!;
+    const oldPid = victim;
+    sim.removePlayer(oldPid);
+
+    openDescent(sim, run);
+    descendRift(sim.ctx, leader);
+    expect(run.floorIndex).toBe(1);
+    sim.drainEvents();
+
+    const newPid = sim.addPlayer('warrior', 'Returning Victim', { state, characterId });
+    const restored = sim.entities.get(newPid)!;
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost).toBe(true);
+    expect(riftInstanceAtPos(sim.ctx, restored.pos)).toBe(run);
+    expect(riftInstanceAtPos(sim.ctx, restored.corpsePos!)).toBe(run);
+    expect(run.memberIds.has(oldPid)).toBe(false);
+    expect(run.memberIds.has(newPid)).toBe(true);
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({
+      kind: 'rift',
+      instanceId: run.instanceId,
+      memberEntityId: newPid,
+      floorIndex: 1,
+    });
+
+    const stateEvent = sim
+      .drainEvents()
+      .find((event) => event.type === 'riftState' && event.pid === newPid);
+    expect(stateEvent).toMatchObject({
+      type: 'riftState',
+      pid: newPid,
+      active: true,
+      instanceId: run.instanceId,
+      floorIndex: 1,
+    });
+    expect(body.id).toBe(oldPid);
+  });
+
+  it('auto-releases an offline unreleased death onto the party current floor on relog', () => {
+    const { sim, leader, victim, run } = enterAsParty();
+    const characterId = 77_003;
+    sim.players.get(victim)!.characterId = characterId;
+    const body = kill(sim, victim);
+    expect(body.ghost, 'the player logs out before manually releasing').toBe(false);
+    expect(body.corpsePos, 'an unreleased death has not stamped its corpse yet').toBeFalsy();
+
+    // Exercise the production logout order: capture boot-local authority, save,
+    // then remove the entity while the rest of the party keeps the run alive.
+    sim.preparePlayerLeave(victim);
+    const saved = sim.serializeCharacter(victim)!;
+    const oldPid = victim;
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({
+      kind: 'rift',
+      instanceId: run.instanceId,
+      memberEntityId: oldPid,
+      floorIndex: 0,
+    });
+    sim.removePlayer(oldPid);
+
+    openDescent(sim, run);
+    descendRift(sim.ctx, leader);
+    expect(run.floorIndex, 'the online party advanced while the victim was offline').toBe(1);
+    sim.drainEvents();
+
+    const newPid = sim.addPlayer('warrior', 'Unreleased Returning Victim', {
+      state: saved,
+      characterId,
+    });
+    const restored = sim.entities.get(newPid)!;
+    const currentFloorOrigin = riftInstanceOrigin(run.slot, run.floorIndex);
+
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost, 'relog auto-releases the saved dead body').toBe(true);
+    expect(restored.corpsePos, 'the auto-release stamps a recoverable corpse').toBeTruthy();
+    expect(riftInstanceAtPos(sim.ctx, restored.corpsePos!)).toBe(run);
+    expect(riftInstanceAtPos(sim.ctx, restored.pos)).toBe(run);
+    expect(Math.abs(restored.corpsePos!.z - currentFloorOrigin.z)).toBeLessThan(160);
+    expect(Math.abs(restored.pos.z - currentFloorOrigin.z)).toBeLessThan(160);
+    expect(run.memberIds.has(oldPid)).toBe(false);
+    expect(run.memberIds.has(newPid)).toBe(true);
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({
+      kind: 'rift',
+      instanceId: run.instanceId,
+      memberEntityId: newPid,
+      floorIndex: run.floorIndex,
+    });
+    expect(sim.drainEvents()).toContainEqual(
+      expect.objectContaining({
+        type: 'riftState',
+        pid: newPid,
+        active: true,
+        instanceId: run.instanceId,
+        floorIndex: run.floorIndex,
+      }),
+    );
+  });
+
+  it('refreshes an online ghost binding after descent before a later relog', () => {
+    const { sim, leader, victim, run } = enterAsParty();
+    const characterId = 77_002;
+    sim.players.get(victim)!.characterId = characterId;
+    const body = kill(sim, victim);
+    sim.releaseSpirit(victim);
+
+    openDescent(sim, run);
+    descendRift(sim.ctx, leader);
+    expect(run.floorIndex).toBe(1);
+    expect(riftInstanceAtPos(sim.ctx, body.corpsePos!)).toBe(run);
+
+    sim.preparePlayerLeave(victim);
+    sim.preparePlayerLeave(victim);
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({ floorIndex: 1 });
+    const state = sim.serializeCharacter(victim)!;
+    const oldPid = victim;
+    sim.removePlayer(oldPid);
+    sim.drainEvents();
+
+    const newPid = sim.addPlayer('warrior', 'Online Then Returning', { state, characterId });
+    const restored = sim.entities.get(newPid)!;
+    expect(riftInstanceAtPos(sim.ctx, restored.pos)).toBe(run);
+    expect(riftInstanceAtPos(sim.ctx, restored.corpsePos!)).toBe(run);
+    expect(run.memberIds.has(oldPid)).toBe(false);
+    expect(run.memberIds.has(newPid)).toBe(true);
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({
+      kind: 'rift',
+      instanceId: run.instanceId,
+      memberEntityId: newPid,
+      floorIndex: 1,
+    });
+    expect(sim.drainEvents()).toContainEqual(
+      expect.objectContaining({
+        type: 'riftState',
+        pid: newPid,
+        active: true,
+        instanceId: run.instanceId,
+        floorIndex: 1,
+      }),
+    );
   });
 
   it('leaves a corpse OUTSIDE the torn-down floor alone', () => {

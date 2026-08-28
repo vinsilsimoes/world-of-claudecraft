@@ -1283,9 +1283,19 @@ export const tr_TR: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Zayıflatma Başarısı",
+        "debilitationResistance": "Zayıflatma Direnci",
+        "silenceSuccess": "Susturma Başarısı",
+        "silenceResistance": "Susturma Direnci",
+        "healthDrain": "Can Emilimi",
+        "manaDrain": "Mana Emilimi",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Can İksiri Etkisi",
+        "manaPotionEffect": "Mana İksiri Etkisi",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Temel Saldırı Hasarı",
+        "basicDamageReduction": "Temel Saldırı Hasarı Azaltma",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const tr_TR: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Savunma Delme Koruması",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "Yukarıda gösterilen bekleme süresi temel değerdir. Beceri Bekleme Süresi Azaltma, bu süreyi PvE’de en fazla %40 veya PvP’de en fazla %30 azaltabilir.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const tr_TR: EnTranslations = {
       "levelGate": "Bu Yarığa yalnızca {level} seviyesinde veya üzerindeki maceracılar girebilir.",
       "deadEntry": "Ölüyken bir Yarığa giremezsin.",
       "deadEntryCombat": "Grubun hala savaşta. Ölüler, dövüş bittiğinde tekrar girebilir.",
+      "corpseRezCombat": "Grubun hâlâ savaşta. Savaş sona erdiğinde dirilebilirsin.",
       "iceGoalLit": "Kırağı sembolü parlıyor. Yol harekete geçiyor.",
       "socketsShut": "Yuvalar gıcırdayarak kapanıyor. Yol harekete geçiyor.",
       "seqProgress": "Rünler sırayla yanıt veriyor ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const tr_TR: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const tr_TR: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const tr_TR: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const tr_TR: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

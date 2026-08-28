@@ -578,6 +578,7 @@ import { persistedResource } from './serialize_resource';
 import {
   createSimContext,
   type DamageResolution,
+  type GhostInstanceBinding,
   type SimContext,
   type SimContextHost,
 } from './sim_context';
@@ -586,8 +587,12 @@ import * as tradeMod from './social/trade';
 import {
   applyResurrectionSickness,
   applyUnstuckSickness,
+  instanceGhostFallbackGraveyard,
   RESURRECTION_SICKNESS_ID,
+  rebindSavedGhostInstance,
   releasePlayerSpirit,
+  rememberDeadPlayerInstance,
+  resolveSavedGhostInstance,
   resurrectAtCorpse,
   resurrectAtSpiritHealer,
   revivePlayerAt,
@@ -1851,8 +1856,8 @@ export interface CharacterState extends Mir4PersistedPlayerState {
   nodeHarvestCooldowns?: Record<string, number>;
   pet?: PetState | null;
   // WoW-style ghost state (JSONB; optional so pre-ghost saves load alive). A player who
-  // logs out as a released spirit resumes as a ghost at the graveyard with the corpse
-  // still marked, rather than free-resurrecting on relog. See src/sim/spirit.ts.
+  // logs out as a released spirit resumes inside the same live instance when possible,
+  // or at a safe graveyard fallback, with the corpse still marked. See src/sim/spirit.ts.
   ghost?: boolean;
   corpsePos?: { x: number; z: number } | null;
   // True when the character was saved dead (JSONB; optional so older saves load
@@ -2216,6 +2221,9 @@ export class Sim {
   private channelSubs = new Map<number, Set<JoinableChannel>>();
   // dungeon instances
   instances: InstanceSlot[] = [];
+  // Boot-local authority for an instanced corpse run, keyed by the durable
+  // character id. Coordinates alone are reusable and therefore never ownership.
+  readonly ghostInstanceBindings = new Map<number, GhostInstanceBinding>();
   dungeonResetLocks = new Map<string, { availableAt: number; claimId: number }>();
   // procedural rift instances (separate slot pool + coordinate band from dungeons)
   riftInstances: RiftInstance[] = [];
@@ -2960,6 +2968,18 @@ export class Sim {
     // Characters saved inside a dungeon instance rejoin at its entrance —
     // their old instance is gone (or belongs to someone else) by now.
     let savedPos = savedState?.pos ?? null;
+    if (!savedState?.dead && opts?.characterId !== undefined) {
+      this.ghostInstanceBindings.delete(opts.characterId);
+    }
+    const savedInstanceCorpse = savedState?.ghost ? savedState.corpsePos : savedState?.pos;
+    let liveDeadInstance =
+      savedState?.dead && savedInstanceCorpse
+        ? resolveSavedGhostInstance(
+            this.ctx,
+            opts?.characterId,
+            this.groundPos(savedInstanceCorpse.x, savedInstanceCorpse.z),
+          )
+        : null;
     // Delve must be checked BEFORE the dungeon branch: dungeonAt() returns null
     // for any x >= ARENA_X_MIN (which includes the delve band), so the dungeon
     // branch's `?? DUNGEON_LIST[0]` fallback would otherwise swallow a delve
@@ -2992,7 +3012,12 @@ export class Sim {
         legacyInstanceExit = true;
       }
     }
-    if (savedPos && isBgPos(savedPos.x)) {
+    if (savedState?.ghost && liveDeadInstance) {
+      // A quick reconnect while the exact claim still exists resumes the corpse
+      // run at that claim's entry. The boot-local authority record, not the
+      // reusable coordinates, is what allowed this branch.
+      savedPos = liveDeadInstance.entry;
+    } else if (savedPos && isBgPos(savedPos.x)) {
       // A save inside the Thornhollow Fields band (a crash mid-match) has no match to
       // rejoin: resume at the world start (dungeonAt() knows nothing about
       // this band, so the dungeon-door fallback below must never see it).
@@ -3000,6 +3025,11 @@ export class Sim {
     } else if (savedPos && isDelvePos(savedPos.x)) {
       const delve = delveAt(savedPos.x) ?? DELVE_LIST[0];
       savedPos = { x: delve.doorPos.x, z: delve.doorPos.z - 4 };
+    } else if (savedPos && savedState?.ghost && savedPos.x > DUNGEON_X_THRESHOLD) {
+      // Runtime instance claims are not persisted. If the claim disappeared
+      // during a restart/timeout, place the ghost at a real Spirit Healer rather
+      // than strand it beside a door with an unreachable corpse.
+      savedPos = instanceGhostFallbackGraveyard(this.ctx, savedPos);
     } else if (savedPos && savedPos.x > DUNGEON_X_THRESHOLD) {
       const dungeon = dungeonAt(savedPos.x) ?? DUNGEON_LIST[0];
       savedPos = { x: dungeon.doorPos.x, z: dungeon.doorPos.z - 4 };
@@ -3024,11 +3054,12 @@ export class Sim {
     // relog, but an unreleased death still needs its corpse marker at the
     // actual death spot. Preserve only current dungeon-band positions here;
     // legacy instance coordinates continue through the migration above.
-    const unreleasedDungeonDeathPos =
-      savedState?.dead &&
-      !savedState.ghost &&
-      savedState.pos.x >= INSTANCE_X_BASE &&
-      dungeonAt(savedState.pos.x)
+    const unreleasedInstanceDeathPos = liveDeadInstance?.corpsePosOverride
+      ? this.groundPos(liveDeadInstance.corpsePosOverride.x, liveDeadInstance.corpsePosOverride.z)
+      : savedState?.dead &&
+          !savedState.ghost &&
+          savedState.pos.x >= INSTANCE_X_BASE &&
+          (dungeonAt(savedState.pos.x) || isRiftPos(savedState.pos.x))
         ? this.groundPos(savedState.pos.x, savedState.pos.z)
         : null;
     const savedArena1v1: ArenaStanding = {
@@ -3197,6 +3228,12 @@ export class Sim {
       }
     }
     this.players.set(player.id, meta);
+    // Rift membership is keyed by runtime entity id. A same-process reconnect
+    // mints a new id, so atomically replace the old member before any death-flow
+    // logic asks the live run for authority. Native dungeon claims need no remap.
+    if (liveDeadInstance && !rebindSavedGhostInstance(this.ctx, opts?.characterId, player.id)) {
+      liveDeadInstance = null;
+    }
     player.skinCatalog = meta.skinCatalog;
     player.skin = meta.skin; // mirror onto the entity so the renderer + wire can read it
     this.accountCosmetics = accountCosmeticsWithWornMechChroma(
@@ -3707,32 +3744,42 @@ export class Sim {
       applyUnstuckSickness(this.ctx, player, savedState.unstuckSickness);
       player.hp = Math.min(player.hp, player.maxHp);
     }
-    // Resume a ghost: a player who logged out as a released spirit comes back as a
-    // ghost at the graveyard (corpse still marked), not freely resurrected. dead stays
-    // unset for a non-ghost logout (the pre-existing revive-on-relog behavior).
+    // Resume a ghost at the destination resolved above: the same live instance when
+    // possible, otherwise a safe graveyard fallback. The corpse remains marked and the
+    // character is not freely resurrected. Non-ghost relogs keep their prior behavior.
     if (savedState?.ghost) {
       player.dead = true;
       player.ghost = true;
       // biome-ignore format: the extracted recovery policy keeps the ghost restore branch compact
-      const corpsePos = recoverMir4CorpsePosition(this.cfg.gameProfile, this.worldContent, savedState.corpsePos);
+      const corpsePos =
+        liveDeadInstance?.corpsePosOverride ??
+        recoverMir4CorpsePosition(
+          this.cfg.gameProfile,
+          this.worldContent,
+          savedState.corpsePos,
+        );
       player.corpsePos = corpsePos ? this.groundPos(corpsePos.x, corpsePos.z) : null;
-      // Instance ids are boot-local (recreated on every claim), so recompute
-      // from the restored position via the same helper the death path uses
-      // (spirit.ts releasePlayerSpirit) rather than persisting the raw id: a
-      // relog within a still-live claim recovers the corpse's instance
-      // binding, while a stale or reset claim correctly resolves to null.
-      player.corpseInstanceId = player.corpsePos ? this.instanceClaimIdAt(player.corpsePos) : null;
+      // The exact boot-local binding was validated before the player was minted.
+      // Never infer claim ownership from corpse coordinates here: a later owner
+      // may have reused the same slot.
+      player.corpseInstanceId = liveDeadInstance?.corpseInstanceId ?? null;
+      if (!liveDeadInstance && isRiftPos(player.pos.x)) {
+        const fallback = instanceGhostFallbackGraveyard(this.ctx, player.pos);
+        player.pos = this.groundPos(fallback.x, fallback.z);
+        player.prevPos = { ...player.pos };
+        this.rebucket(player);
+      }
       player.hp = player.maxHp;
     } else if (savedState?.dead && !isArenaPos(savedState.pos.x) && !isDelvePos(savedState.pos.x)) {
       // Auto-release-on-logout: a character saved dead but UNRELEASED resumes as
       // a released ghost rather than reviving in place at 1 hp (logging out must
       // not bypass the death loop). Put the body back at the death spot, then run
-      // the normal release path so the corpse marker and graveyard choice
-      // (including the instance rule: a dungeon corpse releases to the outdoor
-      // graveyard nearest the door) cannot drift from spirit.ts. Delve, arena,
+      // the normal release path so the corpse marker and destination choice
+      // (inside the same live dungeon claim when it still exists, otherwise the
+      // outdoor fallback) cannot drift from spirit.ts. Delve, arena,
       // and fiesta deaths keep their own bounded respawn rules and never enter
       // the ghost loop, so those positions load exactly as before.
-      player.pos = { ...(unreleasedDungeonDeathPos ?? startPos) };
+      player.pos = { ...(unreleasedInstanceDeathPos ?? startPos) };
       player.prevPos = { ...player.pos };
       this.rebucket(player);
       player.dead = true;
@@ -3741,6 +3788,7 @@ export class Sim {
         player.id,
         this.worldContent.services?.graveyards ?? [],
         this.worldContent.playerStart,
+        false,
       );
     }
     if (savedState?.pet && petCommands.canRestorePetState(meta, savedState.pet)) {
@@ -4086,6 +4134,16 @@ export class Sim {
   preparePlayerLeave(pid: number): void {
     const meta = this.players.get(pid);
     if (!meta) return;
+    const departing = this.entities.get(pid);
+    if (departing?.dead) {
+      rememberDeadPlayerInstance(
+        this.ctx,
+        meta,
+        departing,
+        departing.corpsePos ?? departing.pos,
+        !departing.ghost,
+      );
+    }
     if (!meta.leaving) {
       const leavingEntity = this.entities.get(pid);
       if (leavingEntity?.castingAbility === 'rain_of_fire') cancelCastImpl(this.ctx, leavingEntity);
@@ -5290,6 +5348,9 @@ export class Sim {
       get instances() {
         return sim.instances;
       },
+      get ghostInstanceBindings() {
+        return sim.ghostInstanceBindings;
+      },
       get riftInstances() {
         return sim.riftInstances;
       },
@@ -5612,6 +5673,7 @@ export class Sim {
       applyHeal: sim.applyHeal.bind(sim),
       spellCrit: sim.spellCrit.bind(sim),
       applyAura: sim.applyAura.bind(sim),
+      tryApplyAura: sim.tryApplyAura.bind(sim),
       // General control-aura predicate (stays on Sim); the extracted Nythraxis
       // isNythraxisControlAura consults it through the seam.
       isControlAura: sim.isControlAura.bind(sim),
@@ -7316,10 +7378,14 @@ export class Sim {
   }
 
   private applyAura(target: Entity, aura: Aura): void {
-    if (target.kind === 'npc' && isRejectedFriendlyNpcAura(aura)) return;
-    if (veilboundMarchBlocksAura(target, aura)) return;
+    this.tryApplyAura(target, aura);
+  }
+
+  private tryApplyAura(target: Entity, aura: Aura): boolean {
+    if (target.kind === 'npc' && isRejectedFriendlyNpcAura(aura)) return false;
+    if (veilboundMarchBlocksAura(target, aura)) return false;
     if (aura.kind === 'slow' && target.auras.some((active) => active.kind === 'slow_immunity')) {
-      return;
+      return false;
     }
     if (
       this.isIceBlocked(target) &&
@@ -7327,7 +7393,7 @@ export class Sim {
       aura.sourceId !== target.id &&
       !isUnbreakableControlAura(aura)
     )
-      return;
+      return false;
     if (
       this.isNythraxisRaidEnemy(target) &&
       !nythraxis.isNythraxisControllableAdd(target) && // priest + stalker are meant to be CC'd
@@ -7335,7 +7401,7 @@ export class Sim {
       aura.sourceId !== target.id &&
       !isUnbreakableControlAura(aura)
     )
-      return;
+      return false;
     if (
       target.kind === 'mob' &&
       (MOBS[target.templateId]?.ccImmune || target.ccImmune) &&
@@ -7343,7 +7409,7 @@ export class Sim {
       aura.sourceId !== target.id &&
       !isUnbreakableControlAura(aura)
     )
-      return;
+      return false;
     // Slow immunity is separate from ccImmune: snares (kind 'slow') are not control auras,
     // so a slowImmune raid boss shrugs off Frostbolt/Hamstring-style movement snares while
     // still taking a self-applied slow (e.g. a scripted mechanic) through sourceId === self.
@@ -7355,13 +7421,13 @@ export class Sim {
       aura.sourceId !== target.id &&
       !isUnbreakableControlAura(aura)
     )
-      return;
+      return false;
     const replacementConflicts = auraReplacementConflicts(target.auras, aura);
     if (
       !isUnbreakableControlAura(aura) &&
       replacementConflicts.some((index) => isUnbreakableControlAura(target.auras[index]))
     )
-      return;
+      return false;
     // A same-id same-name re-application is a REFRESH: the old aura is
     // displaced silently (no fade, exactly as before) and the gained event
     // below carries refresh: true so parses read it as SPELL_AURA_REFRESH
@@ -7431,6 +7497,7 @@ export class Sim {
     if (target.kind === 'player') {
       this.recalcPlayer(target);
     }
+    return true;
   }
 
   private applyRootAura(

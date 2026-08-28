@@ -3,6 +3,7 @@ import { spellHasteMult } from '../../src/sim/combat/spell_combat';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_MOUNTS_CATALOG } from '../../src/sim/content/mir4/mounts_catalog';
 import { createMob } from '../../src/sim/entity';
+import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
 import {
   combineAllMir4Mounts,
@@ -49,6 +50,11 @@ function spawnAttackTarget(sim: Sim): Entity {
 function required<T>(value: T | null | undefined, label: string): T {
   if (value === null || value === undefined) throw new Error(`Missing ${label}`);
   return value;
+}
+
+function resolveContacts(sim: Sim): void {
+  for (const impact of sim.player.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+  updateMir4PendingImpacts(sim.ctx);
 }
 
 describe('MIR4 Mount progression', () => {
@@ -598,7 +604,12 @@ describe('MIR4 Mount progression', () => {
     target.hp = target.maxHp;
     expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
     expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65, 8);
+    resolveContacts(sim);
     sim.player.cooldowns.delete('mir4_basic');
+    // Equipping is intentionally blocked in combat. End this test fixture's
+    // synthetic encounter before testing the equipped passive cadence.
+    sim.player.inCombat = false;
+    sim.player.combatTimer = 10;
 
     expect(equipMir4Mount(sim.ctx, sim.playerId, 'meadow-courser')).toMatchObject({
       ok: true,
@@ -607,8 +618,9 @@ describe('MIR4 Mount progression', () => {
     expect(sim.player.mountKey).toBe('');
     expect(required(sim.player.mir4, 'MIR4 player stats').mountBasicAttackSpeedBps).toBe(500);
     expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
-    expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65 / 1.05, 8);
+    expect(sim.player.cooldowns.get('mir4_basic')).toBe(0.619);
     expect(spellHasteMult(sim.player)).toBe(spellHasteBefore);
+    resolveContacts(sim);
     expect(sim.mir4CastSkill(1102, target.id)).toEqual({ ok: true });
     expect(sim.player.cooldowns.get('1102')).toBe(25);
     expect(sim.player.gcdRemaining).toBe(1);
@@ -619,6 +631,7 @@ describe('MIR4 Mount progression', () => {
     });
     expect(required(sim.player.mir4, 'MIR4 player stats').mountBasicAttackSpeedBps).toBe(0);
     sim.player.cooldowns.delete('mir4_basic');
+    sim.player.gcdRemaining = 0;
     expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
     expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65, 8);
 
@@ -640,6 +653,26 @@ describe('MIR4 Mount progression', () => {
     const rangedTarget = spawnAttackTarget(ranged);
     expect(ranged.mir4BasicAttack(rangedTarget.id)).toEqual({ ok: true });
     expect(ranged.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.75 / 1.5, 8);
+  });
+
+  it('enforces the real basic-attack PvE and PvP speed caps after aggregation', () => {
+    const pve = makeSim(1_102);
+    pve.player.mir4!.mountBasicAttackSpeedBps = 99_999;
+    const mob = spawnAttackTarget(pve);
+    expect(pve.mir4BasicAttack(mob.id)).toEqual({ ok: true });
+    expect(pve.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.325, 10);
+
+    const pvp = makeSim(1_103);
+    pvp.player.mir4!.mountBasicAttackSpeedBps = 99_999;
+    const enemyId = pvp.addPlayer('warrior', 'PvP cadence target');
+    const enemy = required(pvp.entities.get(enemyId), 'PvP cadence target');
+    enemy.pos = pvp.groundPos(pvp.player.pos.x + 2, pvp.player.pos.z);
+    const duel = { a: pvp.player.id, b: enemy.id, state: 'active' as const, timer: 0 };
+    pvp.duels.set(pvp.player.id, duel);
+    pvp.duels.set(enemy.id, duel);
+
+    expect(pvp.mir4BasicAttack(enemy.id)).toEqual({ ok: true });
+    expect(pvp.player.cooldowns.get('mir4_basic')).toBe(0.406);
   });
 
   it('sanitizes forged ownership, equips, and pending rows', () => {

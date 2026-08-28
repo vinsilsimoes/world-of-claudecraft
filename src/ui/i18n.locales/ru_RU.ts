@@ -13401,6 +13401,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.stats.bossDamage': 'Урон по боссам',
   'hudChrome.mir4.stats.skillDamage': 'Урон навыков',
   'hudChrome.mir4.stats.penetration': 'Пробивание защиты',
+  'hudChrome.mir4.stats.penetrationProtection': 'Защита от пробивания',
   'hudChrome.mir4.stats.unknown': 'Боевой параметр',
   'hudChrome.mir4.materials.sunStone': 'Солнечный камень',
   'hudChrome.mir4.materials.moonStone': 'Лунный камень',
@@ -13535,7 +13536,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1104.description': 'Наносит врагу {damage} ед. урона. Сбивает цель с ног на 1,2 с.',
   'entities.abilities.mir4_skill_1304.name': 'Таран',
   'entities.abilities.mir4_skill_1304.description':
-    'Наносит врагу {damage} ед. урона. На 4,5 с увеличивает получаемый целью урон на 12%.',
+    'Наносит врагу {damage} ед. урона. На 4,5 с снижает физическую и магическую защиту цели на 12%. Эффекты снижения защиты складываются мультипликативно, но защита не может упасть ниже 20% исходного значения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
   'entities.abilities.mir4_skill_1401.name': 'Сокрушение земли',
   'entities.abilities.mir4_skill_1401.description':
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 70% урона. Сбивает цель с ног на 0,8 с.',
@@ -13546,7 +13547,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Замораживает цель на 1,4 с.',
   'entities.abilities.mir4_skill_2111.name': 'Копьё углей',
   'entities.abilities.mir4_skill_2111.description':
-    'Наносит врагу {damage} ед. урона. На 4,5 с увеличивает получаемый целью урон на 8%.',
+    'Наносит врагу {damage} ед. урона. Поджигает цель и наносит {burnPerTick} ед. базового урона раз в 1 с (4 срабатывания, всего {burnTotal} ед. до снижения урона). Урон зависит от силы заклинаний в момент наложения горения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
   'entities.abilities.mir4_skill_2301.name': 'Печать кары',
   'entities.abilities.mir4_skill_2301.description':
     'Наносит врагу {damage} ед. урона. На 4 с уменьшает наносимый целью урон на 50%.',
@@ -13557,7 +13558,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_2503.description': 'На 10 с уменьшает получаемый урон на 22%.',
   'entities.abilities.mir4_skill_3101.name': 'Серия печатей',
   'entities.abilities.mir4_skill_3101.description':
-    'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. На 4 с увеличивает получаемый целью урон на 10%.',
+    'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Физическая и магическая защита каждого поражённого врага снижается на 10% на 4 с. Эффекты снижения защиты складываются мультипликативно, но защита не может упасть ниже 20% исходного значения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
   'entities.abilities.mir4_skill_3104.name': 'Тотем 1010',
   'entities.abilities.mir4_skill_3104.description': 'Воздействует на врага. Оглушает цель на 1,4 с.',
   'entities.abilities.mir4_skill_3301.name': 'Печать тотема II',
@@ -13584,7 +13585,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5101.description': 'Наносит врагу {damage} ед. урона. Сбивает цель с ног на 1 с.',
   'entities.abilities.mir4_skill_5104.name': 'Размашистый удар 5104',
   'entities.abilities.mir4_skill_5104.description':
-    'Наносит врагу {damage} ед. урона. На 4,5 с увеличивает получаемый целью урон на 14%.',
+    'Наносит врагу {damage} ед. урона. На 4,5 с снижает физическую и магическую защиту цели на 14%. Эффекты снижения защиты складываются мультипликативно, но защита не может упасть ниже 20% исходного значения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
   'entities.abilities.mir4_skill_5201.name': 'Удар 5201',
   'entities.abilities.mir4_skill_5201.description':
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 65% урона. Оглушает цель на 1,1 с.',
@@ -13843,4 +13844,18 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-04': 'Вес небосвода',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-05': 'Бездонная спираль',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-06': 'Абсолютное мгновение',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Шанс ослабления',
+  'hudChrome.mir4.stats.debilitationResistance': 'Сопротивление ослаблению',
+  'hudChrome.mir4.stats.silenceSuccess': 'Шанс немоты',
+  'hudChrome.mir4.stats.silenceResistance': 'Сопротивление немоте',
+  'hudChrome.mir4.stats.healthDrain': 'Похищение здоровья',
+  'hudChrome.mir4.stats.manaDrain': 'Похищение маны',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Эффект зелья здоровья',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Эффект зелья маны',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Урон базовой атаки',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Снижение урона базовой атаки',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
+  'sim.rift.corpseRezCombat':
+    'Ваша группа всё ещё в бою. Вы сможете воскреснуть после окончания боя.',
 };

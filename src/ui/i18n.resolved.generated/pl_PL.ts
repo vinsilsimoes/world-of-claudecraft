@@ -1283,9 +1283,19 @@ export const pl_PL: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Skuteczność osłabienia",
+        "debilitationResistance": "Odporność na osłabienie",
+        "silenceSuccess": "Skuteczność wyciszenia",
+        "silenceResistance": "Odporność na wyciszenie",
+        "healthDrain": "Wysysanie zdrowia",
+        "manaDrain": "Wysysanie many",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Efekt mikstury zdrowia",
+        "manaPotionEffect": "Efekt mikstury many",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Obrażenia ataku podstawowego",
+        "basicDamageReduction": "Redukcja obrażeń ataku podstawowego",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const pl_PL: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Ochrona przed przebiciem obrony",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "Wyświetlony wyżej czas odnowienia jest wartością bazową. Skrócenie czasu odnowienia umiejętności może go zmniejszyć maksymalnie o 40% w PvE lub o 30% w PvP.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const pl_PL: EnTranslations = {
       "levelGate": "Tylko poszukiwacze przygód na poziomie {level} lub wyższym mogą wejść do tej Szczeliny.",
       "deadEntry": "Nie możesz wejść do Szczeliny, gdy jesteś martwy.",
       "deadEntryCombat": "Twoja drużyna wciąż jest w walce. Martwi mogą wrócić, gdy walka się zakończy.",
+      "corpseRezCombat": "Twoja grupa nadal walczy. Możesz się wskrzesić, gdy walka dobiegnie końca.",
       "iceGoalLit": "Mroźny symbol rozbłyska. Droga porusza się.",
       "socketsShut": "Gniazda zamykają się ze zgrzytem. Droga porusza się.",
       "seqProgress": "Runy odpowiadają po kolei ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const pl_PL: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const pl_PL: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const pl_PL: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const pl_PL: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

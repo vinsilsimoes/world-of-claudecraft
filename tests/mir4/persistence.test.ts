@@ -6,6 +6,7 @@ import { setActiveWorldContent } from '../../src/sim/data';
 import { mir4ResolveLayer, mir4RollLayer } from '../../src/sim/mir4/affixes';
 import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
 import { MIR4_MOUNT_PENDING_LIMIT } from '../../src/sim/mir4/mounts';
+import { sanitizeMir4PlayerState } from '../../src/sim/mir4/persistence';
 import { MIR4_SPIRIT_PENDING_LIMIT } from '../../src/sim/mir4/spirits';
 import { buildMir4WocCampaignWorld } from '../../src/sim/mir4/woc_comparison_world';
 import { Sim } from '../../src/sim/sim';
@@ -410,7 +411,7 @@ describe('MIR4 character persistence', () => {
           affixes: [
             [22, 5],
             [28, 3],
-            [31, 2],
+            [30, 2],
           ],
         },
       },
@@ -752,6 +753,223 @@ describe('MIR4 character persistence', () => {
       ok: true,
       accepted: true,
     });
+  });
+
+  it('round-trips V2 penetration affixes in accepted and pending layers', () => {
+    const source = makeMir4Sim(408);
+    const sourceMeta = source.players.get(source.playerId)!;
+    sourceMeta.mir4EquipmentInstances = {
+      991020101: {
+        itemId: 991020101,
+        enhancement: 3,
+        affixes: {
+          enchantment: [
+            [1_000_001, 47],
+            [1_000_002, 53],
+          ],
+        },
+        pendingRoll: {
+          rollId: 'v2-penetration-preview',
+          layer: 'blessing',
+          affixes: [
+            [1_000_002, 55],
+            [1_000_001, 58],
+          ],
+        },
+      },
+    };
+
+    const firstSave = source.serializeCharacter(source.playerId)!;
+    const expectedInstance = {
+      itemId: 991020101,
+      enhancement: 3,
+      affixes: {
+        enchantment: [
+          [1_000_001, 47],
+          [1_000_002, 53],
+        ],
+      },
+      pendingRoll: {
+        rollId: 'v2-penetration-preview',
+        layer: 'blessing',
+        affixes: [
+          [1_000_002, 55],
+          [1_000_001, 58],
+        ],
+      },
+    };
+    expect(firstSave.mir4EquipmentInstances?.[991020101]).toEqual(expectedInstance);
+
+    const target = makeMir4Sim(409, true);
+    const restoredPid = target.addPlayer('warrior', 'V2 Affixes', { state: firstSave });
+    expect(target.players.get(restoredPid)?.mir4EquipmentInstances?.[991020101]).toEqual(
+      expectedInstance,
+    );
+
+    const secondSave = target.serializeCharacter(restoredPid)!;
+    expect(secondSave.mir4EquipmentInstances?.[991020101]).toEqual(expectedInstance);
+  });
+
+  it('rejects V2 penetration affixes from incompatible equipment slots', () => {
+    const sanitized = sanitizeMir4PlayerState(
+      {
+        mir4EquipmentInstances: {
+          991010101: {
+            itemId: 991010101,
+            enhancement: 0,
+            affixes: { enchantment: [[1_000_002, 50]] },
+            pendingRoll: {
+              rollId: 'defense-on-weapon',
+              layer: 'blessing',
+              affixes: [[1_000_002, 50]],
+            },
+          },
+          991050101: {
+            itemId: 991050101,
+            enhancement: 0,
+            affixes: { enchantment: [[1_000_001, 50]] },
+            pendingRoll: {
+              rollId: 'offense-on-armor',
+              layer: 'blessing',
+              affixes: [[1_000_001, 50]],
+            },
+          },
+        },
+      },
+      1,
+    );
+
+    expect(sanitized.mir4EquipmentInstances?.[991010101]?.affixes).toBeUndefined();
+    expect(sanitized.mir4EquipmentInstances?.[991010101]?.pendingRoll).toBeUndefined();
+    expect(sanitized.mir4EquipmentInstances?.[991050101]?.affixes).toBeUndefined();
+    expect(sanitized.mir4EquipmentInstances?.[991050101]?.pendingRoll).toBeUndefined();
+  });
+
+  it('rejects unknown V2-range affix ids from accepted and pending layers', () => {
+    const sanitized = sanitizeMir4PlayerState(
+      {
+        mir4EquipmentInstances: {
+          991020101: {
+            itemId: 991020101,
+            enhancement: 0,
+            affixes: { enchantment: [[1_000_099, 50]] },
+            pendingRoll: {
+              rollId: 'unknown-v2-status',
+              layer: 'blessing',
+              affixes: [[1_000_099, 50]],
+            },
+          },
+        },
+      },
+      1,
+    );
+
+    expect(sanitized.mir4EquipmentInstances?.[991020101]?.affixes).toBeUndefined();
+    expect(sanitized.mir4EquipmentInstances?.[991020101]?.pendingRoll).toBeUndefined();
+  });
+
+  it('interprets legacy special affix id 0 without rewriting the rollback-safe pair', () => {
+    const raw = {
+      mir4EquipmentInstances: {
+        991010101: {
+          itemId: 991010101,
+          enhancement: 0,
+          affixes: { enchantment: [[0, 50]] },
+        },
+        991020101: {
+          itemId: 991020101,
+          enhancement: 0,
+          affixes: { enchantment: [[0, 50]] },
+        },
+        991030101: {
+          itemId: 991030101,
+          enhancement: 0,
+          affixes: { enchantment: [[0, 50]] },
+        },
+        991040101: {
+          itemId: 991040101,
+          enhancement: 0,
+          affixes: { enchantment: [[0, 50]] },
+        },
+        991050101: {
+          itemId: 991050101,
+          enhancement: 0,
+          pendingRoll: {
+            rollId: 'legacy-special',
+            layer: 'blessing',
+            affixes: [[0, 50]],
+          },
+        },
+        991060101: {
+          itemId: 991060101,
+          enhancement: 0,
+          affixes: { enchantment: [[1_000_099, 50]] },
+        },
+      },
+    };
+
+    const migrated = sanitizeMir4PlayerState(raw, 1);
+    const statusOf = (itemId: number) =>
+      migrated.mir4EquipmentInstances?.[itemId]?.affixes?.enchantment?.[0]?.[0];
+    expect(statusOf(991010101)).toBe(0);
+    expect(statusOf(991020101)).toBe(0);
+    expect(statusOf(991030101)).toBe(0);
+    expect(statusOf(991040101)).toBe(0);
+    expect(migrated.mir4EquipmentInstances?.[991050101]?.pendingRoll?.affixes[0]?.[0]).toBe(0);
+    expect(migrated.mir4EquipmentInstances?.[991060101]?.affixes?.enchantment).toBeUndefined();
+    expect(sanitizeMir4PlayerState(migrated, 1)).toEqual(migrated);
+  });
+
+  it('preserves multiple legacy zero affixes because their original family was not encoded', () => {
+    const raw = {
+      mir4EquipmentInstances: {
+        991020101: {
+          itemId: 991020101,
+          enhancement: 0,
+          affixes: {
+            enchantment: [
+              [0, 50],
+              [0, 55],
+            ],
+          },
+        },
+      },
+    };
+    const sanitized = sanitizeMir4PlayerState(raw, 1);
+    expect(sanitized.mir4EquipmentInstances?.[991020101]?.affixes?.enchantment).toEqual([
+      [0, 50],
+      [0, 55],
+    ]);
+    expect(sanitizeMir4PlayerState(sanitized, 1)).toEqual(sanitized);
+  });
+
+  it('rejects impossible affix slots and duplicate statuses at the JSONB boundary', () => {
+    const sanitized = sanitizeMir4PlayerState(
+      {
+        mir4EquipmentInstances: {
+          991010101: {
+            itemId: 991010101,
+            enhancement: 0,
+            affixes: {
+              enchantment: [
+                [24, 5],
+                [20, 5],
+                [20, 6],
+              ],
+            },
+          },
+          991050101: {
+            itemId: 991050101,
+            enhancement: 0,
+            affixes: { enchantment: [[20, 5]] },
+          },
+        },
+      },
+      1,
+    );
+
+    expect(sanitized.mir4EquipmentInstances?.[991010101]?.affixes?.enchantment).toEqual([[20, 5]]);
+    expect(sanitized.mir4EquipmentInstances?.[991050101]?.affixes?.enchantment).toBeUndefined();
   });
 
   it('does not add MIR4 keys to classic character saves', () => {

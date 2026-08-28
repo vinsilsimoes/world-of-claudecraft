@@ -15,12 +15,20 @@
 
 import { describe, expect, it } from 'vitest';
 import { RIFT_ESSENCE_ITEM_ID, RIFT_GEM_IDS } from '../src/sim/content/rift/items';
-import { DUNGEON_X_THRESHOLD, QUESTS, SPIRIT_HEALER_NPC_ID } from '../src/sim/data';
+import { DUNGEON_X_THRESHOLD, isRiftPos, QUESTS, SPIRIT_HEALER_NPC_ID } from '../src/sim/data';
+import { updateInstances } from '../src/sim/instances/dungeons';
 import { placeMobileStationForPlayer } from '../src/sim/professions/mobile_station';
 import { createRiftGearInstance } from '../src/sim/rift/progression';
+import { riftSpiritEntry, updateRiftInstances } from '../src/sim/rift/runs';
 import { Sim } from '../src/sim/sim';
 import { SPIRIT_HEALER_RANGE } from '../src/sim/spirit';
-import { dist2d, type Entity, INTERACT_RANGE, type SimEvent } from '../src/sim/types';
+import {
+  dist2d,
+  type Entity,
+  INSTANCE_EMPTY_TIMEOUT,
+  INTERACT_RANGE,
+  type SimEvent,
+} from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import {
   runApplyEnchant,
@@ -551,6 +559,8 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
 
   it('a released-ghost save inside a live dungeon claim recomputes corpseInstanceId on relog', () => {
     const sim = makeSim();
+    const characterId = 20_001;
+    sim.players.get(sim.playerId)!.characterId = characterId;
     sim.setPlayerLevel(10);
     const p = sim.player as AnyEntity;
     sim.enterDungeon('hollow_crypt');
@@ -575,13 +585,329 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
     // permanently excluded from loot/XP/Heroic Mark credit for that corpse.
     const state = sim.serializeCharacter(sim.playerId)!;
     sim.removePlayer(sim.playerId);
-    const pid2 = sim.addPlayer('warrior', 'Reloger', { state });
+    const pid2 = sim.addPlayer('warrior', 'Reloger', { state, characterId });
     const e2 = sim.entities.get(pid2) as AnyEntity;
 
     expect(e2.dead).toBe(true);
     expect(e2.ghost).toBe(true);
     expect(e2.corpsePos).toBeTruthy();
     expect(e2.corpseInstanceId).toBe(inst.exitId);
+    expect(e2.pos.x).toBeGreaterThan(DUNGEON_X_THRESHOLD);
+    expect(sim.instanceClaimIdAt(e2.pos)).toBe(inst.exitId);
+  });
+
+  it('captures an unreleased dungeon death through the real idempotent leave hook', () => {
+    const sim = makeSim();
+    const characterId = 20_005;
+    sim.players.get(sim.playerId)!.characterId = characterId;
+    sim.setPlayerLevel(10);
+    const p = sim.player as AnyEntity;
+    sim.enterDungeon('hollow_crypt');
+    p.pos = { x: p.pos.x, y: p.pos.y, z: p.pos.z + 30 };
+    p.prevPos = { ...p.pos };
+    sim.rebucket(p);
+    p.hp = 0;
+    p.dead = true;
+
+    sim.preparePlayerLeave(sim.playerId);
+    sim.preparePlayerLeave(sim.playerId);
+    const state = sim.serializeCharacter(sim.playerId)!;
+    const oldPid = sim.playerId;
+    const claim = sim.instances.find(
+      (candidate) => candidate.dungeonId === 'hollow_crypt' && candidate.partyKey !== null,
+    )!;
+    sim.removePlayer(oldPid);
+
+    const newPid = sim.addPlayer('warrior', 'UnreleasedDungeonReloger', {
+      state,
+      characterId,
+    });
+    const restored = sim.entities.get(newPid)!;
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost).toBe(true);
+    expect(restored.corpseInstanceId).toBe(claim.exitId);
+    expect(sim.instanceClaimIdAt(restored.pos)).toBe(claim.exitId);
+    expect(sim.instanceClaimIdAt(restored.corpsePos!)).toBe(claim.exitId);
+  });
+
+  it('never inherits a recycled dungeon slot without the original exact claim id', () => {
+    const sim = makeSim();
+    const characterId = 20_002;
+    sim.players.get(sim.playerId)!.characterId = characterId;
+    sim.setPlayerLevel(10);
+    const p = sim.player as AnyEntity;
+    sim.enterDungeon('hollow_crypt');
+    p.pos = { x: p.pos.x, y: p.pos.y, z: p.pos.z + 30 };
+    p.prevPos = { ...p.pos };
+    sim.rebucket(p);
+    p.hp = 0;
+    p.dead = true;
+    sim.releaseSpirit();
+    const state = sim.serializeCharacter(sim.playerId)!;
+    const oldPid = sim.playerId;
+    const inst = (sim.instances as any[]).find(
+      (candidate) => candidate.dungeonId === 'hollow_crypt' && candidate.partyKey !== null,
+    );
+    const oldClaimId = inst.exitId as number;
+    sim.removePlayer(oldPid);
+
+    // Model the same slot being freed and claimed by somebody else. The world
+    // coordinates are identical, but its unique exit/claim id is new.
+    inst.partyKey = 'solo:char:999999';
+    inst.exitId = oldClaimId + 100_000;
+    expect(sim.instanceClaimIdAt({ ...state.corpsePos!, y: 0 })).toBe(inst.exitId);
+
+    const pid2 = sim.addPlayer('warrior', 'OldOwner', { state, characterId });
+    const restored = sim.entities.get(pid2) as AnyEntity;
+    expect(restored.ghost).toBe(true);
+    expect(restored.pos.x).toBeLessThan(DUNGEON_X_THRESHOLD);
+    expect(restored.corpseInstanceId).toBeNull();
+    expect(healerInRange(sim, restored.pos, SPIRIT_HEALER_RANGE)).toBe(true);
+    expect(sim.ghostInstanceBindings.has(characterId)).toBe(false);
+  });
+
+  it('a released dungeon ghost falls back to a healer when its saved claim no longer exists', () => {
+    const sim = makeSim();
+    sim.setPlayerLevel(10);
+    const p = sim.player as AnyEntity;
+    sim.enterDungeon('hollow_crypt');
+    p.pos = { x: p.pos.x, y: p.pos.y, z: p.pos.z + 30 };
+    p.prevPos = { ...p.pos };
+    sim.rebucket(p);
+    p.hp = 0;
+    p.dead = true;
+    sim.releaseSpirit();
+    const state = sim.serializeCharacter(sim.playerId)!;
+
+    const restarted = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const pid = restarted.addPlayer('warrior', 'RestartedGhost', { state });
+    const restored = restarted.entities.get(pid) as AnyEntity;
+
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost).toBe(true);
+    expect(restored.pos.x).toBeLessThan(DUNGEON_X_THRESHOLD);
+    expect(restored.corpseInstanceId).toBeNull();
+    expect(healerInRange(restarted, restored.pos, SPIRIT_HEALER_RANGE)).toBe(true);
+  });
+
+  it('a released Rift ghost also falls back to a healer after its run no longer exists', () => {
+    const sim = makeSim();
+    sim.setPlayerLevel(20);
+    sim.enterRift(4242, 20, sim.player.id, { x: 0, z: 0 });
+    const p = sim.player as AnyEntity;
+    expect(isRiftPos(p.pos.x)).toBe(true);
+    p.hp = 0;
+    p.dead = true;
+    sim.releaseSpirit();
+    expect(isRiftPos(p.pos.x)).toBe(true);
+    const state = sim.serializeCharacter(sim.playerId)!;
+
+    const restarted = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const pid = restarted.addPlayer('warrior', 'RestartedRiftGhost', { state });
+    const restored = restarted.entities.get(pid) as AnyEntity;
+
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost).toBe(true);
+    expect(isRiftPos(restored.pos.x)).toBe(false);
+    expect(healerInRange(restarted, restored.pos, SPIRIT_HEALER_RANGE)).toBe(true);
+  });
+
+  it('a released Rift ghost reconnects to the same live floor and remaps membership', () => {
+    const sim = makeSim();
+    const characterId = 20_003;
+    sim.players.get(sim.playerId)!.characterId = characterId;
+    sim.setPlayerLevel(20);
+    sim.enterRift(4242, 20, sim.player.id, { x: 0, z: 0 });
+    const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    const p = sim.player as AnyEntity;
+    p.hp = 0;
+    p.dead = true;
+    sim.releaseSpirit();
+    const state = sim.serializeCharacter(sim.playerId)!;
+    const oldPid = sim.playerId;
+    const rememberedCombatExit = { expiresAt: sim.time + 30, mobThreat: [] };
+    inst.combatExitMemory.set(oldPid, rememberedCombatExit);
+
+    sim.removePlayer(oldPid);
+    const newPid = sim.addPlayer('warrior', 'RiftReloger', { state, characterId });
+    const restored = sim.entities.get(newPid) as AnyEntity;
+
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost).toBe(true);
+    expect(isRiftPos(restored.pos.x)).toBe(true);
+    expect(inst.memberIds.has(oldPid)).toBe(false);
+    expect(inst.memberIds.has(newPid)).toBe(true);
+    expect(inst.combatExitMemory.has(oldPid)).toBe(false);
+    expect(inst.combatExitMemory.get(newPid)).toBe(rememberedCombatExit);
+    expect(riftSpiritEntry(sim.ctx, newPid, restored.corpsePos!)).not.toBeNull();
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({
+      kind: 'rift',
+      instanceId: inst.instanceId,
+      memberEntityId: newPid,
+      floorIndex: inst.floorIndex,
+    });
+    expect(sim.drainEvents()).toContainEqual(
+      expect.objectContaining({
+        type: 'riftState',
+        pid: newPid,
+        active: true,
+        instanceId: inst.instanceId,
+        floorIndex: inst.floorIndex,
+      }),
+    );
+
+    const restoredCorpsePos = restored.corpsePos;
+    if (!restoredCorpsePos) throw new Error('restored Rift corpse position is required');
+    restored.pos = { ...restoredCorpsePos };
+    restored.prevPos = { ...restored.pos };
+    sim.rebucket(restored);
+    sim.resurrectAtCorpse(newPid);
+    expect(restored.dead).toBe(false);
+    expect(sim.ghostInstanceBindings.has(characterId)).toBe(false);
+  });
+
+  it('captures an unreleased Rift death through the real idempotent leave hook', () => {
+    const sim = makeSim();
+    const characterId = 20_006;
+    sim.players.get(sim.playerId)!.characterId = characterId;
+    sim.setPlayerLevel(20);
+    sim.enterRift(4242, 20, sim.player.id, { x: 0, z: 0 });
+    const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    const p = sim.player as AnyEntity;
+    p.hp = 0;
+    p.dead = true;
+
+    sim.preparePlayerLeave(sim.playerId);
+    sim.preparePlayerLeave(sim.playerId);
+    const state = sim.serializeCharacter(sim.playerId)!;
+    const oldPid = sim.playerId;
+    sim.removePlayer(oldPid);
+
+    const newPid = sim.addPlayer('warrior', 'UnreleasedRiftReloger', {
+      state,
+      characterId,
+    });
+    const restored = sim.entities.get(newPid)!;
+    expect(restored.dead).toBe(true);
+    expect(restored.ghost).toBe(true);
+    expect(riftSpiritEntry(sim.ctx, newPid, restored.corpsePos!)).not.toBeNull();
+    expect(inst.memberIds.has(oldPid)).toBe(false);
+    expect(inst.memberIds.has(newPid)).toBe(true);
+    expect(sim.ghostInstanceBindings.get(characterId)).toMatchObject({
+      kind: 'rift',
+      instanceId: inst.instanceId,
+      memberEntityId: newPid,
+      floorIndex: inst.floorIndex,
+    });
+  });
+
+  it('never inherits a recycled Rift slot after the original run expires', () => {
+    const sim = makeSim();
+    const characterId = 20_004;
+    sim.players.get(sim.playerId)!.characterId = characterId;
+    sim.setPlayerLevel(20);
+    sim.enterRift(4242, 20, sim.player.id, { x: 0, z: 0 });
+    const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    const p = sim.player as AnyEntity;
+    p.hp = 0;
+    p.dead = true;
+    sim.releaseSpirit();
+    const state = sim.serializeCharacter(sim.playerId)!;
+    const oldPid = sim.playerId;
+    const oldInstanceId = inst.instanceId;
+    sim.removePlayer(oldPid);
+
+    // Same slot/coordinates, different monotonic run identity and owner.
+    inst.instanceId = oldInstanceId + 10_000;
+    inst.partyKey = 'solo:char:999999';
+    inst.memberIds = new Set([999_999]);
+
+    const newPid = sim.addPlayer('warrior', 'ExpiredRiftGhost', { state, characterId });
+    const restored = sim.entities.get(newPid) as AnyEntity;
+    expect(restored.ghost).toBe(true);
+    expect(isRiftPos(restored.pos.x)).toBe(false);
+    expect(inst.memberIds.has(newPid)).toBe(false);
+    expect(sim.ghostInstanceBindings.has(characterId)).toBe(false);
+    expect(healerInRange(sim, restored.pos, SPIRIT_HEALER_RANGE)).toBe(true);
+  });
+
+  it('selectively clears boot-local bindings when dungeon and Rift claims expire', () => {
+    const dungeonSim = makeSim();
+    dungeonSim.setPlayerLevel(10);
+    dungeonSim.enterDungeon('hollow_crypt');
+    const claim = dungeonSim.instances.find(
+      (candidate) => candidate.dungeonId === 'hollow_crypt' && candidate.partyKey !== null,
+    )!;
+    dungeonSim.ghostInstanceBindings.set(30_001, {
+      kind: 'dungeon',
+      claimId: claim.exitId!,
+    });
+    dungeonSim.ghostInstanceBindings.set(30_005, {
+      kind: 'dungeon',
+      claimId: claim.exitId!,
+    });
+    dungeonSim.ghostInstanceBindings.set(30_002, {
+      kind: 'dungeon',
+      claimId: claim.exitId! + 1,
+    });
+    dungeonSim.ghostInstanceBindings.set(30_006, {
+      kind: 'rift',
+      instanceId: claim.exitId!,
+      memberEntityId: dungeonSim.playerId,
+      floorIndex: 0,
+    });
+    dungeonSim.removePlayer(dungeonSim.playerId);
+    claim.emptyFor = INSTANCE_EMPTY_TIMEOUT - 1;
+    dungeonSim.tickCount += (20 - (dungeonSim.tickCount % 20)) % 20;
+    updateInstances(dungeonSim.ctx);
+    expect(dungeonSim.ghostInstanceBindings.has(30_001)).toBe(false);
+    expect(dungeonSim.ghostInstanceBindings.has(30_005)).toBe(false);
+    expect(dungeonSim.ghostInstanceBindings.has(30_002)).toBe(true);
+    expect(
+      dungeonSim.ghostInstanceBindings.has(30_006),
+      'an opposite-kind Rift binding with a numerically colliding id survives dungeon teardown',
+    ).toBe(true);
+
+    const riftSim = makeSim();
+    riftSim.setPlayerLevel(20);
+    riftSim.enterRift(4242, 20, riftSim.player.id, { x: 0, z: 0 });
+    const run = riftSim.riftInstances.find((candidate) => candidate.partyKey !== null)!;
+    riftSim.ghostInstanceBindings.set(30_003, {
+      kind: 'rift',
+      instanceId: run.instanceId,
+      memberEntityId: riftSim.playerId,
+      floorIndex: run.floorIndex,
+    });
+    riftSim.ghostInstanceBindings.set(30_007, {
+      kind: 'rift',
+      instanceId: run.instanceId,
+      memberEntityId: riftSim.playerId + 99_999,
+      floorIndex: run.floorIndex + 7,
+    });
+    riftSim.ghostInstanceBindings.set(30_004, {
+      kind: 'rift',
+      instanceId: run.instanceId + 1,
+      memberEntityId: riftSim.playerId,
+      floorIndex: run.floorIndex,
+    });
+    riftSim.ghostInstanceBindings.set(30_008, {
+      kind: 'dungeon',
+      claimId: run.instanceId,
+    });
+    riftSim.removePlayer(riftSim.playerId);
+    run.emptyFor = 179;
+    riftSim.tickCount += (20 - (riftSim.tickCount % 20)) % 20;
+    updateRiftInstances(riftSim.ctx);
+    expect(riftSim.ghostInstanceBindings.has(30_003)).toBe(false);
+    expect(
+      riftSim.ghostInstanceBindings.has(30_007),
+      'teardown keys only on the exact run identity, not stale membership or floor metadata',
+    ).toBe(false);
+    expect(riftSim.ghostInstanceBindings.has(30_004)).toBe(true);
+    expect(
+      riftSim.ghostInstanceBindings.has(30_008),
+      'an opposite-kind dungeon binding with a numerically colliding id survives Rift teardown',
+    ).toBe(true);
   });
 
   it('an alive save still loads alive and unchanged', () => {

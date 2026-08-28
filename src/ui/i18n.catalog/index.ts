@@ -893,6 +893,7 @@ export const en = {
       deadEntry: 'You cannot enter a rift while dead.',
       deadEntryCombat:
         'Your party is still in combat. The dead may re-enter once the fighting stops.',
+      corpseRezCombat: 'Your party is still in combat. You may resurrect once the fighting stops.',
       iceGoalLit: 'The frost sigil blazes. The way stirs.',
       socketsShut: 'The sockets grind shut. The way stirs.',
       seqProgress: 'The runes answer in turn ({step}/{total}).',

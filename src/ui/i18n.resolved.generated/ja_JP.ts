@@ -1283,9 +1283,19 @@ export const ja_JP: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "弱体化成功率",
+        "debilitationResistance": "弱体化耐性",
+        "silenceSuccess": "沈黙成功率",
+        "silenceResistance": "沈黙耐性",
+        "healthDrain": "HP吸収",
+        "manaDrain": "MP吸収",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "HPポーション効果",
+        "manaPotionEffect": "MPポーション効果",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "通常攻撃ダメージ",
+        "basicDamageReduction": "通常攻撃ダメージ軽減",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const ja_JP: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "防御貫通",
+        "penetrationProtection": "防御貫通耐性",
         "unknown": "戦闘属性"
       },
+      "skillCooldownDisclosure": "上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const ja_JP: EnTranslations = {
       "levelGate": "この裂け目に入れるのはレベル{level}以上の冒険者だけだ。",
       "deadEntry": "死亡した状態では裂け目に入れない。",
       "deadEntryCombat": "パーティーはまだ戦闘中だ。戦いが終われば、死者も再び入れる。",
+      "corpseRezCombat": "パーティーはまだ戦闘中です。戦闘が終わると復活できます。",
       "iceGoalLit": "霜の紋章が燃え上がる。道が動き出す。",
       "socketsShut": "台座が音を立てて閉じる。道が動き出す。",
       "seqProgress": "ルーンが順に応える（{step}/{total}）。",
@@ -10115,7 +10128,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "体当たり",
-        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを12%増加させます。"
+        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象の物理防御と魔法防御を12%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。"
       },
       "mir4_skill_1401": {
         "name": "大地砕き",
@@ -10131,7 +10144,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "残り火の槍",
-        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを8%増加させます。"
+        "description": "敵1体に{damage}ダメージを与えます。対象を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。"
       },
       "mir4_skill_2301": {
         "name": "懲罰の印",
@@ -10147,7 +10160,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "印連撃",
-        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、4秒間、対象が受けるダメージを10%増加させます。"
+        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中したすべての敵の物理防御と魔法防御を4秒間10%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。"
       },
       "mir4_skill_3104": {
         "name": "トーテム 1010",
@@ -10191,7 +10204,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "薙ぎ払い 5104",
-        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象が受けるダメージを14%増加させます。"
+        "description": "敵1体に{damage}ダメージを与え、4.5秒間、対象の物理防御と魔法防御を14%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。"
       },
       "mir4_skill_5201": {
         "name": "強撃 5201",

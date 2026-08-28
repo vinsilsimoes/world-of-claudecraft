@@ -13434,7 +13434,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano a um inimigo. Derruba o alvo por 1,2 s.',
   'entities.abilities.mir4_skill_1304.name': 'Placagem',
   'entities.abilities.mir4_skill_1304.description':
-    'Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 12% por 4,5 s.',
+    'Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 12% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
   'entities.abilities.mir4_skill_1401.name': 'Esmagamento Terrestre',
   'entities.abilities.mir4_skill_1401.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 70% desse dano. Derruba o alvo por 0,8 s.',
@@ -13446,7 +13446,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Congela o alvo por 1,4 s.',
   'entities.abilities.mir4_skill_2111.name': 'Lança de Brasa',
   'entities.abilities.mir4_skill_2111.description':
-    'Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 8% por 4,5 s.',
+    'Causa {damage} de dano a um inimigo. Queima o alvo, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
   'entities.abilities.mir4_skill_2301.name': 'Selo de Smite',
   'entities.abilities.mir4_skill_2301.description':
     'Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s.',
@@ -13457,7 +13457,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_2503.description': 'Reduz o dano recebido em 22% por 10 s.',
   'entities.abilities.mir4_skill_3101.name': 'Sequência de Selo',
   'entities.abilities.mir4_skill_3101.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Aumenta o dano recebido em 10% por 4 s.',
+    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
   'entities.abilities.mir4_skill_3104.name': 'Totem 1010',
   'entities.abilities.mir4_skill_3104.description':
     'Afeta um inimigo. Atordoa o alvo por 1,4 s.',
@@ -13489,7 +13489,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano a um inimigo. Derruba o alvo por 1 s.',
   'entities.abilities.mir4_skill_5104.name': 'Varredura 5104',
   'entities.abilities.mir4_skill_5104.description':
-    'Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 14% por 4,5 s.',
+    'Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 14% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
   'entities.abilities.mir4_skill_5201.name': 'Golpe 5201',
   'entities.abilities.mir4_skill_5201.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Atordoa o alvo por 1,1 s.',
@@ -13683,12 +13683,24 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.stats.allDamageReduction': 'Redução de Todo Dano',
   'hudChrome.mir4.stats.stunSuccess': 'Sucesso de Atordoamento',
   'hudChrome.mir4.stats.stunResistance': 'Resistência a Atordoamento',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Sucesso de Debilitação',
+  'hudChrome.mir4.stats.debilitationResistance': 'Resistência a Debilitação',
+  'hudChrome.mir4.stats.silenceSuccess': 'Sucesso de Silêncio',
+  'hudChrome.mir4.stats.silenceResistance': 'Resistência a Silêncio',
+  'hudChrome.mir4.stats.healthDrain': 'Dreno de Vida',
+  'hudChrome.mir4.stats.manaDrain': 'Dreno de Mana',
   'hudChrome.mir4.stats.recoveryPotion': 'Bônus de Recuperação de Poção',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Efeito de Poção de Vida',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Efeito de Poção de Mana',
   'hudChrome.mir4.stats.skillCooldown': 'Redução de Recarga de Habilidade',
   'hudChrome.mir4.stats.mpCostReduction': 'Redução de Custo de MP',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Dano de Ataque Básico',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Redução de Dano de Ataque Básico',
   'hudChrome.mir4.stats.huntingXp': 'Bônus de EXP de Caça',
   'hudChrome.mir4.stats.rewardXp': 'Bônus de EXP de Recompensa',
   'hudChrome.mir4.stats.dropChance': 'Bônus de Chance de Drop',
+  'hudChrome.mir4.stats.penetration': 'Perfuração de Defesa',
+  'hudChrome.mir4.stats.penetrationProtection': 'Proteção contra Perfuração de Defesa',
   'hudChrome.mir4.stats.utility': 'Recuperação e Progressão',
   'hudChrome.mir4.stats.unknown': 'Atributo de Combate',
   'hudChrome.mir4.materials.sunStone': 'Pedra do Sol',
@@ -13899,4 +13911,8 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-04': 'Peso do Firmamento',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-05': 'Espiral Abissal',
   'hudChrome.mir4.collectibles.spiritSkills.spirit-skill-6-06': 'Instante Absoluto',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
+  'sim.rift.corpseRezCombat':
+    'Seu grupo ainda está em combate. Você poderá ressuscitar quando a luta terminar.',
 };

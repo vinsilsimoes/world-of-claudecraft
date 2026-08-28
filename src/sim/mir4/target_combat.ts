@@ -219,6 +219,11 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
     // retaliation is cleared earlier instead of reaching this branch.
     if (hasManualMovement(meta.moveInput)) continue;
 
+    // Root does not cancel a valid single-target contract. It only pauses
+    // pursuit, and therefore must not age stall/route memory while speed is 0.
+    const runSpeed = mir4AutomationRunSpeed(ctx, player);
+    if (runSpeed <= 0) continue;
+
     const observed = observeMir4AutoBattlePursuit(state.pursuit, target.id, player.pos, distance);
     state.pursuit = observed.pursuit;
     if (observed.stalled) {
@@ -234,10 +239,6 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
       ctx.riftCollisionToken,
     );
     state.route = next.route;
-    ctx.moveToward(
-      player,
-      { x: next.waypoint.x, y: player.pos.y, z: next.waypoint.z },
-      mir4AutomationRunSpeed(ctx, player),
-    );
+    ctx.moveToward(player, { x: next.waypoint.x, y: player.pos.y, z: next.waypoint.z }, runSpeed);
   }
 }

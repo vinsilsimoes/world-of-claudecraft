@@ -23,7 +23,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 968,
-      "state": "2deb07bc",
+      "state": "014e4215",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -66,6 +66,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -145,7 +146,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 970,
-      "state": "575279a7",
+      "state": "9b2c1078",
       "events": "1eb0a908",
       "rng": {
         "draws": 0,
@@ -188,6 +189,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -311,7 +313,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 970,
-      "state": "f9bf5e6b",
+      "state": "4c2050ac",
       "events": "efd5dee5",
       "rng": {
         "draws": 0,
@@ -354,6 +356,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -491,7 +494,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 970,
-      "state": "8ebdb3fb",
+      "state": "1faa4214",
       "events": "1e1fb82b",
       "rng": {
         "draws": 0,
@@ -502,7 +505,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 970,
-      "state": "76886a75",
+      "state": "7e4cd282",
       "events": "fe7adc77",
       "rng": {
         "draws": 0,
@@ -513,7 +516,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 971,
-      "state": "2b5afd7b",
+      "state": "9bed5394",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -573,6 +576,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -773,7 +777,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 971,
-      "state": "12498bae",
+      "state": "03f6d981",
       "events": "5fcbbafc",
       "rng": {
         "draws": 0,
@@ -833,6 +837,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -970,7 +975,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 973,
-      "state": "f8f66096",
+      "state": "ac9e3bb9",
       "events": "2474bfb9",
       "rng": {
         "draws": 0,
@@ -1030,6 +1035,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -1210,7 +1216,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 973,
-      "state": "a7b2c1d3",
+      "state": "9f5c28fc",
       "events": "e722b014",
       "rng": {
         "draws": 0,
@@ -1270,6 +1276,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -1450,7 +1457,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 973,
-      "state": "12498bae",
+      "state": "03f6d981",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1510,6 +1517,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -1647,7 +1655,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 974,
-      "state": "12498bae",
+      "state": "03f6d981",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1707,6 +1715,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -1844,7 +1853,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 976,
-      "state": "70040445",
+      "state": "90b0400b",
       "events": "b0fefd8f",
       "rng": {
         "draws": 0,
@@ -1904,6 +1913,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -1961,6 +1971,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -2199,7 +2210,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 976,
-      "state": "1e07f21f",
+      "state": "c20efc91",
       "events": "edc83589",
       "rng": {
         "draws": 151,
@@ -2210,7 +2221,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 976,
-      "state": "23387c32",
+      "state": "6a6985bc",
       "events": "1139fef4",
       "rng": {
         "draws": 286,
@@ -2221,7 +2232,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 976,
-      "state": "23387c32",
+      "state": "6a6985bc",
       "events": "741638a5",
       "rng": {
         "draws": 286,
@@ -2281,6 +2292,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -2352,6 +2364,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -2595,7 +2608,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 978,
-      "state": "0c366993",
+      "state": "eaaeaf65",
       "events": "caa10dee",
       "rng": {
         "draws": 286,
@@ -2655,6 +2668,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -2726,6 +2740,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -2970,7 +2985,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 980,
-      "state": "cc3fc6a3",
+      "state": "81575db5",
       "events": "d77682e5",
       "rng": {
         "draws": 286,
@@ -3030,6 +3045,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -3101,6 +3117,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -3352,7 +3369,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 980,
-      "state": "cc3fc6a3",
+      "state": "81575db5",
       "events": "741638a5",
       "rng": {
         "draws": 286,
@@ -3412,6 +3429,7 @@
             "mainhand": "rusty_hatchet"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
@@ -3483,6 +3501,7 @@
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [

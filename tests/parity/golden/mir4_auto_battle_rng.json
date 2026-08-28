@@ -6,10 +6,11 @@
   "coverage": [
     "MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out",
     "MIR4 4106 hit/crit/effect draw order at its authored contact clock",
+    "MIR4 default control opposition and build-curve Spirit procs use the shared rng stream",
     "friendly proximity contributes neither targeting nor combat rng draws"
   ],
-  "draws": 9,
-  "drawDigest": "36b93436",
+  "draws": 13,
+  "drawDigest": "3eadcd2b",
   "frames": [
     {
       "tick": 0,
@@ -29,7 +30,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 51,
-      "state": "254242f5",
+      "state": "2c122afb",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -65,6 +66,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -78,12 +81,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -133,6 +145,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -146,12 +160,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -536,7 +559,7 @@
       "tick": 1,
       "time": 0.05,
       "nextId": 51,
-      "state": "95e7b578",
+      "state": "bf6000ac",
       "events": "aa2a18eb",
       "rng": {
         "draws": 6,
@@ -547,7 +570,7 @@
       "tick": 2,
       "time": 0.1,
       "nextId": 51,
-      "state": "d4b6a7e1",
+      "state": "877b364d",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -558,7 +581,7 @@
       "tick": 3,
       "time": 0.15,
       "nextId": 51,
-      "state": "e4c55ec1",
+      "state": "0ded942d",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -569,7 +592,7 @@
       "tick": 4,
       "time": 0.2,
       "nextId": 51,
-      "state": "007ef6b5",
+      "state": "41441201",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -580,7 +603,7 @@
       "tick": 5,
       "time": 0.25,
       "nextId": 51,
-      "state": "0df8a25e",
+      "state": "2717afb2",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -591,7 +614,7 @@
       "tick": 6,
       "time": 0.3,
       "nextId": 51,
-      "state": "0fdf8558",
+      "state": "c795d30c",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -602,7 +625,7 @@
       "tick": 7,
       "time": 0.35,
       "nextId": 51,
-      "state": "369e5148",
+      "state": "86959dfc",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -613,7 +636,7 @@
       "tick": 8,
       "time": 0.4,
       "nextId": 51,
-      "state": "6abb0240",
+      "state": "5f645f34",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -624,7 +647,7 @@
       "tick": 9,
       "time": 0.45,
       "nextId": 51,
-      "state": "644f2dc4",
+      "state": "1c389708",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -635,7 +658,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 51,
-      "state": "79ed21f8",
+      "state": "3f7de52c",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -646,7 +669,7 @@
       "tick": 11,
       "time": 0.55,
       "nextId": 51,
-      "state": "fe5fdc1e",
+      "state": "dc638472",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -657,7 +680,7 @@
       "tick": 12,
       "time": 0.6,
       "nextId": 51,
-      "state": "082af784",
+      "state": "811e1ec8",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -668,7 +691,7 @@
       "tick": 13,
       "time": 0.65,
       "nextId": 51,
-      "state": "ffb625f7",
+      "state": "f485292b",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -679,7 +702,7 @@
       "tick": 14,
       "time": 0.7,
       "nextId": 51,
-      "state": "8b83d85d",
+      "state": "92905b69",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -690,7 +713,7 @@
       "tick": 15,
       "time": 0.75,
       "nextId": 51,
-      "state": "1f5a964b",
+      "state": "c3b4229f",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -701,7 +724,7 @@
       "tick": 15,
       "time": 0.75,
       "nextId": 51,
-      "state": "1f5a964b",
+      "state": "c3b4229f",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -741,6 +764,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -754,12 +779,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -812,6 +846,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -825,12 +861,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -1318,7 +1363,7 @@
       "tick": 16,
       "time": 0.8,
       "nextId": 51,
-      "state": "e5e118a3",
+      "state": "3dedf21f",
       "events": "d6c70036",
       "rng": {
         "draws": 9,
@@ -1329,7 +1374,7 @@
       "tick": 17,
       "time": 0.85,
       "nextId": 51,
-      "state": "473587e2",
+      "state": "6beedbba",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1340,7 +1385,7 @@
       "tick": 18,
       "time": 0.9,
       "nextId": 51,
-      "state": "268ddcb0",
+      "state": "e8eeb50c",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1351,7 +1396,7 @@
       "tick": 19,
       "time": 0.95,
       "nextId": 51,
-      "state": "e219cf9a",
+      "state": "de6a21a2",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1362,7 +1407,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 51,
-      "state": "fbf9315a",
+      "state": "8109a30e",
       "events": "55188a1f",
       "rng": {
         "draws": 9,
@@ -1373,7 +1418,7 @@
       "tick": 21,
       "time": 1.05,
       "nextId": 51,
-      "state": "b5ae0d36",
+      "state": "a87bb8fa",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1384,7 +1429,7 @@
       "tick": 22,
       "time": 1.1,
       "nextId": 51,
-      "state": "dcf968b6",
+      "state": "62be538a",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1395,7 +1440,7 @@
       "tick": 23,
       "time": 1.15,
       "nextId": 51,
-      "state": "8f457d36",
+      "state": "3c7b08ce",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1406,7 +1451,7 @@
       "tick": 24,
       "time": 1.2,
       "nextId": 51,
-      "state": "d22ddc4e",
+      "state": "a5a5472a",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1417,7 +1462,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 51,
-      "state": "40fdc748",
+      "state": "a0b7f9b0",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1428,7 +1473,7 @@
       "tick": 26,
       "time": 1.3,
       "nextId": 51,
-      "state": "604b0588",
+      "state": "ddfc683c",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1439,7 +1484,7 @@
       "tick": 27,
       "time": 1.35,
       "nextId": 51,
-      "state": "c6fcbde2",
+      "state": "bc483042",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1450,7 +1495,7 @@
       "tick": 28,
       "time": 1.4,
       "nextId": 51,
-      "state": "858db7b5",
+      "state": "8611eb6d",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1461,7 +1506,7 @@
       "tick": 29,
       "time": 1.45,
       "nextId": 51,
-      "state": "1f58abc9",
+      "state": "931c62f5",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1472,7 +1517,7 @@
       "tick": 29,
       "time": 1.45,
       "nextId": 51,
-      "state": "1f58abc9",
+      "state": "931c62f5",
       "events": "741638a5",
       "rng": {
         "draws": 9,
@@ -1512,6 +1557,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -1525,12 +1572,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -1583,6 +1639,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -1596,12 +1654,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -1798,7 +1865,15 @@
                 "sourceId": 45,
                 "until": 3.55
               }
-            }
+            },
+            "hardControlHistory": [
+              {
+                "appliedAt": 0.8,
+                "duration": 2,
+                "effectId": "mir4_4106_stun",
+                "sourceId": 45
+              }
+            ]
           },
           "onGround": true,
           "overpowerUntil": -1,
@@ -2136,13 +2211,13 @@
       "tick": 29,
       "time": 1.45,
       "nextId": 51,
-      "state": "1f58abc9",
-      "events": "741638a5",
+      "state": "d378c829",
+      "events": "675d8bd7",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 13,
+        "digest": "3eadcd2b"
       },
-      "label": "final",
+      "label": "shared-build-chances",
       "players": [
         {
           "activeLoadout": -1,
@@ -2176,6 +2251,8 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -2189,12 +2266,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -2211,6 +2297,15 @@
             },
             "301204000": {
               "itemId": 301204000
+            }
+          },
+          "mir4Spirits": {
+            "discovered": [
+              "spirit-common-01"
+            ],
+            "equippedSpiritId": "spirit-common-01",
+            "owned": {
+              "spirit-common-01": 1
             }
           },
           "nodeHarvestReadyAt": {},
@@ -2239,14 +2334,20 @@
           "bgRating": 1500,
           "cls": "warrior",
           "companionUpgrades": {},
-          "counters": {},
+          "counters": {
+            "damageDealt": 412
+          },
           "craftSkills": {},
           "deedStats": {
-            "counters": {},
+            "counters": {
+              "damageDealt": 412
+            },
             "dungeonClears": {},
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
               "recruit_tunic",
               "worn_sword"
             ]
@@ -2260,12 +2361,21 @@
             "offhand": "eastbrook_buckler"
           },
           "equipmentInstance": {},
+          "fame": 2000,
           "gatheringProficiency": {},
           "heroicDaily": {},
           "inventory": [
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
             }
           ],
           "mailWelcomed": true,
@@ -2462,7 +2572,15 @@
                 "sourceId": 45,
                 "until": 3.55
               }
-            }
+            },
+            "hardControlHistory": [
+              {
+                "appliedAt": 0.8,
+                "duration": 2,
+                "effectId": "mir4_4106_stun",
+                "sourceId": 45
+              }
+            ]
           },
           "onGround": true,
           "overpowerUntil": -1,
@@ -2569,7 +2687,17 @@
         {
           "aggroTargetId": 45,
           "aiState": "attack",
-          "combatTimer": 1.4,
+          "auras": [
+            {
+              "duration": 1.14,
+              "id": "mir4_1104_knockdown",
+              "kind": "stun",
+              "name": "Golpe Lacerante",
+              "remaining": 1.14,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
@@ -2578,7 +2706,7 @@
           "fallStartY": 1.524302,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49099,
+          "hp": 48687,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
@@ -2590,6 +2718,19 @@
           "level": 1,
           "lootFfaTimer": "Infinity",
           "maxHp": 50000,
+          "mir4": {
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
+            "criticalOutcome": 10,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "120": 500
+            }
+          },
           "mir4Effects": {
             "active": [
               {
@@ -2599,6 +2740,28 @@
                 "magnitude": 0.6,
                 "remaining": 3.55,
                 "sourceId": 45
+              },
+              {
+                "duration": 1.14,
+                "effectId": "mir4_1104_knockdown",
+                "kind": "knockdown",
+                "remaining": 1.14,
+                "sourceId": 50
+              }
+            ],
+            "controlImmuneUntil": 3.34,
+            "controlImmunityByEffectId": {
+              "mir4_1104_knockdown": {
+                "sourceId": 50,
+                "until": 3.34
+              }
+            },
+            "hardControlHistory": [
+              {
+                "appliedAt": 1.45,
+                "duration": 1.14,
+                "effectId": "mir4_1104_knockdown",
+                "sourceId": 50
               }
             ]
           },
@@ -2627,7 +2790,7 @@
             ],
             [
               50,
-              1
+              413
             ]
           ],
           "wanderTimer": 9999,
@@ -2710,7 +2873,7 @@
         },
         {
           "aiState": "idle",
-          "attackPower": 125,
+          "attackPower": 197,
           "auras": [
             {
               "duration": 3600,
@@ -2724,39 +2887,54 @@
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 100.45,
           "comboUntil": -1,
+          "cooldowns": [
+            [
+              "1104",
+              16
+            ]
+          ],
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
           "fallStartY": 0.861379,
           "fiveSecondRule": 100.45,
-          "hp": 4000,
+          "gcdRemaining": 1,
+          "hp": 6160,
           "id": 50,
+          "inCombat": true,
           "kind": "player",
-          "level": 1,
+          "level": 10,
           "lootFfaTimer": "Infinity",
-          "maxHp": 4000,
-          "maxResource": 600,
+          "maxHp": 6160,
+          "maxResource": 690,
           "mir4": {
-            "accuracy": 5,
+            "accuracy": 41,
+            "bossDamageBps": 41,
+            "bossDamageReductionBps": 41,
             "classId": 1,
             "criticalOutcome": 10,
-            "magicDefense": 12,
-            "manaCostStat": 204,
+            "dodge": 36,
+            "magicDefense": 57,
+            "manaCostStat": 450,
             "monsterDamageReductionBps": 10,
-            "physicalDefense": 12,
+            "physicalDefense": 57,
+            "pvpDamageBps": 9,
             "skillDamageBps": 10,
             "statusValues": {
-              "1": 4000,
-              "6": 600,
-              "19": 204,
-              "20": 125,
-              "24": 12,
-              "26": 12,
-              "28": 5,
+              "1": 6160,
+              "6": 690,
+              "19": 450,
+              "20": 197,
+              "24": 57,
+              "26": 57,
+              "28": 41,
+              "29": 36,
               "32": 10,
+              "38": 9,
+              "41": 41,
               "42": 10,
+              "43": 41,
               "44": 10
             }
           },
@@ -2772,7 +2950,774 @@
             "z": -998
           },
           "potionCooldownUntil": -1,
-          "resource": 600,
+          "resource": 582,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        }
+      ]
+    },
+    {
+      "tick": 29,
+      "time": 1.45,
+      "nextId": 51,
+      "state": "d378c829",
+      "events": "741638a5",
+      "rng": {
+        "draws": 13,
+        "digest": "3eadcd2b"
+      },
+      "label": "final",
+      "players": [
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "autoBattle": {
+            "acquireRadiusYards": 30,
+            "anchorZ": -1000,
+            "mode": "off"
+          },
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {
+            "damageDealt": 2557
+          },
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {
+              "damageDealt": 2557
+            },
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 45,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "fame": 2000,
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
+          "mir4Equipment": {
+            "1": 200204000,
+            "5": 301204000
+          },
+          "mir4EquipmentInstances": {
+            "200204000": {
+              "itemId": 200204000
+            },
+            "301204000": {
+              "itemId": 301204000
+            }
+          },
+          "mir4Spirits": {
+            "discovered": [
+              "spirit-common-01"
+            ],
+            "equippedSpiritId": "spirit-common-01",
+            "owned": {
+              "spirit-common-01": 1
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        },
+        {
+          "activeLoadout": -1,
+          "archetype": {},
+          "arena2v2Rating": 1500,
+          "arenaRating": 1500,
+          "bags": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "bank": {},
+          "bgRating": 1500,
+          "cls": "warrior",
+          "companionUpgrades": {},
+          "counters": {
+            "damageDealt": 412
+          },
+          "craftSkills": {},
+          "deedStats": {
+            "counters": {
+              "damageDealt": 412
+            },
+            "dungeonClears": {},
+            "itemsDiscovered": [
+              "baked_bread",
+              "eastbrook_buckler",
+              "minor_healing_potion",
+              "minor_mana_potion",
+              "recruit_tunic",
+              "worn_sword"
+            ]
+          },
+          "delveClears": {},
+          "delveDaily": {},
+          "entityId": 50,
+          "equipment": {
+            "chest": "recruit_tunic",
+            "mainhand": "worn_sword",
+            "offhand": "eastbrook_buckler"
+          },
+          "equipmentInstance": {},
+          "fame": 2000,
+          "gatheringProficiency": {},
+          "heroicDaily": {},
+          "inventory": [
+            {
+              "count": 5,
+              "itemId": "baked_bread"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_healing_potion"
+            },
+            {
+              "count": 50,
+              "itemId": "minor_mana_potion"
+            }
+          ],
+          "mailWelcomed": true,
+          "mir4ArcRewards": {
+            "xpLedgerVersion": 2
+          },
+          "mir4Equipment": {
+            "1": 200201000,
+            "5": 301201000
+          },
+          "mir4EquipmentInstances": {
+            "200201000": {
+              "itemId": 200201000
+            },
+            "301201000": {
+              "itemId": 301201000
+            }
+          },
+          "nodeHarvestReadyAt": {},
+          "recipesGrandfathered": true,
+          "reliquary": {
+            "counts": {},
+            "firstFind": {}
+          },
+          "talents": {
+            "rows": {}
+          },
+          "townFocus": {}
+        }
+      ],
+      "entities": [
+        {
+          "aiState": "idle",
+          "attackPower": 392,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3598.55,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "combatTimer": 0.65,
+          "comboUntil": -1,
+          "cooldowns": [
+            [
+              "4101",
+              8.55
+            ],
+            [
+              "4102",
+              8.55
+            ],
+            [
+              "4103",
+              24.6
+            ],
+            [
+              "4106",
+              19.35
+            ]
+          ],
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "facing": 1.570796,
+          "fallStartY": 1.53378,
+          "fiveSecondRule": 100.45,
+          "gcdRemaining": 0.35,
+          "hp": 10960,
+          "id": 45,
+          "inCombat": true,
+          "kind": "player",
+          "level": 30,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 10960,
+          "maxResource": 890,
+          "mir4": {
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
+            "classId": 4,
+            "criticalOutcome": 10,
+            "dodge": 116,
+            "magicDefense": 157,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "physicalDefense": 157,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 10960,
+              "6": 890,
+              "19": 951,
+              "20": 392,
+              "24": 157,
+              "26": 157,
+              "28": 127,
+              "29": 116,
+              "32": 10,
+              "38": 29,
+              "41": 131,
+              "42": 10,
+              "43": 131,
+              "44": 10
+            }
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 4,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "y": 1.53378,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "resource": 644.44625,
+          "resourceType": "mana",
+          "spawnPos": {
+            "x": 2,
+            "y": 1.5,
+            "z": -2
+          },
+          "stats": {
+            "agi": 20,
+            "armor": 144,
+            "int": 10,
+            "spi": 11,
+            "sta": 23,
+            "str": 23
+          },
+          "targetId": 46,
+          "templateId": "warrior",
+          "weapon": {
+            "max": 5,
+            "min": 2,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "chase",
+          "auras": [
+            {
+              "duration": 2,
+              "id": "mir4_4106_stun",
+              "kind": "stun",
+              "name": "Investida 4106",
+              "remaining": 1.35,
+              "school": "physical",
+              "sourceId": 45
+            }
+          ],
+          "combatTimer": 0.65,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "fallStartY": 1.577216,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49334,
+          "id": 46,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 2,
+                "effectId": "mir4_4106_stun",
+                "kind": "stun",
+                "remaining": 1.3,
+                "sourceId": 45
+              }
+            ],
+            "controlImmuneUntil": 3.55,
+            "controlImmunityByEffectId": {
+              "mir4_4106_stun": {
+                "sourceId": 45,
+                "until": 3.55
+              }
+            },
+            "hardControlHistory": [
+              {
+                "appliedAt": 0.8,
+                "duration": 2,
+                "effectId": "mir4_4106_stun",
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9999,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              667
+            ]
+          ],
+          "wanderTimer": 9998.2,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 1.4,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.892547,
+          "fallStartY": 0.881882,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49505,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 3.55,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 0.881882,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9997.6,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              495
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "auras": [
+            {
+              "duration": 1.14,
+              "id": "mir4_1104_knockdown",
+              "kind": "stun",
+              "name": "Golpe Lacerante",
+              "remaining": 1.14,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.570796,
+          "fallStartY": 1.524302,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 48687,
+          "id": 48,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4": {
+            "accuracy": 127,
+            "bossDamageBps": 131,
+            "bossDamageReductionBps": 131,
+            "criticalOutcome": 10,
+            "manaCostStat": 951,
+            "monsterDamageReductionBps": 10,
+            "pvpDamageBps": 29,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "120": 500
+            }
+          },
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 3.55,
+                "sourceId": 45
+              },
+              {
+                "duration": 1.14,
+                "effectId": "mir4_1104_knockdown",
+                "kind": "knockdown",
+                "remaining": 1.14,
+                "sourceId": 50
+              }
+            ],
+            "controlImmuneUntil": 3.34,
+            "controlImmunityByEffectId": {
+              "mir4_1104_knockdown": {
+                "sourceId": 50,
+                "until": 3.34
+              }
+            },
+            "hardControlHistory": [
+              {
+                "appliedAt": 1.45,
+                "duration": 1.14,
+                "effectId": "mir4_1104_knockdown",
+                "sourceId": 50
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 2,
+            "y": 1.524302,
+            "z": -1000
+          },
+          "stats": {},
+          "swingTimer": 9997.55,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              901
+            ],
+            [
+              50,
+              413
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "attack",
+          "combatTimer": 1.4,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.249046,
+          "fallStartY": 1.698012,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49505,
+          "id": 49,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 5,
+                "effectId": "mir4_4103_blind",
+                "kind": "blind",
+                "magnitude": 0.6,
+                "remaining": 3.55,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 3,
+            "y": 1.698012,
+            "z": -1001
+          },
+          "stats": {},
+          "swingTimer": 9997.55,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              495
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aiState": "idle",
+          "attackPower": 197,
+          "auras": [
+            {
+              "duration": 3600,
+              "id": "battle_stance",
+              "kind": "battle_stance",
+              "name": "Battle Stance",
+              "remaining": 3598.55,
+              "school": "physical",
+              "sourceId": 50
+            }
+          ],
+          "blockChance": 0.05,
+          "blockValue": 6,
+          "comboUntil": -1,
+          "cooldowns": [
+            [
+              "1104",
+              16
+            ]
+          ],
+          "critChance": 0.06,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.06,
+          "fallStartY": 0.861379,
+          "fiveSecondRule": 100.45,
+          "gcdRemaining": 1,
+          "hp": 6160,
+          "id": 50,
+          "inCombat": true,
+          "kind": "player",
+          "level": 10,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 6160,
+          "maxResource": 690,
+          "mir4": {
+            "accuracy": 41,
+            "bossDamageBps": 41,
+            "bossDamageReductionBps": 41,
+            "classId": 1,
+            "criticalOutcome": 10,
+            "dodge": 36,
+            "magicDefense": 57,
+            "manaCostStat": 450,
+            "monsterDamageReductionBps": 10,
+            "physicalDefense": 57,
+            "pvpDamageBps": 9,
+            "skillDamageBps": 10,
+            "statusValues": {
+              "1": 6160,
+              "6": 690,
+              "19": 450,
+              "20": 197,
+              "24": 57,
+              "26": 57,
+              "28": 41,
+              "29": 36,
+              "32": 10,
+              "38": 9,
+              "41": 41,
+              "42": 10,
+              "43": 41,
+              "44": 10
+            }
+          },
+          "mir4VisualArmorMask": 1,
+          "mir4VisualClassId": 1,
+          "moveSpeed": 7,
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 2.5,
+            "y": 0.861379,
+            "z": -998
+          },
+          "potionCooldownUntil": -1,
+          "resource": 582,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,

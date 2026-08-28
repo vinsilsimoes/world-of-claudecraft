@@ -1283,18 +1283,30 @@ export const pt_BR: EnTranslations = {
         "allDamageReduction": "Redução de Todo Dano",
         "stunSuccess": "Sucesso de Atordoamento",
         "stunResistance": "Resistência a Atordoamento",
+        "debilitationSuccess": "Sucesso de Debilitação",
+        "debilitationResistance": "Resistência a Debilitação",
+        "silenceSuccess": "Sucesso de Silêncio",
+        "silenceResistance": "Resistência a Silêncio",
+        "healthDrain": "Dreno de Vida",
+        "manaDrain": "Dreno de Mana",
         "recoveryPotion": "Bônus de Recuperação de Poção",
+        "healthPotionEffect": "Efeito de Poção de Vida",
+        "manaPotionEffect": "Efeito de Poção de Mana",
         "skillCooldown": "Redução de Recarga de Habilidade",
         "mpCostReduction": "Redução de Custo de MP",
+        "basicAttackDamage": "Dano de Ataque Básico",
+        "basicDamageReduction": "Redução de Dano de Ataque Básico",
         "huntingXp": "Bônus de EXP de Caça",
         "rewardXp": "Bônus de EXP de Recompensa",
         "dropChance": "Bônus de Chance de Drop",
         "energyGain": "Energy Gain Boost",
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recuperação e Progressão",
-        "penetration": "Defense Penetration",
+        "penetration": "Perfuração de Defesa",
+        "penetrationProtection": "Proteção contra Perfuração de Defesa",
         "unknown": "Atributo de Combate"
       },
+      "skillCooldownDisclosure": "A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const pt_BR: EnTranslations = {
       "levelGate": "Somente aventureiros de nível {level} ou superior podem entrar nesta fenda.",
       "deadEntry": "Você não pode entrar em uma fenda enquanto estiver morto.",
       "deadEntryCombat": "Seu grupo ainda está em combate. Os mortos poderão reentrar quando a luta terminar.",
+      "corpseRezCombat": "Seu grupo ainda está em combate. Você poderá ressuscitar quando a luta terminar.",
       "iceGoalLit": "O selo de gelo se acende. O caminho se agita.",
       "socketsShut": "Os encaixes se fecham com um rangido. O caminho se agita.",
       "seqProgress": "As runas respondem em sequência ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Placagem",
-        "description": "Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 12% por 4,5 s."
+        "description": "Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 12% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
       "mir4_skill_1401": {
         "name": "Esmagamento Terrestre",
@@ -10131,7 +10144,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Lança de Brasa",
-        "description": "Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 8% por 4,5 s."
+        "description": "Causa {damage} de dano a um inimigo. Queima o alvo, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
       "mir4_skill_2301": {
         "name": "Selo de Smite",
@@ -10147,7 +10160,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Sequência de Selo",
-        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Aumenta o dano recebido em 10% por 4 s."
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Varredura 5104",
-        "description": "Causa {damage} de dano a um inimigo. Aumenta o dano recebido em 14% por 4,5 s."
+        "description": "Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 14% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
       "mir4_skill_5201": {
         "name": "Golpe 5201",

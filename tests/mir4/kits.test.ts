@@ -103,6 +103,46 @@ describe('self utilities', () => {
     for (let i = 0; i < 200; i++) sim.tick();
     expect(p.mir4Shield).toBeUndefined(); // 10s elapsed
   });
+  it('uses the PvP cooldown cap for a self utility while a hostile player is selected', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeClassSim('elementalist', 931);
+    const p = sim.player;
+    p.level = 40;
+    p.mir4!.statusValues = { ...p.mir4!.statusValues, 95: 99_999 };
+    const enemyId = sim.addPlayer('warrior', 'PvP cooldown target');
+    const enemy = sim.entities.get(enemyId)!;
+    enemy.pos = sim.groundPos(p.pos.x + 2, p.pos.z);
+    const duel = { a: p.id, b: enemy.id, state: 'active' as const, timer: 0 };
+    sim.duels.set(p.id, duel);
+    sim.duels.set(enemy.id, duel);
+    p.targetId = enemy.id;
+
+    expect(sim.mir4CastSkill(2503)).toEqual({ ok: true });
+
+    expect(p.cooldowns.get('2503')).toBeCloseTo(36.4, 10);
+  });
+  it('keeps an explicit monster cast on the PvE cooldown cap even with a hostile player selected', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeClassSim('elementalist', 932);
+    const p = sim.player;
+    p.level = 40;
+    p.mir4!.statusValues = { ...p.mir4!.statusValues, 95: 99_999 };
+    const enemyId = sim.addPlayer('warrior', 'Selected PvP target');
+    const enemy = sim.entities.get(enemyId)!;
+    enemy.pos = sim.groundPos(p.pos.x + 2, p.pos.z);
+    const duel = { a: p.id, b: enemy.id, state: 'active' as const, timer: 0 };
+    sim.duels.set(p.id, duel);
+    sim.duels.set(enemy.id, duel);
+    p.targetId = enemy.id;
+    const wolf = spawnWolf(sim);
+
+    expect(sim.mir4CastSkill(2101, wolf.id)).toEqual({ ok: true });
+
+    // 2101 has a 12-second authored cooldown. The explicit monster target is
+    // authoritative, so the PvE 40% cap applies instead of the PvP 30% cap.
+    expect(p.cooldowns.get('2101')).toBeCloseTo(7.2, 10);
+    expect(p.targetId).toBe(enemy.id);
+  });
   it('3503 heals 18% of max HP and refuses at full health', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('taoist', 94);
@@ -160,5 +200,27 @@ describe('the 4106 stun chance', () => {
     resolveContacts(sim);
     expect(hp - wolf.hp).toBe(85); // floor(50*17000/10000)
     expect(wolf.mir4Effects?.active.some((f) => f.kind === 'stun' && f.duration === 2)).toBe(true);
+  });
+
+  it('uses the PvP control profile against a player-owned pet', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeClassSim('arbalist', 951);
+    sim.player.level = 30;
+    const enemyId = sim.addPlayer('warrior', 'PvP pet owner');
+    const enemy = sim.entities.get(enemyId)!;
+    const pet = spawnWolf(sim, 3);
+    pet.ownerId = enemy.id;
+    pet.hostile = false;
+    const duel = { a: sim.playerId, b: enemy.id, state: 'active' as const, timer: 0 };
+    sim.duels.set(sim.playerId, duel);
+    sim.duels.set(enemy.id, duel);
+    const next = sim.rng.next;
+    sim.rng.next = () => 0.5;
+
+    expect(sim.mir4CastSkill(4106, pet.id)).toEqual({ ok: true });
+    resolveContacts(sim);
+
+    sim.rng.next = next;
+    expect(pet.mir4Effects?.active.some((effect) => effect.kind === 'stun') ?? false).toBe(false);
   });
 });

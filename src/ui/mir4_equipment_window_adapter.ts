@@ -5,6 +5,7 @@
 import { audio } from '../game/audio';
 import { ITEMS } from '../sim/data';
 import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { MIR4_SPECIAL_AFFIX_STATUS_IDS } from '../sim/mir4/equipment';
 import type { EquipSlot, ItemDef, PlayerClass } from '../sim/types';
 import type { IWorld } from '../world_api';
 import { markDialogRoot } from './dialog_root';
@@ -69,6 +70,12 @@ const STATUS_KEYS: Readonly<Record<number, TranslationKey>> = {
   47: 'hudChrome.mir4.stats.allDamageReduction',
   48: 'hudChrome.mir4.stats.stunSuccess',
   49: 'hudChrome.mir4.stats.stunResistance',
+  50: 'hudChrome.mir4.stats.debilitationSuccess',
+  51: 'hudChrome.mir4.stats.debilitationResistance',
+  52: 'hudChrome.mir4.stats.silenceSuccess',
+  53: 'hudChrome.mir4.stats.silenceResistance',
+  80: 'hudChrome.mir4.stats.healthDrain',
+  81: 'hudChrome.mir4.stats.manaDrain',
   82: 'hudChrome.mir4.stats.huntingXp',
   83: 'hudChrome.mir4.stats.rewardXp',
   86: 'hudChrome.mir4.stats.energyGain',
@@ -77,7 +84,14 @@ const STATUS_KEYS: Readonly<Record<number, TranslationKey>> = {
   94: 'hudChrome.mir4.stats.recoveryPotion',
   95: 'hudChrome.mir4.stats.skillCooldown',
   97: 'hudChrome.mir4.stats.mpCostReduction',
+  143: 'hudChrome.mir4.stats.basicAttackDamage',
+  146: 'hudChrome.mir4.stats.healthPotionEffect',
+  147: 'hudChrome.mir4.stats.manaPotionEffect',
+  159: 'hudChrome.mir4.stats.basicAttackDamage',
+  160: 'hudChrome.mir4.stats.basicDamageReduction',
   161: 'hudChrome.mir4.stats.huntingXp',
+  [MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration]: 'hudChrome.mir4.stats.penetration',
+  [MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense]: 'hudChrome.mir4.stats.penetrationProtection',
 };
 
 // MIR4 material balances keep their native semantic keys, while the UI uses
@@ -220,8 +234,21 @@ export function mir4StatusLabel(statusId: number): string {
   return t(STATUS_KEYS[statusId] ?? 'hudChrome.mir4.stats.unknown');
 }
 
-function mir4StatusValue(statusId: number, value: number): string {
-  return (statusId >= 32 && statusId <= 53) || (statusId >= 119 && statusId <= 163)
+export function mir4StatusValue(statusId: number, value: number): string {
+  return (statusId >= 38 && statusId <= 53) ||
+    statusId === 80 ||
+    statusId === 81 ||
+    statusId === 82 ||
+    statusId === 83 ||
+    statusId === 86 ||
+    statusId === 88 ||
+    statusId === 92 ||
+    statusId === 94 ||
+    statusId === 95 ||
+    statusId === 97 ||
+    (statusId >= 119 && statusId <= 163) ||
+    statusId === MIR4_SPECIAL_AFFIX_STATUS_IDS.penetration ||
+    statusId === MIR4_SPECIAL_AFFIX_STATUS_IDS.penetrationDefense
     ? fmtBps(value)
     : fmt(value);
 }
@@ -286,14 +313,26 @@ function statsHtml(view: NonNullable<ReturnType<typeof buildMir4CharacterView>>)
     statCellValue('hudChrome.mir4.stats.pvpDamage', fmtBps(s.pvpDamageBps)),
     statCellValue('hudChrome.mir4.stats.monsterDamage', fmtBps(s.monsterDamageBps)),
     statCellValue('hudChrome.mir4.stats.allDamage', fmtBps(s.allDamageBps)),
+    statCellValue('hudChrome.mir4.stats.penetration', fmtBps(s.penetrationBps)),
     statCellValue('hudChrome.mir4.stats.stunSuccess', fmtBps(s.stunSuccessBps)),
+    statCellValue('hudChrome.mir4.stats.debilitationSuccess', fmtBps(s.statusValues[50] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.silenceSuccess', fmtBps(s.statusValues[52] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.healthDrain', fmtBps(s.statusValues[80] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.manaDrain', fmtBps(s.statusValues[81] ?? 0)),
+    statCellValue(
+      'hudChrome.mir4.stats.basicAttackDamage',
+      fmtBps((s.statusValues[143] ?? 0) + (s.statusValues[159] ?? 0)),
+    ),
   ].join('');
   const defense = [
     statCell('hudChrome.mir4.stats.physicalDefense', s.physicalDefense),
     statCell('hudChrome.mir4.stats.magicDefense', s.magicDefense),
     statCell('hudChrome.mir4.stats.dodge', s.dodge),
     statCell('hudChrome.mir4.stats.avoidCritical', s.avoidCritical),
-    statCellValue('hudChrome.mir4.stats.criticalDamageReduction', fmtBps(s.statusValues[33] ?? 0)),
+    statCellValue(
+      'hudChrome.mir4.stats.criticalDamageReduction',
+      mir4StatusValue(33, s.statusValues[33] ?? 0),
+    ),
     statCellValue('hudChrome.mir4.stats.pvpDamageReduction', fmtBps(s.pvpDamageReductionBps)),
     statCellValue(
       'hudChrome.mir4.stats.monsterDamageReduction',
@@ -302,10 +341,16 @@ function statsHtml(view: NonNullable<ReturnType<typeof buildMir4CharacterView>>)
     statCellValue('hudChrome.mir4.stats.bossDamageReduction', fmtBps(s.bossDamageReductionBps)),
     statCellValue('hudChrome.mir4.stats.skillDamageReduction', fmtBps(s.skillDamageReductionBps)),
     statCellValue('hudChrome.mir4.stats.allDamageReduction', fmtBps(s.allDamageReductionBps)),
+    statCellValue('hudChrome.mir4.stats.penetrationProtection', fmtBps(s.penetrationDefenseBps)),
     statCellValue('hudChrome.mir4.stats.stunResistance', fmtBps(s.stunResistanceBps)),
+    statCellValue('hudChrome.mir4.stats.debilitationResistance', fmtBps(s.statusValues[51] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.silenceResistance', fmtBps(s.statusValues[53] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.basicDamageReduction', fmtBps(s.statusValues[160] ?? 0)),
   ].join('');
   const utility = [
     statCellValue('hudChrome.mir4.stats.recoveryPotion', fmtBps(s.statusValues[94] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.healthPotionEffect', fmtBps(s.statusValues[146] ?? 0)),
+    statCellValue('hudChrome.mir4.stats.manaPotionEffect', fmtBps(s.statusValues[147] ?? 0)),
     statCellValue('hudChrome.mir4.stats.skillCooldown', fmtBps(s.statusValues[95] ?? 0)),
     statCellValue('hudChrome.mir4.stats.mpCostReduction', fmtBps(s.statusValues[97] ?? 0)),
     statCellValue(

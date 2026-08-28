@@ -1283,9 +1283,19 @@ export const ko_KR: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "약화 성공",
+        "debilitationResistance": "약화 저항",
+        "silenceSuccess": "침묵 성공",
+        "silenceResistance": "침묵 저항",
+        "healthDrain": "생명력 흡수",
+        "manaDrain": "마나 흡수",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "생명력 물약 효과",
+        "manaPotionEffect": "마나 물약 효과",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "기본 공격 피해",
+        "basicDamageReduction": "기본 공격 피해 감소",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const ko_KR: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "방어 관통",
+        "penetrationProtection": "방어 관통 저항",
         "unknown": "전투 속성"
       },
+      "skillCooldownDisclosure": "위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const ko_KR: EnTranslations = {
       "levelGate": "레벨 {level} 이상의 모험가만 이 균열에 들어갈 수 있습니다.",
       "deadEntry": "죽은 상태로는 균열에 들어갈 수 없습니다.",
       "deadEntryCombat": "파티가 아직 전투 중입니다. 전투가 끝나면 죽은 자도 다시 들어갈 수 있습니다.",
+      "corpseRezCombat": "파티가 아직 전투 중입니다. 전투가 끝나면 부활할 수 있습니다.",
       "iceGoalLit": "서리 문양이 타오릅니다. 길이 꿈틀거립니다.",
       "socketsShut": "받침대가 갈리며 닫힙니다. 길이 꿈틀거립니다.",
       "seqProgress": "룬이 차례로 응답합니다 ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "몸통 박치기",
-        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 12% 증가시킵니다."
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상의 물리 및 마법 방어력을 12% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
       },
       "mir4_skill_1401": {
         "name": "대지 강타",
@@ -10131,7 +10144,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "잿불 창",
-        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 8% 증가시킵니다."
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 대상을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
       },
       "mir4_skill_2301": {
         "name": "징벌의 인장",
@@ -10147,7 +10160,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "인장 연계",
-        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 4초 동안 대상이 받는 피해를 10% 증가시킵니다."
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 적중한 모든 적의 물리 및 마법 방어력을 4초 동안 10% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
       },
       "mir4_skill_3104": {
         "name": "토템 1010",
@@ -10191,7 +10204,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "휩쓸기 5104",
-        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상이 받는 피해를 14% 증가시킵니다."
+        "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상의 물리 및 마법 방어력을 14% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
       },
       "mir4_skill_5201": {
         "name": "타격 5201",

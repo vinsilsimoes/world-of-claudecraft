@@ -189,6 +189,7 @@ import { createNativeAttestationProof } from './native_attestation';
 import { createNetPipelineStats, type NetPipelineStats } from './net_pipeline_stats';
 import { optimisticQuestState } from './quest_state_optimistic';
 import { isTransientReconnectRejection, isTransientTimeoutRejection } from './reconnect_policy';
+import { riftPresentationClearFromSelfSnapshot } from './rift_snapshot_reconcile';
 import { isInputSendBackpressured } from './send_backpressure';
 import {
   type SnapshotTimerWireMode,
@@ -3384,6 +3385,12 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
         this.pendingSpectateFacing = e.facing;
       }
       seen.add(s.id);
+      const staleRiftPresentation = riftPresentationClearFromSelfSnapshot(e.pos.x, this.riftFloor);
+      if (staleRiftPresentation) {
+        this.riftFloor = staleRiftPresentation.riftFloor;
+        this.riftEventExpiresAtMs = staleRiftPresentation.riftEventExpiresAtMs;
+        this.activeBossDeathZones = staleRiftPresentation.activeBossDeathZones;
+      }
       if (typeof s.ack === 'number' && s.ack > this.ackedInputSeq) {
         for (let seq = this.ackedInputSeq + 1; seq <= s.ack; seq++) {
           const sentAt = this.pendingInputSeqSentAt.get(seq);

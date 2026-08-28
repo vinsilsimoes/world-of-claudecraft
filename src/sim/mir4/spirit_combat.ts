@@ -7,6 +7,7 @@ import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 import {
   type Mir4AttackKind,
+  type Mir4BuildDamageContext,
   type Mir4CombatStats,
   type Mir4ResolvedDamage,
   type Mir4TargetKind,
@@ -37,33 +38,60 @@ export function resolveMir4PlayerDamageWithSpirit(
     hitRoll: number;
     criticalRoll: number;
     allowSpiritProc: boolean;
+    buildBalance?: Mir4BuildDamageContext;
+    forceHit?: boolean;
+    forceCritical?: boolean;
   },
 ): Mir4SpiritDamageResult {
   const base = mir4ResolveDamage(input);
-  const empty = {
-    resolved: base,
-    attempted: input.allowSpiritProc && base.hit,
-    triggered: false,
-    skill: null,
-    healthRestored: 0,
-    manaRestored: 0,
-  };
-  if (!input.allowSpiritProc || !base.hit) return empty;
+  const legacyHit = input.buildBalance
+    ? mir4ResolveDamage({
+        ...input,
+        buildBalance: undefined,
+        defender: {
+          ...input.defender,
+          // Before MobTemplate opposition, classic mobs without a MIR4 bag
+          // always entered this proc contract with zero Dodge. Reconstruct
+          // that exact defender so new PvE Evasion cannot remove a shared RNG
+          // draw that every later deterministic system already expects.
+          dodge: target.mir4?.dodge ?? 0,
+        },
+      }).hit
+    : base.hit;
   const meta = ctx.players.get(player.id);
   const spiritId = meta?.mir4Spirits?.equippedSpiritId;
   const skill = spiritId ? mir4SpiritSpecialSkill(spiritId) : null;
+  const empty = {
+    resolved: base,
+    // `attempted` is an action-group guard, not only a report of the new
+    // resolver's hit. A legacy hit still consumes the historical shared RNG
+    // draw even when the level-scaled curve now turns that contact into a
+    // miss. Mark that lane as attempted so a later impact in the same action
+    // cannot consume the draw again.
+    attempted: input.allowSpiritProc && (legacyHit || base.hit),
+    triggered: false,
+    skill,
+    healthRestored: 0,
+    manaRestored: 0,
+  };
+  if (!input.allowSpiritProc) return empty;
   if (!meta || !skill || ctx.time < (meta.mir4SpiritSkillReadyAt ?? 0)) {
-    return { ...empty, skill };
+    return empty;
   }
   if (
     skill.kind === 'execute' &&
     Math.floor((Math.max(0, target.hp) * 10_000) / Math.max(1, target.maxHp)) >
       (skill.targetHpThresholdBps ?? 0)
   ) {
-    return { ...empty, skill };
+    return empty;
   }
-  if (Math.floor(ctx.rng.next() * 10_000) >= skill.chanceBps) {
-    return { ...empty, skill };
+  if (!legacyHit && !base.hit) return empty;
+  // Every gameplay chance consumes the one shared deterministic stream. The
+  // legacy-hit arm still preserves its historical draw when new Evasion turns
+  // the resolved contact into a miss.
+  const procRoll = Math.floor(ctx.rng.next() * 10_000);
+  if (!base.hit || procRoll >= skill.chanceBps) {
+    return empty;
   }
 
   const healthBefore = player.hp;

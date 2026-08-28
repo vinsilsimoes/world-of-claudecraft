@@ -8,7 +8,7 @@
 // injector) go through abilityDisplayDescription, and the field CHOICE is a pure
 // core (abilityDescriptionField) a vitest drives directly.
 
-import { mir4SkillIdFromAction } from '../sim/mir4/action_abilities';
+import { mir4ActionBurnTooltipDamage, mir4SkillIdFromAction } from '../sim/mir4/action_abilities';
 import type { ResolvedAbility } from '../sim/sim';
 import {
   type AbilityEffect,
@@ -208,6 +208,7 @@ export function abilityDisplayDescription(
   const buff = auraOverride ? auraBuffDisplayValue(auraOverride) : abilityBuffValue(res);
   const duration = abilityDurationValue(res);
   const hourglass = abilityTemporalHourglassValues(res);
+  const mir4Burn = scaling ? mir4ActionBurnTooltipDamage(res.def.id, scaling.spellPower) : null;
   // {rage} splices the RESOLVED gainResource total, so a talent that raises the
   // granted amount (Blood Offering on Blood Toll) shows in the tooltip.
   const rageGained = res.effects.reduce(
@@ -228,6 +229,8 @@ export function abilityDisplayDescription(
     hostilePveDuration: hourglass === null ? '' : formatAbilityNumber(hourglass.hostilePveDuration),
     hostilePvpDuration: hourglass === null ? '' : formatAbilityNumber(hourglass.hostilePvpDuration),
     groundDuration: hourglass === null ? '' : formatAbilityNumber(hourglass.groundDuration),
+    burnPerTick: mir4Burn === null ? '' : formatAbilityNumber(mir4Burn.perTick),
+    burnTotal: mir4Burn === null ? '' : formatAbilityNumber(mir4Burn.total),
     rage: rageText,
   };
   // Cheap Trick retires Gut Punch's stealth requirement. When the RESOLVED ability
@@ -243,12 +246,17 @@ export function abilityDisplayDescription(
   const text =
     stealthFreeVariant ??
     tEntity({ kind: 'ability', id: res.def.id, field: 'description', values });
+  const cooldownDisclosure = t('hudChrome.mir4.skillCooldownDisclosure');
+  const disclosedText =
+    mir4SkillIdFromAction(res.def.id) === null || text.endsWith(cooldownDisclosure)
+      ? text
+      : `${text} ${cooldownDisclosure}`;
   // Spec-aware teaching line: a shared button explains its interaction ONLY
   // for the player's current spec, so a new player never reads another
   // spec's rules on their own tooltip.
   const note = spec ? res.def.specNotes?.[spec] : undefined;
-  if (!note) return text;
-  return `${text} ${tEntity({
+  if (!note) return disclosedText;
+  return `${disclosedText} ${tEntity({
     kind: 'ability',
     id: res.def.id,
     field: `specNote_${spec}` as AbilitySpecNoteField,

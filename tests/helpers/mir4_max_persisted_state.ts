@@ -7,7 +7,7 @@ import { MIR4_QUESTS } from '../../src/sim/content/mir4/quests';
 import { MIR4_QUESTS_ARC } from '../../src/sim/content/mir4/quests_arc';
 import { MIR4_SPIRITS_CATALOG } from '../../src/sim/content/mir4/spirits_catalog';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
-import { MIR4_AFFIXES } from '../../src/sim/mir4/affixes';
+import { mir4AffixPoolFor } from '../../src/sim/mir4/affixes';
 import { MIR4_ARC_DYNAMIC_GRANT_IDS } from '../../src/sim/mir4/arc_rewards';
 import {
   MIR4_EMPTY_MATERIALS,
@@ -62,13 +62,13 @@ function boundedEntropy(label: string, index: number, length: number): string {
 function maximumAffixPairs(
   item: (typeof MIR4_EQUIPMENT_CATALOG)[number],
 ): readonly (readonly [number, number])[] {
-  return Object.values(MIR4_AFFIXES)
+  return mir4AffixPoolFor(item.classId, item.equipSlot)
     .map((def) => {
       const amount =
         def.unit === 'basis-points' ? def.max : def.max * (1 + 25 + item.tier + item.grade);
-      return [def.statusId ?? 0, amount] as const;
+      return [def.statusId, amount] as const;
     })
-    .sort((left, right) => String(right[1]).length - String(left[1]).length);
+    .sort((left, right) => JSON.stringify(right).length - JSON.stringify(left).length);
 }
 
 /**

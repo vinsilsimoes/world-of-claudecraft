@@ -106,5 +106,98 @@ describe('MIR4 Spirit special skills', () => {
     const next = vi.spyOn(h.sim.rng, 'next').mockReturnValue(0);
     expect(resolve(h, false)).toMatchObject({ attempted: false, triggered: false });
     expect(next).not.toHaveBeenCalled();
+
+    const miss = resolveMir4PlayerDamageWithSpirit(h.sim.ctx, h.player, h.target, {
+      rawDamage: 1_000,
+      channel: 'physical',
+      attacker: { accuracy: 10_000, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+      defender: { dodge: 0, avoidCritical: 0, physicalDefense: 0 },
+      hitRoll: 0,
+      criticalRoll: 9_999,
+      allowSpiritProc: true,
+      forceHit: false,
+    });
+    expect(miss).toMatchObject({ attempted: false, triggered: false });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('uses the shared stream for a build-curve miss-to-hit proc', () => {
+    const h = harness('spirit-common-01', 1_007);
+    const next = vi.spyOn(h.sim.rng, 'next').mockReturnValue(0);
+    const result = resolveMir4PlayerDamageWithSpirit(h.sim.ctx, h.player, h.target, {
+      rawDamage: 1_000,
+      channel: 'physical',
+      attacker: { accuracy: 10, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+      defender: { dodge: 0, avoidCritical: 0, physicalDefense: 0 },
+      hitRoll: 9_800,
+      criticalRoll: 9_999,
+      allowSpiritProc: true,
+      buildBalance: { attackerLevel: 1, defenderLevel: 1 },
+    });
+
+    expect(result.resolved).toMatchObject({ hit: true, hitChanceBps: 10_000 });
+    expect(result.attempted).toBe(true);
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('pins shared proc rolls on both sides of the Spirit chance', () => {
+    const resolveShared = (procRoll: number) => {
+      const h = harness('spirit-common-01', 1_007);
+      const next = vi.spyOn(h.sim.rng, 'next').mockReturnValue(procRoll);
+      const result = resolveMir4PlayerDamageWithSpirit(h.sim.ctx, h.player, h.target, {
+        rawDamage: 1_000,
+        channel: 'physical',
+        attacker: { accuracy: 10, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+        defender: { dodge: 0, avoidCritical: 0, physicalDefense: 0 },
+        hitRoll: 9_700,
+        criticalRoll: 9_999,
+        allowSpiritProc: true,
+        buildBalance: { attackerLevel: 1, defenderLevel: 1 },
+      });
+      expect(result.resolved.hit).toBe(true);
+      expect(result.attempted).toBe(true);
+      expect(next).toHaveBeenCalledOnce();
+      return result.triggered;
+    };
+
+    expect(resolveShared(0.1199)).toBe(true);
+    expect(resolveShared(0.12)).toBe(false);
+  });
+
+  it('preserves a legacy proc draw when new mob Evasion turns the hit into a miss', () => {
+    const h = harness('spirit-common-01', 1_008);
+    expect(h.target.mir4).toBeUndefined();
+    const next = vi.spyOn(h.sim.rng, 'next').mockReturnValue(0.99);
+
+    const result = resolveMir4PlayerDamageWithSpirit(h.sim.ctx, h.player, h.target, {
+      rawDamage: 1_000,
+      channel: 'physical',
+      attacker: { accuracy: 10, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+      defender: { dodge: 10, avoidCritical: 0, physicalDefense: 0 },
+      hitRoll: 9_600,
+      criticalRoll: 9_999,
+      allowSpiritProc: true,
+      buildBalance: { attackerLevel: 1, defenderLevel: 1 },
+    });
+
+    expect(result.resolved).toMatchObject({ hit: false, hitChanceBps: 9_500 });
+    expect(result).toMatchObject({ attempted: true, triggered: false });
+    expect(next).toHaveBeenCalledOnce();
+
+    const laterImpact = resolveMir4PlayerDamageWithSpirit(h.sim.ctx, h.player, h.target, {
+      rawDamage: 1_000,
+      channel: 'physical',
+      attacker: { accuracy: 10, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+      defender: { dodge: 10, avoidCritical: 0, physicalDefense: 0 },
+      hitRoll: 9_600,
+      criticalRoll: 9_999,
+      // Mirrors the action-group guard used by combat.ts after the first
+      // contact reports that the legacy proc lane was attempted.
+      allowSpiritProc: !result.attempted,
+      buildBalance: { attackerLevel: 1, defenderLevel: 1 },
+    });
+
+    expect(laterImpact).toMatchObject({ attempted: false, triggered: false });
+    expect(next).toHaveBeenCalledOnce();
   });
 });

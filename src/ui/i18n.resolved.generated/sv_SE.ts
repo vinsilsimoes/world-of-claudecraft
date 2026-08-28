@@ -1283,9 +1283,19 @@ export const sv_SE: EnTranslations = {
         "allDamageReduction": "All Damage Reduction",
         "stunSuccess": "Stun Success",
         "stunResistance": "Stun Resistance",
+        "debilitationSuccess": "Försvagningsframgång",
+        "debilitationResistance": "Försvagningsmotstånd",
+        "silenceSuccess": "Tystnadsframgång",
+        "silenceResistance": "Tystnadsmotstånd",
+        "healthDrain": "Livsdränering",
+        "manaDrain": "Manadränering",
         "recoveryPotion": "Recovery Potion Boost",
+        "healthPotionEffect": "Hälsodryckseffekt",
+        "manaPotionEffect": "Manadryckseffekt",
         "skillCooldown": "Skill Cooldown Reduction",
         "mpCostReduction": "MP Cost Reduction",
+        "basicAttackDamage": "Grundattacksskada",
+        "basicDamageReduction": "Skadereducering mot grundattacker",
         "huntingXp": "Hunting EXP Boost",
         "rewardXp": "Reward EXP Boost",
         "dropChance": "Drop Chance Boost",
@@ -1293,8 +1303,10 @@ export const sv_SE: EnTranslations = {
         "energyGathering": "Energy Gathering Boost",
         "utility": "Recovery and Progression",
         "penetration": "Defense Penetration",
+        "penetrationProtection": "Skydd mot försvarsgenomträngning",
         "unknown": "Combat Attribute"
       },
+      "skillCooldownDisclosure": "Nedkylningstiden som visas ovan är grundvärdet. Minskad nedkylningstid för förmågor kan sänka den med upp till 40 % i PvE eller 30 % i PvP.",
       "materials": {
         "metalCommon": "Common Metal",
         "metalUncommon": "Uncommon Metal",
@@ -8002,6 +8014,7 @@ export const sv_SE: EnTranslations = {
       "levelGate": "Endast äventyrare på nivå {level} eller högre får gå in i denna reva.",
       "deadEntry": "Du kan inte gå in i en reva medan du är död.",
       "deadEntryCombat": "Din grupp är fortfarande i strid. De döda kan gå in igen när striden upphör.",
+      "corpseRezCombat": "Din grupp är fortfarande i strid. Du kan återuppstå när striden är över.",
       "iceGoalLit": "Frostsigillet flammar upp. Vägen rör sig.",
       "socketsShut": "Hållarna gnisslar igen. Vägen rör sig.",
       "seqProgress": "Runorna svarar i tur ({step}/{total}).",
@@ -10115,7 +10128,7 @@ export const sv_SE: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Tackle",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 12% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10131,7 +10144,7 @@ export const sv_SE: EnTranslations = {
       },
       "mir4_skill_2111": {
         "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 8% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2301": {
         "name": "Smite Seal",
@@ -10147,7 +10160,7 @@ export const sv_SE: EnTranslations = {
       },
       "mir4_skill_3101": {
         "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Increases damage taken by 10% for 4 sec."
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_3104": {
         "name": "Totem 1010",
@@ -10191,7 +10204,7 @@ export const sv_SE: EnTranslations = {
       },
       "mir4_skill_5104": {
         "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Increases damage taken by 14% for 4.5 sec."
+        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_5201": {
         "name": "Strike 5201",

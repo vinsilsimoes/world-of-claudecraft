@@ -13451,4 +13451,19 @@ export const es: Partial<Record<TranslationKey, string>> = {
     'Golpea al objetivo por {damage} de daño y lo aturde durante 4 s. Otorga 2 puntos de combo.',
   'gpuNotice.bodyDiscreteInactive':
     'El juego no está usando la GPU dedicada para videojuegos y se está ejecutando en la GPU integrada (de ahorro de energía), así que el rendimiento se verá afectado. Actualiza los controladores de gráficos y reinicia el juego. En Windows, establece también el juego como Alto rendimiento en Configuración > Sistema > Pantalla > Gráficos.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Éxito de debilitación',
+  'hudChrome.mir4.stats.debilitationResistance': 'Resistencia a debilitación',
+  'hudChrome.mir4.stats.silenceSuccess': 'Éxito de silencio',
+  'hudChrome.mir4.stats.silenceResistance': 'Resistencia al silencio',
+  'hudChrome.mir4.stats.healthDrain': 'Drenaje de salud',
+  'hudChrome.mir4.stats.manaDrain': 'Drenaje de maná',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Efecto de poción de salud',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Efecto de poción de maná',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Daño de ataque básico',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Reducción de daño de ataque básico',
+  'hudChrome.mir4.stats.penetrationProtection': 'Protección contra penetración de defensa',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'El tiempo de reutilización mostrado arriba es el valor base. La reducción del tiempo de reutilización de habilidades puede reducirlo hasta un 40% en JcE o un 30% en JcJ.',
+  'sim.rift.corpseRezCombat':
+    'Tu grupo sigue en combate. Podrás resucitar cuando termine la lucha.',
 };

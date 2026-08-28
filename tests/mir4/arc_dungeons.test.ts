@@ -8,7 +8,6 @@ import {
 import { mir4ArcStageAnchor } from '../../src/sim/mir4/arc_quest_runtime';
 import { type Mir4ArcQuestProgress, mir4QuestCurrentStage } from '../../src/sim/mir4/arc_quests';
 import { Sim } from '../../src/sim/sim';
-import { nearestOverworldGraveyard } from '../../src/sim/spirit';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 
 const CAMPAIGN_ROOM_ID = 'campaign_trial_room';
@@ -208,22 +207,23 @@ describe('MIR4 campaign dungeon instances', () => {
     expect(sim.serializeCharacter(sim.playerId)?.pos).toEqual(returnPos);
   });
 
-  it('releases a dead owner at the graveyard nearest the outdoor campaign anchor', () => {
+  it('releases a dead owner at the entry of the same campaign dungeon instance', () => {
     const world = buildMir4ArcWorld(4);
     const sim = makeSim(world);
     const progress = shortDungeonProgress();
     required(sim.players.get(sim.playerId), 'player meta').mir4ArcQuests = {
       [progress.questId]: progress,
     };
-    const returnPos = placeAtStage(sim, sim.playerId, progress);
+    placeAtStage(sim, sim.playerId, progress);
     updateMir4ArcDungeonEncounters(sim.ctx);
+    const run = required([...sim.mir4ArcDungeonRuns.values()][0], 'campaign dungeon run');
+    const room = required(DUNGEONS[CAMPAIGN_ROOM_ID], 'campaign room definition');
+    const origin = instanceOrigin(room.index, run.instanceSlot);
+    const expected = {
+      x: origin.x + room.entry.x,
+      z: origin.z + room.entry.z,
+    };
     const corpsePos = { ...sim.player.pos };
-    const expected = nearestOverworldGraveyard(
-      returnPos.x,
-      returnPos.z,
-      world.services?.graveyards,
-      world.playerStart,
-    );
 
     sim.player.dead = true;
     sim.player.hp = 0;
@@ -233,6 +233,7 @@ describe('MIR4 campaign dungeon instances', () => {
     expect(sim.player.corpsePos).toEqual(corpsePos);
     expect(sim.player.pos.x).toBeCloseTo(expected.x, 6);
     expect(sim.player.pos.z).toBeCloseTo(expected.z, 6);
-    expect(dungeonAt(sim.player.pos.x)).toBeNull();
+    expect(dungeonAt(sim.player.pos.x)?.id).toBe(CAMPAIGN_ROOM_ID);
+    expect(sim.instanceClaimIdAt(sim.player.pos)).toBe(sim.player.corpseInstanceId);
   });
 });

@@ -13242,4 +13242,19 @@ export const sv_SE: Partial<Record<TranslationKey, string>> = {
     'Slå till målet för {damage} skada, vilket bedövar det i 4 sek. Ger 2 kombopoäng.',
   'gpuNotice.bodyDiscreteInactive':
     'Spelet använder inte det separata (spel-)grafikkortet och körs i stället på det strömsparande grafikkortet, vilket försämrar prestandan. Uppdatera dina grafikdrivrutiner och starta sedan om spelet. I Windows anger du även spelet till Höga prestanda under Inställningar > System > Skärm > Grafik.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Försvagningsframgång',
+  'hudChrome.mir4.stats.debilitationResistance': 'Försvagningsmotstånd',
+  'hudChrome.mir4.stats.silenceSuccess': 'Tystnadsframgång',
+  'hudChrome.mir4.stats.silenceResistance': 'Tystnadsmotstånd',
+  'hudChrome.mir4.stats.healthDrain': 'Livsdränering',
+  'hudChrome.mir4.stats.manaDrain': 'Manadränering',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Hälsodryckseffekt',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Manadryckseffekt',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Grundattacksskada',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Skadereducering mot grundattacker',
+  'hudChrome.mir4.stats.penetrationProtection': 'Skydd mot försvarsgenomträngning',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Nedkylningstiden som visas ovan är grundvärdet. Minskad nedkylningstid för förmågor kan sänka den med upp till 40 % i PvE eller 30 % i PvP.',
+  'sim.rift.corpseRezCombat':
+    'Din grupp är fortfarande i strid. Du kan återuppstå när striden är över.',
 };

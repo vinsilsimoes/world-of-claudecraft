@@ -13366,4 +13366,19 @@ export const id_ID: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.challenging_roar.name': 'Auman Garang',
   'entities.abilities.cheap_shot.descriptionNoStealth': 'Serang target sebesar {damage} kerusakan, membuatnya terpana selama 4 detik. Memberi 2 poin combo.',
   'gpuNotice.bodyDiscreteInactive': 'Permainan tidak menggunakan GPU gaming diskret dan sebagai gantinya berjalan pada GPU terintegrasi (hemat daya), sehingga performa akan menurun. Perbarui driver grafismu, lalu nyalakan ulang permainan. Di Windows, juga atur permainan ke Performa tinggi di Pengaturan > Sistem > Tampilan > Grafis.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Keberhasilan debilitasi',
+  'hudChrome.mir4.stats.debilitationResistance': 'Ketahanan debilitasi',
+  'hudChrome.mir4.stats.silenceSuccess': 'Keberhasilan pembungkaman',
+  'hudChrome.mir4.stats.silenceResistance': 'Ketahanan pembungkaman',
+  'hudChrome.mir4.stats.healthDrain': 'Serapan kesehatan',
+  'hudChrome.mir4.stats.manaDrain': 'Serapan mana',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Efek ramuan kesehatan',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Efek ramuan mana',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Kerusakan serangan dasar',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Pengurangan kerusakan serangan dasar',
+  'hudChrome.mir4.stats.penetrationProtection': 'Perlindungan penetrasi pertahanan',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Waktu pemulihan yang ditampilkan di atas adalah nilai dasar. Pengurangan waktu pemulihan kemampuan dapat menguranginya hingga 40% di PvE atau 30% di PvP.',
+  'sim.rift.corpseRezCombat':
+    'Kelompokmu masih bertempur. Kamu dapat bangkit kembali setelah pertempuran berakhir.',
 };

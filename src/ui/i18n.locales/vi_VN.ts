@@ -13030,4 +13030,19 @@ export const vi_VN: Partial<Record<TranslationKey, string>> = {
     'Đánh mục tiêu gây {damage} sát thương, làm choáng nó trong 4 giây. Nhận 2 điểm liên hoàn.',
   'gpuNotice.bodyDiscreteInactive':
     'Trò chơi hiện không dùng card đồ họa chơi game mà đang chạy trên GPU tích hợp (tiết kiệm điện), nên hiệu năng sẽ giảm sút. Hãy cập nhật trình điều khiển đồ họa, sau đó khởi động lại trò chơi. Trên Windows, cũng hãy đặt trò chơi thành Hiệu suất cao trong Cài đặt > Hệ thống > Màn hình > Đồ họa.',
+  'hudChrome.mir4.stats.debilitationSuccess': 'Tỷ lệ gây suy yếu',
+  'hudChrome.mir4.stats.debilitationResistance': 'Kháng suy yếu',
+  'hudChrome.mir4.stats.silenceSuccess': 'Tỷ lệ gây câm lặng',
+  'hudChrome.mir4.stats.silenceResistance': 'Kháng câm lặng',
+  'hudChrome.mir4.stats.healthDrain': 'Hút Sinh lực',
+  'hudChrome.mir4.stats.manaDrain': 'Hút Mana',
+  'hudChrome.mir4.stats.healthPotionEffect': 'Hiệu lực bình máu',
+  'hudChrome.mir4.stats.manaPotionEffect': 'Hiệu lực bình mana',
+  'hudChrome.mir4.stats.basicAttackDamage': 'Sát thương đòn đánh thường',
+  'hudChrome.mir4.stats.basicDamageReduction': 'Giảm sát thương đòn đánh thường',
+  'hudChrome.mir4.stats.penetrationProtection': 'Kháng xuyên phòng thủ',
+  'hudChrome.mir4.skillCooldownDisclosure':
+    'Thời gian hồi chiêu hiển thị ở trên là giá trị cơ bản. Giảm Hồi Chiêu Kỹ Năng có thể giảm tối đa 40% trong PvE hoặc 30% trong PvP.',
+  'sim.rift.corpseRezCombat':
+    'Tổ đội của bạn vẫn đang chiến đấu. Bạn có thể hồi sinh khi giao tranh kết thúc.',
 };
