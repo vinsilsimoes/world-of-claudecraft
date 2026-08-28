@@ -679,6 +679,7 @@ import {
   enterRift as enterRiftImpl,
   leaveRift as leaveRiftImpl,
   liftRiftEntities as liftRiftEntitiesImpl,
+  replayActiveRiftStateForMember as replayRiftStateImpl,
   riftInstanceAtPos,
   riftOpenTreasure as riftOpenTreasureImpl,
   riftPlayerLift as riftPlayerLiftImpl,
@@ -11718,6 +11719,10 @@ export class Sim {
 
   leaveRift(pid?: number): void {
     leaveRiftImpl(this.ctx, pid);
+  }
+
+  replayActiveRiftState(pid: number): boolean {
+    return replayRiftStateImpl(this.ctx, pid);
   }
 
   riftOpenTreasure(objectId: number, pid?: number): void {

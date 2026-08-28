@@ -227,7 +227,17 @@ export function rebindRiftInstanceMember(
   }
   // Reconnect does not pass through enterRift(), so explicitly rebuild the
   // authoritative client floor/minimap state for the newly minted entity id.
-  emitRiftState(ctx, newEntityId, inst, true);
+  replayActiveRiftStateForMember(ctx, newEntityId);
+  return true;
+}
+
+/** Replay the descriptor for an entity that still belongs to one active Rift run. */
+export function replayActiveRiftStateForMember(ctx: SimContext, pid: number): boolean {
+  const inst = ctx.riftInstances.find(
+    (candidate) => candidate.partyKey !== null && candidate.memberIds.has(pid),
+  );
+  if (!inst || !ctx.entities.has(pid) || !ctx.players.has(pid)) return false;
+  emitRiftState(ctx, pid, inst, true);
   return true;
 }
 

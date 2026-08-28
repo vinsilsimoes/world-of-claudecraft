@@ -60,6 +60,10 @@ function dropSocket(server: GameServer, session: ClientSession, ws: any): boolea
   return server.socketClosed(session, ws);
 }
 
+function routeOneSimTick(server: GameServer): void {
+  (server as any).routeEvents(server.sim.tick());
+}
+
 describe('planJoin (pure decision core)', () => {
   const base = { accountId: 7, isGm: false, liveOtherSessions: 0, maxPerAccount: 1 };
 
@@ -221,6 +225,75 @@ describe('linkdead grace lifecycle', () => {
     expect(hello).toMatchObject({ pid: session.pid, name: 'Comeback', cls: 'warrior' });
     // one session, one character: no duplicates were created
     expect(server.clients.size).toBe(1);
+  });
+
+  it('replays the active Rift descriptor after a linkdead ghost resumes on a new socket', () => {
+    const server = new GameServer();
+    const ws = fakeWs();
+    const session = expectJoined(server.join(ws, 11, 101, 'Riftback', 'warrior', null));
+    server.sim.setPlayerLevel(20, session.pid);
+    server.sim.enterRift(4242, 20, session.pid);
+    const liveInstance = server.sim.riftInstances.find((instance) => instance.partyKey !== null)!;
+    const ghost = server.sim.entities.get(session.pid)!;
+    ghost.hp = 0;
+    ghost.dead = true;
+    server.sim.releaseSpirit(session.pid);
+    expect(ghost.ghost).toBe(true);
+    routeOneSimTick(server);
+    expect(
+      ws.send.mock.calls
+        .map((call: any[]) => JSON.parse(call[0]))
+        .some(
+          (frame: any) =>
+            frame.t === 'events' &&
+            frame.list?.some((event: any) => event.type === 'riftState' && event.active === true),
+        ),
+    ).toBe(true);
+
+    dropSocket(server, session, ws);
+    const ws2 = fakeWs();
+    expectJoined(server.join(ws2, 11, 101, 'Riftback', 'warrior', null));
+    routeOneSimTick(server);
+    expect(server.sim.entities.get(session.pid)?.ghost).toBe(true);
+
+    const frames = ws2.send.mock.calls.map((call: any[]) => JSON.parse(call[0]));
+    expect(frames[0]).toMatchObject({ t: 'hello', pid: session.pid });
+    const replay = frames.find(
+      (frame: any) =>
+        frame.t === 'events' &&
+        frame.list?.some((event: any) => event.type === 'riftState' && event.active === true),
+    );
+    expect(replay).toBeTruthy();
+    expect(replay.list.find((event: any) => event.type === 'riftState')).toMatchObject({
+      pid: session.pid,
+      active: true,
+      instanceId: liveInstance.instanceId,
+      seed: 4242,
+      baseLevel: 20,
+      floorIndex: 0,
+    });
+  });
+
+  it('does not synthesize a Rift descriptor when a native-dungeon session resumes', () => {
+    const server = new GameServer();
+    const ws = fakeWs();
+    const session = expectJoined(server.join(ws, 11, 101, 'Fieldback', 'warrior', null));
+    server.sim.setPlayerLevel(20, session.pid);
+    expect(server.sim.enterDungeon('hollow_crypt', session.pid)).toBe(true);
+    dropSocket(server, session, ws);
+
+    const ws2 = fakeWs();
+    expectJoined(server.join(ws2, 11, 101, 'Fieldback', 'warrior', null));
+    routeOneSimTick(server);
+
+    const frames = ws2.send.mock.calls.map((call: any[]) => JSON.parse(call[0]));
+    expect(frames[0]).toMatchObject({ t: 'hello', pid: session.pid });
+    expect(
+      frames.some(
+        (frame: any) =>
+          frame.t === 'events' && frame.list?.some((event: any) => event.type === 'riftState'),
+      ),
+    ).toBe(false);
   });
 
   it('ignores a late close event from the pre-resume socket', () => {
