@@ -33,7 +33,10 @@ export const MAX_OBJECTS = 400;
 // realm columns), so the editor's zone cap sits above that with headroom for a
 // few custom zones. (It was 12 in the 3-zone-strip era.)
 export const MAX_ZONES = 24;
-export const MAX_ROADS = 64;
+// The Aeldrune campaign currently ships more than the old 64-road custom-map
+// ceiling. Keep enough bounded headroom that opening and saving the canonical
+// world cannot silently truncate its authored route network.
+export const MAX_ROADS = 128;
 export const MAX_ROAD_POINTS = 256;
 export const MAX_NAME_LENGTH = 60;
 export const MAX_DESCRIPTION_LENGTH = 500;
@@ -44,6 +47,7 @@ export const MAX_WATER_LEVEL = 40;
 // built-in camps top out at count 14; see src/sim/content/zone*.ts).
 export const MAX_CAMP_COUNT = 20;
 export const MAX_CAMP_RADIUS = 100;
+export const MAX_CAMP_LEVEL = 250;
 export const MAX_OBJECT_POSITIONS = 100;
 export const MAX_ID_LENGTH = 64;
 // Generous world-coordinate bound (the built-in world spans ~360yd); camp, NPC,
@@ -294,12 +298,20 @@ function sanitizeCamp(v: unknown): CampDef | null {
   const center = c.center as Record<string, unknown> | null | undefined;
   if (!center || typeof center !== 'object') return null;
   if (!finiteNum(center.x) || !finiteNum(center.z)) return null;
-  return {
+  const camp: CampDef = {
     mobId,
     center: { x: coord(center.x), z: coord(center.z) },
     radius: clamp(num(c.radius, 5), 0.5, MAX_CAMP_RADIUS),
     count: clamp(Math.floor(num(c.count, 1)), 1, MAX_CAMP_COUNT),
   };
+  if (finiteNum(c.minLevel)) {
+    camp.minLevel = clamp(Math.floor(c.minLevel), 1, MAX_CAMP_LEVEL);
+  }
+  if (finiteNum(c.maxLevel)) {
+    camp.maxLevel = clamp(Math.floor(c.maxLevel), camp.minLevel ?? 1, MAX_CAMP_LEVEL);
+  }
+  if (c.offStream === true) camp.offStream = true;
+  return camp;
 }
 
 // NPC ids are validated for shape only (the engine tolerates an unknown quest
@@ -323,8 +335,12 @@ function sanitizeNpc(v: unknown): NpcDef | null {
     greeting: str(n.greeting, '').slice(0, MAX_DESCRIPTION_LENGTH),
   };
   if (Array.isArray(n.vendorItems)) npc.vendorItems = strArray(n.vendorItems);
+  if (n.devVendor === true) npc.devVendor = true;
   if (n.market === true) npc.market = true;
   if (n.banker === true) npc.banker = true;
+  if (n.heroicVendor === true) npc.heroicVendor = true;
+  if (n.warfareVendor === true) npc.warfareVendor = true;
+  if (n.cardMaster === true) npc.cardMaster = true;
   if (n.dynamic === true) npc.dynamic = true;
   return npc;
 }

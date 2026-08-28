@@ -21,7 +21,13 @@ import {
   MAX_TERRAIN_EDITS,
   MIN_COLLIDE_RADIUS,
 } from '../sim/map_doc';
-import type { BlockerDef, CampDef, HeightStamp, WorldContent } from '../sim/types';
+import type {
+  BlockerDef,
+  CampDef,
+  HeightStamp,
+  Mir4ArcMapProjection,
+  WorldContent,
+} from '../sim/types';
 import { invalidateTerrainEditIndex, terrainHeight, WATER_LEVEL, waterLevel } from '../sim/world';
 import { tEntity } from '../ui/entity_i18n';
 import { t } from '../ui/i18n';
@@ -66,6 +72,11 @@ import {
 } from './placement_transform_core';
 import { DEFAULT_PLAYTEST_SEED, launchPlaytest } from './playtest';
 import { type Bounds, scatterHills, scatterPlacements } from './procgen';
+import {
+  applyQuestAnchorDocumentToProjections,
+  type QuestAnchorPoint,
+} from './quest_authoring_core';
+import { QuestEditor } from './quest_editor';
 import { EditGeneration, shouldAutosave } from './save_lifecycle_core';
 import { editorErrorKey } from './server_errors_core';
 import { appendSpan, removeSpan } from './span_core';
@@ -119,9 +130,15 @@ const BRUSH_COLOR: Partial<Record<EditorTool, number>> = {
   flatten: 0xd8c27a,
   erase: 0xe0503c,
   place: 0x3fd0ff,
+  quest: 0xffd100,
   camp: 0xd9534f,
   spawn: 0x3fd0ff,
 };
+
+export interface EditorAppOptions {
+  questProjections?: readonly Mir4ArcMapProjection[];
+  worldTemplate?: Readonly<WorldContent>;
+}
 
 export class EditorApp {
   // ---- document + active world ------------------------------------------------
@@ -139,6 +156,9 @@ export class EditorApp {
   private readonly drawer: MapDrawer;
   private readonly toasts: Toasts;
   private readonly tutorial: TutorialLoader;
+  private readonly questEditor: QuestEditor;
+  private readonly questProjections: readonly Mir4ArcMapProjection[];
+  private readonly worldTemplate?: Readonly<WorldContent>;
 
   // ---- stage -----------------------------------------------------------------
   private readonly stage2d: HTMLElement;
@@ -173,6 +193,8 @@ export class EditorApp {
   private blockerPreview: BlockerDef | null = null;
   private drawingBlocker2d = false;
   private blockersVisible2d = true;
+  private questAnchors: readonly QuestAnchorPoint[] = [];
+  private selectedQuestAnchor: number | null = null;
 
   private readonly undo = new UndoStack();
   private dirty = false;
@@ -240,8 +262,11 @@ export class EditorApp {
   constructor(
     private readonly root: HTMLElement,
     content: ZoneContent,
+    options: EditorAppOptions = {},
   ) {
     this.content = content;
+    this.questProjections = options.questProjections ?? [];
+    this.worldTemplate = options.worldTemplate;
     this.map = {
       version: CUSTOM_MAP_VERSION,
       meta: {
@@ -279,6 +304,7 @@ export class EditorApp {
       onImport: () => void this.importFile(),
       onExport: () => this.exportFile(),
       onUploadAsset: () => void this.uploadAsset(),
+      onQuests: () => this.questEditor.toggle(),
       onPlaytest: () => this.playtest(),
       onViewMode: (mode) => this.setViewMode(mode),
       onUndo: () => this.doUndo(),
@@ -320,6 +346,26 @@ export class EditorApp {
     });
 
     this.toasts = new Toasts(this.root);
+    this.questEditor = new QuestEditor(main, {
+      projections: this.questProjections,
+      onOverlay: (points, selectedIndex) => {
+        this.questAnchors = points;
+        this.selectedQuestAnchor = selectedIndex;
+        this.viewport3d?.setQuestAnchors(points, selectedIndex);
+        this.canvasDirty = true;
+      },
+      onPositionMode: (active) => {
+        if (active && this.tool !== 'quest') this.setTool('quest');
+      },
+      onFocus: (point) => {
+        this.viewport3d?.focusAt(point);
+        this.cam.center = { ...point };
+        this.canvasDirty = true;
+      },
+      onVisibilityChange: (visible) => this.topbar.setQuestEditorVisible(visible, !visible),
+      toast: (message) => this.toasts.success(message),
+      error: (message) => this.toasts.error(message),
+    });
     this.drawer = new MapDrawer(this.root, {
       listLocal: () => this.io.store.list(),
       hasDraft: () => this.io.draftLoad() !== null,
@@ -390,19 +436,24 @@ export class EditorApp {
    */
   private rebuildActiveWorld(): void {
     const map = this.map;
+    const template = this.worldTemplate;
     const world: WorldContent = {
+      ...template,
       zones: map.content.zones as WorldContent['zones'],
       camps: map.content.camps as WorldContent['camps'],
       npcs: map.content.npcs as WorldContent['npcs'],
       groundObjects: map.content.objects as WorldContent['groundObjects'],
       roads: (map.content.roads ?? BUILTIN_WORLD.roads) as WorldContent['roads'],
-      props: clonePropsWithoutEastbrookLayout(BUILTIN_WORLD.props),
-      playerStart: map.playerStart ? { ...map.playerStart } : { ...PLAYER_START },
-      terrainEdits: map.terrainEdits,
-      placements: [],
-      biomePaint: map.biomePaint,
+      props: template ? template.props : clonePropsWithoutEastbrookLayout(BUILTIN_WORLD.props),
+      playerStart: map.playerStart
+        ? { ...map.playerStart }
+        : { ...(template?.playerStart ?? PLAYER_START) },
+      terrainEdits: [...(template?.terrainEdits ?? []), ...map.terrainEdits],
+      placements: template?.placements ? [...template.placements] : [],
+      biomePaint: map.biomePaint ?? template?.biomePaint,
     };
-    if (map.blockers) world.blockers = map.blockers;
+    const blockers = [...(template?.blockers ?? []), ...(map.blockers ?? [])];
+    if (blockers.length > 0) world.blockers = blockers;
     if (map.waterLevel !== undefined) world.waterLevel = map.waterLevel;
     this.activeWorld = world;
     setActiveWorldContent(world);
@@ -414,15 +465,17 @@ export class EditorApp {
    *  WorldContent so the sim's colliders always read the live array. */
   private blockersRef(): BlockerDef[] {
     if (!this.map.blockers) this.map.blockers = [];
-    if (this.activeWorld.blockers !== this.map.blockers) {
-      this.activeWorld.blockers = this.map.blockers;
-    }
+    this.activeWorld.blockers = [...(this.worldTemplate?.blockers ?? []), ...this.map.blockers];
     return this.map.blockers;
   }
 
   /** EVERY blocker mutation (add, erase, undo/redo) funnels here: the cached
    *  static-collider grid is stale and the overlays must repaint. */
   private blockersMutated(): void {
+    this.activeWorld.blockers = [
+      ...(this.worldTemplate?.blockers ?? []),
+      ...(this.map.blockers ?? []),
+    ];
     invalidateStaticColliders();
     this.viewport3d?.rebuildBlockers();
     this.map.meta.updatedAt = now();
@@ -431,7 +484,9 @@ export class EditorApp {
 
   private syncWaterToActive(): void {
     if (this.map.waterLevel !== undefined) this.activeWorld.waterLevel = this.map.waterLevel;
-    else delete this.activeWorld.waterLevel;
+    else if (this.worldTemplate?.waterLevel !== undefined) {
+      this.activeWorld.waterLevel = this.worldTemplate.waterLevel;
+    } else delete this.activeWorld.waterLevel;
   }
 
   // ---- 3D viewport ---------------------------------------------------------------
@@ -455,19 +510,24 @@ export class EditorApp {
     if (this.viewport3d) return;
     this.show3dLoading();
     try {
-      this.viewport3d = new Editor3DViewport(this.stage3dEl, this.map, {
-        toolActive: () => this.toolWantsPointer(),
-        onEditStart: (w) => this.editStart(w),
-        onEditMove: (w) => this.editMove(w),
-        onEditEnd: () => this.editEnd(),
-        onHover: (w) => this.hover3d(w),
-        onTap: (cx, cy, w) => this.tap3d(cx, cy, w),
-        placementDragEnabled: () => this.tool === 'select',
-        onPlacementDragStart: (index) => this.beginPlacementDrag(index),
-        onPlacementDragMove: (w) => this.updateSelectedPlacement({ x: w.x, z: w.z }, false),
-        onPlacementDragEnd: () => this.endPlacementDrag(),
-        onTransformWheel: (kind, deltaY) => this.transformWheel(kind, deltaY),
-      });
+      this.viewport3d = new Editor3DViewport(
+        this.stage3dEl,
+        this.map,
+        {
+          toolActive: () => this.toolWantsPointer(),
+          onEditStart: (w) => this.editStart(w),
+          onEditMove: (w) => this.editMove(w),
+          onEditEnd: () => this.editEnd(),
+          onHover: (w) => this.hover3d(w),
+          onTap: (cx, cy, w) => this.tap3d(cx, cy, w),
+          placementDragEnabled: () => this.tool === 'select',
+          onPlacementDragStart: (index) => this.beginPlacementDrag(index),
+          onPlacementDragMove: (w) => this.updateSelectedPlacement({ x: w.x, z: w.z }, false),
+          onPlacementDragEnd: () => this.endPlacementDrag(),
+          onTransformWheel: (kind, deltaY) => this.transformWheel(kind, deltaY),
+        },
+        this.worldTemplate,
+      );
       void this.viewport3d
         .start()
         .then(() => {
@@ -519,9 +579,11 @@ export class EditorApp {
   // ---- tool state ----------------------------------------------------------------
 
   private setTool(tool: EditorTool): void {
+    if (this.tool === 'quest' && tool !== 'quest') this.questEditor.cancelPositionMode();
     this.tool = tool;
     this.toolbar.setActive(tool);
     this.assets.setVisible(tool === 'place');
+    if (tool === 'quest') this.questEditor.open();
     if (tool !== 'select') this.setSelectedPlacement(null);
     if (tool !== 'select') this.selectedKey = null;
     if (tool !== 'camp') this.selectedCamp = null;
@@ -545,6 +607,7 @@ export class EditorApp {
 
   /** Tools that claim the left pointer in the 3D viewport. */
   private toolWantsPointer(): boolean {
+    if (this.tool === 'quest') return this.questEditor.isPositioning();
     return this.tool !== 'select' && this.tool !== 'water';
   }
 
@@ -579,6 +642,9 @@ export class EditorApp {
         break;
       case 'place':
         this.placeAt(w);
+        break;
+      case 'quest':
+        this.questEditor.placeSelectedPoint(w);
         break;
       case 'blocker':
         this.blockerStart = { ...w };
@@ -703,6 +769,12 @@ export class EditorApp {
       color = /^#[0-9a-f]{6}$/i.test(swatch) ? Number.parseInt(swatch.slice(1), 16) : 0xffd100;
     } else if (this.tool === 'place') {
       radius = Math.max(0.8, this.placeScale * 0.9);
+    } else if (this.tool === 'quest') {
+      if (!this.questEditor.isPositioning()) {
+        this.viewport3d.clearBrush();
+        return;
+      }
+      radius = 1.4;
     } else if (this.tool === 'camp') {
       radius = this.selectedCampDef()?.radius ?? 10;
     } else if (this.tool === 'spawn') {
@@ -757,6 +829,10 @@ export class EditorApp {
    * grid and the sim's terrain-edit spatial index are both stale.
    */
   private terrainEditsMutated(): void {
+    this.activeWorld.terrainEdits = [
+      ...(this.worldTemplate?.terrainEdits ?? []),
+      ...this.map.terrainEdits,
+    ];
     invalidateStaticColliders();
     invalidateTerrainEditIndex();
   }
@@ -1932,7 +2008,14 @@ export class EditorApp {
   private playtest(): void {
     // Playtest navigates away; back an unsaved doc up to its draft slot first.
     if (this.dirty) this.io.draftSave(this.map);
+    // Send only the editable layer. The game-side handoff rebuilds the canonical
+    // Aeldrune campaign world and applies this compact patch over it; serializing
+    // the complete shipping world exceeds sessionStorage on asset-rich maps.
     const world = customMapToWorldContent(this.map);
+    world.mir4ArcMapProjections = applyQuestAnchorDocumentToProjections(
+      this.questEditor.snapshotDocument(),
+      this.questProjections,
+    );
     this.toasts.info(t('editor.status.playtestLaunch'));
     const ok = launchPlaytest(world, {
       seed: this.map.meta.seed,
@@ -2363,6 +2446,8 @@ export class EditorApp {
         blockerPreview: this.blockerPreview,
         region: this.tool === 'region' ? this.regionBox : null,
         spawn: this.map.playerStart ?? null,
+        questAnchors: this.questAnchors,
+        selectedQuestAnchor: this.selectedQuestAnchor,
         brush:
           this.isDragTool() && this.cursorWorld
             ? {
@@ -2413,7 +2498,12 @@ export class EditorApp {
         stage.setPointerCapture(ev.pointerId);
         return;
       }
-      if (this.tool === 'place' || this.tool === 'camp' || this.tool === 'spawn') {
+      if (
+        this.tool === 'place' ||
+        this.tool === 'camp' ||
+        this.tool === 'spawn' ||
+        (this.tool === 'quest' && this.questEditor.isPositioning())
+      ) {
         this.editStart(w);
         this.canvasDirty = true;
         return;

@@ -8,6 +8,7 @@ import { type KeyValueStore, MapStore, parseMap, serializeMap } from '../src/edi
 import { BUILTIN_WORLD } from '../src/sim/data';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { FENBRIDGE_LAYOUT } from '../src/sim/fenbridge_layout';
+import { buildMir4WocComparisonWorld } from '../src/sim/mir4/woc_comparison_world';
 
 function memStore(): KeyValueStore {
   const m = new Map<string, string>();
@@ -175,6 +176,42 @@ describe('CustomMap build + projection', () => {
     expect(world.props.docks[0].hutLocal).not.toBe(BUILTIN_WORLD.props.docks[0].hutLocal);
   });
 
+  it('preserves the complete Aeldrune world template for editor playtest', () => {
+    const map = newCustomMap('Aeldrune', 'aeldrune', 0);
+    const authored = {
+      ...BUILTIN_WORLD,
+      presentationModel: 'builtin' as const,
+      terrainModel: 'builtin' as const,
+      travelPortals: [{ id: 'aeldrune-gate' } as never],
+      blockers: [{ x1: 1, z1: 2, x2: 3, z2: 4 }],
+      props: {
+        ...BUILTIN_WORLD.props,
+        buildings: [
+          {
+            kind: 'house' as const,
+            id: 'aeldrune-village-house',
+            assetId: '/models/props/eastbrook_bank.glb',
+            x: 12,
+            z: 18,
+            w: 7,
+            d: 5,
+            rot: 0,
+          },
+        ],
+      },
+    };
+
+    const world = customMapToWorldContent(map, authored);
+
+    expect(world.props.buildings).toEqual(authored.props.buildings);
+    expect(world.props).not.toBe(authored.props);
+    expect(world.props.buildings).not.toBe(authored.props.buildings);
+    expect(world.presentationModel).toBe('builtin');
+    expect(world.terrainModel).toBe('builtin');
+    expect(world.travelPortals).toEqual(authored.travelPortals);
+    expect(world.blockers).toEqual(authored.blockers);
+  });
+
   it('customMapFromContent deep-clones (independent of later edits)', () => {
     const content = {
       zones: [
@@ -223,6 +260,36 @@ describe('serialize / parse round-trip', () => {
     expect(parsed?.terrainEdits).toEqual(map.terrainEdits);
     expect(parsed?.placements).toEqual(map.placements);
     expect(parsed?.content.zones.length).toBe(map.content.zones.length);
+  });
+
+  it('preserves every gameplay-bearing Aeldrune campaign field', () => {
+    const world = buildMir4WocComparisonWorld();
+    const map = customMapFromContent(
+      {
+        zones: [...world.zones],
+        camps: [...world.camps],
+        npcs: { ...world.npcs },
+        objects: [...world.groundObjects],
+        roads: [...world.roads],
+      },
+      {
+        meta: {
+          id: 'aeldrune-campaign',
+          name: 'Aeldrune Campaign',
+          description: '',
+          createdAt: 0,
+          updatedAt: 0,
+          seed: 20061,
+          parentId: '',
+        },
+      },
+    );
+
+    const parsed = parseMap(serializeMap(map));
+
+    expect(parsed?.content.camps).toEqual(world.camps);
+    expect(parsed?.content.npcs).toEqual(world.npcs);
+    expect(parsed?.content.roads).toEqual(world.roads);
   });
 
   it('rejects unsalvageable input (no usable zones)', () => {

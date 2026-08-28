@@ -9,6 +9,8 @@
 // the editor's code never enters the shipped game bundle. Defensive: any
 // malformed blob yields null and the normal start screen runs instead.
 
+import { type GameProfile, MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { buildMir4WocCampaignWorld } from '../sim/mir4/woc_comparison_world';
 import type { PlayerClass, WorldContent } from '../sim/types';
 import { WORLD_SEED } from '../sim/world_seed';
 
@@ -19,6 +21,7 @@ export interface EditorPlaytestRequest {
   seed: number;
   playerClass: PlayerClass;
   playerName: string;
+  gameProfile: GameProfile;
 }
 
 const VALID_CLASSES: ReadonlySet<string> = new Set([
@@ -56,6 +59,34 @@ function looksLikeWorldContent(c: unknown): c is WorldContent {
   );
 }
 
+/**
+ * Rebuild the canonical Aeldrune world in the game bundle, then apply only the
+ * editor-owned layer. Static towns, walls, portals, services and presentation
+ * metadata never cross sessionStorage and therefore cannot be omitted or drift
+ * into the generic WoC custom-world runtime.
+ */
+export function composeAeldruneEditorPlaytestWorld(
+  patch: WorldContent,
+  seed: number,
+): WorldContent {
+  const base = buildMir4WocCampaignWorld(undefined, seed);
+  return {
+    ...base,
+    zones: patch.zones,
+    camps: patch.camps,
+    npcs: patch.npcs,
+    groundObjects: patch.groundObjects,
+    roads: patch.roads,
+    playerStart: patch.playerStart,
+    terrainEdits: [...(base.terrainEdits ?? []), ...(patch.terrainEdits ?? [])],
+    placements: [...(base.placements ?? []), ...(patch.placements ?? [])],
+    blockers: [...(base.blockers ?? []), ...(patch.blockers ?? [])],
+    biomePaint: patch.biomePaint ?? base.biomePaint,
+    waterLevel: patch.waterLevel ?? base.waterLevel,
+    mir4ArcMapProjections: patch.mir4ArcMapProjections ?? base.mir4ArcMapProjections,
+  };
+}
+
 // Read AND consume a pending play-test request (removed so a later refresh shows
 // the normal menu). Returns null with no request or on bad data.
 export function takeEditorPlaytestRequest(): EditorPlaytestRequest | null {
@@ -80,7 +111,14 @@ export function takeEditorPlaytestRequest(): EditorPlaytestRequest | null {
       typeof obj.playerName === 'string' && obj.playerName.trim()
         ? obj.playerName.slice(0, 24)
         : 'Mapmaker';
-    return { content: obj.content as WorldContent, seed, playerClass: pc, playerName: name };
+    if (obj.gameProfile !== MIR4_GAME_PROFILE) return null;
+    return {
+      content: composeAeldruneEditorPlaytestWorld(obj.content as WorldContent, seed),
+      seed,
+      playerClass: pc,
+      playerName: name,
+      gameProfile: MIR4_GAME_PROFILE,
+    };
   } catch {
     return null;
   }

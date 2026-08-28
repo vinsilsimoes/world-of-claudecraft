@@ -62,6 +62,8 @@ export interface DrawState {
   region: { minX: number; minZ: number; maxX: number; maxZ: number } | null;
   brush: BrushCursor | null;
   spawn: Vec2 | null;
+  questAnchors: readonly Vec2[];
+  selectedQuestAnchor: number | null;
 }
 
 export function draw(
@@ -96,6 +98,7 @@ export function draw(
   }
   drawBlockers(ctx, cam, vp, state.blockers, state.blockerPreview);
   drawPlacements(ctx, cam, vp, state.placements);
+  drawQuestAnchors(ctx, cam, vp, state.questAnchors, state.selectedQuestAnchor);
   if (state.region) {
     const a = cam.worldToScreen({ x: state.region.minX, z: state.region.minZ }, vp);
     const b = cam.worldToScreen({ x: state.region.maxX, z: state.region.maxZ }, vp);
@@ -110,6 +113,34 @@ export function draw(
   }
   if (state.spawn) drawSpawn(ctx, cam, vp, state.spawn);
   if (state.brush) drawBrush(ctx, cam, vp, state.brush);
+  ctx.restore();
+}
+
+function drawQuestAnchors(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  vp: Viewport,
+  points: readonly Vec2[],
+  selectedIndex: number | null,
+): void {
+  if (points.length === 0) return;
+  ctx.save();
+  ctx.lineWidth = 2;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let index = 0; index < points.length; index += 1) {
+    const screen = cam.worldToScreen(points[index], vp);
+    const selected = index === selectedIndex;
+    ctx.beginPath();
+    ctx.arc(screen.sx, screen.sy, selected ? 10 : 8, 0, Math.PI * 2);
+    ctx.fillStyle = selected ? 'rgba(255,209,0,0.9)' : 'rgba(176,124,198,0.8)';
+    ctx.fill();
+    ctx.strokeStyle = selected ? '#ffffff' : '#ffd100';
+    ctx.stroke();
+    ctx.fillStyle = '#11131a';
+    ctx.fillText(String(index + 1), screen.sx, screen.sy + 0.5);
+  }
   ctx.restore();
 }
 

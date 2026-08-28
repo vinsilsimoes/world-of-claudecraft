@@ -17,6 +17,7 @@ export interface TopbarDeps {
   onImport(): void;
   onExport(): void;
   onUploadAsset(): void;
+  onQuests(): void;
   onPlaytest(): void;
   onViewMode(mode: '3d' | '2d'): void;
   onUndo(): void;
@@ -33,6 +34,7 @@ export class Topbar {
   private readonly offlineBadge: HTMLElement;
   private readonly forkBtn: HTMLButtonElement;
   private readonly uploadBtn: HTMLButtonElement;
+  private readonly questsBtn: HTMLButtonElement;
   private readonly saveBtn: HTMLButtonElement;
   private readonly autosaveBtn: HTMLButtonElement;
   private readonly undoBtn: HTMLButtonElement;
@@ -164,6 +166,15 @@ export class Topbar {
       t('editor.topbar.uploadAssetTitle'),
     );
     actions.appendChild(this.uploadBtn);
+    this.questsBtn = button(
+      t('editor.topbar.quests'),
+      deps.onQuests,
+      'ed-quests',
+      t('editor.topbar.questsTitle'),
+    );
+    this.questsBtn.setAttribute('aria-controls', 'quest-spatial-editor');
+    this.questsBtn.setAttribute('aria-expanded', 'false');
+    actions.appendChild(this.questsBtn);
     sep();
     // Help: the guide modal + tutorial entry (also the tour's last anchor).
     actions.appendChild(
@@ -215,6 +226,12 @@ export class Topbar {
   setAutosave(on: boolean): void {
     this.autosaveBtn.classList.toggle('active', on);
     this.autosaveBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+
+  setQuestEditorVisible(visible: boolean, focus = false): void {
+    this.questsBtn.classList.toggle('active', visible);
+    this.questsBtn.setAttribute('aria-expanded', visible ? 'true' : 'false');
+    if (focus) this.questsBtn.focus();
   }
 
   setSaving(saving: boolean): void {

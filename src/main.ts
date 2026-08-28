@@ -57,6 +57,7 @@ import { provisionDiagnosticsCollectionTickets } from './game/diagnostics_playte
 import { desktopPresenceOnFrame, pushDiscordPresenceEnabled } from './game/discord_presence';
 import { cycleHudFocus } from './game/dpad_focus_nav';
 import { takeEditorPlaytestRequest } from './game/editor_playtest';
+import type { GameProfile } from './sim/game_profile';
 import {
   clearEntryProbe,
   ENTRY_PROBE_STABLE_MS,
@@ -5224,6 +5225,7 @@ async function startOffline(
   skin = 0,
   world?: WorldContent,
   seedOverride?: number,
+  gameProfile?: GameProfile,
 ): Promise<void> {
   if (!(await prepareWorldEntry())) return;
   resetLoadProfile();
@@ -5234,7 +5236,11 @@ async function startOffline(
     () =>
       new Sim(
         // biome-ignore format: the startup adapter owns query projection outside the main firewall
-        offlineStartupSimOptions({ playerClass, playerName: name, world, seedOverride }, startupParams, import.meta.env.DEV),
+        offlineStartupSimOptions(
+          { playerClass, playerName: name, world, seedOverride, gameProfile },
+          startupParams,
+          import.meta.env.DEV,
+        ),
       ),
   );
   provisionDiagnosticsCollectionTickets(sim, startupParams, import.meta.env.DEV);
@@ -11516,6 +11522,7 @@ if (editorPlaytest) {
     0,
     editorPlaytest.content,
     editorPlaytest.seed,
+    editorPlaytest.gameProfile,
   );
 } else if (diagnosticsAutoOffline) {
   startSitePresence('home');

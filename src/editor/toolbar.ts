@@ -14,6 +14,7 @@ export type EditorTool =
   | 'paint'
   | 'water'
   | 'place'
+  | 'quest'
   | 'blocker'
   | 'camp'
   | 'spawn'
@@ -33,6 +34,7 @@ export interface ToolDef {
     | 'editor.tool.paint'
     | 'editor.tool.water'
     | 'editor.tool.place'
+    | 'editor.tool.quest'
     | 'editor.tool.blocker'
     | 'editor.tool.camp'
     | 'editor.tool.spawn'
@@ -84,6 +86,12 @@ export const TOOL_DEFS: readonly ToolDef[] = [
     key: 'p',
     labelKey: 'editor.tool.place',
     icon: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 3v9M4 7.5l8 4.5 8-4.5',
+  },
+  {
+    tool: 'quest',
+    key: 'q',
+    labelKey: 'editor.tool.quest',
+    icon: 'M5 4h14v16H5zM8 8h8M8 12h5M9 17l2 2 4-5',
   },
   {
     tool: 'blocker',

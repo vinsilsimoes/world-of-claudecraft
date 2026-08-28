@@ -28,6 +28,43 @@ export const MIR4_WOC_CHAPTER_LAYOUTS: readonly Mir4WocChapterLayout[] = Object.
       { x: -3, z: 69 },
       { x: 79, z: 79 },
     ],
+    // Authored in the Aeldrune quest editor. The collection points are spread
+    // across readable search areas instead of respawning on a single spot.
+    objectiveAnchors: [
+      { questId: 'M01-Q01', stageIndex: 1, points: [{ x: -49.42, z: 55.74 }] },
+      {
+        questId: 'M01-Q01',
+        stageIndex: 2,
+        points: [
+          { x: -22.59, z: 36.26 },
+          { x: -47.97, z: 15.95 },
+          { x: -79.63, z: -0.71 },
+        ],
+      },
+      { questId: 'M01-Q01', stageIndex: 4, points: [{ x: -12.27, z: 6.17 }] },
+      {
+        questId: 'M01-Q02',
+        stageIndex: 2,
+        points: [
+          { x: -103.09, z: -51.43 },
+          { x: -88.63, z: -96.57 },
+          { x: -110.82, z: -79.1 },
+        ],
+      },
+      { questId: 'M01-Q02', stageIndex: 3, points: [{ x: -85.87, z: -65.56 }] },
+      {
+        questId: 'M01-Q02',
+        stageIndex: 4,
+        points: [
+          { x: -69.57, z: -53.97 },
+          { x: -91.66, z: -52.84 },
+          { x: -79.44, z: -78.07 },
+          { x: -63.91, z: -78.92 },
+          { x: -79.93, z: -35.06 },
+          { x: -104.98, z: -70.73 },
+        ],
+      },
+    ],
   },
   {
     mapId: 'm02-trilha-dos-juncos',

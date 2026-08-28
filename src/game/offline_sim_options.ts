@@ -64,8 +64,9 @@ export function offlineSimOptions(opts: {
   diagnosticsSpawnZoneId?: string | null;
   diagnosticsSpawnPoiId?: string | null;
   mir4WocMap?: boolean;
+  gameProfile?: GameProfile;
 }): SimConfig {
-  const profile = browserGameProfile();
+  const profile = opts.gameProfile ?? browserGameProfile();
   const shell = mir4ShellClassFor(opts.playerClass, profile);
   const baseWorld = activateWorldForGameProfile(profile, {
     explicitWorld: opts.world,

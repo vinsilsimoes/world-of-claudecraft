@@ -5,7 +5,8 @@ import { WORLD_SEED } from '../sim/world_seed';
 // + main.ts). Offline-only: playtest never talks to the server.
 
 import { EDITOR_PLAYTEST_KEY } from '../game/editor_playtest';
-import type { WorldContent } from '../sim/types';
+import { MIR4_GAME_PROFILE } from '../sim/game_profile';
+import { emptyZoneProps, type WorldContent } from '../sim/types';
 
 // The shipped world seed: using it makes the play-test heightfield match
 // what the editor previews for the built-in terrain.
@@ -21,10 +22,14 @@ export interface PlaytestOptions {
 // (the caller can surface that); navigation still happens so the user is not stuck.
 export function launchPlaytest(world: WorldContent, opts: PlaytestOptions): boolean {
   const payload = JSON.stringify({
-    content: world,
+    // Static scene props come from the canonical Aeldrune world on the receiving
+    // side. Keeping even the generic fallback prop inventory here wastes most of
+    // sessionStorage and can make the handoff fail on an asset-rich checkout.
+    content: { ...world, props: emptyZoneProps() },
     seed: opts.seed,
     playerClass: opts.playerClass,
     playerName: opts.playerName,
+    gameProfile: MIR4_GAME_PROFILE,
   });
   let stored = false;
   try {
@@ -33,6 +38,6 @@ export function launchPlaytest(world: WorldContent, opts: PlaytestOptions): bool
   } catch {
     stored = false;
   }
-  if (stored) window.location.href = '/index.html';
+  if (stored) window.location.href = '/index.html?editorPlaytest=aeldrune';
   return stored;
 }

@@ -115,21 +115,44 @@ export function customMapFromContent(
 // independent clone of reusable built-in props outside Eastbrook. Free
 // placements carry their collide footprint so the Sim's colliders and the
 // renderer read the SAME records.
-export function customMapToWorldContent(map: CustomMap): WorldContent {
-  const start = map.playerStart ?? PLAYER_START;
+export function customMapToWorldContent(
+  map: CustomMap,
+  worldTemplate?: Readonly<WorldContent>,
+): WorldContent {
+  const start = map.playerStart ?? worldTemplate?.playerStart ?? PLAYER_START;
+  const template = worldTemplate ? deepClone(worldTemplate as WorldContent) : undefined;
   const world: WorldContent = {
+    ...template,
     zones: deepClone(map.content.zones as WorldContent['zones']),
     camps: deepClone(map.content.camps as WorldContent['camps']),
     npcs: deepClone(map.content.npcs as WorldContent['npcs']),
     groundObjects: deepClone(map.content.objects as WorldContent['groundObjects']),
-    roads: deepClone((map.content.roads ?? BUILTIN_WORLD.roads) as WorldContent['roads']),
-    props: clonePropsWithoutEastbrookLayout(BUILTIN_WORLD.props),
+    roads: deepClone(
+      (map.content.roads ?? worldTemplate?.roads ?? BUILTIN_WORLD.roads) as WorldContent['roads'],
+    ),
+    // A normal custom map excludes the built-in towns because it has no
+    // structured-prop document layer. The Aeldrune world editor supplies its
+    // complete authored world. presentationModel is what authorizes the matching
+    // town/wall renderer; portals, services, blockers and quest projections are
+    // gameplay data that must travel with the same playtest.
+    props: worldTemplate
+      ? deepClone(worldTemplate.props)
+      : clonePropsWithoutEastbrookLayout(BUILTIN_WORLD.props),
     playerStart: { x: start.x, z: start.z },
-    terrainEdits: deepClone(map.terrainEdits),
-    placements: placementsToPlayAssets(map.placements),
-    biomePaint: map.biomePaint ? deepClone(map.biomePaint) : undefined,
+    terrainEdits: [...deepClone(worldTemplate?.terrainEdits ?? []), ...deepClone(map.terrainEdits)],
+    placements: [
+      ...deepClone(worldTemplate?.placements ?? []),
+      ...placementsToPlayAssets(map.placements),
+    ],
+    biomePaint: map.biomePaint
+      ? deepClone(map.biomePaint)
+      : worldTemplate?.biomePaint
+        ? deepClone(worldTemplate.biomePaint)
+        : undefined,
   };
-  if (map.blockers && map.blockers.length > 0) world.blockers = deepClone(map.blockers);
+  const blockers = [...deepClone(worldTemplate?.blockers ?? []), ...deepClone(map.blockers ?? [])];
+  if (blockers.length > 0) world.blockers = blockers;
+  else delete world.blockers;
   if (map.waterLevel !== undefined) world.waterLevel = map.waterLevel;
   return world;
 }

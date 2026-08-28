@@ -180,4 +180,26 @@ describe('offlineSimOptions (main.ts Sim-options extraction)', () => {
     expect(options.world).toBe(explicitWorld);
     vi.unstubAllEnvs();
   });
+
+  it('lets an Aeldrune editor playtest pin the MIR4 profile independently of the dev server env', () => {
+    vi.stubEnv('VITE_GAME_PROFILE', 'woc-classic');
+    const explicitWorld = {
+      zones: [],
+      camps: [],
+      npcs: {},
+      groundObjects: [],
+    } as unknown as WorldContent;
+
+    const options = offlineSimOptions({
+      playerClass: 'warrior',
+      playerName: 'Editor',
+      world: explicitWorld,
+      gameProfile: 'mir4-gameplay-port',
+    });
+
+    expect(options.gameProfile).toBe('mir4-gameplay-port');
+    expect(options.playerClass).toBe('warrior');
+    expect(options.world).toBe(explicitWorld);
+    vi.unstubAllEnvs();
+  });
 });

@@ -18,7 +18,7 @@ import { type SeatRegion, unionRegion } from '../../render/placed_assets';
 import { Renderer } from '../../render/renderer';
 import { FENCE_HALF_DEPTH } from '../../sim/colliders';
 import { Sim } from '../../sim/sim';
-import { type BlockerDef, DT } from '../../sim/types';
+import { type BlockerDef, DT, type WorldContent } from '../../sim/types';
 import { terrainHeight } from '../../sim/world';
 import { type CustomMap, customMapToWorldContent, placementsToRenderAssets } from '../custom_map';
 import { EditorCamera } from './editor_camera';
@@ -59,6 +59,8 @@ export interface Editor3DHooks {
 
 const SPAWN_RING_COLOR = 0x3fd0ff;
 const SPAWN_RING_SEGMENTS = 40;
+const QUEST_ANCHOR_COLOR = 0xb07cc6;
+const QUEST_ANCHOR_SELECTED_COLOR = 0xffd100;
 // Editor-only blocker-wall overlay: translucent boxes over the collision
 // segments (the shipped game renders nothing for a blocker). Height is
 // presentational; the wall thickness reuses the sim's fence half-depth so the
@@ -99,12 +101,16 @@ export class Editor3DViewport {
   private hiddenWater = false;
   private hiddenPlacements = false;
   private hiddenSpawn = false;
+  private hiddenQuestAnchors = false;
   // The app's last-told selection, reapplied after a flushed structural rebuild
   // (rebuildAll clears the view's selection).
   private selectedIndex: number | null = null;
 
   private spawnRing: THREE.Mesh | null = null;
   private spawnPoint: { x: number; z: number } | null = null;
+  private questAnchorPoints: readonly { x: number; z: number }[] = [];
+  private selectedQuestAnchor: number | null = null;
+  private questAnchorsGroup: THREE.Group | null = null;
   private readonly spawnMat = new THREE.MeshBasicMaterial({
     color: SPAWN_RING_COLOR,
     transparent: true,
@@ -145,6 +151,7 @@ export class Editor3DViewport {
     private readonly parent: HTMLElement,
     map: CustomMap,
     private readonly hooks: Editor3DHooks,
+    private readonly worldTemplate?: Readonly<WorldContent>,
   ) {
     this.map = map;
     this.createSurfaces();
@@ -169,7 +176,7 @@ export class Editor3DViewport {
     const gen = ++this.generation;
     if (!this.canvas.isConnected) this.createSurfaces();
     this.seed = this.map.meta.seed;
-    const world = customMapToWorldContent(this.map);
+    const world = customMapToWorldContent(this.map, this.worldTemplate);
     // The editor is its own host: world-content fetches sit parked in the
     // deferred lane until someone opens it (startGame does this for the game
     // client), and a Renderer built over an unopened lane throws "asset not
@@ -201,6 +208,7 @@ export class Editor3DViewport {
     this.spawnPoint = start ? { x: start.x, z: start.z } : null;
     this.refreshSpawnRing();
     this.rebuildBlockers();
+    this.refreshQuestAnchors();
     // Frame the world hub to start.
     const hub = this.map.content.zones[0]?.hub ?? { x: 0, z: 0 };
     this.cam.target.set(hub.x, terrainHeight(hub.x, hub.z, this.seed), hub.z);
@@ -298,6 +306,7 @@ export class Editor3DViewport {
     this.renderer.rebakeTerrainNormals(region);
     this.renderer.placedAssets.reSeat(region);
     this.refreshSpawnRing();
+    this.refreshQuestAnchors();
     this.rebuildBlockers(); // walls sit on terrainHeight: re-seat after a sculpt
   }
 
@@ -315,6 +324,7 @@ export class Editor3DViewport {
     this.renderer.rebuildWaterBodies();
     this.renderer.placedAssets.reSeat();
     this.refreshSpawnRing();
+    this.refreshQuestAnchors();
     this.rebuildBlockers();
   }
 
@@ -464,6 +474,78 @@ export class Editor3DViewport {
     this.renderer.scene.add(this.spawnRing);
   }
 
+  focusAt(point: Readonly<{ x: number; z: number }>): void {
+    this.cam.target.set(point.x, terrainHeight(point.x, point.z, this.seed), point.z);
+    this.cam.dist = Math.min(this.cam.dist, 45);
+  }
+
+  setQuestAnchors(points: readonly { x: number; z: number }[], selectedIndex: number | null): void {
+    this.questAnchorPoints = points.map((point) => ({ ...point }));
+    this.selectedQuestAnchor = selectedIndex;
+    if (!this.visible) {
+      this.hiddenQuestAnchors = true;
+      return;
+    }
+    this.refreshQuestAnchors();
+  }
+
+  private refreshQuestAnchors(): void {
+    if (!this.renderer) return;
+    this.disposeQuestAnchors();
+    if (this.questAnchorPoints.length === 0) return;
+    const group = new THREE.Group();
+    group.name = 'editor-quest-anchors';
+    for (let index = 0; index < this.questAnchorPoints.length; index += 1) {
+      const point = this.questAnchorPoints[index];
+      if (!point) continue;
+      const selected = index === this.selectedQuestAnchor;
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(selected ? 1.2 : 0.9, selected ? 1.55 : 1.2, 32),
+        new THREE.MeshBasicMaterial({
+          color: selected ? QUEST_ANCHOR_SELECTED_COLOR : QUEST_ANCHOR_COLOR,
+          transparent: true,
+          opacity: selected ? 0.95 : 0.78,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      ring.geometry.rotateX(-Math.PI / 2);
+      ring.position.set(point.x, terrainHeight(point.x, point.z, this.seed) + 0.12, point.z);
+      ring.renderOrder = 3;
+      group.add(ring);
+
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(selected ? 0.08 : 0.05, 0.02, selected ? 5 : 3.5, 10),
+        new THREE.MeshBasicMaterial({
+          color: selected ? QUEST_ANCHOR_SELECTED_COLOR : QUEST_ANCHOR_COLOR,
+          transparent: true,
+          opacity: selected ? 0.7 : 0.38,
+          depthWrite: false,
+        }),
+      );
+      beam.position.set(
+        point.x,
+        terrainHeight(point.x, point.z, this.seed) + (selected ? 2.5 : 1.75),
+        point.z,
+      );
+      beam.renderOrder = 3;
+      group.add(beam);
+    }
+    this.questAnchorsGroup = group;
+    this.renderer.scene.add(group);
+  }
+
+  private disposeQuestAnchors(): void {
+    if (!this.questAnchorsGroup) return;
+    this.renderer?.scene.remove(this.questAnchorsGroup);
+    for (const child of this.questAnchorsGroup.children) {
+      const mesh = child as THREE.Mesh;
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+    this.questAnchorsGroup = null;
+  }
+
   // ---- blocker walls (editor-only overlay) -----------------------------------
 
   /** Rebuild the translucent wall boxes from this.map.blockers (any change:
@@ -595,6 +677,10 @@ export class Editor3DViewport {
       this.hiddenBlockers = false;
       this.rebuildBlockers();
     }
+    if (this.hiddenQuestAnchors) {
+      this.hiddenQuestAnchors = false;
+      this.refreshQuestAnchors();
+    }
   }
 
   private clearHiddenWork(): void {
@@ -604,6 +690,7 @@ export class Editor3DViewport {
     this.hiddenPlacements = false;
     this.hiddenSpawn = false;
     this.hiddenBlockers = false;
+    this.hiddenQuestAnchors = false;
   }
 
   dispose(): void {
@@ -620,6 +707,7 @@ export class Editor3DViewport {
     cancelAnimationFrame(this.raf);
     this.raf = 0;
     if (this.renderer) {
+      this.disposeQuestAnchors();
       const renderer = this.renderer;
       renderer.editorCam = null;
       void renderer
@@ -637,6 +725,7 @@ export class Editor3DViewport {
     // The scene died with the GL context; just drop the overlay handles.
     this.blockersGroup = null;
     this.blockerPreviewMesh = null;
+    this.questAnchorsGroup = null;
     this.canvas?.remove();
     this.nameplates?.remove();
   }
@@ -670,7 +759,7 @@ export class Editor3DViewport {
     // the scene (its view is built lazily by sync, so re-hide every frame).
     if (player) {
       const view = this.renderer.views.get(player.id);
-      if (view && view.group.visible) view.group.visible = false;
+      if (view?.group.visible) view.group.visible = false;
     }
     this.raf = requestAnimationFrame(this.loop);
   };
