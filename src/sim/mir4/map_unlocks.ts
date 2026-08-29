@@ -1,4 +1,4 @@
-import { mir4ArcQuest } from '../content/mir4/arc_campaign';
+import { MIR4_QUESTS_MAIN, mir4ArcQuest } from '../content/mir4/arc_campaign';
 import { MIR4_WORLD_ARC } from '../content/mir4/world_arc';
 import type { Mir4ArcQuestProgress } from './arc_quests';
 
@@ -8,17 +8,28 @@ function mapIdForChapter(chapter: string): string | null {
   return MIR4_WORLD_ARC.find((map) => map.mapId.startsWith(`${chapter}-`))?.mapId ?? null;
 }
 
-/** A map becomes available the instant any accepted main quest points at it. */
+/** A map becomes available as soon as the campaign offers a main quest that points at it. */
 export function isMir4CampaignMapUnlocked(
   mapId: string,
   quests: Readonly<Record<string, Mir4ArcQuestProgress>> | undefined,
 ): boolean {
   if (mapId === MIR4_WORLD_ARC[0]?.mapId) return true;
-  for (const progress of Object.values(quests ?? {})) {
-    if (!/^M\d{2}-Q\d{2}$/.test(progress.questId)) continue;
-    if (mir4ArcQuest(progress.questId)?.mapId === mapId) return true;
+
+  const completedMainQuestIds = new Set<string>();
+  for (const [storedQuestId, progress] of Object.entries(quests ?? {})) {
+    const questId = /^M\d{2}-Q\d{2}$/.test(progress.questId) ? progress.questId : storedQuestId;
+    if (!/^M\d{2}-Q\d{2}$/.test(questId)) continue;
+    const quest = mir4ArcQuest(questId);
+    if (quest?.mapId === mapId) return true;
+    if (quest?.group === 'main' && progress.state === 'done') {
+      completedMainQuestIds.add(questId);
+    }
   }
-  return false;
+
+  const offeredMainQuest = MIR4_QUESTS_MAIN.find(
+    (quest) => !completedMainQuestIds.has(quest.questId),
+  );
+  return offeredMainQuest?.mapId === mapId;
 }
 
 /** Resolve the campaign map reached by crossing one physical portal side. */
