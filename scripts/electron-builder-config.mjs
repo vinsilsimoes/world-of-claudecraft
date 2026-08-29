@@ -348,9 +348,9 @@ export function stampFeedFile(text, apiOrigin) {
   }
   const lines = String(text)
     .split('\n')
-    .filter((line) => !line.startsWith('wocApiOrigin:'));
+    .filter((line) => !line.startsWith('aeldruneApiOrigin:') && !line.startsWith('wocApiOrigin:'));
   while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
-  return `${lines.join('\n')}\nwocApiOrigin: ${JSON.stringify(apiOrigin)}\n`;
+  return `${lines.join('\n')}\naeldruneApiOrigin: ${JSON.stringify(apiOrigin)}\n`;
 }
 
 // Stamp every one of the channel's feed files in the electron-builder output

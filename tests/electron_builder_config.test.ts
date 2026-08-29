@@ -578,15 +578,16 @@ describe('stampFeedFile', () => {
     const stamped = stampFeedFile(yml, 'https://worldofclaudecraft.com');
     expect(stamped).toBe(
       'version: 0.23.0\nfiles:\n  - url: woc.zip\npath: woc.zip\n' +
-        'wocApiOrigin: "https://worldofclaudecraft.com"\n',
+        'aeldruneApiOrigin: "https://worldofclaudecraft.com"\n',
     );
   });
 
   it('replaces an existing stamp instead of stacking (idempotent re-stamp)', () => {
     const once = stampFeedFile(yml, 'http://localhost:8787');
     const twice = stampFeedFile(once, 'https://worldofclaudecraft.com');
-    expect(twice.match(/wocApiOrigin/g)).toHaveLength(1);
-    expect(twice).toContain('wocApiOrigin: "https://worldofclaudecraft.com"');
+    expect(twice.match(/aeldruneApiOrigin/g)).toHaveLength(1);
+    expect(twice).not.toContain('wocApiOrigin');
+    expect(twice).toContain('aeldruneApiOrigin: "https://worldofclaudecraft.com"');
     expect(twice).not.toContain('localhost');
   });
 
@@ -607,7 +608,7 @@ describe('stampFeedFile', () => {
       'latest-mac.yml',
       'https://updates.example.com/desktop/latest-mac.yml',
     );
-    expect(info.wocApiOrigin).toBe('https://worldofclaudecraft.com');
+    expect(info.aeldruneApiOrigin).toBe('https://worldofclaudecraft.com');
     expect(info.version).toBe('0.23.0');
     expect(info.path).toBe('woc.zip');
   });
@@ -631,11 +632,11 @@ describe('stampChannelFeedFiles (the electron-build.mjs stamping orchestration)'
     });
     expect([...stamped].sort()).toEqual(['latest-mac.yml', 'latest.yml']);
     expect(readFileSync(join(dir, 'latest-mac.yml'), 'utf8')).toContain(
-      'wocApiOrigin: "https://worldofclaudecraft.com"',
+      'aeldruneApiOrigin: "https://worldofclaudecraft.com"',
     );
-    expect(readFileSync(join(dir, 'latest.yml'), 'utf8')).toContain('wocApiOrigin');
-    expect(readFileSync(join(dir, 'dev-mac.yml'), 'utf8')).not.toContain('wocApiOrigin');
-    expect(readFileSync(join(dir, 'builder-debug.yml'), 'utf8')).not.toContain('wocApiOrigin');
+    expect(readFileSync(join(dir, 'latest.yml'), 'utf8')).toContain('aeldruneApiOrigin');
+    expect(readFileSync(join(dir, 'dev-mac.yml'), 'utf8')).not.toContain('aeldruneApiOrigin');
+    expect(readFileSync(join(dir, 'builder-debug.yml'), 'utf8')).not.toContain('aeldruneApiOrigin');
   });
 
   it('is a no-op without a channel or an output dir (steam and pack builds)', () => {
@@ -650,7 +651,7 @@ describe('stampChannelFeedFiles (the electron-build.mjs stamping orchestration)'
         joinPath: join,
       }),
     ).toEqual([]);
-    expect(readFileSync(join(dir, 'latest-mac.yml'), 'utf8')).not.toContain('wocApiOrigin');
+    expect(readFileSync(join(dir, 'latest-mac.yml'), 'utf8')).not.toContain('aeldruneApiOrigin');
     expect(
       stampChannelFeedFiles({
         outDir: join(dir, 'does-not-exist'),

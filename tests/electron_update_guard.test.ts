@@ -73,14 +73,24 @@ describe('evaluateUpdateOffer (the runtime cross-track refusal)', () => {
 
   it('accepts an offer stamped with the same origin, slash tolerant', () => {
     expect(
-      evaluateUpdateOffer({ apiOrigin: own, info: { version: '0.23.0', wocApiOrigin: own } }),
+      evaluateUpdateOffer({
+        apiOrigin: own,
+        info: { version: '0.23.0', aeldruneApiOrigin: own },
+      }),
     ).toEqual({ ok: true, stamped: true });
     expect(
       evaluateUpdateOffer({
         apiOrigin: own,
-        info: { wocApiOrigin: 'https://aeldrune.tibiadepot.com/' },
+        info: { aeldruneApiOrigin: 'https://aeldrune.tibiadepot.com/' },
       }),
     ).toEqual({ ok: true, stamped: true });
+  });
+
+  it('accepts the historical origin stamp during installed-client migration', () => {
+    expect(evaluateUpdateOffer({ apiOrigin: own, info: { wocApiOrigin: own } })).toEqual({
+      ok: true,
+      stamped: true,
+    });
   });
 
   it('accepts a pre-split feed file with no stamp (back compat), flagged unstamped', () => {
@@ -88,12 +98,12 @@ describe('evaluateUpdateOffer (the runtime cross-track refusal)', () => {
       ok: true,
       stamped: false,
     });
-    expect(evaluateUpdateOffer({ apiOrigin: own, info: { wocApiOrigin: '' } })).toEqual({
+    expect(evaluateUpdateOffer({ apiOrigin: own, info: { aeldruneApiOrigin: '' } })).toEqual({
       ok: true,
       stamped: false,
     });
-    // A valueless `wocApiOrigin:` yml line parses to null; same back-compat arm.
-    expect(evaluateUpdateOffer({ apiOrigin: own, info: { wocApiOrigin: null } })).toEqual({
+    // A valueless origin yml line parses to null; same back-compat arm.
+    expect(evaluateUpdateOffer({ apiOrigin: own, info: { aeldruneApiOrigin: null } })).toEqual({
       ok: true,
       stamped: false,
     });

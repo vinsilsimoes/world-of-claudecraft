@@ -12,7 +12,7 @@
 //
 // evaluateUpdateOffer is the runtime defense in depth behind that split: the
 // build stamps every emitted feed file with the API origin its artifact was
-// baked with (wocApiOrigin, scripts/electron-build.mjs), and
+// baked with (aeldruneApiOrigin, scripts/electron-build.mjs), and
 // electron/updater.cjs refuses to download an update whose stamp differs from
 // this install's own origin, so a feed file renamed or uploaded onto the wrong
 // track still cannot flip a shipped app to another backend. No electron
@@ -47,13 +47,15 @@ function updateChannelForOrigin(apiOrigin) {
 }
 
 // Decide whether an offered update (electron-updater's UpdateInfo, which is
-// the parsed feed yml, so the wocApiOrigin stamp rides along) may be
+// the parsed feed yml, so the Aeldrune origin stamp rides along) may be
 // downloaded by an install whose own baked origin is apiOrigin. Feed files
 // published before the track split carry no stamp and are accepted
 // (stamped: false); a present stamp must match exactly, and an unverifiable
 // side (garbage stamp, garbage own origin) refuses rather than guesses.
 function evaluateUpdateOffer({ apiOrigin, info } = {}) {
-  const offered = info?.wocApiOrigin;
+  // Keep accepting the historical field so already-installed clients can
+  // cross the branding migration without weakening origin validation.
+  const offered = info?.aeldruneApiOrigin ?? info?.wocApiOrigin;
   if (offered === undefined || offered === null || offered === '') {
     return { ok: true, stamped: false };
   }

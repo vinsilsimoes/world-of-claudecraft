@@ -204,7 +204,9 @@ if (feedChannel) {
     fs: { existsSync, readdirSync, readFileSync, writeFileSync },
     joinPath: path.join,
   });
-  for (const name of stamped) console.log(`[electron-build] stamped wocApiOrigin into ${name}`);
+  for (const name of stamped) {
+    console.log(`[electron-build] stamped aeldruneApiOrigin into ${name}`);
+  }
   if (mode === 'build' && stamped.length === 0) {
     console.warn(
       `[electron-build] no ${feedChannel}*.yml feed files found in ${outDir}; ` +

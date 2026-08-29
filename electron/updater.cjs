@@ -21,7 +21,7 @@
 //
 // Track safety: this install reads ONLY the update channel derived from its
 // own baked API origin (production origin: 'latest'; anything else: 'dev'),
-// and it refuses to download an update whose feed-file wocApiOrigin stamp
+// and it refuses to download an update whose feed-file Aeldrune origin stamp
 // differs from that origin. Both are defense in depth behind the build-time
 // split in scripts/electron-builder-config.mjs; see the issue this closes:
 // a dev-origin artifact on the production feed must never install.

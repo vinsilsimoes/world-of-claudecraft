@@ -17,7 +17,7 @@ const feed = [
   '    sha512: test-hash',
   `path: ${installer}`,
   'sha512: test-hash',
-  'wocApiOrigin: "https://aeldrune.tibiadepot.com"',
+  'aeldruneApiOrigin: "https://aeldrune.tibiadepot.com"',
   '',
 ].join('\n');
 

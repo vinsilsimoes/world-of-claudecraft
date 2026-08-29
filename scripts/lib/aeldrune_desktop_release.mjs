@@ -94,7 +94,7 @@ export function planAeldruneDesktopPublish({
   if (version !== expectedVersion) {
     throw new Error(`desktop feed version ${JSON.stringify(version)} is not ${expectedVersion}`);
   }
-  const apiOrigin = yamlScalar(feedText, 'wocApiOrigin');
+  const apiOrigin = yamlScalar(feedText, 'aeldruneApiOrigin');
   if (apiOrigin !== expectedApiOrigin) {
     throw new Error(
       `desktop feed API origin ${JSON.stringify(apiOrigin)} is not ${expectedApiOrigin}`,
