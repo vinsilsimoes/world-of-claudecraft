@@ -11,6 +11,10 @@ import {
 export interface Mir4SkillEffect extends ExtractedMir4SkillEffect {
   /** Entity that receives this effect. Hostile effects default to target. */
   subject?: 'actor' | 'target' | 'party';
+  /** Radius used by party heals and party-wide support effects. */
+  partyRadiusPx?: number;
+  /** Deterministic cap for allies admitted by a party pulse. */
+  maxPartyTargets?: number;
   /** Move the actor to the target before resolving the skill. */
   chargeToTarget?: boolean;
   /** Pull every enemy hit toward the actor after contact. */
