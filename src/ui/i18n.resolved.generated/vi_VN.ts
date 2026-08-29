@@ -4992,7 +4992,9 @@ export const vi_VN: EnTranslations = {
         "pillarClassesTitle": "Chín lớp, ba vai trò",
         "pillarClassesBody": "Đỡ đòn, trị liệu hoặc gây sát thương. Mỗi lớp chơi đúng theo cách nguyên mẫu của nó nên có, với tài năng để biến nó thành của riêng bạn.",
         "pillarOpenTitle": "Miễn phí và mã nguồn mở",
-        "pillarOpenBody": "Miễn phí chơi đến cấp tối đa, với toàn bộ trò chơi là mã nguồn mở. Không trả tiền để thắng, không bao giờ."
+        "pillarOpenBody": "Miễn phí chơi đến cấp tối đa, với toàn bộ trò chơi là mã nguồn mở. Không trả tiền để thắng, không bao giờ.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Chọn lớp nhân vật của bạn",
@@ -5050,6 +5052,8 @@ export const vi_VN: EnTranslations = {
         "heading": "Điều nên biết",
         "q1": "Có miễn phí để chơi không?",
         "a1": "Có. Toàn bộ trò chơi miễn phí đến cấp tối đa, và nó là mã nguồn mở trên GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Tôi có cần ví crypto không?",
         "a2": "Không. Trò chơi hoàn toàn chơi được mà không cần ví. Token cộng đồng tùy chọn chỉ thêm những điểm nhấn trang trí và một phần chia từ quỹ giải thưởng hằng ngày, và không bao giờ ảnh hưởng đến sức mạnh.",
         "q3": "Tôi có thể chơi ngoại tuyến không?",

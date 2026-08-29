@@ -47,12 +47,13 @@ const load = (fetchReleases: () => Promise<NewsReleaseEntry[]>) =>
   loadCharselectNews(host as unknown as HTMLElement, fetchReleases, storage as unknown as Storage);
 
 describe('loadCharselectNews', () => {
-  it('paints the compact feed: latest expanded, older collapsed, view-all link', async () => {
+  it('paints the compact private feed: latest expanded and older collapsed', async () => {
     await load(async () => [release(3), release(2), release(1)]);
     expect(host.innerHTML).toContain('news-item');
     expect(host.innerHTML).toContain('notes for 3');
     expect((host.innerHTML.match(/<details class="news-collapsed">/g) ?? []).length).toBe(2);
-    expect(host.innerHTML).toContain('news-view-all');
+    expect(host.innerHTML).not.toContain('news-view-all');
+    expect(host.innerHTML).not.toContain('github.com');
   });
 
   it('marks every release NEW on a first-ever visit and advances the marker', async () => {

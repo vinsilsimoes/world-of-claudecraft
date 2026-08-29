@@ -10,12 +10,14 @@ import {
 
 const steamStamp = { wocDesktop: { distribution: 'steam' } };
 const websiteStamp = { wocDesktop: { distribution: 'website' } };
+const standaloneStamp = { wocDesktop: { distribution: 'standalone' } };
 const epicStamp = { wocDesktop: { distribution: 'epic' } };
 
 describe('resolveDistribution', () => {
   it('reads the packaged wocDesktop stamp', () => {
     expect(resolveDistribution({ packagedMetadata: steamStamp })).toBe('steam');
     expect(resolveDistribution({ packagedMetadata: websiteStamp })).toBe('website');
+    expect(resolveDistribution({ packagedMetadata: standaloneStamp })).toBe('standalone');
     expect(resolveDistribution({ packagedMetadata: epicStamp })).toBe('epic');
   });
 
@@ -105,8 +107,9 @@ describe('resolveDistribution', () => {
 });
 
 describe('updaterAllowed (the store / dev double gate)', () => {
-  it('allows only a packaged website build', () => {
+  it('allows packaged Aeldrune standalone and website builds', () => {
     expect(updaterAllowed({ distribution: 'website', isPackaged: true })).toBe(true);
+    expect(updaterAllowed({ distribution: 'standalone', isPackaged: true })).toBe(true);
   });
 
   it('never allows a Steam build, packaged or not', () => {
@@ -121,13 +124,15 @@ describe('updaterAllowed (the store / dev double gate)', () => {
 
   it('never allows an unpackaged checkout, even forced to website', () => {
     expect(updaterAllowed({ distribution: 'website', isPackaged: false })).toBe(false);
+    expect(updaterAllowed({ distribution: 'standalone', isPackaged: false })).toBe(false);
     expect(updaterAllowed({ distribution: 'website', isPackaged: undefined })).toBe(false);
   });
 });
 
 describe('walletConnectionSupported', () => {
-  it('allows the website shell and keeps Steam and Epic fail-closed', () => {
+  it('allows standalone and website shells and keeps Steam and Epic fail-closed', () => {
     expect(walletConnectionSupported({ distribution: 'website' })).toBe(true);
+    expect(walletConnectionSupported({ distribution: 'standalone' })).toBe(true);
     expect(walletConnectionSupported({ distribution: 'steam' })).toBe(false);
     expect(walletConnectionSupported({ distribution: 'epic' })).toBe(false);
     expect(walletConnectionSupported({ distribution: 'unknown' })).toBe(false);
@@ -224,12 +229,12 @@ describe('resolveDesktopOrigins (the packaged-build VITE_DESKTOP_* hatch closure
 
   it('falls back to the production origin, and login falls back to the api origin', () => {
     expect(resolveDesktopOrigins({})).toEqual({
-      apiOrigin: 'https://worldofclaudecraft.com',
-      loginOrigin: 'https://worldofclaudecraft.com',
+      apiOrigin: 'https://aeldrune.tibiadepot.com',
+      loginOrigin: 'https://aeldrune.tibiadepot.com',
     });
     expect(resolveDesktopOrigins()).toEqual({
-      apiOrigin: 'https://worldofclaudecraft.com',
-      loginOrigin: 'https://worldofclaudecraft.com',
+      apiOrigin: 'https://aeldrune.tibiadepot.com',
+      loginOrigin: 'https://aeldrune.tibiadepot.com',
     });
     expect(
       resolveDesktopOrigins({
@@ -241,11 +246,22 @@ describe('resolveDesktopOrigins (the packaged-build VITE_DESKTOP_* hatch closure
 });
 
 const defaultOrigins = {
-  apiOrigin: 'https://worldofclaudecraft.com',
-  loginOrigin: 'https://worldofclaudecraft.com',
+  apiOrigin: 'https://aeldrune.tibiadepot.com',
+  loginOrigin: 'https://aeldrune.tibiadepot.com',
 };
 
 describe('resolveDesktopConfig', () => {
+  it('summarizes the packaged standalone Aeldrune build', () => {
+    const config = resolveDesktopConfig({ packagedMetadata: standaloneStamp, isPackaged: true });
+    expect(config).toEqual({
+      distribution: 'standalone',
+      updaterEnabled: true,
+      crashSubmitUrl: '',
+      updateChannel: 'latest',
+      ...defaultOrigins,
+    });
+  });
+
   it('summarizes the packaged website build', () => {
     const config = resolveDesktopConfig({ packagedMetadata: websiteStamp, isPackaged: true });
     expect(config).toEqual({

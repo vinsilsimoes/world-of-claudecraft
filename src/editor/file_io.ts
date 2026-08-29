@@ -10,7 +10,7 @@ export function downloadMap(map: CustomMap): void {
   const a = document.createElement('a');
   a.href = url;
   const safe = map.meta.name.replace(/[^a-z0-9-_]+/gi, '-').toLowerCase() || 'map';
-  a.download = `woc-map-${safe}.json`;
+  a.download = `aeldrune-map-${safe}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();

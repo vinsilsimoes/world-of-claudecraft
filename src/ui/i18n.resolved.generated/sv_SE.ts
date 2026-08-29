@@ -4992,7 +4992,9 @@ export const sv_SE: EnTranslations = {
         "pillarClassesTitle": "Nio klasser, tre roller",
         "pillarClassesBody": "Tanka, läk eller dela ut skadan. Varje klass spelas så som dess arketyp bör, med talanger för att göra den till din egen.",
         "pillarOpenTitle": "Gratis och öppen källkod",
-        "pillarOpenBody": "Gratis att spela upp till nivåtaket, med hela spelet som öppen källkod. Aldrig någonsin pay to win."
+        "pillarOpenBody": "Gratis att spela upp till nivåtaket, med hela spelet som öppen källkod. Aldrig någonsin pay to win.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Välj din klass",
@@ -5050,6 +5052,8 @@ export const sv_SE: EnTranslations = {
         "heading": "Bra att veta",
         "q1": "Är det gratis att spela?",
         "a1": "Ja. Hela spelet är gratis upp till nivåtaket, och det är öppen källkod på GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Behöver jag en kryptoplånbok?",
         "a2": "Nej. Spelet är fullt spelbart utan en. Den valfria community-token lägger bara till kosmetisk flärd och en andel av prispotten för dagliga belöningar, och den påverkar aldrig styrkan.",
         "q3": "Kan jag spela offline?",

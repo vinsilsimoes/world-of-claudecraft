@@ -29,7 +29,7 @@ import {
   type UpdateToastState,
 } from './desktop_update_view';
 import { formatNumber, t } from './i18n';
-import { GITHUB_RELEASES_URL } from './news_feed';
+import { AELDRUNE_UPDATES_URL } from './news_feed';
 import { svgIcon } from './ui_icons';
 
 // How long the "up to date" confirmation lingers before hiding itself.
@@ -115,7 +115,7 @@ export function initDesktopUpdateToast(bridge: DesktopBridge): void {
   const whatsNew = document.createElement('a');
   whatsNew.id = 'desktop-update-whats-new';
   whatsNew.className = 'desktop-update-whats-new';
-  whatsNew.href = GITHUB_RELEASES_URL;
+  whatsNew.href = AELDRUNE_UPDATES_URL;
   whatsNew.target = '_blank';
   whatsNew.rel = 'noopener noreferrer';
 

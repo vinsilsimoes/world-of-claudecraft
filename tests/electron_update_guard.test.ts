@@ -15,7 +15,7 @@ import {
 
 describe('PRODUCTION_API_ORIGIN', () => {
   it('is the production site', () => {
-    expect(PRODUCTION_API_ORIGIN).toBe('https://worldofclaudecraft.com');
+    expect(PRODUCTION_API_ORIGIN).toBe('https://aeldrune.tibiadepot.com');
   });
 });
 
@@ -39,8 +39,8 @@ describe('apiOriginKey', () => {
 
 describe('isProductionApiOrigin', () => {
   it('accepts only the production origin (slash and case tolerant)', () => {
-    expect(isProductionApiOrigin('https://worldofclaudecraft.com')).toBe(true);
-    expect(isProductionApiOrigin('https://worldofclaudecraft.com/')).toBe(true);
+    expect(isProductionApiOrigin('https://aeldrune.tibiadepot.com')).toBe(true);
+    expect(isProductionApiOrigin('https://aeldrune.tibiadepot.com/')).toBe(true);
   });
 
   it('rejects dev, staging, localhost, http, subdomains, and garbage', () => {
@@ -55,8 +55,8 @@ describe('isProductionApiOrigin', () => {
 
 describe('updateChannelForOrigin (the track split)', () => {
   it('production origin publishes and reads the latest channel', () => {
-    expect(updateChannelForOrigin('https://worldofclaudecraft.com')).toBe('latest');
-    expect(updateChannelForOrigin('https://worldofclaudecraft.com/')).toBe('latest');
+    expect(updateChannelForOrigin('https://aeldrune.tibiadepot.com')).toBe('latest');
+    expect(updateChannelForOrigin('https://aeldrune.tibiadepot.com/')).toBe('latest');
   });
 
   it('every non-production origin fails safe onto the dev channel', () => {
@@ -69,7 +69,7 @@ describe('updateChannelForOrigin (the track split)', () => {
 });
 
 describe('evaluateUpdateOffer (the runtime cross-track refusal)', () => {
-  const own = 'https://worldofclaudecraft.com';
+  const own = 'https://aeldrune.tibiadepot.com';
 
   it('accepts an offer stamped with the same origin, slash tolerant', () => {
     expect(
@@ -78,7 +78,7 @@ describe('evaluateUpdateOffer (the runtime cross-track refusal)', () => {
     expect(
       evaluateUpdateOffer({
         apiOrigin: own,
-        info: { wocApiOrigin: 'https://worldofclaudecraft.com/' },
+        info: { wocApiOrigin: 'https://aeldrune.tibiadepot.com/' },
       }),
     ).toEqual({ ok: true, stamped: true });
   });

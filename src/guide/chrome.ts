@@ -135,7 +135,6 @@ export function buildChrome(
         <p class="guide-footer-blurb">${esc(t('guide.footer.blurb'))}</p>
         <nav class="guide-footer-links" aria-label="${esc(t('guide.footer.linksLabel'))}">
           <a class="guide-cta guide-cta-sm" href="/play">${esc(t('guide.footer.playNow'))}</a>
-          <a href="#" aria-disabled="true" tabindex="-1" title="${esc(t('guide.footer.github'))}">${esc(t('guide.footer.github'))}</a>
         </nav>
         <p class="guide-footer-rights">&copy; ${esc(t('guide.footer.rights'))}</p>
       </div>

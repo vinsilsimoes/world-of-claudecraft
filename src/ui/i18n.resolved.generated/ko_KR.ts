@@ -4992,7 +4992,9 @@ export const ko_KR: EnTranslations = {
         "pillarClassesTitle": "9개의 직업, 3가지 역할",
         "pillarClassesBody": "방어 전담을 맡거나, 치유하거나, 피해를 입히세요. 모든 직업이 본연의 원형에 맞게 플레이되며, 특성으로 나만의 방식을 만들 수 있습니다.",
         "pillarOpenTitle": "무료이자 오픈 소스",
-        "pillarOpenBody": "최고 레벨까지 무료로 플레이할 수 있고, 게임 전체가 오픈 소스입니다. 결제로 이기는 일은 결코 없습니다."
+        "pillarOpenBody": "최고 레벨까지 무료로 플레이할 수 있고, 게임 전체가 오픈 소스입니다. 결제로 이기는 일은 결코 없습니다.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "직업을 선택하세요",
@@ -5050,6 +5052,8 @@ export const ko_KR: EnTranslations = {
         "heading": "알아두면 좋은 점",
         "q1": "무료로 플레이할 수 있나요?",
         "a1": "네. 게임 전체를 최고 레벨까지 무료로 즐길 수 있으며, GitHub에 공개된 오픈 소스입니다.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "암호화폐 지갑이 필요한가요?",
         "a2": "아니요. 지갑 없이도 완전히 플레이할 수 있습니다. 선택 사항인 커뮤니티 토큰은 외형 장식과 일일 보상 상금 풀의 지분만 더할 뿐, 결코 능력에 영향을 주지 않습니다.",
         "q3": "오프라인으로 플레이할 수 있나요?",

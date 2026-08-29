@@ -4992,7 +4992,9 @@ export const da_DK: EnTranslations = {
         "pillarClassesTitle": "Ni klasser, tre roller",
         "pillarClassesBody": "Tank, helbred, eller del skaden ud. Hver klasse spiller, som dens arketype bør, med talenter, der gør den til din.",
         "pillarOpenTitle": "Gratis og open source",
-        "pillarOpenBody": "Gratis at spille til maksniveauet, med hele spillet som open source. Ingen pay to win, nogensinde."
+        "pillarOpenBody": "Gratis at spille til maksniveauet, med hele spillet som open source. Ingen pay to win, nogensinde.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Vælg din klasse",
@@ -5050,6 +5052,8 @@ export const da_DK: EnTranslations = {
         "heading": "Godt at vide",
         "q1": "Er det gratis at spille?",
         "a1": "Ja. Hele spillet er gratis til maksniveauet, og det er open source på GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Skal jeg bruge en crypto-wallet?",
         "a2": "Nej. Spillet er fuldt spilbart uden en. Det valgfrie fællesskabstoken tilføjer kun kosmetisk pynt og en andel af præmiepuljen for daglige belønninger, og det påvirker aldrig styrke.",
         "q3": "Kan jeg spille offline?",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  GITHUB_RELEASES_URL,
+  AELDRUNE_UPDATES_URL,
   loadNewsInto,
   markNewReleases,
   type NewsReleaseEntry,
@@ -12,11 +12,9 @@ import {
 } from '../src/ui/news_feed';
 
 describe('Aeldrune news source', () => {
-  it('reads releases from the Aeldrune repository instead of the WoC upstream', () => {
-    expect(GITHUB_RELEASES_URL).toBe(
-      'https://github.com/vinsilsimoes/world-of-claudecraft/releases',
-    );
-    expect(GITHUB_RELEASES_URL).not.toContain('levy-street');
+  it('keeps release navigation on the private Aeldrune product site', () => {
+    expect(AELDRUNE_UPDATES_URL).toBe('https://aeldrune.tibiadepot.com/');
+    expect(AELDRUNE_UPDATES_URL).not.toContain('github.com');
   });
 });
 
@@ -46,7 +44,7 @@ describe('renderReleaseBody', () => {
   });
 
   it('joins hard-wrapped consecutive lines into one paragraph; a blank line breaks it', () => {
-    // GitHub release notes arrive hard-wrapped near 72 columns; per-line
+    // Release notes can arrive hard-wrapped near 72 columns; per-line
     // paragraphs rendered every source wrap as its own one-line paragraph.
     expect(renderReleaseBody('adds a broad set\nof improvements.\n\nNext paragraph.')).toBe(
       '<p>adds a broad set of improvements.</p><p>Next paragraph.</p>',
@@ -139,18 +137,18 @@ describe('renderCompactNews: the character-select compact news feed', () => {
     }));
 
   it('renders the empty state when there are no releases', () => {
-    expect(renderCompactNews([], 'https://example.com/releases')).toContain('news-empty');
+    expect(renderCompactNews([])).toContain('news-empty');
   });
 
   it('renders the latest release fully expanded (a news-item article) with its NEW badge', () => {
-    const html = renderCompactNews(releases(1), 'https://example.com/releases');
+    const html = renderCompactNews(releases(1));
     expect(html).toContain('news-item');
     expect(html).toContain('notes for 1');
     expect(html).toContain('news-badge');
   });
 
   it('collapses every OLDER release to a version + date <details> row that expands in place', () => {
-    const html = renderCompactNews(releases(3), 'https://example.com/releases');
+    const html = renderCompactNews(releases(3));
     // The latest is a full article, not a collapsed row.
     expect(html).toContain('news-item');
     // The two older releases are native <details> disclosures (expand in place,
@@ -166,26 +164,20 @@ describe('renderCompactNews: the character-select compact news feed', () => {
 
   it('marks every NEW release, not only the expanded latest: a collapsed row for an older release also carries the badge when it is new too', () => {
     const all = releases(3).map((r) => ({ ...r, isNew: true }));
-    const html = renderCompactNews(all, 'https://example.com/releases');
+    const html = renderCompactNews(all);
     expect((html.match(/news-badge/g) ?? []).length).toBe(3);
   });
 
   it('a not-new older release renders its collapsed row without a badge', () => {
-    const html = renderCompactNews(releases(3), 'https://example.com/releases');
+    const html = renderCompactNews(releases(3));
     // releases(3) marks only index 0 (the latest, v3) as new; v2/v1 are not.
     expect((html.match(/news-badge/g) ?? []).length).toBe(1);
   });
 
-  it('appends a "View all updates on GitHub" link at the bottom, pointed at the given URL', () => {
-    const html = renderCompactNews(releases(2), 'https://github.com/example/repo/releases');
-    expect(html).toContain('news-view-all');
-    expect(html).toContain('href="https://github.com/example/repo/releases"');
-    expect(html.indexOf('news-view-all')).toBeGreaterThan(html.indexOf('news-collapsed'));
-  });
-
-  it('escapes the URL passed for the view-all link', () => {
-    const html = renderCompactNews(releases(1), 'https://example.com/"><script>x</script>');
-    expect(html).not.toContain('<script>x</script>');
+  it('does not expose a source repository from the private client', () => {
+    const html = renderCompactNews(releases(2));
+    expect(html).not.toContain('news-view-all');
+    expect(html).not.toContain('github.com');
   });
 });
 
@@ -285,21 +277,18 @@ describe('stripReleaseNotesPreamble', () => {
 describe('compact news strips the redundant preamble at render time', () => {
   it('renders neither the Release Notes h1 nor the metadata rows', () => {
     const body = '# Aeldrune v0.26.0 Release Notes\n\n**Release:** v0.26.0\n\nThe real intro.';
-    const html = renderCompactNews(
-      [
-        {
-          id: 1,
-          tag: 'v0.26.0',
-          name: 'Aeldrune v0.26.0',
-          publishedAt: '2026-07-15T00:00:00Z',
-          url: 'https://example.com/releases/v0.26.0',
-          prerelease: false,
-          body,
-          isNew: true,
-        },
-      ],
-      'https://example.com/releases',
-    );
+    const html = renderCompactNews([
+      {
+        id: 1,
+        tag: 'v0.26.0',
+        name: 'Aeldrune v0.26.0',
+        publishedAt: '2026-07-15T00:00:00Z',
+        url: 'https://example.com/releases/v0.26.0',
+        prerelease: false,
+        body,
+        isNew: true,
+      },
+    ]);
     expect(html).not.toContain('Release Notes</h1>');
     expect(html).not.toContain('<strong>Release:</strong>');
     expect(html).toContain('The real intro.');

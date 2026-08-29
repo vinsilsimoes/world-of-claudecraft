@@ -4992,7 +4992,9 @@ export const cs_CZ: EnTranslations = {
         "pillarClassesTitle": "Devět tříd, tři role",
         "pillarClassesBody": "Tankuj, léč nebo rozdávej poškození. Každá třída se hraje tak, jak její archetyp slibuje, a talenty ji přizpůsobí tobě.",
         "pillarOpenTitle": "Zdarma a open source",
-        "pillarOpenBody": "Zdarma až po maximální úroveň, s celou hrou jako open source. Žádné pay to win, nikdy."
+        "pillarOpenBody": "Zdarma až po maximální úroveň, s celou hrou jako open source. Žádné pay to win, nikdy.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Vyber si třídu",
@@ -5050,6 +5052,8 @@ export const cs_CZ: EnTranslations = {
         "heading": "Dobré vědět",
         "q1": "Je hra zdarma?",
         "a1": "Ano. Celá hra je zdarma až po maximální úroveň a je open source na GitHubu.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Potřebuji crypto peněženku?",
         "a2": "Ne. Hra je plně hratelná i bez něj. Volitelný komunitní token přidává jen kosmetický styl a podíl na balíku denních odměn a nikdy neovlivňuje sílu.",
         "q3": "Můžu hrát offline?",

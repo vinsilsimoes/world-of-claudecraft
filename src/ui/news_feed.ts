@@ -1,4 +1,4 @@
-// News & Updates feed: renders GitHub release notes for the home page's
+// News & Updates feed: renders Aeldrune release notes for the home page's
 // "News & Updates" panel and the character-select screen's news panel.
 // Extracted out of main.ts (the sanctioned firewall) so the sanitizing
 // markdown renderer and the fetch/paint loop have their own tested home.
@@ -9,10 +9,9 @@
 // pure too; the character-select consumer is src/ui/charselect_news.ts.
 import { formatDateTime, t } from './i18n';
 
-// The public release-notes home. The character-select news panel renders its
-// "all releases" link with it, and the desktop update card's what's-new row
-// links it directly.
-export const GITHUB_RELEASES_URL = 'https://github.com/vinsilsimoes/world-of-claudecraft/releases';
+// Product-owned release-notes destination. Never exposes a source repository
+// from the private Aeldrune client.
+export const AELDRUNE_UPDATES_URL = 'https://aeldrune.tibiadepot.com/';
 
 export interface NewsReleaseEntry {
   id: number;
@@ -65,12 +64,12 @@ function escapeHtml(s: string): string {
   );
 }
 
-// Minimal, safe Markdown -> HTML for GitHub release notes. The input is escaped
+// Minimal, safe Markdown -> HTML for product release notes. The input is escaped
 // FIRST, so every regex below operates on inert text; the only markup we emit is
 // our own whitelisted tags. Deliberately tiny (no tables/images/blockquotes),
 // enough to make patch notes readable without pulling in a markdown dependency.
 // Consecutive plain lines JOIN into one paragraph (standard Markdown semantics:
-// only a blank line breaks a paragraph). GitHub release notes arrive hard-wrapped
+// only a blank line breaks a paragraph). Release notes can arrive hard-wrapped
 // near 72 columns, so per-line paragraphs rendered every source wrap as its own
 // choppy one-line paragraph.
 export function renderReleaseBody(md: string): string {
@@ -127,12 +126,6 @@ export function renderReleaseBody(md: string): string {
   return out.join('');
 }
 
-function newsItemFoot(url: string): string {
-  return url
-    ? `<div class="news-item-foot"><a class="news-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${t('news.viewOnGithub')}</a></div>`
-    : '';
-}
-
 /** Strips the release body's own redundant preamble (the "<name> Release
  *  Notes" h1 plus the Release/Date/Previous-release definition rows): the
  *  article chrome already shows name, tag, and date, so the preamble printed
@@ -160,7 +153,7 @@ export function renderReleaseArticle(r: NewsReleaseEntry, opts?: { isNew?: boole
     `<article class="news-item">` +
     `<div class="news-item-head">` +
     `<h3 class="news-item-title">${title}</h3><div class="news-item-meta">${tag}${newBadge}${badge}${when}</div></div>` +
-    `<div class="news-body">${renderReleaseBody(stripReleaseNotesPreamble(r.body))}</div>${newsItemFoot(r.url)}</article>`
+    `<div class="news-body">${renderReleaseBody(stripReleaseNotesPreamble(r.body))}</div></article>`
   );
 }
 
@@ -219,7 +212,7 @@ function renderCompactNewsCollapsedRow(r: NewsReleaseEntry & { isNew?: boolean }
     `<summary class="news-collapsed-summary">` +
     `<span class="news-collapsed-version">${label}${newBadge}</span>${when}` +
     `</summary>` +
-    `<div class="news-body">${renderReleaseBody(stripReleaseNotesPreamble(r.body))}</div>${newsItemFoot(r.url)}` +
+    `<div class="news-body">${renderReleaseBody(stripReleaseNotesPreamble(r.body))}</div>` +
     `</details>`
   );
 }
@@ -229,20 +222,15 @@ function renderCompactNewsCollapsedRow(r: NewsReleaseEntry & { isNew?: boolean }
  * (title, date, NEW badge, rendered body), older releases (the caller has
  * already capped the list via markNewReleases) collapsed to version + date
  * rows that expand in place (a native <details>/<summary> disclosure, same
- * pattern as the guide FAQ: src/guide/pages/faq.ts), plus a "View all updates
- * on GitHub" link at the bottom. DOM-free: returns a markup string, painted by
+ * pattern as the guide FAQ: src/guide/pages/faq.ts). DOM-free: returns a markup string, painted by
  * the caller (the character-select panel, src/ui/charselect_news.ts).
  */
-export function renderCompactNews(
-  releases: (NewsReleaseEntry & { isNew: boolean })[],
-  githubReleasesUrl: string,
-): string {
+export function renderCompactNews(releases: (NewsReleaseEntry & { isNew: boolean })[]): string {
   if (releases.length === 0) return newsEmptyHtml();
   const [latest, ...older] = releases;
   const parts = [
     renderReleaseArticle(latest, { isNew: latest.isNew }),
     ...older.map(renderCompactNewsCollapsedRow),
-    `<div class="news-view-all"><a href="${escapeHtml(githubReleasesUrl)}" target="_blank" rel="noopener noreferrer">${t('news.viewAll')}</a></div>`,
   ];
   return parts.join('');
 }

@@ -8,17 +8,10 @@ const VERSION_RE = /^\d+\.\d+\.\d+$/;
 // A release integration branch (release/vX.Y.Z-<slug>) carries the base
 // version's surfaces, so a trailing -<slug> is tolerated when inferring.
 const RELEASE_REF_RE = /(?:^|refs\/heads\/)release\/v?(\d+\.\d+\.\d+)(?:-[a-z0-9][a-z0-9-]*)?$/;
-const MAC_DMG_RE = /world-of-claudecraft-\d+\.\d+\.\d+-mac-universal\.dmg/g;
-const LINUX_APPIMAGE_RE = /world-of-claudecraft-\d+\.\d+\.\d+-linux-x86_64\.AppImage/g;
-// The website download page links the x64 NSIS installer (build.nsis.
-// buildUniversalInstaller is false, issue 2013): a per-arch installer, not
-// the old combined "-win.exe" that folded both arches into one download.
-const WINDOWS_INSTALLER_RE = /world-of-claudecraft-\d+\.\d+\.\d+-win-x64\.exe/g;
-// A page migrated before the per-arch cutover (or hand-edited afterward) can
-// still carry the legacy combined-installer filename. Both prepare and check
-// must recognize it so it gets rewritten/flagged instead of silently surviving
-// a version bump (issue: legacy Windows links bypass the release guard).
-const LEGACY_WINDOWS_INSTALLER_RE = /world-of-claudecraft-\d+\.\d+\.\d+-win\.exe/g;
+const WINDOWS_INSTALLER_RE = /Aeldrune-\d+\.\d+\.\d+-win-x64\.exe/g;
+// Accept inherited WoC filenames as migration input, but always rewrite them to
+// the one Aeldrune Windows artifact the standalone alpha actually publishes.
+const LEGACY_WINDOWS_INSTALLER_RE = /world-of-claudecraft-\d+\.\d+\.\d+-win(?:-x64)?\.exe/g;
 // src/game/desktop_download.ts is deliberately absent from this script's
 // surfaces: DESKTOP_VERSION derives from package.json at build time through the
 // __APP_VERSION__ define, so nothing there needs rewriting or checking. The
@@ -90,18 +83,17 @@ export function setPackageVersion(packageJson, version) {
 }
 
 export function setDesktopDownloadVersion(html, version, path) {
-  if (!MAC_DMG_RE.test(html)) {
-    throw new Error(`${path} is missing a macOS desktop download URL`);
+  WINDOWS_INSTALLER_RE.lastIndex = 0;
+  LEGACY_WINDOWS_INSTALLER_RE.lastIndex = 0;
+  if (!WINDOWS_INSTALLER_RE.test(html) && !LEGACY_WINDOWS_INSTALLER_RE.test(html)) {
+    throw new Error(`${path} is missing an Aeldrune Windows desktop download URL`);
   }
-  MAC_DMG_RE.lastIndex = 0;
+  WINDOWS_INSTALLER_RE.lastIndex = 0;
+  LEGACY_WINDOWS_INSTALLER_RE.lastIndex = 0;
   const normalized = normalizeVersion(version);
-  // Optional platform links are rewritten wherever present. The macOS link is
-  // the only download URL every entry page is required to carry.
   return html
-    .replace(MAC_DMG_RE, `world-of-claudecraft-${normalized}-mac-universal.dmg`)
-    .replace(LINUX_APPIMAGE_RE, `world-of-claudecraft-${normalized}-linux-x86_64.AppImage`)
-    .replace(WINDOWS_INSTALLER_RE, `world-of-claudecraft-${normalized}-win-x64.exe`)
-    .replace(LEGACY_WINDOWS_INSTALLER_RE, `world-of-claudecraft-${normalized}-win-x64.exe`);
+    .replace(WINDOWS_INSTALLER_RE, `Aeldrune-${normalized}-win-x64.exe`)
+    .replace(LEGACY_WINDOWS_INSTALLER_RE, `Aeldrune-${normalized}-win-x64.exe`);
 }
 
 export function setGameVersionText(html, version, path) {
@@ -212,29 +204,22 @@ export function collectReleaseVersionFailures({
     }
   }
 
-  const expectedArtifact = `world-of-claudecraft-${expected}-mac-universal.dmg`;
-  const expectedLinuxArtifact = `world-of-claudecraft-${expected}-linux-x86_64.AppImage`;
-  const expectedWindowsArtifact = `world-of-claudecraft-${expected}-win-x64.exe`;
+  const expectedWindowsArtifact = `Aeldrune-${expected}-win-x64.exe`;
   for (const [path, html] of Object.entries(htmlFiles)) {
     const gameVersion = readGameVersion(html);
     if (gameVersion !== expected) {
       failures.push(`${path} game-version is v${gameVersion}, expected v${expected}`);
     }
-    if (!html.includes(expectedArtifact)) {
-      failures.push(`${path} is missing the macOS desktop download URL for ${expected}`);
-    }
-    // Only pages that carry a Linux link must have it on the release version;
-    // play.html links only the dmg and stays exempt.
-    LINUX_APPIMAGE_RE.lastIndex = 0;
-    if (LINUX_APPIMAGE_RE.test(html) && !html.includes(expectedLinuxArtifact)) {
-      failures.push(`${path} has a stale Linux desktop download URL, expected ${expected}`);
-    }
     WINDOWS_INSTALLER_RE.lastIndex = 0;
     LEGACY_WINDOWS_INSTALLER_RE.lastIndex = 0;
     const hasWindowsInstallerLink =
       WINDOWS_INSTALLER_RE.test(html) || LEGACY_WINDOWS_INSTALLER_RE.test(html);
-    if (hasWindowsInstallerLink && !html.includes(expectedWindowsArtifact)) {
-      failures.push(`${path} has a stale Windows desktop download URL, expected ${expected}`);
+    if (!hasWindowsInstallerLink) {
+      failures.push(`${path} is missing the Aeldrune Windows desktop download URL`);
+    } else if (!html.includes(expectedWindowsArtifact)) {
+      failures.push(
+        `${path} has a stale Aeldrune Windows desktop download URL, expected ${expected}`,
+      );
     }
     if (/coming soon/i.test(html)) {
       failures.push(`${path} still contains Coming Soon in the download panel`);

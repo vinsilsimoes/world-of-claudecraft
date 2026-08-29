@@ -187,9 +187,7 @@ describe('desktop update card DOM', () => {
     expect(link()?.hidden).toBe(false);
     // The literal destination, pinned here rather than against the constant the
     // module imports (that would only compare the module to itself).
-    expect(link()?.getAttribute('href')).toBe(
-      'https://github.com/levy-street/world-of-claudecraft/releases',
-    );
+    expect(link()?.getAttribute('href')).toBe('https://aeldrune.tibiadepot.com/');
     // A plain external hop: _blank plus the noopener pair is what routes it to
     // the system browser (and keeps the opener out of the new context).
     expect(link()?.getAttribute('target')).toBe('_blank');

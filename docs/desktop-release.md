@@ -1,5 +1,49 @@
 # Desktop release runbook (Electron: website download + Steam + Epic)
 
+## Aeldrune Windows auto-updater
+
+The Aeldrune direct-download client is a separate `standalone` distribution. Use the
+explicit commands below; the build refuses to proceed if the app id, product name,
+artifact pattern, API origin, update origin, or gameplay profile points back to World
+of ClaudeCraft. The packaged application name is `aeldrune-desktop` and its updater
+cache is isolated at `aeldrune-desktop-updater`; the verifier rejects either legacy
+WoC value before publication.
+
+```powershell
+npm run electron:build:aeldrune
+npm run electron:verify:aeldrune
+```
+
+The build writes exactly one Windows x64 installer, its differential blockmap, a
+portable zip, and `latest.yml` under `release-aeldrune/`. A release must advance the
+numeric version in `package.json`; publishing the same version twice or a lower version
+is refused. The installer is baked for `https://aeldrune.tibiadepot.com` and reads its
+feed from `https://aeldrune.tibiadepot.com/desktop-updates/latest.yml`.
+
+Provision the update endpoint once by including
+`deploy/aeldrune-desktop-updates.nginx.conf` inside the
+`aeldrune.tibiadepot.com` TLS server block, creating
+`/opt/aeldrune/shared/desktop-updates`, running `nginx -t`, and reloading nginx.
+
+After a verified build, publish over SSH with credentials supplied outside git:
+
+```powershell
+$env:AELDRUNE_DESKTOP_SSH_HOST = 'your-host'
+$env:AELDRUNE_DESKTOP_SSH_USER = 'ubuntu'
+$env:AELDRUNE_DESKTOP_SSH_IDENTITY = 'C:\path\to\ssh-key'
+node scripts/aeldrune-desktop-release.mjs publish
+```
+
+The publisher validates the Aeldrune filenames, version, API stamp, and remote version
+before uploading. It uploads into a release-specific staging directory, moves the
+versioned artifacts first, and moves `latest.yml` last. Therefore an interrupted upload
+cannot advertise an installer that is not yet downloadable.
+
+The first installer made before this pipeline did not contain `app-update.yml`, so that
+one build requires a single manual reinstall of the updater-enabled bootstrap release.
+Every later higher version is checked 15 seconds after launch and then every four hours;
+it downloads in the background and installs when the player quits or chooses restart.
+
 How to build, sign, publish, and verify the Aeldrune desktop app.
 The longer companion explainer (what shipped, per-platform update/signing
 mechanics, step-by-step release walkthroughs) is `docs/desktop-ship-notes.md`.
@@ -7,14 +51,16 @@ One codebase produces three distribution channels:
 
 | Channel | Command | Output | Updates |
 |---|---|---|---|
-| website | `npm run electron:build` | `release/` installers + update feed files | in-app via electron-updater |
+| Aeldrune standalone | `npm run electron:build:aeldrune` | `release-aeldrune/` Windows x64 installer + feed | in-app via electron-updater |
+| inherited website | `node scripts/electron-build.mjs build website` | `release/` cross-platform artifacts | no Aeldrune CI publication |
 | steam | `npm run electron:build:steam` | `release-steam/` loose per-OS layouts | SteamPipe depots only (in-app updater OFF) |
 | epic | `npm run electron:build:epic` | `release-epic/` loose Win+Mac layouts | Epic BPT only (in-app updater OFF) |
 
 Sign-in is email and Discord only, identical to the web flow: email/password logs in
 inside the app, and "Continue with Discord" opens the player's default browser on the
 `/desktop-login` page, which hands a one-time code back to the app over the
-`worldofclaudecraft://desktop-login` deep link. There is no Steam or Epic sign-in on
+`aeldrune://desktop-login` deep link. The legacy `worldofclaudecraft://` scheme remains
+registered during the alpha migration window. There is no Steam or Epic sign-in on
 any channel; on the Steam channel the shell's one Steam surface is the account-link
 ticket behind the Book of Deeds achievement mirror (`electron/steam.cjs`). Epic
 account-link and achievement mirror surfaces live under
@@ -216,98 +262,45 @@ website download page offers the AppImage (not the deb): it runs on immutable
 Fedora atomic desktops (Bazzite, Steam Deck) with no system install, just
 `chmod +x` and launch, which the deb cannot do there.
 
-## Publishing from CI (all three platforms)
+## Publishing Aeldrune from CI
 
-The `.github/workflows/desktop-publish.yml` workflow publishes all three
-platforms automatically:
-
-- Linux: AppImage + deb (x64 + arm64), `SHA256SUMS-linux`, and both per-arch
-  feed files. No signing.
-- macOS: the signed + notarized universal dmg + zip + blockmap,
-  `SHA256SUMS-mac`, and `latest-mac.yml`. The job verifies the signature
-  (`codesign --verify --deep --strict`, `spctl -a -t exec`) before uploading
-  and refuses to run at all without the Apple secrets, so an ad-hoc build can
-  never publish.
-- Windows: the Key-Vault-signed per-arch NSIS installers (`build.nsis.
-  buildUniversalInstaller: false`, one `-win-x64.exe` and one `-win-arm64.exe`
-  instead of a single dual-arch exe) + their `.exe.blockmap` files + the
-  per-arch zips, `SHA256SUMS-windows`, and `latest.yml` (both installers list
-  in the SAME feed file; Windows update-info filenames carry no arch suffix).
-  The job verifies every installer is Authenticode-signed
-  (`Get-AuthenticodeSignature` must report `Valid`) before uploading and
-  refuses to run at all without the Azure Key Vault secrets, so an unsigned
-  build can never publish. Because the installers' exact filenames are
-  defined by what electron-builder emits, the job takes the artifact list from
-  `latest.yml` (and rejects a `dev*.yml` misbake) instead of pinning literal
-  names like the linux/mac jobs do; it iterates every file the feed
-  references, so it verifies and uploads both arches without change.
-
-The platform jobs are independent: a mac signing failure never blocks the
-Linux publish and vice versa.
+`.github/workflows/desktop-publish.yml` is Windows-only and always calls the explicit
+`electron:build:aeldrune` command. It then opens the packaged `app.asar` and verifies
+the version, `standalone` distribution, `mir4-gameplay-port` profile, production API
+origin, and update feed before an upload is possible. The workflow no longer contains
+the inherited WoC Linux, macOS, R2, or update-host publication paths.
 
 Triggers:
 
-- Pushing a release tag `v<version>` (the tagged commit must be on `main` and the
-  tag must match `package.json` `version`; the workflow hard-fails on a mismatch
-  so a half-bumped release cannot publish). The download page's version derives
-  from `package.json` at build time, so there is no second constant to keep in
-  step with the tag.
-- Manual `workflow_dispatch` (Actions tab, "Desktop publish", pick a branch).
-  By default this is a DRY RUN: it builds, signs, verifies, and checksums
-  exactly like a release, then attaches the artifacts to the workflow run
-  (7-day retention) for inspection instead of uploading, so the whole pipeline
-  can be rehearsed without touching the live host. Tick "publish" to really
-  upload (the backfill path). The same version lockstep guard runs; only the
-  tag and main-ancestry checks are skipped.
+- A `v<version>` tag publishes only when the tag matches `package.json` and its commit
+  is on `main`.
+- A manual run is a dry run by default. It builds, verifies, and retains the artifacts
+  for seven days. Selecting `publish` uses the same guarded publisher as the local
+  runbook.
 
-Within each job, versioned artifacts upload first and the feed files
-(`latest-linux.yml` + `latest-linux-arm64.yml`, `latest-mac.yml`) last, so
-installed apps are never offered an update whose file is not yet downloadable.
-Versioned artifacts upload with immutable cache headers; checksum and feed
-files are near-uncached, matching the existing host convention.
+Configure these GitHub Actions secrets once:
 
-One-time provisioning (maintainer):
+- `AELDRUNE_DESKTOP_SSH_HOST`: the SSH host serving the update directory.
+- `AELDRUNE_DESKTOP_SSH_USER`: normally `ubuntu`.
+- `AELDRUNE_DESKTOP_SSH_PRIVATE_KEY`: the complete private key text.
 
-1. Cloudflare R2: create a bucket (any name, e.g. `woc-desktop-updates`) and
-   connect the custom domain `updates.worldofclaudecraft.com` to it (R2 bucket
-   settings, Custom Domains; the zone must be on the same Cloudflare account).
-   Objects are uploaded under the `desktop/` prefix, matching the
-   `/desktop/` path the feed URL and download page already use.
-2. R2 API token: create an "Object Read and Write" API token scoped to that one
-   bucket (Cloudflare dashboard, R2, Manage API Tokens). Note the Access Key ID,
-   Secret Access Key, and your Cloudflare account id.
-3. GitHub repo secrets (Settings, Secrets and variables, Actions), R2 set:
-   `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`.
-4. GitHub repo secrets, Apple set (all five required or the mac job refuses to
-   run; sourced from the same credentials the manual mac build uses):
-   - `CSC_LINK`: the Developer ID Application `.p12` as base64
-     (`base64 -i <cert>.p12 | pbcopy`).
-   - `CSC_KEY_PASSWORD`: the `.p12` password.
-   - `APPLE_API_KEY_P8`: the raw text content of the App Store Connect API key
-     `.p8` file (the workflow writes it to disk and points `APPLE_API_KEY` at
-     it; note the manual flow passes a file path here instead).
-   - `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`: as in the manual flow.
-5. GitHub repo secrets, Azure set (the five required ones or the windows job
-   refuses to run): `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`,
-   `AZURE_KEY_VAULT_URL`, `AZURE_KEY_VAULT_CERTIFICATE`, plus the optional
-   `CODE_SIGN_TIMESTAMP_URL`, `CODE_SIGN_FILE_DIGEST`,
-   `CODE_SIGN_TIMESTAMP_DIGEST` (see "Windows: Azure signing", Route B;
-   `WINDOWS_PUBLISHER_NAME` and `CSC_NAME` are not consumed by this path).
-6. Public read: the custom domain makes the bucket publicly readable through
-   that hostname only, which is exactly what the updater and download page need;
-   do not additionally enable the `r2.dev` public URL.
+The optional Actions variable `AELDRUNE_DESKTOP_REMOTE_DIR` defaults to
+`/opt/aeldrune/shared/desktop-updates`. The workflow writes the private key only into
+the runner temporary directory, restricts its ACL, and deletes it in a `finally` block.
+The publisher refuses the same version and downgrades, uploads through a version-specific
+staging directory, and moves `latest.yml` last.
 
-Verify after the first publish:
+The alpha installer is currently unsigned. The workflow records its Authenticode status
+and warns without blocking the private test feed. Before a public release, provision a
+Windows code-signing certificate and make a valid Authenticode signature a hard publish
+gate, otherwise SmartScreen will continue to warn players.
+
+Verify the public update host after publication:
 
 ```bash
-curl -sI https://updates.worldofclaudecraft.com/desktop/latest-linux.yml | head -1
-curl -sI https://updates.worldofclaudecraft.com/desktop/latest-mac.yml | head -1
-curl -s https://updates.worldofclaudecraft.com/desktop/SHA256SUMS-linux
+curl -s https://aeldrune.tibiadepot.com/desktop-updates/latest.yml
+curl -sI https://aeldrune.tibiadepot.com/desktop-updates/Aeldrune-<version>-win-x64.exe
 ```
-
-Users verify a download against the published checksums with
-`sha256sum -c SHA256SUMS-linux --ignore-missing` (or `shasum -a 256 -c
-SHA256SUMS-mac --ignore-missing` on macOS) from their download directory.
 
 ## Publishing a website update
 

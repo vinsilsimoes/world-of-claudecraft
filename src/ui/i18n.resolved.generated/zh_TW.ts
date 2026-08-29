@@ -4992,7 +4992,9 @@ export const zh_TW: EnTranslations = {
         "pillarClassesTitle": "九種職業，三種角色定位",
         "pillarClassesBody": "擔任坦克、治療或輸出。每種職業都依其原型該有的方式運作，並透過天賦打造出你自己的風格。",
         "pillarOpenTitle": "免費且開放原始碼",
-        "pillarOpenBody": "可免費遊玩至等級上限，且整款遊戲皆為開放原始碼。永遠不會有付費就贏的設計。"
+        "pillarOpenBody": "可免費遊玩至等級上限，且整款遊戲皆為開放原始碼。永遠不會有付費就贏的設計。",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "選擇你的職業",
@@ -5050,6 +5052,8 @@ export const zh_TW: EnTranslations = {
         "heading": "先了解一下",
         "q1": "這款遊戲免費嗎？",
         "a1": "是的。整款遊戲可免費遊玩至等級上限，並且在GitHub上開放原始碼。",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "我需要加密貨幣錢包嗎？",
         "a2": "不需要。沒有它遊戲也能完整遊玩。選用的社群代幣僅增添外觀裝飾，以及每日獎勵獎池的一份分紅，絕不影響戰力。",
         "q3": "我可以離線遊玩嗎？",

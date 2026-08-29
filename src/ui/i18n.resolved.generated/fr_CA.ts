@@ -4992,7 +4992,9 @@ export const fr_CA: EnTranslations = {
         "pillarClassesTitle": "Neuf classes, trois rôles",
         "pillarClassesBody": "Encaissez, soignez ou infligez les dégâts. Chaque classe se joue comme son archétype le veut, avec des talents pour la rendre vôtre.",
         "pillarOpenTitle": "Gratuit et open source",
-        "pillarOpenBody": "Gratuit jusqu'au niveau maximum, avec tout le jeu en open source. Pas de pay to win, jamais."
+        "pillarOpenBody": "Gratuit jusqu'au niveau maximum, avec tout le jeu en open source. Pas de pay to win, jamais.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Choisissez votre classe",
@@ -5050,6 +5052,8 @@ export const fr_CA: EnTranslations = {
         "heading": "Bon à savoir",
         "q1": "Est-ce gratuit ?",
         "a1": "Oui. Tout le jeu est gratuit jusqu'au niveau maximum, et il est open source sur GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Ai-je besoin d'un portefeuille crypto ?",
         "a2": "Non. Le jeu est entièrement jouable sans cela. Le jeton communautaire optionnel n'ajoute que des fioritures cosmétiques et une part de la cagnotte des récompenses quotidiennes, et il n'affecte jamais la puissance.",
         "q3": "Puis-je jouer hors ligne ?",

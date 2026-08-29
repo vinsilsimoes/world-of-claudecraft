@@ -4992,7 +4992,9 @@ export const ja_JP: EnTranslations = {
         "pillarClassesTitle": "9つのクラス、3つのロール",
         "pillarClassesBody": "タンク、ヒーラー、ダメージのいずれでも。どのクラスもアーキタイプらしい立ち回りができ、タレントで自分好みに育てられる。",
         "pillarOpenTitle": "無料、そしてオープンソース",
-        "pillarOpenBody": "最大レベルまで無料でプレイでき、ゲーム全体がオープンソース。Pay to Winは一切なし。"
+        "pillarOpenBody": "最大レベルまで無料でプレイでき、ゲーム全体がオープンソース。Pay to Winは一切なし。",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "クラスを選ぼう",
@@ -5050,6 +5052,8 @@ export const ja_JP: EnTranslations = {
         "heading": "知っておきたいこと",
         "q1": "無料で遊べますか?",
         "a1": "はい。ゲーム全体が最大レベルまで無料で、GitHubでオープンソースとして公開されています。",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "暗号通貨ウォレットは必要ですか?",
         "a2": "いいえ。ウォレットがなくても完全にプレイできます。任意のコミュニティトークンは、見た目の装飾と、デイリー報酬の賞金プールの分け前を加えるだけで、性能には一切影響しません。",
         "q3": "オフラインで遊べますか?",

@@ -4992,7 +4992,9 @@ export const zh_CN: EnTranslations = {
         "pillarClassesTitle": "九大职业,三种定位",
         "pillarClassesBody": "坦克、治疗,还是输出,任你选择。每个职业都贴合自身的原型设计,还能用天赋打造出专属于你的玩法。",
         "pillarOpenTitle": "免费且开源",
-        "pillarOpenBody": "免费畅玩直至满级,整个游戏完全开源。永不付费致胜。"
+        "pillarOpenBody": "免费畅玩直至满级,整个游戏完全开源。永不付费致胜。",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "选择你的职业",
@@ -5050,6 +5052,8 @@ export const zh_CN: EnTranslations = {
         "heading": "须知事项",
         "q1": "游戏免费吗?",
         "a1": "是的。整个游戏在满级之前完全免费,并且在 GitHub 上开源。",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "我需要加密货币钱包吗?",
         "a2": "不需要。没有钱包也能完整畅玩游戏。可选的社区代币仅增添外观装饰，以及每日奖励奖池的一份分成，绝不影响战力。",
         "q3": "可以离线游玩吗?",

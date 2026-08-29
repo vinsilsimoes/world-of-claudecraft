@@ -4992,7 +4992,9 @@ export const en_CA: EnTranslations = {
         "pillarClassesTitle": "Nine classes, three roles",
         "pillarClassesBody": "Tank, heal, or deal the damage. Every class plays the way its archetype should, with talents to make it yours.",
         "pillarOpenTitle": "Free and open source",
-        "pillarOpenBody": "Free to play to the level cap, with the whole game open source. No pay to win, ever."
+        "pillarOpenBody": "Free to play to the level cap, with the whole game open source. No pay to win, ever.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Choose your class",
@@ -5050,6 +5052,8 @@ export const en_CA: EnTranslations = {
         "heading": "Good to know",
         "q1": "Is it free to play?",
         "a1": "Yes. The whole game is free to the level cap, and it is open source on GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Do I need a crypto wallet?",
         "a2": "No. The game is fully playable without one. The optional community token only adds cosmetic flair and a share of the daily rewards prize pool, and it never affects power.",
         "q3": "Can I play offline?",

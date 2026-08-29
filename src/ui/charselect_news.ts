@@ -1,6 +1,6 @@
 // Character-select "News & Updates" panel: paints the compact release-notes
 // feed (latest release expanded with a NEW badge, older releases collapsed,
-// capped at 5, "View all updates on GitHub" link) into the character-select
+// capped at 5) into the character-select
 // stage, in the slot where the class-details sheet used to sit. Cold path
 // (painted once per character-select entry), so raw DOM writes are fine here
 // (the store_promo_card.ts / dialog_root.ts cold-window convention, not the
@@ -8,7 +8,6 @@
 // and live in ./news_feed; this module owns only the fetch loop and the
 // last-seen persistence.
 import {
-  GITHUB_RELEASES_URL,
   markNewReleases,
   type NewsReleaseEntry,
   newsEmptyHtml,
@@ -76,5 +75,5 @@ export async function loadCharselectNews(
     host.innerHTML = newsEmptyHtml();
     return;
   }
-  host.innerHTML = renderCompactNews(markNewReleases(releases, lastSeen), GITHUB_RELEASES_URL);
+  host.innerHTML = renderCompactNews(markNewReleases(releases, lastSeen));
 }

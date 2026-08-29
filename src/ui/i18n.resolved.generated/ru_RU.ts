@@ -4992,7 +4992,9 @@ export const ru_RU: EnTranslations = {
         "pillarClassesTitle": "Девять классов, три роли",
         "pillarClassesBody": "Будьте танком, лекарем или наносите урон. Каждый класс играется так, как и положено его архетипу, а таланты делают его по-настоящему вашим.",
         "pillarOpenTitle": "Бесплатно и с открытым исходным кодом",
-        "pillarOpenBody": "Бесплатная игра до максимального уровня, а исходный код игры полностью открыт. Никакого pay-to-win, никогда."
+        "pillarOpenBody": "Бесплатная игра до максимального уровня, а исходный код игры полностью открыт. Никакого pay-to-win, никогда.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Выберите свой класс",
@@ -5050,6 +5052,8 @@ export const ru_RU: EnTranslations = {
         "heading": "Полезно знать",
         "q1": "Игра бесплатная?",
         "a1": "Да. Вся игра бесплатна до максимального уровня, а её исходный код открыт на GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Нужен ли мне криптокошелёк?",
         "a2": "Нет. В игру можно полноценно играть и без него. Необязательный токен сообщества открывает только косметические украшения и долю в призовом фонде ежедневных наград и никогда не влияет на силу.",
         "q3": "Можно ли играть офлайн?",

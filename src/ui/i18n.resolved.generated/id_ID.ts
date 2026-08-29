@@ -4992,7 +4992,9 @@ export const id_ID: EnTranslations = {
         "pillarClassesTitle": "Sembilan kelas, tiga peran",
         "pillarClassesBody": "Jadi tank, sembuhkan, atau lancarkan damage. Setiap kelas dimainkan sesuai arketipenya, dengan talent untuk menjadikannya milikmu.",
         "pillarOpenTitle": "Gratis dan sumber terbuka",
-        "pillarOpenBody": "Gratis dimainkan hingga batas level, dengan seluruh permainan bersumber terbuka. Tanpa bayar untuk menang, selamanya."
+        "pillarOpenBody": "Gratis dimainkan hingga batas level, dengan seluruh permainan bersumber terbuka. Tanpa bayar untuk menang, selamanya.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Pilih kelasmu",
@@ -5050,6 +5052,8 @@ export const id_ID: EnTranslations = {
         "heading": "Hal-hal yang perlu diketahui",
         "q1": "Apakah gratis dimainkan?",
         "a1": "Ya. Seluruh permainan gratis hingga batas level, dan ini sumber terbuka di GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Apakah saya perlu dompet kripto?",
         "a2": "Tidak. Permainan ini sepenuhnya bisa dimainkan tanpa itu. Token komunitas opsional hanya menambah hiasan kosmetik dan sebagian dari kumpulan hadiah harian, dan ia tak pernah memengaruhi kekuatan.",
         "q3": "Bisakah saya bermain luring?",

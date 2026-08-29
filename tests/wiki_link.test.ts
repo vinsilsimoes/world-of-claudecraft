@@ -34,7 +34,7 @@ describe('resolveWikiUrl', () => {
   });
 
   it('pins the canonical wiki URL to its literal', () => {
-    expect(CANONICAL_WIKI_URL).toBe('https://worldofclaudecraft.com/wiki/');
+    expect(CANONICAL_WIKI_URL).toBe('https://aeldrune.tibiadepot.com/wiki/');
   });
 });
 
@@ -48,9 +48,7 @@ describe('promptWikiVisit', () => {
     expect(confirm).toHaveBeenCalledTimes(1);
     const [title, body, okText, cancelText, onOk] = confirm.mock.calls[0];
     expect(title).toBe('Open the Wiki?');
-    expect(body).toBe(
-      'This opens the Aeldrune wiki in your browser. The game keeps running.',
-    );
+    expect(body).toBe('This opens the Aeldrune wiki in your browser. The game keeps running.');
     expect(okText).toBe('Open Wiki');
     expect(cancelText).toBe('Cancel');
 

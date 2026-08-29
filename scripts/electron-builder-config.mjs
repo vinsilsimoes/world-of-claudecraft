@@ -39,6 +39,7 @@
 // Kept free of child_process/fs so tests/electron_builder_config.test.ts can pin
 // the channel differences directly.
 
+import desktopIdentity from '../electron/identity.cjs';
 import {
   apiOriginKey,
   isProductionApiOrigin,
@@ -47,6 +48,35 @@ import {
 } from '../electron/update_guard.cjs';
 
 const UPDATE_CHANNELS = new Set(['latest', 'dev']);
+
+// The standalone distribution is the Aeldrune client. Pin its compile-time
+// profile so Vite cannot silently build the WoC profile and reject persisted
+// Aeldrune characters at selection.
+export function desktopClientBuildEnv({ baseEnv = {}, distribution, apiOrigin }) {
+  return {
+    ...baseEnv,
+    VITE_DESKTOP_APP: '1',
+    VITE_DESKTOP_API_ORIGIN: apiOrigin,
+    ...(distribution === 'standalone' ? { VITE_GAME_PROFILE: 'mir4-gameplay-port' } : {}),
+  };
+}
+
+function assertAeldruneStandaloneIdentity(base) {
+  const failures = [];
+  if (base?.appId !== desktopIdentity.APP_ID) failures.push(`appId=${base?.appId}`);
+  if (base?.productName !== desktopIdentity.PRODUCT_NAME) {
+    failures.push(`productName=${base?.productName}`);
+  }
+  if (base?.artifactName !== `Aeldrune-\${version}-\${os}-\${arch}.\${ext}`) {
+    failures.push(`artifactName=${base?.artifactName}`);
+  }
+  if (base?.publish?.url !== desktopIdentity.DESKTOP_UPDATE_URL) {
+    failures.push(`publish.url=${base?.publish?.url}`);
+  }
+  if (failures.length > 0) {
+    throw new Error(`refusing standalone build with non-Aeldrune identity: ${failures.join(', ')}`);
+  }
+}
 
 export function azureSignOptionsFromEnv(env = {}) {
   const options = {
@@ -118,14 +148,21 @@ export function desktopBuilderConfig({
   epicDeploymentId = '',
   epicClientId = '',
 }) {
-  if (distribution !== 'website' && distribution !== 'steam' && distribution !== 'epic') {
+  if (
+    distribution !== 'standalone' &&
+    distribution !== 'website' &&
+    distribution !== 'steam' &&
+    distribution !== 'epic'
+  ) {
     throw new Error(`unknown desktop distribution: ${distribution}`);
   }
   const config = structuredClone(base);
   config.extraMetadata = {
     ...(config.extraMetadata ?? {}),
+    ...(distribution === 'standalone' ? { name: desktopIdentity.PACKAGE_NAME } : {}),
     wocDesktop: {
       distribution,
+      ...(distribution === 'standalone' ? { gameProfile: desktopIdentity.GAME_PROFILE } : {}),
       ...(apiOrigin ? { apiOrigin } : {}),
       ...(loginOrigin ? { loginOrigin } : {}),
       ...(crashSubmitUrl ? { crashSubmitUrl } : {}),
@@ -140,7 +177,7 @@ export function desktopBuilderConfig({
       ...(distribution === 'epic' ? { epicProductId, epicDeploymentId, epicClientId } : {}),
     },
   };
-  if (distribution === 'website' && config.publish) {
+  if ((distribution === 'standalone' || distribution === 'website') && config.publish) {
     // A non-empty origin that does not parse would strand the install it
     // bakes: the channel would fail safe to 'dev' while the runtime guard
     // normalizes its own side to production, refusing every stamped update on
@@ -171,6 +208,17 @@ export function desktopBuilderConfig({
       );
     }
     config.publish = { ...config.publish, channel };
+  }
+  if (distribution === 'standalone') {
+    assertAeldruneStandaloneIdentity(config);
+    config.directories = { ...(config.directories ?? {}), output: 'release-aeldrune' };
+    config.win = {
+      ...(config.win ?? {}),
+      target: [
+        { target: 'nsis', arch: ['x64'] },
+        { target: 'zip', arch: ['x64'] },
+      ],
+    };
   }
   // Windows signing routes, mutually exclusive with Trusted Signing first:
   // both resolvers require a complete env set, so at most one is normally

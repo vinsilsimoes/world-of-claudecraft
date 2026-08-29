@@ -606,7 +606,7 @@ applyNativeDeviceLanguage({
 // boot's profile is already resolved, and a missing bridge no-ops.
 void primeNativeDeviceMemoryHint();
 
-const SITE_URL = 'https://worldofclaudecraft.com/';
+const SITE_URL = 'https://aeldrune.tibiadepot.com/';
 
 const RESOURCE_KEYS = {
   mana: 'classDetails.resources.mana',
@@ -6192,7 +6192,7 @@ async function completeDesktopBrowserLogin(): Promise<boolean> {
   try {
     const { code } = await api.createDesktopLoginCode();
     if (!code) throw new Error('missing desktop login code');
-    location.href = `worldofclaudecraft://desktop-login?code=${encodeURIComponent(code)}`;
+    location.href = `aeldrune://desktop-login?code=${encodeURIComponent(code)}`;
   } catch (err) {
     loginError(userFacingApiError(err));
     show('#login-panel');
@@ -6401,7 +6401,7 @@ function setupSecuritySection(): void {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'woc-recovery-codes.txt';
+    a.download = 'aeldrune-recovery-codes.txt';
     a.click();
     URL.revokeObjectURL(url);
   });
@@ -6434,7 +6434,7 @@ function setupSecuritySection(): void {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'woc-account-export.json';
+      a.download = 'aeldrune-account-export.json';
       a.click();
       URL.revokeObjectURL(url);
       setAccountFieldMsg('#account-export-msg', t('hudChrome.account.exportDone'), true);
@@ -7538,52 +7538,44 @@ function updateSeoMetadata(lang: SupportedLanguage): void {
 
   const jsonLd = document.getElementById('structured-data') as HTMLScriptElement | null;
   if (jsonLd) {
-    const sameAs = [
-      'https://github.com/levy-street/world-of-claudecraft',
-      'https://discord.com/invite/worldofclaudecraft',
-      'https://www.youtube.com/@WoClaudeCraft',
-      'https://x.com/WoClaudecraft',
-      'https://www.instagram.com/worldofclaudecraft/',
-      'https://www.tiktok.com/@worldofclaudecraft',
-      'https://www.reddit.com/r/WorldofClaudecraft/',
-    ];
+    const sameAs: string[] = [];
     jsonLd.textContent = JSON.stringify(
       {
         '@context': 'https://schema.org',
         '@graph': [
           {
             '@type': 'WebSite',
-            '@id': 'https://worldofclaudecraft.com/#website',
+            '@id': 'https://aeldrune.tibiadepot.com/#website',
             name: 'Aeldrune',
             url: canonicalHref,
             inLanguage: languageTag(lang),
             description: t('seo.description'),
             publisher: {
-              '@id': 'https://worldofclaudecraft.com/#organization',
+              '@id': 'https://aeldrune.tibiadepot.com/#organization',
             },
           },
           {
             '@type': 'Organization',
-            '@id': 'https://worldofclaudecraft.com/#organization',
+            '@id': 'https://aeldrune.tibiadepot.com/#organization',
             name: 'Aeldrune',
-            url: 'https://worldofclaudecraft.com/',
-            logo: 'https://worldofclaudecraft.com/aeldrune-logo.png',
+            url: SITE_URL,
+            logo: 'https://aeldrune.tibiadepot.com/aeldrune-logo.png',
             sameAs,
           },
           {
             '@type': 'VideoGame',
-            '@id': 'https://worldofclaudecraft.com/#game',
+            '@id': 'https://aeldrune.tibiadepot.com/#game',
             name: 'Aeldrune',
             genre: t('seo.genre'),
             playMode: t('seo.playMode'),
             applicationCategory: t('seo.applicationCategory'),
             operatingSystem: t('seo.operatingSystem'),
             url: canonicalHref,
-            image: 'https://worldofclaudecraft.com/aeldrune-logo.png',
+            image: 'https://aeldrune.tibiadepot.com/aeldrune-logo.png',
             description: t('seo.description'),
             inLanguage: languageTag(lang),
             publisher: {
-              '@id': 'https://worldofclaudecraft.com/#organization',
+              '@id': 'https://aeldrune.tibiadepot.com/#organization',
             },
             sameAs,
           },

@@ -4992,7 +4992,9 @@ export const tr_TR: EnTranslations = {
         "pillarClassesTitle": "Dokuz sınıf, üç rol",
         "pillarClassesBody": "Tankla, iyileştir ya da hasarı sen ver. Her sınıf, arketipine yakışan biçimde oynanır ve onu kendine özgü kılacak yetenekler sunar.",
         "pillarOpenTitle": "Ücretsiz ve açık kaynak",
-        "pillarOpenBody": "Seviye sınırına kadar ücretsiz oynanır, oyunun tamamı açık kaynaktır. Asla paraya dayalı üstünlük yok."
+        "pillarOpenBody": "Seviye sınırına kadar ücretsiz oynanır, oyunun tamamı açık kaynaktır. Asla paraya dayalı üstünlük yok.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Sınıfını seç",
@@ -5050,6 +5052,8 @@ export const tr_TR: EnTranslations = {
         "heading": "Bilmekte fayda var",
         "q1": "Ücretsiz mi oynanıyor?",
         "a1": "Evet. Oyunun tamamı seviye sınırına kadar ücretsiz ve GitHub'da açık kaynak.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Kripto cüzdanına ihtiyacım var mı?",
         "a2": "Hayır. Oyun, cüzdan olmadan da tümüyle oynanabilir. İsteğe bağlı topluluk jetonu yalnızca görsel süsler ve günlük ödül havuzundan bir pay ekler; gücü asla etkilemez.",
         "q3": "Çevrim dışı oynayabilir miyim?",

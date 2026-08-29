@@ -153,7 +153,7 @@ describe('Aeldrune public site and wiki', () => {
     expect(links).not.toContain(
       'content="The only official channels for Aeldrune. Play the game and follow us',
     );
-    expect(links).toContain("Aeldrune's community channels have not launched yet.");
+    expect(links).toContain('Official Aeldrune game and service links.');
     expect(merch).toContain('<meta name="robots" content="noindex, nofollow" />');
   });
 
@@ -163,7 +163,7 @@ describe('Aeldrune public site and wiki', () => {
     const baseCss = readFileSync(join(__dirname, '..', 'src/styles/base.css'), 'utf8');
     const guideCss = readFileSync(join(__dirname, '..', 'src/guide/styles.css'), 'utf8');
     expect(index).toMatch(/href="#" aria-disabled="true" tabindex="-1"/);
-    expect(guideChrome).toMatch(/href="#" aria-disabled="true" tabindex="-1"/);
+    expect(guideChrome).not.toMatch(/href="#" aria-disabled="true" tabindex="-1"/);
     const disabledPlaceholderSelector = /a\[href=["']#["']\]\[aria-disabled=["']true["']\]/;
     expect(baseCss).toMatch(disabledPlaceholderSelector);
     expect(guideCss).toMatch(disabledPlaceholderSelector);

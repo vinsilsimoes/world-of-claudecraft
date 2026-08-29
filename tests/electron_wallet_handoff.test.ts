@@ -23,6 +23,7 @@ describe('Electron wallet browser handoff', () => {
   });
 
   it('parses only the wallet-handoff custom protocol target', () => {
+    expect(parseWalletHandoffDeepLink(`aeldrune://wallet-handoff?code=${code}`)).toEqual({ code });
     expect(parseWalletHandoffDeepLink(`worldofclaudecraft://wallet-handoff?code=${code}`)).toEqual({
       code,
     });

@@ -8,6 +8,7 @@ export const NATIVE_APP_ORIGINS = new Set([
 ]);
 
 export const DESKTOP_APP_ORIGINS = new Set([
+  'app://aeldrune',
   'app://worldofclaudecraft',
   'http://127.0.0.1:5173',
   'http://localhost:5173',
@@ -18,7 +19,8 @@ export function isNativeAppRequest(req: Pick<IncomingMessage, 'headers'>): boole
   return typeof origin === 'string' && NATIVE_APP_ORIGINS.has(origin);
 }
 
-// The Electron desktop shell (app://worldofclaudecraft packaged, the two localhost
+// The Electron desktop shell (app://aeldrune packaged, the legacy WoC origin for
+// already-installed clients, and the two localhost
 // Vite origins in dev). Origin is spoofable, so treat this as a client CLASS
 // marker (which UX/verification path applies), never as proof of identity.
 export function isDesktopAppRequest(req: Pick<IncomingMessage, 'headers'>): boolean {

@@ -109,14 +109,17 @@ describe('Aeldrune product identity', () => {
     }
   });
 
-  it('keeps compatibility identifiers while changing installable display names', () => {
+  it('uses Aeldrune desktop identity while retaining necessary legacy bridges', () => {
     const pkg = JSON.parse(source('package.json'));
-    expect(pkg.name).toBe('world-of-claudecraft');
-    expect(pkg.build.appId).toBe('com.worldofclaudecraft.desktop');
+    expect(pkg.name).toBe('aeldrune-desktop');
+    expect(pkg.private).toBe(true);
+    expect(pkg.license).toBe('UNLICENSED');
+    expect(pkg.author).toEqual({ name: 'Aeldrune Studio' });
+    expect(pkg.build.appId).toBe('com.aeldrune.desktop');
     expect(pkg.build.productName).toBe('Aeldrune');
     expect(pkg.build.protocols[0]).toEqual({
       name: 'Aeldrune Login',
-      schemes: ['worldofclaudecraft'],
+      schemes: ['aeldrune', 'worldofclaudecraft'],
     });
 
     const capacitor = source('capacitor.config.ts');
@@ -134,18 +137,39 @@ describe('Aeldrune product identity', () => {
     expect(ios).toContain('<string>worldofclaudecraft</string>');
 
     const electron = source('electron/main.cjs');
-    expect(electron).toContain("productName: 'Aeldrune'");
-    expect(electron).toContain("_companyName: 'Aeldrune'");
-    expect(electron).toContain("title: 'Aeldrune'");
-    expect(electron).toContain("const deepLinkProtocol = 'worldofclaudecraft'");
+    expect(electron).toContain('productName: PRODUCT_NAME');
+    expect(electron).toContain('_companyName: PRODUCT_NAME');
+    expect(electron).toContain('title: PRODUCT_NAME');
+    expect(electron).toContain('const deepLinkProtocol = DEEP_LINK_PROTOCOL');
+    const identity = source('electron/identity.cjs');
+    expect(identity).toContain("const PRODUCT_NAME = 'Aeldrune'");
+    expect(identity).toContain("const DEEP_LINK_PROTOCOL = 'aeldrune'");
+    expect(identity).toContain("const LEGACY_DEEP_LINK_PROTOCOL = 'worldofclaudecraft'");
     expect(source('electron/shell_strings.cjs')).toContain("crashTitle: 'Aeldrune'");
 
     expect(source('.github/workflows/desktop-publish.yml')).toContain(
-      'release/mac-universal/Aeldrune.app',
+      'release-aeldrune/Aeldrune-*-win-x64.exe',
     );
     const epicUpload = source('scripts/epic-bpt-upload.mjs');
     expect(epicUpload).toContain("win: 'Aeldrune.exe'");
     expect(epicUpload).toContain("path.join('Aeldrune.app', 'Contents', 'MacOS', 'Aeldrune')");
+  });
+
+  it('does not advertise a source repository or open-source distribution in product UI', () => {
+    const surfaces = [
+      'index.html',
+      'play.html',
+      'public/links.html',
+      'src/guide/pages/home.ts',
+      'src/guide/chrome.ts',
+      'src/ui/news_feed.ts',
+      'src/ui/desktop_update_toast.ts',
+      'src/ui/wiki_link.ts',
+    ];
+    for (const file of surfaces) {
+      const text = source(file);
+      expect(text, file).not.toMatch(/github\.com|open[- ]source|worldofclaudecraft\.com/i);
+    }
   });
 
   it('ships the master logo and square platform derivatives', async () => {

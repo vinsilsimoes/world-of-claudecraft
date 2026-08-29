@@ -15,7 +15,7 @@ import {
 // A miniature of package.json's "build" block: just the keys the channel
 // derivation touches, plus one it must pass through untouched.
 const base = {
-  appId: 'com.worldofclaudecraft.desktop',
+  appId: 'com.aeldrune.desktop',
   files: ['dist/**', 'electron/**', '!node_modules/**'],
   directories: { buildResources: 'build', output: 'release' },
   publish: { provider: 'generic', url: 'https://updates.example.com/desktop' },
@@ -24,7 +24,7 @@ const base = {
   linux: { target: [{ target: 'AppImage', arch: ['x64', 'arm64'] }] },
 };
 
-const prodOrigin = 'https://worldofclaudecraft.com';
+const prodOrigin = 'https://aeldrune.tibiadepot.com';
 
 describe('desktopBuilderConfig', () => {
   it('stamps the website channel into extraMetadata and keeps the publish feed', () => {

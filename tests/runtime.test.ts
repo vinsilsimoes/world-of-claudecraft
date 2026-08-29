@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  desktopApiOrigin,
   desktopBridge,
   isElectronRuntime,
   normalizeOrigin,
@@ -22,6 +23,10 @@ describe('desktop runtime helpers', () => {
   });
 
   it('builds websocket URLs from desktop API origins', () => {
+    expect(desktopApiOrigin()).toBe('https://aeldrune.tibiadepot.com');
+    expect(runtimeWebSocketUrl('app:', 'aeldrune', desktopApiOrigin())).toBe(
+      'wss://aeldrune.tibiadepot.com/ws',
+    );
     expect(
       runtimeWebSocketUrl('app:', 'worldofclaudecraft', 'https://worldofclaudecraft.com'),
     ).toBe('wss://worldofclaudecraft.com/ws');

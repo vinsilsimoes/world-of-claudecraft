@@ -1,5 +1,7 @@
 'use strict';
 
+const { DEEP_LINK_PROTOCOL, LEGACY_DEEP_LINK_PROTOCOL } = require('./identity.cjs');
+
 const HANDOFF_CODE = /^[A-Za-z0-9_-]{43}$/;
 
 function sanitizeWalletHandoffCode(value) {
@@ -21,7 +23,13 @@ function parseWalletHandoffDeepLink(value) {
   } catch {
     return null;
   }
-  if (url.protocol !== 'worldofclaudecraft:' || url.hostname !== 'wallet-handoff') return null;
+  if (
+    url.protocol !== `${DEEP_LINK_PROTOCOL}:` &&
+    url.protocol !== `${LEGACY_DEEP_LINK_PROTOCOL}:`
+  ) {
+    return null;
+  }
+  if (url.hostname !== 'wallet-handoff') return null;
   const code = sanitizeWalletHandoffCode(url.searchParams.get('code'));
   return code ? { code } : null;
 }

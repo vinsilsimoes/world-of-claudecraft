@@ -4,6 +4,16 @@
 
 import type { UpdateChannel } from '../electron/update_guard.cjs';
 
+export function desktopClientBuildEnv(input: {
+  baseEnv?: Record<string, string | undefined>;
+  distribution: string;
+  apiOrigin: string;
+}): Record<string, string | undefined> & {
+  VITE_DESKTOP_APP: '1';
+  VITE_DESKTOP_API_ORIGIN: string;
+  VITE_GAME_PROFILE?: 'mir4-gameplay-port';
+};
+
 export interface AzureSignOptions {
   publisherName: string;
   endpoint: string;
@@ -26,8 +36,10 @@ export function keyVaultSignConfigFromEnv(
 
 export interface DesktopBuilderConfig {
   extraMetadata: {
+    name?: 'aeldrune-desktop';
     wocDesktop: {
-      distribution: 'website' | 'steam' | 'epic';
+      distribution: 'standalone' | 'website' | 'steam' | 'epic';
+      gameProfile?: 'mir4-gameplay-port';
       apiOrigin?: string;
       loginOrigin?: string;
       crashSubmitUrl?: string;

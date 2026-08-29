@@ -22,39 +22,41 @@ function setUserAgent(ua: string): void {
 describe('initDesktopDownload', () => {
   beforeEach(buildView);
 
-  it('syncs each button href to the versioned artifact URL', () => {
+  it('enables only the published Aeldrune Windows artifact', () => {
     setUserAgent('Mozilla/5.0 (X11; Linux x86_64)');
     initDesktopDownload(document);
     const mac = document.querySelector('[data-platform="mac"]') as HTMLAnchorElement;
     const linux = document.querySelector('[data-platform="linux"]') as HTMLAnchorElement;
-    expect(mac.href).toBe(desktopDownloadUrl('mac'));
-    expect(linux.href).toBe(desktopDownloadUrl('linux'));
-    expect(linux.getAttribute('aria-disabled')).toBe('false');
-    expect(linux.classList.contains('is-unavailable')).toBe(false);
+    expect(mac.hasAttribute('href')).toBe(false);
+    expect(mac.getAttribute('aria-disabled')).toBe('true');
+    expect(linux.hasAttribute('href')).toBe(false);
+    expect(linux.getAttribute('aria-disabled')).toBe('true');
+    expect(linux.classList.contains('is-unavailable')).toBe(true);
     const win = document.querySelector('[data-platform="win"]') as HTMLAnchorElement;
     expect(win.href).toBe(desktopDownloadUrl('win'));
     expect(win.getAttribute('aria-disabled')).toBe('false');
     expect(win.classList.contains('is-unavailable')).toBe(false);
   });
 
-  it('highlights and floats the visitor OS button first, and reveals its hint', () => {
+  it('does not highlight or reveal a hint for an unavailable Linux build', () => {
     setUserAgent('Mozilla/5.0 (X11; Linux x86_64) Chrome/125');
     initDesktopDownload(document);
     const actions = document.querySelector('.desktop-download-actions') as HTMLElement;
     const first = actions.firstElementChild as HTMLElement;
-    expect(first.dataset.platform).toBe('linux');
-    expect(first.classList.contains('is-detected')).toBe(true);
+    expect(first.dataset.platform).toBe('mac');
+    expect(first.classList.contains('is-detected')).toBe(false);
     const hint = document.querySelector('.desktop-download-hint') as HTMLElement;
-    expect(hint.hidden).toBe(false);
+    expect(hint.hidden).toBe(true);
   });
 
-  it('keeps the Linux hint hidden for non-Linux visitors and highlights their OS', () => {
+  it('keeps unsupported macOS unavailable', () => {
     setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
     initDesktopDownload(document);
     const hint = document.querySelector('.desktop-download-hint') as HTMLElement;
     expect(hint.hidden).toBe(true);
     const mac = document.querySelector('[data-platform="mac"]') as HTMLElement;
-    expect(mac.classList.contains('is-detected')).toBe(true);
+    expect(mac.classList.contains('is-detected')).toBe(false);
+    expect(mac.getAttribute('aria-disabled')).toBe('true');
   });
 
   it('highlights and floats the Windows button for Windows visitors', () => {
@@ -86,21 +88,16 @@ function entryLinks(path: string, platform: string): HTMLAnchorElement[] {
 }
 
 describe('desktop download entry markup', () => {
-  it.each(['index.html', 'play.html'])('%s pins its mac and Windows hrefs', (path) => {
-    for (const platform of ['mac', 'win'] as const) {
-      const links = entryLinks(path, platform);
-      expect(links).toHaveLength(1);
-      expect(links[0]?.getAttribute('href')).toBe(desktopDownloadUrl(platform));
-    }
+  it.each(['index.html', 'play.html'])('%s pins its Windows fallback href', (path) => {
+    const links = entryLinks(path, 'win');
+    expect(links).toHaveLength(1);
+    expect(links[0]?.getAttribute('href')).toBe(desktopDownloadUrl('win'));
   });
 
-  it('pins the index.html Linux href, and keeps play.html free of one', () => {
-    const links = entryLinks('index.html', 'linux');
-    expect(links).toHaveLength(1);
-    expect(links[0]?.getAttribute('href')).toBe(desktopDownloadUrl('linux'));
-    // play.html deliberately links only mac and Windows; collectReleaseVersionFailures
-    // exempts pages that never carried an AppImage link.
-    expect(entryLinks('play.html', 'linux')).toHaveLength(0);
+  it('keeps unsupported static links as non-download placeholders', () => {
+    expect(entryLinks('index.html', 'mac')[0]?.getAttribute('href')).toBe('#');
+    expect(entryLinks('index.html', 'linux')[0]?.getAttribute('href')).toBe('#');
+    expect(entryLinks('play.html', 'mac')[0]?.getAttribute('href')).toBe('#');
   });
 
   it.each(['index.html', 'play.html'])('%s ships an enabled Windows fallback link', (path) => {

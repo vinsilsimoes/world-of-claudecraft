@@ -1,4 +1,4 @@
-// Aeldrune loot boundary for reused World of ClaudeCraft maps and dungeons.
+// Aeldrune loot boundary for reused legacy maps and dungeons.
 // A reused mob may keep its model, AI and copper row, but never its classic
 // profession reagents, equipment, quest tokens or heroic loot table.
 

@@ -27,7 +27,7 @@ function pillarsHtml(): string {
   const pillars = [
     ['guide.home.what.pillarPlayTitle', 'guide.home.what.pillarPlayBody'],
     ['guide.home.what.pillarClassesTitle', 'guide.home.what.pillarClassesBody'],
-    ['guide.home.what.pillarOpenTitle', 'guide.home.what.pillarOpenBody'],
+    ['guide.home.what.pillarBuildsTitle', 'guide.home.what.pillarBuildsBody'],
   ] as const;
   const cards = pillars
     .map(
@@ -115,7 +115,7 @@ function groupHtml(): string {
 
 function faqHtml(): string {
   const qa = [
-    ['guide.home.faq.q1', t('guide.home.faq.a1')],
+    ['guide.home.faq.qAccess', t('guide.home.faq.aAccess')],
     ['guide.home.faq.q2', t('guide.home.faq.a2')],
     ['guide.home.faq.q3', t('guide.home.faq.a3')],
     [
@@ -150,7 +150,6 @@ function communityHtml(): string {
       <div class="guide-community-cta">
         <a class="guide-cta" href="/play">${esc(t('guide.home.community.play'))}</a>
         <a class="guide-cta guide-cta-ghost" href="#" aria-disabled="true" tabindex="-1">${esc(t('guide.home.community.discord'))}</a>
-        <a class="guide-cta guide-cta-ghost" href="#" aria-disabled="true" tabindex="-1">${esc(t('guide.home.community.github'))}</a>
       </div>
     </section>`;
 }

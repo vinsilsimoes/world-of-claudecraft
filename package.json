@@ -1,11 +1,10 @@
 {
-  "name": "world-of-claudecraft",
-  "version": "0.39.0",
+  "name": "aeldrune-desktop",
+  "version": "0.39.2",
   "private": true,
-  "license": "MIT",
+  "license": "UNLICENSED",
   "author": {
-    "name": "Levy Street",
-    "email": "woc@levystreet.com"
+    "name": "Aeldrune Studio"
   },
   "type": "module",
   "main": "electron/main.cjs",
@@ -21,16 +20,19 @@
     "wiki:content": "node scripts/wiki/build_content.mjs",
     "wiki:stills": "node scripts/wiki/render_model_stills.mjs",
     "sitemap:build": "node scripts/build_sitemap.mjs",
-    "build:native": "VITE_NATIVE_APP=1 VITE_API_ORIGIN=${VITE_API_ORIGIN:-https://worldofclaudecraft.com} npm run build && node scripts/build_media_manifest.mjs prune",
+    "build:native": "VITE_NATIVE_APP=1 VITE_API_ORIGIN=${VITE_API_ORIGIN:-https://aeldrune.tibiadepot.com} npm run build && node scripts/build_media_manifest.mjs prune",
     "native:sync": "npm run build:native && npx cap sync",
     "ota:publish": "node scripts/ota/publish_bundle.mjs",
     "native:open:ios": "npm run native:sync && npx cap open ios",
     "native:open:android": "npm run native:sync && npx cap open android",
     "electron:dev": "node scripts/electron-dev.mjs",
     "electron:pack": "node scripts/electron-build.mjs pack",
+    "electron:pack:aeldrune": "node scripts/electron-build.mjs pack standalone",
     "electron:pack:steam": "node scripts/electron-build.mjs pack steam",
     "electron:pack:epic": "node scripts/electron-build.mjs pack epic",
     "electron:build": "node scripts/electron-build.mjs build",
+    "electron:build:aeldrune": "node scripts/electron-build.mjs build standalone",
+    "electron:verify:aeldrune": "node scripts/aeldrune-desktop-release.mjs verify",
     "electron:build:steam": "node scripts/electron-build.mjs build steam",
     "electron:build:epic": "node scripts/electron-build.mjs build epic",
     "epic:bpt-upload": "node scripts/epic-bpt-upload.mjs",
@@ -174,7 +176,7 @@
     "steamworks.js": "^0.4.0"
   },
   "build": {
-    "appId": "com.worldofclaudecraft.desktop",
+    "appId": "com.aeldrune.desktop",
     "productName": "Aeldrune",
     "icon": "build/icon.png",
     "files": [
@@ -213,6 +215,7 @@
       {
         "name": "Aeldrune Login",
         "schemes": [
+          "aeldrune",
           "worldofclaudecraft"
         ]
       }
@@ -282,10 +285,10 @@
         }
       ]
     },
-    "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
+    "artifactName": "Aeldrune-${version}-${os}-${arch}.${ext}",
     "publish": {
       "provider": "generic",
-      "url": "https://updates.worldofclaudecraft.com/desktop"
+      "url": "https://aeldrune.tibiadepot.com/desktop-updates"
     }
   },
   "allowScripts": {

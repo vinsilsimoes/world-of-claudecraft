@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#08080d" />
   <title>Aeldrune - Official Links</title>
-  <meta name="description" content="Aeldrune's community channels have not launched yet. Play the local development build or use the disabled GitHub placeholder." />
+  <meta name="description" content="Official Aeldrune game and service links." />
 
   <link rel="canonical" href="/links" />
 
@@ -14,14 +14,14 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Aeldrune" />
   <meta property="og:title" data-i18n-content="pageTitle" content="Aeldrune - Official Links" />
-  <meta property="og:description" content="Aeldrune's community channels have not launched yet." />
+  <meta property="og:description" content="Official Aeldrune game and service links." />
   <meta property="og:url" content="/links" />
   <meta property="og:image" content="/aeldrune-logo.png" />
   <meta property="og:image:alt" content="Aeldrune" />
   <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" data-i18n-content="pageTitle" content="Aeldrune - Official Links" />
-  <meta name="twitter:description" content="Aeldrune's community channels have not launched yet." />
+  <meta name="twitter:description" content="Official Aeldrune game and service links." />
   <meta name="twitter:image" content="/aeldrune-logo.png" />
   <meta name="twitter:image:alt" content="Aeldrune" />
 
@@ -33,7 +33,7 @@
     "@type": "WebPage",
     "name": "Aeldrune - Official Links",
     "url": "/links",
-    "description": "Aeldrune's community channels have not launched yet.",
+    "description": "Official Aeldrune game and service links.",
     "inLanguage": "en",
     "isPartOf": { "@type": "WebSite", "name": "Aeldrune", "url": "/" },
     "about": {
@@ -363,8 +363,7 @@
       flex-direction: column;
       gap: var(--gap-row);
     }
-    /* Only publish channels that actually exist. GitHub remains a disabled placeholder
-       at the owner's request; the other inherited social rows stay out of the UI. */
+    /* Only publish channels that actually exist; pending rows stay out of the UI. */
     .rows .btn[href="#"] { display: none; }
     .rows .btn[data-pending-link] {
       display: flex;
@@ -659,7 +658,7 @@
       </svg>
       <div>
         <h2 id="ward-title" class="ward__title">Community channels are not published yet.</h2>
-        <p class="ward__body">Use the local Play entry for testing. The GitHub row is a disabled placeholder until an Aeldrune repository is published.</p>
+        <p class="ward__body">Use the official Play entry to enter Aeldrune.</p>
       </div>
     </section>
 
@@ -775,13 +774,13 @@
         </li>
 
         <li>
-          <a class="btn btn--row" href="#" data-pending-link aria-disabled="true" tabindex="-1">
+          <a class="btn btn--row" href="/api/status">
             <span class="btn__icon" aria-hidden="true">
               <svg class="ic" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
             </span>
             <span class="btn__text">
-              <span class="btn__label" data-i18n="githubLabel">GitHub</span>
-              <span class="btn__handle" data-i18n="githubHandle">Coming later</span>
+              <span class="btn__label">Server Status</span>
+              <span class="btn__handle">Aeldrune service health</span>
             </span>
             <span class="btn__seal" aria-hidden="true">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="seal-disc" cx="12" cy="12" r="10"/><circle class="seal-rim" cx="12" cy="12" r="10"/><path class="seal-check" d="M8 12.3l2.6 2.6L16 9.3"/></svg>
@@ -828,8 +827,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (opens in new tab)",
           footNote: "If it is not listed on this page, it is not us. Stay sharp out there, adventurer.",
           copyright: "2026 Aeldrune"
@@ -856,8 +855,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (se abre en una pestaña nueva)",
           footNote: "Si no figura en esta página, no somos nosotros. Mantente alerta ahí afuera, aventurero.",
           copyright: "2026 Aeldrune"
@@ -884,8 +883,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (se abre en una pestaña nueva)",
           footNote: "Si no aparece en esta página, no somos nosotros. Mantente alerta ahí fuera, aventurero.",
           copyright: "2026 Aeldrune"
@@ -912,8 +911,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (s'ouvre dans un nouvel onglet)",
           footNote: "Si cela ne figure pas sur cette page, ce n'est pas nous. Restez vigilant, aventurier.",
           copyright: "2026 Aeldrune"
@@ -940,8 +939,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (s'ouvre dans un nouvel onglet)",
           footNote: "Si ce n'est pas inscrit sur cette page, ce n'est pas nous. Restez vigilant, aventurier.",
           copyright: "2026 Aeldrune"
@@ -968,8 +967,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (opens in new tab)",
           footNote: "If it is not listed on this page, it is not us. Stay sharp out there, adventurer.",
           copyright: "2026 Aeldrune"
@@ -996,8 +995,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (si apre in una nuova scheda)",
           footNote: "Se non figura in questa pagina, non siamo noi. Tieni gli occhi aperti là fuori, avventuriero.",
           copyright: "2026 Aeldrune"
@@ -1024,8 +1023,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (wird in neuem Tab geöffnet)",
           footNote: "Was nicht auf dieser Seite steht, stammt nicht von uns. Bleib wachsam da draußen, Abenteurer.",
           copyright: "2026 Aeldrune"
@@ -1052,8 +1051,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (在新标签页中打开)",
           footNote: "若未列于此页之上，便绝非我等。在外多加小心，冒险者。",
           copyright: "2026 Aeldrune"
@@ -1080,8 +1079,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " （在新分頁開啟）",
           footNote: "若未列於本頁，便非我方。在外多加留心，冒險者。",
           copyright: "2026 Aeldrune"
@@ -1108,8 +1107,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (새 탭에서 열림)",
           footNote: "이 페이지에 없다면 우리가 아닙니다. 모험가여, 늘 경계를 늦추지 마십시오.",
           copyright: "2026 Aeldrune"
@@ -1136,8 +1135,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (新しいタブで開きます)",
           footNote: "このページに記載がなければ、我らではない。道中、油断するでないぞ、冒険者よ。",
           copyright: "2026 Aeldrune"
@@ -1164,8 +1163,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (abre em uma nova aba)",
           footNote: "Se não estiver listado nesta página, não somos nós. Fique atento lá fora, aventureiro.",
           copyright: "2026 Aeldrune"
@@ -1192,8 +1191,8 @@
           ytHandle: "Coming later",
           redditLabel: "Reddit",
           redditHandle: "Coming later",
-          githubLabel: "GitHub",
-          githubHandle: "Coming later",
+          statusLabel: "Server Status",
+          statusHandle: "Aeldrune service health",
           opensNewTab: " (открывается в новой вкладке)",
           footNote: "Чего нет на этой странице, то не от нас. Будьте начеку, искатель приключений.",
           copyright: "2026 Aeldrune"

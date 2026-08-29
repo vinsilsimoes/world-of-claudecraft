@@ -4992,7 +4992,9 @@ export const nl_NL: EnTranslations = {
         "pillarClassesTitle": "Negen klassen, drie rollen",
         "pillarClassesBody": "Tanken, genezen of de schade uitdelen. Elke klasse speelt zoals zijn archetype hoort, met talenten om hem van jou te maken.",
         "pillarOpenTitle": "Gratis en open source",
-        "pillarOpenBody": "Gratis te spelen tot het maximale niveau, met het hele spel open source. Nooit pay to win."
+        "pillarOpenBody": "Gratis te spelen tot het maximale niveau, met het hele spel open source. Nooit pay to win.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Kies je klasse",
@@ -5050,6 +5052,8 @@ export const nl_NL: EnTranslations = {
         "heading": "Goed om te weten",
         "q1": "Is het gratis te spelen?",
         "a1": "Ja. Het hele spel is gratis tot het maximale niveau, en het is open source op GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Heb ik een crypto-wallet nodig?",
         "a2": "Nee. Het spel is volledig speelbaar zonder. Het optionele community-token voegt alleen cosmetische opsmuk en een aandeel in de prijzenpot van de dagelijkse beloningen toe, en heeft nooit invloed op kracht.",
         "q3": "Kan ik offline spelen?",

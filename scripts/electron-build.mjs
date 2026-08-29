@@ -3,18 +3,22 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import desktopIdentity from '../electron/identity.cjs';
 import {
   azureSignOptionsFromEnv,
   desktopBuilderConfig,
+  desktopClientBuildEnv,
   isChannelFeedFile,
   keyVaultSignConfigFromEnv,
   stampChannelFeedFiles,
 } from './electron-builder-config.mjs';
 import { buildElectronVendor } from './electron-vendor.mjs';
 
-// Usage: node scripts/electron-build.mjs [pack|build] [website|steam|epic]
+// Usage: node scripts/electron-build.mjs [pack|build] [standalone|website|steam|epic]
 //  - pack: --dir only (fast local verification); build: full installers.
-//  - website (default): the direct-download channel; keeps the publish feed, so
+//  - standalone (default): the Aeldrune Windows client. It is pinned to the
+//    mir4-gameplay-port profile and the aeldrune.tibiadepot.com API/update host.
+//  - website: the inherited cross-platform direct-download channel; keeps the publish feed, so
 //    the packaged app self-updates via electron-updater.
 //  - steam: the SteamPipe channel; publish nulled, 'dir' targets per OS, output
 //    in release-steam/, and the runtime stamp turns the in-app updater OFF
@@ -29,8 +33,8 @@ if (!['pack', 'build'].includes(mode)) {
   console.error(`unknown electron build mode: ${mode}`);
   process.exit(1);
 }
-const distribution = process.argv[3] ?? 'website';
-if (!['website', 'steam', 'epic'].includes(distribution)) {
+const distribution = process.argv[3] ?? 'standalone';
+if (!['standalone', 'website', 'steam', 'epic'].includes(distribution)) {
   console.error(`unknown desktop distribution: ${distribution}`);
   process.exit(1);
 }
@@ -39,7 +43,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const electronBuilderCommand =
   process.platform === 'win32' ? 'electron-builder.cmd' : 'electron-builder';
-const defaultOrigin = 'https://worldofclaudecraft.com';
+const defaultOrigin = desktopIdentity.PRODUCTION_API_ORIGIN;
 // Resolve the web origins ONCE: apiOrigin feeds both the Vite client build and
 // the wocDesktop stamp below (so the packaged main process always agrees with
 // what the bundle was baked with); loginOrigin is stamped for the main process
@@ -48,11 +52,11 @@ const defaultOrigin = 'https://worldofclaudecraft.com';
 // (CI matrices) mean "unset", hence || rather than ??.
 const apiOrigin = process.env.VITE_DESKTOP_API_ORIGIN || defaultOrigin;
 const loginOrigin = process.env.VITE_DESKTOP_LOGIN_ORIGIN || apiOrigin;
-const env = {
-  ...process.env,
-  VITE_DESKTOP_APP: '1',
-  VITE_DESKTOP_API_ORIGIN: apiOrigin,
-};
+const env = desktopClientBuildEnv({
+  baseEnv: process.env,
+  distribution,
+  apiOrigin,
+});
 
 // A macOS build with no real Developer ID configured must still LAUNCH. On Apple Silicon
 // the kernel SIGKILLs any invalidly-signed binary, and the electronFuses flip

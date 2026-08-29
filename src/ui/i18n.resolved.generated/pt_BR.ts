@@ -4992,7 +4992,9 @@ export const pt_BR: EnTranslations = {
         "pillarClassesTitle": "Nove classes, três papéis",
         "pillarClassesBody": "Proteja, cure ou cause o dano. Cada classe joga como seu arquétipo deveria, com talentos para torná-la sua.",
         "pillarOpenTitle": "Gratuito e de código aberto",
-        "pillarOpenBody": "Gratuito para jogar até o nível máximo, com o jogo inteiro de código aberto. Nada de pagar para vencer, jamais."
+        "pillarOpenBody": "Gratuito para jogar até o nível máximo, com o jogo inteiro de código aberto. Nada de pagar para vencer, jamais.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Escolha sua classe",
@@ -5050,6 +5052,8 @@ export const pt_BR: EnTranslations = {
         "heading": "Bom saber",
         "q1": "É gratuito para jogar?",
         "a1": "Sim. O jogo inteiro é gratuito até o nível máximo, e é de código aberto no GitHub.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Preciso de uma carteira de criptomoedas?",
         "a2": "Não. O jogo é totalmente jogável sem um. O token comunitário opcional apenas acrescenta adornos cosméticos e uma fatia do fundo de prêmios das recompensas diárias, e nunca afeta o poder.",
         "q3": "Posso jogar offline?",

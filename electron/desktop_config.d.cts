@@ -4,12 +4,13 @@
 
 import type { UpdateChannel } from './update_guard.cjs';
 
-export type Distribution = 'website' | 'steam' | 'epic';
+export type Distribution = 'standalone' | 'website' | 'steam' | 'epic';
 
 export interface DesktopConfigInput {
   packagedMetadata?: {
     wocDesktop?: {
       distribution?: unknown;
+      gameProfile?: unknown;
       crashSubmitUrl?: unknown;
       apiOrigin?: unknown;
       loginOrigin?: unknown;

@@ -31,20 +31,15 @@ MARKETING_VERSION = 0.20.0;
 CURRENT_PROJECT_VERSION = 4;
 MARKETING_VERSION = 0.20.0;`;
 
-const INDEX_HTML = `<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-mac-universal.dmg">Download</a>
-<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-linux-x86_64.AppImage">Download</a>
-<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-win-x64.exe">Download</a>
+const INDEX_HTML = `<a href="https://aeldrune.tibiadepot.com/desktop-updates/Aeldrune-0.20.0-win-x64.exe">Download</a>
 <div id="game-version">v0.10</div>`;
 
-// play.html omits Linux but carries the macOS and Windows links.
-const PLAY_HTML = `<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-mac-universal.dmg">Download</a>
-<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-win-x64.exe">Download</a>
+const PLAY_HTML = `<a href="https://aeldrune.tibiadepot.com/desktop-updates/Aeldrune-0.20.0-win-x64.exe">Download</a>
 <div id="game-version">v0.10</div>`;
 
 // A page migrated before the per-arch cutover (or hand-edited afterward) can still
 // carry the legacy combined-installer filename ("-win.exe", no arch suffix).
-const LEGACY_WINDOWS_HTML = `<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-mac-universal.dmg">Download</a>
-<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-win.exe">Download</a>
+const LEGACY_WINDOWS_HTML = `<a href="https://updates.worldofclaudecraft.com/desktop/world-of-claudecraft-0.20.0-win.exe">Download</a>
 <div id="game-version">v0.10</div>`;
 
 const README_MD = `[![Version](https://img.shields.io/badge/version-0.20.0-blue)](package.json)`;
@@ -101,35 +96,22 @@ describe('release version transforms', () => {
     expect(out.private).toBe(true);
   });
 
-  it('updates macOS desktop artifact links', () => {
+  it('updates Aeldrune Windows desktop artifact links', () => {
     const out = setDesktopDownloadVersion(INDEX_HTML, '0.21.0', 'index.html');
-    expect(out).toContain('world-of-claudecraft-0.21.0-mac-universal.dmg');
-    expect(out).not.toContain('world-of-claudecraft-0.20.0-mac-universal.dmg');
-  });
-
-  it('updates Linux AppImage artifact links where present', () => {
-    const out = setDesktopDownloadVersion(INDEX_HTML, '0.21.0', 'index.html');
-    expect(out).toContain('world-of-claudecraft-0.21.0-linux-x86_64.AppImage');
-    expect(out).not.toContain('world-of-claudecraft-0.20.0-linux-x86_64.AppImage');
-  });
-
-  it('updates Windows installer artifact links', () => {
-    const out = setDesktopDownloadVersion(INDEX_HTML, '0.21.0', 'index.html');
-    expect(out).toContain('world-of-claudecraft-0.21.0-win-x64.exe');
-    expect(out).not.toContain('world-of-claudecraft-0.20.0-win-x64.exe');
+    expect(out).toContain('Aeldrune-0.21.0-win-x64.exe');
+    expect(out).not.toContain('Aeldrune-0.20.0-win-x64.exe');
   });
 
   it('migrates a legacy combined Windows installer link to the per-arch form', () => {
     const out = setDesktopDownloadVersion(LEGACY_WINDOWS_HTML, '0.21.0', 'index.html');
-    expect(out).toContain('world-of-claudecraft-0.21.0-win-x64.exe');
+    expect(out).toContain('Aeldrune-0.21.0-win-x64.exe');
     expect(out).not.toContain('world-of-claudecraft-0.20.0-win.exe');
     expect(out).not.toMatch(/world-of-claudecraft-\d+\.\d+\.\d+-win\.exe/);
   });
 
-  it('tolerates pages without a Linux link (play.html)', () => {
+  it('updates every entry page without requiring unshipped platforms', () => {
     const out = setDesktopDownloadVersion(PLAY_HTML, '0.21.0', 'play.html');
-    expect(out).toContain('world-of-claudecraft-0.21.0-mac-universal.dmg');
-    expect(out).not.toContain('AppImage');
+    expect(out).toContain('Aeldrune-0.21.0-win-x64.exe');
   });
 
   it('updates README version badges', () => {
@@ -169,12 +151,8 @@ describe('planReleaseVersion', () => {
     expect(JSON.parse(plan.packageJson).version).toBe('0.21.0');
     expect(plan.gradle).toContain('versionName "0.21.0"');
     expect(plan.pbxproj.match(/MARKETING_VERSION = 0\.21\.0;/g)).toHaveLength(2);
-    expect(plan.htmlFiles['index.html']).toContain('world-of-claudecraft-0.21.0-mac-universal.dmg');
-    expect(plan.htmlFiles['index.html']).toContain(
-      'world-of-claudecraft-0.21.0-linux-x86_64.AppImage',
-    );
-    expect(plan.htmlFiles['index.html']).toContain('world-of-claudecraft-0.21.0-win-x64.exe');
-    expect(plan.htmlFiles['play.html']).toContain('world-of-claudecraft-0.21.0-win-x64.exe');
+    expect(plan.htmlFiles['index.html']).toContain('Aeldrune-0.21.0-win-x64.exe');
+    expect(plan.htmlFiles['play.html']).toContain('Aeldrune-0.21.0-win-x64.exe');
     expect(plan.htmlFiles['play.html']).toContain('<div id="game-version">v0.21.0</div>');
     expect(plan.readmeFiles['README.md']).toContain('version-0.21.0-blue');
   });
@@ -202,16 +180,15 @@ describe('collectReleaseVersionFailures', () => {
         'android/app/build.gradle versionName is 0.20.0, expected 0.21.0',
         'ios/App/App.xcodeproj/project.pbxproj MARKETING_VERSION includes 0.20.0, expected all 0.21.0',
         'index.html game-version is v0.10, expected v0.21.0',
-        'index.html has a stale Linux desktop download URL, expected 0.21.0',
-        'index.html has a stale Windows desktop download URL, expected 0.21.0',
-        'play.html is missing the macOS desktop download URL for 0.21.0',
+        'index.html has a stale Aeldrune Windows desktop download URL, expected 0.21.0',
+        'play.html is missing the Aeldrune Windows desktop download URL',
         'play.html still contains Coming Soon in the download panel',
         'README.md version badge includes 0.20.0, expected all 0.21.0',
       ]),
     );
   });
 
-  it('does not require a Linux link on pages that never had one', () => {
+  it('does not require macOS or Linux artifacts', () => {
     const failures = collectReleaseVersionFailures({
       version: '0.20.0',
       packageJson: PACKAGE_JSON,
@@ -225,7 +202,7 @@ describe('collectReleaseVersionFailures', () => {
       },
     });
 
-    expect(failures.filter((failure) => failure.includes('Linux'))).toEqual([]);
+    expect(failures.filter((failure) => /Linux|macOS/.test(failure))).toEqual([]);
   });
 
   it('reports a stale legacy combined Windows installer link left unmigrated', () => {
@@ -236,8 +213,8 @@ describe('collectReleaseVersionFailures', () => {
       pbxproj: PBXPROJ,
       htmlFiles: {
         'index.html': setGameVersionText(LEGACY_WINDOWS_HTML, '0.21.0', 'index.html').replace(
-          'world-of-claudecraft-0.20.0-mac-universal.dmg',
-          'world-of-claudecraft-0.21.0-mac-universal.dmg',
+          'world-of-claudecraft-0.20.0-win.exe',
+          'world-of-claudecraft-0.21.0-win.exe',
         ),
       },
       readmeFiles: {
@@ -246,7 +223,7 @@ describe('collectReleaseVersionFailures', () => {
     });
 
     expect(failures).toContain(
-      'index.html has a stale Windows desktop download URL, expected 0.21.0',
+      'index.html has a stale Aeldrune Windows desktop download URL, expected 0.21.0',
     );
   });
 });

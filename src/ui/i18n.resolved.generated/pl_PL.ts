@@ -4992,7 +4992,9 @@ export const pl_PL: EnTranslations = {
         "pillarClassesTitle": "Dziewięć klas, trzy role",
         "pillarClassesBody": "Tankuj, lecz albo zadawaj obrażenia. Każda klasa gra się tak, jak powinien jej archetyp, a talenty czynią ją twoją.",
         "pillarOpenTitle": "Darmowa i o otwartym kodzie",
-        "pillarOpenBody": "Darmowa gra aż do maksymalnego poziomu, z całą grą o otwartym kodzie. Żadnego pay to win, nigdy."
+        "pillarOpenBody": "Darmowa gra aż do maksymalnego poziomu, z całą grą o otwartym kodzie. Żadnego pay to win, nigdy.",
+        "pillarBuildsTitle": "Build your own path",
+        "pillarBuildsBody": "Equipment, skills, spirits, mounts, Codex and training all shape your character. Every choice can support a different combat build."
       },
       "classes": {
         "heading": "Wybierz swoją klasę",
@@ -5050,6 +5052,8 @@ export const pl_PL: EnTranslations = {
         "heading": "Warto wiedzieć",
         "q1": "Czy gra jest darmowa?",
         "a1": "Tak. Cała gra jest darmowa aż do maksymalnego poziomu, a jej kod źródłowy jest otwarty na GitHubie.",
+        "qAccess": "How do I play Aeldrune?",
+        "aAccess": "Create an account and play in the browser, or install the private Aeldrune Windows client from the official download page.",
         "q2": "Czy potrzebuję portfela krypto?",
         "a2": "Nie. W grę można w pełni grać bez niego. Opcjonalny żeton społeczności dodaje jedynie kosmetyczny akcent i udział w puli dziennych nagród, i nigdy nie wpływa na siłę.",
         "q3": "Czy mogę grać offline?",

@@ -98,7 +98,7 @@ function renderBusy(wallet: string): void {
 
 function renderComplete(): void {
   if (!root || !code) return;
-  const returnUrl = `worldofclaudecraft://wallet-handoff?code=${encodeURIComponent(code)}`;
+  const returnUrl = `aeldrune://wallet-handoff?code=${encodeURIComponent(code)}`;
   replaceWalletHandoffContent(
     root,
     `<div class="wallet-handoff-card">` +

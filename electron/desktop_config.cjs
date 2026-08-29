@@ -16,7 +16,7 @@
 
 const { PRODUCTION_API_ORIGIN, updateChannelForOrigin } = require('./update_guard.cjs');
 
-const DISTRIBUTIONS = new Set(['website', 'steam', 'epic']);
+const DISTRIBUTIONS = new Set(['standalone', 'website', 'steam', 'epic']);
 
 // Resolve the distribution channel. The WOC_DISTRIBUTION env override applies
 // ONLY to unpackaged checkouts (`electron .` / electron:dev): a PACKAGED
@@ -86,17 +86,17 @@ function resolveDesktopOrigins({ packagedMetadata, env, isPackaged } = {}) {
 // The one gate the auto-updater honors. Steam and Epic builds MUST NOT
 // self-update (SteamPipe / Epic BPT own patches; store guidance is explicit),
 // and an unpackaged checkout has nothing to update, so the updater runs only
-// for a packaged website build. There is deliberately no env escape hatch to
+// for a packaged direct-download build. There is deliberately no env escape hatch to
 // force it ON in a Steam or Epic build; WOC_DISTRIBUTION=website on a dev
 // checkout still stays off via isPackaged.
 function updaterAllowed({ distribution, isPackaged }) {
-  return isPackaged === true && distribution === 'website';
+  return isPackaged === true && (distribution === 'standalone' || distribution === 'website');
 }
 
 // Wallet handoff is intentionally limited to the website-distributed shell.
 // Keep this decision pure and tested so Steam and Epic IPC cannot drift open.
 function walletConnectionSupported({ distribution }) {
-  return distribution === 'website';
+  return distribution === 'standalone' || distribution === 'website';
 }
 
 // One-call summary used by electron/main.cjs at startup. updateChannel is a
