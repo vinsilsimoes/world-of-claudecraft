@@ -134,10 +134,11 @@ describe('Aeldrune public site and wiki', () => {
     }
   });
 
-  it('keeps unavailable landing-page actions hidden while preserving their runtime anchors', () => {
+  it('publishes the Windows download action while keeping unavailable actions hidden', () => {
     const html = readFileSync(join(__dirname, '..', 'index.html'), 'utf8');
     expect(html).toMatch(/id="nav-btn-news"[^>]*\bhidden\b/);
-    expect(html).toMatch(/id="nav-btn-download"[^>]*\bhidden\b/);
+    expect(html).toMatch(/id="nav-btn-download"/);
+    expect(html).not.toMatch(/id="nav-btn-download"[^>]*\bhidden\b/);
     expect(html).toMatch(/class="donate-cta"[^>]*\bhidden\b/);
     expect(html).toMatch(/id="mobile-donate"[^>]*\bhidden\b/);
     expect(html).toMatch(/class="social-link donate"[^>]*\bhidden\b/);

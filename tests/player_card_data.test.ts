@@ -51,6 +51,7 @@ describe('buildPlayerCardData', () => {
       topPercent: null,
       devTier: 3,
       devMergedPrs: 18,
+      siteUrl: 'aeldrune.tibiadepot.com',
     });
     expect(data.gear.map((entry) => entry.slot)).toEqual([
       'slot:mainhand',

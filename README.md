@@ -1,6 +1,6 @@
 # Aeldrune
 
-![Version](https://img.shields.io/badge/version-0.39.2-blue)
+![Version](https://img.shields.io/badge/version-0.39.3-blue)
 
 Aeldrune is a private 3D MMORPG in active alpha development. This repository contains the authoritative Aeldrune web client, Windows client, simulation, server, content, tools, and automated verification.
 

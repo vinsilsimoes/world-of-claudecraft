@@ -44,6 +44,15 @@ export interface WalletConnectRuntimeOptions {
   enableWalletGuide: boolean;
 }
 
+export interface WalletConnectMetadata {
+  name: 'Aeldrune';
+  description: string;
+  url: string;
+  icons: string[];
+  termsConditionsUrl: string;
+  privacyPolicyUrl: string;
+}
+
 export function walletConnectRuntimeOptions(protocol: string): WalletConnectRuntimeOptions {
   const packagedDesktop = protocol === 'app:';
   return {
@@ -90,7 +99,19 @@ function metadataUrl(): string {
   if (typeof window !== 'undefined' && /^https?:$/.test(window.location.protocol)) {
     return window.location.origin;
   }
-  return 'https://worldofclaudecraft.com';
+  return 'https://aeldrune.tibiadepot.com';
+}
+
+export function walletConnectMetadata(origin: string = metadataUrl()): WalletConnectMetadata {
+  const publicOrigin = origin.replace(/\/+$/, '');
+  return {
+    name: 'Aeldrune',
+    description: 'Connect a Solana wallet to Aeldrune',
+    url: publicOrigin,
+    icons: [`${publicOrigin}/icon-512.png`],
+    termsConditionsUrl: `${publicOrigin}/terms`,
+    privacyPolicyUrl: `${publicOrigin}/privacy`,
+  };
 }
 
 function connectionCancelled(): Error {
@@ -108,18 +129,14 @@ export async function createWalletConnectClient(projectId: string): Promise<Wall
   const runtime = walletConnectRuntimeOptions(
     typeof window === 'undefined' ? '' : window.location.protocol,
   );
+  const { termsConditionsUrl, privacyPolicyUrl, ...metadata } = walletConnectMetadata();
   const adapter = new SolanaAdapter({ registerWalletStandard: runtime.registerWalletStandard });
   const appKit = createAppKit({
     adapters: [adapter],
     projectId,
     networks: [solana],
     defaultNetwork: solana,
-    metadata: {
-      name: 'Aeldrune',
-      description: 'Connect a Solana wallet to Aeldrune',
-      url: metadataUrl(),
-      icons: ['https://worldofclaudecraft.com/icon-512.png'],
-    },
+    metadata,
     featuredWalletIds: [...FEATURED_WALLET_IDS],
     allWallets: runtime.allWallets,
     enableNetworkSwitch: false,
@@ -127,8 +144,8 @@ export async function createWalletConnectClient(projectId: string): Promise<Wall
     enableMobileFullScreen: true,
     experimental_preferUniversalLinks: true,
     themeMode: 'dark',
-    termsConditionsUrl: 'https://worldofclaudecraft.com/terms',
-    privacyPolicyUrl: 'https://worldofclaudecraft.com/privacy',
+    termsConditionsUrl,
+    privacyPolicyUrl,
     features: {
       analytics: false,
       email: false,

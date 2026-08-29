@@ -115,6 +115,7 @@ import {
 } from './game/keyboard_turn_facing';
 import { applyMobileKeyboardViewport } from './game/keyboard_viewport_applier';
 import { shouldUseStaticBackdrop } from './game/landing_backdrop';
+import { initialLandingView } from './game/landing_route';
 import { createLandingThemeAudio } from './game/landing_theme';
 import {
   collectLoadSpans,
@@ -10743,6 +10744,8 @@ function wireStartScreens(): void {
   });
   setupNavBtn(navBtnDownload, '#download-view');
   initDesktopDownload();
+  const routedLandingView = initialLandingView(location.pathname);
+  if (routedLandingView) switchMainView(routedLandingView);
   initBrowserSupportNotice();
   setupNavBtn(navBtnLogin, '#hero-view', () => {
     show('#login-panel');

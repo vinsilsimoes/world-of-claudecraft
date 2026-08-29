@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   deserializeSolanaTransaction,
   parseAppKitAccountState,
+  walletConnectMetadata,
   walletConnectRuntimeOptions,
 } from '../src/net/wallet_connect';
 
@@ -11,6 +12,17 @@ const V0_TRANSACTION_BASE64 =
   'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==';
 
 describe('Reown AppKit Solana adapter', () => {
+  it('publishes only Aeldrune-owned metadata and policy URLs', () => {
+    expect(walletConnectMetadata('https://aeldrune.tibiadepot.com')).toEqual({
+      name: 'Aeldrune',
+      description: 'Connect a Solana wallet to Aeldrune',
+      url: 'https://aeldrune.tibiadepot.com',
+      icons: ['https://aeldrune.tibiadepot.com/icon-512.png'],
+      termsConditionsUrl: 'https://aeldrune.tibiadepot.com/terms',
+      privacyPolicyUrl: 'https://aeldrune.tibiadepot.com/privacy',
+    });
+  });
+
   it('uses the direct QR pairing view without Wallet Standard registration in the desktop app', () => {
     expect(walletConnectRuntimeOptions('app:')).toEqual({
       registerWalletStandard: false,
