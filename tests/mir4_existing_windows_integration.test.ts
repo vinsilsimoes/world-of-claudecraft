@@ -352,7 +352,7 @@ describe('MIR4 content reaches the existing Aeldrune windows', () => {
     const upgrade = abilityRows[0]?.querySelector<HTMLButtonElement>('.spell-upgrade-btn');
     expect(upgrade?.disabled).toBe(false);
     expect(upgrade?.textContent).toContain('Rank 2');
-    expect(upgrade?.getAttribute('aria-label')).toContain('Void Strike');
+    expect(upgrade?.getAttribute('aria-label')).toContain('Void Slash');
     upgrade?.click();
     expect(commands.mir4UpgradeSkill).toHaveBeenCalledWith(1102, 1);
     state.mir4Materials = { ...MIR4_EMPTY_MATERIALS };

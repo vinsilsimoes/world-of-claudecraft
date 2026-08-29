@@ -1,5 +1,5 @@
 import { MIR4_CLASSES, mir4ClassByKey } from '../sim/content/mir4/classes';
-import { mir4SkillsForClass } from '../sim/content/mir4/skills';
+import { mir4SkillsForClass } from '../sim/content/mir4/skills_runtime';
 import type { GameProfile } from '../sim/game_profile';
 import { classesForGameProfile } from '../sim/game_profile_roster';
 import { mir4SkillUnlockLevel } from '../sim/mir4/skill_progression';
@@ -20,6 +20,8 @@ export interface ProfileClassOption {
 export interface Mir4ClassDetailsView {
   key: Mir4ClassKey;
   labelKey: TranslationKey;
+  roleKey: TranslationKey;
+  identityKey: TranslationKey;
   damageKey: TranslationKey;
   rangeKey: TranslationKey;
   weaponKey: TranslationKey;
@@ -52,6 +54,8 @@ export function mir4ClassDetailsView(key: Mir4ClassKey): Mir4ClassDetailsView {
   return {
     key,
     labelKey: `classes.${key}` as TranslationKey,
+    roleKey: `classDetails.mir4.roles.${def.combatRole}` as TranslationKey,
+    identityKey: `classDetails.mir4.identity.${def.key}` as TranslationKey,
     damageKey: `classDetails.mir4.damage.${def.damageChannel}` as TranslationKey,
     rangeKey,
     weaponKey: `classDetails.mir4.weapons.${def.weapon}` as TranslationKey,

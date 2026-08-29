@@ -11,6 +11,7 @@ import {
   mir4AutoBattleTargetBlocked,
   observeMir4AutoBattlePursuit,
 } from '../../src/sim/auto_battle/target_memory';
+import { mir4SkillsForClass } from '../../src/sim/content/mir4';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
@@ -432,7 +433,7 @@ describe('mir4 auto battle', () => {
     updateMir4AutoBattle(sim.ctx);
     resolveScheduledAction(sim);
 
-    expect(p.cooldowns.has('1401')).toBe(true);
+    expect(p.cooldowns.has('1302')).toBe(true);
     expect(primary.hp).toBeLessThan(primary.maxHp);
     expect(nearbyA.hp).toBeLessThan(nearbyA.maxHp);
     expect(nearbyB.hp).toBeLessThan(nearbyB.maxHp);
@@ -471,25 +472,29 @@ describe('mir4 auto battle', () => {
   it('uses a targetless AoE only when its real area contains enough hostiles', () => {
     const crowded = makeSim(888, 'elementalist');
     const crowdedPlayer = crowded.entities.get(crowded.playerId)!;
-    crowdedPlayer.level = 30;
+    crowdedPlayer.level = 70;
     spawnTankWolf(crowded, crowdedPlayer.pos.x + 2, crowdedPlayer.pos.z, 'crowded_primary');
     spawnTankWolf(crowded, crowdedPlayer.pos.x + 3, crowdedPlayer.pos.z + 1, 'crowded_a');
     spawnTankWolf(crowded, crowdedPlayer.pos.x + 3, crowdedPlayer.pos.z - 1, 'crowded_b');
-    crowdedPlayer.cooldowns.set('2101', 10);
+    for (const skillId of ['2101', '2111', '2501', '2301', '2503', '2203', '2303']) {
+      crowdedPlayer.cooldowns.set(skillId, 10);
+    }
     crowded.setMir4AutoBattleMode('battle');
     updateMir4AutoBattle(crowded.ctx);
-    expect(crowdedPlayer.cooldowns.has('2501')).toBe(true);
+    expect(crowdedPlayer.cooldowns.has('2201')).toBe(true);
 
     const spread = makeSim(889, 'elementalist');
     const spreadPlayer = spread.entities.get(spread.playerId)!;
-    spreadPlayer.level = 30;
+    spreadPlayer.level = 70;
     spawnTankWolf(spread, spreadPlayer.pos.x + 2, spreadPlayer.pos.z, 'spread_primary');
     spawnTankWolf(spread, spreadPlayer.pos.x + 15, spreadPlayer.pos.z, 'spread_a');
     spawnTankWolf(spread, spreadPlayer.pos.x + 20, spreadPlayer.pos.z, 'spread_b');
-    spreadPlayer.cooldowns.set('2101', 10);
+    for (const skillId of ['2111', '2501', '2301', '2503', '2203', '2303']) {
+      spreadPlayer.cooldowns.set(skillId, 10);
+    }
     spread.setMir4AutoBattleMode('battle');
     updateMir4AutoBattle(spread.ctx);
-    expect(spreadPlayer.cooldowns.has('2501')).toBe(false);
+    expect(spreadPlayer.cooldowns.has('2201')).toBe(false);
   });
 
   it.each(['friendly', 'covered'] as const)(
@@ -497,7 +502,7 @@ describe('mir4 auto battle', () => {
     (rejectedKind) => {
       const sim = makeSim(rejectedKind === 'friendly' ? 8892 : 8893, 'elementalist');
       const p = sim.player;
-      p.level = 30;
+      p.level = 70;
       spawnTankWolf(sim, p.pos.x + 2, p.pos.z, `${rejectedKind}_valid_primary`);
       spawnTankWolf(sim, p.pos.x + 3, p.pos.z + 1, `${rejectedKind}_valid_secondary`);
       const rejected = spawnTankWolf(sim, p.pos.x + 3, p.pos.z - 1, `${rejectedKind}_rejected`);
@@ -507,32 +512,36 @@ describe('mir4 auto battle', () => {
         sim.ctx.hasLineOfSight = (attacker, target) =>
           target.id !== rejected.id && hasLineOfSight(attacker, target);
       }
-      p.cooldowns.set('2101', 10);
+      for (const skillId of ['2111', '2501', '2301', '2503', '2203', '2303']) {
+        p.cooldowns.set(skillId, 10);
+      }
       sim.setMir4AutoBattleMode('battle');
 
       updateMir4AutoBattle(sim.ctx);
 
-      expect(p.cooldowns.has('2501')).toBe(false);
+      expect(p.cooldowns.has('2201')).toBe(false);
     },
   );
 
   it('casts an actor-centered AoE on the nearby pack even when the retained target is far', () => {
     const sim = makeSim(8891, 'elementalist');
     const p = sim.player;
-    p.level = 30;
+    p.level = 70;
     const retained = spawnTankWolf(sim, p.pos.x + 20, p.pos.z, 'retained_far_target');
     const nearA = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'actor_area_a');
     const nearB = spawnTankWolf(sim, p.pos.x + 3, p.pos.z + 1, 'actor_area_b');
     const nearC = spawnTankWolf(sim, p.pos.x + 3, p.pos.z - 1, 'actor_area_c');
     const before = { x: p.pos.x, z: p.pos.z };
     p.targetId = retained.id;
-    p.cooldowns.set('2101', 10);
+    for (const skillId of ['2101', '2111', '2501', '2301', '2503', '2203', '2303']) {
+      p.cooldowns.set(skillId, 10);
+    }
     sim.setMir4AutoBattleMode('battle');
 
     updateMir4AutoBattle(sim.ctx);
     resolveScheduledAction(sim);
 
-    expect(p.cooldowns.has('2501')).toBe(true);
+    expect(p.cooldowns.has('2201')).toBe(true);
     expect(nearA.hp).toBeLessThan(nearA.maxHp);
     expect(nearB.hp).toBeLessThan(nearB.maxHp);
     expect(nearC.hp).toBeLessThan(nearC.maxHp);
@@ -551,7 +560,7 @@ describe('mir4 auto battle', () => {
     updateMir4AutoBattle(sim.ctx);
 
     expect(p.cooldowns.has('mir4_ult')).toBe(true);
-    expect(['1102', '1104', '1304', '1401'].some((id) => p.cooldowns.has(id))).toBe(false);
+    expect(['1102', '1302', '1301', '1101', '1103'].some((id) => p.cooldowns.has(id))).toBe(false);
     expect(p.mir4PendingImpacts).toHaveLength(3);
     expect(wolf.hp).toBe(wolf.maxHp);
   });
@@ -579,7 +588,7 @@ describe('mir4 auto battle', () => {
 
     expect(p.cooldowns.has('mir4_basic')).toBe(true);
     expect(p.cooldowns.has('mir4_ult')).toBe(false);
-    expect(['1102', '1104', '1304', '1401'].some((id) => p.cooldowns.has(id))).toBe(false);
+    expect(['1102', '1302', '1301', '1101', '1103'].some((id) => p.cooldowns.has(id))).toBe(false);
     expect(p.mir4UltGauge).toBe(100);
     expect({ x: p.pos.x, z: p.pos.z }).toEqual({ x: before.x, z: before.z });
   });
@@ -601,7 +610,7 @@ describe('mir4 auto battle', () => {
   it.each([
     ['warrior', 4],
     ['elementalist', 8],
-    ['taoist', 4],
+    ['taoist', 8],
     ['arbalist', 12],
     ['lancer', 6],
   ] as const)('uses the %s class range instead of forcing every class into melee', (cls, range) => {
@@ -609,6 +618,11 @@ describe('mir4 auto battle', () => {
     placePlayerInOpenField(sim);
     const p = sim.entities.get(sim.playerId)!;
     p.level = 40;
+    sim.players.get(sim.playerId)!.mir4DisabledAutoSkills = mir4SkillsForClass(
+      p.mir4!.classId as 1 | 2 | 3 | 4 | 5,
+    )
+      .slice(1)
+      .map((skill) => skill.skillId);
     const wolf = spawnTankWolf(sim, p.pos.x + range, p.pos.z, `test_${cls}_range`);
     const before = { ...p.pos };
     const hasLineOfSight = sim.ctx.hasLineOfSight;
@@ -628,6 +642,11 @@ describe('mir4 auto battle', () => {
     placePlayerInOpenField(outside);
     const outsidePlayer = outside.entities.get(outside.playerId)!;
     outsidePlayer.level = 40;
+    outside.players.get(outside.playerId)!.mir4DisabledAutoSkills = mir4SkillsForClass(
+      outsidePlayer.mir4!.classId as 1 | 2 | 3 | 4 | 5,
+    )
+      .slice(1)
+      .map((skill) => skill.skillId);
     const outsideWolf = spawnTankWolf(
       outside,
       outsidePlayer.pos.x + range + 0.01,

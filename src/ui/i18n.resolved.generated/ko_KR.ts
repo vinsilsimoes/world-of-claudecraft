@@ -4835,7 +4835,7 @@ export const ko_KR: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "A character starts with one skill and unlocks another every ten levels. Newly unlocked skills enter the first free action-bar slot automatically. Skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -4946,7 +4946,7 @@ export const ko_KR: EnTranslations = {
         "title": "Frequently Asked Questions",
         "lead": "Short answers based on the current Aeldrune implementation.",
         "q1": "How many classes are available?",
-        "a1": "Five: Guerreiro, Elementalista, Taoista, Besteiro and Lanceiro.",
+        "a1": "Five: Guerreiro, Feiticeiro, Taoista, Besteiro and Lanceiro.",
         "q2": "How large is the campaign?",
         "a2": "Twenty regions cover levels 1 through 200, with 230 authored quests in the current catalog.",
         "q3": "Can the game play every mission automatically?",
@@ -8920,13 +8920,29 @@ export const ko_KR: EnTranslations = {
     },
     "mir4": {
       "labels": {
+        "role": "Role",
         "damage": "피해",
         "combatRange": "전투 거리",
         "startingSkills": "시작 기술"
       },
       "damage": {
         "physical": "물리",
-        "magic": "마법"
+        "magic": "마법",
+        "hybrid": "Physical and Magic"
+      },
+      "roles": {
+        "frontline-control": "Frontline Controller",
+        "magic-artillery": "Magic Artillery",
+        "support-controller": "Support Controller",
+        "ranged-marksman": "Ranged Marksman",
+        "mobile-controller": "Mobile Controller"
+      },
+      "identity": {
+        "warrior": "A durable melee fighter who absorbs pressure, breaks enemy defenses and chains knockdowns before finishing with Dragon Flame.",
+        "elementalist": "A long-range spellcaster who controls groups with frost, fire and wide-area magic while relying on Magic Shield for survival.",
+        "taoist": "A hybrid support fighter who controls space with seals, weakens enemy defenses and restores nearby party members with Heal.",
+        "arbalist": "A long-range physical specialist who keeps distance, pressures groups with shells and arrows, and disables priority targets.",
+        "lancer": "A mobile spear fighter who closes gaps, combines Physical and Magic damage, and chains stun, knockdown and defense breaks."
       },
       "range": {
         "melee": "근접",
@@ -10151,13 +10167,33 @@ export const ko_KR: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1101": {
+        "name": "Rampant",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+      },
       "mir4_skill_1102": {
         "name": "공허의 일격",
         "description": "적 하나에게 {damage}의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
       },
+      "mir4_skill_1103": {
+        "name": "Barbaric Charge",
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+      },
       "mir4_skill_1104": {
         "name": "열상 일격",
         "description": "적 하나에게 {damage}의 피해를 주고 대상을 1.2초 동안 넘어뜨립니다."
+      },
+      "mir4_skill_1201": {
+        "name": "Iron Shackle",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+      },
+      "mir4_skill_1301": {
+        "name": "Riposte",
+        "description": "Deals {damage} damage to an enemy. Increases your Physical and Magic Defense by 24% for 3 sec. At rank 8, restores 10% of your maximum health; at rank 10, restores 20%."
+      },
+      "mir4_skill_1302": {
+        "name": "Lion's Roar",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "몸통 박치기",
@@ -10171,6 +10207,14 @@ export const ko_KR: EnTranslations = {
         "name": "질풍 일격",
         "description": "적 하나에게 영향을 주고 대상을 3.2초 동안 35% 느려지게 합니다."
       },
+      "mir4_skill_1502": {
+        "name": "Unbreakable Stance",
+        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+      },
+      "mir4_skill_1601": {
+        "name": "Crescent Strike",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+      },
       "mir4_skill_2101": {
         "name": "프리즘 광선",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.4초 동안 빙결시킵니다."
@@ -10179,57 +10223,145 @@ export const ko_KR: EnTranslations = {
         "name": "잿불 창",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 대상을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
       },
-      "mir4_skill_2301": {
-        "name": "징벌의 인장",
-        "description": "적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다."
-      },
       "mir4_skill_2501": {
         "name": "현현된 핵",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 8미터 안의 다른 적 최대 4명에게 60%의 피해를 주고 대상을 1.8초 동안 빙결시킵니다."
+      },
+      "mir4_skill_2301": {
+        "name": "징벌의 인장",
+        "description": "적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다."
       },
       "mir4_skill_2503": {
         "name": "마법 방패",
         "description": "10초 동안 받는 피해가 22% 감소합니다."
       },
-      "mir4_skill_3101": {
-        "name": "인장 연계",
-        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 적중한 모든 적의 물리 및 마법 방어력을 4초 동안 10% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
+      "mir4_skill_2203": {
+        "name": "Blizzard",
+        "description": "Deals {damage} damage over 7 impacts. Up to 7 other enemies within 9 yards take full damage. Freezes each enemy hit for 1.8 sec."
       },
-      "mir4_skill_3104": {
-        "name": "토템 1010",
-        "description": "적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다."
+      "mir4_skill_2303": {
+        "name": "Chain Lightning",
+        "description": "Deals {damage} damage to an enemy and chains at full damage to up to 6 other enemies within 12 yards."
       },
-      "mir4_skill_3301": {
-        "name": "토템 인장 II",
-        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다."
+      "mir4_skill_2201": {
+        "name": "Flame Strike",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies. Pushes each enemy hit 5.5 yards away and dazes them for 0.9 sec."
       },
-      "mir4_skill_3503": {
-        "name": "비취 연꽃",
-        "description": "최대 생명력의 18%를 회복합니다."
+      "mir4_skill_2502": {
+        "name": "Soul Devour",
+        "description": "Deals {damage} damage over 5 impacts. Up to 5 other enemies within 7 yards take full damage."
+      },
+      "mir4_skill_2103": {
+        "name": "Immolate",
+        "description": "Deals {damage} damage over 10 impacts. Up to 4 other enemies within 10 yards take 75% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (6 ticks, {burnTotal} total before mitigation)."
+      },
+      "mir4_skill_2204": {
+        "name": "Phoenix Embrace",
+        "description": "Increases your damage by 25% for 60 sec."
+      },
+      "mir4_skill_2202": {
+        "name": "Frozen Block",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies and freezes them for 2 sec. Reduces damage taken by 100% for 4 sec."
       },
       "mir4_skill_3506": {
         "name": "토템 인장 I",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 1.6초 동안 이동 불가 상태로 만듭니다."
       },
+      "mir4_skill_3101": {
+        "name": "인장 연계",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 적중한 모든 적의 물리 및 마법 방어력을 4초 동안 10% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
+      },
+      "mir4_skill_3301": {
+        "name": "토템 인장 II",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다."
+      },
+      "mir4_skill_3104": {
+        "name": "토템 1010",
+        "description": "적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다."
+      },
+      "mir4_skill_3503": {
+        "name": "비취 연꽃",
+        "description": "최대 생명력의 18%를 회복합니다."
+      },
+      "mir4_skill_3103": {
+        "name": "Piercing Blades",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. From rank 5, Stuns monsters for 2 sec and has a 20% base chance to Stun players."
+      },
+      "mir4_skill_3501": {
+        "name": "Guardian Circle",
+        "description": "Deals {damage} damage to nearby enemies and increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3201": {
+        "name": "Tai Chi",
+        "description": "Deals {damage} hybrid damage to nearby enemies, pulls them toward you and Knocks them Down for 1.5 sec. Base Knockdown chance is 100% against monsters and 10% against players."
+      },
+      "mir4_skill_3505": {
+        "name": "Blasting Charm",
+        "description": "Deals {damage} damage to an enemy, reduces its damage by 35% for 8 sec and reduces its Physical and Magic Defense by 12% for 15 sec."
+      },
+      "mir4_skill_3203": {
+        "name": "Soaring Slash",
+        "description": "Deals {damage} hybrid damage over 6 impacts. Up to 3 other enemies within 7 yards take 70% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
+      },
+      "mir4_skill_3404": {
+        "name": "Expulsion Circle",
+        "description": "Increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3504": {
+        "name": "Greater Heal",
+        "description": "Restores 45% of maximum health to you and up to 4 party members within 20 yards."
+      },
       "mir4_skill_4101": {
         "name": "폭발 4101",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 3.5초 동안 대상이 주는 피해를 45% 감소시킵니다."
+      },
+      "mir4_skill_4106": {
+        "name": "돌진 4106",
+        "description": "적 하나에게 {damage}의 피해를 주고 대상을 2초 동안 기절시킵니다."
       },
       "mir4_skill_4102": {
         "name": "연계 4102",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 6.625미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 3.5초 동안 30% 느려지게 합니다."
       },
       "mir4_skill_4103": {
-        "name": "Twin Echo",
+        "name": "Burst Shell",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 7.5미터 안의 다른 적 최대 4명에게 55%의 피해를 주고 5초 동안 대상이 주는 피해를 60% 감소시킵니다."
-      },
-      "mir4_skill_4106": {
-        "name": "돌진 4106",
-        "description": "적 하나에게 {damage}의 피해를 주고 대상을 2초 동안 기절시킵니다."
       },
       "mir4_skill_4107": {
         "name": "섬광 화살",
         "description": "적 하나에게 영향을 주고 3.2초 동안 대상이 주는 피해를 45% 감소시킵니다."
+      },
+      "mir4_skill_4108": {
+        "name": "Heavenly Bow",
+        "description": "Deals {damage} damage in an arrow rain. Up to 7 other enemies within 9 yards take 85% damage."
+      },
+      "mir4_skill_4111": {
+        "name": "Mind's Eye",
+        "description": "Increases your damage by 15% for 30 sec."
+      },
+      "mir4_skill_4105": {
+        "name": "Ice Cage",
+        "description": "Deals {damage} damage and slows enemies by 50% for 10 sec."
+      },
+      "mir4_skill_4109": {
+        "name": "Obliterate Shell",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_4104": {
+        "name": "Venom Mist Shell",
+        "description": "Deals {damage} damage in a poisonous area and reduces enemy damage by 40% for 5 sec."
+      },
+      "mir4_skill_4110": {
+        "name": "Seeking Bolt",
+        "description": "Deals {damage} damage to a single enemy from extreme range."
+      },
+      "mir4_skill_4112": {
+        "name": "Cloaking",
+        "description": "Grants 150 Dodge and increases your damage by 20% for 2 sec."
+      },
+      "mir4_skill_5201": {
+        "name": "타격 5201",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.1초 동안 기절시킵니다."
       },
       "mir4_skill_5101": {
         "name": "찌르기 5101",
@@ -10239,10 +10371,6 @@ export const ko_KR: EnTranslations = {
         "name": "휩쓸기 5104",
         "description": "적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상의 물리 및 마법 방어력을 14% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
       },
-      "mir4_skill_5201": {
-        "name": "타격 5201",
-        "description": "적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.1초 동안 기절시킵니다."
-      },
       "mir4_skill_5301": {
         "name": "사슬 5301",
         "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
@@ -10250,6 +10378,34 @@ export const ko_KR: EnTranslations = {
       "mir4_skill_5401": {
         "name": "격노의 폭풍",
         "description": "적 하나에게 영향을 주고 대상을 1초 동안 넘어뜨립니다."
+      },
+      "mir4_skill_5102": {
+        "name": "Dragon Tail",
+        "description": "Deals {damage} damage to enemies swept by the spear."
+      },
+      "mir4_skill_5103": {
+        "name": "Ascending Dragon",
+        "description": "Deals {damage} hybrid damage and slows enemies by 30% for 5 sec."
+      },
+      "mir4_skill_5303": {
+        "name": "Crushing Blow",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5403": {
+        "name": "Wind Wall",
+        "description": "Deals {damage} hybrid damage and increases your Physical and Magic Defense by 20% for 5 sec."
+      },
+      "mir4_skill_5205": {
+        "name": "Piercing Spear",
+        "description": "Deals {damage} hybrid damage from long range and Knocks Down monsters for 1.6 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5304": {
+        "name": "Absorption",
+        "description": "Deals {damage} damage and restores 15% of your maximum health."
+      },
+      "mir4_skill_5202": {
+        "name": "Blitz Strike",
+        "description": "Charges a distant enemy, deals {damage} damage and Knocks it Down."
       },
       "mir4_ultimate_1": {
         "name": "궁극기",

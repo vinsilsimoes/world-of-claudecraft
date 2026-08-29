@@ -193,7 +193,7 @@ describe('MIR4 focused target combat', () => {
     sim.tick();
 
     expect(sim.player.cooldowns.has('mir4_basic')).toBe(true);
-    expect(['1102', '1104', '1304', '1401'].some((id) => sim.player.cooldowns.has(id))).toBe(false);
+    expect(sim.player.cooldowns.has('1102')).toBe(false);
     expect(sim.player.targetId).toBe(selected.id);
   });
 
@@ -239,9 +239,7 @@ describe('MIR4 focused target combat', () => {
     sim.tick();
 
     expect(sim.player.cooldowns.has('1102')).toBe(false);
-    expect([1104, 1304, 1401].some((skillId) => sim.player.cooldowns.has(String(skillId)))).toBe(
-      true,
-    );
+    expect(sim.player.cooldowns.has('1302')).toBe(true);
   });
 
   it('keeps a disabled automatic skill available for a manual cast', () => {

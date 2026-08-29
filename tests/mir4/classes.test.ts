@@ -20,22 +20,36 @@ describe('the mir4 class roster', () => {
     expect(MIR4_CLASS_IDS).toEqual([1, 2, 3, 4, 5]);
     expect(MIR4_CLASSES.map((c) => [c.classId, c.key, c.name, c.weapon])).toEqual([
       [1, 'warrior', 'Guerreiro', 'heavySword'],
-      [2, 'elementalist', 'Elementalista', 'largeStaff'],
+      [2, 'elementalist', 'Feiticeiro', 'largeStaff'],
       [3, 'taoist', 'Taoista', 'shortStaff'],
       [4, 'arbalist', 'Besteiro', 'arbalest'],
       [5, 'lancer', 'Lanceiro', 'spear'],
     ]);
   });
-  it('only the elementalist is a magic class; range bands are 2/4/2/6/3 tiles', () => {
+  it('separates physical, magic, and hybrid identities with the Taoist at support range', () => {
     expect(MIR4_CLASSES.map((c) => c.damageChannel)).toEqual([
       'physical',
       'magic',
+      'hybrid',
       'physical',
-      'physical',
-      'physical',
+      'hybrid',
     ]);
-    expect(MIR4_CLASSES.map((c) => c.rangeTiles)).toEqual([2, 4, 2, 6, 3]);
-    expect(MIR4_CLASSES.map(mir4ClassRangeYards)).toEqual([4, 8, 4, 12, 6]);
+    expect(MIR4_CLASSES.map((c) => c.rangeTiles)).toEqual([2, 4, 4, 6, 3]);
+    expect(MIR4_CLASSES.map(mir4ClassRangeYards)).toEqual([4, 8, 8, 12, 6]);
+    expect(MIR4_CLASSES.map((c) => c.combatRole)).toEqual([
+      'frontline-control',
+      'magic-artillery',
+      'support-controller',
+      'ranged-marksman',
+      'mobile-controller',
+    ]);
+    expect(MIR4_CLASSES.map((c) => c.ultimateDisplayName)).toEqual([
+      'Chama do Dragão',
+      'Tornado do Dragão',
+      'Raio de Luz',
+      'Chuva de Flechas',
+      'Lança do Dragão',
+    ]);
   });
   it('every class carries the same creation kit anchors', () => {
     for (const c of MIR4_CLASSES) {

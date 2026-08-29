@@ -2,7 +2,7 @@
 // from rank 1 to rank 15 and consume one crafted Tome of Knowledge per step.
 // Projection and mutation are shared by offline, online and headless hosts.
 
-import { mir4SkillById } from '../content/mir4/skills';
+import { mir4SkillById } from '../content/mir4/skills_runtime';
 import type { SimContext } from '../sim_context';
 import { refreshMir4KnownAbilities } from './action_abilities';
 import { MIR4_EMPTY_MATERIALS, type Mir4Materials } from './equipment';

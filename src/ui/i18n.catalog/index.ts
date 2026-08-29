@@ -815,7 +815,7 @@ export const en = {
   },
   classes: {
     warrior: 'Warrior',
-    elementalist: 'Elementalist',
+    elementalist: 'Sorcerer',
     taoist: 'Taoist',
     arbalist: 'Arbalist',
     lancer: 'Lancer',
@@ -828,7 +828,7 @@ export const en = {
     warlock: 'Warlock',
     druid: 'Druid',
     warriorAria: 'Warrior class',
-    elementalistAria: 'Elementalist class',
+    elementalistAria: 'Sorcerer class',
     taoistAria: 'Taoist class',
     arbalistAria: 'Arbalist class',
     lancerAria: 'Lancer class',

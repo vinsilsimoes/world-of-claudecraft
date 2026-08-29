@@ -118,7 +118,7 @@ describe('characterSheet: shared fields', () => {
     const sheet = characterSheet(input({ row }));
     expect(sheet.gameProfile).toBe('mir4-gameplay-port');
     expect(sheet.class).toBe('elementalist');
-    expect(sheet.classLabel).toBe('Elementalist');
+    expect(sheet.classLabel).toBe('Sorcerer');
     expect(sheet.spec).toBeNull();
     expect(sheet.avatarUrl).toBe('https://worldofclaudecraft.com/avatar/warrior/0.png');
     expect(sheet.stats).toBeUndefined();

@@ -64,12 +64,12 @@ describe('MIR4 per-skill automatic use', () => {
   it('rejects an opt-out for a same-class skill that has not been unlocked yet', () => {
     const sim = makeSim();
 
-    expect(sim.setMir4AutoSkillEnabled(1104, false)).toBe(false);
+    expect(sim.setMir4AutoSkillEnabled(1302, false)).toBe(false);
     expect(sim.setMir4AutoSkillEnabled(1501, false)).toBe(false);
     expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toBeUndefined();
     sim.player.level = 10;
-    expect(sim.setMir4AutoSkillEnabled(1104, false)).toBe(true);
-    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([1104]);
+    expect(sim.setMir4AutoSkillEnabled(1302, false)).toBe(true);
+    expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([1302]);
   });
 
   it('rejects foreign-class, duplicate, malformed, and oversized saved ids', () => {
@@ -134,9 +134,7 @@ describe('MIR4 per-skill automatic use', () => {
     sim.tick();
 
     expect(sim.player.cooldowns.has('1102')).toBe(false);
-    expect([1104, 1304, 1401].some((skillId) => sim.player.cooldowns.has(String(skillId)))).toBe(
-      true,
-    );
+    expect(sim.player.cooldowns.has('1302')).toBe(true);
   });
 
   it('uses an enabled area-tagged starter skill against one target when no higher-priority action qualifies', () => {

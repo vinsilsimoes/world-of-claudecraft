@@ -69,7 +69,7 @@ describe('MIR4 Codex system window', () => {
   it('supports filters, unit registration, active-class labels, and a generic close label', () => {
     const test = harness(12, 2);
     test.window.open();
-    expect(test.root.textContent).toContain('Elementalist equipment: Weapon');
+    expect(test.root.textContent).toContain('Sorcerer equipment: Weapon');
     expect(
       test.root.querySelector<HTMLButtonElement>('[data-close]')?.getAttribute('aria-label'),
     ).toBe('Return to Game');

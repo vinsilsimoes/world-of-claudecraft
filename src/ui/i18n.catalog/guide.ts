@@ -156,7 +156,7 @@ export const guideStrings = {
       lead: 'Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.',
       skillUnlocks: 'Skill progression',
       skillUnlocksBody:
-        'A character starts with one skill and unlocks another every ten levels. Newly unlocked skills enter the first free action-bar slot automatically. Skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.',
+        'Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.',
       weapon: 'Weapon',
       damage: 'Damage',
       range: 'Range',
@@ -292,7 +292,7 @@ export const guideStrings = {
       title: 'Frequently Asked Questions',
       lead: 'Short answers based on the current Aeldrune implementation.',
       q1: 'How many classes are available?',
-      a1: 'Five: Guerreiro, Elementalista, Taoista, Besteiro and Lanceiro.',
+      a1: 'Five: Guerreiro, Feiticeiro, Taoista, Besteiro and Lanceiro.',
       q2: 'How large is the campaign?',
       a2: 'Twenty regions cover levels 1 through 200, with 230 authored quests in the current catalog.',
       q3: 'Can the game play every mission automatically?',

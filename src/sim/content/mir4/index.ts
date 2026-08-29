@@ -25,11 +25,13 @@ export {
   MIR4_CLASS_IDS,
   MIR4_CLASSES,
   MIR4_TILES_TO_YARDS,
+  MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS,
   type Mir4BasicSpec,
   type Mir4ClassCombatSpec,
   type Mir4ClassDef,
   type Mir4ClassId,
   type Mir4ClassKey,
+  type Mir4CombatRole,
   type Mir4DamageChannel,
   type Mir4RangeBand,
   type Mir4UltimateSpec,
@@ -47,15 +49,17 @@ export {
 export {
   MIR4_SKILL_GLOBAL_COOLDOWN_MS,
   MIR4_SKILL_LEVEL_CAPS,
-  MIR4_SKILLS,
   type Mir4SkillDamage,
   type Mir4SkillDamageComponent,
+  type Mir4SkillProvenance,
+} from './skills';
+export {
+  MIR4_SKILLS,
   type Mir4SkillDef,
   type Mir4SkillEffect,
-  type Mir4SkillProvenance,
   mir4SkillById,
   mir4SkillsForClass,
-} from './skills';
+} from './skills_runtime';
 export {
   MIR4_STATUS_REGISTRY,
   type Mir4StatusCategory,

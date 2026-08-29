@@ -1514,6 +1514,9 @@ export type Mir4EffectKind =
   | 'silence'
   | 'blind'
   | 'defense-break'
+  | 'damage-boost'
+  | 'defense-boost'
+  | 'dodge-boost'
   | 'burn';
 
 export interface Mir4ActiveEffect {

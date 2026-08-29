@@ -8,7 +8,9 @@ import {
 
 describe('MIR4 authored skill progression', () => {
   it('starts with one skill and unlocks the remaining class kit every ten levels', () => {
-    expect([1, 2, 3, 4, 5].map(mir4SkillUnlockLevel)).toEqual([1, 10, 20, 30, 40]);
+    expect(Array.from({ length: 12 }, (_, index) => mir4SkillUnlockLevel(index + 1))).toEqual([
+      1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110,
+    ]);
     expect(MIR4_ULTIMATE_UNLOCK_LEVEL).toBe(50);
   });
 

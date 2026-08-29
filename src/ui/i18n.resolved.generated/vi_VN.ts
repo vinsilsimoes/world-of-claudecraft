@@ -4835,7 +4835,7 @@ export const vi_VN: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "A character starts with one skill and unlocks another every ten levels. Newly unlocked skills enter the first free action-bar slot automatically. Skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -4946,7 +4946,7 @@ export const vi_VN: EnTranslations = {
         "title": "Frequently Asked Questions",
         "lead": "Short answers based on the current Aeldrune implementation.",
         "q1": "How many classes are available?",
-        "a1": "Five: Guerreiro, Elementalista, Taoista, Besteiro and Lanceiro.",
+        "a1": "Five: Guerreiro, Feiticeiro, Taoista, Besteiro and Lanceiro.",
         "q2": "How large is the campaign?",
         "a2": "Twenty regions cover levels 1 through 200, with 230 authored quests in the current catalog.",
         "q3": "Can the game play every mission automatically?",
@@ -7977,7 +7977,7 @@ export const vi_VN: EnTranslations = {
   },
   "classes": {
     "warrior": "Chiến Binh",
-    "elementalist": "Elementalist",
+    "elementalist": "Sorcerer",
     "taoist": "Taoist",
     "arbalist": "Arbalist",
     "lancer": "Lancer",
@@ -7990,7 +7990,7 @@ export const vi_VN: EnTranslations = {
     "warlock": "Thuật Sĩ Hắc Ám",
     "druid": "Druid",
     "warriorAria": "Lớp nhân vật Chiến Binh",
-    "elementalistAria": "Elementalist class",
+    "elementalistAria": "Sorcerer class",
     "taoistAria": "Taoist class",
     "arbalistAria": "Arbalist class",
     "lancerAria": "Lancer class",
@@ -8920,13 +8920,29 @@ export const vi_VN: EnTranslations = {
     },
     "mir4": {
       "labels": {
+        "role": "Role",
         "damage": "Damage",
         "combatRange": "Combat Range",
         "startingSkills": "Starting Skills"
       },
       "damage": {
         "physical": "Physical",
-        "magic": "Magic"
+        "magic": "Magic",
+        "hybrid": "Physical and Magic"
+      },
+      "roles": {
+        "frontline-control": "Frontline Controller",
+        "magic-artillery": "Magic Artillery",
+        "support-controller": "Support Controller",
+        "ranged-marksman": "Ranged Marksman",
+        "mobile-controller": "Mobile Controller"
+      },
+      "identity": {
+        "warrior": "A durable melee fighter who absorbs pressure, breaks enemy defenses and chains knockdowns before finishing with Dragon Flame.",
+        "elementalist": "A long-range spellcaster who controls groups with frost, fire and wide-area magic while relying on Magic Shield for survival.",
+        "taoist": "A hybrid support fighter who controls space with seals, weakens enemy defenses and restores nearby party members with Heal.",
+        "arbalist": "A long-range physical specialist who keeps distance, pressures groups with shells and arrows, and disables priority targets.",
+        "lancer": "A mobile spear fighter who closes gaps, combines Physical and Magic damage, and chains stun, knockdown and defense breaks."
       },
       "range": {
         "melee": "Melee",
@@ -10151,16 +10167,36 @@ export const vi_VN: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1101": {
+        "name": "Rampant",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+      },
       "mir4_skill_1102": {
-        "name": "Void Strike",
+        "name": "Void Slash",
         "description": "Deals {damage} damage to an enemy. Stuns the target for 0.9 sec."
       },
+      "mir4_skill_1103": {
+        "name": "Barbaric Charge",
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+      },
       "mir4_skill_1104": {
-        "name": "Lacerating Strike",
+        "name": "Splitting Slash",
         "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
       },
+      "mir4_skill_1201": {
+        "name": "Iron Shackle",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+      },
+      "mir4_skill_1301": {
+        "name": "Riposte",
+        "description": "Deals {damage} damage to an enemy. Increases your Physical and Magic Defense by 24% for 3 sec. At rank 8, restores 10% of your maximum health; at rank 10, restores 20%."
+      },
+      "mir4_skill_1302": {
+        "name": "Lion's Roar",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+      },
       "mir4_skill_1304": {
-        "name": "Tackle",
+        "name": "Body Check",
         "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
       },
       "mir4_skill_1401": {
@@ -10168,107 +10204,227 @@ export const vi_VN: EnTranslations = {
         "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 70% damage. Knocks the target down for 0.8 sec."
       },
       "mir4_skill_1501": {
-        "name": "Gale Strike",
+        "name": "Gale Slash",
         "description": "Affects an enemy. Slows the target by 35% for 3.2 sec."
       },
+      "mir4_skill_1502": {
+        "name": "Unbreakable Stance",
+        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+      },
+      "mir4_skill_1601": {
+        "name": "Crescent Strike",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+      },
       "mir4_skill_2101": {
-        "name": "Prismatic Beam",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Freezes the target for 1.4 sec."
+        "name": "Flame Orb",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
       },
       "mir4_skill_2111": {
-        "name": "Ember Spear",
-        "description": "Deals {damage} damage to an enemy. Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
-      },
-      "mir4_skill_2301": {
-        "name": "Smite Seal",
-        "description": "Deals {damage} damage to an enemy. Reduces the target's damage by 50% for 4 sec."
+        "name": "Frost Orb",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Slows each enemy hit by 35% for 3.2 sec."
       },
       "mir4_skill_2501": {
-        "name": "Evoked Core",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 8 yards take 60% damage. Freezes the target for 1.8 sec."
+        "name": "Dark Vortex",
+        "description": "Deals {damage} damage to an enemy. Pulls up to 4 other enemies within 8 yards toward you and roots each enemy hit for 2.2 sec."
+      },
+      "mir4_skill_2301": {
+        "name": "Thunderstorm",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 65% damage. Dazes each enemy hit for 1.2 sec."
       },
       "mir4_skill_2503": {
         "name": "Magic Shield",
         "description": "Reduces damage taken by 22% for 10 sec."
       },
-      "mir4_skill_3101": {
-        "name": "Seal Sequence",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
+      "mir4_skill_2203": {
+        "name": "Blizzard",
+        "description": "Deals {damage} damage over 7 impacts. Up to 7 other enemies within 9 yards take full damage. Freezes each enemy hit for 1.8 sec."
       },
-      "mir4_skill_3104": {
-        "name": "Totem 1010",
-        "description": "Affects an enemy. Stuns the target for 1.4 sec."
+      "mir4_skill_2303": {
+        "name": "Chain Lightning",
+        "description": "Deals {damage} damage to an enemy and chains at full damage to up to 6 other enemies within 12 yards."
       },
-      "mir4_skill_3301": {
-        "name": "Totem Seal II",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 60% damage. Slows the target by 35% for 4.2 sec."
+      "mir4_skill_2201": {
+        "name": "Flame Strike",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies. Pushes each enemy hit 5.5 yards away and dazes them for 0.9 sec."
       },
-      "mir4_skill_3503": {
-        "name": "Jade Lotus",
-        "description": "Restores 18% of maximum health."
+      "mir4_skill_2502": {
+        "name": "Soul Devour",
+        "description": "Deals {damage} damage over 5 impacts. Up to 5 other enemies within 7 yards take full damage."
+      },
+      "mir4_skill_2103": {
+        "name": "Immolate",
+        "description": "Deals {damage} damage over 10 impacts. Up to 4 other enemies within 10 yards take 75% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (6 ticks, {burnTotal} total before mitigation)."
+      },
+      "mir4_skill_2204": {
+        "name": "Phoenix Embrace",
+        "description": "Increases your damage by 25% for 60 sec."
+      },
+      "mir4_skill_2202": {
+        "name": "Frozen Block",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies and freezes them for 2 sec. Reduces damage taken by 100% for 4 sec."
       },
       "mir4_skill_3506": {
-        "name": "Totem Seal I",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 60% damage. Roots the target for 1.6 sec."
+        "name": "Moonlight Wave",
+        "description": "Deals {damage} damage over 5 impacts. Up to 3 other enemies within 7 yards take 60% damage. Slows each enemy hit by 25% for 8 sec."
+      },
+      "mir4_skill_3101": {
+        "name": "Sunbeam Sword",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
+      },
+      "mir4_skill_3301": {
+        "name": "Moonlight Orb",
+        "description": "Deals {damage} damage over 9 impacts. Up to 3 other enemies within 7.25 yards take 60% damage. Roots each enemy hit for 1.6 sec."
+      },
+      "mir4_skill_3104": {
+        "name": "Rain of Blades",
+        "description": "Deals {damage} hybrid damage over 4 impacts. Up to 4 other enemies within 7.75 yards take 60% damage. At rank 8, each enemy hit has a 40% chance to be Silenced for 4 sec."
+      },
+      "mir4_skill_3503": {
+        "name": "Heal",
+        "description": "Restores 18% of maximum health to you and up to 4 party members within 20 yards."
+      },
+      "mir4_skill_3103": {
+        "name": "Piercing Blades",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. From rank 5, Stuns monsters for 2 sec and has a 20% base chance to Stun players."
+      },
+      "mir4_skill_3501": {
+        "name": "Guardian Circle",
+        "description": "Deals {damage} damage to nearby enemies and increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3201": {
+        "name": "Tai Chi",
+        "description": "Deals {damage} hybrid damage to nearby enemies, pulls them toward you and Knocks them Down for 1.5 sec. Base Knockdown chance is 100% against monsters and 10% against players."
+      },
+      "mir4_skill_3505": {
+        "name": "Blasting Charm",
+        "description": "Deals {damage} damage to an enemy, reduces its damage by 35% for 8 sec and reduces its Physical and Magic Defense by 12% for 15 sec."
+      },
+      "mir4_skill_3203": {
+        "name": "Soaring Slash",
+        "description": "Deals {damage} hybrid damage over 6 impacts. Up to 3 other enemies within 7 yards take 70% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
+      },
+      "mir4_skill_3404": {
+        "name": "Expulsion Circle",
+        "description": "Increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3504": {
+        "name": "Greater Heal",
+        "description": "Restores 45% of maximum health to you and up to 4 party members within 20 yards."
       },
       "mir4_skill_4101": {
-        "name": "Burst 4101",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Reduces the target's damage by 45% for 3.5 sec."
-      },
-      "mir4_skill_4102": {
-        "name": "Sequence 4102",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.625 yards take 65% damage. Slows the target by 30% for 3.5 sec."
-      },
-      "mir4_skill_4103": {
-        "name": "Twin Echo",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 55% damage. Reduces the target's damage by 60% for 5 sec."
+        "name": "Quick Shot",
+        "description": "Deals {damage} damage over 6 rapid impacts. Up to 3 other enemies within 7 yards take 65% damage."
       },
       "mir4_skill_4106": {
-        "name": "Charge 4106",
-        "description": "Deals {damage} damage to an enemy. Stuns the target for 2 sec."
+        "name": "Painstrike Gale",
+        "description": "Deals {damage} damage to an enemy. Stuns monsters for 2 sec and has a 10% base chance to Stun players."
+      },
+      "mir4_skill_4102": {
+        "name": "Illusion Arrow",
+        "description": "Deals {damage} damage over 5 impacts. Up to 3 other enemies within 6.625 yards take 65% damage and grants 60 Dodge for 4 sec."
+      },
+      "mir4_skill_4103": {
+        "name": "Burst Shell",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 65% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
       },
       "mir4_skill_4107": {
-        "name": "Flare Arrow",
-        "description": "Affects an enemy. Reduces the target's damage by 45% for 3.2 sec."
+        "name": "Flash Arrow",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.75 yards take 60% damage and have their damage reduced by 45% for 5 sec."
       },
-      "mir4_skill_5101": {
-        "name": "Thrust 5101",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1 sec."
+      "mir4_skill_4108": {
+        "name": "Heavenly Bow",
+        "description": "Deals {damage} damage in an arrow rain. Up to 7 other enemies within 9 yards take 85% damage."
       },
-      "mir4_skill_5104": {
-        "name": "Sweep 5104",
-        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
+      "mir4_skill_4111": {
+        "name": "Mind's Eye",
+        "description": "Increases your damage by 15% for 30 sec."
+      },
+      "mir4_skill_4105": {
+        "name": "Ice Cage",
+        "description": "Deals {damage} damage and slows enemies by 50% for 10 sec."
+      },
+      "mir4_skill_4109": {
+        "name": "Obliterate Shell",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_4104": {
+        "name": "Venom Mist Shell",
+        "description": "Deals {damage} damage in a poisonous area and reduces enemy damage by 40% for 5 sec."
+      },
+      "mir4_skill_4110": {
+        "name": "Seeking Bolt",
+        "description": "Deals {damage} damage to a single enemy from extreme range."
+      },
+      "mir4_skill_4112": {
+        "name": "Cloaking",
+        "description": "Grants 150 Dodge and increases your damage by 20% for 2 sec."
       },
       "mir4_skill_5201": {
-        "name": "Strike 5201",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7 yards take 65% damage. Stuns the target for 1.1 sec."
+        "name": "Ravaging Blow",
+        "description": "Deals {damage} hybrid damage over 6 impacts and slows enemies by 25% for 5 sec."
+      },
+      "mir4_skill_5101": {
+        "name": "Crescent Blade",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5104": {
+        "name": "Nirvana Kick",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1 sec; base chance against players is 10%."
       },
       "mir4_skill_5301": {
-        "name": "Chain 5301",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage. Stuns the target for 0.9 sec."
+        "name": "Double Strike",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage."
       },
       "mir4_skill_5401": {
-        "name": "Raging Storm",
-        "description": "Affects an enemy. Knocks the target down for 1 sec."
+        "name": "Sweeping Storm",
+        "description": "Deals {damage} hybrid damage and reduces enemy damage by 30% for 5 sec."
+      },
+      "mir4_skill_5102": {
+        "name": "Dragon Tail",
+        "description": "Deals {damage} damage to enemies swept by the spear."
+      },
+      "mir4_skill_5103": {
+        "name": "Ascending Dragon",
+        "description": "Deals {damage} hybrid damage and slows enemies by 30% for 5 sec."
+      },
+      "mir4_skill_5303": {
+        "name": "Crushing Blow",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5403": {
+        "name": "Wind Wall",
+        "description": "Deals {damage} hybrid damage and increases your Physical and Magic Defense by 20% for 5 sec."
+      },
+      "mir4_skill_5205": {
+        "name": "Piercing Spear",
+        "description": "Deals {damage} hybrid damage from long range and Knocks Down monsters for 1.6 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5304": {
+        "name": "Absorption",
+        "description": "Deals {damage} damage and restores 15% of your maximum health."
+      },
+      "mir4_skill_5202": {
+        "name": "Blitz Strike",
+        "description": "Charges a distant enemy, deals {damage} damage and Knocks it Down."
       },
       "mir4_ultimate_1": {
-        "name": "Ultimate",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "name": "Dragon Flame",
+        "description": "Deals {damage} damage over 3 impacts. Restores 10% of your maximum health. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_2": {
-        "name": "Ultimate",
+        "name": "Dragon Tornado",
         "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_3": {
-        "name": "Ultimate",
+        "name": "Ray of Light",
         "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_4": {
-        "name": "Ultimate",
+        "name": "Arrow Rain",
         "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_5": {
-        "name": "Ultimate",
+        "name": "Dragon Spear",
         "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
       },
       "mir4_passive_warrior_heavy_armor": {

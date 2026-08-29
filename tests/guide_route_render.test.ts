@@ -48,7 +48,7 @@ describe('Guide route rendering', () => {
     const html =
       pageFor('classes')?.render({ params: [], sub: 'classes', titleKey: 'guide.nav.classes' }) ??
       '';
-    for (const name of ['Guerreiro', 'Elementalista', 'Taoista', 'Besteiro', 'Lanceiro']) {
+    for (const name of ['Guerreiro', 'Feiticeiro', 'Taoista', 'Besteiro', 'Lanceiro']) {
       expect(html).toContain(name);
     }
     for (const retired of ['Paladin', 'Hunter', 'Rogue', 'Priest', 'Shaman', 'Warlock', 'Druid']) {

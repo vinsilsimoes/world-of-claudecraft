@@ -2,6 +2,7 @@
 // readiness, per-skill area counting, and the range of the next admitted
 // action; the coordinator only commits the chosen verb.
 
+import type { Mir4SkillDef } from '../content/mir4';
 import {
   MIR4_CLASS_COMBAT_SPECS,
   mir4ClassById,
@@ -9,9 +10,9 @@ import {
   mir4SkillById,
   mir4SkillsForClass,
 } from '../content/mir4';
-import type { Mir4SkillDef } from '../content/mir4/skills';
 import { mir4HardControlled, mir4Silenced } from '../mir4/effects';
 import { mir4SkillManaCost } from '../mir4/math';
+import { mir4LowestPartyHealthPercent, mir4PartyNeedsHealing } from '../mir4/party_support';
 import { MIR4_ULTIMATE_UNLOCK_LEVEL, mir4SkillUnlockLevel } from '../mir4/skill_progression';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
@@ -29,21 +30,40 @@ export interface Mir4AutoBattleSkillPick {
 }
 
 function isSelfUtility(skill: Mir4SkillDef): boolean {
-  return skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
+  const effects = [skill.effect, ...(skill.additionalEffects ?? [])].filter(
+    (effect): effect is NonNullable<Mir4SkillDef['effect']> => effect !== null,
+  );
+  return (
+    skill.damage === null &&
+    effects.length > 0 &&
+    effects.every((effect) => effect.subject === 'actor' || effect.subject === 'party')
+  );
 }
 
 function isActorCenteredOffense(skill: Mir4SkillDef): boolean {
   return !skill.requiresTarget && (skill.effect?.areaRadiusPx ?? 0) > 0 && !isSelfUtility(skill);
 }
 
-function skillReady(p: Entity, skill: Mir4SkillDef): boolean {
+function partyPulseSpec(skill: Mir4SkillDef): { radiusYards: number; maxTargets: number } {
+  return {
+    radiusYards: (skill.effect?.partyRadiusPx ?? 0) / 16,
+    maxTargets: skill.effect?.maxPartyTargets ?? 1,
+  };
+}
+
+function skillReady(ctx: SimContext, p: Entity, skill: Mir4SkillDef): boolean {
   if (p.cooldowns.has(String(skill.skillId))) return false;
   const cost = mir4SkillManaCost(p.mir4?.manaCostStat ?? 0, skill.skillCost, skill.skillCostType);
   if (p.resource < cost) return false;
   if (skill.effect?.effect === 'magic-shield' && (p.mir4Shield?.remaining ?? 0) > 0) {
     return false;
   }
-  if (skill.effect?.effect === 'heal-pulse' && p.hp >= p.maxHp) return false;
+  if (
+    skill.effect?.effect === 'heal-pulse' &&
+    !mir4PartyNeedsHealing(ctx, p, partyPulseSpec(skill))
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -119,9 +139,15 @@ export function pickMir4AutoBattleSkill(
     'single-target',
   ] as const) {
     for (const skill of order) {
-      if (!skillReady(p, skill)) continue;
+      if (!skillReady(ctx, p, skill)) continue;
       const roles = skill.roles;
-      if (phase === 'survival-utility' && !(wants(roles, phase) && hpPercent <= 45)) continue;
+      const supportHpPercent =
+        skill.effect?.effect === 'heal-pulse'
+          ? mir4LowestPartyHealthPercent(ctx, p, partyPulseSpec(skill))
+          : hpPercent;
+      if (phase === 'survival-utility' && !(wants(roles, phase) && supportHpPercent <= 45)) {
+        continue;
+      }
       if (
         phase === 'aoe' &&
         !(
@@ -151,7 +177,7 @@ export function pickMir4AutoBattleSkill(
   // skill until level 10. Against a lone target, use any remaining ready
   // offensive skill before falling back to the basic attack.
   for (const skill of order) {
-    if (!skillReady(p, skill) || isSelfUtility(skill) || repeatsActiveEffect(target, skill)) {
+    if (!skillReady(ctx, p, skill) || isSelfUtility(skill) || repeatsActiveEffect(target, skill)) {
       continue;
     }
     if (isActorCenteredOffense(skill) && hostileCountInSkillArea(ctx, p, target, skill, area) < 1) {
@@ -191,7 +217,10 @@ export function mir4AutoBattleActionRange(
     const radius = (skill?.effect?.areaRadiusPx ?? 0) / 16;
     if (radius > 0) return radius;
   }
-  if (pick && !pick.selfUtility && p.gcdRemaining <= 0) return classRange;
+  if (pick && !pick.selfUtility && p.gcdRemaining <= 0) {
+    const skill = mir4SkillById(pick.skillId);
+    return (skill?.castRangePx ?? classRange * 16) / 16;
+  }
   return Math.min(classRange, spec.basic.rangePx / 16);
 }
 
@@ -203,11 +232,10 @@ function orderKit<T extends { skillId: number }>(
 ): T[] {
   if (classId !== 1) return [...kit];
   const rank = targetControlled
-    ? { 1104: 0, 1401: 1, 1102: 2, 1304: 3 }
-    : { 1102: 0, 1304: 1, 1104: 2, 1401: 3 };
+    ? { 1104: 0, 1401: 1, 1102: 2, 1301: 3, 1304: 4 }
+    : { 1102: 0, 1301: 1, 1302: 2, 1101: 3, 1103: 4, 1304: 5, 1104: 6, 1401: 7 };
   return [...kit].sort(
     (a, b) =>
-      (rank[a.skillId as 1102 | 1104 | 1304 | 1401] ?? 9) -
-      (rank[b.skillId as 1102 | 1104 | 1304 | 1401] ?? 9),
+      (rank[a.skillId as keyof typeof rank] ?? 99) - (rank[b.skillId as keyof typeof rank] ?? 99),
   );
 }

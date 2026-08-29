@@ -9,7 +9,7 @@ import { MIR4_CODEX_COLLECTIONS, MIR4_CODEX_UNLOCK_LEVEL } from '../sim/content/
 import { MIR4_EQUIPMENT_CATALOG } from '../sim/content/mir4/equipment_catalog';
 import { MIR4_ITEM_PROGRESSION_RANKS } from '../sim/content/mir4/item_progression';
 import { MIR4_MOUNTS_CATALOG } from '../sim/content/mir4/mounts_catalog';
-import { MIR4_SKILLS } from '../sim/content/mir4/skills';
+import { MIR4_SKILLS } from '../sim/content/mir4/skills_runtime';
 import { MIR4_SPIRITS_CATALOG } from '../sim/content/mir4/spirits_catalog';
 import { MIR4_WORLD_ARC } from '../sim/content/mir4/world_arc';
 import { DUNGEONS } from '../sim/data';

@@ -107,6 +107,8 @@ function esc(text: string): string {
 export function renderMir4ClassDetails(panel: HTMLElement, className: Mir4ClassKey): void {
   const view = mir4ClassDetailsView(className);
   const classLabel = t(view.labelKey);
+  const roleLabel = t(view.roleKey);
+  const identity = t(view.identityKey);
   const damageLabel = t(view.damageKey);
   const rangeLabel = t(view.rangeKey);
   const weaponLabel = t(view.weaponKey);
@@ -120,17 +122,19 @@ export function renderMir4ClassDetails(panel: HTMLElement, className: Mir4ClassK
       <div class="class-details-header">
         <div class="class-details-header-text">
           <h3 class="class-details-name">${esc(classLabel)}</h3>
-          <span class="class-details-role role-dps">${esc(damageLabel)}</span>
+          <span class="class-details-role role-dps">${esc(roleLabel)}</span>
         </div>
       </div>
       <div class="class-details-grid">
         <div class="class-details-gear-col">
           <h4 class="details-section-title">${esc(t('classDetails.sections.equipment'))}</h4>
+          <div class="details-gear-row"><strong>${esc(t('classDetails.mir4.labels.role'))}:</strong> <span class="badge">${esc(roleLabel)}</span></div>
           <div class="details-gear-row"><strong>${esc(t('classDetails.labels.weapons'))}:</strong> <span class="badge">${esc(weaponLabel)}</span></div>
           <div class="details-gear-row"><strong>${esc(t('classDetails.mir4.labels.damage'))}:</strong> <span class="badge">${esc(damageLabel)}</span></div>
           <div class="details-gear-row"><strong>${esc(t('classDetails.mir4.labels.combatRange'))}:</strong> <span class="badge">${esc(rangeLabel)}</span></div>
           <div class="details-gear-row"><strong>${esc(t('classDetails.mir4.labels.startingSkills'))}:</strong> <span class="badge">${formatNumber(view.startingSkills)}</span></div>
         </div>
+        <p class="class-details-lore">${esc(identity)}</p>
       </div>
     </div>`;
   panel.setAttribute(

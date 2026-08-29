@@ -13402,19 +13402,36 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mir4.campaign.objective.tutorial': 'Conclua a lição do sistema',
   'hudChrome.mir4.campaign.objective.interact': 'Interaja com o objetivo marcado',
   'hudChrome.mir4.campaign.objective.complete': 'Conclua o objetivo atual',
-  'classes.elementalist': 'Elementalista',
+  'classes.elementalist': 'Feiticeiro',
   'classes.taoist': 'Taoista',
   'classes.arbalist': 'Besteiro',
   'classes.lancer': 'Lanceiro',
-  'classes.elementalistAria': 'Classe Elementalista',
+  'classes.elementalistAria': 'Classe Feiticeiro',
   'classes.taoistAria': 'Classe Taoista',
   'classes.arbalistAria': 'Classe Besteiro',
   'classes.lancerAria': 'Classe Lanceiro',
   'classDetails.mir4.labels.damage': 'Dano',
+  'classDetails.mir4.labels.role': 'Função',
   'classDetails.mir4.labels.combatRange': 'Alcance de combate',
   'classDetails.mir4.labels.startingSkills': 'Habilidades iniciais',
   'classDetails.mir4.damage.physical': 'Físico',
   'classDetails.mir4.damage.magic': 'Mágico',
+  'classDetails.mir4.damage.hybrid': 'Físico e mágico',
+  'classDetails.mir4.roles.frontline-control': 'Controle de linha de frente',
+  'classDetails.mir4.roles.magic-artillery': 'Artilharia mágica',
+  'classDetails.mir4.roles.support-controller': 'Suporte e controle',
+  'classDetails.mir4.roles.ranged-marksman': 'Atirador de longo alcance',
+  'classDetails.mir4.roles.mobile-controller': 'Controle móvel',
+  'classDetails.mir4.identity.warrior':
+    'Combatente corpo a corpo resistente que absorve pressão, quebra defesas e encadeia derrubadas antes de finalizar com Chama do Dragão.',
+  'classDetails.mir4.identity.elementalist':
+    'Conjurador de longo alcance que controla grupos com gelo, fogo e magia em área, usando Escudo Mágico para sobreviver.',
+  'classDetails.mir4.identity.taoist':
+    'Combatente de suporte híbrido que controla o terreno com selos, enfraquece defesas e cura aliados próximos do grupo.',
+  'classDetails.mir4.identity.arbalist':
+    'Especialista físico de longo alcance que mantém distância, pressiona grupos com projéteis e desabilita alvos prioritários.',
+  'classDetails.mir4.identity.lancer':
+    'Combatente móvel de lança que encurta distâncias, combina dano físico e mágico e encadeia atordoamento, derrubada e quebra de defesa.',
   'classDetails.mir4.range.melee': 'Corpo a corpo',
   'classDetails.mir4.range.medium': 'Médio alcance',
   'classDetails.mir4.range.long': 'Longo alcance',
@@ -13426,92 +13443,93 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'classDetails.mir4.weapons.spear': 'Lança',
   'classDetails.mir4.aria':
     'Detalhes da classe {className}: dano {damage}, alcance {range}, arma {weapon}, {skills} habilidades iniciais.',
-  'entities.abilities.mir4_skill_1102.name': 'Golpe de Vácuo',
+  'entities.abilities.mir4_skill_1102.name': 'Corte do Vazio',
   'entities.abilities.mir4_skill_1102.description':
     'Causa {damage} de dano a um inimigo. Atordoa o alvo por 0,9 s.',
-  'entities.abilities.mir4_skill_1104.name': 'Golpe Lacerante',
+  'entities.abilities.mir4_skill_1104.name': 'Corte Divisor',
   'entities.abilities.mir4_skill_1104.description':
     'Causa {damage} de dano a um inimigo. Derruba o alvo por 1,2 s.',
-  'entities.abilities.mir4_skill_1304.name': 'Placagem',
+  'entities.abilities.mir4_skill_1304.name': 'Choque Corporal',
   'entities.abilities.mir4_skill_1304.description':
     'Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 12% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
   'entities.abilities.mir4_skill_1401.name': 'Esmagamento Terrestre',
   'entities.abilities.mir4_skill_1401.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 70% desse dano. Derruba o alvo por 0,8 s.',
-  'entities.abilities.mir4_skill_1501.name': 'Golpe de Vendaval',
+  'entities.abilities.mir4_skill_1501.name': 'Corte Vendaval',
   'entities.abilities.mir4_skill_1501.description':
     'Afeta um inimigo. Reduz a velocidade do alvo em 35% por 3,2 s.',
-  'entities.abilities.mir4_skill_2101.name': 'Raio Prismático',
+  'entities.abilities.mir4_skill_2101.name': 'Orbe Gélido',
   'entities.abilities.mir4_skill_2101.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Congela o alvo por 1,4 s.',
-  'entities.abilities.mir4_skill_2111.name': 'Lança de Brasa',
+  'entities.abilities.mir4_skill_2111.name': 'Orbe Flamejante',
   'entities.abilities.mir4_skill_2111.description':
     'Causa {damage} de dano a um inimigo. Queima o alvo, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
-  'entities.abilities.mir4_skill_2301.name': 'Selo de Smite',
+  'entities.abilities.mir4_skill_2301.name': 'Vórtice Sombrio',
   'entities.abilities.mir4_skill_2301.description':
     'Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s.',
-  'entities.abilities.mir4_skill_2501.name': 'Núcleo Evocado',
+  'entities.abilities.mir4_skill_2501.name': 'Nevasca',
   'entities.abilities.mir4_skill_2501.description':
     'Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 8 jardas recebem 60% desse dano. Congela o alvo por 1,8 s.',
   'entities.abilities.mir4_skill_2503.name': 'Escudo Mágico',
   'entities.abilities.mir4_skill_2503.description': 'Reduz o dano recebido em 22% por 10 s.',
-  'entities.abilities.mir4_skill_3101.name': 'Sequência de Selo',
+  'entities.abilities.mir4_skill_3101.name': 'Onda do Luar',
   'entities.abilities.mir4_skill_3101.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
-  'entities.abilities.mir4_skill_3104.name': 'Totem 1010',
+  'entities.abilities.mir4_skill_3104.name': 'Tai Chi',
   'entities.abilities.mir4_skill_3104.description':
     'Afeta um inimigo. Atordoa o alvo por 1,4 s.',
-  'entities.abilities.mir4_skill_3301.name': 'Selo de Totem II',
+  'entities.abilities.mir4_skill_3301.name': 'Círculo de Expulsão',
   'entities.abilities.mir4_skill_3301.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 60% desse dano. Reduz a velocidade do alvo em 35% por 4,2 s.',
   'entities.abilities.mir4_skill_3503.name': 'Cura',
-  'entities.abilities.mir4_skill_3503.description': 'Restaura 18% da vida máxima.',
-  'entities.abilities.mir4_skill_3506.name': 'Selo de Totem I',
+  'entities.abilities.mir4_skill_3503.description':
+    'Restaura 18% da vida máxima de você e de até 4 membros do grupo em um raio de 20 jardas.',
+  'entities.abilities.mir4_skill_3506.name': 'Círculo Guardião',
   'entities.abilities.mir4_skill_3506.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 60% desse dano. Enraíza o alvo por 1,6 s.',
-  'entities.abilities.mir4_skill_4101.name': 'Rajada 4101',
+  'entities.abilities.mir4_skill_4101.name': 'Projétil Explosivo',
   'entities.abilities.mir4_skill_4101.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Reduz o dano causado pelo alvo em 45% por 3,5 s.',
-  'entities.abilities.mir4_skill_4102.name': 'Sequência 4102',
+  'entities.abilities.mir4_skill_4102.name': 'Arco Celestial',
   'entities.abilities.mir4_skill_4102.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,625 jardas recebem 65% desse dano. Reduz a velocidade do alvo em 30% por 3,5 s.',
-  'entities.abilities.mir4_skill_4103.name': 'Eco Gêmeo',
+  'entities.abilities.mir4_skill_4103.name': 'Projétil Obliterador',
   'entities.abilities.mir4_skill_4103.description':
     'Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,5 jardas recebem 55% desse dano. Reduz o dano causado pelo alvo em 60% por 5 s.',
-  'entities.abilities.mir4_skill_4106.name': 'Investida 4106',
+  'entities.abilities.mir4_skill_4106.name': 'Flecha Ilusória',
   'entities.abilities.mir4_skill_4106.description':
     'Causa {damage} de dano a um inimigo. Atordoa o alvo por 2 s.',
   'entities.abilities.mir4_skill_4107.name': 'Seta do Clarão',
   'entities.abilities.mir4_skill_4107.description':
     'Afeta um inimigo. Reduz o dano causado pelo alvo em 45% por 3,2 s.',
-  'entities.abilities.mir4_skill_5101.name': 'Estocada 5101',
+  'entities.abilities.mir4_skill_5101.name': 'Lâmina Crescente',
   'entities.abilities.mir4_skill_5101.description':
     'Causa {damage} de dano a um inimigo. Derruba o alvo por 1 s.',
-  'entities.abilities.mir4_skill_5104.name': 'Varredura 5104',
+  'entities.abilities.mir4_skill_5104.name': 'Ataque Relâmpago',
   'entities.abilities.mir4_skill_5104.description':
     'Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 14% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
-  'entities.abilities.mir4_skill_5201.name': 'Golpe 5201',
+  'entities.abilities.mir4_skill_5201.name': 'Chute do Nirvana',
   'entities.abilities.mir4_skill_5201.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Atordoa o alvo por 1,1 s.',
-  'entities.abilities.mir4_skill_5301.name': 'Cadeia 5301',
+  'entities.abilities.mir4_skill_5301.name': 'Lança Perfurante',
   'entities.abilities.mir4_skill_5301.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 70% desse dano. Atordoa o alvo por 0,9 s.',
-  'entities.abilities.mir4_skill_5401.name': 'Tempestade Arrebatadora',
+  'entities.abilities.mir4_skill_5401.name': 'Tempestade Devastadora',
   'entities.abilities.mir4_skill_5401.description':
     'Afeta um inimigo. Derruba o alvo por 1 s.',
-  'entities.abilities.mir4_ultimate_1.name': 'Ultimate',
+  'entities.abilities.mir4_ultimate_1.name': 'Chama do Dragão',
   'entities.abilities.mir4_ultimate_1.description':
-    'Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio.',
-  'entities.abilities.mir4_ultimate_2.name': 'Ultimate',
+    'Causa {damage} de dano em 3 impactos. Restaura 10% da sua vida máxima. Requer o medidor de ultimate cheio.',
+  'entities.abilities.mir4_ultimate_2.name': 'Tornado do Dragão',
   'entities.abilities.mir4_ultimate_2.description':
     'Causa {damage} de dano em 4 impactos. Requer o medidor de ultimate cheio.',
-  'entities.abilities.mir4_ultimate_3.name': 'Ultimate',
+  'entities.abilities.mir4_ultimate_3.name': 'Raio de Luz',
   'entities.abilities.mir4_ultimate_3.description':
     'Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio.',
-  'entities.abilities.mir4_ultimate_4.name': 'Ultimate',
+  'entities.abilities.mir4_ultimate_4.name': 'Chuva de Flechas',
   'entities.abilities.mir4_ultimate_4.description':
     'Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio.',
-  'entities.abilities.mir4_ultimate_5.name': 'Ultimate',
+  'entities.abilities.mir4_ultimate_5.name': 'Lança do Dragão',
   'entities.abilities.mir4_ultimate_5.description':
     'Causa {damage} de dano em 2 impactos. Requer o medidor de ultimate cheio.',
   'entities.abilities.mir4_passive_warrior_heavy_armor.name': 'Armadura Pesada',

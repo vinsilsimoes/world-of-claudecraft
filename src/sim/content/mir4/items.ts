@@ -67,7 +67,7 @@ export const MIR4_ITEMS: Readonly<Record<number, Mir4EquipmentItemDef>> = Object
   200202000: starterItem(
     200202000,
     'starter-weapon-elementalist',
-    'Arma Inicial do Elementalista',
+    'Arma Inicial do Feiticeiro',
     2,
     1,
     [
@@ -80,7 +80,7 @@ export const MIR4_ITEMS: Readonly<Record<number, Mir4EquipmentItemDef>> = Object
   301202000: starterItem(
     301202000,
     'starter-armor-elementalist',
-    'Armadura Inicial do Elementalista',
+    'Armadura Inicial do Feiticeiro',
     2,
     5,
     STARTER_ARMOR_ATTRIBUTES,

@@ -77,6 +77,41 @@ describe('potions', () => {
 });
 
 describe('the rotation cascade', () => {
+  it('prioritizes Heal when a nearby party member is critically injured', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(1030, 'taoist');
+    sim.setPlayerLevel(40);
+    teleport(sim, 1.5, -10.5);
+    const taoist = sim.player;
+    const allyId = sim.addPlayer('warrior', 'Injured ally');
+    sim.partyInvite(allyId, sim.playerId);
+    sim.partyAccept(allyId);
+    const ally = sim.entities.get(allyId)!;
+    ally.pos = sim.groundPos(taoist.pos.x + 3, taoist.pos.z);
+    ally.hp = ally.maxHp * 0.4;
+    const target = createMob(
+      sim.nextId++,
+      {
+        ...MIR4_MOBS.mir4_forest_wolf,
+        id: 'party_heal_rotation_target',
+        hpBase: 5_000,
+        hpPerLevel: 0,
+        moveSpeed: 0,
+      } as never,
+      1,
+      sim.groundPos(taoist.pos.x + 2, taoist.pos.z),
+    );
+    sim.addEntity(target);
+
+    expect(
+      pickMir4AutoBattleSkill(sim.ctx, taoist, target, {
+        anchorX: taoist.pos.x,
+        anchorZ: taoist.pos.z,
+        acquireRadiusYards: 30,
+      })?.skillId,
+    ).toBe(3503);
+  });
+
   it('pins every priority phase to a literal winning skill', () => {
     const setup = (
       seed: number,
@@ -86,7 +121,7 @@ describe('the rotation cascade', () => {
     ) => {
       setActiveWorldContent(MIR4_SLICE_WORLD);
       const sim = makeSim(seed, cls);
-      sim.setPlayerLevel(40);
+      sim.setPlayerLevel(cls === 'arbalist' ? 100 : 40);
       teleport(sim, 1.5, -10.5);
       const player = sim.player;
       const target = createMob(
@@ -125,19 +160,25 @@ describe('the rotation cascade', () => {
       })?.skillId;
     };
 
-    expect(setup(1031, 'warrior', (_sim, player) => (player.hp = player.maxHp * 0.4))).toBe(1304);
-    expect(setup(1032, 'warrior', () => undefined, 2)).toBe(1401);
+    expect(setup(1031, 'warrior', (_sim, player) => (player.hp = player.maxHp * 0.4))).toBe(1301);
+    expect(setup(1032, 'warrior', () => undefined, 2)).toBe(1302);
     expect(setup(1033, 'warrior', () => undefined)).toBe(1102);
-    expect(setup(1034, 'lancer', (_sim, _player, target) => (target.hp = target.maxHp * 0.3))).toBe(
-      5104,
-    );
+    expect(
+      setup(1034, 'arbalist', (_sim, player, target) => {
+        target.hp = target.maxHp * 0.3;
+        for (const skillId of [4101, 4106, 4102, 4103, 4107, 4108, 4111, 4105, 4109, 4104]) {
+          player.cooldowns.set(String(skillId), 10);
+        }
+      }),
+    ).toBe(4110);
     expect(
       setup(1035, 'warrior', (_sim, player) => {
         player.cooldowns.set('1102', 10);
-        player.cooldowns.set('1304', 10);
-        player.cooldowns.set('1501', 10);
+        player.cooldowns.set('1301', 10);
+        player.cooldowns.set('1302', 10);
+        player.cooldowns.set('1101', 10);
       }),
-    ).toBe(1104);
+    ).toBe(1103);
   });
 
   it('filters candidates outside the Auto Battle anchor before tracing line of sight', () => {
@@ -280,7 +321,7 @@ describe('the rotation cascade', () => {
     expect(characterStateReads).toBe(0);
   });
 
-  it('warrior setup order: 1102 first, then 1304, 1104, 1401 across GCDs', () => {
+  it('uses the new Warrior setup and payoff order across global cooldowns', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(103);
     sim.setPlayerLevel(40);
@@ -290,7 +331,7 @@ describe('the rotation cascade', () => {
     const tanky = {
       ...MIR4_MOBS.mir4_forest_wolf,
       id: 'test_tank_wolf',
-      hpBase: 5000,
+      hpBase: 50_000,
       hpPerLevel: 0,
     };
     const w = createMob(
@@ -307,10 +348,7 @@ describe('the rotation cascade', () => {
     sim.players.get(sim.playerId)!.autoBattle!.acquireRadiusYards = 6;
     // Collect the cast order from the damage events' ability names (the
     // cooldown map races: early 25s cooldowns expire before sampling).
-    // 1401 (Esmagamento Terrestre) is aoe-only with minTargets 3: against a
-    // single target the server cascade never admits it, exactly like the
-    // source's selectAutoHuntAction.
-    const names = ['Golpe de Vácuo', 'Placagem', 'Golpe Lacerante'];
+    const names = ['Corte do Vazio', 'Rugido de Leão', 'Riposta'];
     const seen: string[] = [];
     for (let t = 0; t < 400 && seen.length < 3; t++) {
       pinWolf(sim, w);
@@ -341,6 +379,8 @@ describe('the rotation cascade', () => {
     sim.setMir4AutoBattleMode('battle');
     sim.tick();
     expect(p.hp).toBe(1500 + 200); // the exact 5% potion fired
-    expect(p.cooldowns.has('mir4_potion_hp')).toBe(true);
+    // One simulation tick is one second, so the one-second potion cooldown has
+    // elapsed by the time the tick returns even though the potion fired.
+    expect(p.cooldowns.has('mir4_potion_hp')).toBe(false);
   });
 });

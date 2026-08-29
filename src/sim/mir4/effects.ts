@@ -315,8 +315,19 @@ export function mir4DefenseMultiplier(target: Entity): number {
   for (const effect of target.mir4Effects?.active ?? []) {
     if (effect.remaining <= CAST_COMPLETE_EPS) continue;
     if (effect.kind === 'defense-break') multiplier *= 1 - effect.magnitude;
+    if (effect.kind === 'defense-boost') multiplier *= 1 + effect.magnitude;
   }
-  return Math.max(0.2, Math.min(1, multiplier));
+  return Math.max(0.2, Math.min(2, multiplier));
+}
+
+/** Temporary dodge granted by class skills, expressed in the live dodge stat. */
+export function mir4DodgeBonus(target: Entity): number {
+  let bonus = 0;
+  for (const effect of target.mir4Effects?.active ?? []) {
+    if (effect.remaining <= CAST_COMPLETE_EPS) continue;
+    if (effect.kind === 'dodge-boost') bonus += effect.magnitude;
+  }
+  return bonus;
 }
 
 /** Hard-controlled (movement/attack frozen) right now. */
@@ -350,8 +361,9 @@ export function mir4AttackMultiplier(target: Entity): number {
   for (const f of target.mir4Effects?.active ?? []) {
     if (f.remaining <= CAST_COMPLETE_EPS) continue;
     if (f.kind === 'blind') mult *= 1 - f.magnitude;
+    if (f.kind === 'damage-boost') mult *= 1 + f.magnitude;
   }
-  return mult;
+  return Math.max(0, mult);
 }
 
 /** Movement multiplier: hard control = 0, else the slow product. */
@@ -519,6 +531,9 @@ export function mir4EffectKindOf(effect: string): Mir4EffectKind | null {
     case 'silence':
     case 'blind':
     case 'defense-break':
+    case 'damage-boost':
+    case 'defense-boost':
+    case 'dodge-boost':
     case 'burn':
       return effect;
     default:

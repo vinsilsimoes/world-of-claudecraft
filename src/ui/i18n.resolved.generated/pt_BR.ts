@@ -4835,7 +4835,7 @@ export const pt_BR: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "A character starts with one skill and unlocks another every ten levels. Newly unlocked skills enter the first free action-bar slot automatically. Skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -4946,7 +4946,7 @@ export const pt_BR: EnTranslations = {
         "title": "Frequently Asked Questions",
         "lead": "Short answers based on the current Aeldrune implementation.",
         "q1": "How many classes are available?",
-        "a1": "Five: Guerreiro, Elementalista, Taoista, Besteiro and Lanceiro.",
+        "a1": "Five: Guerreiro, Feiticeiro, Taoista, Besteiro and Lanceiro.",
         "q2": "How large is the campaign?",
         "a2": "Twenty regions cover levels 1 through 200, with 230 authored quests in the current catalog.",
         "q3": "Can the game play every mission automatically?",
@@ -7977,7 +7977,7 @@ export const pt_BR: EnTranslations = {
   },
   "classes": {
     "warrior": "Guerreiro",
-    "elementalist": "Elementalista",
+    "elementalist": "Feiticeiro",
     "taoist": "Taoista",
     "arbalist": "Besteiro",
     "lancer": "Lanceiro",
@@ -7990,7 +7990,7 @@ export const pt_BR: EnTranslations = {
     "warlock": "Bruxo",
     "druid": "Druida",
     "warriorAria": "Classe Guerreiro",
-    "elementalistAria": "Classe Elementalista",
+    "elementalistAria": "Classe Feiticeiro",
     "taoistAria": "Classe Taoista",
     "arbalistAria": "Classe Besteiro",
     "lancerAria": "Classe Lanceiro",
@@ -8920,13 +8920,29 @@ export const pt_BR: EnTranslations = {
     },
     "mir4": {
       "labels": {
+        "role": "Função",
         "damage": "Dano",
         "combatRange": "Alcance de combate",
         "startingSkills": "Habilidades iniciais"
       },
       "damage": {
         "physical": "Físico",
-        "magic": "Mágico"
+        "magic": "Mágico",
+        "hybrid": "Físico e mágico"
+      },
+      "roles": {
+        "frontline-control": "Controle de linha de frente",
+        "magic-artillery": "Artilharia mágica",
+        "support-controller": "Suporte e controle",
+        "ranged-marksman": "Atirador de longo alcance",
+        "mobile-controller": "Controle móvel"
+      },
+      "identity": {
+        "warrior": "Combatente corpo a corpo resistente que absorve pressão, quebra defesas e encadeia derrubadas antes de finalizar com Chama do Dragão.",
+        "elementalist": "Conjurador de longo alcance que controla grupos com gelo, fogo e magia em área, usando Escudo Mágico para sobreviver.",
+        "taoist": "Combatente de suporte híbrido que controla o terreno com selos, enfraquece defesas e cura aliados próximos do grupo.",
+        "arbalist": "Especialista físico de longo alcance que mantém distância, pressiona grupos com projéteis e desabilita alvos prioritários.",
+        "lancer": "Combatente móvel de lança que encurta distâncias, combina dano físico e mágico e encadeia atordoamento, derrubada e quebra de defesa."
       },
       "range": {
         "melee": "Corpo a corpo",
@@ -10151,16 +10167,36 @@ export const pt_BR: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1101": {
+        "name": "Rampant",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+      },
       "mir4_skill_1102": {
-        "name": "Golpe de Vácuo",
+        "name": "Corte do Vazio",
         "description": "Causa {damage} de dano a um inimigo. Atordoa o alvo por 0,9 s."
       },
+      "mir4_skill_1103": {
+        "name": "Barbaric Charge",
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+      },
       "mir4_skill_1104": {
-        "name": "Golpe Lacerante",
+        "name": "Corte Divisor",
         "description": "Causa {damage} de dano a um inimigo. Derruba o alvo por 1,2 s."
       },
+      "mir4_skill_1201": {
+        "name": "Iron Shackle",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+      },
+      "mir4_skill_1301": {
+        "name": "Riposte",
+        "description": "Deals {damage} damage to an enemy. Increases your Physical and Magic Defense by 24% for 3 sec. At rank 8, restores 10% of your maximum health; at rank 10, restores 20%."
+      },
+      "mir4_skill_1302": {
+        "name": "Lion's Roar",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+      },
       "mir4_skill_1304": {
-        "name": "Placagem",
+        "name": "Choque Corporal",
         "description": "Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 12% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
       "mir4_skill_1401": {
@@ -10168,107 +10204,227 @@ export const pt_BR: EnTranslations = {
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 70% desse dano. Derruba o alvo por 0,8 s."
       },
       "mir4_skill_1501": {
-        "name": "Golpe de Vendaval",
+        "name": "Corte Vendaval",
         "description": "Afeta um inimigo. Reduz a velocidade do alvo em 35% por 3,2 s."
       },
+      "mir4_skill_1502": {
+        "name": "Unbreakable Stance",
+        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+      },
+      "mir4_skill_1601": {
+        "name": "Crescent Strike",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+      },
       "mir4_skill_2101": {
-        "name": "Raio Prismático",
+        "name": "Orbe Gélido",
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Congela o alvo por 1,4 s."
       },
       "mir4_skill_2111": {
-        "name": "Lança de Brasa",
+        "name": "Orbe Flamejante",
         "description": "Causa {damage} de dano a um inimigo. Queima o alvo, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
-      "mir4_skill_2301": {
-        "name": "Selo de Smite",
-        "description": "Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s."
-      },
       "mir4_skill_2501": {
-        "name": "Núcleo Evocado",
+        "name": "Nevasca",
         "description": "Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 8 jardas recebem 60% desse dano. Congela o alvo por 1,8 s."
+      },
+      "mir4_skill_2301": {
+        "name": "Vórtice Sombrio",
+        "description": "Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s."
       },
       "mir4_skill_2503": {
         "name": "Escudo Mágico",
         "description": "Reduz o dano recebido em 22% por 10 s."
       },
+      "mir4_skill_2203": {
+        "name": "Blizzard",
+        "description": "Deals {damage} damage over 7 impacts. Up to 7 other enemies within 9 yards take full damage. Freezes each enemy hit for 1.8 sec."
+      },
+      "mir4_skill_2303": {
+        "name": "Chain Lightning",
+        "description": "Deals {damage} damage to an enemy and chains at full damage to up to 6 other enemies within 12 yards."
+      },
+      "mir4_skill_2201": {
+        "name": "Flame Strike",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies. Pushes each enemy hit 5.5 yards away and dazes them for 0.9 sec."
+      },
+      "mir4_skill_2502": {
+        "name": "Soul Devour",
+        "description": "Deals {damage} damage over 5 impacts. Up to 5 other enemies within 7 yards take full damage."
+      },
+      "mir4_skill_2103": {
+        "name": "Immolate",
+        "description": "Deals {damage} damage over 10 impacts. Up to 4 other enemies within 10 yards take 75% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (6 ticks, {burnTotal} total before mitigation)."
+      },
+      "mir4_skill_2204": {
+        "name": "Phoenix Embrace",
+        "description": "Increases your damage by 25% for 60 sec."
+      },
+      "mir4_skill_2202": {
+        "name": "Frozen Block",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies and freezes them for 2 sec. Reduces damage taken by 100% for 4 sec."
+      },
+      "mir4_skill_3506": {
+        "name": "Círculo Guardião",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 60% desse dano. Enraíza o alvo por 1,6 s."
+      },
       "mir4_skill_3101": {
-        "name": "Sequência de Selo",
+        "name": "Onda do Luar",
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
-      "mir4_skill_3104": {
-        "name": "Totem 1010",
-        "description": "Afeta um inimigo. Atordoa o alvo por 1,4 s."
-      },
       "mir4_skill_3301": {
-        "name": "Selo de Totem II",
+        "name": "Círculo de Expulsão",
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 60% desse dano. Reduz a velocidade do alvo em 35% por 4,2 s."
+      },
+      "mir4_skill_3104": {
+        "name": "Tai Chi",
+        "description": "Afeta um inimigo. Atordoa o alvo por 1,4 s."
       },
       "mir4_skill_3503": {
         "name": "Cura",
-        "description": "Restaura 18% da vida máxima."
+        "description": "Restaura 18% da vida máxima de você e de até 4 membros do grupo em um raio de 20 jardas."
       },
-      "mir4_skill_3506": {
-        "name": "Selo de Totem I",
-        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 60% desse dano. Enraíza o alvo por 1,6 s."
+      "mir4_skill_3103": {
+        "name": "Piercing Blades",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. From rank 5, Stuns monsters for 2 sec and has a 20% base chance to Stun players."
+      },
+      "mir4_skill_3501": {
+        "name": "Guardian Circle",
+        "description": "Deals {damage} damage to nearby enemies and increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3201": {
+        "name": "Tai Chi",
+        "description": "Deals {damage} hybrid damage to nearby enemies, pulls them toward you and Knocks them Down for 1.5 sec. Base Knockdown chance is 100% against monsters and 10% against players."
+      },
+      "mir4_skill_3505": {
+        "name": "Blasting Charm",
+        "description": "Deals {damage} damage to an enemy, reduces its damage by 35% for 8 sec and reduces its Physical and Magic Defense by 12% for 15 sec."
+      },
+      "mir4_skill_3203": {
+        "name": "Soaring Slash",
+        "description": "Deals {damage} hybrid damage over 6 impacts. Up to 3 other enemies within 7 yards take 70% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
+      },
+      "mir4_skill_3404": {
+        "name": "Expulsion Circle",
+        "description": "Increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3504": {
+        "name": "Greater Heal",
+        "description": "Restores 45% of maximum health to you and up to 4 party members within 20 yards."
       },
       "mir4_skill_4101": {
-        "name": "Rajada 4101",
+        "name": "Projétil Explosivo",
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Reduz o dano causado pelo alvo em 45% por 3,5 s."
       },
+      "mir4_skill_4106": {
+        "name": "Flecha Ilusória",
+        "description": "Causa {damage} de dano a um inimigo. Atordoa o alvo por 2 s."
+      },
       "mir4_skill_4102": {
-        "name": "Sequência 4102",
+        "name": "Arco Celestial",
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,625 jardas recebem 65% desse dano. Reduz a velocidade do alvo em 30% por 3,5 s."
       },
       "mir4_skill_4103": {
-        "name": "Eco Gêmeo",
+        "name": "Projétil Obliterador",
         "description": "Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,5 jardas recebem 55% desse dano. Reduz o dano causado pelo alvo em 60% por 5 s."
-      },
-      "mir4_skill_4106": {
-        "name": "Investida 4106",
-        "description": "Causa {damage} de dano a um inimigo. Atordoa o alvo por 2 s."
       },
       "mir4_skill_4107": {
         "name": "Seta do Clarão",
         "description": "Afeta um inimigo. Reduz o dano causado pelo alvo em 45% por 3,2 s."
       },
+      "mir4_skill_4108": {
+        "name": "Heavenly Bow",
+        "description": "Deals {damage} damage in an arrow rain. Up to 7 other enemies within 9 yards take 85% damage."
+      },
+      "mir4_skill_4111": {
+        "name": "Mind's Eye",
+        "description": "Increases your damage by 15% for 30 sec."
+      },
+      "mir4_skill_4105": {
+        "name": "Ice Cage",
+        "description": "Deals {damage} damage and slows enemies by 50% for 10 sec."
+      },
+      "mir4_skill_4109": {
+        "name": "Obliterate Shell",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_4104": {
+        "name": "Venom Mist Shell",
+        "description": "Deals {damage} damage in a poisonous area and reduces enemy damage by 40% for 5 sec."
+      },
+      "mir4_skill_4110": {
+        "name": "Seeking Bolt",
+        "description": "Deals {damage} damage to a single enemy from extreme range."
+      },
+      "mir4_skill_4112": {
+        "name": "Cloaking",
+        "description": "Grants 150 Dodge and increases your damage by 20% for 2 sec."
+      },
+      "mir4_skill_5201": {
+        "name": "Chute do Nirvana",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Atordoa o alvo por 1,1 s."
+      },
       "mir4_skill_5101": {
-        "name": "Estocada 5101",
+        "name": "Lâmina Crescente",
         "description": "Causa {damage} de dano a um inimigo. Derruba o alvo por 1 s."
       },
       "mir4_skill_5104": {
-        "name": "Varredura 5104",
+        "name": "Ataque Relâmpago",
         "description": "Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 14% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
       },
-      "mir4_skill_5201": {
-        "name": "Golpe 5201",
-        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Atordoa o alvo por 1,1 s."
-      },
       "mir4_skill_5301": {
-        "name": "Cadeia 5301",
+        "name": "Lança Perfurante",
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 70% desse dano. Atordoa o alvo por 0,9 s."
       },
       "mir4_skill_5401": {
-        "name": "Tempestade Arrebatadora",
+        "name": "Tempestade Devastadora",
         "description": "Afeta um inimigo. Derruba o alvo por 1 s."
       },
+      "mir4_skill_5102": {
+        "name": "Dragon Tail",
+        "description": "Deals {damage} damage to enemies swept by the spear."
+      },
+      "mir4_skill_5103": {
+        "name": "Ascending Dragon",
+        "description": "Deals {damage} hybrid damage and slows enemies by 30% for 5 sec."
+      },
+      "mir4_skill_5303": {
+        "name": "Crushing Blow",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5403": {
+        "name": "Wind Wall",
+        "description": "Deals {damage} hybrid damage and increases your Physical and Magic Defense by 20% for 5 sec."
+      },
+      "mir4_skill_5205": {
+        "name": "Piercing Spear",
+        "description": "Deals {damage} hybrid damage from long range and Knocks Down monsters for 1.6 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5304": {
+        "name": "Absorption",
+        "description": "Deals {damage} damage and restores 15% of your maximum health."
+      },
+      "mir4_skill_5202": {
+        "name": "Blitz Strike",
+        "description": "Charges a distant enemy, deals {damage} damage and Knocks it Down."
+      },
       "mir4_ultimate_1": {
-        "name": "Ultimate",
-        "description": "Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio."
+        "name": "Chama do Dragão",
+        "description": "Causa {damage} de dano em 3 impactos. Restaura 10% da sua vida máxima. Requer o medidor de ultimate cheio."
       },
       "mir4_ultimate_2": {
-        "name": "Ultimate",
+        "name": "Tornado do Dragão",
         "description": "Causa {damage} de dano em 4 impactos. Requer o medidor de ultimate cheio."
       },
       "mir4_ultimate_3": {
-        "name": "Ultimate",
+        "name": "Raio de Luz",
         "description": "Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio."
       },
       "mir4_ultimate_4": {
-        "name": "Ultimate",
+        "name": "Chuva de Flechas",
         "description": "Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio."
       },
       "mir4_ultimate_5": {
-        "name": "Ultimate",
+        "name": "Lança do Dragão",
         "description": "Causa {damage} de dano em 2 impactos. Requer o medidor de ultimate cheio."
       },
       "mir4_passive_warrior_heavy_armor": {

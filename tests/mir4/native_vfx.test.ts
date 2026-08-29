@@ -6,9 +6,9 @@ import { ABILITIES } from '../../src/sim/data';
 import { mir4NativeVfxCue } from '../../src/sim/mir4/native_vfx';
 
 describe('MIR4 skills reuse native WoC VFX and audio cues', () => {
-  it('maps every one of the 25 skills to a shipping native ability specification', () => {
+  it('maps every active gameplay skill to a shipping native ability specification', () => {
     const skills = ([1, 2, 3, 4, 5] as const).flatMap((classId) => mir4SkillsForClass(classId));
-    expect(skills).toHaveLength(25);
+    expect(skills).toHaveLength(60);
     for (const skill of skills) {
       const cue = mir4NativeVfxCue(skill);
       expect(ABILITIES[cue.ability], `${skill.skillId} ability`).toBeDefined();
@@ -33,18 +33,18 @@ describe('MIR4 skills reuse native WoC VFX and audio cues', () => {
     });
   });
 
-  it('renders the Taoist area root as a ground snare, never as a personal shield', () => {
+  it('renders Moonlight Wave as a native ranged arcane strike', () => {
     const skill = mir4SkillsForClass(3).find((candidate) => candidate.skillId === 3506)!;
     expect(mir4NativeVfxCue(skill)).toEqual({
-      ability: 'earthbind',
-      school: 'nature',
-      fx: 'nova',
+      ability: 'frost_shock',
+      school: 'arcane',
+      fx: 'projectile',
     });
   });
 
   it('never routes a victim-targeted dash or strike through a discarded selfCast cue', () => {
     const skills = ([1, 5] as const).flatMap((classId) => mir4SkillsForClass(classId));
-    for (const skillId of [1304, 5201, 5301]) {
+    for (const skillId of [1103, 1304, 5201, 5301]) {
       expect(mir4NativeVfxCue(skills.find((skill) => skill.skillId === skillId)!).fx).toBe(
         'projectile',
       );

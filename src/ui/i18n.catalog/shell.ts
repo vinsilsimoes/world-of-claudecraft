@@ -330,6 +330,7 @@ export const shellStrings = {
       },
       mir4: {
         labels: {
+          role: 'Role',
           damage: 'Damage',
           combatRange: 'Combat Range',
           startingSkills: 'Starting Skills',
@@ -337,6 +338,26 @@ export const shellStrings = {
         damage: {
           physical: 'Physical',
           magic: 'Magic',
+          hybrid: 'Physical and Magic',
+        },
+        roles: {
+          'frontline-control': 'Frontline Controller',
+          'magic-artillery': 'Magic Artillery',
+          'support-controller': 'Support Controller',
+          'ranged-marksman': 'Ranged Marksman',
+          'mobile-controller': 'Mobile Controller',
+        },
+        identity: {
+          warrior:
+            'A durable melee fighter who absorbs pressure, breaks enemy defenses and chains knockdowns before finishing with Dragon Flame.',
+          elementalist:
+            'A long-range spellcaster who controls groups with frost, fire and wide-area magic while relying on Magic Shield for survival.',
+          taoist:
+            'A hybrid support fighter who controls space with seals, weakens enemy defenses and restores nearby party members with Heal.',
+          arbalist:
+            'A long-range physical specialist who keeps distance, pressures groups with shells and arrows, and disables priority targets.',
+          lancer:
+            'A mobile spear fighter who closes gaps, combines Physical and Magic damage, and chains stun, knockdown and defense breaks.',
         },
         range: {
           melee: 'Melee',

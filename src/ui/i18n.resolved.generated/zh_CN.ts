@@ -4835,7 +4835,7 @@ export const zh_CN: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "A character starts with one skill and unlocks another every ten levels. Newly unlocked skills enter the first free action-bar slot automatically. Skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -4946,7 +4946,7 @@ export const zh_CN: EnTranslations = {
         "title": "Frequently Asked Questions",
         "lead": "Short answers based on the current Aeldrune implementation.",
         "q1": "How many classes are available?",
-        "a1": "Five: Guerreiro, Elementalista, Taoista, Besteiro and Lanceiro.",
+        "a1": "Five: Guerreiro, Feiticeiro, Taoista, Besteiro and Lanceiro.",
         "q2": "How large is the campaign?",
         "a2": "Twenty regions cover levels 1 through 200, with 230 authored quests in the current catalog.",
         "q3": "Can the game play every mission automatically?",
@@ -8920,13 +8920,29 @@ export const zh_CN: EnTranslations = {
     },
     "mir4": {
       "labels": {
+        "role": "Role",
         "damage": "伤害",
         "combatRange": "战斗距离",
         "startingSkills": "初始技能"
       },
       "damage": {
         "physical": "物理",
-        "magic": "魔法"
+        "magic": "魔法",
+        "hybrid": "Physical and Magic"
+      },
+      "roles": {
+        "frontline-control": "Frontline Controller",
+        "magic-artillery": "Magic Artillery",
+        "support-controller": "Support Controller",
+        "ranged-marksman": "Ranged Marksman",
+        "mobile-controller": "Mobile Controller"
+      },
+      "identity": {
+        "warrior": "A durable melee fighter who absorbs pressure, breaks enemy defenses and chains knockdowns before finishing with Dragon Flame.",
+        "elementalist": "A long-range spellcaster who controls groups with frost, fire and wide-area magic while relying on Magic Shield for survival.",
+        "taoist": "A hybrid support fighter who controls space with seals, weakens enemy defenses and restores nearby party members with Heal.",
+        "arbalist": "A long-range physical specialist who keeps distance, pressures groups with shells and arrows, and disables priority targets.",
+        "lancer": "A mobile spear fighter who closes gaps, combines Physical and Magic damage, and chains stun, knockdown and defense breaks."
       },
       "range": {
         "melee": "近战",
@@ -10151,13 +10167,33 @@ export const zh_CN: EnTranslations = {
   },
   "entities": {
     "abilities": {
+      "mir4_skill_1101": {
+        "name": "Rampant",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+      },
       "mir4_skill_1102": {
         "name": "虚空斩",
         "description": "对一名敌人造成 {damage} 点伤害。使目标昏迷 0.9 秒。"
       },
+      "mir4_skill_1103": {
+        "name": "Barbaric Charge",
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+      },
       "mir4_skill_1104": {
         "name": "撕裂斩",
         "description": "对一名敌人造成 {damage} 点伤害。击倒目标 1.2 秒。"
+      },
+      "mir4_skill_1201": {
+        "name": "Iron Shackle",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+      },
+      "mir4_skill_1301": {
+        "name": "Riposte",
+        "description": "Deals {damage} damage to an enemy. Increases your Physical and Magic Defense by 24% for 3 sec. At rank 8, restores 10% of your maximum health; at rank 10, restores 20%."
+      },
+      "mir4_skill_1302": {
+        "name": "Lion's Roar",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "冲撞",
@@ -10171,6 +10207,14 @@ export const zh_CN: EnTranslations = {
         "name": "疾风斩",
         "description": "影响一名敌人。使目标减速 35%，持续 3.2 秒。"
       },
+      "mir4_skill_1502": {
+        "name": "Unbreakable Stance",
+        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+      },
+      "mir4_skill_1601": {
+        "name": "Crescent Strike",
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+      },
       "mir4_skill_2101": {
         "name": "棱彩光束",
         "description": "对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。冻结目标 1.4 秒。"
@@ -10179,57 +10223,145 @@ export const zh_CN: EnTranslations = {
         "name": "余烬长枪",
         "description": "对一名敌人造成 {damage} 点伤害。灼烧目标，每 1 秒造成 {burnPerTick} 点基础伤害（共 4 次，减伤前总计 {burnTotal} 点）。伤害取决于施加灼烧时你的法术强度。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
       },
-      "mir4_skill_2301": {
-        "name": "惩击之印",
-        "description": "对一名敌人造成 {damage} 点伤害。使目标造成的伤害降低 50%，持续 4 秒。"
-      },
       "mir4_skill_2501": {
         "name": "唤出核心",
         "description": "对一名敌人造成 {damage} 点伤害。8 码内最多 4 名其他敌人受到 60% 伤害。冻结目标 1.8 秒。"
+      },
+      "mir4_skill_2301": {
+        "name": "惩击之印",
+        "description": "对一名敌人造成 {damage} 点伤害。使目标造成的伤害降低 50%，持续 4 秒。"
       },
       "mir4_skill_2503": {
         "name": "魔法护盾",
         "description": "受到的伤害降低 22%，持续 10 秒。"
       },
-      "mir4_skill_3101": {
-        "name": "印记连击",
-        "description": "对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。使每个命中的敌人的物理和魔法防御降低 10%，持续 4 秒。多个破防效果以乘法方式叠加，但防御不会低于原始值的 20%。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
+      "mir4_skill_2203": {
+        "name": "Blizzard",
+        "description": "Deals {damage} damage over 7 impacts. Up to 7 other enemies within 9 yards take full damage. Freezes each enemy hit for 1.8 sec."
       },
-      "mir4_skill_3104": {
-        "name": "图腾 1010",
-        "description": "影响一名敌人。使目标昏迷 1.4 秒。"
+      "mir4_skill_2303": {
+        "name": "Chain Lightning",
+        "description": "Deals {damage} damage to an enemy and chains at full damage to up to 6 other enemies within 12 yards."
       },
-      "mir4_skill_3301": {
-        "name": "图腾之印 II",
-        "description": "对一名敌人造成 {damage} 点伤害。7.25 码内最多 3 名其他敌人受到 60% 伤害。使目标减速 35%，持续 4.2 秒。"
+      "mir4_skill_2201": {
+        "name": "Flame Strike",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies. Pushes each enemy hit 5.5 yards away and dazes them for 0.9 sec."
       },
-      "mir4_skill_3503": {
-        "name": "玉莲",
-        "description": "恢复最大生命值的 18%。"
+      "mir4_skill_2502": {
+        "name": "Soul Devour",
+        "description": "Deals {damage} damage over 5 impacts. Up to 5 other enemies within 7 yards take full damage."
+      },
+      "mir4_skill_2103": {
+        "name": "Immolate",
+        "description": "Deals {damage} damage over 10 impacts. Up to 4 other enemies within 10 yards take 75% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (6 ticks, {burnTotal} total before mitigation)."
+      },
+      "mir4_skill_2204": {
+        "name": "Phoenix Embrace",
+        "description": "Increases your damage by 25% for 60 sec."
+      },
+      "mir4_skill_2202": {
+        "name": "Frozen Block",
+        "description": "Deals {damage} damage over 3 impacts to nearby enemies and freezes them for 2 sec. Reduces damage taken by 100% for 4 sec."
       },
       "mir4_skill_3506": {
         "name": "图腾之印 I",
         "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 60% 伤害。定身目标 1.6 秒。"
       },
+      "mir4_skill_3101": {
+        "name": "印记连击",
+        "description": "对一名敌人造成 {damage} 点伤害。6.5 码内最多 3 名其他敌人受到 65% 伤害。使每个命中的敌人的物理和魔法防御降低 10%，持续 4 秒。多个破防效果以乘法方式叠加，但防御不会低于原始值的 20%。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
+      },
+      "mir4_skill_3301": {
+        "name": "图腾之印 II",
+        "description": "对一名敌人造成 {damage} 点伤害。7.25 码内最多 3 名其他敌人受到 60% 伤害。使目标减速 35%，持续 4.2 秒。"
+      },
+      "mir4_skill_3104": {
+        "name": "图腾 1010",
+        "description": "影响一名敌人。使目标昏迷 1.4 秒。"
+      },
+      "mir4_skill_3503": {
+        "name": "玉莲",
+        "description": "恢复最大生命值的 18%。"
+      },
+      "mir4_skill_3103": {
+        "name": "Piercing Blades",
+        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. From rank 5, Stuns monsters for 2 sec and has a 20% base chance to Stun players."
+      },
+      "mir4_skill_3501": {
+        "name": "Guardian Circle",
+        "description": "Deals {damage} damage to nearby enemies and increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3201": {
+        "name": "Tai Chi",
+        "description": "Deals {damage} hybrid damage to nearby enemies, pulls them toward you and Knocks them Down for 1.5 sec. Base Knockdown chance is 100% against monsters and 10% against players."
+      },
+      "mir4_skill_3505": {
+        "name": "Blasting Charm",
+        "description": "Deals {damage} damage to an enemy, reduces its damage by 35% for 8 sec and reduces its Physical and Magic Defense by 12% for 15 sec."
+      },
+      "mir4_skill_3203": {
+        "name": "Soaring Slash",
+        "description": "Deals {damage} hybrid damage over 6 impacts. Up to 3 other enemies within 7 yards take 70% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
+      },
+      "mir4_skill_3404": {
+        "name": "Expulsion Circle",
+        "description": "Increases the party's Physical and Magic Defense by 25% for 60 sec."
+      },
+      "mir4_skill_3504": {
+        "name": "Greater Heal",
+        "description": "Restores 45% of maximum health to you and up to 4 party members within 20 yards."
+      },
       "mir4_skill_4101": {
         "name": "爆发 4101",
         "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 65% 伤害。使目标造成的伤害降低 45%，持续 3.5 秒。"
+      },
+      "mir4_skill_4106": {
+        "name": "冲锋 4106",
+        "description": "对一名敌人造成 {damage} 点伤害。使目标昏迷 2 秒。"
       },
       "mir4_skill_4102": {
         "name": "连击 4102",
         "description": "对一名敌人造成 {damage} 点伤害。6.625 码内最多 3 名其他敌人受到 65% 伤害。使目标减速 30%，持续 3.5 秒。"
       },
       "mir4_skill_4103": {
-        "name": "Twin Echo",
+        "name": "Burst Shell",
         "description": "对一名敌人造成 {damage} 点伤害。7.5 码内最多 4 名其他敌人受到 55% 伤害。使目标造成的伤害降低 60%，持续 5 秒。"
-      },
-      "mir4_skill_4106": {
-        "name": "冲锋 4106",
-        "description": "对一名敌人造成 {damage} 点伤害。使目标昏迷 2 秒。"
       },
       "mir4_skill_4107": {
         "name": "闪光箭",
         "description": "影响一名敌人。使目标造成的伤害降低 45%，持续 3.2 秒。"
+      },
+      "mir4_skill_4108": {
+        "name": "Heavenly Bow",
+        "description": "Deals {damage} damage in an arrow rain. Up to 7 other enemies within 9 yards take 85% damage."
+      },
+      "mir4_skill_4111": {
+        "name": "Mind's Eye",
+        "description": "Increases your damage by 15% for 30 sec."
+      },
+      "mir4_skill_4105": {
+        "name": "Ice Cage",
+        "description": "Deals {damage} damage and slows enemies by 50% for 10 sec."
+      },
+      "mir4_skill_4109": {
+        "name": "Obliterate Shell",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_4104": {
+        "name": "Venom Mist Shell",
+        "description": "Deals {damage} damage in a poisonous area and reduces enemy damage by 40% for 5 sec."
+      },
+      "mir4_skill_4110": {
+        "name": "Seeking Bolt",
+        "description": "Deals {damage} damage to a single enemy from extreme range."
+      },
+      "mir4_skill_4112": {
+        "name": "Cloaking",
+        "description": "Grants 150 Dodge and increases your damage by 20% for 2 sec."
+      },
+      "mir4_skill_5201": {
+        "name": "打击 5201",
+        "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 65% 伤害。使目标昏迷 1.1 秒。"
       },
       "mir4_skill_5101": {
         "name": "突刺 5101",
@@ -10239,10 +10371,6 @@ export const zh_CN: EnTranslations = {
         "name": "横扫 5104",
         "description": "对一名敌人造成 {damage} 点伤害。使目标的物理和魔法防御降低 14%，持续 4.5 秒。多个破防效果以乘法方式叠加，但防御不会低于原始值的 20%。上方显示的是基础冷却时间。技能冷却缩减在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
       },
-      "mir4_skill_5201": {
-        "name": "打击 5201",
-        "description": "对一名敌人造成 {damage} 点伤害。7 码内最多 3 名其他敌人受到 65% 伤害。使目标昏迷 1.1 秒。"
-      },
       "mir4_skill_5301": {
         "name": "锁链 5301",
         "description": "对一名敌人造成 {damage} 点伤害。7.25 码内最多 3 名其他敌人受到 70% 伤害。使目标昏迷 0.9 秒。"
@@ -10250,6 +10378,34 @@ export const zh_CN: EnTranslations = {
       "mir4_skill_5401": {
         "name": "狂怒风暴",
         "description": "影响一名敌人。击倒目标 1 秒。"
+      },
+      "mir4_skill_5102": {
+        "name": "Dragon Tail",
+        "description": "Deals {damage} damage to enemies swept by the spear."
+      },
+      "mir4_skill_5103": {
+        "name": "Ascending Dragon",
+        "description": "Deals {damage} hybrid damage and slows enemies by 30% for 5 sec."
+      },
+      "mir4_skill_5303": {
+        "name": "Crushing Blow",
+        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5403": {
+        "name": "Wind Wall",
+        "description": "Deals {damage} hybrid damage and increases your Physical and Magic Defense by 20% for 5 sec."
+      },
+      "mir4_skill_5205": {
+        "name": "Piercing Spear",
+        "description": "Deals {damage} hybrid damage from long range and Knocks Down monsters for 1.6 sec; base chance against players is 10%."
+      },
+      "mir4_skill_5304": {
+        "name": "Absorption",
+        "description": "Deals {damage} damage and restores 15% of your maximum health."
+      },
+      "mir4_skill_5202": {
+        "name": "Blitz Strike",
+        "description": "Charges a distant enemy, deals {damage} damage and Knocks it Down."
       },
       "mir4_ultimate_1": {
         "name": "终极技能",

@@ -317,13 +317,13 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const near = spawnWolf(sim);
     near.maxHp = 1_000;
     near.hp = 1_000;
-    expect(sim.castMir4Skill(1104, sim.playerId, near.id)).toEqual({
+    expect(sim.castMir4Skill(1302, sim.playerId, near.id)).toEqual({
       ok: false,
       reason: 'not-unlocked',
     });
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({ ok: true });
     sim.player.level = 10;
-    expect(sim.castMir4Skill(1104, sim.playerId, near.id)).toEqual({ ok: false, reason: 'on-gcd' });
+    expect(sim.castMir4Skill(1302, sim.playerId, near.id)).toEqual({ ok: false, reason: 'on-gcd' });
     ticks(sim, 25); // 1.25s: the final-contact lock is gone; cooldown remains
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({
       ok: false,

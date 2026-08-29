@@ -16,12 +16,16 @@ import {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
   MIR4_SKILL_GLOBAL_COOLDOWN_MS,
+  MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS,
+  type Mir4SkillDef,
+  type Mir4SkillEffect,
   mir4ClassById,
   mir4ClassRangeYards,
   mir4SkillById,
 } from '../content/mir4';
 import { mir4MobAccuracy, mir4MobBuildDefenses } from '../content/mir4/mobs';
 import { resolveMobTemplate } from '../mob/template';
+import { PLAYER_BODY_RADIUS } from '../pathfind';
 import type { SimContext } from '../sim_context';
 import type { Entity, Mir4PendingImpact, PlayerClass } from '../types';
 import { dist2d } from '../types';
@@ -44,6 +48,7 @@ import {
   mir4AttackMultiplier,
   mir4DamageTakenAddend,
   mir4DefenseMultiplier,
+  mir4DodgeBonus,
   mir4EffectKindOf,
   mir4HardControlled,
   mir4SecondaryBps,
@@ -59,6 +64,7 @@ import {
   mir4SkillRankScaledInteger,
 } from './math';
 import { mir4NativeVfxCue } from './native_vfx';
+import { mir4PartyNeedsHealing, mir4PartyPulseTargets } from './party_support';
 import { cancelMir4QuestObjectiveCastForCombat } from './quest_objective_cast';
 import {
   MIR4_SKILL_MAX_LEVEL,
@@ -154,7 +160,7 @@ function mir4DefenderStats(ctx: SimContext, target: Entity): Partial<Mir4CombatS
       : undefined;
   const defenseMultiplier = mir4DefenseMultiplier(target);
   return {
-    dodge: s?.dodge ?? mobDefenses?.dodge ?? 0,
+    dodge: (s?.dodge ?? mobDefenses?.dodge ?? 0) + mir4DodgeBonus(target),
     avoidCritical: s?.avoidCritical ?? mobDefenses?.avoidCritical ?? 0,
     criticalDamageReduction: mir4StatusRecordValue(s?.statusValues, 33),
     physicalDefense: Math.floor(
@@ -218,6 +224,48 @@ function resolveLivingHostileTarget(
   return target;
 }
 
+function mir4SkillEffects(skill: Mir4SkillDef): readonly Mir4SkillEffect[] {
+  return [skill.effect, ...(skill.additionalEffects ?? [])].filter(
+    (effect): effect is Mir4SkillEffect => effect !== null,
+  );
+}
+
+function isMir4SelfUtility(skill: Mir4SkillDef): boolean {
+  const effects = mir4SkillEffects(skill);
+  return (
+    skill.damage === null &&
+    effects.length > 0 &&
+    effects.every((effect) => effect.subject === 'actor' || effect.subject === 'party')
+  );
+}
+
+function moveMir4EntityNear(
+  ctx: SimContext,
+  mover: Entity,
+  anchor: Entity,
+  separationYards: number,
+): void {
+  const dx = mover.pos.x - anchor.pos.x;
+  const dz = mover.pos.z - anchor.pos.z;
+  const length = Math.hypot(dx, dz) || 1;
+  const desiredX = anchor.pos.x + (dx / length) * separationYards;
+  const desiredZ = anchor.pos.z + (dz / length) * separationYards;
+  const resolved = ctx.resolveMove(
+    mover.pos.x,
+    mover.pos.z,
+    desiredX,
+    desiredZ,
+    PLAYER_BODY_RADIUS,
+    mover,
+  );
+  mover.prevPos = { ...mover.pos };
+  mover.pos = ctx.groundPos(resolved.x, resolved.z);
+  mover.vx = 0;
+  mover.vy = 0;
+  mover.vz = 0;
+  ctx.rebucket(mover);
+}
+
 function mir4ActionInFlight(player: Entity): boolean {
   return (player.mir4PendingImpacts?.length ?? 0) > 0;
 }
@@ -263,8 +311,7 @@ export function castMir4Skill(
   // Self utilities need no target. Catalog rows that explicitly carry a
   // targetless area resolve around the actor and choose visible enemies
   // deterministically; other offensive rows still require a live target.
-  const isSelfUtility =
-    skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
+  const isSelfUtility = isMir4SelfUtility(skill);
   const areaRadiusYards = (skill.effect?.areaRadiusPx ?? 0) / 16;
   const isActorCenteredAoE = !skill.requiresTarget && areaRadiusYards > 0 && !isSelfUtility;
   const maxSecondaryTargets = skill.effect?.maxSecondaryTargets ?? 0;
@@ -286,11 +333,17 @@ export function castMir4Skill(
     if (skill.effect?.effect === 'magic-shield' && (p.mir4Shield?.remaining ?? 0) > 0) {
       return { ok: false, reason: 'utility-not-ready' };
     }
-    if (skill.effect?.effect === 'heal-pulse' && p.hp >= p.maxHp) {
+    if (
+      skill.effect?.effect === 'heal-pulse' &&
+      !mir4PartyNeedsHealing(ctx, p, {
+        radiusYards: (skill.effect.partyRadiusPx ?? 0) / 16,
+        maxTargets: skill.effect.maxPartyTargets ?? 1,
+      })
+    ) {
       return { ok: false, reason: 'utility-not-ready' };
     }
   }
-  const rangeYards = classRangeYards(p);
+  const rangeYards = (skill.castRangePx ?? classRangeYards(p) * 16) / 16;
   if (!isActorCenteredAoE && target && dist2d(p.pos, target.pos) > rangeYards) {
     return { ok: false, reason: 'out-of-range' };
   }
@@ -324,6 +377,24 @@ export function castMir4Skill(
   const meta = ctx.players.get(pid);
   const rawLevel = meta?.mir4SkillLevels?.[skillId] ?? 1;
   const skillLevel = Math.min(MIR4_SKILL_MAX_LEVEL, Math.max(1, Math.floor(rawLevel)));
+  if (target && skill.effect?.chargeToTarget) {
+    moveMir4EntityNear(ctx, p, target, 1.6);
+  }
+  for (const effect of mir4SkillEffects(skill)) {
+    if (effect.subject === 'actor') {
+      applyMir4ConfiguredSkillEffect(ctx, p, p, skill, skillLevel, effect, false);
+      continue;
+    }
+    if (effect.subject === 'party') {
+      const partyTargets = mir4PartyPulseTargets(ctx, p, {
+        radiusYards: Number(effect.partyRadiusPx ?? 0) / 16,
+        maxTargets: Number(effect.maxPartyTargets ?? 1),
+      });
+      for (const partyTarget of partyTargets) {
+        applyMir4ConfiguredSkillEffect(ctx, p, partyTarget, skill, skillLevel, effect, false);
+      }
+    }
+  }
   const primaryImpacts: Array<{
     target: Entity;
     rawDamage: number;
@@ -340,7 +411,8 @@ export function castMir4Skill(
 
   // Authorial skills keep their aggregate mechanics inside the same immediate
   // action batch as catalog damage components.
-  const policy = MIR4_AUTHORIAL_SKILL_POLICIES[skillId];
+  const policy =
+    skill.provenance === 'authorial-v1' ? MIR4_AUTHORIAL_SKILL_POLICIES[skillId] : undefined;
   if (policy && target) {
     const phys = Math.floor((p.attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
     const magic = Math.floor((p.spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
@@ -384,13 +456,18 @@ export function castMir4Skill(
   if (areaRadiusYards > 0 && totalRawDamage > 0 && target) {
     const bps = skill.effect?.secondaryDamageBasisPoints ?? 0;
     if (maxSecondaryTargets > 0 && bps > 0) {
+      const secondaryChannel = primaryImpacts[0]?.channel ?? 'physical';
       const perSecondary = Math.floor(
         (totalRawDamage * mir4SecondaryBps(bps, maxSecondaryTargets, areaSecondaries.length)) /
           10_000,
       );
       for (const secondary of areaSecondaries) {
         if (secondary.dead) continue;
-        secondaryImpacts.push({ target: secondary, rawDamage: perSecondary, channel: 'physical' });
+        secondaryImpacts.push({
+          target: secondary,
+          rawDamage: perSecondary,
+          channel: secondaryChannel,
+        });
       }
     }
   }
@@ -437,7 +514,10 @@ export function castMir4Skill(
     });
   }
 
-  if (skill.effect && primaryImpacts.length + secondaryImpacts.length > 0) {
+  const hostileEffects = mir4SkillEffects(skill).filter(
+    (effect) => effect.subject !== 'actor' && effect.subject !== 'party',
+  );
+  if (hostileEffects.length > 0 && primaryImpacts.length + secondaryImpacts.length > 0) {
     const damagedTargets = new Map<number, Entity>();
     for (const impact of [...primaryImpacts, ...secondaryImpacts]) {
       damagedTargets.set(impact.target.id, impact.target);
@@ -463,7 +543,11 @@ export function castMir4Skill(
         actionGroupId: actionGroupFor(effectTarget),
       });
     }
-  } else if (primaryImpacts.length === 0 && secondaryImpacts.length === 0 && skill.effect) {
+  } else if (
+    primaryImpacts.length === 0 &&
+    secondaryImpacts.length === 0 &&
+    hostileEffects.length > 0
+  ) {
     const effectTargets = isSelfUtility
       ? [p]
       : target
@@ -609,7 +693,9 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
   if (!target) return { ok: false, reason: 'no-target' };
   if (ctx.isStunned(p) || mir4HardControlled(p)) return { ok: false, reason: 'controlled' };
   if (mir4Silenced(p)) return { ok: false, reason: 'silenced' };
-  const spec = MIR4_CLASS_COMBAT_SPECS[p.mir4?.classId ?? 1] ?? MIR4_CLASS_COMBAT_SPECS[1];
+  const classId = p.mir4?.classId ?? 1;
+  const spec = MIR4_CLASS_COMBAT_SPECS[classId] ?? MIR4_CLASS_COMBAT_SPECS[1];
+  const classDef = mir4ClassById(classId);
   if ((p.mir4UltGauge ?? 0) < spec.ultimate.requiredGauge) {
     return { ok: false, reason: 'no-mp' };
   }
@@ -630,6 +716,16 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
       mir4CombatContextForTarget(target),
     ),
   );
+  if (classId === 1) {
+    const baseHeal = Math.floor((p.maxHp * MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS) / 10_000);
+    const heal = mir4ModifiedSkillHealing(baseHeal, p.mir4?.statusValues);
+    const healthBefore = p.hp;
+    p.hp = Math.min(p.maxHp, p.hp + heal);
+    p.resource = Math.min(
+      p.maxResource,
+      p.resource + mir4ManaRecoveredFromHealing(p.hp - healthBefore, p.mir4?.statusValues),
+    );
+  }
   const attackPower = spec.ultimate.channel === 'magic' ? p.spellPower : p.attackPower;
   const damage = mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient);
   ctx.emit({
@@ -647,7 +743,7 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
       rawDamage: damage,
       channel: spec.ultimate.channel,
       attackKind: 'skill',
-      name: 'Ultimate',
+      name: classDef?.ultimateDisplayName ?? 'Ultimate',
       gaugeGain: 0,
       spiritProcEligible: true,
       actionGroupId,
@@ -705,8 +801,24 @@ function applyMir4PendingSkillEffect(
   effectOnly: boolean,
 ): void {
   const skill = mir4SkillById(skillId);
-  const effect = skill?.effect;
-  if (!skill || !effect || target.dead) return;
+  if (!skill || target.dead) return;
+  for (const effect of mir4SkillEffects(skill)) {
+    if (effect.subject === 'actor' || effect.subject === 'party') continue;
+    applyMir4ConfiguredSkillEffect(ctx, source, target, skill, skillLevel, effect, effectOnly);
+  }
+}
+
+function applyMir4ConfiguredSkillEffect(
+  ctx: SimContext,
+  source: Entity,
+  target: Entity,
+  skill: Mir4SkillDef,
+  skillLevel: number,
+  effect: Mir4SkillEffect,
+  effectOnly: boolean,
+): void {
+  if (target.dead) return;
+  if (skillLevel < Number(effect.minimumRank ?? 1)) return;
 
   if (effect.effect === 'magic-shield' && source.id === target.id) {
     const magnitudeBasisPoints = mir4SkillRankScaledInteger(
@@ -722,22 +834,77 @@ function applyMir4PendingSkillEffect(
   if (effect.effect === 'heal-pulse' && source.id === target.id) {
     const bps = effect.healMaxHpBasisPoints as number | undefined;
     const scaledBps = mir4SkillRankScaledInteger(bps ?? 0, skillLevel);
-    const heal = mir4ModifiedSkillHealing(
-      Math.floor((source.maxHp * scaledBps) / 10_000),
-      source.mir4?.statusValues,
-    );
-    const healthBefore = source.hp;
-    source.hp = Math.min(source.maxHp, source.hp + heal);
+    const partyTargets = mir4PartyPulseTargets(ctx, source, {
+      radiusYards: (effect.partyRadiusPx ?? 0) / 16,
+      maxTargets: effect.maxPartyTargets ?? 1,
+    });
+    let totalHealing = 0;
+    for (const partyTarget of partyTargets) {
+      const heal = mir4ModifiedSkillHealing(
+        Math.floor((partyTarget.maxHp * scaledBps) / 10_000),
+        source.mir4?.statusValues,
+      );
+      const healthBefore = partyTarget.hp;
+      partyTarget.hp = Math.min(partyTarget.maxHp, partyTarget.hp + heal);
+      totalHealing += partyTarget.hp - healthBefore;
+    }
     source.resource = Math.min(
       source.maxResource,
-      source.resource +
-        mir4ManaRecoveredFromHealing(source.hp - healthBefore, source.mir4?.statusValues),
+      source.resource + mir4ManaRecoveredFromHealing(totalHealing, source.mir4?.statusValues),
     );
+    return;
+  }
+  if (effect.effect === 'self-heal' && source.id === target.id) {
+    const minimumRank = Number(effect.minimumRank ?? 1);
+    if (skillLevel < minimumRank) return;
+    const basisPoints =
+      skillLevel >= 10
+        ? Number(effect.rank10HealMaxHpBasisPoints ?? effect.healMaxHpBasisPoints ?? 0)
+        : Number(effect.healMaxHpBasisPoints ?? 0);
+    const heal = mir4ModifiedSkillHealing(
+      Math.floor((source.maxHp * basisPoints) / 10_000),
+      source.mir4?.statusValues,
+    );
+    source.hp = Math.min(source.maxHp, source.hp + heal);
     return;
   }
 
   const kind = mir4EffectKindOf(effect.effect);
-  if (!kind || !ctx.isHostileTo(source, target)) return;
+  if (
+    (effect.subject === 'actor' && source.id === target.id) ||
+    (effect.subject === 'party' && !ctx.isHostileTo(source, target))
+  ) {
+    if (!kind) return;
+    applyMir4Effect(ctx, source, {
+      effectId: `mir4_${skill.skillId}_${effect.effect}`,
+      kind,
+      durationSeconds: (effect.durationMs ?? 0) / 1000,
+      magnitude: effect.magnitude ?? 0,
+      name: skill.displayName,
+      sourceId: source.id,
+    });
+    return;
+  }
+  if (!ctx.isHostileTo(source, target)) return;
+  if (effect.pullToActor) {
+    const template =
+      target.kind === 'mob'
+        ? resolveMobTemplate(target.templateId, ctx.mir4RuntimeMobTemplates)
+        : undefined;
+    if (template?.boss !== true && target.ccImmune !== true) {
+      moveMir4EntityNear(ctx, target, source, 1.6);
+    }
+  }
+  if (effect.pushFromActorYards) {
+    const template =
+      target.kind === 'mob'
+        ? resolveMobTemplate(target.templateId, ctx.mir4RuntimeMobTemplates)
+        : undefined;
+    if (template?.boss !== true && target.ccImmune !== true) {
+      moveMir4EntityNear(ctx, target, source, effect.pushFromActorYards);
+    }
+  }
+  if (!kind) return;
   let lands = true;
   const controlFamily = mir4ControlFamilyOf(kind);
   const targetKind = mir4TargetKind(ctx, target);
@@ -781,7 +948,7 @@ function applyMir4PendingSkillEffect(
     ? mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), skillLevel)
     : Math.round((effect.magnitude ?? 0) * 10_000);
   applyMir4Effect(ctx, target, {
-    effectId: `mir4_${skillId}_${effect.effect}`,
+    effectId: `mir4_${skill.skillId}_${effect.effect}`,
     kind,
     durationSeconds: durationMs / 1000,
     magnitude: magnitudeBasisPoints / 10_000,

@@ -57,12 +57,12 @@ describe('magic-channel kits (damageType 2 rides spellPower)', () => {
     expect(sim.mir4CastSkill(2101, wolf.id)).toEqual({ ok: true });
     resolveContacts(sim);
     expect(hp - wolf.hp).toBe(93);
-    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'freeze')).toBe(true);
+    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'burn')).toBe(true);
   });
 });
 
-describe('authorial skills (the 7 policy rebuilds)', () => {
-  it('lancer 5201 hybrid: floor(50*10000/10000) + floor(50*14000/10000) = 120', () => {
+describe('ported hybrid and authorial skills', () => {
+  it('lancer 5201 hybrid: floor(50*12000/10000) + floor(50*16000/10000) = 140', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('lancer');
     const wolf = spawnWolf(sim);
@@ -71,10 +71,10 @@ describe('authorial skills (the 7 policy rebuilds)', () => {
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(5201, wolf.id)).toEqual({ ok: true });
     resolveContacts(sim);
-    expect(hp - wolf.hp).toBe(120);
-    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'stun')).toBe(true);
+    expect(hp - wolf.hp).toBe(140);
+    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'slow')).toBe(true);
   });
-  it('elementalist 2301: magic 20000 on MA 50 = 100 + blind', () => {
+  it('Sorcerer 2301: magic 20000 on MA 50 = 100 + daze', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('elementalist', 92);
     sim.player.level = 30;
@@ -83,9 +83,7 @@ describe('authorial skills (the 7 policy rebuilds)', () => {
     expect(sim.mir4CastSkill(2301, wolf.id)).toEqual({ ok: true });
     resolveContacts(sim);
     expect(hp - wolf.hp).toBe(100);
-    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'blind' && f.magnitude === 0.5)).toBe(
-      true,
-    );
+    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'dazed')).toBe(true);
   });
 });
 
@@ -159,7 +157,28 @@ describe('self utilities', () => {
     expect(p.hp).toBe(1000 + Math.floor(4000 * 0.18)); // +720
   });
 
-  it('rank 15 improves shield, healing, and the pure-control totem by 28%', () => {
+  it('3503 can be cast at full health to restore an injured nearby party member', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeClassSim('taoist', 940);
+    const taoist = sim.player;
+    taoist.level = 40;
+    const allyId = sim.addPlayer('warrior', 'Nearby ally');
+    sim.partyInvite(allyId, sim.playerId);
+    sim.partyAccept(allyId);
+    const ally = sim.entities.get(allyId)!;
+    ally.pos = sim.groundPos(taoist.pos.x + 3, taoist.pos.z);
+    ally.maxHp = 4_000;
+    ally.hp = 1_000;
+    taoist.hp = taoist.maxHp;
+
+    expect(sim.mir4CastSkill(3503)).toEqual({ ok: true });
+    resolveContacts(sim);
+
+    expect(taoist.hp).toBe(taoist.maxHp);
+    expect(ally.hp).toBe(1_000 + Math.floor(4_000 * 0.18));
+  });
+
+  it('rank 15 improves shield and healing while Piercing Blades keeps its official stun', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
 
     const shieldSim = makeClassSim('elementalist', 941);
@@ -177,14 +196,16 @@ describe('self utilities', () => {
     resolveContacts(healSim);
     expect(healSim.player.hp).toBe(1000 + Math.floor(4000 * 0.2304));
 
-    const totemSim = makeClassSim('taoist', 943);
-    totemSim.player.level = 30;
-    totemSim.players.get(totemSim.playerId)!.mir4SkillLevels = { 3104: 15 };
-    const wolf = spawnWolf(totemSim);
-    expect(totemSim.mir4CastSkill(3104)).toEqual({ ok: true });
-    resolveContacts(totemSim);
+    const piercingSim = makeClassSim('taoist', 943);
+    piercingSim.player.level = 50;
+    piercingSim.players.get(piercingSim.playerId)!.mir4SkillLevels = { 3103: 15 };
+    const wolf = spawnWolf(piercingSim);
+    wolf.maxHp = 50_000;
+    wolf.hp = wolf.maxHp;
+    expect(piercingSim.mir4CastSkill(3103, wolf.id)).toEqual({ ok: true });
+    resolveContacts(piercingSim);
     expect(wolf.mir4Effects?.active).toContainEqual(
-      expect.objectContaining({ kind: 'stun', duration: 1.792 }),
+      expect.objectContaining({ kind: 'stun', duration: 2 }),
     );
   });
 });

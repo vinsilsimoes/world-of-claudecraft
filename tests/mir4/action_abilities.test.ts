@@ -74,7 +74,7 @@ describe('MIR4 skills in the existing ability surface', () => {
         [50, 6],
       ] as const) {
         sim.setPlayerLevel(level);
-        expect(activeIds(), `${cls} level ${level}`).toHaveLength(count);
+        expect(activeIds(), `${cls} level ${level}`).toHaveLength(level === 50 ? count + 1 : count);
       }
     }
   });
@@ -91,10 +91,10 @@ describe('MIR4 skills in the existing ability surface', () => {
       .map((event) => event.abilityId);
 
     expect(sim.player.level).toBeGreaterThanOrEqual(20);
-    expect(sim.known.some((ability) => ability.def.id === mir4ActionId(1304))).toBe(true);
+    expect(sim.known.some((ability) => ability.def.id === mir4ActionId(1301))).toBe(true);
     expect(sim.known.some((ability) => ability.def.passive)).toBe(true);
-    expect(learnedAbilityIds).toContain(mir4ActionId(1104));
-    expect(learnedAbilityIds).toContain(mir4ActionId(1304));
+    expect(learnedAbilityIds).toContain(mir4ActionId(1302));
+    expect(learnedAbilityIds).toContain(mir4ActionId(1301));
     expect(meta.counters.levelUps).toBe(sim.player.level - 1);
   });
 
@@ -108,6 +108,7 @@ describe('MIR4 skills in the existing ability surface', () => {
       cooldownId: '1102',
     });
     expect(voidStrike?.def.range).toBe(4);
+    expect(voidStrike?.def.name).toBe('Void Slash');
     expect(voidStrike?.def.description).toContain('$d');
   });
 
@@ -141,28 +142,28 @@ describe('MIR4 skills in the existing ability surface', () => {
       ),
       'rank-15 heal',
     );
-    const totem = required(
-      mir4ActionAbilities(3, 30, { 3104: 15 }, 204).find(
-        (ability) => ability.def.id === mir4ActionId(3104),
+    const piercingBlades = required(
+      mir4ActionAbilities(3, 50, { 3103: 15 }, 204).find(
+        (ability) => ability.def.id === mir4ActionId(3103),
       ),
-      'rank-15 totem',
+      'rank-15 Piercing Blades',
     );
 
     expect(shield.def.description).toContain('28.2%');
     expect(heal.def.description).toContain('23.04%');
-    expect(totem.def.description).toContain('1.792 sec');
+    expect(piercingBlades.def.description).toContain('2 sec');
   });
 
   it('describes defense break and burn using their live mechanics', () => {
     const warrior = required(
-      mir4ActionAbilities(1, 30, undefined, 204).find(
+      mir4ActionAbilities(1, 90, undefined, 204).find(
         (ability) => ability.def.id === mir4ActionId(1304),
       ),
       'defense-break skill',
     );
     const elementalist = required(
       mir4ActionAbilities(2, 30, undefined, 204).find(
-        (ability) => ability.def.id === mir4ActionId(2111),
+        (ability) => ability.def.id === mir4ActionId(2101),
       ),
       'burn skill',
     );
@@ -172,26 +173,26 @@ describe('MIR4 skills in the existing ability surface', () => {
       ),
       'area defense-break skill',
     );
-    const lancer = required(
-      mir4ActionAbilities(5, 30, undefined, 204).find(
-        (ability) => ability.def.id === mir4ActionId(5104),
+    const arbalist = required(
+      mir4ActionAbilities(4, 30, undefined, 204).find(
+        (ability) => ability.def.id === mir4ActionId(4103),
       ),
-      'lancer defense-break skill',
+      'arbalist defense-break skill',
     );
 
     expect(warrior.def.description).toContain(
       "Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.",
     );
     expect(elementalist.def.description).toContain(
-      'Burns the target for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.',
+      'Burns each enemy hit for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.',
     );
     expect(taoist.def.description).toContain(
       'Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.',
     );
-    expect(lancer.def.description).toContain(
-      "Reduces the target's Physical and Magic Defense by 14% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.",
+    expect(arbalist.def.description).toContain(
+      'Each enemy hit has its Physical and Magic Defense reduced by 12% for 10 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value.',
     );
-    for (const action of [warrior, elementalist, taoist, lancer]) {
+    for (const action of [warrior, elementalist, taoist, arbalist]) {
       expect(action.def.description).toContain(
         'The cooldown shown above is the base cooldown. Skill Cooldown Reduction can lower it by up to 40% in PvE or 30% in PvP.',
       );
@@ -212,8 +213,8 @@ describe('MIR4 skills in the existing ability surface', () => {
       player.mir4.accuracy = 10_000;
       player.mir4.critical = 0;
       const action = required(
-        sim.known.find((ability) => ability.def.id === mir4ActionId(2111)),
-        'Ember Spear action',
+        sim.known.find((ability) => ability.def.id === mir4ActionId(2101)),
+        'Flame Orb action',
       );
       const scaling = {
         attackPower: player.attackPower,
@@ -243,7 +244,7 @@ describe('MIR4 skills in the existing ability surface', () => {
       expect(burn.ticks).toBe(appliedTicks);
       expect(burn.total).toBe(appliedPerTick * appliedTicks);
       expect(tooltip).toContain(
-        `Burns the target for ${burn.perTick} base damage every 1 sec (${burn.ticks} ticks, ${burn.total} total before mitigation).`,
+        `Burns each enemy hit for ${burn.perTick} base damage every 1 sec (${burn.ticks} ticks, ${burn.total} total before mitigation).`,
       );
       expect(tooltip).toContain(
         'The cooldown shown above is the base cooldown. Skill Cooldown Reduction can lower it by up to 40% in PvE or 30% in PvP.',
@@ -372,9 +373,18 @@ describe('MIR4 skills in the existing ability surface', () => {
     const player = required(sim.entities.get(sim.playerId), 'player');
     const target = spawnTarget(sim);
     player.mir4UltGauge = 100;
+    player.hp = player.maxHp - 1_000;
+    const hpBefore = player.hp;
+    const dragonFlame = required(
+      sim.known.find((ability) => ability.def.id === mir4UltimateActionId(1)),
+      'Dragon Flame action',
+    );
 
     sim.castAbility(mir4UltimateActionId(1));
 
+    expect(dragonFlame.def.name).toBe('Dragon Flame');
+    expect(dragonFlame.def.description).toContain('Restores 10% of your maximum health.');
+    expect(player.hp).toBe(Math.min(player.maxHp, hpBefore + Math.floor(player.maxHp * 0.1)));
     expect(player.mir4UltGauge).toBe(0);
     expect(player.cooldowns.get('mir4_ult')).toBe(30);
     expect(mir4ActionRawDamage(mir4UltimateActionId(1), 1, 100, 0)).toBe(360);
@@ -397,9 +407,9 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(player.autoAttack).toBe(false);
   });
 
-  it('lets control-only supplemental actions apply their real effect', () => {
+  it('lets Gale Slash apply its real control effect after it unlocks', () => {
     const sim = makeSim('warrior');
-    sim.setPlayerLevel(40);
+    sim.setPlayerLevel(60);
     const target = spawnTarget(sim);
     sim.castAbility(mir4ActionId(1501));
     expect(target.mir4Effects?.active).toContainEqual(
@@ -411,8 +421,8 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(mir4ActionRawDamage(mir4ActionId(1102), 1, 1000, 0)).toBe(2500);
     expect(mir4ActionRawDamage(mir4ActionId(1102), 1, 1000, 0, 100)).toBe(2525);
     expect(mir4ActionRawDamage(mir4ActionId(1102), 2, 1000, 0)).toBe(2550);
-    expect(mir4ActionRawDamage(mir4ActionId(5201), 1, 50, 50)).toBe(120);
-    expect(mir4ActionRawDamage(mir4ActionId(5201), 15, 50, 50)).toBeGreaterThan(120);
+    expect(mir4ActionRawDamage(mir4ActionId(5201), 1, 50, 50)).toBe(140);
+    expect(mir4ActionRawDamage(mir4ActionId(5201), 15, 50, 50)).toBeGreaterThan(140);
 
     const hybrid = required(
       mir4ActionAbilities(5, 1, undefined, 204).find(
@@ -428,9 +438,9 @@ describe('MIR4 skills in the existing ability surface', () => {
         rangedPower: 0,
         mir4SkillDamageBps: 100,
       }),
-    ).toBe(383);
+    ).toBe(444);
     expect(abilityEffectText(hybrid, { attackPower: 100, spellPower: 200, rangedPower: 0 })).toBe(
-      '380',
+      '440',
     );
   });
 
@@ -440,9 +450,9 @@ describe('MIR4 skills in the existing ability surface', () => {
     const target = spawnTarget(sim);
     const action = required(
       sim.known.find((ability) => ability.def.id === mir4ActionId(1102)),
-      'Void Strike action',
+      'Void Slash action',
     );
-    const effect = required(action.effects[0], 'Void Strike damage');
+    const effect = required(action.effects[0], 'Void Slash damage');
     if (!player.mir4) throw new Error('missing MIR4 player stats');
     player.attackPower = 1_000;
     player.mir4.accuracy = 0;

@@ -400,7 +400,7 @@ const CLASS_LABELS: Record<PlayableClass, string> = {
   mage: 'Mage',
   warlock: 'Warlock',
   druid: 'Druid',
-  elementalist: 'Elementalist',
+  elementalist: 'Sorcerer',
   taoist: 'Taoist',
   arbalist: 'Arbalist',
   lancer: 'Lancer',

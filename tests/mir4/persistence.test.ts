@@ -33,18 +33,18 @@ describe('MIR4 character persistence', () => {
   it('round-trips per-skill automatic-use opt-outs and restores new skills as enabled', () => {
     const source = makeMir4Sim(394);
     source.setPlayerLevel(10);
-    source.setMir4AutoSkillEnabled(1104, false);
+    source.setMir4AutoSkillEnabled(1302, false);
     source.setMir4AutoSkillEnabled(1102, false);
 
     const saved = source.serializeCharacter(source.playerId)!;
-    expect(saved.mir4DisabledAutoSkills).toEqual([1102, 1104]);
+    expect(saved.mir4DisabledAutoSkills).toEqual([1102, 1302]);
 
     const target = makeMir4Sim(393, true);
     const restoredPid = target.addPlayer('warrior', 'Automatic Skills', {
       state: saved,
     });
-    expect(target.players.get(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1104]);
-    expect(target.mir4PlayerState(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1104]);
+    expect(target.players.get(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1302]);
+    expect(target.mir4PlayerState(restoredPid)?.mir4DisabledAutoSkills).toEqual([1102, 1302]);
   });
 
   it('round-trips one hundred pending Spirit summons without truncation', () => {

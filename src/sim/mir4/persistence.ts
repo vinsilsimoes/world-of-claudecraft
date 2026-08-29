@@ -13,7 +13,7 @@ import type { Mir4ClassId } from '../content/mir4/classes';
 import type { Mir4EquipmentItemDef } from '../content/mir4/equipment_catalog';
 import { MIR4_ITEMS, mir4EquipmentDefinition } from '../content/mir4/items';
 import { MIR4_QUESTS } from '../content/mir4/quests';
-import { mir4SkillById } from '../content/mir4/skills';
+import { mir4SkillById } from '../content/mir4/skills_runtime';
 import type { Mir4AchievementClears, Mir4Currencies } from './achievements';
 import { MIR4_AFFIXES, mir4AffixPoolFor } from './affixes';
 import type { Mir4ArcQuestProgress } from './arc_quests';

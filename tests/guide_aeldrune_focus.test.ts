@@ -45,7 +45,7 @@ describe('Aeldrune public site and wiki', () => {
     expect(AELDRUNE_PUBLIC_FACTS.levelCap).toBe(200);
     expect(AELDRUNE_PUBLIC_FACTS.classNames).toEqual([
       'Guerreiro',
-      'Elementalista',
+      'Feiticeiro',
       'Taoista',
       'Besteiro',
       'Lanceiro',

@@ -15,36 +15,42 @@ import { mir4CoefficientDamage, mir4SkillManaCost } from '../../src/sim/mir4/mat
 const WARRIOR_LEVEL_1 = { attackPower: 50, manaCostStat: 204 };
 
 describe('the mir4 skill catalog shape', () => {
-  it('is 25 unique skills, five per class, one AoE role each', () => {
-    expect(MIR4_SKILLS).toHaveLength(25);
-    expect(new Set(MIR4_SKILLS.map((s) => s.skillId)).size).toBe(25);
+  it('has complete official regular-skill kits for all five classes', () => {
+    expect(MIR4_SKILLS).toHaveLength(60);
+    expect(new Set(MIR4_SKILLS.map((s) => s.skillId)).size).toBe(60);
     for (let classId = 1; classId <= 5; classId++) {
       const kit = mir4SkillsForClass(classId as 1 | 2 | 3 | 4 | 5);
-      expect(kit).toHaveLength(5);
-      expect(kit.map((s) => s.slot).sort()).toEqual([1, 2, 3, 4, 5]);
+      const expectedSlots = Array.from({ length: 12 }, (_, index) => index + 1);
+      expect(kit).toHaveLength(expectedSlots.length);
+      expect(kit.map((s) => s.slot).sort((a, b) => a - b)).toEqual(expectedSlots);
       expect(kit.some((s) => s.roles.includes('aoe'))).toBe(true);
     }
     expect(mir4SkillById(9999)).toBeNull();
   });
-  it('slot 5 unlocks at level 5; the shared GCD is 1000 ms', () => {
-    for (const skill of MIR4_SKILLS) {
-      if (skill.slot === 5) expect(skill.unlock).toEqual({ kind: 'level', level: 5 });
-      else expect(skill.unlock).toEqual({ kind: 'initial-deck' });
+  it('records the product unlock curve for every complete kit', () => {
+    for (const classId of [1, 2, 3, 4, 5] as const) {
+      expect(mir4SkillsForClass(classId).map((skill) => skill.unlock)).toEqual([
+        { kind: 'initial-deck' },
+        ...Array.from({ length: 11 }, (_, index) => ({
+          kind: 'level',
+          level: (index + 1) * 10,
+        })),
+      ]);
     }
     expect(MIR4_SKILL_GLOBAL_COOLDOWN_MS).toBe(1000);
   });
-  it('the seven authorial skills carry their canon policies', () => {
+  it('active authorial skills retain their policies while replaced Taoist rows use native data', () => {
     const authorial = MIR4_SKILLS.filter((s) => s.provenance === 'authorial-v1');
-    expect(authorial.map((s) => s.skillId).sort()).toEqual([
-      2301, 2501, 3301, 3506, 4103, 5104, 5201,
-    ]);
-    expect(Object.keys(MIR4_AUTHORIAL_SKILL_POLICIES).map(Number).sort()).toEqual(
-      authorial.map((s) => s.skillId).sort(),
-    );
-    for (const policy of Object.values(MIR4_AUTHORIAL_SKILL_POLICIES)) {
+    expect(authorial.map((s) => s.skillId).sort()).toEqual([2301, 2501]);
+    for (const skill of authorial) {
+      const policy = MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId];
+      expect(policy).toBeDefined();
+      if (!policy) continue;
       expect(policy.nativeClaim).toBe(false);
       expect(policy.autoBattleEligible).toBe(true);
     }
+    expect(mir4SkillById(3301)?.sourceRuntimeStatus).toBe('official-client-catalog');
+    expect(mir4SkillById(3506)?.sourceRuntimeStatus).toBe('official-client-catalog');
     expect(MIR4_AUTHORIAL_SKILL_POLICIES[4103]?.damage.levelOneDamage).toBe(115);
     expect(MIR4_AUTHORIAL_SKILL_POLICIES[4103]?.mpCost).toBe(42);
   });
@@ -108,11 +114,11 @@ describe('pinned skills (warrior 1102, taoist 3101, arbalist 4106)', () => {
     expect(skill?.damage?.components).toHaveLength(1);
     expect(mir4CoefficientDamage(50, skill!.damage!.components[0]!.coefficient)).toBe(85);
   });
-  it('1501 Golpe de Vendaval: the warrior level-5 supplemental kit entry', () => {
+  it('1501 Gale Slash: the seventh Warrior action at level 60', () => {
     const skill = mir4SkillById(1501);
     expect(skill?.classId).toBe(1);
-    expect(skill?.slot).toBe(5);
-    expect(skill?.unlock).toEqual({ kind: 'level', level: 5 });
+    expect(skill?.slot).toBe(7);
+    expect(skill?.unlock).toEqual({ kind: 'level', level: 60 });
     expect(skill?.cooldownMs).toBe(44_000);
     expect(skill?.skillCost).toBe(3400);
     expect(skill?.browserRangePx).toBe(104);

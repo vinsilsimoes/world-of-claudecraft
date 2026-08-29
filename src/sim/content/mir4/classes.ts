@@ -2,14 +2,22 @@
 // server/mir4-class-combat-identity-v1.js (CLASS_IDENTITIES),
 // server/mir4-class-combat-range-v1.js (CLASS_PROFILES),
 // server/mir4-character-appearance-v1.js (names), and
-// server/data/mir4-character-core-v1.json (classCreates). DO NOT change values
-// without a documented decision in docs/migration/survival-game-port-plan.md.
+// server/data/mir4-character-core-v1.json (classCreates). Stable ids, creation
+// anchors and equipment ids remain source-compatible. Product-facing class
+// identity follows the official MIR4 archetypes documented in
+// docs/design/aeldrune-mir4-class-parity.md.
 // The stat/level table itself is class_levels.ts.
 
 export type Mir4ClassId = 1 | 2 | 3 | 4 | 5;
 export type Mir4ClassKey = 'warrior' | 'elementalist' | 'taoist' | 'arbalist' | 'lancer';
-export type Mir4DamageChannel = 'physical' | 'magic';
+export type Mir4DamageChannel = 'physical' | 'magic' | 'hybrid';
 export type Mir4RangeBand = 'melee' | 'medium-range' | 'long-range' | 'melee-extended';
+export type Mir4CombatRole =
+  | 'frontline-control'
+  | 'magic-artillery'
+  | 'support-controller'
+  | 'ranged-marksman'
+  | 'mobile-controller';
 
 export interface Mir4ClassDef {
   classId: Mir4ClassId;
@@ -19,6 +27,7 @@ export interface Mir4ClassDef {
   weapon: 'heavySword' | 'largeStaff' | 'shortStaff' | 'arbalest' | 'spear';
   damageChannel: Mir4DamageChannel;
   rangeBand: Mir4RangeBand;
+  combatRole: Mir4CombatRole;
   /** Source range envelope in tiles (basic/ultimate/targeted are identical per class). */
   rangeTiles: number;
   /** The initial skill deck (4 skills); the 5th supplemental skill unlocks at level 5. */
@@ -31,6 +40,8 @@ export interface Mir4ClassDef {
   initialWeaponMeshIds: readonly number[];
   questStartId: number;
   initialVehicleId: number;
+  /** PT-BR display name for the class's gauge-consuming signature action. */
+  ultimateDisplayName: string;
 }
 
 /** The classId roster, in source order. */
@@ -44,6 +55,7 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     weapon: 'heavySword',
     damageChannel: 'physical',
     rangeBand: 'melee',
+    combatRole: 'frontline-control',
     rangeTiles: 2,
     initialSkillIds: [1102, 1104, 1304, 1401],
     initialStageId: 100004010,
@@ -54,14 +66,16 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     initialWeaponMeshIds: [101111],
     questStartId: 100000000,
     initialVehicleId: 1011,
+    ultimateDisplayName: 'Chama do Dragão',
   },
   {
     classId: 2,
     key: 'elementalist',
-    name: 'Elementalista',
+    name: 'Feiticeiro',
     weapon: 'largeStaff',
     damageChannel: 'magic',
     rangeBand: 'medium-range',
+    combatRole: 'magic-artillery',
     rangeTiles: 4,
     initialSkillIds: [2101, 2111, 2501, 2301],
     initialStageId: 100004010,
@@ -72,15 +86,17 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     initialWeaponMeshIds: [121111],
     questStartId: 100000000,
     initialVehicleId: 1011,
+    ultimateDisplayName: 'Tornado do Dragão',
   },
   {
     classId: 3,
     key: 'taoist',
     name: 'Taoista',
     weapon: 'shortStaff',
-    damageChannel: 'physical',
-    rangeBand: 'melee',
-    rangeTiles: 2,
+    damageChannel: 'hybrid',
+    rangeBand: 'medium-range',
+    combatRole: 'support-controller',
+    rangeTiles: 4,
     initialSkillIds: [3506, 3101, 3301, 3104],
     initialStageId: 100004010,
     initialPosition: [29722, 74350, 9065],
@@ -90,6 +106,7 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     initialWeaponMeshIds: [141111],
     questStartId: 100000000,
     initialVehicleId: 1011,
+    ultimateDisplayName: 'Raio de Luz',
   },
   {
     classId: 4,
@@ -98,6 +115,7 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     weapon: 'arbalest',
     damageChannel: 'physical',
     rangeBand: 'long-range',
+    combatRole: 'ranged-marksman',
     rangeTiles: 6,
     initialSkillIds: [4101, 4106, 4102, 4103],
     initialStageId: 100004010,
@@ -108,14 +126,16 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     initialWeaponMeshIds: [161101, 162101],
     questStartId: 100000000,
     initialVehicleId: 1011,
+    ultimateDisplayName: 'Chuva de Flechas',
   },
   {
     classId: 5,
     key: 'lancer',
     name: 'Lanceiro',
     weapon: 'spear',
-    damageChannel: 'physical',
+    damageChannel: 'hybrid',
     rangeBand: 'melee-extended',
+    combatRole: 'mobile-controller',
     rangeTiles: 3,
     initialSkillIds: [5201, 5101, 5104, 5301],
     initialStageId: 100004010,
@@ -126,6 +146,7 @@ export const MIR4_CLASSES: readonly Mir4ClassDef[] = [
     initialWeaponMeshIds: [181103],
     questStartId: 100000000,
     initialVehicleId: 1011,
+    ultimateDisplayName: 'Lança do Dragão',
   },
 ];
 
@@ -146,6 +167,9 @@ export function mir4ClassByKey(key: string): Mir4ClassDef | null {
  * lives; never mix px/tiles/yards at a call site.
  */
 export const MIR4_TILES_TO_YARDS = 2;
+
+/** Dragon Flame's Aeldrune rank-one self-sustain, based on the official skill identity. */
+export const MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS = 1000;
 
 /** The class's full range envelope in world yards. */
 export function mir4ClassRangeYards(def: Mir4ClassDef): number {

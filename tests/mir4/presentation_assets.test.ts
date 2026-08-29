@@ -8,7 +8,7 @@ import {
   mir4ArcNpcTemplateId,
 } from '../../src/sim/content/mir4/arc_campaign';
 import { MIR4_CLASS_PASSIVES } from '../../src/sim/content/mir4/passives';
-import { MIR4_SKILLS } from '../../src/sim/content/mir4/skills';
+import { MIR4_SKILLS } from '../../src/sim/content/mir4/skills_runtime';
 import {
   MIR4_ACTION_ABILITY_DEFS,
   mir4ActionId,

@@ -22,6 +22,9 @@ formulas), never here.
 - `skills.ts`: GENERATED. The 25-skill catalog (5 per class: deck slots 1..4
   plus the level-5 supplemental slot 5) with damage components, effect
   profiles, rotation roles, and provenance.
+- `skills_runtime.ts`: hand-authored gameplay composition over the immutable
+  extraction. The five complete 12-skill official class kits and Aeldrune
+  progression live here; each class also has its Ultimate in the combat spec.
 - `authorial_policies.ts`: GENERATED. The 7 authorial skill policies; per port
   plan Standing decision #2 these are the canon rule for their skills
   (`nativeClaim: false` authorial rebuilds of what the native catalog left
@@ -46,5 +49,6 @@ the tests below; never hand-patch a value.
   which authors the English i18n catalog source in the SAME change (root i18n
   rule; M16 wordy-name rule applies to the PT-BR fills).
 - Tests: `tests/mir4/math.test.ts`, `tests/mir4/classes.test.ts`,
-  `tests/mir4/skills.test.ts` pin literal source-observed values. Adding or
-  changing a record means updating the pin in the same change.
+  `tests/mir4/skills.test.ts` and the per-class `*_complete_kit.test.ts` suites
+  pin literal source-observed values. Adding or changing a record means
+  updating the pin in the same change.

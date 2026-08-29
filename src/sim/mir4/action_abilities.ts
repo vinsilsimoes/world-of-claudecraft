@@ -6,6 +6,7 @@ import {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
   MIR4_CLASS_PASSIVES,
+  MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS,
   type Mir4ClassId,
   type Mir4SkillDef,
   mir4ClassById,
@@ -56,31 +57,74 @@ export function refreshMir4KnownAbilities(
 }
 
 const ENGLISH_NAMES: Readonly<Record<number, string>> = {
-  1102: 'Void Strike',
-  1104: 'Lacerating Strike',
-  1304: 'Tackle',
+  1101: 'Rampant',
+  1102: 'Void Slash',
+  1103: 'Barbaric Charge',
+  1104: 'Splitting Slash',
+  1201: 'Iron Shackle',
+  1301: 'Riposte',
+  1302: "Lion's Roar",
+  1304: 'Body Check',
   1401: 'Ground Smash',
-  1501: 'Gale Strike',
-  2101: 'Prismatic Beam',
-  2111: 'Ember Spear',
-  2301: 'Smite Seal',
-  2501: 'Evoked Core',
+  1501: 'Gale Slash',
+  1502: 'Unbreakable Stance',
+  1601: 'Crescent Strike',
+  2101: 'Flame Orb',
+  2103: 'Immolate',
+  2111: 'Frost Orb',
+  2201: 'Flame Strike',
+  2202: 'Frozen Block',
+  2203: 'Blizzard',
+  2204: 'Phoenix Embrace',
+  2301: 'Thunderstorm',
+  2303: 'Chain Lightning',
+  2501: 'Dark Vortex',
+  2502: 'Soul Devour',
   2503: 'Magic Shield',
-  3101: 'Seal Sequence',
-  3104: 'Totem 1010',
-  3301: 'Totem Seal II',
+  3101: 'Sunbeam Sword',
+  3103: 'Piercing Blades',
+  3104: 'Rain of Blades',
+  3201: 'Tai Chi',
+  3203: 'Soaring Slash',
+  3301: 'Moonlight Orb',
+  3404: 'Expulsion Circle',
+  3501: 'Guardian Circle',
   3503: 'Heal',
-  3506: 'Totem Seal I',
-  4101: 'Burst 4101',
-  4102: 'Sequence 4102',
-  4103: 'Twin Echo',
-  4106: 'Charge 4106',
-  4107: 'Flare Arrow',
-  5101: 'Thrust 5101',
-  5104: 'Sweep 5104',
-  5201: 'Strike 5201',
-  5301: 'Chain 5301',
-  5401: 'Raging Storm',
+  3504: 'Greater Heal',
+  3505: 'Blasting Charm',
+  3506: 'Moonlight Wave',
+  4101: 'Quick Shot',
+  4102: 'Illusion Arrow',
+  4103: 'Burst Shell',
+  4104: 'Venom Mist Shell',
+  4105: 'Ice Cage',
+  4106: 'Painstrike Gale',
+  4107: 'Flash Arrow',
+  4108: 'Heavenly Bow',
+  4109: 'Obliterate Shell',
+  4110: 'Seeking Bolt',
+  4111: "Mind's Eye",
+  4112: 'Cloaking',
+  5101: 'Crescent Blade',
+  5102: 'Dragon Tail',
+  5103: 'Ascending Dragon',
+  5104: 'Nirvana Kick',
+  5201: 'Ravaging Blow',
+  5202: 'Blitz Strike',
+  5205: 'Piercing Spear',
+  5301: 'Double Strike',
+  5303: 'Crushing Blow',
+  5304: 'Absorption',
+  5401: 'Sweeping Storm',
+  5403: 'Wind Wall',
+};
+
+const ULTIMATE_ENGLISH_NAMES: Readonly<Record<Mir4ClassId, string>> = {
+  1: 'Dragon Flame',
+  2: 'Dragon Tornado',
+  3: 'Ray of Light',
+  4: 'Arrow Rain',
+  5: 'Dragon Spear',
 };
 
 const PASSIVE_ENGLISH_NAMES: Readonly<Record<string, string>> = {
@@ -126,12 +170,17 @@ function percent(value: number): string {
   return `${Math.round(value * 1000) / 10}%`;
 }
 
-function effectSentence(skill: Mir4SkillDef, rank = 1): string {
-  const effect = skill.effect;
-  if (!effect) return '';
+function effectSentenceFor(
+  skill: Mir4SkillDef,
+  effect: NonNullable<Mir4SkillDef['effect']>,
+  rank = 1,
+): string {
   const scalesControlEffect =
     skill.damage === null &&
-    MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId] === undefined &&
+    !(
+      skill.provenance === 'authorial-v1' &&
+      MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId] !== undefined
+    ) &&
     effect.effect !== 'magic-shield' &&
     effect.effect !== 'heal-pulse';
   const durationMs = scalesControlEffect
@@ -142,9 +191,9 @@ function effectSentence(skill: Mir4SkillDef, rank = 1): string {
     case 'stun':
       return ` Stuns the target for ${seconds} sec.`;
     case 'knockdown':
-      return ` Knocks the target down for ${seconds} sec.`;
+      return `${effect.chargeToTarget ? ' Charges to the target.' : ''}${effect.pullToActor ? ' Pulls nearby enemies toward you.' : ''} Knocks ${effect.areaRadiusPx ? 'each enemy hit' : 'the target'} down for ${seconds} sec.`;
     case 'dazed':
-      return ` Dazes the target for ${seconds} sec.`;
+      return `${effect.pushFromActorYards ? ` Pushes each enemy hit ${effect.pushFromActorYards} yards away.` : ''} Dazes the target for ${seconds} sec.`;
     case 'root':
       return ` Roots the target for ${seconds} sec.`;
     case 'freeze':
@@ -164,25 +213,63 @@ function effectSentence(skill: Mir4SkillDef, rank = 1): string {
     }
     case 'burn': {
       const ticks = Math.floor(seconds / MIR4_BURN_TICK_SECONDS);
-      return ` Burns the target for {burnPerTick} base damage every ${MIR4_BURN_TICK_SECONDS} sec (${ticks} ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.`;
+      const victim = effect.areaRadiusPx ? 'each enemy hit' : 'the target';
+      return ` Burns ${victim} for {burnPerTick} base damage every ${MIR4_BURN_TICK_SECONDS} sec (${ticks} ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.`;
     }
     case 'magic-shield':
       return `Reduces damage taken by ${percent(mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), rank) / 10_000)} for ${seconds} sec.`;
     case 'heal-pulse': {
       const basisPoints = Number(effect.healMaxHpBasisPoints ?? 0);
-      return `Restores ${mir4SkillRankScaledInteger(basisPoints, rank) / 100}% of maximum health.`;
+      const amount = mir4SkillRankScaledInteger(basisPoints, rank) / 100;
+      const partyTargets = Math.max(1, Number(effect.maxPartyTargets ?? 1));
+      const radius = Number(effect.partyRadiusPx ?? 0) / 16;
+      return partyTargets > 1
+        ? `Restores ${amount}% of maximum health to you and up to ${partyTargets - 1} party members within ${radius} yards.`
+        : `Restores ${amount}% of maximum health.`;
+    }
+    case 'pull':
+      return ' Pulls each enemy hit toward you.';
+    case 'damage-boost':
+      return ` Increases ${effect.subject === 'party' ? 'party damage' : 'your damage'} by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
+    case 'defense-boost':
+      return ` Increases ${effect.subject === 'party' ? "the party's" : 'your'} Physical and Magic Defense by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
+    case 'dodge-boost':
+      return ` Increases your Dodge by ${effect.magnitude ?? 0} for ${seconds} sec.`;
+    case 'self-heal': {
+      const rank8Heal = Number(effect.healMaxHpBasisPoints ?? 0) / 100;
+      if (effect.minimumRank === undefined && effect.rank10HealMaxHpBasisPoints === undefined) {
+        return ` Restores ${rank8Heal}% of your maximum health.`;
+      }
+      const rank10Heal = Number(effect.rank10HealMaxHpBasisPoints ?? 0) / 100;
+      return ` At rank 8, restores ${rank8Heal}% of your maximum health; at rank 10, restores ${rank10Heal}%.`;
     }
     default:
       return '';
   }
 }
 
+function effectSentence(skill: Mir4SkillDef, rank = 1): string {
+  return [skill.effect, ...(skill.additionalEffects ?? [])]
+    .filter((effect): effect is NonNullable<Mir4SkillDef['effect']> => effect !== null)
+    .map((effect) => effectSentenceFor(skill, effect, rank))
+    .join('');
+}
+
 function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
   const utility = effectSentence(skill, rank);
-  if (skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse') {
+  const effects = [skill.effect, ...(skill.additionalEffects ?? [])].filter(
+    (effect): effect is NonNullable<Mir4SkillDef['effect']> => effect !== null,
+  );
+  const selfUtility =
+    skill.damage === null &&
+    effects.length > 0 &&
+    effects.every((effect) => effect.subject === 'actor' || effect.subject === 'party');
+  if (selfUtility) {
     return utility;
   }
-  const damage = skill.damage !== null || MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId];
+  const damage =
+    skill.damage !== null ||
+    (skill.provenance === 'authorial-v1' && MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId]);
   let text = damage ? 'Deals $d damage to an enemy.' : 'Affects an enemy.';
   const area = skill.effect;
   if (
@@ -258,8 +345,13 @@ export function mir4ClassIdFromActions(
 }
 
 function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): AbilityDef {
+  const effects = [skill.effect, ...(skill.additionalEffects ?? [])].filter(
+    (effect): effect is NonNullable<Mir4SkillDef['effect']> => effect !== null,
+  );
   const selfUtility =
-    skill.effect?.effect === 'magic-shield' || skill.effect?.effect === 'heal-pulse';
+    skill.damage === null &&
+    effects.length > 0 &&
+    effects.every((effect) => effect.subject === 'actor' || effect.subject === 'party');
   return {
     id: mir4ActionId(skill.skillId),
     name: ENGLISH_NAMES[skill.skillId] ?? skill.displayName,
@@ -267,12 +359,13 @@ function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): 
     cost,
     castTime: 0,
     cooldown: skill.cooldownMs / 1000,
-    range: selfUtility ? 0 : range,
+    range: selfUtility ? 0 : (skill.castRangePx ?? range * 16) / 16,
     school: skill.classId === 2 || skill.classId === 3 ? 'arcane' : 'physical',
-    requiresTarget: !selfUtility,
+    requiresTarget: skill.requiresTarget && !selfUtility,
     learnLevel: mir4SkillUnlockLevel(skill.slot),
     effects:
-      skill.damage !== null || MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId]
+      skill.damage !== null ||
+      (skill.provenance === 'authorial-v1' && MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId])
         ? [{ type: 'directDamage', min: 0, max: 0 }]
         : [],
     description: descriptionFor(skill, rank),
@@ -284,7 +377,7 @@ function ultimateActionDef(classId: Mir4ClassId): AbilityDef {
   const impacts = spec.impactOffsetMs.length;
   return {
     id: mir4UltimateActionId(classId),
-    name: 'Ultimate',
+    name: ULTIMATE_ENGLISH_NAMES[classId],
     class: 'warrior',
     cost: 0,
     castTime: 0,
@@ -294,7 +387,11 @@ function ultimateActionDef(classId: Mir4ClassId): AbilityDef {
     requiresTarget: true,
     learnLevel: MIR4_ULTIMATE_UNLOCK_LEVEL,
     effects: [{ type: 'directDamage', min: 0, max: 0 }],
-    description: `Deals $d damage over ${impacts} impacts. Requires a full Ultimate gauge. ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`,
+    description: `Deals $d damage over ${impacts} impacts.${
+      classId === 1
+        ? ` Restores ${MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS / 100}% of your maximum health.`
+        : ''
+    } Requires a full Ultimate gauge. ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`,
   };
 }
 
@@ -441,7 +538,9 @@ export function mir4ActionRawDamage(
   }
   const skillId = mir4SkillIdFromAction(abilityId);
   if (skillId === null) return null;
-  const policy = MIR4_AUTHORIAL_SKILL_POLICIES[skillId];
+  const skill = mir4SkillById(skillId);
+  const policy =
+    skill?.provenance === 'authorial-v1' ? MIR4_AUTHORIAL_SKILL_POLICIES[skillId] : undefined;
   if (policy) {
     const physical = Math.floor((attackPower * (policy.damage.physicalCoefficient ?? 0)) / 10_000);
     const magic = Math.floor((spellPower * (policy.damage.magicCoefficient ?? 0)) / 10_000);
@@ -450,7 +549,6 @@ export function mir4ActionRawDamage(
       skillDamageBps,
     );
   }
-  const skill = mir4SkillById(skillId);
   if (!skill?.damage) return null;
   let total = 0;
   for (const component of skill.damage.components) {

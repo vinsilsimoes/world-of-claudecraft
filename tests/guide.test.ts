@@ -1035,8 +1035,8 @@ describe('Guide search locale-insensitive folding', () => {
     await ensureLocaleLoaded('tr_TR');
     try {
       setLanguage('tr_TR');
-      const hits = rank(buildIndex(), 'elementalista');
-      expect(hits.some((e) => e.label === 'Elementalista')).toBe(true);
+      const hits = rank(buildIndex(), 'feiticeiro');
+      expect(hits.some((e) => e.label === 'Feiticeiro')).toBe(true);
     } finally {
       setLanguage('en');
     }

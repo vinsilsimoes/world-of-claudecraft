@@ -45,7 +45,7 @@ describe('MIR4 native class presentation profiles', () => {
     ]);
   });
 
-  it('pins all six native weapon ranks for Warrior, Elementalist, and Lancer', () => {
+  it('pins all six native weapon ranks for Warrior, Sorcerer, and Lancer', () => {
     expect(mir4NativeClassPresentation(1).weaponItemIds).toEqual([
       'eastbrook_greatsword',
       'highwatch_greatsword',

@@ -46,7 +46,7 @@ function makeSim(seed = 61): Sim {
   });
   sim.mir4UnequipSlot(1);
   sim.mir4UnequipSlot(5);
-  sim.player.level = 40;
+  sim.player.level = 120;
   return sim;
 }
 
@@ -72,7 +72,7 @@ function makeClassSim(seed: number, playerClassMir4: Mir4ClassKey): Sim {
     idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
     world: EMPTY_TEST_WORLD,
   });
-  sim.player.level = 40;
+  sim.player.level = 120;
   return sim;
 }
 
@@ -699,7 +699,7 @@ describe('the mir4 effect engine', () => {
         kind: 'burn',
         durationSeconds: 4.5,
         magnitude: 0.08,
-        name: 'Ember Spear',
+        name: 'Orbe Flamejante',
         sourceId: sim.playerId,
       }),
     ).toEqual({ ok: true });
@@ -984,12 +984,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
 
     expect(checkedIds).not.toContain(distant.id);
   });
-  it.each([
-    ['elementalist', 2501, 'freeze', 8],
-    ['taoist', 3506, 'root', 7],
-    ['arbalist', 4103, 'blind', 7.5],
-    ['lancer', 5201, 'stun', 7],
-  ] as const)(
+  it.each([['elementalist', 2201, 'dazed', 7]] as const)(
     'casts the %s actor-centered AoE %i without a selected target',
     (cls, skillId, effectKind, radius) => {
       const sim = makeClassSim(652 + skillId, cls);
@@ -1015,23 +1010,18 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       expect(outside.mir4Effects?.active ?? []).toHaveLength(0);
     },
   );
-  it('refuses the lancer actor-centered skill when no hostile is inside its area', () => {
+  it('refuses a distant lancer target before committing the targeted skill', () => {
     const sim = makeClassSim(5853, 'lancer');
     const p = sim.player;
     const distant = spawnTankWolf(sim, p.pos.x + 20, p.pos.z, '5201_distant_only');
     const resourceBefore = p.resource;
 
-    expect(sim.mir4CastSkill(5201, distant.id)).toEqual({ ok: false, reason: 'no-target' });
+    expect(sim.mir4CastSkill(5201, distant.id)).toEqual({ ok: false, reason: 'out-of-range' });
     expect(p.resource).toBe(resourceBefore);
     expect(p.cooldowns.has('5201')).toBe(false);
     expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
   });
-  it.each([
-    ['elementalist', 2501, 'freeze', 8],
-    ['taoist', 3506, 'root', 7],
-    ['arbalist', 4103, 'blind', 7.5],
-    ['lancer', 5201, 'stun', 7],
-  ] as const)(
+  it.each([['elementalist', 2201, 'dazed', 7]] as const)(
     'includes the exact %s actor-area boundary for skill %i',
     (cls, skillId, effectKind, radius) => {
       const sim = makeClassSim(1652 + skillId, cls);

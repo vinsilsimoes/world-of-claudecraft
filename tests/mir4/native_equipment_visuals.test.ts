@@ -43,7 +43,7 @@ describe('MIR4 native WoC equipment presentation', () => {
   });
 
   it('stamps the render-only mirror through the authoritative stat funnel', () => {
-    const player = createPlayer(1, 'warrior', { x: 0, y: 0, z: 0 }, 'Elementalist');
+    const player = createPlayer(1, 'warrior', { x: 0, y: 0, z: 0 }, 'Sorcerer');
     recalcMir4PlayerStats(player, 'elementalist', 10, {
       1: 991010202,
       5: 991050202,
