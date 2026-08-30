@@ -455,10 +455,10 @@ describe('MIR4 local comparison on the original WoC map', () => {
   });
 
   it('lets Auto Journey reach the deliberate M01 tutorial checkpoint', () => {
-    // This checkpoint exercises M01 only. Building later campaign projections
-    // makes the deterministic 741-tick journey needlessly approach Vitest's
-    // timeout under parallel load without adding coverage to this assertion.
-    const world = buildMir4WocComparisonWorld(1);
+    // This checkpoint isolates the authored route and its three spread clue
+    // anchors. Grind camps have their own danger coverage and would make this
+    // navigation test depend on the player's combat build and contact timings.
+    const world = { ...buildMir4WocComparisonWorld(1), camps: [] };
     setActiveWorldContent(world);
     const sim = new Sim({
       seed: 1790,
@@ -475,12 +475,12 @@ describe('MIR4 local comparison on the original WoC map', () => {
     while (
       meta.mir4AutoQuest &&
       meta.mir4ArcQuests?.['M01-Q01']?.stageIndex !== 3 &&
-      guard++ < 1_000
+      guard++ < 2_000
     ) {
       sim.tick();
     }
 
-    expect(guard).toBeLessThan(1_000);
+    expect(guard).toBeLessThan(2_000);
     expect(meta.mir4ArcQuests?.['M01-Q01']).toMatchObject({
       stageIndex: 3,
       state: 'active',

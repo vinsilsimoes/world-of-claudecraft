@@ -67,9 +67,10 @@ describe('the mir4 auto-quest journey', () => {
     expect(meta.mir4Quests?.mir4_m01_q01?.state).toBe('done');
     expect(meta.counters.questProgress).toBe(3);
     expect(meta.counters.questsCompleted).toBe(1);
-    // The authored quest reward is deterministic; the transient target used
-    // by this journey does not have a five-copper loot grant.
-    expect(meta.copper).toBe(200);
+    // The authored reward is 200 copper. Two hostile tutorial wolves also
+    // pay their real two-copper automatic loot when defensive retaliation
+    // defeats them during the journey.
+    expect(meta.copper).toBe(204);
     const expected = advanceMir4Experience(1, 0, 1432);
     expect(sim.entities.get(sim.playerId)!.level).toBe(expected.level);
   });

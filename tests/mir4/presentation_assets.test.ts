@@ -1,6 +1,5 @@
-import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { abilityVfxFullSpec, abilityVfxSpec } from '../../src/render/ability_vfx_registry';
 import { VISUALS, visualKeyFor } from '../../src/render/characters/manifest';
 import {
   MIR4_ARC_NPC_IDENTITIES,
@@ -8,7 +7,7 @@ import {
   mir4ArcNpcTemplateId,
 } from '../../src/sim/content/mir4/arc_campaign';
 import { MIR4_CLASS_PASSIVES } from '../../src/sim/content/mir4/passives';
-import { MIR4_SKILLS } from '../../src/sim/content/mir4/skills_runtime';
+import { MIR4_SKILLS, mir4SkillsForClass } from '../../src/sim/content/mir4/skills_runtime';
 import {
   MIR4_ACTION_ABILITY_DEFS,
   mir4ActionId,
@@ -16,7 +15,12 @@ import {
 } from '../../src/sim/mir4/action_abilities';
 import { stageMobSource } from '../../src/sim/mir4/arc_encounters';
 import { MIR4_ARC_COMBAT_STAGE_KINDS } from '../../src/sim/mir4/arc_stage_kinds';
-import { abilityImageUrl, MIR4_ABILITY_IMAGE_ALIASES } from '../../src/ui/icons';
+import {
+  abilityIconRecipe,
+  abilityImageUrl,
+  hasExplicitAbilityIcon,
+  MIR4_ABILITY_IMAGE_ALIASES,
+} from '../../src/ui/icons';
 
 describe('MIR4 presentation reuses the native WoC asset inventory', () => {
   it('renders all five logical classes with distinct existing WoC character bodies', () => {
@@ -76,19 +80,39 @@ describe('MIR4 presentation reuses the native WoC asset inventory', () => {
     } as never);
     expect(tarek).toBe(tarekWithoutMap);
     expect(
-      visualKeyFor({ kind: 'npc', templateId: 'mir4_lenna', name: 'Guarda Lenna' } as never),
+      visualKeyFor({
+        kind: 'npc',
+        templateId: 'mir4_lenna',
+        name: 'Guarda Lenna',
+      } as never),
     ).toBe('npc_knight');
     expect(
-      visualKeyFor({ kind: 'npc', templateId: 'mir4_sera', name: 'Almirante Sera' } as never),
+      visualKeyFor({
+        kind: 'npc',
+        templateId: 'mir4_sera',
+        name: 'Almirante Sera',
+      } as never),
     ).toBe('npc_knight');
     expect(
-      visualKeyFor({ kind: 'npc', templateId: 'mir4_ada', name: 'Carpinteira Ada' } as never),
+      visualKeyFor({
+        kind: 'npc',
+        templateId: 'mir4_ada',
+        name: 'Carpinteira Ada',
+      } as never),
     ).toBe('npc_smith');
     expect(
-      visualKeyFor({ kind: 'npc', templateId: 'mir4_pavio', name: 'Guia Pavio' } as never),
+      visualKeyFor({
+        kind: 'npc',
+        templateId: 'mir4_pavio',
+        name: 'Guia Pavio',
+      } as never),
     ).toBe('npc_scout');
     expect(
-      visualKeyFor({ kind: 'npc', templateId: 'mir4_mirena', name: 'Rainha Mirena' } as never),
+      visualKeyFor({
+        kind: 'npc',
+        templateId: 'mir4_mirena',
+        name: 'Rainha Mirena',
+      } as never),
     ).toBe('npc_knight');
   });
 
@@ -171,42 +195,47 @@ describe('MIR4 presentation reuses the native WoC asset inventory', () => {
     expect(visual('dire_wolf', 'Lobo Sinistro')).toBe('greyjaw');
   });
 
-  it('gives every MIR4 skill and ultimate a committed painted WoC icon alias', () => {
+  it('gives every MIR4 skill and ultimate an explicit visual identity', () => {
     const abilityIds = [
       ...MIR4_SKILLS.map((skill) => mir4ActionId(skill.skillId)),
       ...([1, 2, 3, 4, 5] as const).map((classId) => mir4UltimateActionId(classId)),
     ];
-    const urls = abilityIds.map((id) => abilityImageUrl(id));
+    expect(MIR4_ABILITY_IMAGE_ALIASES).toEqual({});
+    const recipes = abilityIds.map((id) => {
+      expect(abilityImageUrl(id), id).toBeNull();
+      expect(hasExplicitAbilityIcon(id), id).toBe(true);
+      return JSON.stringify(abilityIconRecipe(id));
+    });
+    expect(new Set(recipes).size).toBe(abilityIds.length);
+  });
 
-    expect(
-      Object.keys(MIR4_ABILITY_IMAGE_ALIASES)
-        .filter((id) => !id.startsWith('mir4_passive_'))
-        .sort(),
-    ).toEqual([...abilityIds].sort());
-    expect(urls).not.toContain(null);
-    expect(new Set(urls).size).toBeGreaterThanOrEqual(20);
-    for (const url of urls) {
-      const file = fileURLToPath(new URL(`../../public${url}`, import.meta.url));
-      expect(existsSync(file), url ?? 'missing-url').toBe(true);
+  it('gives all five class kits authored VFX and a direct class-rig animation', () => {
+    const classVisuals = {
+      1: 'player_warrior',
+      2: 'player_mage',
+      3: 'player_shaman',
+      4: 'player_hunter',
+      5: 'player_paladin',
+    } as const;
+
+    for (const classId of [1, 2, 3, 4, 5] as const) {
+      const abilityIds = [
+        ...mir4SkillsForClass(classId).map((skill) => mir4ActionId(skill.skillId)),
+        mir4UltimateActionId(classId),
+      ];
+      const clips = VISUALS[classVisuals[classId]].clips.attackByAbility ?? {};
+      for (const id of abilityIds) {
+        expect(abilityVfxSpec(id), `${id} compact VFX`).toBeDefined();
+        expect(abilityVfxFullSpec(id), `${id} full VFX`).toBeDefined();
+        expect(clips[id], `${id} rig animation`).toBeTruthy();
+      }
     }
   });
 
-  it('gives every visible MIR4 passive a committed painted WoC icon alias', () => {
+  it('does not expose the removed prototype passives as MIR4 actions', () => {
     const passiveIds = MIR4_ACTION_ABILITY_DEFS.filter((def) => def.passive).map((def) => def.id);
-    const urls = passiveIds.map((id) => abilityImageUrl(id));
 
-    expect(passiveIds).toHaveLength(25);
-    expect([...passiveIds].sort()).toEqual(
-      Object.values(MIR4_CLASS_PASSIVES)
-        .flat()
-        .map((passive) => `mir4_passive_${passive.id}`)
-        .sort(),
-    );
-    expect(urls).not.toContain(null);
-    expect(new Set(urls).size).toBeGreaterThanOrEqual(20);
-    for (const url of urls) {
-      const file = fileURLToPath(new URL(`../../public${url}`, import.meta.url));
-      expect(existsSync(file), url ?? 'missing-url').toBe(true);
-    }
+    expect(Object.values(MIR4_CLASS_PASSIVES).flat()).toEqual([]);
+    expect(passiveIds).toEqual([]);
   });
 });

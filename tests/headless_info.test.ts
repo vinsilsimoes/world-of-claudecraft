@@ -53,7 +53,9 @@ describe('headless episode info', () => {
       copper: 2_300,
       darksteel: 1_000,
       effect_points: 500,
-      skill_tomes: 3,
+      // The obsolete generic skill-tome balance is retained in the wire shape
+      // as zero; class upgrades use the four graded Knowledge Tome materials.
+      skill_tomes: 0,
       knowledge_fragments: 5,
       knowledge_tomes: { common: 2, rare: 3, epic: 4, legendary: 5 },
       skill_levels: { 1102: 7 },

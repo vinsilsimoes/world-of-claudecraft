@@ -57,6 +57,22 @@ describe('MIR4 focused target combat', () => {
     expect(sim.mir4AutoBattleActive()).toBe(false);
   });
 
+  it('keeps monster retaliation armed long enough for an authored delayed contact to land', () => {
+    const sim = makeSim(62111);
+    const attacker = spawnWolf(sim, 2, 'retaliation_delayed_contact', 5000);
+
+    sim.ctx.dealDamage(attacker, sim.player, 1, false, 'physical', null, 'hit');
+    for (let tick = 0; tick < 20; tick += 1) sim.tick();
+
+    expect(attacker.hp).toBeLessThan(attacker.maxHp);
+    expect(sim.player.targetId).toBe(attacker.id);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toMatchObject({
+      targetId: attacker.id,
+      owner: 'retaliation',
+    });
+    expect(sim.mir4AutoBattleActive()).toBe(false);
+  });
+
   it('cancels only defensive retaliation when a non-movement key reports manual intent', () => {
     const sim = makeSim(6223);
     const attacker = spawnWolf(sim, 2, 'retaliation_key_override', 5000);
@@ -226,8 +242,8 @@ describe('MIR4 focused target combat', () => {
 
   it('skips only the opted-out skill and continues the focused rotation', () => {
     const sim = makeSim(6212);
-    // Skill progression unlocks one action every ten levels; put the player at
-    // the authored level where the alternative rotation entries are available.
+    // Put the player at an authored MIR4 threshold where alternative rotation
+    // entries are available after opting out of the first skill.
     sim.player.level = 40;
     sim.player.maxResource = 10_000;
     sim.player.resource = 10_000;

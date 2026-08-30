@@ -13541,13 +13541,14 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1401.description':
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7 м получают 70% урона. Сбивает цель с ног на 0,8 с.',
   'entities.abilities.mir4_skill_1501.name': 'Удар ветра',
-  'entities.abilities.mir4_skill_1501.description': 'Воздействует на врага. На 3,2 с замедляет цель на 35%.',
-  'entities.abilities.mir4_skill_2101.name': 'Призматический луч',
+  'entities.abilities.mir4_skill_1501.description':
+    'Наносит врагу {damage} ед. урона. До 4 других врагов в радиусе 7,75 м получают 65% урона. На 3,2 с замедляет каждого поражённого врага на 35%.',
+  'entities.abilities.mir4_skill_2101.name': 'Огненная сфера',
   'entities.abilities.mir4_skill_2101.description':
-    'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Замораживает цель на 1,4 с.',
-  'entities.abilities.mir4_skill_2111.name': 'Копьё углей',
+    'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Поджигает каждого поражённого врага и наносит {burnPerTick} ед. базового урона раз в 1 с (4 срабатывания, всего {burnTotal} ед. до снижения урона). Урон зависит от силы заклинаний в момент наложения горения.',
+  'entities.abilities.mir4_skill_2111.name': 'Ледяная сфера',
   'entities.abilities.mir4_skill_2111.description':
-    'Наносит врагу {damage} ед. урона. Поджигает цель и наносит {burnPerTick} ед. базового урона раз в 1 с (4 срабатывания, всего {burnTotal} ед. до снижения урона). Урон зависит от силы заклинаний в момент наложения горения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
+    'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. На 3,2 с замедляет каждого поражённого врага на 35%.',
   'entities.abilities.mir4_skill_2301.name': 'Печать кары',
   'entities.abilities.mir4_skill_2301.description':
     'Наносит врагу {damage} ед. урона. На 4 с уменьшает наносимый целью урон на 50%.',
@@ -13559,8 +13560,9 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3101.name': 'Серия печатей',
   'entities.abilities.mir4_skill_3101.description':
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Физическая и магическая защита каждого поражённого врага снижается на 10% на 4 с. Эффекты снижения защиты складываются мультипликативно, но защита не может упасть ниже 20% исходного значения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP.',
-  'entities.abilities.mir4_skill_3104.name': 'Тотем 1010',
-  'entities.abilities.mir4_skill_3104.description': 'Воздействует на врага. Оглушает цель на 1,4 с.',
+  'entities.abilities.mir4_skill_3104.name': 'Дождь клинков',
+  'entities.abilities.mir4_skill_3104.description':
+    'Наносит {damage} ед. смешанного урона за 4 удара. До 4 других врагов в радиусе 7,75 м получают 60% урона. На 8-м ранге каждый поражённый враг с вероятностью 40% получает немоту на 4 с.',
   'entities.abilities.mir4_skill_3301.name': 'Печать тотема II',
   'entities.abilities.mir4_skill_3301.description':
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7,25 м получают 60% урона. На 4,2 с замедляет цель на 35%.',
@@ -13580,7 +13582,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_4106.name': 'Рывок 4106',
   'entities.abilities.mir4_skill_4106.description': 'Наносит врагу {damage} ед. урона. Оглушает цель на 2 с.',
   'entities.abilities.mir4_skill_4107.name': 'Вспышечная стрела',
-  'entities.abilities.mir4_skill_4107.description': 'Воздействует на врага. На 3,2 с уменьшает наносимый целью урон на 45%.',
+  'entities.abilities.mir4_skill_4107.description':
+    'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,75 м получают 60% урона и на 5 с наносят на 45% меньше урона.',
   'entities.abilities.mir4_skill_5101.name': 'Выпад 5101',
   'entities.abilities.mir4_skill_5101.description': 'Наносит врагу {damage} ед. урона. Сбивает цель с ног на 1 с.',
   'entities.abilities.mir4_skill_5104.name': 'Размашистый удар 5104',
@@ -13592,8 +13595,9 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5301.name': 'Цепь 5301',
   'entities.abilities.mir4_skill_5301.description':
     'Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7,25 м получают 70% урона. Оглушает цель на 0,9 с.',
-  'entities.abilities.mir4_skill_5401.name': 'Яростная буря',
-  'entities.abilities.mir4_skill_5401.description': 'Воздействует на врага. Сбивает цель с ног на 1 с.',
+  'entities.abilities.mir4_skill_5401.name': 'Сметающая буря',
+  'entities.abilities.mir4_skill_5401.description':
+    'Наносит врагу {damage} ед. смешанного урона и на 5 с уменьшает наносимый им урон на 30%.',
   'entities.abilities.mir4_ultimate_1.name': 'Суперумение',
   'entities.abilities.mir4_ultimate_1.description':
     'Наносит {damage} ед. урона за 3 удара. Требуется полная шкала суперумения.',

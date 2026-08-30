@@ -13372,13 +13372,14 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1401.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.8초 동안 넘어뜨립니다.',
   'entities.abilities.mir4_skill_1501.name': '질풍 일격',
-  'entities.abilities.mir4_skill_1501.description': '적 하나에게 영향을 주고 대상을 3.2초 동안 35% 느려지게 합니다.',
-  'entities.abilities.mir4_skill_2101.name': '프리즘 광선',
+  'entities.abilities.mir4_skill_1501.description':
+    '적 하나에게 {damage}의 피해를 줍니다. 7.75미터 안의 다른 적 최대 4명에게 65%의 피해를 주고, 적중한 각 적을 3.2초 동안 35% 느려지게 합니다.',
+  'entities.abilities.mir4_skill_2101.name': '화염 구슬',
   'entities.abilities.mir4_skill_2101.description':
-    '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.4초 동안 빙결시킵니다.',
-  'entities.abilities.mir4_skill_2111.name': '잿불 창',
+    '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 줍니다. 적중한 각 적을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다.',
+  'entities.abilities.mir4_skill_2111.name': '서리 구슬',
   'entities.abilities.mir4_skill_2111.description':
-    '적 하나에게 {damage}의 피해를 줍니다. 대상을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
+    '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고, 적중한 각 적을 3.2초 동안 35% 느려지게 합니다.',
   'entities.abilities.mir4_skill_2301.name': '징벌의 인장',
   'entities.abilities.mir4_skill_2301.description':
     '적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다.',
@@ -13390,8 +13391,9 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3101.name': '인장 연계',
   'entities.abilities.mir4_skill_3101.description':
     '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 적중한 모든 적의 물리 및 마법 방어력을 4초 동안 10% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
-  'entities.abilities.mir4_skill_3104.name': '토템 1010',
-  'entities.abilities.mir4_skill_3104.description': '적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다.',
+  'entities.abilities.mir4_skill_3104.name': '칼날의 비',
+  'entities.abilities.mir4_skill_3104.description':
+    '4회에 걸쳐 {damage}의 복합 피해를 줍니다. 7.75미터 안의 다른 적 최대 4명에게 60%의 피해를 줍니다. 8등급부터 적중한 각 적을 40% 확률로 4초 동안 침묵시킵니다.',
   'entities.abilities.mir4_skill_3301.name': '토템 인장 II',
   'entities.abilities.mir4_skill_3301.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다.',
@@ -13411,7 +13413,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_4106.name': '돌진 4106',
   'entities.abilities.mir4_skill_4106.description': '적 하나에게 {damage}의 피해를 주고 대상을 2초 동안 기절시킵니다.',
   'entities.abilities.mir4_skill_4107.name': '섬광 화살',
-  'entities.abilities.mir4_skill_4107.description': '적 하나에게 영향을 주고 3.2초 동안 대상이 주는 피해를 45% 감소시킵니다.',
+  'entities.abilities.mir4_skill_4107.description':
+    '적 하나에게 {damage}의 피해를 줍니다. 6.75미터 안의 다른 적 최대 3명에게 60%의 피해를 주고, 5초 동안 적이 주는 피해를 45% 감소시킵니다.',
   'entities.abilities.mir4_skill_5101.name': '찌르기 5101',
   'entities.abilities.mir4_skill_5101.description': '적 하나에게 {damage}의 피해를 주고 대상을 1초 동안 넘어뜨립니다.',
   'entities.abilities.mir4_skill_5104.name': '휩쓸기 5104',
@@ -13423,8 +13426,9 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5301.name': '사슬 5301',
   'entities.abilities.mir4_skill_5301.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.9초 동안 기절시킵니다.',
-  'entities.abilities.mir4_skill_5401.name': '격노의 폭풍',
-  'entities.abilities.mir4_skill_5401.description': '적 하나에게 영향을 주고 대상을 1초 동안 넘어뜨립니다.',
+  'entities.abilities.mir4_skill_5401.name': '휩쓸기 폭풍',
+  'entities.abilities.mir4_skill_5401.description':
+    '적에게 {damage}의 복합 피해를 주고 5초 동안 적이 주는 피해를 30% 감소시킵니다.',
   'entities.abilities.mir4_ultimate_1.name': '궁극기',
   'entities.abilities.mir4_ultimate_1.description': '3회에 걸쳐 {damage}의 피해를 줍니다. 궁극기 게이지가 가득 차야 합니다.',
   'entities.abilities.mir4_ultimate_2.name': '궁극기',

@@ -129,6 +129,29 @@ describe('spectacle crescendo classification', () => {
 });
 
 describe('sequencer applies the crescendo boosts at the spawn seams', () => {
+  it('holds a MIR4 signature impact until its authoritative contact delay', () => {
+    const a = makeHost();
+    const seq = new ArchetypeSequencer();
+    const slot = seq.start(
+      a.host,
+      'mir4_contact',
+      STRIKE_SPEC,
+      1,
+      2,
+      0xffffff,
+      0,
+      false,
+      0,
+      undefined,
+      0.9,
+    );
+
+    step(seq, a.host, 0.85);
+    expect(slot?.impactDone).toBe(false);
+    step(seq, a.host, 0.1);
+    expect(slot?.impactDone).toBe(true);
+  });
+
   it('bolt impact flipbook scales by SPECTACLE.flipbook; release ring fires at tier 0 only', () => {
     const a = makeHost();
     const seq = new ArchetypeSequencer();

@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { mir4LevelRow } from '../../src/sim/content/mir4';
+import { MIR4_QUESTS_ARC } from '../../src/sim/content/mir4/arc_campaign';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
@@ -10,8 +11,8 @@ import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 
-// Phase 3.6: the 25 class passives (summed bps over table+gear, unlocking at
-// 20/30/40/50/60) and skill ranks (coefficient + rank * levelUpCoefficient).
+// Official class kits expose active skills plus an Ultimate. Aeldrune does not
+// add a separate five-passive progression layer on top of those kits.
 
 function makeClassSim(cls: Mir4ClassKey, seed = 111): Sim {
   const sim = new Sim({
@@ -63,6 +64,16 @@ afterAll(() => {
 });
 
 describe('class passives', () => {
+  it('does not reintroduce invented class-passive unlocks through quest rewards', () => {
+    const unlocks = MIR4_QUESTS_ARC.flatMap((quest) => {
+      const value = quest.rewards.systemUnlocks;
+      return Array.isArray(value)
+        ? value.filter((entry): entry is string => typeof entry === 'string')
+        : [];
+    });
+    expect(unlocks.some((unlock) => unlock.startsWith('class-passive-level-'))).toBe(false);
+  });
+
   it('a level-19 warrior carries none: pure table values', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('warrior');
@@ -72,34 +83,40 @@ describe('class passives', () => {
     expect(p.maxHp).toBe(row[3]);
     expect(p.attackPower).toBe(row[5]);
   });
-  it('level 20 unlocks Armadura Pesada: maxHp +8% exactly', () => {
+  it('the Warrior has no standalone passive bonus at level 20', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('warrior', 112);
     setLevel(sim, 20);
     const p = sim.entities.get(sim.playerId)!;
     const base = mir4LevelRow(1, 20)![3];
-    expect(p.maxHp).toBe(base + Math.floor((base * 800) / 10_000));
+    expect(p.maxHp).toBe(base);
   });
-  it('level 60 stacks every unlocked sum per status, applied once', () => {
+  it('the Warrior has no standalone passive bonus at level 60', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('warrior', 113);
     setLevel(sim, 60);
     const p = sim.entities.get(sim.playerId)!;
     const row = mir4LevelRow(1, 60)!;
-    // maxHp: 800 + 400 + 500 = 1700 bps; PA: 600 + 400 = 1000 bps.
-    expect(p.maxHp).toBe(row[3] + Math.floor((row[3] * 1700) / 10_000));
-    expect(p.attackPower).toBe(row[5] + Math.floor((row[5] * 1000) / 10_000));
-    expect(p.mir4?.physicalDefense).toBe(row[7] + Math.floor((row[7] * 1300) / 10_000));
+    expect(p.maxHp).toBe(row[3]);
+    expect(p.attackPower).toBe(row[5]);
+    expect(p.mir4?.physicalDefense).toBe(row[7]);
   });
-  it('the taoist level-60 six-stat passive lands on every column', () => {
+  it.each([
+    ['elementalist', 2],
+    ['taoist', 3],
+    ['arbalist', 4],
+    ['lancer', 5],
+  ] as const)('does not add invented passives to %s at level 60', (classKey, classId) => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
-    const sim = makeClassSim('taoist', 114);
+    const sim = makeClassSim(classKey, 114 + classId);
     setLevel(sim, 60);
     const p = sim.entities.get(sim.playerId)!;
-    const row = mir4LevelRow(3, 60)!;
-    expect(p.maxHp).toBe(row[3] + Math.floor((row[3] * 1200) / 10_000)); // 20:400 + 50:400 + 60:400
-    expect(p.spellPower).toBe(row[6] + Math.floor((row[6] * 800) / 10_000)); // 400+400
-    expect(p.attackPower).toBe(row[5] + Math.floor((row[5] * 800) / 10_000));
+    const row = mir4LevelRow(classId, 60)!;
+    expect(p.maxHp).toBe(row[3]);
+    expect(p.attackPower).toBe(row[5]);
+    expect(p.spellPower).toBe(row[6]);
+    expect(p.mir4?.physicalDefense).toBe(row[7]);
+    expect(p.mir4?.magicDefense).toBe(row[8]);
   });
 });
 

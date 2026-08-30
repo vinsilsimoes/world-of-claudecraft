@@ -13457,13 +13457,13 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 70% desse dano. Derruba o alvo por 0,8 s.',
   'entities.abilities.mir4_skill_1501.name': 'Corte Vendaval',
   'entities.abilities.mir4_skill_1501.description':
-    'Afeta um inimigo. Reduz a velocidade do alvo em 35% por 3,2 s.',
-  'entities.abilities.mir4_skill_2101.name': 'Orbe Gélido',
+    'Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,75 jardas recebem 65% desse dano. Reduz a velocidade de cada inimigo atingido em 35% por 3,2 s.',
+  'entities.abilities.mir4_skill_2101.name': 'Orbe Flamejante',
   'entities.abilities.mir4_skill_2101.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Congela o alvo por 1,4 s.',
-  'entities.abilities.mir4_skill_2111.name': 'Orbe Flamejante',
+    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Queima cada inimigo atingido, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada.',
+  'entities.abilities.mir4_skill_2111.name': 'Orbe Gélido',
   'entities.abilities.mir4_skill_2111.description':
-    'Causa {damage} de dano a um inimigo. Queima o alvo, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
+    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Reduz a velocidade de cada inimigo atingido em 35% por 3,2 s.',
   'entities.abilities.mir4_skill_2301.name': 'Vórtice Sombrio',
   'entities.abilities.mir4_skill_2301.description':
     'Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s.',
@@ -13475,9 +13475,9 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3101.name': 'Onda do Luar',
   'entities.abilities.mir4_skill_3101.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
-  'entities.abilities.mir4_skill_3104.name': 'Tai Chi',
+  'entities.abilities.mir4_skill_3104.name': 'Chuva de Lâminas',
   'entities.abilities.mir4_skill_3104.description':
-    'Afeta um inimigo. Atordoa o alvo por 1,4 s.',
+    'Causa {damage} de dano híbrido em 4 impactos. Até 4 outros inimigos em 7,75 jardas recebem 60% desse dano. No grau 8, cada inimigo atingido tem 40% de chance de ser Silenciado por 4 s.',
   'entities.abilities.mir4_skill_3301.name': 'Círculo de Expulsão',
   'entities.abilities.mir4_skill_3301.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 60% desse dano. Reduz a velocidade do alvo em 35% por 4,2 s.',
@@ -13501,7 +13501,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano a um inimigo. Atordoa o alvo por 2 s.',
   'entities.abilities.mir4_skill_4107.name': 'Seta do Clarão',
   'entities.abilities.mir4_skill_4107.description':
-    'Afeta um inimigo. Reduz o dano causado pelo alvo em 45% por 3,2 s.',
+    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,75 jardas recebem 60% desse dano e têm o dano causado reduzido em 45% por 5 s.',
   'entities.abilities.mir4_skill_5101.name': 'Lâmina Crescente',
   'entities.abilities.mir4_skill_5101.description':
     'Causa {damage} de dano a um inimigo. Derruba o alvo por 1 s.',
@@ -13516,7 +13516,7 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 70% desse dano. Atordoa o alvo por 0,9 s.',
   'entities.abilities.mir4_skill_5401.name': 'Tempestade Devastadora',
   'entities.abilities.mir4_skill_5401.description':
-    'Afeta um inimigo. Derruba o alvo por 1 s.',
+    'Causa {damage} de dano híbrido e reduz o dano causado pelo inimigo em 30% por 5 s.',
   'entities.abilities.mir4_ultimate_1.name': 'Chama do Dragão',
   'entities.abilities.mir4_ultimate_1.description':
     'Causa {damage} de dano em 3 impactos. Restaura 10% da sua vida máxima. Requer o medidor de ultimate cheio.',

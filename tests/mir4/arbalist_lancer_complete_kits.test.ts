@@ -3,7 +3,7 @@ import { mir4SkillsForClass } from '../../src/sim/content/mir4';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { mir4ActionAbilities, mir4ActionId } from '../../src/sim/mir4/action_abilities';
-import { castMir4Skill } from '../../src/sim/mir4/combat';
+import { castMir4Skill, updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { mir4AttackMultiplier, mir4DefenseMultiplier } from '../../src/sim/mir4/effects';
 import { Sim } from '../../src/sim/sim';
 import { dist2d, type Entity, type Mir4ClassKey } from '../../src/sim/types';
@@ -43,6 +43,11 @@ function spawnTarget(sim: Sim, dx: number, suffix: string): Entity {
   return target;
 }
 
+function resolveSkill(sim: Sim): void {
+  sim.time += 5;
+  updateMir4PendingImpacts(sim.ctx);
+}
+
 describe('the complete MIR4 Arbalist kit', () => {
   it('contains the twelve official regular skills and names', () => {
     expect(mir4SkillsForClass(4).map((skill) => [skill.skillId, skill.displayName])).toEqual([
@@ -63,6 +68,9 @@ describe('the complete MIR4 Arbalist kit', () => {
       ability.def.id.startsWith('mir4_skill_'),
     );
     expect(actions).toHaveLength(12);
+    expect(actions.map((ability) => ability.def.learnLevel)).toEqual([
+      1, 1, 1, 1, 5, 8, 16, 24, 32, 40, 48, 56,
+    ]);
     expect(actions.find((ability) => ability.def.id === mir4ActionId(4110))?.def.name).toBe(
       'Seeking Bolt',
     );
@@ -74,10 +82,13 @@ describe('the complete MIR4 Arbalist kit', () => {
     expect(castMir4Skill(painstrike.ctx, painstrike.playerId, 4106, target.id)).toEqual({
       ok: true,
     });
+    resolveSkill(painstrike);
     expect(target.mir4Effects?.active.some((effect) => effect.kind === 'stun')).toBe(true);
 
     const cloaking = makeClass('arbalist', 16_002);
-    expect(castMir4Skill(cloaking.ctx, cloaking.playerId, 4112)).toEqual({ ok: true });
+    expect(castMir4Skill(cloaking.ctx, cloaking.playerId, 4112)).toEqual({
+      ok: true,
+    });
     expect(mir4AttackMultiplier(cloaking.player)).toBeCloseTo(1.2, 8);
     expect(
       cloaking.player.mir4Effects?.active.some((effect) => effect.kind === 'dodge-boost'),
@@ -101,11 +112,13 @@ describe('the complete MIR4 Lancer kit', () => {
       [5304, 'Absorção'],
       [5202, 'Golpe Relâmpago'],
     ]);
-    expect(
-      mir4ActionAbilities(5, 120, undefined, 204).filter((ability) =>
-        ability.def.id.startsWith('mir4_skill_'),
-      ),
-    ).toHaveLength(12);
+    const actions = mir4ActionAbilities(5, 120, undefined, 204).filter((ability) =>
+      ability.def.id.startsWith('mir4_skill_'),
+    );
+    expect(actions).toHaveLength(12);
+    expect(actions.map((ability) => ability.def.learnLevel)).toEqual([
+      1, 1, 1, 1, 5, 8, 16, 24, 32, 40, 48, 56,
+    ]);
   });
 
   it('protects with Wind Wall, heals with Absorption, and charges with Blitz Strike', () => {
@@ -126,6 +139,7 @@ describe('the complete MIR4 Lancer kit', () => {
     blitz.ctx.hasLineOfSight = () => true;
     const before = dist2d(blitz.player.pos, blitzTarget.pos);
     expect(castMir4Skill(blitz.ctx, blitz.playerId, 5202, blitzTarget.id)).toEqual({ ok: true });
+    resolveSkill(blitz);
     expect(dist2d(blitz.player.pos, blitzTarget.pos)).toBeLessThan(before);
     expect(blitzTarget.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(
       true,

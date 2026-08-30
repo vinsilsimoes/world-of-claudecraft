@@ -4835,7 +4835,7 @@ export const zh_TW: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Every class follows its original MIR4 class-level requirements: four regular skills at level 1, then one at levels 5, 8, 16, 24, 32, 40, 48 and 56. The class Ultimate is available from level 1 and requires a full Ultimate gauge. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -10172,8 +10172,8 @@ export const zh_TW: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1101": {
-        "name": "Rampant",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+        "name": "Berserk",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage. Increases your damage by 12% for 15 sec."
       },
       "mir4_skill_1102": {
         "name": "虛空斬",
@@ -10181,7 +10181,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_1103": {
         "name": "Barbaric Charge",
-        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards of you take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
       },
       "mir4_skill_1104": {
         "name": "撕裂斬",
@@ -10189,7 +10189,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_1201": {
         "name": "Iron Shackle",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards of a point 5 yards in front of you take 100% damage and are pulled toward you."
       },
       "mir4_skill_1301": {
         "name": "Riposte",
@@ -10197,7 +10197,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_1302": {
         "name": "Lion's Roar",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "衝撞",
@@ -10209,23 +10209,23 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_1501": {
         "name": "疾風斬",
-        "description": "影響一名敵人。使目標減速 35%，持續 3.2 秒。"
+        "description": "對一名敵人造成 {damage} 點傷害。7.75 碼內最多 4 名其他敵人受到 65% 傷害。使每個命中的敵人減速 35%，持續 3.2 秒。"
       },
       "mir4_skill_1502": {
         "name": "Unbreakable Stance",
-        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+        "description": "Deals {damage} damage to up to 8 nearby enemies. At rank 8, increases your Dodge by 30; at rank 10, by 60 for 20 sec."
       },
       "mir4_skill_1601": {
         "name": "Crescent Strike",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies in a 9-yard-long, 5-yard-wide frontal strip take 85% damage."
       },
       "mir4_skill_2101": {
-        "name": "稜彩光束",
-        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。凍結目標 1.4 秒。"
+        "name": "火焰球",
+        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。灼燒每個命中的敵人，每 1 秒造成 {burnPerTick} 點基礎傷害（共 4 次，減傷前總計 {burnTotal} 點）。傷害取決於施加灼燒時你的法術強度。"
       },
       "mir4_skill_2111": {
-        "name": "餘燼長槍",
-        "description": "對一名敵人造成 {damage} 點傷害。灼燒目標，每 1 秒造成 {burnPerTick} 點基礎傷害（共 4 次，減傷前總計 {burnTotal} 點）。傷害取決於施加灼燒時你的法術強度。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。"
+        "name": "冰霜球",
+        "description": "對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使每個命中的敵人減速 35%，持續 3.2 秒。"
       },
       "mir4_skill_2501": {
         "name": "喚出核心",
@@ -10280,8 +10280,8 @@ export const zh_TW: EnTranslations = {
         "description": "對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 60% 傷害。使目標減速 35%，持續 4.2 秒。"
       },
       "mir4_skill_3104": {
-        "name": "圖騰 1010",
-        "description": "影響一名敵人。使目標昏迷 1.4 秒。"
+        "name": "刀刃之雨",
+        "description": "以 4 次攻擊造成 {damage} 點混合傷害。7.75 碼內最多 4 名其他敵人受到 60% 傷害。達到 8 階後，每個命中的敵人有 40% 機率被沉默 4 秒。"
       },
       "mir4_skill_3503": {
         "name": "玉蓮",
@@ -10333,7 +10333,7 @@ export const zh_TW: EnTranslations = {
       },
       "mir4_skill_4107": {
         "name": "閃光箭",
-        "description": "影響一名敵人。使目標造成的傷害降低 45%，持續 3.2 秒。"
+        "description": "對一名敵人造成 {damage} 點傷害。6.75 碼內最多 3 名其他敵人受到 60% 傷害，並使其造成的傷害降低 45%，持續 5 秒。"
       },
       "mir4_skill_4108": {
         "name": "Heavenly Bow",
@@ -10380,8 +10380,8 @@ export const zh_TW: EnTranslations = {
         "description": "對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 70% 傷害。使目標昏迷 0.9 秒。"
       },
       "mir4_skill_5401": {
-        "name": "狂怒風暴",
-        "description": "影響一名敵人。擊倒目標 1 秒。"
+        "name": "橫掃風暴",
+        "description": "造成 {damage} 點混合傷害，並使敵人造成的傷害降低 30%，持續 5 秒。"
       },
       "mir4_skill_5102": {
         "name": "Dragon Tail",

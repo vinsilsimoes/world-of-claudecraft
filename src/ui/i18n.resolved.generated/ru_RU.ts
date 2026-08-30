@@ -4835,7 +4835,7 @@ export const ru_RU: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Every class follows its original MIR4 class-level requirements: four regular skills at level 1, then one at levels 5, 8, 16, 24, 32, 40, 48 and 56. The class Ultimate is available from level 1 and requires a full Ultimate gauge. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -10172,8 +10172,8 @@ export const ru_RU: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1101": {
-        "name": "Rampant",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+        "name": "Berserk",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage. Increases your damage by 12% for 15 sec."
       },
       "mir4_skill_1102": {
         "name": "Удар пустоты",
@@ -10181,7 +10181,7 @@ export const ru_RU: EnTranslations = {
       },
       "mir4_skill_1103": {
         "name": "Barbaric Charge",
-        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards of you take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
       },
       "mir4_skill_1104": {
         "name": "Рассечение",
@@ -10189,7 +10189,7 @@ export const ru_RU: EnTranslations = {
       },
       "mir4_skill_1201": {
         "name": "Iron Shackle",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards of a point 5 yards in front of you take 100% damage and are pulled toward you."
       },
       "mir4_skill_1301": {
         "name": "Riposte",
@@ -10197,7 +10197,7 @@ export const ru_RU: EnTranslations = {
       },
       "mir4_skill_1302": {
         "name": "Lion's Roar",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "Таран",
@@ -10209,23 +10209,23 @@ export const ru_RU: EnTranslations = {
       },
       "mir4_skill_1501": {
         "name": "Удар ветра",
-        "description": "Воздействует на врага. На 3,2 с замедляет цель на 35%."
+        "description": "Наносит врагу {damage} ед. урона. До 4 других врагов в радиусе 7,75 м получают 65% урона. На 3,2 с замедляет каждого поражённого врага на 35%."
       },
       "mir4_skill_1502": {
         "name": "Unbreakable Stance",
-        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+        "description": "Deals {damage} damage to up to 8 nearby enemies. At rank 8, increases your Dodge by 30; at rank 10, by 60 for 20 sec."
       },
       "mir4_skill_1601": {
         "name": "Crescent Strike",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies in a 9-yard-long, 5-yard-wide frontal strip take 85% damage."
       },
       "mir4_skill_2101": {
-        "name": "Призматический луч",
-        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Замораживает цель на 1,4 с."
+        "name": "Огненная сфера",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. Поджигает каждого поражённого врага и наносит {burnPerTick} ед. базового урона раз в 1 с (4 срабатывания, всего {burnTotal} ед. до снижения урона). Урон зависит от силы заклинаний в момент наложения горения."
       },
       "mir4_skill_2111": {
-        "name": "Копьё углей",
-        "description": "Наносит врагу {damage} ед. урона. Поджигает цель и наносит {burnPerTick} ед. базового урона раз в 1 с (4 срабатывания, всего {burnTotal} ед. до снижения урона). Урон зависит от силы заклинаний в момент наложения горения. Указанное выше время восстановления является базовым. Сокращение восстановления умений может уменьшить его максимум на 40% в PvE или на 30% в PvP."
+        "name": "Ледяная сфера",
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,5 м получают 65% урона. На 3,2 с замедляет каждого поражённого врага на 35%."
       },
       "mir4_skill_2501": {
         "name": "Призванное ядро",
@@ -10280,8 +10280,8 @@ export const ru_RU: EnTranslations = {
         "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7,25 м получают 60% урона. На 4,2 с замедляет цель на 35%."
       },
       "mir4_skill_3104": {
-        "name": "Тотем 1010",
-        "description": "Воздействует на врага. Оглушает цель на 1,4 с."
+        "name": "Дождь клинков",
+        "description": "Наносит {damage} ед. смешанного урона за 4 удара. До 4 других врагов в радиусе 7,75 м получают 60% урона. На 8-м ранге каждый поражённый враг с вероятностью 40% получает немоту на 4 с."
       },
       "mir4_skill_3503": {
         "name": "Нефритовый лотос",
@@ -10333,7 +10333,7 @@ export const ru_RU: EnTranslations = {
       },
       "mir4_skill_4107": {
         "name": "Вспышечная стрела",
-        "description": "Воздействует на врага. На 3,2 с уменьшает наносимый целью урон на 45%."
+        "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 6,75 м получают 60% урона и на 5 с наносят на 45% меньше урона."
       },
       "mir4_skill_4108": {
         "name": "Heavenly Bow",
@@ -10380,8 +10380,8 @@ export const ru_RU: EnTranslations = {
         "description": "Наносит врагу {damage} ед. урона. До 3 других врагов в радиусе 7,25 м получают 70% урона. Оглушает цель на 0,9 с."
       },
       "mir4_skill_5401": {
-        "name": "Яростная буря",
-        "description": "Воздействует на врага. Сбивает цель с ног на 1 с."
+        "name": "Сметающая буря",
+        "description": "Наносит врагу {damage} ед. смешанного урона и на 5 с уменьшает наносимый им урон на 30%."
       },
       "mir4_skill_5102": {
         "name": "Dragon Tail",

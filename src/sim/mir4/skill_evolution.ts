@@ -107,7 +107,7 @@ export function upgradeMir4Skill(
   if (!skill || skill.classId !== entity.mir4.classId) {
     return { ok: false, reason: 'skill-not-upgradable' };
   }
-  if (entity.level < mir4SkillUnlockLevel(skill.slot)) {
+  if (entity.level < mir4SkillUnlockLevel(skill)) {
     return { ok: false, reason: 'skill-locked' };
   }
   const rawCurrentLevel = meta.mir4SkillLevels?.[skillId] ?? 1;

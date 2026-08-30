@@ -564,6 +564,7 @@ describe('the mir4 effect engine', () => {
       rooted.player.pos.z,
       'root_semantics_target',
     );
+    rootedTarget.swingTimer = 999;
     expect(
       applyMir4Effect(rooted.ctx, rooted.player, {
         effectId: 'movement_only_root',
@@ -688,6 +689,7 @@ describe('the mir4 effect engine', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(627);
     const target = spawnTankWolf(sim, sim.player.pos.x + 2, sim.player.pos.z, 'burn_target');
+    target.swingTimer = 999;
     sim.player.spellPower = 100;
     target.maxHp = 5_000;
     target.hp = target.maxHp;
@@ -948,7 +950,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     const p = sim.player;
     p.pos = sim.groundPos(27, 0);
     const primary = spawnTankWolf(sim, 27, 2, 'visible_primary');
-    const visible = spawnTankWolf(sim, 27, -2, 'visible_secondary');
+    const visible = spawnTankWolf(sim, 27, -0.5, 'visible_secondary');
     const covered = spawnTankWolf(sim, 30, 0, 'covered_secondary');
     const originalHasLineOfSight = sim.ctx.hasLineOfSight;
     sim.ctx.hasLineOfSight = (_attacker, target) => target.id !== covered.id;

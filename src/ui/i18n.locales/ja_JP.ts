@@ -13363,13 +13363,14 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1401.description':
     '敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に70%のダメージを与え、対象を0.8秒間ノックダウンします。',
   'entities.abilities.mir4_skill_1501.name': '疾風撃',
-  'entities.abilities.mir4_skill_1501.description': '敵1体に作用し、対象を3.2秒間35%減速させます。',
-  'entities.abilities.mir4_skill_2101.name': 'プリズム光線',
+  'entities.abilities.mir4_skill_1501.description':
+    '敵1体に{damage}ダメージを与えます。7.75ヤード以内の他の敵最大4体に65%のダメージを与え、命中した各敵を3.2秒間35%減速させます。',
+  'entities.abilities.mir4_skill_2101.name': 'フレイムオーブ',
   'entities.abilities.mir4_skill_2101.description':
-    '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.4秒間凍結します。',
-  'entities.abilities.mir4_skill_2111.name': '残り火の槍',
+    '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与えます。命中した各敵を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。',
+  'entities.abilities.mir4_skill_2111.name': 'フロストオーブ',
   'entities.abilities.mir4_skill_2111.description':
-    '敵1体に{damage}ダメージを与えます。対象を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
+    '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中した各敵を3.2秒間35%減速させます。',
   'entities.abilities.mir4_skill_2301.name': '懲罰の印',
   'entities.abilities.mir4_skill_2301.description':
     '敵1体に{damage}ダメージを与え、4秒間、対象が与えるダメージを50%減少させます。',
@@ -13381,8 +13382,9 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3101.name': '印連撃',
   'entities.abilities.mir4_skill_3101.description':
     '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中したすべての敵の物理防御と魔法防御を4秒間10%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
-  'entities.abilities.mir4_skill_3104.name': 'トーテム 1010',
-  'entities.abilities.mir4_skill_3104.description': '敵1体に作用し、対象を1.4秒間スタンさせます。',
+  'entities.abilities.mir4_skill_3104.name': '刃の雨',
+  'entities.abilities.mir4_skill_3104.description':
+    '4回の攻撃で{damage}の複合ダメージを与えます。7.75ヤード以内の他の敵最大4体に60%のダメージを与えます。ランク8では、命中した各敵を40%の確率で4秒間沈黙させます。',
   'entities.abilities.mir4_skill_3301.name': 'トーテムの印 II',
   'entities.abilities.mir4_skill_3301.description':
     '敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に60%のダメージを与え、対象を4.2秒間35%減速させます。',
@@ -13402,7 +13404,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_4106.name': '突進 4106',
   'entities.abilities.mir4_skill_4106.description': '敵1体に{damage}ダメージを与え、対象を2秒間スタンさせます。',
   'entities.abilities.mir4_skill_4107.name': '閃光矢',
-  'entities.abilities.mir4_skill_4107.description': '敵1体に作用し、3.2秒間、対象が与えるダメージを45%減少させます。',
+  'entities.abilities.mir4_skill_4107.description':
+    '敵1体に{damage}ダメージを与えます。6.75ヤード以内の他の敵最大3体に60%のダメージを与え、5秒間、与えるダメージを45%減少させます。',
   'entities.abilities.mir4_skill_5101.name': '突き 5101',
   'entities.abilities.mir4_skill_5101.description': '敵1体に{damage}ダメージを与え、対象を1秒間ノックダウンします。',
   'entities.abilities.mir4_skill_5104.name': '薙ぎ払い 5104',
@@ -13414,8 +13417,9 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5301.name': '鎖撃 5301',
   'entities.abilities.mir4_skill_5301.description':
     '敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に70%のダメージを与え、対象を0.9秒間スタンさせます。',
-  'entities.abilities.mir4_skill_5401.name': '荒れ狂う嵐',
-  'entities.abilities.mir4_skill_5401.description': '敵1体に作用し、対象を1秒間ノックダウンします。',
+  'entities.abilities.mir4_skill_5401.name': '薙ぎ払いの嵐',
+  'entities.abilities.mir4_skill_5401.description':
+    '敵に{damage}の複合ダメージを与え、5秒間、敵が与えるダメージを30%減少させます。',
   'entities.abilities.mir4_ultimate_1.name': 'アルティメット',
   'entities.abilities.mir4_ultimate_1.description':
     '3回の攻撃で{damage}ダメージを与えます。アルティメットゲージが満タンである必要があります。',

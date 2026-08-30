@@ -624,6 +624,7 @@ describe('MIR4 Mount progression', () => {
     expect(sim.mir4CastSkill(1102, target.id)).toEqual({ ok: true });
     expect(sim.player.cooldowns.get('1102')).toBe(25);
     expect(sim.player.gcdRemaining).toBe(1);
+    resolveContacts(sim);
 
     expect(equipMir4Mount(sim.ctx, sim.playerId, null)).toMatchObject({
       ok: true,

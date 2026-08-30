@@ -53,7 +53,7 @@ function makePainter(hasGestureClip: (id: number, ability: string) => boolean, i
     localPlayerId: () => -1,
   } as unknown as AbilityVfxDeps;
   const painter = new AbilityVfx(deps, () => 0);
-  return { painter, triggerAttack };
+  return { painter, triggerAttack, fx };
 }
 
 describe('player gesture release on cast fx (review #2961)', () => {
@@ -124,8 +124,8 @@ describe('player gesture release on cast fx (review #2961)', () => {
     ['lightning', 'lightning_bolt'],
     ['nova', 'thunder_clap'],
     ['windup', 'aimed_shot'],
-    ['selfCast', 'mortal_strike'],
-    ['nova', 'whirlwind'],
+    ['selfCast', 'mir4_skill_1102'],
+    ['nova', 'mir4_skill_1501'],
   ] as const)(
     'does not restart a MIR4 %s/%s gesture whose authoritative action already began',
     (fx, ability) => {
@@ -141,6 +141,22 @@ describe('player gesture release on cast fx (review #2961)', () => {
       expect(triggerAttack).not.toHaveBeenCalled();
     },
   );
+
+  it('forwards a MIR4 authoritative contact delay to the signature impact sequence', () => {
+    const { painter, fx } = makePainter(() => true);
+    painter.handleSpellfx({
+      sourceId: SOURCE_ID,
+      targetId: TARGET_ID,
+      school: 'physical',
+      fx: 'selfCast',
+      ability: 'mir4_skill_1102',
+      attackAnimationStarted: true,
+      impactDelayMs: 900,
+    });
+
+    expect(fx.sequenceInstant).toHaveBeenCalledOnce();
+    expect(fx.sequenceInstant.mock.calls[0]?.slice(-2)).toEqual([0, 0.9]);
+  });
 
   it('never plays the player gesture path for a mob (mobThrowFallback owns that read)', () => {
     const { painter, triggerAttack } = makePainter(

@@ -60,7 +60,12 @@ describe('the native WoC VFX hook', () => {
       (e) => e.type === 'spellfx' && e.school === 'physical' && e.sourceId === sim.playerId,
     );
     expect(fx).toHaveLength(1);
-    expect(fx[0]).toMatchObject({ ability: 'storm_bolt', fx: 'projectile' });
+    expect(fx[0]).toMatchObject({
+      ability: 'mir4_skill_1102',
+      fx: 'selfCast',
+      impactDelayMs: 900,
+      attackAnimationStarted: true,
+    });
   });
   it('self utilities emit the native shield cue keyed to the caster', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);

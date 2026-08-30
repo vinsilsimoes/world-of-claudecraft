@@ -642,7 +642,10 @@ describe('coverage: each scenario fires its subsystem', () => {
     expect(Math.hypot(near.pos.x - near.spawnPos.x, near.pos.z - near.spawnPos.z)).toBeGreaterThan(
       0.1,
     );
-    expect({ x: far.pos.x, z: far.pos.z }).toEqual({ x: far.spawnPos.x, z: far.spawnPos.z });
+    expect({ x: far.pos.x, z: far.pos.z }).toEqual({
+      x: far.spawnPos.x,
+      z: far.spawnPos.z,
+    });
     expect(trace.draws).toBe(0);
   });
 
@@ -672,19 +675,21 @@ describe('coverage: each scenario fires its subsystem', () => {
     const events = rec.allEvents as Ev[];
     const nearIds = rec.notes.nearIds as number[];
     const retainedId = rec.notes.retainedId as number;
+    const burstShellTargetOrder = rec.notes.burstShellTargetOrder as number[];
     const friendlyId = rec.notes.friendlyId as number;
     const contestedTargetId = rec.notes.contestedTargetId as number;
-    const ecoTargets = events
-      .filter((event) => event.type === 'damage' && event.ability === 'Eco Gêmeo')
+    const burstShellTargets = events
+      .filter((event) => event.type === 'damage' && event.ability === 'Escudo Explosivo')
       .map((event) => event.targetId);
 
-    expect(ecoTargets).toEqual(nearIds);
-    expect(ecoTargets).not.toContain(retainedId);
+    // The primary target is resolved first. Secondary targets are ordered by
+    // distance from Burst Shell's target-centered footprint, then entity id.
+    expect(burstShellTargets).toEqual(burstShellTargetOrder);
     for (const id of nearIds) {
       expect(
         rec.sim.entities
           .get(id)
-          ?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4103_blind'),
+          ?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4103_defense-break'),
       ).toBe(true);
     }
     const retained = rec.sim.entities.get(retainedId);
@@ -693,7 +698,7 @@ describe('coverage: each scenario fires its subsystem', () => {
         (event) =>
           event.type === 'damage' &&
           event.targetId === retainedId &&
-          event.ability === 'Investida 4106',
+          event.ability === 'Vendaval de Golpe de Dor',
       ),
     ).toBe(true);
     expect(
@@ -703,12 +708,17 @@ describe('coverage: each scenario fires its subsystem', () => {
     expect(friendly?.hp).toBe(friendly?.maxHp);
     expect(friendly?.mir4Effects?.active ?? []).toHaveLength(0);
     expect(contestedTargetId).toBe(nearIds[0]);
+    expect(
+      rec.sim.entities
+        .get(contestedTargetId)
+        ?.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_1104_knockdown'),
+    ).toBe(true);
     expect(rec.notes.spiritProcAttempted).toBe(true);
 
-    expect(trace.frames.find((frame) => frame.label === 'actor-centered-4103')?.rng.draws).toBe(6);
-    expect(trace.frames.find((frame) => frame.label === 'targeted-4106')?.rng.draws).toBe(9);
+    expect(trace.frames.find((frame) => frame.label === 'actor-centered-4103')?.rng.draws).toBe(8);
+    expect(trace.frames.find((frame) => frame.label === 'targeted-4106')?.rng.draws).toBe(11);
     expect(trace.frames.find((frame) => frame.label === 'shared-build-chances')?.rng.draws).toBe(
-      13,
+      15,
     );
   });
 });

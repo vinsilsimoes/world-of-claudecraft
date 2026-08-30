@@ -156,7 +156,7 @@ export const guideStrings = {
       lead: 'Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.',
       skillUnlocks: 'Skill progression',
       skillUnlocksBody:
-        'Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.',
+        'Every class follows its original MIR4 class-level requirements: four regular skills at level 1, then one at levels 5, 8, 16, 24, 32, 40, 48 and 56. The class Ultimate is available from level 1 and requires a full Ultimate gauge. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.',
       weapon: 'Weapon',
       damage: 'Damage',
       range: 'Range',

@@ -67,7 +67,9 @@ describe('MIR4 per-skill automatic use', () => {
     expect(sim.setMir4AutoSkillEnabled(1302, false)).toBe(false);
     expect(sim.setMir4AutoSkillEnabled(1501, false)).toBe(false);
     expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toBeUndefined();
-    sim.player.level = 10;
+    sim.player.level = 7;
+    expect(sim.setMir4AutoSkillEnabled(1302, false)).toBe(false);
+    sim.player.level = 8;
     expect(sim.setMir4AutoSkillEnabled(1302, false)).toBe(true);
     expect(sim.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([1302]);
   });
@@ -153,6 +155,9 @@ describe('MIR4 per-skill automatic use', () => {
     );
     target.wanderTimer = 999999;
     sim.addEntity(target);
+    for (const skillId of [4106, 4102, 4103]) {
+      sim.setMir4AutoSkillEnabled(skillId, false);
+    }
 
     sim.setMir4AutoBattle(true);
     sim.tick();

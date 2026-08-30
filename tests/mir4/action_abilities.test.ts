@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import type { Mir4ClassId } from '../../src/sim/content/mir4/classes';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
@@ -10,13 +11,12 @@ import {
   mir4ActionRawDamage,
   mir4UltimateActionId,
 } from '../../src/sim/mir4/action_abilities';
-import { grantMir4Xp } from '../../src/sim/mir4/combat';
+import { grantMir4Xp, updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey, SimEvent } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
 import { abilityDamageBonus } from '../../src/ui/ability_damage';
 import { abilityDisplayDescription, abilityEffectText } from '../../src/ui/ability_description';
-import { isAbilityActionBarEligible } from '../../src/ui/hud/action_bar/hotbar';
 
 function required<T>(value: T | undefined, label: string): T {
   if (value === undefined) throw new Error(`missing ${label}`);
@@ -49,35 +49,267 @@ function spawnTarget(sim: Sim): Entity {
   return target;
 }
 
+function resolveMir4SkillTimeline(sim: Sim, elapsedSeconds = 3): SimEvent[] {
+  sim.time += elapsedSeconds;
+  updateMir4PendingImpacts(sim.ctx);
+  return sim.drainEvents();
+}
+
 afterAll(() => setActiveWorldContent(null));
 
 describe('MIR4 skills in the existing ability surface', () => {
-  it('unlocks one active skill every ten levels and reserves Ultimate for level 50', () => {
-    for (const cls of ['warrior', 'elementalist', 'taoist', 'arbalist', 'lancer'] as const) {
-      const sim = makeSim(cls);
-      const activeIds = () =>
-        sim.known
-          .filter(
-            (ability) =>
-              ability.def.id.startsWith('mir4_skill_') ||
-              ability.def.id.startsWith('mir4_ultimate_'),
-          )
-          .map((ability) => ability.def.id);
-      expect(activeIds()).toHaveLength(1);
-      expect(sim.known.some((ability) => ability.def.id === 'heroic_strike')).toBe(false);
-      for (const [level, count] of [
-        [9, 1],
-        [10, 2],
-        [20, 3],
-        [30, 4],
-        [40, 5],
-        [50, 6],
-      ] as const) {
-        sim.setPlayerLevel(level);
-        expect(activeIds(), `${cls} level ${level}`).toHaveLength(level === 50 ? count + 1 : count);
+  const officialEnglishNames = [
+    [
+      1,
+      [
+        [1102, 'Void Slash'],
+        [1104, 'Splitting Slash'],
+        [1304, 'Body Check'],
+        [1401, 'Ground Smash'],
+        [1501, 'Gale Slash'],
+        [1302, "Lion's Roar"],
+        [1301, 'Riposte'],
+        [1201, 'Iron Shackle'],
+        [1601, 'Crescent Strike'],
+        [1101, 'Berserk'],
+        [1103, 'Barbaric Charge'],
+        [1502, 'Unbreakable Stance'],
+      ],
+      'Dragon Flame',
+    ],
+    [
+      2,
+      [
+        [2101, 'Flame Orb'],
+        [2111, 'Frost Orb'],
+        [2501, 'Dark Vortex'],
+        [2301, 'Thunderstorm'],
+        [2503, 'Magic Shield'],
+        [2203, 'Blizzard'],
+        [2303, 'Chain Lightning'],
+        [2201, 'Flame Strike'],
+        [2502, 'Soul Devour'],
+        [2103, 'Immolate'],
+        [2204, 'Phoenix Embrace'],
+        [2202, 'Frozen Block'],
+      ],
+      'Dragon Tornado',
+    ],
+    [
+      3,
+      [
+        [3506, 'Moonlight Wave'],
+        [3101, 'Sunbeam Sword'],
+        [3301, 'Moonlight Orb'],
+        [3104, 'Rain of Blades'],
+        [3503, 'Heal'],
+        [3103, 'Piercing Blades'],
+        [3501, 'Guardian Circle'],
+        [3201, 'Tai Chi'],
+        [3505, 'Blasting Charm'],
+        [3203, 'Soaring Slash'],
+        [3404, 'Expulsion Circle'],
+        [3504, 'Greater Heal'],
+      ],
+      'Ray of Light',
+    ],
+    [
+      4,
+      [
+        [4101, 'Quick Shot'],
+        [4106, 'Painstrike Gale'],
+        [4102, 'Illusion Arrow'],
+        [4103, 'Burst Shell'],
+        [4107, 'Flash Arrow'],
+        [4108, 'Heavenly Bow'],
+        [4111, "Mind's Eye"],
+        [4105, 'Ice Cage'],
+        [4109, 'Obliterate Shell'],
+        [4104, 'Venom Mist Shell'],
+        [4110, 'Seeking Bolt'],
+        [4112, 'Cloaking'],
+      ],
+      'Arrow Rain',
+    ],
+    [
+      5,
+      [
+        [5201, 'Ravaging Blow'],
+        [5101, 'Crescent Blade'],
+        [5104, 'Nirvana Kick'],
+        [5301, 'Double Strike'],
+        [5401, 'Sweeping Storm'],
+        [5102, 'Dragon Tail'],
+        [5103, 'Ascending Dragon'],
+        [5303, 'Crushing Blow'],
+        [5403, 'Wind Wall'],
+        [5205, 'Piercing Spear'],
+        [5304, 'Absorption'],
+        [5202, 'Blitz Strike'],
+      ],
+      'Dragon Spear',
+    ],
+  ] as const;
+
+  it.each(officialEnglishNames)(
+    'keeps the official English names for every class %i skill and Ultimate',
+    (classId, skills, ultimateName) => {
+      for (const [skillId, expectedName] of skills) {
+        expect(
+          required(
+            mir4ActionAbilities(classId, 56, undefined, 204).find(
+              (ability) => ability.def.id === mir4ActionId(skillId),
+            ),
+            `class ${classId} skill ${skillId}`,
+          ).def.name,
+        ).toBe(expectedName);
       }
+      expect(
+        required(
+          mir4ActionAbilities(classId, 1, undefined, 204).find(
+            (ability) => ability.def.id === mir4UltimateActionId(classId),
+          ),
+          `class ${classId} Ultimate`,
+        ).def.name,
+      ).toBe(ultimateName);
+    },
+  );
+
+  const officialClassProgression = [
+    [
+      1,
+      [1102, 1104, 1304, 1401],
+      [
+        [1501, 5],
+        [1302, 8],
+        [1301, 16],
+        [1201, 24],
+        [1601, 32],
+        [1101, 40],
+        [1103, 48],
+        [1502, 56],
+      ],
+    ],
+    [
+      2,
+      [2101, 2111, 2501, 2301],
+      [
+        [2503, 5],
+        [2203, 8],
+        [2303, 16],
+        [2201, 24],
+        [2502, 32],
+        [2103, 40],
+        [2204, 48],
+        [2202, 56],
+      ],
+    ],
+    [
+      3,
+      [3506, 3101, 3301, 3104],
+      [
+        [3503, 5],
+        [3103, 8],
+        [3501, 16],
+        [3201, 24],
+        [3505, 32],
+        [3203, 40],
+        [3404, 48],
+        [3504, 56],
+      ],
+    ],
+    [
+      4,
+      [4101, 4106, 4102, 4103],
+      [
+        [4107, 5],
+        [4108, 8],
+        [4111, 16],
+        [4105, 24],
+        [4109, 32],
+        [4104, 40],
+        [4110, 48],
+        [4112, 56],
+      ],
+    ],
+    [
+      5,
+      [5201, 5101, 5104, 5301],
+      [
+        [5401, 5],
+        [5102, 8],
+        [5103, 16],
+        [5303, 24],
+        [5403, 32],
+        [5205, 40],
+        [5304, 48],
+        [5202, 56],
+      ],
+    ],
+  ] as const satisfies readonly (readonly [
+    Mir4ClassId,
+    readonly number[],
+    readonly (readonly [number, number])[],
+  ])[];
+
+  it('unlocks the Warrior kit at the official MIR4 levels', () => {
+    const sim = makeSim('warrior');
+    const activeIds = () =>
+      sim.known
+        .filter(
+          (ability) =>
+            ability.def.id.startsWith('mir4_skill_') || ability.def.id.startsWith('mir4_ultimate_'),
+        )
+        .map((ability) => ability.def.id);
+
+    expect(activeIds()).toEqual([
+      mir4ActionId(1102),
+      mir4ActionId(1104),
+      mir4ActionId(1304),
+      mir4ActionId(1401),
+      mir4UltimateActionId(1),
+    ]);
+    expect(sim.known.some((ability) => ability.def.id === 'heroic_strike')).toBe(false);
+    for (const [level, count] of [
+      [4, 5],
+      [5, 6],
+      [8, 7],
+      [16, 8],
+      [24, 9],
+      [32, 10],
+      [40, 11],
+      [48, 12],
+      [56, 13],
+    ] as const) {
+      sim.setPlayerLevel(level);
+      expect(activeIds(), `warrior level ${level}`).toHaveLength(count);
     }
   });
+
+  it.each(officialClassProgression)(
+    'admits class %i skills at the exact original MIR4 levels',
+    (classId, initialSkillIds, laterSkills) => {
+      expect(
+        mir4ActionAbilities(classId, 1, undefined, 204).map((ability) => ability.def.id),
+      ).toEqual([...initialSkillIds.map(mir4ActionId), mir4UltimateActionId(classId)]);
+
+      for (const [skillId, level] of laterSkills) {
+        const actionId = mir4ActionId(skillId);
+        expect(
+          mir4ActionAbilities(classId, level - 1, undefined, 204).some(
+            (ability) => ability.def.id === actionId,
+          ),
+          `class ${classId} skill ${skillId} before level ${level}`,
+        ).toBe(false);
+        expect(
+          mir4ActionAbilities(classId, level, undefined, 204).some(
+            (ability) => ability.def.id === actionId,
+          ),
+          `class ${classId} skill ${skillId} at level ${level}`,
+        ).toBe(true);
+      }
+    },
+  );
 
   it('refreshes the offline/headless action kit and reward counter after natural level-ups', () => {
     const sim = makeSim('warrior');
@@ -92,7 +324,7 @@ describe('MIR4 skills in the existing ability surface', () => {
 
     expect(sim.player.level).toBeGreaterThanOrEqual(20);
     expect(sim.known.some((ability) => ability.def.id === mir4ActionId(1301))).toBe(true);
-    expect(sim.known.some((ability) => ability.def.passive)).toBe(true);
+    expect(sim.known.some((ability) => ability.def.passive)).toBe(false);
     expect(learnedAbilityIds).toContain(mir4ActionId(1302));
     expect(learnedAbilityIds).toContain(mir4ActionId(1301));
     expect(meta.counters.levelUps).toBe(sim.player.level - 1);
@@ -112,21 +344,12 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(voidStrike?.def.description).toContain('$d');
   });
 
-  it('shows unlocked passives as informational spellbook rows, never bar actions', () => {
-    const warrior = mir4ActionAbilities(1, 20, undefined, 204);
-    const passive = required(
-      warrior.find((ability) => ability.def.id === 'mir4_passive_warrior-heavy-armor'),
-      'level-20 passive',
-    );
+  it('does not synthesize legacy standalone passives for the MIR4 Warrior', () => {
+    const warrior = mir4ActionAbilities(1, 120, undefined, 204);
 
-    expect(passive.def).toMatchObject({
-      name: 'Heavy Armor',
-      learnLevel: 20,
-      passive: true,
-      description: 'Increases maximum health by 8%.',
-    });
-    expect(isAbilityActionBarEligible(passive.def)).toBe(false);
-    expect(mir4ActionAbilities(1, 19, undefined, 204)).not.toContainEqual(passive);
+    expect(warrior).toHaveLength(13);
+    expect(warrior.some((ability) => ability.def.passive)).toBe(false);
+    expect(warrior.some((ability) => ability.def.id.startsWith('mir4_passive_'))).toBe(false);
   });
 
   it('keeps rank-scaled support tooltips aligned with their live effects', () => {
@@ -223,6 +446,7 @@ describe('MIR4 skills in the existing ability surface', () => {
       };
 
       sim.castAbility(action.def.id);
+      resolveMir4SkillTimeline(sim, 2);
 
       const appliedBurn = required(
         target.mir4Effects?.active.find((effect) => effect.kind === 'burn'),
@@ -261,6 +485,8 @@ describe('MIR4 skills in the existing ability surface', () => {
     const sim = makeSim('warrior');
     const player = required(sim.entities.get(sim.playerId), 'player');
     const target = spawnTarget(sim);
+    target.maxHp = 10_000;
+    target.hp = target.maxHp;
     const hp = target.hp;
     const mp = player.resource;
 
@@ -268,28 +494,44 @@ describe('MIR4 skills in the existing ability surface', () => {
     sim.castAbility(mir4ActionId(1102));
     const events = sim.drainEvents();
 
-    expect(target.hp).toBeLessThan(hp);
+    expect(target.hp).toBe(hp);
     expect(player.resource).toBe(mp - 36);
     expect(player.cooldowns.get('1102')).toBe(25);
     expect(player.cooldowns.has(mir4ActionId(1102))).toBe(false);
     expect(
       (player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
-    ).toHaveLength(0);
-    expect(events.some((event) => event.type === 'mir4AttackStart')).toBe(false);
+    ).toHaveLength(4);
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'mir4AttackStart',
+        action: 'skill',
+        ability: 'mir4_skill_1102',
+        durationMs: 1500,
+      }),
+    );
     const spellfx = events.find(
       (event) =>
         event.type === 'spellfx' && event.sourceId === player.id && event.targetId === target.id,
     );
     expect(spellfx).toBeDefined();
-    expect(spellfx).not.toHaveProperty('attackAnimationStarted');
-    const damageEvents = events.filter(
+    expect(spellfx).toMatchObject({
+      impactDelayMs: 900,
+      attackAnimationStarted: true,
+    });
+    expect(events.some((event) => event.type === 'damage')).toBe(false);
+
+    const impactEvents = resolveMir4SkillTimeline(sim, 1);
+    expect(target.hp).toBeLessThan(hp);
+    expect(player.mir4PendingImpacts).toEqual([]);
+    const damageEvents = impactEvents.filter(
       (event): event is Extract<SimEvent, { type: 'damage' }> =>
         event.type === 'damage' && event.sourceId === player.id,
     );
-    expect(damageEvents.every((event) => event.attackAnimationStarted !== true)).toBe(true);
+    expect(damageEvents).toHaveLength(3);
+    expect(damageEvents.every((event) => event.attackAnimationStarted === true)).toBe(true);
   });
 
-  it('does not repeat immediate skill damage on later simulation ticks', () => {
+  it('resolves delayed skill contacts once without repeating them on later ticks', () => {
     const sim = makeSim('warrior');
     const target = spawnTarget(sim);
     target.maxHp = 10_000;
@@ -297,20 +539,23 @@ describe('MIR4 skills in the existing ability surface', () => {
     const hp = target.hp;
 
     sim.castAbility(mir4ActionId(1102));
-    expect(target.hp).toBeLessThan(hp);
+    expect(target.hp).toBe(hp);
     sim.drainEvents();
 
     const laterEvents = Array.from({ length: 40 }, () => sim.tick()).flat();
 
     expect(
-      laterEvents.some((event) => event.type === 'damage' && event.ability === 'Golpe de Vácuo'),
-    ).toBe(false);
+      laterEvents.filter((event) => event.type === 'damage' && event.ability === 'Corte do Vazio'),
+    ).toHaveLength(3);
+    expect(target.hp).toBeLessThan(hp);
     expect(
-      (sim.player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
+      (sim.player.mir4PendingImpacts ?? []).filter(
+        (impact) => impact.attackKind === 'skill' && impact.skillId === 1102,
+      ),
     ).toHaveLength(0);
   });
 
-  it('keeps an immediate PvE skill committed after line of sight changes', () => {
+  it('keeps an admitted PvE skill committed after line of sight changes during its windup', () => {
     const sim = makeSim('warrior');
     const target = spawnTarget(sim);
     target.maxHp = 10_000;
@@ -318,12 +563,11 @@ describe('MIR4 skills in the existing ability surface', () => {
     const hp = target.hp;
 
     sim.castAbility(mir4ActionId(1102));
-    expect(target.hp).toBeLessThan(hp);
-    const landedHp = target.hp;
+    expect(target.hp).toBe(hp);
     sim.ctx.hasLineOfSight = () => false;
     for (let tick = 0; tick < 40; tick++) sim.tick();
 
-    expect(target.hp).toBe(landedHp);
+    expect(target.hp).toBeLessThan(hp);
   });
 
   it('drops one cumulative Knowledge Fragment per XP-bearing kill and none from zero-XP mobs', () => {
@@ -332,6 +576,7 @@ describe('MIR4 skills in the existing ability surface', () => {
     first.hp = 1;
 
     sim.castAbility(mir4ActionId(1102));
+    resolveMir4SkillTimeline(sim, 1);
     expect(sim.players.get(sim.playerId)?.mir4Materials?.knowledgeFragment).toBe(1);
 
     sim.player.cooldowns.clear();
@@ -339,6 +584,7 @@ describe('MIR4 skills in the existing ability surface', () => {
     const second = spawnTarget(sim);
     second.hp = 1;
     sim.castAbility(mir4ActionId(1102));
+    resolveMir4SkillTimeline(sim, 1);
     expect(sim.players.get(sim.playerId)?.mir4Materials?.knowledgeFragment).toBe(2);
 
     sim.player.cooldowns.clear();
@@ -347,6 +593,7 @@ describe('MIR4 skills in the existing ability surface', () => {
     zeroXp.templateId = 'knowledge_fragment_zero_xp_fixture';
     zeroXp.hp = 1;
     sim.castAbility(mir4ActionId(1102));
+    resolveMir4SkillTimeline(sim, 1);
 
     expect(sim.players.get(sim.playerId)?.mir4Materials?.knowledgeFragment).toBe(2);
   });
@@ -407,11 +654,44 @@ describe('MIR4 skills in the existing ability surface', () => {
     expect(player.autoAttack).toBe(false);
   });
 
-  it('lets Gale Slash apply its real control effect after it unlocks', () => {
+  it('keeps Gale Slash tooltip damage equal to its nine-contact combat total', () => {
     const sim = makeSim('warrior');
     sim.setPlayerLevel(60);
+    const player = required(sim.entities.get(sim.playerId), 'player');
     const target = spawnTarget(sim);
+    const action = required(
+      sim.known.find((ability) => ability.def.id === mir4ActionId(1501)),
+      'Gale Slash action',
+    );
+    const effect = required(action.effects[0], 'Gale Slash damage');
+    if (!player.mir4) throw new Error('missing MIR4 player stats');
+    player.attackPower = 1_000;
+    player.mir4.accuracy = 0;
+    player.mir4.critical = 0;
+    player.mir4.skillDamageBps = 0;
+    target.maxHp = 10_000;
+    target.hp = target.maxHp;
+    const scaling = {
+      attackPower: player.attackPower,
+      spellPower: player.spellPower,
+      rangedPower: player.rangedPower,
+      mir4SkillDamageBps: player.mir4.skillDamageBps,
+    };
+    const displayedDamage = abilityDamageBonus(action, effect, scaling);
+    const hpBefore = target.hp;
+
     sim.castAbility(mir4ActionId(1501));
+    resolveMir4SkillTimeline(sim, 2);
+
+    expect(displayedDamage).toBe(3_800);
+    expect(hpBefore - target.hp).toBe(displayedDamage);
+    expect(abilityEffectText(action, scaling)).toBe('3,800');
+    expect(action.def.description).toContain('Deals $d damage to an enemy.');
+    expect(
+      abilityDisplayDescription(action, abilityEffectText(action, scaling), scaling),
+    ).toContain(
+      'Deals 3,800 damage to an enemy. Up to 4 other enemies within 7.75 yards of you take 65% damage. Slows each enemy hit by 35% for 3.2 sec.',
+    );
     expect(target.mir4Effects?.active).toContainEqual(
       expect.objectContaining({ kind: 'slow', magnitude: 0.35, duration: 3.2 }),
     );
@@ -439,9 +719,13 @@ describe('MIR4 skills in the existing ability surface', () => {
         mir4SkillDamageBps: 100,
       }),
     ).toBe(444);
-    expect(abilityEffectText(hybrid, { attackPower: 100, spellPower: 200, rangedPower: 0 })).toBe(
-      '440',
-    );
+    expect(
+      abilityEffectText(hybrid, {
+        attackPower: 100,
+        spellPower: 200,
+        rangedPower: 0,
+      }),
+    ).toBe('440');
   });
 
   it('keeps the live tooltip equal to combat after STATUS 44 skill-damage scaling', () => {
@@ -470,6 +754,7 @@ describe('MIR4 skills in the existing ability surface', () => {
     const hpBefore = target.hp;
 
     sim.castAbility(mir4ActionId(1102));
+    resolveMir4SkillTimeline(sim, 1);
 
     expect(displayedDamage).toBe(2_525);
     expect(hpBefore - target.hp).toBe(displayedDamage);
@@ -507,6 +792,7 @@ describe('MIR4 skills in the existing ability surface', () => {
       const before = target.hp;
 
       sim.castAbility(mir4ActionId(1102));
+      resolveMir4SkillTimeline(sim, 1);
 
       return before - target.hp;
     };

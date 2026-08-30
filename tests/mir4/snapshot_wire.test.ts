@@ -37,7 +37,11 @@ describe('MIR4 snapshot wire', () => {
           suspended: false,
         },
         mir4SkillLevels: { 2101: 2, 1102: 2 },
-        mir4SkillResources: { effectPoints: 800.9, skillTomes: 6, injected: 999 },
+        mir4SkillResources: {
+          effectPoints: 800.9,
+          skillTomes: 6,
+          injected: 999,
+        },
         mir4AchievementClears: { 201: 2, injected: 999 },
         mir4Currencies: { darksteel: 1_000.9, energy: 500.9, injected: 999 },
         mir4Materials: { sunStone: 3, injected: 999 },
@@ -85,9 +89,15 @@ describe('MIR4 snapshot wire', () => {
 
   it('reconciles client reads, retains omitted deltas, and ignores malformed replacements', () => {
     const client = bareClient(7, {
-      cfg: { seed: 1, playerClass: 'warrior', gameProfile: 'mir4-gameplay-port' },
+      cfg: {
+        seed: 1,
+        playerClass: 'warrior',
+        gameProfile: 'mir4-gameplay-port',
+      },
     });
-    const apply = client as unknown as { applySnapshot(snapshot: unknown): void };
+    const apply = client as unknown as {
+      applySnapshot(snapshot: unknown): void;
+    };
     apply.applySnapshot(
       selfSnapshot({
         classId: 2,
@@ -143,7 +153,13 @@ describe('MIR4 snapshot wire', () => {
         objective: { kind: 'inspect-clues', current: 1, total: 3 },
       }),
     ]);
-    expect(client.known.map((ability) => ability.def.id)).toEqual(['mir4_skill_2101']);
+    expect(client.known.map((ability) => ability.def.id)).toEqual([
+      'mir4_skill_2101',
+      'mir4_skill_2111',
+      'mir4_skill_2501',
+      'mir4_skill_2301',
+      'mir4_ultimate_2',
+    ]);
 
     apply.applySnapshot(selfSnapshot(undefined, 8));
     expect(client.mir4AutoBattleActive()).toBe(true);
@@ -153,7 +169,11 @@ describe('MIR4 snapshot wire', () => {
     expect(client.mir4AutoBattleActive()).toBe(true);
 
     apply.applySnapshot(
-      selfSnapshot({ classId: 2, mir4DisabledAutoSkills: 'corrupt', ultimateGauge: 0 }),
+      selfSnapshot({
+        classId: 2,
+        mir4DisabledAutoSkills: 'corrupt',
+        ultimateGauge: 0,
+      }),
     );
     expect(client.player.mir4UltGauge).toBe(72);
     expect(client.mir4PlayerState()?.mir4DisabledAutoSkills).toEqual([2101]);
@@ -178,7 +198,11 @@ describe('MIR4 snapshot wire', () => {
 
   it('does not mutate authoritative mirrors while a command is only in flight', () => {
     const client = bareClient(7, {
-      cfg: { seed: 1, playerClass: 'warrior', gameProfile: 'mir4-gameplay-port' },
+      cfg: {
+        seed: 1,
+        playerClass: 'warrior',
+        gameProfile: 'mir4-gameplay-port',
+      },
       cmd: () => {},
     });
     client.setMir4AutoBattle(true);

@@ -19,6 +19,8 @@ import {
   RUINOUS_BRAND_VFX_FULL_SPEC,
   RUINOUS_BRAND_VFX_SPEC,
 } from './destruction_vfx_specs';
+import { mir4ClassVfxFullSpec, mir4ClassVfxSpec } from './mir4_class_vfx_specs';
+import { mir4WarriorVfxFullSpec, mir4WarriorVfxSpec } from './mir4_warrior_vfx_specs';
 import {
   ARMY_OF_THE_DEAD_VFX_FULL_SPEC,
   ARMY_OF_THE_DEAD_VFX_SPEC,
@@ -50,6 +52,10 @@ import { ABYSSAL_RIFT_VFX_FULL_SPEC, ABYSSAL_RIFT_VFX_SPEC } from './warlock_vfx
 // Generated gallery projections remain untouched. Class-owned bespoke
 // identities resolve through this narrow runtime seam instead.
 export function abilityVfxSpec(abilityId: string): AbilityVfxSpec | undefined {
+  const warrior = mir4WarriorVfxSpec(abilityId);
+  if (warrior) return warrior;
+  const mir4Class = mir4ClassVfxSpec(abilityId);
+  if (mir4Class) return mir4Class;
   if (abilityId === 'emberkin_felbolt') return EMBERKIN_FELBOLT_VFX_SPEC;
   if (abilityId === 'gloomshade_abyssal_chain') return GLOOMSHADE_ABYSSAL_CHAIN_VFX_SPEC;
   if (abilityId === 'bone_mage_shadow_bolt') return BONE_MAGE_SHADOW_BOLT_VFX_SPEC;
@@ -74,6 +80,10 @@ export function abilityVfxSpec(abilityId: string): AbilityVfxSpec | undefined {
 }
 
 export function abilityVfxFullSpec(abilityId: string): AbilityVfxFullSpec | undefined {
+  const warrior = mir4WarriorVfxFullSpec(abilityId);
+  if (warrior) return warrior;
+  const mir4Class = mir4ClassVfxFullSpec(abilityId);
+  if (mir4Class) return mir4Class;
   if (abilityId === 'emberkin_felbolt') return EMBERKIN_FELBOLT_VFX_FULL_SPEC;
   if (abilityId === 'gloomshade_abyssal_chain') return GLOOMSHADE_ABYSSAL_CHAIN_VFX_FULL_SPEC;
   if (abilityId === 'bone_mage_shadow_bolt') return BONE_MAGE_SHADOW_BOLT_VFX_FULL_SPEC;

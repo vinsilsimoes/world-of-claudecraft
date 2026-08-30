@@ -346,8 +346,8 @@ describe('MIR4 content reaches the existing Aeldrune windows', () => {
     expect(abilityRows.length).toBeGreaterThan(0);
     expect(abilityRows.every((row) => row.dataset.abilityId?.startsWith('mir4_'))).toBe(true);
     expect(root.textContent).not.toContain('Heroic Strike');
-    expect(root.querySelectorAll('.spell-upgrade-btn')).toHaveLength(2);
-    expect(root.textContent).toContain('Trainable at level 20');
+    expect(root.querySelectorAll('.spell-upgrade-btn')).toHaveLength(6);
+    expect(root.textContent).toContain('Trainable at level 16');
     expect(root.textContent).toContain('Common Tome of Knowledge: 1/1');
     const upgrade = abilityRows[0]?.querySelector<HTMLButtonElement>('.spell-upgrade-btn');
     expect(upgrade?.disabled).toBe(false);
@@ -504,8 +504,10 @@ describe('MIR4 content reaches the existing Aeldrune windows', () => {
     const { world, commands } = makeWorld({
       classId: 1,
       ultimateGauge: 0,
+      mir4Currencies: { darksteel: 100, energy: 0 },
       mir4Materials: {
         ...MIR4_EMPTY_MATERIALS,
+        metalCommon: 50,
         sunStone: 10,
         moonStone: 10,
         solarScroll: 10,

@@ -61,7 +61,7 @@ export function mir4ClassDetailsView(key: Mir4ClassKey): Mir4ClassDetailsView {
     weaponKey: `classDetails.mir4.weapons.${def.weapon}` as TranslationKey,
     rangeYards: def.rangeTiles * 2,
     startingSkills: mir4SkillsForClass(def.classId).filter(
-      (skill) => mir4SkillUnlockLevel(skill.slot) <= 1,
+      (skill) => mir4SkillUnlockLevel(skill) <= 1,
     ).length,
   };
 }

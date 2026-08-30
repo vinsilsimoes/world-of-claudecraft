@@ -27,15 +27,23 @@ describe('the mir4 skill catalog shape', () => {
     }
     expect(mir4SkillById(9999)).toBeNull();
   });
-  it('records the product unlock curve for every complete kit', () => {
+  it('records the official progression curve for every homologated class', () => {
+    const officialCurve = [
+      { kind: 'initial-deck' },
+      { kind: 'initial-deck' },
+      { kind: 'initial-deck' },
+      { kind: 'initial-deck' },
+      { kind: 'level', level: 5 },
+      { kind: 'level', level: 8 },
+      { kind: 'level', level: 16 },
+      { kind: 'level', level: 24 },
+      { kind: 'level', level: 32 },
+      { kind: 'level', level: 40 },
+      { kind: 'level', level: 48 },
+      { kind: 'level', level: 56 },
+    ];
     for (const classId of [1, 2, 3, 4, 5] as const) {
-      expect(mir4SkillsForClass(classId).map((skill) => skill.unlock)).toEqual([
-        { kind: 'initial-deck' },
-        ...Array.from({ length: 11 }, (_, index) => ({
-          kind: 'level',
-          level: (index + 1) * 10,
-        })),
-      ]);
+      expect(mir4SkillsForClass(classId).map((skill) => skill.unlock)).toEqual(officialCurve);
     }
     expect(MIR4_SKILL_GLOBAL_COOLDOWN_MS).toBe(1000);
   });
@@ -114,14 +122,61 @@ describe('pinned skills (warrior 1102, taoist 3101, arbalist 4106)', () => {
     expect(skill?.damage?.components).toHaveLength(1);
     expect(mir4CoefficientDamage(50, skill!.damage!.components[0]!.coefficient)).toBe(85);
   });
-  it('1501 Gale Slash: the seventh Warrior action at level 60', () => {
+  it('1501 Gale Slash: the fifth Warrior action at level 5', () => {
     const skill = mir4SkillById(1501);
     expect(skill?.classId).toBe(1);
-    expect(skill?.slot).toBe(7);
-    expect(skill?.unlock).toEqual({ kind: 'level', level: 60 });
+    expect(skill?.slot).toBe(5);
+    expect(skill?.unlock).toEqual({ kind: 'level', level: 5 });
     expect(skill?.cooldownMs).toBe(44_000);
     expect(skill?.skillCost).toBe(3400);
     expect(skill?.browserRangePx).toBe(104);
-    expect(skill?.damage).toBeNull(); // the source ships no damage block for supplemental rows
+    expect(skill?.hitCount).toBe(9);
+    expect(skill?.damage).toEqual({
+      components: [
+        {
+          attackId: 150101,
+          damageType: 1,
+          damageAttribute: 0,
+          coefficient: 9000,
+          levelUpCoefficient: 180,
+          impactCount: 3,
+        },
+        {
+          attackId: 150102,
+          damageType: 1,
+          damageAttribute: 0,
+          coefficient: 8000,
+          levelUpCoefficient: 160,
+          impactCount: 2,
+        },
+        {
+          attackId: 150103,
+          damageType: 1,
+          damageAttribute: 0,
+          coefficient: 8000,
+          levelUpCoefficient: 160,
+          impactCount: 2,
+        },
+        {
+          attackId: 150104,
+          damageType: 1,
+          damageAttribute: 0,
+          coefficient: 6000,
+          levelUpCoefficient: 150,
+          impactCount: 1,
+        },
+        {
+          attackId: 150105,
+          damageType: 1,
+          damageAttribute: 0,
+          coefficient: 7000,
+          levelUpCoefficient: 150,
+          impactCount: 1,
+        },
+      ],
+      aggregateCoefficient: 38_000,
+      aggregateLevelUpCoefficient: 800,
+      allocationMode: 'row-total-impact-vector',
+    });
   });
 });

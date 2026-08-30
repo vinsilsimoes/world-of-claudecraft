@@ -4835,7 +4835,7 @@ export const ko_KR: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Every class follows its original MIR4 class-level requirements: four regular skills at level 1, then one at levels 5, 8, 16, 24, 32, 40, 48 and 56. The class Ultimate is available from level 1 and requires a full Ultimate gauge. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -10172,8 +10172,8 @@ export const ko_KR: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1101": {
-        "name": "Rampant",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+        "name": "Berserk",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage. Increases your damage by 12% for 15 sec."
       },
       "mir4_skill_1102": {
         "name": "공허의 일격",
@@ -10181,7 +10181,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_1103": {
         "name": "Barbaric Charge",
-        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards of you take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
       },
       "mir4_skill_1104": {
         "name": "열상 일격",
@@ -10189,7 +10189,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_1201": {
         "name": "Iron Shackle",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards of a point 5 yards in front of you take 100% damage and are pulled toward you."
       },
       "mir4_skill_1301": {
         "name": "Riposte",
@@ -10197,7 +10197,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_1302": {
         "name": "Lion's Roar",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "몸통 박치기",
@@ -10209,23 +10209,23 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_1501": {
         "name": "질풍 일격",
-        "description": "적 하나에게 영향을 주고 대상을 3.2초 동안 35% 느려지게 합니다."
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 7.75미터 안의 다른 적 최대 4명에게 65%의 피해를 주고, 적중한 각 적을 3.2초 동안 35% 느려지게 합니다."
       },
       "mir4_skill_1502": {
         "name": "Unbreakable Stance",
-        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+        "description": "Deals {damage} damage to up to 8 nearby enemies. At rank 8, increases your Dodge by 30; at rank 10, by 60 for 20 sec."
       },
       "mir4_skill_1601": {
         "name": "Crescent Strike",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies in a 9-yard-long, 5-yard-wide frontal strip take 85% damage."
       },
       "mir4_skill_2101": {
-        "name": "프리즘 광선",
-        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.4초 동안 빙결시킵니다."
+        "name": "화염 구슬",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 줍니다. 적중한 각 적을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다."
       },
       "mir4_skill_2111": {
-        "name": "잿불 창",
-        "description": "적 하나에게 {damage}의 피해를 줍니다. 대상을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다."
+        "name": "서리 구슬",
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고, 적중한 각 적을 3.2초 동안 35% 느려지게 합니다."
       },
       "mir4_skill_2501": {
         "name": "현현된 핵",
@@ -10280,8 +10280,8 @@ export const ko_KR: EnTranslations = {
         "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다."
       },
       "mir4_skill_3104": {
-        "name": "토템 1010",
-        "description": "적 하나에게 영향을 주고 대상을 1.4초 동안 기절시킵니다."
+        "name": "칼날의 비",
+        "description": "4회에 걸쳐 {damage}의 복합 피해를 줍니다. 7.75미터 안의 다른 적 최대 4명에게 60%의 피해를 줍니다. 8등급부터 적중한 각 적을 40% 확률로 4초 동안 침묵시킵니다."
       },
       "mir4_skill_3503": {
         "name": "비취 연꽃",
@@ -10333,7 +10333,7 @@ export const ko_KR: EnTranslations = {
       },
       "mir4_skill_4107": {
         "name": "섬광 화살",
-        "description": "적 하나에게 영향을 주고 3.2초 동안 대상이 주는 피해를 45% 감소시킵니다."
+        "description": "적 하나에게 {damage}의 피해를 줍니다. 6.75미터 안의 다른 적 최대 3명에게 60%의 피해를 주고, 5초 동안 적이 주는 피해를 45% 감소시킵니다."
       },
       "mir4_skill_4108": {
         "name": "Heavenly Bow",
@@ -10380,8 +10380,8 @@ export const ko_KR: EnTranslations = {
         "description": "적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 70%의 피해를 주고 대상을 0.9초 동안 기절시킵니다."
       },
       "mir4_skill_5401": {
-        "name": "격노의 폭풍",
-        "description": "적 하나에게 영향을 주고 대상을 1초 동안 넘어뜨립니다."
+        "name": "휩쓸기 폭풍",
+        "description": "적에게 {damage}의 복합 피해를 주고 5초 동안 적이 주는 피해를 30% 감소시킵니다."
       },
       "mir4_skill_5102": {
         "name": "Dragon Tail",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HEADLESS_PROTOCOL_VERSION,
   MAX_INPUT_LINE_LENGTH,
   maxLevelForGameProfile,
   parseTalentResetRequest,
@@ -22,6 +23,10 @@ import type { SimContext } from '../src/sim/sim_context';
 import { ALL_CLASSES, type Aura } from '../src/sim/types';
 
 describe('headless environment protocol validation', () => {
+  it('advertises the versioned twelve-skill MIR4 action and observation ABI', () => {
+    expect(HEADLESS_PROTOCOL_VERSION).toBe(3);
+  });
+
   it('accepts only integer action ids from the declared action space', () => {
     expect(validateAction(0)).toBe(0);
     expect(validateAction(NUM_ACTIONS - 1)).toBe(NUM_ACTIONS - 1);
@@ -94,7 +99,10 @@ describe('headless environment protocol validation', () => {
         'mir4-gameplay-port',
         'elementalist',
       ),
-    ).toEqual({ ok: false, error: 'talents are unavailable for mir4-gameplay-port' });
+    ).toEqual({
+      ok: false,
+      error: 'talents are unavailable for mir4-gameplay-port',
+    });
   });
 
   it('rejects malformed levels and every legacy or dual-model talent reset shape', () => {
@@ -165,7 +173,7 @@ describe('headless environment protocol validation', () => {
 
     const obs = encodeObs(sim);
     const readyIndex = 16 + slot * 2;
-    const questStart = obsSize() - 17 - QUEST_ORDER.length * 2;
+    const questStart = obsSize() - 37 - QUEST_ORDER.length * 2;
     expect(obs).toHaveLength(obsSize());
     expect(obs[2]).toBe(1);
     expect(obs[3]).toBe(1);
@@ -215,20 +223,23 @@ describe('headless environment protocol validation', () => {
     expect(meta.mir4AchievementClears).toEqual({ 201: 2 });
     expect(meta.copper).toBe(3_200);
     expect(meta.mir4Currencies).toEqual({ darksteel: 1_000, energy: 0 });
-    expect(meta.mir4SkillResources).toEqual({ effectPoints: 500, skillTomes: 0 });
+    expect(meta.mir4SkillResources).toEqual({
+      effectPoints: 500,
+      skillTomes: 0,
+    });
     expect(meta.mir4Materials?.knowledgeTomeCommon).toBe(1);
 
     const claimedObs = encodeObs(sim);
-    const achievementObs = claimedObs.slice(-17, -14);
+    const achievementObs = claimedObs.slice(-37, -34);
     expect(achievementObs).toEqual([1, 1, 1]);
-    expect(claimedObs.at(-11)).toBe(0);
-    expect(claimedObs.at(-9)).toBeCloseTo(0.1);
+    expect(claimedObs.at(-31)).toBe(0);
+    expect(claimedObs.at(-29)).toBeCloseTo(0.1);
 
     expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1102, 1).ok).toBe(true);
     const upgradedObs = encodeObs(sim);
-    expect(upgradedObs.at(-11)).toBe(0);
-    expect(upgradedObs.at(-9)).toBe(0);
-    expect(upgradedObs.at(-5)).toBeCloseTo(2 / 15);
+    expect(upgradedObs.at(-31)).toBe(0);
+    expect(upgradedObs.at(-29)).toBe(0);
+    expect(upgradedObs.at(-25)).toBeCloseTo(2 / 15);
   });
 
   it('lets headless bots craft the tome chain and upgrade each unlocked skill slot', () => {
@@ -263,6 +274,30 @@ describe('headless environment protocol validation', () => {
 
     applyAction(sim, ACTIONS.indexOf('upgrade_skill_2'));
     expect(meta.mir4SkillLevels?.[1104]).toBeUndefined();
+
+    meta.mir4Materials.knowledgeTomeCommon = 1;
+    sim.player.level = 7;
+    applyAction(sim, ACTIONS.indexOf('upgrade_skill_6'));
+    expect(meta.mir4SkillLevels?.[1302]).toBeUndefined();
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(1);
+    sim.player.level = 8;
+    applyAction(sim, ACTIONS.indexOf('upgrade_skill_6'));
+    expect(meta.mir4SkillLevels?.[1302]).toBe(2);
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(0);
+
+    meta.mir4Materials.knowledgeTomeCommon = 1;
+    sim.player.level = 55;
+    applyAction(sim, ACTIONS.indexOf('upgrade_skill_12'));
+    expect(meta.mir4SkillLevels?.[1502]).toBeUndefined();
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(1);
+    sim.player.level = 56;
+    applyAction(sim, ACTIONS.indexOf('upgrade_skill_12'));
+    expect(meta.mir4SkillLevels?.[1502]).toBe(2);
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(0);
+
+    const ranks = encodeObs(sim).slice(-25, -13);
+    expect(ranks[5]).toBeCloseTo(2 / 15);
+    expect(ranks[11]).toBeCloseTo(2 / 15);
   });
 
   it('sizes the action space to the largest class kit so every class is castable', () => {
@@ -276,10 +311,46 @@ describe('headless environment protocol validation', () => {
     for (const cls of ALL_CLASSES) {
       expect(CLASSES[cls].abilities.length).toBeLessThanOrEqual(abilitySlots);
     }
-    // 24 fixed actions (the original 15 plus 4 knowledge crafts + 5 skill upgrades)
-    // plus the ability slots.
-    expect(NUM_ACTIONS).toBe(24 + abilitySlots);
+    // 44 fixed actions (the original 15, 4 knowledge crafts, 12 skill upgrades,
+    // auto-battle and 12 per-skill auto-use toggles) plus the ability slots.
+    expect(NUM_ACTIONS).toBe(44 + abilitySlots);
   });
+
+  it.each([
+    ['warrior', 1],
+    ['elementalist', 2],
+    ['taoist', 3],
+    ['arbalist', 4],
+    ['lancer', 5],
+  ] as const)(
+    'observes the Ultimate gate and automation controls for MIR4 %s',
+    (playerClassMir4, classId) => {
+      const sim = new Sim({
+        seed: 700 + classId,
+        playerClass: 'warrior',
+        playerClassMir4,
+        gameProfile: 'mir4-gameplay-port',
+        world: buildMir4ArcWorld(),
+      });
+      const ultimateSlot = sim.known.findIndex(
+        (ability) => ability.def.id === `mir4_ultimate_${classId}`,
+      );
+      expect(ultimateSlot).toBeGreaterThanOrEqual(0);
+      const readyIndex = 16 + ultimateSlot * 2;
+      expect(encodeObs(sim)[13]).toBe(0);
+      expect(encodeObs(sim)[readyIndex]).toBe(0);
+
+      sim.player.mir4UltGauge = 100;
+      expect(encodeObs(sim)[13]).toBe(1);
+      expect(encodeObs(sim)[readyIndex]).toBe(1);
+
+      const automationStart = obsSize() - (1 + 12);
+      expect(encodeObs(sim).slice(automationStart)).toEqual([0, ...Array(12).fill(1)]);
+      applyAction(sim, ACTIONS.indexOf('toggle_auto_battle'));
+      applyAction(sim, ACTIONS.indexOf('toggle_auto_skill_1'));
+      expect(encodeObs(sim).slice(automationStart, automationStart + 2)).toEqual([1, 0]);
+    },
+  );
 
   it('observes Devotion, Ascension, and the real Divine Ascension readiness gate', () => {
     const sim = new Sim({ seed: 17, playerClass: 'paladin', autoEquip: true });
@@ -290,18 +361,22 @@ describe('headless environment protocol validation', () => {
     const readyIndex = 16 + slot * 2;
 
     expect(encodeObs(sim)[readyIndex]).toBe(0);
-    expect(encodeObs(sim).slice(-14, -11)).toEqual([0, 0, 0]);
+    expect(encodeObs(sim).slice(-34, -31)).toEqual([0, 0, 0]);
 
     grantDevotion(sim.player, 20);
     expect(encodeObs(sim)[readyIndex]).toBe(1);
-    expect(encodeObs(sim).slice(-14, -11)).toEqual([1, 0, 0]);
+    expect(encodeObs(sim).slice(-34, -31)).toEqual([1, 0, 0]);
 
     sim.castAbility('divine_ascension');
     expect(encodeObs(sim)[readyIndex]).toBe(0);
-    expect(encodeObs(sim).slice(-14, -11)).toEqual([0, 1, 1]);
+    expect(encodeObs(sim).slice(-34, -31)).toEqual([0, 1, 1]);
 
-    const warrior = new Sim({ seed: 18, playerClass: 'warrior', autoEquip: true });
-    expect(encodeObs(warrior).slice(-14, -11)).toEqual([0, 0, 0]);
+    const warrior = new Sim({
+      seed: 18,
+      playerClass: 'warrior',
+      autoEquip: true,
+    });
+    expect(encodeObs(warrior).slice(-34, -31)).toEqual([0, 0, 0]);
   });
 
   it('marks a Necromancy spender ready only when enough Soul Fragments exist', () => {
@@ -347,13 +422,21 @@ describe('headless environment protocol validation', () => {
   });
 
   it('exposes the exact specialization resource in the shared secondary-resource scalar', () => {
-    const affliction = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const affliction = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      autoEquip: true,
+    });
     affliction.setPlayerLevel(20);
     affliction.setSpec('affliction');
     gainDoom(affliction as unknown as SimContext, affliction.player, 37);
     expect(encodeObs(affliction)[13]).toBeCloseTo(0.37);
 
-    const necromancy = new Sim({ seed: 8, playerClass: 'warlock', autoEquip: true });
+    const necromancy = new Sim({
+      seed: 8,
+      playerClass: 'warlock',
+      autoEquip: true,
+    });
     necromancy.setPlayerLevel(20);
     necromancy.setSpec('demonology');
     addSoulFragments(necromancy as unknown as SimContext, necromancy.player, 3);

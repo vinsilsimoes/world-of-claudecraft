@@ -33,6 +33,7 @@ except ImportError as e:  # pragma: no cover
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _DEFAULT_SERVER = os.path.join(_HERE, "..", "dist-env", "env_server.cjs")
+_HEADLESS_PROTOCOL_VERSION = 3
 
 
 class WoWClassicEnv(gym.Env):
@@ -85,6 +86,15 @@ class WoWClassicEnv(gym.Env):
             bufsize=1,
         )
         meta = self._request({"cmd": "info", "game_profile": self.game_profile})
+        protocol_version = int(meta.get("protocol_version", 0))
+        if protocol_version != _HEADLESS_PROTOCOL_VERSION:
+            self._proc.kill()
+            self._proc.wait(timeout=5)
+            raise RuntimeError(
+                "incompatible headless protocol: "
+                f"expected {_HEADLESS_PROTOCOL_VERSION}, got {protocol_version}; "
+                "run npm run build:env"
+            )
         self._obs_size = int(meta["obs_size"])
         self.action_names: list[str] = list(meta["actions"])
         self.observation_space = spaces.Box(-2.0, 2.0, shape=(self._obs_size,), dtype=np.float32)

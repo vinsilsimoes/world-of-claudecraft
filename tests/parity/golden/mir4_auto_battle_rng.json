@@ -2,15 +2,15 @@
   "scenario": "mir4_auto_battle_rng",
   "seed": 7771,
   "sampleEvery": 1,
-  "ticks": 29,
+  "ticks": 39,
   "coverage": [
-    "MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out",
+    "MIR4 Auto Battle targeted AoE selection and ordered hostile fan-out",
     "MIR4 4106 hit/crit/effect draw order at its authored contact clock",
     "MIR4 default control opposition and build-curve Spirit procs use the shared rng stream",
     "friendly proximity contributes neither targeting nor combat rng draws"
   ],
-  "draws": 13,
-  "drawDigest": "3eadcd2b",
+  "draws": 15,
+  "drawDigest": "1a214796",
   "frames": [
     {
       "tick": 0,
@@ -30,7 +30,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 51,
-      "state": "2c122afb",
+      "state": "fc115fe9",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -99,6 +99,15 @@
             }
           ],
           "mailWelcomed": true,
+          "mir4DisabledAutoSkills": [
+            4101,
+            4102,
+            4105,
+            4106,
+            4107,
+            4108,
+            4111
+          ],
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -205,7 +214,7 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 392,
+          "attackPower": 357,
           "auras": [
             {
               "duration": 3600,
@@ -221,16 +230,6 @@
           "blockValue": 6,
           "combatTimer": 99,
           "comboUntil": -1,
-          "cooldowns": [
-            [
-              "4101",
-              10
-            ],
-            [
-              "4102",
-              10
-            ]
-          ],
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
@@ -244,7 +243,7 @@
           "maxHp": 10960,
           "maxResource": 890,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "classId": 4,
@@ -260,10 +259,10 @@
               "1": 10960,
               "6": 890,
               "19": 951,
-              "20": 392,
+              "20": 357,
               "24": 157,
               "26": 157,
-              "28": 127,
+              "28": 121,
               "29": 116,
               "32": 10,
               "38": 29,
@@ -354,7 +353,7 @@
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "fallStartY": 0.881882,
+          "fallStartY": 1.206575,
           "fiveSecondRule": 99,
           "hostile": true,
           "hp": 50000,
@@ -367,14 +366,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 0.881882,
+            "x": 9,
+            "y": 1.206575,
             "z": -999
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 0.881882,
+            "x": 9,
+            "y": 1.206575,
             "z": -999
           },
           "stats": {},
@@ -394,7 +393,7 @@
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "fallStartY": 1.524302,
+          "fallStartY": 1.519455,
           "fiveSecondRule": 99,
           "hostile": true,
           "hp": 50000,
@@ -407,14 +406,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "stats": {},
@@ -434,7 +433,7 @@
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "fallStartY": 1.698012,
+          "fallStartY": 2.055072,
           "fiveSecondRule": 99,
           "hostile": true,
           "hp": 50000,
@@ -447,14 +446,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "stats": {},
@@ -488,7 +487,7 @@
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": 0.861379,
+          "fallStartY": 0.769231,
           "fiveSecondRule": 99,
           "hp": 4000,
           "id": 50,
@@ -526,9 +525,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2.5,
-            "y": 0.861379,
-            "z": -998
+            "x": 9,
+            "y": 0.769231,
+            "z": -997.5
           },
           "potionCooldownUntil": -1,
           "resource": 600,
@@ -559,176 +558,176 @@
       "tick": 1,
       "time": 0.05,
       "nextId": 51,
-      "state": "bf6000ac",
-      "events": "aa2a18eb",
+      "state": "33356572",
+      "events": "4eb8e5e0",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 2,
       "time": 0.1,
       "nextId": 51,
-      "state": "877b364d",
+      "state": "e26fa401",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 3,
       "time": 0.15,
       "nextId": 51,
-      "state": "0ded942d",
+      "state": "84e6b440",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 4,
       "time": 0.2,
       "nextId": 51,
-      "state": "41441201",
+      "state": "24888258",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 5,
       "time": 0.25,
       "nextId": 51,
-      "state": "2717afb2",
+      "state": "78ba4f60",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 6,
       "time": 0.3,
       "nextId": 51,
-      "state": "c795d30c",
+      "state": "c7c373aa",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 7,
       "time": 0.35,
       "nextId": 51,
-      "state": "86959dfc",
+      "state": "5cb12b2f",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 8,
       "time": 0.4,
       "nextId": 51,
-      "state": "5f645f34",
+      "state": "86bc5bf3",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 9,
       "time": 0.45,
       "nextId": 51,
-      "state": "1c389708",
+      "state": "e8f2cdeb",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 10,
       "time": 0.5,
       "nextId": 51,
-      "state": "3f7de52c",
+      "state": "2577cdff",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 11,
       "time": 0.55,
       "nextId": 51,
-      "state": "dc638472",
+      "state": "89b188be",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 12,
       "time": 0.6,
       "nextId": 51,
-      "state": "811e1ec8",
+      "state": "447c6b06",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 13,
       "time": 0.65,
       "nextId": 51,
-      "state": "f485292b",
+      "state": "3be9d7b2",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 14,
       "time": 0.7,
       "nextId": 51,
-      "state": "92905b69",
+      "state": "f267bb0e",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 0,
+        "digest": "811c9dc5"
       }
     },
     {
       "tick": 15,
       "time": 0.75,
       "nextId": 51,
-      "state": "c3b4229f",
-      "events": "741638a5",
+      "state": "ed84113a",
+      "events": "91f0157b",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 15,
       "time": 0.75,
       "nextId": 51,
-      "state": "c3b4229f",
+      "state": "ed84113a",
       "events": "741638a5",
       "rng": {
-        "draws": 6,
-        "digest": "8ea732dd"
+        "draws": 8,
+        "digest": "4a48e204"
       },
       "label": "actor-centered-4103",
       "players": [
@@ -753,12 +752,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 1891
+            "damageDealt": 2315
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 1891
+              "damageDealt": 2315
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -800,6 +799,15 @@
           "mir4ArcRewards": {
             "xpLedgerVersion": 2
           },
+          "mir4DisabledAutoSkills": [
+            4101,
+            4102,
+            4105,
+            4106,
+            4107,
+            4108,
+            4111
+          ],
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -909,7 +917,7 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 392,
+          "attackPower": 357,
           "auras": [
             {
               "duration": 3600,
@@ -923,17 +931,8 @@
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 0.7,
           "comboUntil": -1,
           "cooldowns": [
-            [
-              "4101",
-              9.25
-            ],
-            [
-              "4102",
-              9.25
-            ],
             [
               "4103",
               25.3
@@ -955,7 +954,7 @@
           "maxHp": 10960,
           "maxResource": 890,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "classId": 4,
@@ -971,10 +970,10 @@
               "1": 10960,
               "6": 890,
               "19": 951,
-              "20": 392,
+              "20": 357,
               "24": 157,
               "26": 157,
-              "28": 127,
+              "28": 121,
               "29": 116,
               "32": 10,
               "38": 29,
@@ -995,7 +994,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 692.5575,
+          "resource": 694.115,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -1019,65 +1018,24 @@
           }
         },
         {
-          "aiState": "idle",
-          "combatTimer": 99.75,
+          "aggroTargetId": 50,
+          "aiState": "attack",
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
+          "facing": -0.380506,
           "fallStartY": 1.577216,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 50000,
+          "hp": 49215,
           "id": 46,
-          "kind": "mob",
-          "level": 1,
-          "lootFfaTimer": "Infinity",
-          "maxHp": 50000,
-          "onGround": true,
-          "overpowerUntil": -1,
-          "petMode": "defensive",
-          "pos": {
-            "x": 10,
-            "y": 1.577216,
-            "z": -1000
-          },
-          "potionCooldownUntil": -1,
-          "spawnPos": {
-            "x": 10,
-            "y": 1.577216,
-            "z": -1000
-          },
-          "stats": {},
-          "swingTimer": 9999,
-          "templateId": "mir4_forest_wolf",
-          "wanderTimer": 9998.25,
-          "weapon": {
-            "max": 300,
-            "min": 192,
-            "speed": 2
-          }
-        },
-        {
-          "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 0.7,
-          "comboUntil": -1,
-          "critChance": 0.05,
-          "detonateTimer": "Infinity",
-          "dodgeChance": 0.05,
-          "facing": -1.892547,
-          "fallStartY": 0.881882,
-          "fiveSecondRule": 99,
-          "hostile": true,
-          "hp": 49505,
-          "id": 47,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
           },
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1085,11 +1043,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 4.25,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 10,
                 "sourceId": 45
               }
             ]
@@ -1098,15 +1056,15 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
+            "x": 10,
+            "y": 1.577216,
+            "z": -1000
           },
           "stats": {},
           "swingTimer": 9998.3,
@@ -1115,7 +1073,7 @@
           "threat": [
             [
               45,
-              495
+              785
             ],
             [
               50,
@@ -1130,24 +1088,92 @@
           }
         },
         {
-          "aggroTargetId": 45,
+          "aggroTargetId": 50,
           "aiState": "attack",
-          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -1.570796,
-          "fallStartY": 1.524302,
+          "fallStartY": 1.206575,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49099,
+          "hp": 49490,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 10,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9998.25,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              510
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 50,
+          "aiState": "attack",
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": 0.380506,
+          "fallStartY": 1.519455,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49490,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "level": 1,
@@ -1156,11 +1182,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 4.25,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 10,
                 "sourceId": 45
               }
             ]
@@ -1169,14 +1195,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "stats": {},
@@ -1186,7 +1212,7 @@
           "threat": [
             [
               45,
-              901
+              510
             ],
             [
               50,
@@ -1201,24 +1227,22 @@
           }
         },
         {
-          "aggroTargetId": 45,
+          "aggroTargetId": 50,
           "aiState": "attack",
-          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -1.249046,
-          "fallStartY": 1.698012,
+          "fallStartY": 2.055072,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49505,
+          "hp": 49490,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "level": 1,
@@ -1227,11 +1251,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 4.25,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 10,
                 "sourceId": 45
               }
             ]
@@ -1240,14 +1264,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "stats": {},
@@ -1257,7 +1281,7 @@
           "threat": [
             [
               45,
-              495
+              510
             ],
             [
               50,
@@ -1292,10 +1316,11 @@
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": 0.861379,
+          "fallStartY": 0.769231,
           "fiveSecondRule": 99.75,
           "hp": 4000,
           "id": 50,
+          "inCombat": true,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1330,9 +1355,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2.5,
-            "y": 0.861379,
-            "z": -998
+            "x": 9,
+            "y": 0.769231,
+            "z": -997.5
           },
           "potionCooldownUntil": -1,
           "resource": 600,
@@ -1363,165 +1388,165 @@
       "tick": 16,
       "time": 0.8,
       "nextId": 51,
-      "state": "3dedf21f",
-      "events": "d6c70036",
+      "state": "daff0b64",
+      "events": "354c892b",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 17,
       "time": 0.85,
       "nextId": 51,
-      "state": "6beedbba",
+      "state": "0dfd6429",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 18,
       "time": 0.9,
       "nextId": 51,
-      "state": "e8eeb50c",
+      "state": "d7268de0",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 19,
       "time": 0.95,
       "nextId": 51,
-      "state": "de6a21a2",
+      "state": "62cfc2fd",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 20,
       "time": 1,
       "nextId": 51,
-      "state": "8109a30e",
+      "state": "f7ce0c22",
       "events": "55188a1f",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 21,
       "time": 1.05,
       "nextId": 51,
-      "state": "a87bb8fa",
+      "state": "4084c6bc",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 22,
       "time": 1.1,
       "nextId": 51,
-      "state": "62be538a",
+      "state": "1aa16a93",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 23,
       "time": 1.15,
       "nextId": 51,
-      "state": "3c7b08ce",
+      "state": "193069f8",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 24,
       "time": 1.2,
       "nextId": 51,
-      "state": "a5a5472a",
+      "state": "cb7c2ce3",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 25,
       "time": 1.25,
       "nextId": 51,
-      "state": "a0b7f9b0",
+      "state": "b33937a2",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 26,
       "time": 1.3,
       "nextId": 51,
-      "state": "ddfc683c",
+      "state": "8b71dce9",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 27,
       "time": 1.35,
       "nextId": 51,
-      "state": "bc483042",
+      "state": "8b1bf8c0",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 28,
       "time": 1.4,
       "nextId": 51,
-      "state": "8611eb6d",
+      "state": "af861e1c",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 8,
+        "digest": "4a48e204"
       }
     },
     {
       "tick": 29,
       "time": 1.45,
       "nextId": 51,
-      "state": "931c62f5",
-      "events": "741638a5",
+      "state": "d5ac9d13",
+      "events": "2067133f",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 11,
+        "digest": "aa711e2d"
       }
     },
     {
       "tick": 29,
       "time": 1.45,
       "nextId": 51,
-      "state": "931c62f5",
+      "state": "d5ac9d13",
       "events": "741638a5",
       "rng": {
-        "draws": 9,
-        "digest": "36b93436"
+        "draws": 11,
+        "digest": "aa711e2d"
       },
       "label": "targeted-4106",
       "players": [
@@ -1546,12 +1571,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 2557
+            "damageDealt": 2921
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 2557
+              "damageDealt": 2921
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -1593,6 +1618,15 @@
           "mir4ArcRewards": {
             "xpLedgerVersion": 2
           },
+          "mir4DisabledAutoSkills": [
+            4101,
+            4102,
+            4103,
+            4105,
+            4107,
+            4108,
+            4111
+          ],
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -1702,7 +1736,7 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 392,
+          "attackPower": 357,
           "auras": [
             {
               "duration": 3600,
@@ -1716,17 +1750,8 @@
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 0.65,
           "comboUntil": -1,
           "cooldowns": [
-            [
-              "4101",
-              8.55
-            ],
-            [
-              "4102",
-              8.55
-            ],
             [
               "4103",
               24.6
@@ -1752,7 +1777,7 @@
           "maxHp": 10960,
           "maxResource": 890,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "classId": 4,
@@ -1768,10 +1793,10 @@
               "1": 10960,
               "6": 890,
               "19": 951,
-              "20": 392,
+              "20": 357,
               "24": 157,
               "26": 157,
-              "28": 127,
+              "28": 121,
               "29": 116,
               "32": 10,
               "38": 29,
@@ -1823,21 +1848,21 @@
               "duration": 2,
               "id": "mir4_4106_stun",
               "kind": "stun",
-              "name": "Investida 4106",
-              "remaining": 1.35,
+              "name": "Vendaval de Golpe de Dor",
+              "remaining": 2,
               "school": "physical",
               "sourceId": 45
             }
           ],
-          "combatTimer": 0.65,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
+          "facing": -1.570796,
           "fallStartY": 1.577216,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49334,
+          "hp": 48609,
           "id": 46,
           "inCombat": true,
           "kind": "mob",
@@ -1852,23 +1877,31 @@
           "mir4Effects": {
             "active": [
               {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 9.3,
+                "sourceId": 45
+              },
+              {
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "kind": "stun",
-                "remaining": 1.3,
+                "remaining": 2,
                 "sourceId": 45
               }
             ],
-            "controlImmuneUntil": 3.55,
+            "controlImmuneUntil": 4.2,
             "controlImmunityByEffectId": {
               "mir4_4106_stun": {
                 "sourceId": 45,
-                "until": 3.55
+                "until": 4.2
               }
             },
             "hardControlHistory": [
               {
-                "appliedAt": 0.8,
+                "appliedAt": 1.45,
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "sourceId": 45
@@ -1888,73 +1921,6 @@
             "x": 10,
             "y": 1.577216,
             "z": -1000
-          },
-          "stats": {},
-          "swingTimer": 9999,
-          "tappedById": 45,
-          "templateId": "mir4_forest_wolf",
-          "threat": [
-            [
-              45,
-              667
-            ]
-          ],
-          "wanderTimer": 9998.2,
-          "weapon": {
-            "max": 300,
-            "min": 192,
-            "speed": 2
-          }
-        },
-        {
-          "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
-          "comboUntil": -1,
-          "critChance": 0.05,
-          "detonateTimer": "Infinity",
-          "dodgeChance": 0.05,
-          "facing": -1.892547,
-          "fallStartY": 0.881882,
-          "fiveSecondRule": 99,
-          "hostile": true,
-          "hp": 49505,
-          "id": 47,
-          "inCombat": true,
-          "kind": "mob",
-          "leashAnchor": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
-          },
-          "level": 1,
-          "lootFfaTimer": "Infinity",
-          "maxHp": 50000,
-          "mir4Effects": {
-            "active": [
-              {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
-                "sourceId": 45
-              }
-            ]
-          },
-          "onGround": true,
-          "overpowerUntil": -1,
-          "petMode": "defensive",
-          "pos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
-          },
-          "potionCooldownUntil": -1,
-          "spawnPos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
           },
           "stats": {},
           "swingTimer": 9997.6,
@@ -1963,7 +1929,7 @@
           "threat": [
             [
               45,
-              495
+              1391
             ],
             [
               50,
@@ -1979,23 +1945,94 @@
         },
         {
           "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
+          "aiState": "chase",
+          "combatTimer": 0.7,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.681454,
+          "fallStartY": 1.206575,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49490,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 9.3,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9997.55,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              510
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "chase",
+          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
           "facing": -1.570796,
-          "fallStartY": 1.524302,
+          "fallStartY": 1.519455,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49099,
+          "hp": 49490,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "level": 1,
@@ -2004,11 +2041,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 9.3,
                 "sourceId": 45
               }
             ]
@@ -2017,14 +2054,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "stats": {},
@@ -2034,7 +2071,7 @@
           "threat": [
             [
               45,
-              901
+              510
             ],
             [
               50,
@@ -2050,23 +2087,23 @@
         },
         {
           "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
+          "aiState": "chase",
+          "combatTimer": 0.7,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -1.249046,
-          "fallStartY": 1.698012,
+          "facing": -1.460139,
+          "fallStartY": 2.055072,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49505,
+          "hp": 49490,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "level": 1,
@@ -2075,11 +2112,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 9.3,
                 "sourceId": 45
               }
             ]
@@ -2088,14 +2125,14 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "stats": {},
@@ -2105,7 +2142,7 @@
           "threat": [
             [
               45,
-              495
+              510
             ],
             [
               50,
@@ -2140,7 +2177,7 @@
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": 0.861379,
+          "fallStartY": 0.769231,
           "fiveSecondRule": 100.45,
           "hp": 4000,
           "id": 50,
@@ -2178,9 +2215,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2.5,
-            "y": 0.861379,
-            "z": -998
+            "x": 9,
+            "y": 0.769231,
+            "z": -997.5
           },
           "potionCooldownUntil": -1,
           "resource": 600,
@@ -2208,14 +2245,124 @@
       ]
     },
     {
-      "tick": 29,
-      "time": 1.45,
+      "tick": 30,
+      "time": 1.5,
       "nextId": 51,
-      "state": "d378c829",
-      "events": "675d8bd7",
+      "state": "e6598495",
+      "events": "eb9bf11c",
       "rng": {
-        "draws": 13,
-        "digest": "3eadcd2b"
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 31,
+      "time": 1.55,
+      "nextId": 51,
+      "state": "a9238aba",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 32,
+      "time": 1.6,
+      "nextId": 51,
+      "state": "8558709b",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 33,
+      "time": 1.65,
+      "nextId": 51,
+      "state": "6e15d794",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 34,
+      "time": 1.7,
+      "nextId": 51,
+      "state": "9687350d",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 35,
+      "time": 1.75,
+      "nextId": 51,
+      "state": "9078e228",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 36,
+      "time": 1.8,
+      "nextId": 51,
+      "state": "ea2fe494",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 37,
+      "time": 1.85,
+      "nextId": 51,
+      "state": "1739c0e0",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 38,
+      "time": 1.9,
+      "nextId": 51,
+      "state": "a0faa396",
+      "events": "741638a5",
+      "rng": {
+        "draws": 11,
+        "digest": "aa711e2d"
+      }
+    },
+    {
+      "tick": 39,
+      "time": 1.95,
+      "nextId": 51,
+      "state": "377968ce",
+      "events": "cd99a9ed",
+      "rng": {
+        "draws": 14,
+        "digest": "6ed8d1de"
+      }
+    },
+    {
+      "tick": 39,
+      "time": 1.95,
+      "nextId": 51,
+      "state": "cdc6bb38",
+      "events": "741638a5",
+      "rng": {
+        "draws": 15,
+        "digest": "1a214796"
       },
       "label": "shared-build-chances",
       "players": [
@@ -2240,12 +2387,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 2557
+            "damageDealt": 2921
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 2557
+              "damageDealt": 2921
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -2287,6 +2434,15 @@
           "mir4ArcRewards": {
             "xpLedgerVersion": 2
           },
+          "mir4DisabledAutoSkills": [
+            4101,
+            4102,
+            4103,
+            4105,
+            4107,
+            4108,
+            4111
+          ],
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -2409,38 +2565,30 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 392,
+          "attackPower": 357,
           "auras": [
             {
               "duration": 3600,
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3598.55,
+              "remaining": 3598.05,
               "school": "physical",
               "sourceId": 45
             }
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 0.65,
+          "combatTimer": 0.5,
           "comboUntil": -1,
           "cooldowns": [
             [
-              "4101",
-              8.55
-            ],
-            [
-              "4102",
-              8.55
-            ],
-            [
               "4103",
-              24.6
+              24.1
             ],
             [
               "4106",
-              19.35
+              18.85
             ]
           ],
           "critChance": 0.06,
@@ -2448,8 +2596,7 @@
           "dodgeChance": 0.06,
           "facing": 1.570796,
           "fallStartY": 1.53378,
-          "fiveSecondRule": 100.45,
-          "gcdRemaining": 0.35,
+          "fiveSecondRule": 100.95,
           "hp": 10960,
           "id": 45,
           "inCombat": true,
@@ -2459,7 +2606,7 @@
           "maxHp": 10960,
           "maxResource": 890,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "classId": 4,
@@ -2475,10 +2622,10 @@
               "1": 10960,
               "6": 890,
               "19": 951,
-              "20": 392,
+              "20": 357,
               "24": 157,
               "26": 157,
-              "28": 127,
+              "28": 121,
               "29": 116,
               "32": 10,
               "38": 29,
@@ -2499,7 +2646,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 644.44625,
+          "resource": 645.55875,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -2530,21 +2677,22 @@
               "duration": 2,
               "id": "mir4_4106_stun",
               "kind": "stun",
-              "name": "Investida 4106",
-              "remaining": 1.35,
+              "name": "Vendaval de Golpe de Dor",
+              "remaining": 1.5,
               "school": "physical",
               "sourceId": 45
             }
           ],
-          "combatTimer": 0.65,
+          "combatTimer": 0.5,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
+          "facing": -1.570796,
           "fallStartY": 1.577216,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49334,
+          "hp": 48609,
           "id": 46,
           "inCombat": true,
           "kind": "mob",
@@ -2559,23 +2707,31 @@
           "mir4Effects": {
             "active": [
               {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
+                "sourceId": 45
+              },
+              {
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "kind": "stun",
-                "remaining": 1.3,
+                "remaining": 1.5,
                 "sourceId": 45
               }
             ],
-            "controlImmuneUntil": 3.55,
+            "controlImmuneUntil": 4.2,
             "controlImmunityByEffectId": {
               "mir4_4106_stun": {
                 "sourceId": 45,
-                "until": 3.55
+                "until": 4.2
               }
             },
             "hardControlHistory": [
               {
-                "appliedAt": 0.8,
+                "appliedAt": 1.45,
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "sourceId": 45
@@ -2595,73 +2751,6 @@
             "x": 10,
             "y": 1.577216,
             "z": -1000
-          },
-          "stats": {},
-          "swingTimer": 9999,
-          "tappedById": 45,
-          "templateId": "mir4_forest_wolf",
-          "threat": [
-            [
-              45,
-              667
-            ]
-          ],
-          "wanderTimer": 9998.2,
-          "weapon": {
-            "max": 300,
-            "min": 192,
-            "speed": 2
-          }
-        },
-        {
-          "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
-          "comboUntil": -1,
-          "critChance": 0.05,
-          "detonateTimer": "Infinity",
-          "dodgeChance": 0.05,
-          "facing": -1.892547,
-          "fallStartY": 0.881882,
-          "fiveSecondRule": 99,
-          "hostile": true,
-          "hp": 49505,
-          "id": 47,
-          "inCombat": true,
-          "kind": "mob",
-          "leashAnchor": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
-          },
-          "level": 1,
-          "lootFfaTimer": "Infinity",
-          "maxHp": 50000,
-          "mir4Effects": {
-            "active": [
-              {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
-                "sourceId": 45
-              }
-            ]
-          },
-          "onGround": true,
-          "overpowerUntil": -1,
-          "petMode": "defensive",
-          "pos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
-          },
-          "potionCooldownUntil": -1,
-          "spawnPos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
           },
           "stats": {},
           "swingTimer": 9997.6,
@@ -2670,7 +2759,7 @@
           "threat": [
             [
               45,
-              495
+              1391
             ],
             [
               50,
@@ -2686,13 +2775,84 @@
         },
         {
           "aggroTargetId": 45,
-          "aiState": "attack",
+          "aiState": "chase",
+          "combatTimer": 1.2,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.681454,
+          "fallStartY": 1.206575,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49490,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9997.05,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              510
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "chase",
           "auras": [
             {
               "duration": 1.14,
               "id": "mir4_1104_knockdown",
               "kind": "stun",
-              "name": "Golpe Lacerante",
+              "name": "Corte Divisor",
               "remaining": 1.14,
               "school": "physical",
               "sourceId": 50
@@ -2703,23 +2863,23 @@
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
           "facing": -1.570796,
-          "fallStartY": 1.524302,
+          "fallStartY": 1.519455,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 48687,
+          "hp": 49078,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "level": 1,
           "lootFfaTimer": "Infinity",
           "maxHp": 50000,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "criticalOutcome": 10,
@@ -2734,11 +2894,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
                 "sourceId": 45
               },
               {
@@ -2749,16 +2909,16 @@
                 "sourceId": 50
               }
             ],
-            "controlImmuneUntil": 3.34,
+            "controlImmuneUntil": 3.84,
             "controlImmunityByEffectId": {
               "mir4_1104_knockdown": {
                 "sourceId": 50,
-                "until": 3.34
+                "until": 3.84
               }
             },
             "hardControlHistory": [
               {
-                "appliedAt": 1.45,
+                "appliedAt": 1.95,
                 "duration": 1.14,
                 "effectId": "mir4_1104_knockdown",
                 "sourceId": 50
@@ -2769,24 +2929,24 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "stats": {},
-          "swingTimer": 9997.55,
+          "swingTimer": 9997.05,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              901
+              510
             ],
             [
               50,
@@ -2802,23 +2962,23 @@
         },
         {
           "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
+          "aiState": "chase",
+          "combatTimer": 1.2,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -1.249046,
-          "fallStartY": 1.698012,
+          "facing": -1.460139,
+          "fallStartY": 2.055072,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49505,
+          "hp": 49490,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "level": 1,
@@ -2827,11 +2987,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
                 "sourceId": 45
               }
             ]
@@ -2840,24 +3000,24 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "stats": {},
-          "swingTimer": 9997.55,
+          "swingTimer": 9997.05,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              495
+              510
             ],
             [
               50,
@@ -2880,7 +3040,7 @@
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3598.55,
+              "remaining": 3598.05,
               "school": "physical",
               "sourceId": 50
             }
@@ -2891,15 +3051,15 @@
           "cooldowns": [
             [
               "1104",
-              16
+              15.5
             ]
           ],
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": 0.861379,
-          "fiveSecondRule": 100.45,
-          "gcdRemaining": 1,
+          "fallStartY": 0.769231,
+          "fiveSecondRule": 100.95,
+          "gcdRemaining": 0.5,
           "hp": 6160,
           "id": 50,
           "inCombat": true,
@@ -2945,12 +3105,12 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2.5,
-            "y": 0.861379,
-            "z": -998
+            "x": 9,
+            "y": 0.769231,
+            "z": -997.5
           },
           "potionCooldownUntil": -1,
-          "resource": 582,
+          "resource": 583.725,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -2975,14 +3135,14 @@
       ]
     },
     {
-      "tick": 29,
-      "time": 1.45,
+      "tick": 39,
+      "time": 1.95,
       "nextId": 51,
-      "state": "d378c829",
+      "state": "cdc6bb38",
       "events": "741638a5",
       "rng": {
-        "draws": 13,
-        "digest": "3eadcd2b"
+        "draws": 15,
+        "digest": "1a214796"
       },
       "label": "final",
       "players": [
@@ -3007,12 +3167,12 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
-            "damageDealt": 2557
+            "damageDealt": 2921
           },
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 2557
+              "damageDealt": 2921
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -3054,6 +3214,15 @@
           "mir4ArcRewards": {
             "xpLedgerVersion": 2
           },
+          "mir4DisabledAutoSkills": [
+            4101,
+            4102,
+            4103,
+            4105,
+            4107,
+            4108,
+            4111
+          ],
           "mir4Equipment": {
             "1": 200204000,
             "5": 301204000
@@ -3176,38 +3345,30 @@
       "entities": [
         {
           "aiState": "idle",
-          "attackPower": 392,
+          "attackPower": 357,
           "auras": [
             {
               "duration": 3600,
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3598.55,
+              "remaining": 3598.05,
               "school": "physical",
               "sourceId": 45
             }
           ],
           "blockChance": 0.05,
           "blockValue": 6,
-          "combatTimer": 0.65,
+          "combatTimer": 0.5,
           "comboUntil": -1,
           "cooldowns": [
             [
-              "4101",
-              8.55
-            ],
-            [
-              "4102",
-              8.55
-            ],
-            [
               "4103",
-              24.6
+              24.1
             ],
             [
               "4106",
-              19.35
+              18.85
             ]
           ],
           "critChance": 0.06,
@@ -3215,8 +3376,7 @@
           "dodgeChance": 0.06,
           "facing": 1.570796,
           "fallStartY": 1.53378,
-          "fiveSecondRule": 100.45,
-          "gcdRemaining": 0.35,
+          "fiveSecondRule": 100.95,
           "hp": 10960,
           "id": 45,
           "inCombat": true,
@@ -3226,7 +3386,7 @@
           "maxHp": 10960,
           "maxResource": 890,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "classId": 4,
@@ -3242,10 +3402,10 @@
               "1": 10960,
               "6": 890,
               "19": 951,
-              "20": 392,
+              "20": 357,
               "24": 157,
               "26": 157,
-              "28": 127,
+              "28": 121,
               "29": 116,
               "32": 10,
               "38": 29,
@@ -3266,7 +3426,7 @@
             "z": -1000
           },
           "potionCooldownUntil": -1,
-          "resource": 644.44625,
+          "resource": 645.55875,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,
@@ -3297,21 +3457,22 @@
               "duration": 2,
               "id": "mir4_4106_stun",
               "kind": "stun",
-              "name": "Investida 4106",
-              "remaining": 1.35,
+              "name": "Vendaval de Golpe de Dor",
+              "remaining": 1.5,
               "school": "physical",
               "sourceId": 45
             }
           ],
-          "combatTimer": 0.65,
+          "combatTimer": 0.5,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
+          "facing": -1.570796,
           "fallStartY": 1.577216,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49334,
+          "hp": 48609,
           "id": 46,
           "inCombat": true,
           "kind": "mob",
@@ -3326,23 +3487,31 @@
           "mir4Effects": {
             "active": [
               {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
+                "sourceId": 45
+              },
+              {
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "kind": "stun",
-                "remaining": 1.3,
+                "remaining": 1.5,
                 "sourceId": 45
               }
             ],
-            "controlImmuneUntil": 3.55,
+            "controlImmuneUntil": 4.2,
             "controlImmunityByEffectId": {
               "mir4_4106_stun": {
                 "sourceId": 45,
-                "until": 3.55
+                "until": 4.2
               }
             },
             "hardControlHistory": [
               {
-                "appliedAt": 0.8,
+                "appliedAt": 1.45,
                 "duration": 2,
                 "effectId": "mir4_4106_stun",
                 "sourceId": 45
@@ -3362,73 +3531,6 @@
             "x": 10,
             "y": 1.577216,
             "z": -1000
-          },
-          "stats": {},
-          "swingTimer": 9999,
-          "tappedById": 45,
-          "templateId": "mir4_forest_wolf",
-          "threat": [
-            [
-              45,
-              667
-            ]
-          ],
-          "wanderTimer": 9998.2,
-          "weapon": {
-            "max": 300,
-            "min": 192,
-            "speed": 2
-          }
-        },
-        {
-          "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
-          "comboUntil": -1,
-          "critChance": 0.05,
-          "detonateTimer": "Infinity",
-          "dodgeChance": 0.05,
-          "facing": -1.892547,
-          "fallStartY": 0.881882,
-          "fiveSecondRule": 99,
-          "hostile": true,
-          "hp": 49505,
-          "id": 47,
-          "inCombat": true,
-          "kind": "mob",
-          "leashAnchor": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
-          },
-          "level": 1,
-          "lootFfaTimer": "Infinity",
-          "maxHp": 50000,
-          "mir4Effects": {
-            "active": [
-              {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
-                "sourceId": 45
-              }
-            ]
-          },
-          "onGround": true,
-          "overpowerUntil": -1,
-          "petMode": "defensive",
-          "pos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
-          },
-          "potionCooldownUntil": -1,
-          "spawnPos": {
-            "x": 3,
-            "y": 0.881882,
-            "z": -999
           },
           "stats": {},
           "swingTimer": 9997.6,
@@ -3437,7 +3539,7 @@
           "threat": [
             [
               45,
-              495
+              1391
             ],
             [
               50,
@@ -3453,13 +3555,84 @@
         },
         {
           "aggroTargetId": 45,
-          "aiState": "attack",
+          "aiState": "chase",
+          "combatTimer": 1.2,
+          "comboUntil": -1,
+          "critChance": 0.05,
+          "detonateTimer": "Infinity",
+          "dodgeChance": 0.05,
+          "facing": -1.681454,
+          "fallStartY": 1.206575,
+          "fiveSecondRule": 99,
+          "hostile": true,
+          "hp": 49490,
+          "id": 47,
+          "inCombat": true,
+          "kind": "mob",
+          "leashAnchor": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "level": 1,
+          "lootFfaTimer": "Infinity",
+          "maxHp": 50000,
+          "mir4Effects": {
+            "active": [
+              {
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
+                "sourceId": 45
+              }
+            ]
+          },
+          "onGround": true,
+          "overpowerUntil": -1,
+          "petMode": "defensive",
+          "pos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "potionCooldownUntil": -1,
+          "spawnPos": {
+            "x": 9,
+            "y": 1.206575,
+            "z": -999
+          },
+          "stats": {},
+          "swingTimer": 9997.05,
+          "tappedById": 45,
+          "templateId": "mir4_forest_wolf",
+          "threat": [
+            [
+              45,
+              510
+            ],
+            [
+              50,
+              1
+            ]
+          ],
+          "wanderTimer": 9999,
+          "weapon": {
+            "max": 300,
+            "min": 192,
+            "speed": 2
+          }
+        },
+        {
+          "aggroTargetId": 45,
+          "aiState": "chase",
           "auras": [
             {
               "duration": 1.14,
               "id": "mir4_1104_knockdown",
               "kind": "stun",
-              "name": "Golpe Lacerante",
+              "name": "Corte Divisor",
               "remaining": 1.14,
               "school": "physical",
               "sourceId": 50
@@ -3470,23 +3643,23 @@
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
           "facing": -1.570796,
-          "fallStartY": 1.524302,
+          "fallStartY": 1.519455,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 48687,
+          "hp": 49078,
           "id": 48,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "level": 1,
           "lootFfaTimer": "Infinity",
           "maxHp": 50000,
           "mir4": {
-            "accuracy": 127,
+            "accuracy": 121,
             "bossDamageBps": 131,
             "bossDamageReductionBps": 131,
             "criticalOutcome": 10,
@@ -3501,11 +3674,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
                 "sourceId": 45
               },
               {
@@ -3516,16 +3689,16 @@
                 "sourceId": 50
               }
             ],
-            "controlImmuneUntil": 3.34,
+            "controlImmuneUntil": 3.84,
             "controlImmunityByEffectId": {
               "mir4_1104_knockdown": {
                 "sourceId": 50,
-                "until": 3.34
+                "until": 3.84
               }
             },
             "hardControlHistory": [
               {
-                "appliedAt": 1.45,
+                "appliedAt": 1.95,
                 "duration": 1.14,
                 "effectId": "mir4_1104_knockdown",
                 "sourceId": 50
@@ -3536,24 +3709,24 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 2,
-            "y": 1.524302,
+            "x": 8,
+            "y": 1.519455,
             "z": -1000
           },
           "stats": {},
-          "swingTimer": 9997.55,
+          "swingTimer": 9997.05,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              901
+              510
             ],
             [
               50,
@@ -3569,23 +3742,23 @@
         },
         {
           "aggroTargetId": 45,
-          "aiState": "attack",
-          "combatTimer": 1.4,
+          "aiState": "chase",
+          "combatTimer": 1.2,
           "comboUntil": -1,
           "critChance": 0.05,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.05,
-          "facing": -1.249046,
-          "fallStartY": 1.698012,
+          "facing": -1.460139,
+          "fallStartY": 2.055072,
           "fiveSecondRule": 99,
           "hostile": true,
-          "hp": 49505,
+          "hp": 49490,
           "id": 49,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "level": 1,
@@ -3594,11 +3767,11 @@
           "mir4Effects": {
             "active": [
               {
-                "duration": 5,
-                "effectId": "mir4_4103_blind",
-                "kind": "blind",
-                "magnitude": 0.6,
-                "remaining": 3.55,
+                "duration": 10,
+                "effectId": "mir4_4103_defense-break",
+                "kind": "defense-break",
+                "magnitude": 0.12,
+                "remaining": 8.8,
                 "sourceId": 45
               }
             ]
@@ -3607,24 +3780,24 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "potionCooldownUntil": -1,
           "spawnPos": {
-            "x": 3,
-            "y": 1.698012,
+            "x": 9,
+            "y": 2.055072,
             "z": -1001
           },
           "stats": {},
-          "swingTimer": 9997.55,
+          "swingTimer": 9997.05,
           "tappedById": 45,
           "templateId": "mir4_forest_wolf",
           "threat": [
             [
               45,
-              495
+              510
             ],
             [
               50,
@@ -3647,7 +3820,7 @@
               "id": "battle_stance",
               "kind": "battle_stance",
               "name": "Battle Stance",
-              "remaining": 3598.55,
+              "remaining": 3598.05,
               "school": "physical",
               "sourceId": 50
             }
@@ -3658,15 +3831,15 @@
           "cooldowns": [
             [
               "1104",
-              16
+              15.5
             ]
           ],
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": 0.861379,
-          "fiveSecondRule": 100.45,
-          "gcdRemaining": 1,
+          "fallStartY": 0.769231,
+          "fiveSecondRule": 100.95,
+          "gcdRemaining": 0.5,
           "hp": 6160,
           "id": 50,
           "inCombat": true,
@@ -3712,12 +3885,12 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": 2.5,
-            "y": 0.861379,
-            "z": -998
+            "x": 9,
+            "y": 0.769231,
+            "z": -997.5
           },
           "potionCooldownUntil": -1,
-          "resource": 582,
+          "resource": 583.725,
           "resourceType": "mana",
           "spawnPos": {
             "x": 2,

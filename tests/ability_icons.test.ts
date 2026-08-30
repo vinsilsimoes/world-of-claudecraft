@@ -125,11 +125,13 @@ describe('ability icons', () => {
   it('pins every ABILITY_RECIPES key and payload by stable content identity', () => {
     const ids = abilityRecipeIds();
     expect(ids).toEqual([...new Set(ids)].sort((left, right) => left.localeCompare(right)));
-    expect(ids).toHaveLength(436);
+    // Five obsolete passive placeholders are absent, while all 65 official
+    // active MIR4 actions now own a code-native Aeldrune recipe.
+    expect(ids).toHaveLength(501);
     for (const id of ids) expect(hasExplicitAbilityIcon(id), id).toBe(true);
 
     const identity = ids.map((id) => ({ id, recipe: abilityIconRecipe(id) }));
     const hash = createHash('sha256').update(stableSerialize(identity)).digest('hex');
-    expect(hash).toBe('75db90c0112f17535c921f9c0d12fb904755da9ce532cf77c7a19e7958174a56');
+    expect(hash).toBe('1f82e3bfb6a7162b5942de2c572821dd4c2b322740d05212a44f5026e7f12489');
   });
 });

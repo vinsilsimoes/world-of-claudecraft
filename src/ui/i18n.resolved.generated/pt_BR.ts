@@ -4835,7 +4835,7 @@ export const pt_BR: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Every class follows its original MIR4 class-level requirements: four regular skills at level 1, then one at levels 5, 8, 16, 24, 32, 40, 48 and 56. The class Ultimate is available from level 1 and requires a full Ultimate gauge. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -10172,8 +10172,8 @@ export const pt_BR: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1101": {
-        "name": "Rampant",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+        "name": "Berserk",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage. Increases your damage by 12% for 15 sec."
       },
       "mir4_skill_1102": {
         "name": "Corte do Vazio",
@@ -10181,7 +10181,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_1103": {
         "name": "Barbaric Charge",
-        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards of you take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
       },
       "mir4_skill_1104": {
         "name": "Corte Divisor",
@@ -10189,7 +10189,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_1201": {
         "name": "Iron Shackle",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards of a point 5 yards in front of you take 100% damage and are pulled toward you."
       },
       "mir4_skill_1301": {
         "name": "Riposte",
@@ -10197,7 +10197,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_1302": {
         "name": "Lion's Roar",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "Choque Corporal",
@@ -10209,23 +10209,23 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_1501": {
         "name": "Corte Vendaval",
-        "description": "Afeta um inimigo. Reduz a velocidade do alvo em 35% por 3,2 s."
+        "description": "Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,75 jardas recebem 65% desse dano. Reduz a velocidade de cada inimigo atingido em 35% por 3,2 s."
       },
       "mir4_skill_1502": {
         "name": "Unbreakable Stance",
-        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+        "description": "Deals {damage} damage to up to 8 nearby enemies. At rank 8, increases your Dodge by 30; at rank 10, by 60 for 20 sec."
       },
       "mir4_skill_1601": {
         "name": "Crescent Strike",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies in a 9-yard-long, 5-yard-wide frontal strip take 85% damage."
       },
       "mir4_skill_2101": {
-        "name": "Orbe Gélido",
-        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Congela o alvo por 1,4 s."
+        "name": "Orbe Flamejante",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Queima cada inimigo atingido, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada."
       },
       "mir4_skill_2111": {
-        "name": "Orbe Flamejante",
-        "description": "Causa {damage} de dano a um inimigo. Queima o alvo, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP."
+        "name": "Orbe Gélido",
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Reduz a velocidade de cada inimigo atingido em 35% por 3,2 s."
       },
       "mir4_skill_2501": {
         "name": "Nevasca",
@@ -10280,8 +10280,8 @@ export const pt_BR: EnTranslations = {
         "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 60% desse dano. Reduz a velocidade do alvo em 35% por 4,2 s."
       },
       "mir4_skill_3104": {
-        "name": "Tai Chi",
-        "description": "Afeta um inimigo. Atordoa o alvo por 1,4 s."
+        "name": "Chuva de Lâminas",
+        "description": "Causa {damage} de dano híbrido em 4 impactos. Até 4 outros inimigos em 7,75 jardas recebem 60% desse dano. No grau 8, cada inimigo atingido tem 40% de chance de ser Silenciado por 4 s."
       },
       "mir4_skill_3503": {
         "name": "Cura",
@@ -10333,7 +10333,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_4107": {
         "name": "Seta do Clarão",
-        "description": "Afeta um inimigo. Reduz o dano causado pelo alvo em 45% por 3,2 s."
+        "description": "Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,75 jardas recebem 60% desse dano e têm o dano causado reduzido em 45% por 5 s."
       },
       "mir4_skill_4108": {
         "name": "Heavenly Bow",
@@ -10381,7 +10381,7 @@ export const pt_BR: EnTranslations = {
       },
       "mir4_skill_5401": {
         "name": "Tempestade Devastadora",
-        "description": "Afeta um inimigo. Derruba o alvo por 1 s."
+        "description": "Causa {damage} de dano híbrido e reduz o dano causado pelo inimigo em 30% por 5 s."
       },
       "mir4_skill_5102": {
         "name": "Dragon Tail",

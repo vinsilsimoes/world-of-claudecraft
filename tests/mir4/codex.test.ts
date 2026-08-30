@@ -281,8 +281,7 @@ describe('MIR4 Codex domain', () => {
       state,
       rewardItems,
     );
-    // Warrior's level-25 passive scales the raw +100 Codex HP bonus by 8%.
-    expect(withCodex.maxHp - baseline.maxHp).toBe(108);
+    expect(withCodex.maxHp - baseline.maxHp).toBe(100);
     expect(withCodex.combatPower).toBeGreaterThan(baseline.combatPower);
     expect(
       deriveMir4PlayerStats(1, 25, undefined, undefined, spirits, mounts, state, rewardItems),

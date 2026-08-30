@@ -61,11 +61,20 @@ describe('MIR4 skill evolution', () => {
     const sim = makeSim();
     const meta = sim.players.get(sim.playerId)!;
     meta.mir4Materials = { ...MIR4_EMPTY_MATERIALS, knowledgeTomeCommon: 1 };
-    expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1104, 1)).toEqual({
+    expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1501, 1)).toEqual({
       ok: false,
       reason: 'skill-locked',
     });
     expect(meta.mir4Materials.knowledgeTomeCommon).toBe(1);
+
+    sim.player.level = 5;
+    expect(upgradeMir4Skill(sim.ctx, sim.playerId, 1501, 1)).toEqual({
+      ok: true,
+      skillId: 1501,
+      previousLevel: 1,
+      currentLevel: 2,
+    });
+    expect(meta.mir4Materials.knowledgeTomeCommon).toBe(0);
   });
 
   it.each([

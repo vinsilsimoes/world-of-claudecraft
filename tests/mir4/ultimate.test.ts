@@ -114,7 +114,7 @@ describe('the impact clock and gauge (runtime)', () => {
     );
     expect(damage).toMatchObject({ school: 'magic', attackAnimationStarted: true });
   });
-  it('applies an effect-only skill immediately through its original VFX path', () => {
+  it('applies an effect-only skill immediately while starting its authored animation', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = new Sim({
       seed: 712,
@@ -130,7 +130,15 @@ describe('the impact clock and gauge (runtime)', () => {
 
     expect(sim.mir4CastSkill(2503)).toEqual({ ok: true });
     const castEvents = sim.drainEvents();
-    expect(castEvents.some((event) => event.type === 'mir4AttackStart')).toBe(false);
+    expect(castEvents).toContainEqual(
+      expect.objectContaining({
+        type: 'mir4AttackStart',
+        sourceId: sim.playerId,
+        targetId: sim.playerId,
+        action: 'skill',
+        durationMs: 1267,
+      }),
+    );
     expect(castEvents).toContainEqual(
       expect.objectContaining({
         type: 'spellfx',
@@ -185,9 +193,6 @@ describe('the impact clock and gauge (runtime)', () => {
     wolf.swingTimer = 999;
     sim.addEntity(wolf);
     p.mir4UltGauge = 100;
-    expect(sim.mir4UltimateCast(wolf.id)).toEqual({ ok: false, reason: 'not-unlocked' });
-    expect(p.mir4UltGauge).toBe(100);
-    p.level = 50;
     p.mir4UltGauge = 99;
     expect(sim.mir4UltimateCast(wolf.id)).toEqual({ ok: false, reason: 'no-mp' }); // gauge gate
     p.mir4UltGauge = 100;
@@ -196,14 +201,29 @@ describe('the impact clock and gauge (runtime)', () => {
     expect(p.mir4UltGauge).toBe(0);
     expect(p.cooldowns.has('mir4_ult')).toBe(true);
     expect(wolf.hp).toBe(wolf.maxHp); // scheduled, not instant
-    expect(sim.drainEvents()).toContainEqual({
-      type: 'mir4AttackStart',
-      sourceId: p.id,
-      targetId: wolf.id,
-      action: 'ultimate',
-      pose: 'weapon',
-      durationMs: 1_275,
-    });
+    expect(sim.drainEvents()).toEqual(
+      expect.arrayContaining([
+        {
+          type: 'mir4AttackStart',
+          sourceId: p.id,
+          targetId: wolf.id,
+          ability: 'mir4_ultimate_1',
+          action: 'ultimate',
+          pose: 'weapon',
+          durationMs: 1_275,
+        },
+        {
+          type: 'spellfx',
+          sourceId: p.id,
+          targetId: wolf.id,
+          school: 'physical',
+          fx: 'nova',
+          ability: 'mir4_ultimate_1',
+          impactDelayMs: 1_020,
+          attackAnimationStarted: true,
+        },
+      ]),
+    );
     const startedAt = sim.time;
     for (const [time, expectedDamage] of [
       [0.519, 0],

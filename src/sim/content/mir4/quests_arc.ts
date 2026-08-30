@@ -1466,7 +1466,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
         },
       ],
       recipeUnlocks: [],
-      systemUnlocks: ['class-passive-level-20', 'map-exit-m03'],
+      systemUnlocks: ['map-exit-m03'],
       accountGrants: [],
     },
     repeatability: 'once-per-character',
@@ -2165,7 +2165,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
         },
       ],
       recipeUnlocks: [],
-      systemUnlocks: ['class-passive-level-30', 'map-exit-m04'],
+      systemUnlocks: ['map-exit-m04'],
       accountGrants: [
         {
           category: 'mount',
@@ -2906,7 +2906,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
         },
       ],
       recipeUnlocks: [],
-      systemUnlocks: ['class-passive-level-40', 'map-exit-m05'],
+      systemUnlocks: ['map-exit-m05'],
       accountGrants: [
         {
           category: 'mount',
@@ -3580,7 +3580,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
         },
       ],
       recipeUnlocks: [],
-      systemUnlocks: ['class-passive-level-50', 'map-exit-m06'],
+      systemUnlocks: ['map-exit-m06'],
       accountGrants: [],
     },
     repeatability: 'once-per-character',
@@ -4228,7 +4228,7 @@ export const MIR4_QUESTS_MAIN: readonly Mir4ArcQuest[] = [
         },
       ],
       recipeUnlocks: [],
-      systemUnlocks: ['class-passive-level-60', 'map-exit-m07'],
+      systemUnlocks: ['map-exit-m07'],
       accountGrants: [
         {
           category: 'mount',

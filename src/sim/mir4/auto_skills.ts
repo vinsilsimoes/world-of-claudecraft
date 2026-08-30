@@ -50,7 +50,7 @@ export function setMir4AutoSkillEnabled(
   const classId = player?.mir4?.classId as Mir4ClassId | undefined;
   const skill = mir4SkillById(skillId);
   if (!meta || !player || classId === undefined || skill?.classId !== classId) return false;
-  if (player.level < mir4SkillUnlockLevel(skill.slot)) return false;
+  if (player.level < mir4SkillUnlockLevel(skill)) return false;
 
   const disabled = new Set(meta.mir4DisabledAutoSkills ?? []);
   const wasEnabled = !disabled.has(skillId);

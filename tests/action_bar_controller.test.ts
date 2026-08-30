@@ -24,6 +24,17 @@ class MemoryStorage {
   }
 }
 
+class FailingBarStorage extends MemoryStorage {
+  failBarWrites = false;
+
+  override setItem(key: string, value: string): void {
+    if (this.failBarWrites && key === 'woc_hotbar_warrior_ActionbarTester') {
+      throw new Error('simulated action-bar persistence failure');
+    }
+    super.setItem(key, value);
+  }
+}
+
 interface MutableState {
   known: string[];
   level: number;
@@ -116,7 +127,10 @@ describe('ActionBarController form persistence', () => {
     controller.init();
 
     expect(controller.actions).toHaveLength(33);
-    expect(controller.actions[0]).toEqual({ type: 'ability', id: 'sunder_armor' });
+    expect(controller.actions[0]).toEqual({
+      type: 'ability',
+      id: 'sunder_armor',
+    });
     expect(controller.actions.slice(22)).toEqual(Array.from({ length: 11 }, () => null));
   });
 
@@ -166,7 +180,10 @@ describe('ActionBarController form persistence', () => {
     storage.setItem('woc_hotbar_warrior_ActionbarTester', JSON.stringify(stored));
     const { controller } = makeHarness('warrior', [], bar(), storage);
     controller.init();
-    expect(controller.actions[0]).toEqual({ type: 'item', id: 'ghost_tool_from_v33' });
+    expect(controller.actions[0]).toEqual({
+      type: 'item',
+      id: 'ghost_tool_from_v33',
+    });
     expect(controller.actions[1]).toEqual({ type: 'item', id: 'baked_bread' });
     expect(controller.actions[2]).toBeNull();
     controller.saveActions();
@@ -192,11 +209,17 @@ describe('ActionBarController form persistence', () => {
 
     const reloaded = makeHarness('druid', ['wrath', 'bear_form', 'claw'], bar(), storage);
     reloaded.controller.init();
-    expect(reloaded.controller.actions[32]).toEqual({ type: 'ability', id: 'wrath' });
+    expect(reloaded.controller.actions[32]).toEqual({
+      type: 'ability',
+      id: 'wrath',
+    });
 
     reloaded.state.auras = ['form_bear'];
     reloaded.controller.syncActiveForm();
-    expect(reloaded.controller.actions[32]).toEqual({ type: 'ability', id: 'claw' });
+    expect(reloaded.controller.actions[32]).toEqual({
+      type: 'ability',
+      id: 'claw',
+    });
   });
 
   it('round-trips source slot 20 through the expanded storage model', () => {
@@ -210,7 +233,10 @@ describe('ActionBarController form persistence', () => {
     reader.controller.init();
 
     expect(reader.controller.actions).toHaveLength(ACTION_BAR_ABILITY_SLOTS);
-    expect(reader.controller.actions[19]).toEqual({ type: 'ability', id: 'sinister_strike' });
+    expect(reader.controller.actions[19]).toEqual({
+      type: 'ability',
+      id: 'sinister_strike',
+    });
     expect(reader.controller.actions[20]).toBeNull();
     expect(reader.controller.actions[21]).toBeNull();
   });
@@ -436,8 +462,14 @@ describe('ActionBarController form persistence', () => {
     harness.controller.replaceActionsForLoadout(fireLayout, fireKnown);
     harness.controller.syncKnownAbilities();
 
-    expect(harness.controller.actions[5]).toEqual({ type: 'ability', id: 'pyroblast' });
-    expect(harness.controller.actions[10]).toEqual({ type: 'ability', id: 'fireball_form' });
+    expect(harness.controller.actions[5]).toEqual({
+      type: 'ability',
+      id: 'pyroblast',
+    });
+    expect(harness.controller.actions[10]).toEqual({
+      type: 'ability',
+      id: 'fireball_form',
+    });
 
     harness.state.known = [...fireKnown];
     harness.controller.syncKnownAbilities();
@@ -557,26 +589,131 @@ describe('ActionBarController owned-class level 20 defaults', () => {
 });
 
 describe('ActionBarController attack slot', () => {
-  it('places a newly unlocked MIR4 ability in the first available visible slot', () => {
-    const harness = makeHarness('warrior', ['mir4_skill_1102'], bar('mir4_skill_1102'));
+  it.each([
+    [[1102, 1104, 1304, 1401], 1],
+    [[2101, 2111, 2501, 2301], 2],
+    [[3506, 3101, 3301, 3104], 3],
+    [[4101, 4106, 4102, 4103], 4],
+    [[5201, 5101, 5104, 5301], 5],
+  ] as const)(
+    'places all four level-1 skills and the Ultimate for MIR4 class %i',
+    (skillIds, classId) => {
+      const creationKit = [
+        ...skillIds.map((skillId) => `mir4_skill_${skillId}`),
+        `mir4_ultimate_${classId}`,
+      ];
+      const harness = makeHarness('warrior', creationKit, bar());
+      harness.state.showAttackButton = false;
+      harness.state.preferFirstSeatAction = true;
+
+      harness.controller.syncKnownAbilities();
+
+      expect(creationKit.map((_id, slot) => harness.controller.actionForSlot(slot))).toEqual(
+        creationKit.map((id) => ({ type: 'ability', id })),
+      );
+    },
+  );
+
+  it('retries the class-kit migration when persisting the rebuilt bar fails', () => {
+    const creationKit = [
+      'mir4_skill_1102',
+      'mir4_skill_1104',
+      'mir4_skill_1304',
+      'mir4_skill_1401',
+      'mir4_ultimate_1',
+    ];
+    const storage = new FailingBarStorage();
+    const barKey = 'woc_hotbar_warrior_ActionbarTester';
+    const markerKey = `${barKey}:aeldrune-class-kit-v1`;
+    storage.setItem(barKey, JSON.stringify(bar()));
+    storage.failBarWrites = true;
+    const first = makeHarness('warrior', creationKit, bar(), storage);
+    first.state.showAttackButton = false;
+    first.state.preferFirstSeatAction = true;
+
+    first.controller.init();
+    first.controller.syncKnownAbilities();
+
+    expect(storage.getItem(markerKey)).toBeNull();
+    storage.failBarWrites = false;
+    const retry = makeHarness('warrior', creationKit, bar(), storage);
+    retry.state.showAttackButton = false;
+    retry.state.preferFirstSeatAction = true;
+    retry.controller.init();
+    retry.controller.syncKnownAbilities();
+
+    expect(storage.getItem(markerKey)).toBe('1');
+    expect(creationKit.map((_id, slot) => retry.controller.actionForSlot(slot))).toEqual(
+      creationKit.map((id) => ({ type: 'ability', id })),
+    );
+  });
+
+  it.each([
+    [[1102, 1104, 1304, 1401], 1],
+    [[2101, 2111, 2501, 2301], 2],
+    [[3506, 3101, 3301, 3104], 3],
+    [[4101, 4106, 4102, 4103], 4],
+    [[5201, 5101, 5104, 5301], 5],
+  ] as const)(
+    'migrates an empty pre-homologation bar once for MIR4 class %i',
+    (skillIds, classId) => {
+      const creationKit = [
+        ...skillIds.map((skillId) => `mir4_skill_${skillId}`),
+        `mir4_ultimate_${classId}`,
+      ];
+      const storage = new MemoryStorage();
+      storage.setItem('woc_hotbar_warrior_ActionbarTester', JSON.stringify(bar()));
+      const harness = makeHarness('warrior', creationKit, bar(), storage);
+      harness.state.showAttackButton = false;
+      harness.state.preferFirstSeatAction = true;
+
+      harness.controller.init();
+      harness.controller.syncKnownAbilities();
+
+      expect(creationKit.map((_id, slot) => harness.controller.actionForSlot(slot))).toEqual(
+        creationKit.map((id) => ({ type: 'ability', id })),
+      );
+      expect(storage.getItem('woc_hotbar_warrior_ActionbarTester:aeldrune-class-kit-v1')).toBe('1');
+
+      harness.controller.replaceAttackAction(null);
+      harness.controller.replaceActions(bar());
+      harness.controller.saveAttackAction();
+      harness.controller.saveActions();
+      harness.controller.reload();
+      harness.controller.syncKnownAbilities();
+
+      expect(harness.controller.actionForSlot(0)).toBeNull();
+      expect(harness.controller.actions).toEqual(bar());
+    },
+  );
+
+  it('places level-5 Gale Slash after the exact MIR4 Warrior creation kit', () => {
+    const creationKit = [
+      'mir4_skill_1102',
+      'mir4_skill_1104',
+      'mir4_skill_1304',
+      'mir4_skill_1401',
+      'mir4_ultimate_1',
+    ];
+    const harness = makeHarness('warrior', creationKit, bar(...creationKit));
     harness.state.showAttackButton = false;
     harness.state.preferFirstSeatAction = true;
     harness.controller.syncKnownAbilities();
 
-    harness.state.known.push('mir4_skill_1104');
+    harness.state.known.push('mir4_skill_1501');
     harness.controller.syncKnownAbilities();
 
     expect(harness.controller.actionForSlot(0)).toEqual({
       type: 'ability',
       id: 'mir4_skill_1102',
     });
-    expect(harness.controller.actionForSlot(1)).toEqual({
+    expect(harness.controller.actionForSlot(creationKit.length)).toEqual({
       type: 'ability',
-      id: 'mir4_skill_1104',
+      id: 'mir4_skill_1501',
     });
     expect(
       [harness.controller.actionForSlot(0), ...harness.controller.actions].filter(
-        (action) => action?.type === 'ability' && action.id === 'mir4_skill_1104',
+        (action) => action?.type === 'ability' && action.id === 'mir4_skill_1501',
       ),
     ).toHaveLength(1);
   });
@@ -588,12 +725,18 @@ describe('ActionBarController attack slot', () => {
 
     harness.controller.syncKnownAbilities();
 
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'strike' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'strike',
+    });
     expect(harness.controller.actions[0]).toBeNull();
     expect(harness.controller.removeAbility('strike')).toBe(true);
     expect(harness.controller.actionForSlot(0)).toBeNull();
     expect(harness.controller.addAbility('strike')).toBe(true);
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'strike' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'strike',
+    });
   });
 
   it('loads, hides, exposes, and removes the persisted freed-slot action', () => {
@@ -607,7 +750,10 @@ describe('ActionBarController attack slot', () => {
 
     expect(harness.controller.actionForSlot(0)).toBeNull();
     harness.state.showAttackButton = false;
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'strike' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'strike',
+    });
 
     harness.controller.replaceAttackAction(null);
     harness.controller.saveAttackAction();
@@ -621,7 +767,10 @@ describe('ActionBarController attack slot', () => {
 
     harness.controller.replaceAttackAction({ type: 'ability', id: 'mangle' });
     harness.controller.saveAttackAction();
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'mangle' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'mangle',
+    });
 
     harness.state.auras = ['form_bear'];
     harness.controller.syncActiveForm();
@@ -629,16 +778,25 @@ describe('ActionBarController attack slot', () => {
 
     harness.controller.replaceAttackAction({ type: 'ability', id: 'claw' });
     harness.controller.saveAttackAction();
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'claw' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'claw',
+    });
     expect(harness.storage.getItem('woc_hotbar_druid_ActionbarTester_bear:s0')).not.toBeNull();
 
     harness.state.auras = [];
     harness.controller.syncActiveForm();
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'mangle' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'mangle',
+    });
 
     harness.state.auras = ['form_bear'];
     harness.controller.syncActiveForm();
-    expect(harness.controller.actionForSlot(0)).toEqual({ type: 'ability', id: 'claw' });
+    expect(harness.controller.actionForSlot(0)).toEqual({
+      type: 'ability',
+      id: 'claw',
+    });
   });
 });
 
@@ -805,7 +963,10 @@ describe('ActionBarController persistence seam', () => {
     controller.replaceActions(bar('heroic_strike'));
     controller.saveActions();
     expect(persisted).toHaveLength(1);
-    expect(persisted[0].forms.normal?.bar[0]).toEqual({ type: 'ability', id: 'heroic_strike' });
+    expect(persisted[0].forms.normal?.bar[0]).toEqual({
+      type: 'ability',
+      id: 'heroic_strike',
+    });
   });
 
   it('does NOT persist while re-seeding from storage in reload (server-wins restore)', () => {
@@ -816,7 +977,10 @@ describe('ActionBarController persistence seam', () => {
     storage.setItem('woc_hotbar_warrior_ActionbarTester', JSON.stringify(bar('sunder_armor')));
     controller.reload();
     expect(persisted).toEqual([]);
-    expect(controller.actions[0]).toEqual({ type: 'ability', id: 'sunder_armor' });
+    expect(controller.actions[0]).toEqual({
+      type: 'ability',
+      id: 'sunder_armor',
+    });
   });
 
   it('keeps offline localStorage behavior byte-identical when no persistLayout is wired', () => {
@@ -879,7 +1043,12 @@ describe('isHotbarItemId: reins are placeable now that mounts are items', () => 
     // isAssignableAction is what the drop target consults; a reins action must
     // survive it exactly as a potion action does.
     expect(controller.isAssignableAction({ type: 'item', id: 'reins_valorsteed' })).toBe(true);
-    expect(controller.isAssignableAction({ type: 'item', id: 'lesser_healing_potion' })).toBe(true);
+    expect(
+      controller.isAssignableAction({
+        type: 'item',
+        id: 'lesser_healing_potion',
+      }),
+    ).toBe(true);
     // A non-usable material still must not be assignable.
     expect(controller.isAssignableAction({ type: 'item', id: 'copper_ore' })).toBe(false);
   });

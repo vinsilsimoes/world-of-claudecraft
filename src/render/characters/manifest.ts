@@ -1053,6 +1053,22 @@ export const VISUALS: Record<string, VisualDef> = {
         dualwield: 'Dualwield_Melee_Attack_Chop',
       },
       attackByAbility: {
+        // Aeldrune Warrior skills keep their own ids all the way through the
+        // renderer. The clip donors are native 3D rig actions, not classic
+        // ability aliases, so changing one presentation cannot change another.
+        mir4_skill_1102: '1H_Melee_Attack_Slice_Diagonal',
+        mir4_skill_1302: 'Cheer',
+        mir4_skill_1301: '1H_Melee_Attack_Slice_Horizontal',
+        mir4_skill_1101: 'Dualwield_Melee_Attack_Chop',
+        mir4_skill_1103: '2H_Melee_Attack_Chop',
+        mir4_skill_1104: '2H_Melee_Attack_Chop',
+        mir4_skill_1501: '1H_Melee_Attack_Slice_Horizontal',
+        mir4_skill_1201: '1H_Melee_Attack_Slice_Horizontal',
+        mir4_skill_1601: '1H_Melee_Attack_Slice_Horizontal',
+        mir4_skill_1304: 'Shield_Bash',
+        mir4_skill_1401: '2H_Melee_Attack_Chop',
+        mir4_skill_1502: 'Block',
+        mir4_ultimate_1: '2H_Melee_Attack_Chop',
         mortal_strike: '2H_Melee_Attack_Chop',
         execute: '2H_Melee_Attack_Chop',
         slam: '2H_Melee_Attack_Chop',
@@ -1138,6 +1154,21 @@ export const VISUALS: Record<string, VisualDef> = {
       // (final_edict is its successor and carries the Verdict clip). Not
       // every ability is listed; unlisted ids keep the default chop.
       attackByAbility: {
+        // Aeldrune Lancer. Each official MIR4 action resolves through the
+        // Lancer's own id, while using a compatible native paladin-rig clip.
+        mir4_skill_5201: 'Paladin_Bastion_Sweep',
+        mir4_skill_5101: 'Paladin_Bastion_Sweep',
+        mir4_skill_5104: 'Cast_HammerBash',
+        mir4_skill_5301: '1H_Melee_Attack_Slice_Diagonal',
+        mir4_skill_5401: 'Cast_Consecrate',
+        mir4_skill_5102: 'Paladin_Bastion_Sweep',
+        mir4_skill_5103: 'Paladin_Templars_Verdict_1H',
+        mir4_skill_5303: 'Cast_HammerBash',
+        mir4_skill_5403: 'Cast_Ward',
+        mir4_skill_5205: 'Paladin_Templars_Verdict_1H',
+        mir4_skill_5304: 'Cast_HolyMend',
+        mir4_skill_5202: 'Paladin_Bastion_Sweep',
+        mir4_ultimate_5: 'Cast_Consecrate',
         final_edict: 'Paladin_Templars_Verdict_1H',
         sunward_disc: 'Spellcast_Raise',
         bastion_sweep: 'Paladin_Bastion_Sweep',
@@ -1192,6 +1223,20 @@ export const VISUALS: Record<string, VisualDef> = {
       // are pet-command channels with no combat swing to author, matching
       // batch 1's own utility/summon exclusions for the mage).
       attackByAbility: {
+        // Aeldrune Arbalist official MIR4 action set.
+        mir4_skill_4101: 'Hunter_Shot_Volley',
+        mir4_skill_4106: 'Hunter_Shot_Snap',
+        mir4_skill_4102: 'Hunter_Shot_Snap',
+        mir4_skill_4103: 'Hunter_Shot_Snap',
+        mir4_skill_4107: 'Hunter_Shot_Snap',
+        mir4_skill_4108: 'Hunter_Shot_Volley',
+        mir4_skill_4111: 'Spellcast_Raise',
+        mir4_skill_4105: 'Hunter_Shot_Snap',
+        mir4_skill_4109: 'Hunter_Shot_Snap',
+        mir4_skill_4104: 'Hunter_Shot_Volley',
+        mir4_skill_4110: 'Hunter_Shot_LongDraw',
+        mir4_skill_4112: 'Spellcast_Raise',
+        mir4_ultimate_4: 'Hunter_Shot_Volley',
         raptor_strike: 'Hunter_Melee_Gut',
         mongoose_bite: 'Hunter_Melee_Counter',
         wing_clip: 'Hunter_Melee_Clip',
@@ -1354,6 +1399,20 @@ export const VISUALS: Record<string, VisualDef> = {
       // same call the warrior's raised_guard makes. This covers every
       // ability tagged class: 'shaman' in classes.ts.
       attackByAbility: {
+        // Aeldrune Taoist official MIR4 action set.
+        mir4_skill_3506: 'Cast_Bolt',
+        mir4_skill_3101: 'Storm_Strike',
+        mir4_skill_3301: 'Cast_Bolt',
+        mir4_skill_3104: 'Cast_Quake',
+        mir4_skill_3503: 'Cast_Heal',
+        mir4_skill_3103: 'Storm_Strike',
+        mir4_skill_3501: 'Block',
+        mir4_skill_3201: 'Cast_Quake',
+        mir4_skill_3505: 'Cast_Shock',
+        mir4_skill_3203: 'Storm_Strike',
+        mir4_skill_3404: 'Spellcast_Raise',
+        mir4_skill_3504: 'Cast_Heal',
+        mir4_ultimate_3: 'Cast_Quake',
         lightning_bolt: 'Cast_Bolt',
         earth_shock: 'Cast_Shock',
         flame_shock: 'Cast_Shock',
@@ -1410,6 +1469,20 @@ export const VISUALS: Record<string, VisualDef> = {
       // exhaustive coverage (utility/buff/summon abilities keep the default
       // chop until a later batch).
       attackByAbility: {
+        // Aeldrune Sorcerer official MIR4 action set.
+        mir4_skill_2101: 'Cast_Fire',
+        mir4_skill_2111: 'Cast_Frost',
+        mir4_skill_2501: 'Cast_Arcane',
+        mir4_skill_2301: 'Cast_Arcane',
+        mir4_skill_2503: 'Cast_Frost',
+        mir4_skill_2203: 'Cast_Frost',
+        mir4_skill_2303: 'Cast_Arcane',
+        mir4_skill_2201: 'Cast_Fire',
+        mir4_skill_2502: 'Cast_Arcane',
+        mir4_skill_2103: 'Cast_Fire',
+        mir4_skill_2204: 'Spellcast_Raise',
+        mir4_skill_2202: 'Cast_Nova',
+        mir4_ultimate_2: 'Cast_Fire',
         fireball: 'Cast_Fire',
         scorch: 'Cast_Fire',
         fire_blast: 'Cast_Fire',

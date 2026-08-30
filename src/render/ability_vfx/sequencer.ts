@@ -400,6 +400,7 @@ export class ArchetypeSequencer {
     awaitTravel: boolean,
     windupDelay = 0,
     at?: { x: number; y: number; z: number },
+    impactDelay?: number,
   ): SeqSlot | null {
     if (tier >= 2) return null;
     // steal the oldest running sequence when the pool is saturated: a fresh
@@ -423,7 +424,11 @@ export class ArchetypeSequencer {
     slot.power = spec.power ?? 1;
     slot.releaseAt = windupDelay;
     slot.releaseDone = windupDelay <= 0;
-    slot.impactAt = awaitTravel ? Number.POSITIVE_INFINITY : windupDelay + 0.15;
+    slot.impactAt = awaitTravel
+      ? Number.POSITIVE_INFINITY
+      : impactDelay === undefined
+        ? windupDelay + 0.15
+        : Math.max(windupDelay, impactDelay);
     slot.impactDone = false;
     slot.flip2Done = true;
     slot.ring2Done = true;

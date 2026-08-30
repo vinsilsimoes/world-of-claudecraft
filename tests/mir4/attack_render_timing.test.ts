@@ -34,7 +34,11 @@ describe('MIR4 renderer-owned action timing', () => {
     expect(mir4ActionDurationSeconds(undefined, 0.55)).toBe(0.55);
   });
 
-  it.each([['basic', 'cast', 448] as const, ['ultimate', 'weapon', 1_275] as const])(
+  it.each([
+    ['basic', 'cast', 448] as const,
+    ['skill', 'weapon', 1_500] as const,
+    ['ultimate', 'weapon', 1_275] as const,
+  ])(
     'forwards %s pose and duration once without replaying from damage',
     (action, pose, durationMs) => {
       const renderer = Object.create(Renderer.prototype) as AttackEventHarness;
@@ -84,7 +88,7 @@ describe('MIR4 renderer-owned action timing', () => {
       type: 'mir4AttackStart',
       sourceId: 7,
       targetId: 9,
-      ability: 'whirlwind',
+      ability: 'mir4_skill_1501',
       action: 'basic',
       pose: 'weapon',
       durationMs: 2_050,
@@ -93,7 +97,7 @@ describe('MIR4 renderer-owned action timing', () => {
       type: 'mir4AttackStart',
       sourceId: 7,
       targetId: 9,
-      ability: 'mortal_strike',
+      ability: 'mir4_skill_1102',
       action: 'basic',
       pose: 'weapon',
       durationMs: 500,
@@ -101,6 +105,6 @@ describe('MIR4 renderer-owned action timing', () => {
 
     expect(visual.playCastAction).toHaveBeenCalledWith('storm_bolt', 800);
     expect(visual.playWhirl).toHaveBeenCalledWith(2_050);
-    expect(visual.playAttack).toHaveBeenCalledWith('mortal_strike', 500);
+    expect(visual.playAttack).toHaveBeenCalledWith('mir4_skill_1102', 500);
   });
 });

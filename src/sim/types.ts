@@ -1578,6 +1578,8 @@ export interface Mir4PendingImpact {
   forceHit?: boolean;
   forceCritical?: boolean;
   periodic?: boolean;
+  /** The authoritative action-start cue already began the attack one-shot. */
+  attackAnimationStarted?: true;
 }
 
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
@@ -5921,7 +5923,7 @@ export type SimEvent = { pid?: number } & (
       sourceId: number;
       targetId: number;
       ability?: string;
-      action: 'basic' | 'ultimate';
+      action: 'basic' | 'skill' | 'ultimate';
       pose: 'weapon' | 'cast';
       durationMs: number;
     }
@@ -6035,6 +6037,9 @@ export type SimEvent = { pid?: number } & (
       // The body one-shot already began from a MIR4 authoritative action
       // event. The painter still stages particles but must not restart it.
       attackAnimationStarted?: true;
+      // Delay from cast start to the signature impact recovered from the
+      // authoritative action timeline. Presentation only.
+      impactDelayMs?: number;
       // True for a wand auto-attack projectile, so combat_sfx.ts can pick the
       // dedicated wand_<school> cue instead of the real-spell proj_<school>
       // one: a passive auto-attack must not sound identical to an actual cast.

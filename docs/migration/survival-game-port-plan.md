@@ -13,11 +13,11 @@ narrative record; its `server/` modules are the behavioral reference.
 
 ## Authority matrix
 
-| Concern | Source of truth |
-|---|---|
-| Architecture, engine, net protocol, DB, persistence, auth, build, tests, deployment | This repository (root `CLAUDE.md` invariants and seams) |
-| Classes, skills, formulas, combat resources, progression, items, refinement, enchantments, blessings, auto battle, auto mission, narrative, quests, NPCs, monsters, rewards, map concepts, region order | The source project (`F:\Dev\Survival-Game`) |
-| Final implementation | This repository's patterns: one `src/sim/` system behind `SimContext`, data-as-code in `src/sim/content/`, `IWorld` facets, authoritative server |
+| Concern                                                                                                                                                                                                 | Source of truth                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Architecture, engine, net protocol, DB, persistence, auth, build, tests, deployment                                                                                                                     | This repository (root `CLAUDE.md` invariants and seams)                                                                                          |
+| Classes, skills, formulas, combat resources, progression, items, refinement, enchantments, blessings, auto battle, auto mission, narrative, quests, NPCs, monsters, rewards, map concepts, region order | The source project (`F:\Dev\Survival-Game`)                                                                                                      |
+| Final implementation                                                                                                                                                                                    | This repository's patterns: one `src/sim/` system behind `SimContext`, data-as-code in `src/sim/content/`, `IWorld` facets, authoritative server |
 
 Preserve the source project's intended behavior, not its code. Never copy its
 monoliths (`server/authoritative-state.js` is a dispatch giant; extract the rule
@@ -43,20 +43,20 @@ the server loads (deep-frozen by `server/mir4-mmo-world-content-v1.js`).
 
 Key source modules (behavioral reference for the port):
 
-| Domain | Source module |
-|---|---|
-| 5 classes, level table 1-250, effective stats, Combat Power | `server/mir4-character-core-data.js` + `server/data/mir4-character-core-v1.json` |
-| Class combat identity and range bands | `server/mir4-class-combat-identity-v1.js`, `server/mir4-class-combat-range-v1.js` |
-| Class passives (5 per class, unlock 20/30/40/50/60) | `js/mir4-class-passives-v1.js` |
-| Skill catalog (25 skills, 5 per class) | `server/mir4-combat-data.js` (`CLASS_CATALOG`), `server/mir4-skill-execution-contract-v1.js` (`ROLE_BY_SKILL`, `EFFECT_PROFILES`), `server/mir4-authorial-skills-v1.js` (7 rebuilt skills, `nativeClaim:false`) |
-| Damage math (hit/crit/defense/penetration, bps) | `server/mir4-authoritative-damage-v1.js` |
-| Auto battle (brain FSM + rotation admission) | `server/automation-brain-v1.js`, `server/mir4-auto-hunt-rotation-v1.js`, `server/mir4-p3c-automation-v1.js`, per-class planners `server/mir4-p4-*-actions-v1.js` |
-| Auto mission ("Quest Journey") | `js/quest-journey.js`, `js/mmo-world-client.js`, `mmo.*` command handlers in `server/authoritative-state.js` |
-| Equipment catalog (240 items, 8 slots x 5 classes x 6 ranks) | `server/data/authorial-equipment-catalog-v1.json` validated by `server/mir4-authorial-equipment-catalog-v1.js` |
-| Refinement / enchantment / blessing | `server/mir4-authorial-equipment-v1.js` (`enhance()`, `rollLayer`, `resolveLayer`) |
-| MMO quests, zones, portals, lore (m01..m20) | `server/data/mir4-mmo-world-runtime-v1.json` + `server/mir4-mmo-world-campaign-v1.js` |
-| Monster spawn/stat formula | `server/mir4-mmo-world-encounters-v1.js` |
-| Mounts (85, 6 grades, combine 20%) / Spirits | `server/mir4-mount-summon-v1.js`, `server/mir4-spirit-summon-v1.js` |
+| Domain                                                       | Source module                                                                                                                                                                                                   |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5 classes, level table 1-250, effective stats, Combat Power  | `server/mir4-character-core-data.js` + `server/data/mir4-character-core-v1.json`                                                                                                                                |
+| Class combat identity and range bands                        | `server/mir4-class-combat-identity-v1.js`, `server/mir4-class-combat-range-v1.js`                                                                                                                               |
+| Legacy source passives (5 per class, unlock 20/30/40/50/60)  | `js/mir4-class-passives-v1.js` (migration inventory only; superseded by the official active-kit parity decision)                                                                                                |
+| Skill catalog (25 skills, 5 per class)                       | `server/mir4-combat-data.js` (`CLASS_CATALOG`), `server/mir4-skill-execution-contract-v1.js` (`ROLE_BY_SKILL`, `EFFECT_PROFILES`), `server/mir4-authorial-skills-v1.js` (7 rebuilt skills, `nativeClaim:false`) |
+| Damage math (hit/crit/defense/penetration, bps)              | `server/mir4-authoritative-damage-v1.js`                                                                                                                                                                        |
+| Auto battle (brain FSM + rotation admission)                 | `server/automation-brain-v1.js`, `server/mir4-auto-hunt-rotation-v1.js`, `server/mir4-p3c-automation-v1.js`, per-class planners `server/mir4-p4-*-actions-v1.js`                                                |
+| Auto mission ("Quest Journey")                               | `js/quest-journey.js`, `js/mmo-world-client.js`, `mmo.*` command handlers in `server/authoritative-state.js`                                                                                                    |
+| Equipment catalog (240 items, 8 slots x 5 classes x 6 ranks) | `server/data/authorial-equipment-catalog-v1.json` validated by `server/mir4-authorial-equipment-catalog-v1.js`                                                                                                  |
+| Refinement / enchantment / blessing                          | `server/mir4-authorial-equipment-v1.js` (`enhance()`, `rollLayer`, `resolveLayer`)                                                                                                                              |
+| MMO quests, zones, portals, lore (m01..m20)                  | `server/data/mir4-mmo-world-runtime-v1.json` + `server/mir4-mmo-world-campaign-v1.js`                                                                                                                           |
+| Monster spawn/stat formula                                   | `server/mir4-mmo-world-encounters-v1.js`                                                                                                                                                                        |
+| Mounts (85, 6 grades, combine 20%) / Spirits                 | `server/mir4-mount-summon-v1.js`, `server/mir4-spirit-summon-v1.js`                                                                                                                                             |
 
 The five classes (ids 1..5, product keys `warrior`, `elementalist`, `taoist`,
 `arbalist`, `lancer`) are the final roster for this profile. The classic roster
@@ -88,21 +88,21 @@ The `mir4-gameplay-port` profile foundation is merged ahead of this plan:
 
 ## Migration matrix
 
-| Domain | Origin (source project) | Destination (this repo) | Strategy |
-|---|---|---|---|
-| 5 classes + passives | character-core data + passives | `src/sim/content/mir4/` records + creation gating in the entity path | ADAPT |
-| 25 skills + effect profiles | combat-data catalog + execution contract | `src/sim/content/mir4/` records + `src/sim/combat/` systems | ADAPT |
-| Damage formulas (bps) | `mir4-authoritative-damage-v1.js` | pure module under `src/sim/mir4/` with pinned-value tests | ADAPT |
-| Auto battle | automation brain + rotation + client controller | `src/sim/auto_battle/` system behind `SimContext` (runs in Sim: offline, server, headless; client only toggles via `IWorld`) | ADAPT (locomotion model differs: Sim-side A*) |
-| Auto mission | quest-journey + `mmo.*` handlers | `src/sim/auto_quest/` system over real quest state + `IWorld` facet | ADAPT |
-| Items (240) + slots | authorial equipment catalog | extend `src/sim/content/items.ts` (no second inventory) | EXTEND |
-| Refine/enchant/bless | `mir4-authorial-equipment-v1.js` | sim progression/equipment module + server `RouteDef` where a REST surface is needed | EXTEND |
-| Quests + narrative m01..m20 | compiled runtime JSON | declarative quest/zone records in `src/sim/content/mir4/` (dialog text becomes i18n keys) | ADAPT |
-| 20 maps | approved TMX (semantic reference only) | procedural zones (content records + seed terrain + camps + portals), same topology/progression/rhythm | REBUILD (never load TMX at runtime) |
-| Monsters | encounters formula + native catalog rows | `src/sim/content/mir4/` mob records + `src/sim/mob/` behavior | ADAPT |
-| Mounts / spirits | summon modules | `src/sim/content/mounts.ts` + `src/sim/pet/` | ADAPT |
-| Level/XP 1-250 | LEVEL table JSON | profile-scoped tuning beside `XP_TABLE` in `src/sim/types.ts` | REPLACE (profile-scoped) |
-| Accounts, auth, DB, wire, build, gate | this repo | unchanged | REUSE |
+| Domain                                | Origin (source project)                         | Destination (this repo)                                                                                                      | Strategy                                      |
+| ------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| 5 classes + passives                  | character-core data + passives                  | `src/sim/content/mir4/` records + creation gating in the entity path                                                         | ADAPT                                         |
+| 25 skills + effect profiles           | combat-data catalog + execution contract        | `src/sim/content/mir4/` records + `src/sim/combat/` systems                                                                  | ADAPT                                         |
+| Damage formulas (bps)                 | `mir4-authoritative-damage-v1.js`               | pure module under `src/sim/mir4/` with pinned-value tests                                                                    | ADAPT                                         |
+| Auto battle                           | automation brain + rotation + client controller | `src/sim/auto_battle/` system behind `SimContext` (runs in Sim: offline, server, headless; client only toggles via `IWorld`) | ADAPT (locomotion model differs: Sim-side A*) |
+| Auto mission                          | quest-journey + `mmo.*` handlers                | `src/sim/auto_quest/` system over real quest state + `IWorld` facet                                                          | ADAPT                                         |
+| Items (240) + slots                   | authorial equipment catalog                     | extend `src/sim/content/items.ts` (no second inventory)                                                                      | EXTEND                                        |
+| Refine/enchant/bless                  | `mir4-authorial-equipment-v1.js`                | sim progression/equipment module + server `RouteDef` where a REST surface is needed                                          | EXTEND                                        |
+| Quests + narrative m01..m20           | compiled runtime JSON                           | declarative quest/zone records in `src/sim/content/mir4/` (dialog text becomes i18n keys)                                    | ADAPT                                         |
+| 20 maps                               | approved TMX (semantic reference only)          | procedural zones (content records + seed terrain + camps + portals), same topology/progression/rhythm                        | REBUILD (never load TMX at runtime)           |
+| Monsters                              | encounters formula + native catalog rows        | `src/sim/content/mir4/` mob records + `src/sim/mob/` behavior                                                                | ADAPT                                         |
+| Mounts / spirits                      | summon modules                                  | `src/sim/content/mounts.ts` + `src/sim/pet/`                                                                                 | ADAPT                                         |
+| Level/XP 1-250                        | LEVEL table JSON                                | profile-scoped tuning beside `XP_TABLE` in `src/sim/types.ts`                                                                | REPLACE (profile-scoped)                      |
+| Accounts, auth, DB, wire, build, gate | this repo                                       | unchanged                                                                                                                    | REUSE                                         |
 
 Content obligations from root `CLAUDE.md` apply to every new mob/quest/item/zone
 record in this profile too: wiki regen, deeds for conquerable content, Reliquary
@@ -212,6 +212,7 @@ authoritative-damage-v1,regional-skill-runtime-v1,crowd-control-policy-v1,
 auto-hunt-rotation-v1,class-passives js}, docs/mir4-browser-all-class-catalog.md.
 
 Key audit facts that shape the port:
+
 - Impact timing is authored offsets (dueAt = cast + offsetMs; warrior basic
   [280], ultimates e.g. [520,760,1020]); native impactTimes are metadata-only.
 - `impactCount` on authorial policies is PRESENTATION cardinality, never a
@@ -233,7 +234,7 @@ Key audit facts that shape the port:
   flips setup {1102,1304,1104,1401} to payoff when the target is dazed.
 - Potions: HP 5% max (1s cd), MP 120 flat (5s cd); auto-potion thresholds
   HP 50% / MP 35%.
-- Passives: 5 per class at levels 20/30/40/50/60, pure bps multipliers on the
+- Historical source passives: 5 per class at levels 20/30/40/50/60, pure bps multipliers on the
   effective status, applied after level+gear with proportional hp/mp rescale.
 - Skill level 2: only the SKILL_LEVEL_CAPS_BY_CLASS ids, behind server gates
   (cost 3200 copper + 400 effect points + 3 tomes); dano uses levelUpCoefficient.
@@ -245,16 +246,17 @@ Key audit facts that shape the port:
 
 Ordered slices (each independently committable):
 3.1 effect/CC engine + full warrior kit (1104/1304/1401/1501 effects, AoE
-    secondaries, delayed impacts via delayedEvents, 750ms CC immunity).
+secondaries, delayed impacts via delayedEvents, 750ms CC immunity).
 3.2 basic/ultimate/gauge specs as data + warrior ultimate executing.
 3.3 D1 multi-class hosting decision (PlayerClass union vs templateId routing;
-    investigate classic CLASSES/guide obligations first) + creation gating.
+investigate classic CLASSES/guide obligations first) + creation gating.
 3.4 remaining four kits executing (incl. authorial hybrid math + tracked
-    buffs, 2503 shield, 3503 heal, 4106 stun PvE/PvP chances).
+buffs, 2503 shield, 3503 heal, 4106 stun PvE/PvP chances).
 3.5 rotation cascade per class + warrior setup/payoff + auto-potion.
 3.6 passives (data + recalc integration + rescale) + L2 evolution data/gates.
 3.7 mob attack pipeline mir4 + m01 combatXpModel + boss contextual wiring.
 3.8 offline/online parity pass + placeholder VFX event surface.
+
 - **Phase 4: equipment systems.** Inventory extension, refinement, enchantment,
   blessings, material wallet, transactional server validation.
 - **Phase 5: world and narrative.** Procedural zones for the m01..m20 arc, quest
@@ -269,17 +271,17 @@ Ordered slices (each independently committable):
 “Complete” below means the feature reached every required maturity layer, not
 merely that a dataset or unit-tested sim function exists.
 
-| Slice | Dataset | Sim | Host | Persisted/online | Existing UI | E2E | Status |
-|---|---:|---:|---:|---:|---:|---:|---|
-| Profile/world/roster | yes | yes | yes | yes | yes | yes | active; PostgreSQL 16 and two-browser release proof passed |
-| M01 combat + five kits | yes | yes | yes | yes | yes | yes | active; all five classes boot through the existing entry shell with MIR4-only actions and the shared WoC action bar |
-| L2 skill evolution | yes | yes | yes | yes | existing Spellbook + Deeds | yes | active; browser proof upgrades skill 1102 and spends the three authoritative resources |
-| M01 quest/auto journey | yes | yes | yes | yes | tracker + log | yes | active; smoke proof accepts M01-Q01 and activates auto journey through the existing tracker |
-| Equipment/refine/enchant/bless/craft | yes | yes | yes | yes | yes | yes | active; existing Crafting window drives every authoritative operation |
-| m01..m20 procedural world/mobs/travel | yes | yes | yes | n/a | zone map + atlas + portals | yes | active; full-campaign four-tier browser and live-Sim portal traversal pass |
-| 230-quest arc | yes | yes | yes | yes | tracker + Quest Log + Crafting | yes | active; exhaustive sim coverage plus real M04 short-dungeon browser completion |
-| Native mount adaptation | yes | yes | yes | yes | Bags + Character + native Mount runtime | yes | active; ticket redemption and equip use the existing Bags and native runtime model |
-| Spirits | yes | yes | yes | yes | Bags + Character | yes | active; ticket redemption and equip pass through the existing Bags window |
+| Slice                                 | Dataset | Sim | Host | Persisted/online |                             Existing UI | E2E | Status                                                                                                              |
+| ------------------------------------- | ------: | --: | ---: | ---------------: | --------------------------------------: | --: | ------------------------------------------------------------------------------------------------------------------- |
+| Profile/world/roster                  |     yes | yes |  yes |              yes |                                     yes | yes | active; PostgreSQL 16 and two-browser release proof passed                                                          |
+| M01 combat + five kits                |     yes | yes |  yes |              yes |                                     yes | yes | active; all five classes boot through the existing entry shell with MIR4-only actions and the shared WoC action bar |
+| L2 skill evolution                    |     yes | yes |  yes |              yes |              existing Spellbook + Deeds | yes | active; browser proof upgrades skill 1102 and spends the three authoritative resources                              |
+| M01 quest/auto journey                |     yes | yes |  yes |              yes |                           tracker + log | yes | active; smoke proof accepts M01-Q01 and activates auto journey through the existing tracker                         |
+| Equipment/refine/enchant/bless/craft  |     yes | yes |  yes |              yes |                                     yes | yes | active; existing Crafting window drives every authoritative operation                                               |
+| m01..m20 procedural world/mobs/travel |     yes | yes |  yes |              n/a |              zone map + atlas + portals | yes | active; full-campaign four-tier browser and live-Sim portal traversal pass                                          |
+| 230-quest arc                         |     yes | yes |  yes |              yes |          tracker + Quest Log + Crafting | yes | active; exhaustive sim coverage plus real M04 short-dungeon browser completion                                      |
+| Native mount adaptation               |     yes | yes |  yes |              yes | Bags + Character + native Mount runtime | yes | active; ticket redemption and equip use the existing Bags and native runtime model                                  |
+| Spirits                               |     yes | yes |  yes |              yes |                        Bags + Character | yes | active; ticket redemption and equip pass through the existing Bags window                                           |
 
 Current implementation estimate: **100%**. Every migration slice in the ledger
 has reached its required dataset, simulation, host, persistence/online, existing-
@@ -1150,15 +1152,15 @@ Asset procurement is intentionally gated after the physical and greybox passes:
 topology, routes and honest limits need no purchase. If the existing catalogue
 cannot supply the required silhouettes, the current shortlist is:
 
-- **Best first environment purchase:** Daniel Mistage's *STYLIZED Fantasy
-  Village* (currently USD 50), over 800 modular village/environment assets with
+- **Best first environment purchase:** Daniel Mistage's _STYLIZED Fantasy
+  Village_ (currently USD 50), over 800 modular village/environment assets with
   FBX/Blend sources and four atlases. Use for denser human settlements only
   after GLB conversion/budget validation.
-- **Best direct-GLB organic settlement option:** Standout7's *LOKIT Elf Village
-  Modular Pack* (free subset; currently USD 15/29.99 tiers), with GLB/glTF,
+- **Best direct-GLB organic settlement option:** Standout7's _LOKIT Elf Village
+  Modular Pack_ (free subset; currently USD 15/29.99 tiers), with GLB/glTF,
   atlas-based materials and CC0 terms. Use for forest and mystical villages.
-- **Dungeon gap, no purchase required:** Sigil's Vault *Modular Dungeon Kit
-  v1.0*, name-your-price/CC0, 90+ GLB/FBX modules on one trim sheet. Evaluate
+- **Dungeon gap, no purchase required:** Sigil's Vault _Modular Dungeon Kit
+  v1.0_, name-your-price/CC0, 90+ GLB/FBX modules on one trim sheet. Evaluate
   only if the existing KayKit castle/dungeon vocabulary cannot distinguish the
   underground maps.
 

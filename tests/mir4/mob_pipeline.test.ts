@@ -80,19 +80,19 @@ describe('the mob->player pipeline', () => {
     sim.mobSwing(wolf, p);
     expect(hp - p.hp).toBe(Math.floor(240 * 0.5)); // 120
   });
-  it('the level-40 warrior passive set mitigates through the table defense', () => {
+  it('the level-40 Warrior mitigates through the table defense without invented passives', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(124);
     const p = sim.entities.get(sim.playerId)!;
-    p.level = 40; // Pele de Ferro raises the L40 defense columns
+    p.level = 40;
     initMir4Player(sim.ctx, sim.playerId);
     const def = p.mir4?.physicalDefense ?? 0;
-    expect(def).toBe(210); // 195 row + floor(195*800/10000) Pele de Ferro
-    p.mir4!.dodge = 0; // deterministic hit: the L40 dodge would roll misses
+    expect(def).toBe(195);
+    p.mir4!.dodge = 0;
     const wolf = spawnWolf(sim);
     const hp = p.hp;
     sim.mobSwing(wolf, p);
-    expect(hp - p.hp).toBe(Math.floor((240 * 100) / (100 + def))); // 77
+    expect(hp - p.hp).toBe(Math.floor((240 * 100) / (100 + def)));
   });
   it('wolf kills pay the m01 map model: 34 per normal kill', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);

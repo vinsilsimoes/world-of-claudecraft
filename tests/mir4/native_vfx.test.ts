@@ -1,19 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { ABILITY_VFX_FULL_SPECS } from '../../src/render/ability_vfx_full_specs';
-import { ABILITY_VFX_SPECS } from '../../src/render/ability_vfx_specs';
+import { abilityVfxFullSpec, abilityVfxSpec } from '../../src/render/ability_vfx_registry';
 import { mir4SkillsForClass } from '../../src/sim/content/mir4';
-import { ABILITIES } from '../../src/sim/data';
 import { mir4NativeVfxCue } from '../../src/sim/mir4/native_vfx';
 
-describe('MIR4 skills reuse native WoC VFX and audio cues', () => {
-  it('maps every active gameplay skill to a shipping native ability specification', () => {
+describe('MIR4 skill VFX routing', () => {
+  it('maps every active gameplay skill to a shipping ability specification', () => {
     const skills = ([1, 2, 3, 4, 5] as const).flatMap((classId) => mir4SkillsForClass(classId));
     expect(skills).toHaveLength(60);
     for (const skill of skills) {
       const cue = mir4NativeVfxCue(skill);
-      expect(ABILITIES[cue.ability], `${skill.skillId} ability`).toBeDefined();
-      expect(ABILITY_VFX_SPECS[cue.ability], `${skill.skillId} compact VFX`).toBeDefined();
-      expect(ABILITY_VFX_FULL_SPECS[cue.ability], `${skill.skillId} full VFX`).toBeDefined();
+      expect(abilityVfxSpec(cue.ability), `${skill.skillId} compact VFX`).toBeDefined();
+      expect(abilityVfxFullSpec(cue.ability), `${skill.skillId} full VFX`).toBeDefined();
       expect(cue.school).not.toContain('mir4/');
       expect(cue.fx).not.toBe('flourish');
     }
@@ -42,9 +39,12 @@ describe('MIR4 skills reuse native WoC VFX and audio cues', () => {
     });
   });
 
-  it('never routes a victim-targeted dash or strike through a discarded selfCast cue', () => {
+  it('keeps every homologated Warrior action on its own Aeldrune presentation id', () => {
     const skills = ([1, 5] as const).flatMap((classId) => mir4SkillsForClass(classId));
-    for (const skillId of [1103, 1304, 5201, 5301]) {
+    for (const skill of skills.filter((candidate) => candidate.classId === 1)) {
+      expect(mir4NativeVfxCue(skill).ability).toBe(`mir4_skill_${skill.skillId}`);
+    }
+    for (const skillId of [5201, 5301]) {
       expect(mir4NativeVfxCue(skills.find((skill) => skill.skillId === skillId)!).fx).toBe(
         'projectile',
       );

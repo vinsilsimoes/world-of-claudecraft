@@ -162,9 +162,13 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
       meta.mir4TargetCombat = undefined;
       continue;
     }
+    const retaliationTarget =
+      state.owner === 'retaliation' ? ctx.entities.get(state.targetId) : undefined;
+    const retaliationPlayer = retaliationTarget ? ctx.pvpController(retaliationTarget) : null;
     if (
-      state.owner === 'retaliation' &&
-      (player.openWorldPvpDefenseRights?.get(state.targetId) ?? Number.NEGATIVE_INFINITY) < ctx.time
+      retaliationPlayer &&
+      (player.openWorldPvpDefenseRights?.get(retaliationPlayer.id) ?? Number.NEGATIVE_INFINITY) <
+        ctx.time
     ) {
       clearMir4TargetCombat(ctx, player);
       continue;

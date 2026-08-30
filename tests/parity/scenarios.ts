@@ -21,6 +21,7 @@
 // mobSwing, spawnDelveModule), never reaching into not-yet-extracted internals
 // in a way the sim itself does not already expose.
 
+import { mir4SkillsForClass } from '../../src/sim/content/mir4';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import {
   arenaOrigin,
@@ -157,7 +158,11 @@ function spawnMob(
   y: number,
   z: number,
 ): AnyEntity {
-  const mob = createMob(sim.nextId++, MOBS[key], level, { x, y, z }) as AnyEntity;
+  const mob = createMob(sim.nextId++, MOBS[key], level, {
+    x,
+    y,
+    z,
+  }) as AnyEntity;
   sim.addEntity(mob);
   return mob;
 }
@@ -1488,7 +1493,11 @@ function drownedLitany(): Scenario {
           (o: AnyEntity | undefined) => o && run.objectState[o.id]?.kind === 'drowned_reliquary',
         );
       if (reliquary) {
-        p.pos = { x: reliquary.pos.x + 1, y: reliquary.pos.y, z: reliquary.pos.z };
+        p.pos = {
+          x: reliquary.pos.x + 1,
+          y: reliquary.pos.y,
+          z: reliquary.pos.z,
+        };
         p.prevPos = { ...p.pos };
         sim.rebucket(p);
         sim.delveInteract(reliquary.id); // -> delveRiteChoosePrompt (the popup cue)
@@ -1524,7 +1533,10 @@ function partyLoot(): Scenario {
       mob.dead = true;
       mob.lootable = true;
       mob.tappedById = a;
-      mob.loot = { copper: 0, items: [{ itemId: 'greyjaw_hide_boots', count: 1 }] };
+      mob.loot = {
+        copper: 0,
+        items: [{ itemId: 'greyjaw_hide_boots', count: 1 }],
+      };
       sim.addEntity(mob);
       rec.track(mob.id);
       sim.lootCorpse(mob.id, a);
@@ -1719,7 +1731,10 @@ function masterLoot(): Scenario {
       mob.lootRecipientIds = [a, b, c, d];
       // Three uncommon copies: one per assignment arm below. Master loot outranks
       // need-greed in awardSharedLootItem, so each copy opens a curate-phase roll.
-      mob.loot = { copper: 0, items: [{ itemId: 'greyjaw_hide_boots', count: 3 }] };
+      mob.loot = {
+        copper: 0,
+        items: [{ itemId: 'greyjaw_hide_boots', count: 3 }],
+      };
       sim.addEntity(mob);
       rec.track(mob.id);
       sim.lootCorpse(mob.id, a);
@@ -1812,13 +1827,19 @@ function entityRoster(): Scenario {
       // (2) delayed-event drain: one due+fires, one due+guard-false (dropped), one
       // future (stays pending). delayedEvents is the field this slice owns.
       const delayed = asHarness(sim).delayedEvents;
-      delayed.push({ at: sim.time + 0.05, event: { type: 'respawn', pid: p.id } });
+      delayed.push({
+        at: sim.time + 0.05,
+        event: { type: 'respawn', pid: p.id },
+      });
       delayed.push({
         at: sim.time + 0.05,
         event: { type: 'respawn', pid: p.id },
         guard: () => false,
       });
-      delayed.push({ at: sim.time + 100, event: { type: 'respawn', pid: p.id } });
+      delayed.push({
+        at: sim.time + 100,
+        event: { type: 'respawn', pid: p.id },
+      });
       rec.tick(5); // both mobs despawn (0.1s) and the due delayed events resolve
       rec.snapshot('post-churn');
       // (4) outdoor release-spirit -> rise as a ghost at the nearest graveyard, then
@@ -2646,7 +2667,13 @@ function multiClassHeal(): Scenario {
       // Heal 3: druid, hex on source (outgoing cut) + Mortal-Wound on target
       // (incoming cut), forced crit -> crit*hex*mortal combined.
       eDruid.auras.push(
-        aura({ id: 'hex_dr', name: 'Weakening Hex', kind: 'hex', value: 0.3, sourceId: m1.id }),
+        aura({
+          id: 'hex_dr',
+          name: 'Weakening Hex',
+          kind: 'hex',
+          value: 0.3,
+          sourceId: m1.id,
+        }),
       );
       tank.auras.push(
         aura({
@@ -2699,7 +2726,13 @@ function multiClassHeal(): Scenario {
       // dealDamage consumers: druid (still hexed) crit-hits a critvuln mob ->
       // hexOutputMult (outgoing-damage cut) + critVulnBonus (crit-only) both read.
       m1.auras.push(
-        aura({ id: 'cv_m1', name: 'Find Weakness', kind: 'critvuln', value: 0.5, sourceId: druid }),
+        aura({
+          id: 'cv_m1',
+          name: 'Find Weakness',
+          kind: 'critvuln',
+          value: 0.5,
+          sourceId: druid,
+        }),
       );
       sim.dealDamage(eDruid, m1, 100, true, 'physical', 'Smite', 'hit');
       rec.snapshot('crit-vuln-damage');
@@ -2966,7 +2999,11 @@ function delveProgression(): Scenario {
       // `resetDay` is the realm's own daily boundary, which is what every daily
       // window now reads; `utcDay` stays the calendar stamp beside it, moved in
       // step so the scenario keeps describing one instant rather than two.
-      meta.delveDaily = { date: '2099-01-01', firstClearXp: new Set(['seed']), markClears: 2 };
+      meta.delveDaily = {
+        date: '2099-01-01',
+        firstClearXp: new Set(['seed']),
+        markClears: 2,
+      };
       sim.resetDay = '2099-06-25';
       sim.utcDay = '2099-06-25';
       sim.delveDailyWire(sim.playerId);
@@ -5001,7 +5038,13 @@ function shamanEngines(): Scenario {
       'Spiritmend Tidecall deposit and Cascading Mend consumption',
       'Shaman spec state in deterministic headless snapshots',
     ],
-    build: () => new Sim({ seed: 2929, playerClass: 'shaman', noPlayer: true, autoEquip: true }),
+    build: () =>
+      new Sim({
+        seed: 2929,
+        playerClass: 'shaman',
+        noPlayer: true,
+        autoEquip: true,
+      }),
     drive(rec: Recorder) {
       const sim = rec.sim as AnySim;
       const elementalId = sim.addPlayer('shaman', 'Stormbank');
@@ -5094,7 +5137,13 @@ function druidEngines(): Scenario {
       'Old Blood landed-strike bank across Wolf and Bruin with both payoffs',
       'Verdance completed-HoT bank and Overbloom harvest',
     ],
-    build: () => new Sim({ seed: 2930, playerClass: 'druid', noPlayer: true, autoEquip: true }),
+    build: () =>
+      new Sim({
+        seed: 2930,
+        playerClass: 'druid',
+        noPlayer: true,
+        autoEquip: true,
+      }),
     drive(rec: Recorder) {
       const sim = rec.sim as AnySim;
       const moonId = sim.addPlayer('druid', 'Moonbank');
@@ -5789,7 +5838,13 @@ function catFormAutoSwing(): Scenario {
       'bear-form control swinging at the equipped weapon speed on the same loadout',
     ],
     sampleEvery: 5,
-    build: () => new Sim({ seed: 2931, playerClass: 'druid', noPlayer: true, autoEquip: true }),
+    build: () =>
+      new Sim({
+        seed: 2931,
+        playerClass: 'druid',
+        noPlayer: true,
+        autoEquip: true,
+      }),
     drive(rec: Recorder) {
       const sim = rec.sim as AnySim;
       const catId = sim.addPlayer('druid', 'Pawtrace');
@@ -5846,7 +5901,7 @@ function mir4AutoBattleRng(): Scenario {
   return {
     name: 'mir4_auto_battle_rng',
     coverage: [
-      'MIR4 Auto Battle actor-centered targetless AoE selection and ordered hostile fan-out',
+      'MIR4 Auto Battle targeted AoE selection and ordered hostile fan-out',
       'MIR4 4106 hit/crit/effect draw order at its authored contact clock',
       'MIR4 default control opposition and build-curve Spirit procs use the shared rng stream',
       'friendly proximity contributes neither targeting nor combat rng draws',
@@ -5863,29 +5918,31 @@ function mir4AutoBattleRng(): Scenario {
     drive(rec: Recorder) {
       const sim = rec.sim;
       const pid = sim.addPlayer('arbalist', 'Mir4Parity');
-      // The scenario deliberately exercises slot-4 4103 and slot-2 4106.
-      // Progression unlocks those at levels 30 and 10 respectively, so make
-      // the combat fixture eligible through the same level funnel as gameplay.
+      // The scenario deliberately exercises initial-deck skills 4103 and 4106.
+      // Explicit auto-skill preferences isolate each cast so future additions
+      // to the exact MIR4 progression curve cannot silently change the probe.
       sim.setPlayerLevel(30, pid);
       const player = requireEntity(sim, pid, 'MIR4 parity player');
       teleport(sim, player, OPEN_FIELD.x, OPEN_FIELD.z);
       player.resource = player.maxResource;
 
       const retained = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 10, OPEN_FIELD.z);
-      const nearPlus = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 3, OPEN_FIELD.z + 1);
-      const nearMiddle = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 2, OPEN_FIELD.z);
-      const nearMinus = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 3, OPEN_FIELD.z - 1);
+      const nearPlus = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 9, OPEN_FIELD.z + 1);
+      const nearMiddle = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 8, OPEN_FIELD.z);
+      const nearMinus = spawnMir4Mob(sim, 'mir4_forest_wolf', OPEN_FIELD.x + 9, OPEN_FIELD.z - 1);
       const friendlyPid = sim.addPlayer('warrior', 'Mir4Friendly');
       const friendly = requireEntity(sim, friendlyPid, 'MIR4 parity friendly player');
-      teleport(sim, friendly, OPEN_FIELD.x + 2.5, OPEN_FIELD.z + 2);
+      teleport(sim, friendly, OPEN_FIELD.x + 9, OPEN_FIELD.z + 2.5);
       player.targetId = retained.id;
-      player.cooldowns.set('4101', 10);
-      player.cooldowns.set('4102', 10);
+      for (const skill of mir4SkillsForClass(4)) {
+        sim.setMir4AutoSkillEnabled(skill.skillId, skill.skillId === 4103, pid);
+      }
       sim.setMir4AutoBattleMode('battle', pid);
 
       rec.notes.pid = pid;
       rec.notes.retainedId = retained.id;
       rec.notes.nearIds = [nearMiddle.id, nearPlus.id, nearMinus.id];
+      rec.notes.burstShellTargetOrder = [retained.id, nearPlus.id, nearMinus.id, nearMiddle.id];
       rec.notes.friendlyId = friendly.id;
       rec.track(pid, retained.id, nearPlus.id, nearMiddle.id, nearMinus.id, friendly.id);
       rec.snapshot('mir4-pack-ready');
@@ -5900,6 +5957,8 @@ function mir4AutoBattleRng(): Scenario {
 
       player.gcdRemaining = 0;
       player.resource = player.maxResource;
+      sim.setMir4AutoSkillEnabled(4103, false, pid);
+      sim.setMir4AutoSkillEnabled(4106, true, pid);
       sim.setMir4AutoBattleMode('battle', pid);
       rec.tick(1);
       sim.setMir4AutoBattleMode('off', pid);
@@ -5920,6 +5979,9 @@ function mir4AutoBattleRng(): Scenario {
       friendly.gcdRemaining = 0;
       friendly.resource = friendly.maxResource;
       sim.castMir4Skill(1104, friendlyPid, nearMiddle.id);
+      // Warrior damage and control now resolve on the authored contact frame,
+      // so advance through that frame before probing the shared Spirit draw.
+      rec.tick(10);
 
       // A build-curve hit that the legacy formula rejected must still draw its
       // Spirit proc chance from the same shared stream.
@@ -5932,7 +5994,12 @@ function mir4AutoBattleRng(): Scenario {
       const spiritResult = resolveMir4PlayerDamageWithSpirit(sim.ctx, player, retained, {
         rawDamage: 1_000,
         channel: 'physical',
-        attacker: { accuracy: 10, critical: 0, criticalOutcome: 10, penetrationBps: 0 },
+        attacker: {
+          accuracy: 10,
+          critical: 0,
+          criticalOutcome: 10,
+          penetrationBps: 0,
+        },
         defender: { dodge: 0, avoidCritical: 0, physicalDefense: 0 },
         hitRoll: 9_700,
         criticalRoll: 9_999,

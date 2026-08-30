@@ -62,7 +62,7 @@ describe('reviewed localization semantics', () => {
     expect(translation('pt_BR', 'entities.abilities.mir4_skill_1304.description')).toContain(
       'Reduz as Defesas Física e Mágica do alvo em 12% por 4,5 s.',
     );
-    const burn = translation('pt_BR', 'entities.abilities.mir4_skill_2111.description');
+    const burn = translation('pt_BR', 'entities.abilities.mir4_skill_2101.description');
     expect(burn).toContain('{burnPerTick} de dano base a cada 1 s');
     expect(burn).toContain('4 acertos, {burnTotal} no total antes da mitigação');
     expect(burn).toContain('Poder Mágico no momento em que a Queimadura é aplicada');
@@ -162,7 +162,7 @@ describe('reviewed localization semantics', () => {
           expect(normalized).toContain(terms.areaTargetSet.toLocaleLowerCase());
         }
       }
-      const burn = translation(locale, 'entities.abilities.mir4_skill_2111.description');
+      const burn = translation(locale, 'entities.abilities.mir4_skill_2101.description');
       expect(burn).toContain(terms.spellPower);
       expect(burn).toContain('{burnPerTick}');
       expect(burn).toContain('{burnTotal}');

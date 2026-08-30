@@ -103,7 +103,7 @@ describe('the mir4 slice: creation and stats', () => {
 });
 
 describe('the mir4 slice: skill 1102 and the basic attack', () => {
-  it('1102 spends 36 MP, arms its cooldown + GCD, deals 312, and stuns for 900ms', () => {
+  it('1102 spends 36 MP, arms its cooldown + GCD, then deals 312 and stuns on contact', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
     wolf.maxHp = 1_000;
@@ -116,6 +116,27 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(p.cooldowns.has('1102')).toBe(true);
     expect(p.cooldowns.get('1102')).toBe(25);
     expect(p.gcdRemaining).toBe(1);
+    const castEvents = sim.drainEvents();
+    expect(wolf.hp).toBe(1_000);
+    expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(false);
+    expect(
+      (p.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
+    ).toHaveLength(4);
+    expect(castEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'mir4AttackStart',
+          action: 'skill',
+          durationMs: 1500,
+          ability: 'mir4_skill_1102',
+        }),
+      ]),
+    );
+
+    for (const offset of [0.52, 0.699, 0.9]) {
+      sim.time = offset;
+      updateMir4PendingImpacts(sim.ctx);
+    }
     const impactEvents = sim.drainEvents();
     // The source starter adds 75 PA and 10 bps skill damage to the level-1
     // table, producing the shipping 100 + 100 + 112 impacts.
@@ -127,23 +148,25 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
         event.type === 'damage' && event.sourceId === p.id,
     );
     expect(damageEvents).toHaveLength(3);
-    expect(damageEvents.every((event) => event.attackAnimationStarted !== true)).toBe(true);
+    expect(damageEvents.every((event) => event.attackAnimationStarted === true)).toBe(true);
     expect(impactEvents.some((event) => event.type === 'mir4AttackStart')).toBe(false);
   });
-  it('lands all three 1102 contacts immediately and schedules no delayed duplicate', () => {
+  it('lands all three 1102 contacts only at the official contact offsets', () => {
     const sim = makeSliceSim(4_242);
     const wolf = spawnWolf(sim);
     wolf.maxHp = 1_000;
     wolf.hp = 1_000;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
-    expect(wolf.hp).toBe(688);
-    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(true);
+    expect(wolf.hp).toBe(1_000);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(false);
     expect(
       (sim.player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
-    ).toHaveLength(0);
+    ).toHaveLength(4);
 
-    for (let tick = 0; tick < 24; tick++) sim.tick();
+    for (let tick = 0; tick < 19; tick++) sim.tick();
     expect(wolf.hp).toBe(688);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(true);
+    expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(0);
   });
   it('applies a multi-hit effect when an earlier contact lands and the final one misses', () => {
     const sim = makeSliceSim(4_243);
@@ -164,7 +187,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const startedAt = sim.time;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
 
-    for (const offset of [0.45, 0.825, 1.2]) {
+    for (const offset of [0.52, 0.699, 0.9]) {
       sim.time = startedAt + offset;
       updateMir4PendingImpacts(sim.ctx);
     }
@@ -183,7 +206,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const startedAt = sim.time;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
 
-    for (const offset of [0.45, 0.825, 1.2]) {
+    for (const offset of [0.52, 0.699, 0.9]) {
       sim.time = startedAt + offset;
       updateMir4PendingImpacts(sim.ctx);
     }
@@ -219,7 +242,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const startedAt = sim.time;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
 
-    for (const offset of [0.45, 0.825, 1.2]) {
+    for (const offset of [0.52, 0.699, 0.9]) {
       sim.time = startedAt + offset;
       updateMir4PendingImpacts(sim.ctx);
     }
@@ -228,7 +251,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
       .drainEvents()
       .filter((event) => event.type === 'spellfx' && event.school === 'mir4/spirit/bonus-damage');
     expect(spiritFx).toHaveLength(1);
-    expect(meta.mir4SpiritSkillReadyAt).toBeCloseTo(startedAt + 6.55);
+    expect(meta.mir4SpiritSkillReadyAt).toBeCloseTo(startedAt + 0.699 + 6.55);
     expect(draws).toHaveBeenCalledTimes(7);
   });
   it('does not retry a failed spirit proc on later contacts of the same action', () => {
@@ -257,7 +280,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const startedAt = sim.time;
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true });
 
-    for (const offset of [0.45, 0.825, 1.2]) {
+    for (const offset of [0.52, 0.699, 0.9]) {
       sim.time = startedAt + offset;
       updateMir4PendingImpacts(sim.ctx);
     }
@@ -269,7 +292,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(meta.mir4SpiritSkillReadyAt).toBeUndefined();
     expect(draws).toHaveBeenCalledTimes(7);
   });
-  it('keeps manual actions on the shared GCD without an extra skill contact lock', () => {
+  it('keeps manual actions inside the shared GCD and authored contact window', () => {
     const sim = makeSliceSim(4_244);
     const wolf = spawnWolf(sim);
     wolf.maxHp = 10_000;
@@ -286,7 +309,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const resumedEvents = Array.from({ length: 20 }, () => sim.tick()).flat();
     expect(resumedEvents.some((event) => event.type === 'mir4AttackStart')).toBe(true);
   });
-  it('rejects a manual action on the GCD after an immediate auto-battle skill', () => {
+  it('rejects a manual action while an auto-battle skill is in its contact window', () => {
     const sim = makeSliceSim(4_248);
     const wolf = spawnWolf(sim);
     wolf.maxHp = 10_000;
@@ -296,7 +319,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
 
     updateMir4AutoBattle(sim.ctx);
 
-    expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(0);
+    expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(4);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: false, reason: 'on-gcd' });
   });
   it('gates: range, wrong class, unknown skill, cooldown', () => {

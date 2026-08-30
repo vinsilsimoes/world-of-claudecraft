@@ -2,7 +2,7 @@
 // Speaks NDJSON over stdin/stdout: one JSON object per line in, one per line out.
 //
 //   -> {"cmd":"info"}
-//   <- {"obs_size":...,"num_actions":...,"actions":[...]}  (sizes are content-dependent; query, don't hardcode)
+//   <- {"protocol_version":...,"obs_size":...,"num_actions":...,"actions":[...]}  (sizes are content-dependent; query, don't hardcode)
 //   -> {"cmd":"reset","seed":123,"player_class":"warrior","player_level":20,"talents":{"spec":"arms","rows":{}},"config":{...}}
 //   <- {"obs":[...],"info":{...}}
 //   -> {"cmd":"step","action":4}
@@ -23,6 +23,7 @@ import { type RewardCounters, Sim } from '../src/sim/sim';
 import { MAX_LEVEL, type Mir4ClassKey, type PlayableClass } from '../src/sim/types';
 import { buildHeadlessEpisodeInfo } from './info';
 import {
+  HEADLESS_PROTOCOL_VERSION,
   MAX_INPUT_LINE_LENGTH,
   maxLevelForGameProfile,
   parseTalentResetRequest,
@@ -212,6 +213,7 @@ function serve(): void {
               break;
             }
             send({
+              protocol_version: HEADLESS_PROTOCOL_VERSION,
               obs_size: obsSize(),
               num_actions: NUM_ACTIONS,
               actions: ACTIONS,

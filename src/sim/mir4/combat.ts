@@ -30,7 +30,12 @@ import type { SimContext } from '../sim_context';
 import type { Entity, Mir4PendingImpact, PlayerClass } from '../types';
 import { dist2d } from '../types';
 import { refreshMir4KnownAbilities } from './action_abilities';
-import { mir4AnimationDurationForContactsMs } from './attack_timeline';
+import { mir4AreaSecondaryTargets } from './area_targets';
+import {
+  mir4AnimationDurationForContactsMs,
+  mir4ContactOffsetsMs,
+  mir4ValidatedSkillContactOffsetsMs,
+} from './attack_timeline';
 import {
   type Mir4BuildCombatContext,
   mir4BuildAttackIntervalMs,
@@ -44,7 +49,6 @@ import {
 import {
   applyMir4Effect,
   mir4AoEHostileTargets,
-  mir4AoESecondaryTargets,
   mir4AttackMultiplier,
   mir4DamageTakenAddend,
   mir4DefenseMultiplier,
@@ -303,7 +307,7 @@ export function castMir4Skill(
   if (!skill) return { ok: false, reason: 'unknown-skill' };
   const classId = p.mir4?.classId;
   if (classId !== skill.classId) return { ok: false, reason: 'wrong-class' };
-  if (p.level < mir4SkillUnlockLevel(skill.slot)) {
+  if (p.level < mir4SkillUnlockLevel(skill)) {
     return { ok: false, reason: 'not-unlocked' };
   }
   if (ctx.isStunned(p) || mir4HardControlled(p)) return { ok: false, reason: 'controlled' };
@@ -404,8 +408,8 @@ export function castMir4Skill(
   const areaSecondaries = target
     ? isActorCenteredAoE
       ? actorCenteredTargets.slice(1)
-      : areaRadiusYards > 0 && maxSecondaryTargets > 0
-        ? mir4AoESecondaryTargets(ctx, p, target, areaRadiusYards, maxSecondaryTargets)
+      : skill.effect && areaRadiusYards > 0 && maxSecondaryTargets > 0
+        ? mir4AreaSecondaryTargets(ctx, p, target, skill.effect, maxSecondaryTargets)
         : []
     : [];
 
@@ -474,6 +478,17 @@ export function castMir4Skill(
 
   const cue = mir4NativeVfxCue(skill);
   const visualTarget = target?.id ?? p.id;
+  const synchronizedOffsets =
+    skill.impactOffsetsMs ??
+    (skill.classId >= 1 && skill.classId <= 5
+      ? mir4ContactOffsetsMs(skill.attackAnimationMs, Math.max(1, primaryImpacts.length))
+      : undefined);
+  const skillContactOffsetsMs = mir4ValidatedSkillContactOffsetsMs(
+    synchronizedOffsets,
+    skill.attackAnimationMs,
+    Math.max(1, primaryImpacts.length),
+  );
+  const finalSkillContactMs = skillContactOffsetsMs?.at(-1) ?? 0;
   const actionPrefix = `${p.id}:skill:${skillId}:${Math.round(ctx.time * 1_000)}`;
   const actionGroups = new Map<number, string>();
   const actionGroupFor = (impactTarget: Entity): string => {
@@ -483,9 +498,9 @@ export function castMir4Skill(
     actionGroups.set(impactTarget.id, created);
     return created;
   };
-  for (const impact of primaryImpacts) {
+  for (const [impactIndex, impact] of primaryImpacts.entries()) {
     scheduleMir4Impact(ctx, p, impact.target, {
-      dueAt: ctx.time,
+      dueAt: ctx.time + (skillContactOffsetsMs?.[impactIndex] ?? 0) / 1000,
       rawDamage: impact.rawDamage,
       channel: impact.channel,
       attackKind: 'skill',
@@ -497,11 +512,12 @@ export function castMir4Skill(
       skillId,
       skillLevel,
       actionGroupId: actionGroupFor(impact.target),
+      attackAnimationStarted: skillContactOffsetsMs ? true : undefined,
     });
   }
   for (const impact of secondaryImpacts) {
     scheduleMir4Impact(ctx, p, impact.target, {
-      dueAt: ctx.time,
+      dueAt: ctx.time + finalSkillContactMs / 1000,
       rawDamage: impact.rawDamage,
       channel: impact.channel,
       attackKind: 'skill',
@@ -511,6 +527,7 @@ export function castMir4Skill(
       skillId,
       skillLevel,
       actionGroupId: actionGroupFor(impact.target),
+      attackAnimationStarted: skillContactOffsetsMs ? true : undefined,
     });
   }
 
@@ -528,7 +545,7 @@ export function castMir4Skill(
     // amplify damage from the action that applied it.
     for (const effectTarget of damagedTargets.values()) {
       scheduleMir4Impact(ctx, p, effectTarget, {
-        dueAt: ctx.time,
+        dueAt: ctx.time + finalSkillContactMs / 1000,
         rawDamage: 0,
         channel: 'physical',
         attackKind: 'skill',
@@ -541,6 +558,7 @@ export function castMir4Skill(
         effectOnly: true,
         requiresLandedImpact: true,
         actionGroupId: actionGroupFor(effectTarget),
+        attackAnimationStarted: skillContactOffsetsMs ? true : undefined,
       });
     }
   } else if (
@@ -557,7 +575,7 @@ export function castMir4Skill(
         : [];
     for (const effectTarget of effectTargets) {
       scheduleMir4Impact(ctx, p, effectTarget, {
-        dueAt: ctx.time,
+        dueAt: ctx.time + finalSkillContactMs / 1000,
         rawDamage: 0,
         channel: 'physical',
         attackKind: 'skill',
@@ -569,14 +587,27 @@ export function castMir4Skill(
         applySkillEffect: true,
         effectOnly: true,
         actionGroupId: actionGroupFor(effectTarget),
+        attackAnimationStarted: skillContactOffsetsMs ? true : undefined,
       });
     }
   }
-  // Skills keep the original MIR4-port feel: their authoritative result is
-  // committed in the cast command, then the existing VFX cue owns the body
-  // gesture. Basic attacks and ultimates retain their authored contact-time
-  // scheduling below.
-  resolveMir4SkillActionImmediately(ctx, p, actionPrefix);
+  if (skillContactOffsetsMs) {
+    ctx.emit({
+      type: 'mir4AttackStart',
+      sourceId: p.id,
+      targetId: visualTarget,
+      ability: cue.ability,
+      action: 'skill',
+      pose: 'weapon',
+      durationMs: skill.attackAnimationMs,
+    });
+  } else {
+    // Non-MIR4 extension content without an official animation duration keeps
+    // the legacy immediate path. Every official five-class skill is scheduled
+    // after its animation begins, even where the source table exposes only a
+    // duration/hit count and no exact per-contact timestamps.
+    resolveMir4SkillActionImmediately(ctx, p, actionPrefix);
+  }
   ctx.emit({
     type: 'spellfx',
     sourceId: p.id,
@@ -584,6 +615,8 @@ export function castMir4Skill(
     school: cue.school,
     fx: cue.fx,
     ability: cue.ability,
+    impactDelayMs: skillContactOffsetsMs ? finalSkillContactMs : undefined,
+    attackAnimationStarted: skillContactOffsetsMs ? true : undefined,
   });
   return { ok: true };
 }
@@ -728,14 +761,28 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
   }
   const attackPower = spec.ultimate.channel === 'magic' ? p.spellPower : p.attackPower;
   const damage = mir4CoefficientDamage(attackPower, spec.ultimate.perImpactCoefficient);
+  const warriorUltimateAbility = classId === 1 ? 'mir4_ultimate_1' : undefined;
   ctx.emit({
     type: 'mir4AttackStart',
     sourceId: p.id,
     targetId: target.id,
+    ability: warriorUltimateAbility,
     action: 'ultimate',
     pose: spec.ultimate.channel === 'magic' ? 'cast' : 'weapon',
     durationMs: mir4AnimationDurationForContactsMs(spec.ultimate.impactOffsetMs),
   });
+  if (warriorUltimateAbility) {
+    ctx.emit({
+      type: 'spellfx',
+      sourceId: p.id,
+      targetId: target.id,
+      school: 'physical',
+      fx: 'nova',
+      ability: warriorUltimateAbility,
+      impactDelayMs: spec.ultimate.impactOffsetMs.at(-1),
+      attackAnimationStarted: true,
+    });
+  }
   const actionGroupId = `${p.id}:ultimate:${Math.round(ctx.time * 1_000)}:${target.id}`;
   for (const offsetMs of spec.ultimate.impactOffsetMs) {
     scheduleMir4Impact(ctx, p, target, {
@@ -747,6 +794,7 @@ export function mir4Ultimate(ctx: SimContext, pid: number, targetId?: number): M
       gaugeGain: 0,
       spiritProcEligible: true,
       actionGroupId,
+      attackAnimationStarted: true,
     });
   }
   return { ok: true };
@@ -770,6 +818,7 @@ function scheduleMir4Impact(
     effectOnly?: boolean;
     actionGroupId?: string;
     requiresLandedImpact?: boolean;
+    attackAnimationStarted?: true;
   },
 ): void {
   if (!p.mir4PendingImpacts) p.mir4PendingImpacts = [];
@@ -789,6 +838,7 @@ function scheduleMir4Impact(
     effectOnly: impact.effectOnly,
     actionGroupId: impact.actionGroupId,
     requiresLandedImpact: impact.requiresLandedImpact,
+    attackAnimationStarted: impact.attackAnimationStarted,
   });
 }
 
@@ -879,7 +929,10 @@ function applyMir4ConfiguredSkillEffect(
       effectId: `mir4_${skill.skillId}_${effect.effect}`,
       kind,
       durationSeconds: (effect.durationMs ?? 0) / 1000,
-      magnitude: effect.magnitude ?? 0,
+      magnitude:
+        skillLevel >= 10
+          ? (effect.rank10Magnitude ?? effect.magnitude ?? 0)
+          : (effect.magnitude ?? 0),
       name: skill.displayName,
       sourceId: source.id,
     });
@@ -944,9 +997,11 @@ function applyMir4ConfiguredSkillEffect(
         targetKind,
       )
     : rankedDurationMs;
+  const authoredMagnitude =
+    skillLevel >= 10 ? (effect.rank10Magnitude ?? effect.magnitude ?? 0) : (effect.magnitude ?? 0);
   const magnitudeBasisPoints = effectOnly
-    ? mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), skillLevel)
-    : Math.round((effect.magnitude ?? 0) * 10_000);
+    ? mir4SkillRankScaledInteger(Math.round(authoredMagnitude * 10_000), skillLevel)
+    : Math.round(authoredMagnitude * 10_000);
   applyMir4Effect(ctx, target, {
     effectId: `mir4_${skill.skillId}_${effect.effect}`,
     kind,
@@ -1024,16 +1079,23 @@ function resolveMir4PendingImpactBatch(
       hitRoll,
       criticalRoll,
       allowSpiritProc: impact.spiritProcEligible === true && impact.spiritProcAttempted !== true,
-      buildBalance: { attackerLevel: source.level, defenderLevel: target.level },
+      buildBalance: {
+        attackerLevel: source.level,
+        defenderLevel: target.level,
+      },
       forceHit: impact.forceHit,
       forceCritical: impact.forceCritical,
     });
     if (spiritDamage.attempted) {
-      patchMir4ActionGroup(owner, due, impact.actionGroupId, { spiritProcAttempted: true });
+      patchMir4ActionGroup(owner, due, impact.actionGroupId, {
+        spiritProcAttempted: true,
+      });
     }
     const resolved = spiritDamage.resolved;
     if (!resolved.hit) continue;
-    patchMir4ActionGroup(owner, due, impact.actionGroupId, { actionLanded: true });
+    patchMir4ActionGroup(owner, due, impact.actionGroupId, {
+      actionLanded: true,
+    });
     const landedDamage = ctx.dealDamage(
       source,
       target,
@@ -1045,7 +1107,7 @@ function resolveMir4PendingImpactBatch(
       true,
       undefined,
       !impact.periodic,
-      impact.attackKind !== 'skill',
+      impact.attackAnimationStarted === true || impact.attackKind !== 'skill',
     );
     if (!impact.periodic) applyMir4Drain(source, target, landedDamage);
     if (impact.gaugeGain > 0) {
@@ -1188,7 +1250,11 @@ export function mir4MobAttackPlayer(ctx: SimContext, mob: Entity, player: Entity
   const resolved = mir4ResolveDamage({
     rawDamage: raw,
     channel: 'physical',
-    attacker: { accuracy: mir4MobAccuracy(mob.level), critical: 0, criticalOutcome: 10 },
+    attacker: {
+      accuracy: mir4MobAccuracy(mob.level),
+      critical: 0,
+      criticalOutcome: 10,
+    },
     defender: mir4DefenderStats(ctx, player),
     targetKind: mob.mobBoss ? 'boss' : 'monster',
     attackKind: 'basic',

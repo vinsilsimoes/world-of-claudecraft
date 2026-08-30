@@ -12,6 +12,7 @@ import { parseTalentAllocation } from '../src/sim/talent_allocation_input';
 import { MAX_LEVEL, type PlayableClass } from '../src/sim/types';
 
 export const MAX_INPUT_LINE_LENGTH = 1024 * 1024;
+export const HEADLESS_PROTOCOL_VERSION = 3;
 
 export function validateAction(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isInteger(value)) return null;
@@ -60,15 +61,24 @@ export function parseTalentResetRequest(
   const maxLevel = maxLevelForGameProfile(gameProfile);
   const playerLevel = validatePlayerLevel(request.player_level ?? 1, gameProfile);
   if (playerLevel === null) {
-    return { ok: false, error: `invalid player_level: expected integer 1-${maxLevel}` };
+    return {
+      ok: false,
+      error: `invalid player_level: expected integer 1-${maxLevel}`,
+    };
   }
   if (!Object.hasOwn(request, 'talents')) return { ok: true, playerLevel };
   if (gameProfile === MIR4_GAME_PROFILE) {
-    return { ok: false, error: 'talents are unavailable for mir4-gameplay-port' };
+    return {
+      ok: false,
+      error: 'talents are unavailable for mir4-gameplay-port',
+    };
   }
   const talents = parseTalentAllocation(request.talents);
   if (!talents) {
-    return { ok: false, error: 'invalid talents: expected canonical spec/rows allocation' };
+    return {
+      ok: false,
+      error: 'invalid talents: expected canonical spec/rows allocation',
+    };
   }
   return { ok: true, playerLevel, talents };
 }

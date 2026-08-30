@@ -5,7 +5,6 @@
 import {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
-  MIR4_CLASS_PASSIVES,
   MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS,
   type Mir4ClassId,
   type Mir4SkillDef,
@@ -32,7 +31,6 @@ import {
 
 const ACTION_PREFIX = 'mir4_skill_';
 const ULTIMATE_PREFIX = 'mir4_ultimate_';
-const PASSIVE_PREFIX = 'mir4_passive_';
 
 /**
  * The shared ability tooltip has no hostile target yet, so it cannot know
@@ -57,7 +55,7 @@ export function refreshMir4KnownAbilities(
 }
 
 const ENGLISH_NAMES: Readonly<Record<number, string>> = {
-  1101: 'Rampant',
+  1101: 'Berserk',
   1102: 'Void Slash',
   1103: 'Barbaric Charge',
   1104: 'Splitting Slash',
@@ -125,45 +123,6 @@ const ULTIMATE_ENGLISH_NAMES: Readonly<Record<Mir4ClassId, string>> = {
   3: 'Ray of Light',
   4: 'Arrow Rain',
   5: 'Dragon Spear',
-};
-
-const PASSIVE_ENGLISH_NAMES: Readonly<Record<string, string>> = {
-  'warrior-heavy-armor': 'Heavy Armor',
-  'warrior-weapon-mastery': 'Weapon Mastery',
-  'warrior-iron-skin': 'Iron Skin',
-  'warrior-fighting-spirit': 'Fighting Spirit',
-  'warrior-indomitable-will': 'Indomitable Will',
-  'elementalist-mana-well': 'Mana Well',
-  'elementalist-arcane-intellect': 'Arcane Intellect',
-  'elementalist-elemental-protection': 'Elemental Protection',
-  'elementalist-channeling': 'Channeling',
-  'elementalist-arcane-ascension': 'Arcane Ascension',
-  'taoist-spiritual-vessel': 'Spiritual Vessel',
-  'taoist-twin-paths': 'Twin Paths',
-  'taoist-sacred-guard': 'Sacred Guard',
-  'taoist-serene-mind': 'Serene Mind',
-  'taoist-celestial-harmony': 'Celestial Harmony',
-  'arbalist-eagle-eye': 'Eagle Eye',
-  'arbalist-ballistic-mastery': 'Ballistic Mastery',
-  'arbalist-nature-guard': "Nature's Guard",
-  'arbalist-hunter-instinct': "Hunter's Instinct",
-  'arbalist-perfect-shot': 'Perfect Shot',
-  'lancer-war-conditioning': 'War Conditioning',
-  'lancer-spear-mastery': 'Spear Mastery',
-  'lancer-vanguard-armor': 'Vanguard Armor',
-  'lancer-battle-rhythm': 'Battle Rhythm',
-  'lancer-dragon-vanguard': "Dragon's Vanguard",
-};
-
-const PASSIVE_STATUS_NAMES: Readonly<Record<number, string>> = {
-  1: 'maximum health',
-  6: 'maximum mana',
-  20: 'physical attack',
-  22: 'magic attack',
-  24: 'physical defense',
-  26: 'magic defense',
-  28: 'accuracy',
-  29: 'dodge',
 };
 
 function percent(value: number): string {
@@ -234,6 +193,9 @@ function effectSentenceFor(
     case 'defense-boost':
       return ` Increases ${effect.subject === 'party' ? "the party's" : 'your'} Physical and Magic Defense by ${percent(effect.magnitude ?? 0)} for ${seconds} sec.`;
     case 'dodge-boost':
+      if (effect.minimumRank !== undefined && effect.rank10Magnitude !== undefined) {
+        return ` At rank ${effect.minimumRank}, increases your Dodge by ${effect.magnitude ?? 0}; at rank 10, by ${effect.rank10Magnitude} for ${seconds} sec.`;
+      }
       return ` Increases your Dodge by ${effect.magnitude ?? 0} for ${seconds} sec.`;
     case 'self-heal': {
       const rank8Heal = Number(effect.healMaxHpBasisPoints ?? 0) / 100;
@@ -253,6 +215,25 @@ function effectSentence(skill: Mir4SkillDef, rank = 1): string {
     .filter((effect): effect is NonNullable<Mir4SkillDef['effect']> => effect !== null)
     .map((effect) => effectSentenceFor(skill, effect, rank))
     .join('');
+}
+
+function secondaryAreaSentence(effect: NonNullable<Mir4SkillDef['effect']>): string {
+  const targets = effect.maxSecondaryTargets ?? 0;
+  const damagePercent = (effect.secondaryDamageBasisPoints ?? 0) / 100;
+  if (effect.areaShape === 'frontal-strip') {
+    const length = Number(effect.areaLengthPx ?? 0) / 16;
+    const width = Number(effect.areaWidthPx ?? 0) / 16;
+    return ` Up to ${targets} other enemies in a ${length}-yard-long, ${width}-yard-wide frontal strip take ${damagePercent}% damage.`;
+  }
+  const radius = Number(effect.areaRadiusPx ?? 0) / 16;
+  if (effect.areaOrigin === 'actor') {
+    return ` Up to ${targets} other enemies within ${radius} yards of you take ${damagePercent}% damage.`;
+  }
+  if (effect.areaOrigin === 'forward') {
+    const offset = Number(effect.areaForwardOffsetPx ?? 0) / 16;
+    return ` Up to ${targets} other enemies within ${radius} yards of a point ${offset} yards in front of you take ${damagePercent}% damage.`;
+  }
+  return ` Up to ${targets} other enemies within ${radius} yards of the target take ${damagePercent}% damage.`;
 }
 
 function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
@@ -278,7 +259,7 @@ function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
     area.maxSecondaryTargets !== undefined &&
     area.secondaryDamageBasisPoints !== undefined
   ) {
-    text += ` Up to ${area.maxSecondaryTargets} other enemies within ${area.areaRadiusPx / 16} yards take ${area.secondaryDamageBasisPoints / 100}% damage.`;
+    text += secondaryAreaSentence(area);
   }
   return `${text + utility} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
 }
@@ -362,7 +343,7 @@ function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): 
     range: selfUtility ? 0 : (skill.castRangePx ?? range * 16) / 16,
     school: skill.classId === 2 || skill.classId === 3 ? 'arcane' : 'physical',
     requiresTarget: skill.requiresTarget && !selfUtility,
-    learnLevel: mir4SkillUnlockLevel(skill.slot),
+    learnLevel: mir4SkillUnlockLevel(skill),
     effects:
       skill.damage !== null ||
       (skill.provenance === 'authorial-v1' && MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId])
@@ -395,39 +376,6 @@ function ultimateActionDef(classId: Mir4ClassId): AbilityDef {
   };
 }
 
-function passiveDescription(bonuses: readonly { statusId: number; basisPoints: number }[]): string {
-  const parts = bonuses.map(
-    (bonus) =>
-      `${PASSIVE_STATUS_NAMES[bonus.statusId] ?? `status ${bonus.statusId}`} by ${bonus.basisPoints / 100}%`,
-  );
-  const benefit =
-    parts.length <= 1
-      ? parts[0]
-      : `${parts.slice(0, -1).join(', ')}${parts.length > 2 ? ',' : ''} and ${parts.at(-1)}`;
-  return `Increases ${benefit}.`;
-}
-
-function passiveActionDef(
-  classId: Mir4ClassId,
-  passive: (typeof MIR4_CLASS_PASSIVES)[Mir4ClassId][number],
-): AbilityDef {
-  return {
-    id: `${PASSIVE_PREFIX}${passive.id}`,
-    name: PASSIVE_ENGLISH_NAMES[passive.id] ?? passive.name,
-    class: 'warrior',
-    cost: 0,
-    castTime: 0,
-    cooldown: 0,
-    range: 0,
-    school: classId === 2 || classId === 3 ? 'arcane' : 'physical',
-    requiresTarget: false,
-    learnLevel: passive.level,
-    passive: true,
-    effects: [],
-    description: passiveDescription(passive.bonuses),
-  };
-}
-
 export const MIR4_ACTION_ABILITY_DEFS: readonly AbilityDef[] = ([1, 2, 3, 4, 5] as const)
   .flatMap((classId): AbilityDef[] => {
     const cls = mir4ClassById(classId);
@@ -436,7 +384,6 @@ export const MIR4_ACTION_ABILITY_DEFS: readonly AbilityDef[] = ([1, 2, 3, 4, 5] 
     return [
       ...mir4SkillsForClass(classId).map((skill) => actionDef(skill, range, 0)),
       ultimateActionDef(classId),
-      ...MIR4_CLASS_PASSIVES[classId].map((passive) => passiveActionDef(classId, passive)),
     ];
   })
   .sort((a, b) => a.id.localeCompare(b.id));
@@ -452,7 +399,6 @@ export function mir4AbilityIdsForClass(classId: Mir4ClassId): string[] {
   return [
     ...mir4SkillsForClass(classId).map((skill) => mir4ActionId(skill.skillId)),
     mir4UltimateActionId(classId),
-    ...MIR4_CLASS_PASSIVES[classId].map((passive) => `${PASSIVE_PREFIX}${passive.id}`),
   ];
 }
 
@@ -466,7 +412,7 @@ export function mir4ActionAbilities(
   if (!cls) return [];
   const range = mir4ClassRangeYards(cls);
   const skills: ResolvedAbility[] = mir4SkillsForClass(classId)
-    .filter((skill) => level >= mir4SkillUnlockLevel(skill.slot))
+    .filter((skill) => level >= mir4SkillUnlockLevel(skill))
     .map((skill) => {
       const rank = Math.min(
         MIR4_SKILL_MAX_LEVEL,
@@ -496,20 +442,6 @@ export function mir4ActionAbilities(
       cooldown: ultimateDef.cooldown,
       cooldownId: 'mir4_ult',
       effects: ultimateDef.effects,
-      threatFlat: 0,
-      threatMult: 1,
-    });
-  }
-  for (const passive of MIR4_CLASS_PASSIVES[classId]) {
-    if (level < passive.level) continue;
-    const def = passiveActionDef(classId, passive);
-    skills.push({
-      def,
-      rank: 1,
-      cost: 0,
-      castTime: 0,
-      cooldown: 0,
-      effects: [],
       threatFlat: 0,
       threatMult: 1,
     });

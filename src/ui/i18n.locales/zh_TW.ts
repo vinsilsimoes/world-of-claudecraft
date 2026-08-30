@@ -13137,13 +13137,14 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1401.description':
     '對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 70% 傷害。擊倒目標 0.8 秒。',
   'entities.abilities.mir4_skill_1501.name': '疾風斬',
-  'entities.abilities.mir4_skill_1501.description': '影響一名敵人。使目標減速 35%，持續 3.2 秒。',
-  'entities.abilities.mir4_skill_2101.name': '稜彩光束',
+  'entities.abilities.mir4_skill_1501.description':
+    '對一名敵人造成 {damage} 點傷害。7.75 碼內最多 4 名其他敵人受到 65% 傷害。使每個命中的敵人減速 35%，持續 3.2 秒。',
+  'entities.abilities.mir4_skill_2101.name': '火焰球',
   'entities.abilities.mir4_skill_2101.description':
-    '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。凍結目標 1.4 秒。',
-  'entities.abilities.mir4_skill_2111.name': '餘燼長槍',
+    '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。灼燒每個命中的敵人，每 1 秒造成 {burnPerTick} 點基礎傷害（共 4 次，減傷前總計 {burnTotal} 點）。傷害取決於施加灼燒時你的法術強度。',
+  'entities.abilities.mir4_skill_2111.name': '冰霜球',
   'entities.abilities.mir4_skill_2111.description':
-    '對一名敵人造成 {damage} 點傷害。灼燒目標，每 1 秒造成 {burnPerTick} 點基礎傷害（共 4 次，減傷前總計 {burnTotal} 點）。傷害取決於施加灼燒時你的法術強度。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
+    '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使每個命中的敵人減速 35%，持續 3.2 秒。',
   'entities.abilities.mir4_skill_2301.name': '懲擊之印',
   'entities.abilities.mir4_skill_2301.description':
     '對一名敵人造成 {damage} 點傷害。使目標造成的傷害降低 50%，持續 4 秒。',
@@ -13155,8 +13156,9 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3101.name': '印記連擊',
   'entities.abilities.mir4_skill_3101.description':
     '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使每個命中的敵人的物理和魔法防禦降低 10%，持續 4 秒。多個破防效果以乘法方式疊加，但防禦不會低於原始值的 20%。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
-  'entities.abilities.mir4_skill_3104.name': '圖騰 1010',
-  'entities.abilities.mir4_skill_3104.description': '影響一名敵人。使目標昏迷 1.4 秒。',
+  'entities.abilities.mir4_skill_3104.name': '刀刃之雨',
+  'entities.abilities.mir4_skill_3104.description':
+    '以 4 次攻擊造成 {damage} 點混合傷害。7.75 碼內最多 4 名其他敵人受到 60% 傷害。達到 8 階後，每個命中的敵人有 40% 機率被沉默 4 秒。',
   'entities.abilities.mir4_skill_3301.name': '圖騰之印 II',
   'entities.abilities.mir4_skill_3301.description':
     '對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 60% 傷害。使目標減速 35%，持續 4.2 秒。',
@@ -13176,7 +13178,8 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_4106.name': '衝鋒 4106',
   'entities.abilities.mir4_skill_4106.description': '對一名敵人造成 {damage} 點傷害。使目標昏迷 2 秒。',
   'entities.abilities.mir4_skill_4107.name': '閃光箭',
-  'entities.abilities.mir4_skill_4107.description': '影響一名敵人。使目標造成的傷害降低 45%，持續 3.2 秒。',
+  'entities.abilities.mir4_skill_4107.description':
+    '對一名敵人造成 {damage} 點傷害。6.75 碼內最多 3 名其他敵人受到 60% 傷害，並使其造成的傷害降低 45%，持續 5 秒。',
   'entities.abilities.mir4_skill_5101.name': '突刺 5101',
   'entities.abilities.mir4_skill_5101.description': '對一名敵人造成 {damage} 點傷害。擊倒目標 1 秒。',
   'entities.abilities.mir4_skill_5104.name': '橫掃 5104',
@@ -13188,8 +13191,9 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_5301.name': '鎖鏈 5301',
   'entities.abilities.mir4_skill_5301.description':
     '對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 70% 傷害。使目標昏迷 0.9 秒。',
-  'entities.abilities.mir4_skill_5401.name': '狂怒風暴',
-  'entities.abilities.mir4_skill_5401.description': '影響一名敵人。擊倒目標 1 秒。',
+  'entities.abilities.mir4_skill_5401.name': '橫掃風暴',
+  'entities.abilities.mir4_skill_5401.description':
+    '造成 {damage} 點混合傷害，並使敵人造成的傷害降低 30%，持續 5 秒。',
   'entities.abilities.mir4_ultimate_1.name': '終極技能',
   'entities.abilities.mir4_ultimate_1.description':
     '透過 3 次打擊造成 {damage} 點傷害。需要終極技能能量全滿。',

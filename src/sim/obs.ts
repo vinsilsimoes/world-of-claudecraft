@@ -7,7 +7,13 @@ import {
   dominionTemplateForAbility,
 } from './combat/necromancy_dominion';
 import { canUseForbiddenReflection } from './combat/warlock_talents';
-import { MIR4_MAX_LEVEL, type Mir4ClassId, mir4LevelRow, mir4SkillsForClass } from './content/mir4';
+import {
+  MIR4_CLASS_COMBAT_SPECS,
+  MIR4_MAX_LEVEL,
+  type Mir4ClassId,
+  mir4LevelRow,
+  mir4SkillsForClass,
+} from './content/mir4';
 import { MIR4_QUESTS_MAIN } from './content/mir4/arc_campaign';
 import { noticeboardDefByEntityId } from './content/noticeboards';
 import { corpseInteractionAvailability } from './corpse_interaction';
@@ -25,6 +31,7 @@ import {
   WORLD_MIN_Z,
 } from './data';
 import { MIR4_GAME_PROFILE } from './game_profile';
+import { mir4ClassIdFromUltimateAction } from './mir4/action_abilities';
 import { mir4ArcStageGoal, mir4QuestCurrentStage } from './mir4/arc_quests';
 import { mir4SkillUnlockLevel } from './mir4/skill_progression';
 import {
@@ -58,6 +65,10 @@ import { worldContentBounds } from './world_content_bounds';
 // constant) so adding abilities to any class can never silently leave high
 // learn-order slots unreachable. See abilitiesKnownAt(): one entry per ability.
 const ABILITY_SLOTS = Math.max(...Object.values(CLASSES).map((c) => c.abilities.length));
+// Versioned MIR4 training ABI: every shipped class owns twelve regular skills.
+// Keep this explicit so adding a thirteenth skill requires a deliberate headless
+// protocol revision instead of silently moving every trailing action/obs index.
+const MIR4_SKILL_SLOTS = 12;
 
 export const ACTIONS = [
   'noop', // 0
@@ -81,11 +92,9 @@ export const ACTIONS = [
   'craft_knowledge_rare',
   'craft_knowledge_epic',
   'craft_knowledge_legendary',
-  'upgrade_skill_1',
-  'upgrade_skill_2',
-  'upgrade_skill_3',
-  'upgrade_skill_4',
-  'upgrade_skill_5',
+  ...Array.from({ length: MIR4_SKILL_SLOTS }, (_, i) => `upgrade_skill_${i + 1}`),
+  'toggle_auto_battle',
+  ...Array.from({ length: MIR4_SKILL_SLOTS }, (_, i) => `toggle_auto_skill_${i + 1}`),
 ] as const;
 
 export const NUM_ACTIONS = ACTIONS.length;
@@ -187,6 +196,19 @@ export function applyAction(sim: Sim, action: number): void {
           const current = sim.players.get(sim.playerId)?.mir4SkillLevels?.[skill.skillId] ?? 1;
           sim.mir4UpgradeSkill(skill.skillId, current);
         }
+      } else if (name === 'toggle_auto_battle' && sim.player.mir4) {
+        sim.setMir4AutoBattle(!sim.mir4AutoBattleActive());
+      } else if (name.startsWith('toggle_auto_skill_') && sim.player.mir4) {
+        const slot = Number.parseInt(name.slice('toggle_auto_skill_'.length), 10);
+        const skill = mir4SkillsForClass(sim.player.mir4.classId as Mir4ClassId).find(
+          (candidate) => candidate.slot === slot,
+        );
+        if (skill) {
+          const disabled = sim.players
+            .get(sim.playerId)
+            ?.mir4DisabledAutoSkills?.includes(skill.skillId);
+          sim.setMir4AutoSkillEnabled(skill.skillId, disabled === true);
+        }
       }
     }
   }
@@ -208,7 +230,21 @@ export function applyAction(sim: Sim, action: number): void {
 const NEARBY_MOBS = 5;
 
 export function obsSize(): number {
-  return 16 + ABILITY_SLOTS * 2 + 9 + NEARBY_MOBS * 6 + 5 + QUEST_ORDER.length * 2 + 3 + 3 + 1 + 10;
+  return (
+    16 +
+    ABILITY_SLOTS * 2 +
+    9 +
+    NEARBY_MOBS * 6 +
+    5 +
+    QUEST_ORDER.length * 2 +
+    3 +
+    3 +
+    1 +
+    5 +
+    MIR4_SKILL_SLOTS +
+    1 +
+    MIR4_SKILL_SLOTS
+  );
 }
 
 export function encodeObs(sim: Sim): number[] {
@@ -295,7 +331,9 @@ export function encodeObs(sim: Sim): number[] {
         ? soulFragmentCount(p) / 5
         : sim.talentSpec === 'destruction'
           ? destructionRuin / 5
-          : p.comboPoints / 5;
+          : isMir4
+            ? (p.mir4UltGauge ?? 0) / 100
+            : p.comboPoints / 5;
   obs.push(specializationResource);
   obs.push(p.sitting || p.eating || p.drinking ? 1 : 0);
   obs.push(sim.time > p.overpowerUntil ? 0 : 1); // dodge proc available
@@ -340,9 +378,14 @@ export function encodeObs(sim: Sim): number[] {
       known.def.id === 'divine_ascension'
         ? canActivateDivineAscension(p)
         : !known.def.devotionCost || hasDevotion(p, known.def.devotionCost);
+    const ultimateClassId = mir4ClassIdFromUltimateAction(known.def.id);
+    const ultimateReady =
+      ultimateClassId === null ||
+      (p.mir4UltGauge ?? 0) >= MIR4_CLASS_COMBAT_SPECS[ultimateClassId].ultimate.requiredGauge;
     const ready =
       cd <= 0 &&
       devotionReady &&
+      ultimateReady &&
       p.resource >= known.cost &&
       destructionRuin >= (known.def.ruinCost ?? 0) &&
       soulFragmentCount(p) >= (known.def.soulFragmentCost ?? 0) &&
@@ -518,7 +561,7 @@ export function encodeObs(sim: Sim): number[] {
 
   // Current skill-progression economy, appended so existing observation
   // indices stay stable: fragment + four tome balances, then ranks for the
-  // five regular class skills (locked skills remain zero).
+  // twelve regular class skills (locked skills remain zero).
   const materials = mir4Meta?.mir4Materials;
   obs.push(
     isMir4 ? clamp((materials?.knowledgeFragment ?? 0) / 5, 0, 2) : 0,
@@ -528,11 +571,21 @@ export function encodeObs(sim: Sim): number[] {
     isMir4 ? clamp((materials?.knowledgeTomeLegendary ?? 0) / 10, 0, 2) : 0,
   );
   const mir4Skills = p.mir4 ? mir4SkillsForClass(p.mir4.classId as Mir4ClassId) : [];
-  for (let slot = 1; slot <= 5; slot++) {
+  for (let slot = 1; slot <= MIR4_SKILL_SLOTS; slot++) {
     const skill = mir4Skills.find((candidate) => candidate.slot === slot);
-    const unlocked = !!skill && p.level >= mir4SkillUnlockLevel(slot);
+    const unlocked = !!skill && p.level >= mir4SkillUnlockLevel(skill);
     const rank = unlocked && skill ? (mir4Meta?.mir4SkillLevels?.[skill.skillId] ?? 1) : 0;
     obs.push(clamp(rank / 15, 0, 1));
+  }
+
+  // Automation preferences are part of the playable MIR4 controls. Appended
+  // so prior observation indices stay stable while bots can observe and
+  // reproduce the same auto-battle/per-skill choices as browser clients.
+  obs.push(isMir4 && sim.mir4AutoBattleActive() ? 1 : 0);
+  const disabledAutoSkills = new Set(mir4Meta?.mir4DisabledAutoSkills ?? []);
+  for (let slot = 1; slot <= MIR4_SKILL_SLOTS; slot++) {
+    const skill = mir4Skills.find((candidate) => candidate.slot === slot);
+    obs.push(isMir4 && skill && !disabledAutoSkills.has(skill.skillId) ? 1 : 0);
   }
 
   return obs;

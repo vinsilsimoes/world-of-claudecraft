@@ -75,6 +75,7 @@ export class ActionBarController {
   private talentSpecAtLastSync: string | null | undefined;
   private playerLevelAtLastSync: number | null = null;
   private pendingLoadoutKnownAbilityIds: Set<string> | null = null;
+  private pendingAeldruneClassKitMigrationKey: string | null = null;
   private attackActionState: HotbarAction = null;
   // Suppresses the persistence seam while the controller is loading/seeding from
   // storage: only user-driven changes after init should upload. Flipped true at
@@ -198,6 +199,7 @@ export class ActionBarController {
       if (isStanceBarAbilityGroup(ABILITIES[id]?.exclusiveGroup)) return;
       if (this.shouldAutoPlaceOnForm(id, this.activeFormState)) autoPlaceAbilityIds.add(id);
     };
+    const seedsFreshClassKit = this.knownAbilityIdsAtLastSync === null && !this.loadedFromStorage;
     if (this.knownAbilityIdsAtLastSync === null) {
       const loadedWarlockBarNeedsOverhaulRepair =
         this.loadedFromStorage &&
@@ -233,7 +235,7 @@ export class ActionBarController {
       this.attackActionState = null;
       this.saveAttackAction();
     }
-    this.promoteFirstSeatAction();
+    this.promoteFirstSeatAction(seedsFreshClassKit);
     this.knownAbilityIdsAtLastSync = knownAbilityIdSet;
     this.talentSpecAtLastSync = talentSpec;
     this.playerLevelAtLastSync = playerLevel;
@@ -355,14 +357,19 @@ export class ActionBarController {
   }
 
   /** Move the first configured action into the profile's visible seat 1. */
-  private promoteFirstSeatAction(): boolean {
+  private promoteFirstSeatAction(compactSeededKit = false): boolean {
     if (!this.prefersFirstSeatAction() || this.attackActionState !== null) return false;
     const sourceIndex = this.actionState.findIndex((action) => action !== null);
     if (sourceIndex === -1) return false;
     this.attackActionState = this.actionState[sourceIndex];
-    this.actionState = clearHotbarSlot(this.actionState, sourceIndex);
-    this.saveActions();
-    this.saveAttackAction();
+    this.actionState = compactSeededKit
+      ? [
+          ...this.actionState.slice(0, sourceIndex),
+          ...this.actionState.slice(sourceIndex + 1),
+          null,
+        ]
+      : clearHotbarSlot(this.actionState, sourceIndex);
+    if (this.saveActions()) this.saveAttackAction();
     return true;
   }
 
@@ -426,13 +433,25 @@ export class ActionBarController {
     return this.actionState[barSlot - 1] ?? null;
   }
 
-  saveActions(): void {
+  saveActions(): boolean {
+    let saved = false;
     try {
       this.deps.storage.setItem(this.slotMapKey(), JSON.stringify(this.actionState));
+      saved = true;
     } catch {
       // Storage can be unavailable in private browsing modes.
     }
+    if (saved && this.pendingAeldruneClassKitMigrationKey) {
+      try {
+        this.deps.storage.setItem(this.pendingAeldruneClassKitMigrationKey, '1');
+        this.pendingAeldruneClassKitMigrationKey = null;
+      } catch {
+        // If the marker alone fails, the durable non-empty bar is safe and the
+        // next load can mark it without reconstructing the player's layout.
+      }
+    }
     this.persist();
+    return saved;
   }
 
   saveAttackAction(): void {
@@ -450,6 +469,46 @@ export class ActionBarController {
 
   private slotMapKey(form: HotbarForm = this.activeFormState): string {
     return actionBarSlotMapKey(this.deps.playerClass, this.deps.playerName, form);
+  }
+
+  /**
+   * One-time migration for characters whose saved MIR4 bar predates the exact
+   * class kits. The old abilities are stripped by the normal eligibility
+   * parser; without a version marker that repaired-but-empty array looks like
+   * an intentionally empty custom bar forever, so none of the homologated
+   * starter skills are offered on entry.
+   */
+  private migrateAeldruneClassKitBar(
+    stored: boolean,
+    parsed: readonly HotbarAction[],
+    removedIneligibleAbility: boolean,
+  ): boolean {
+    if (!this.prefersFirstSeatAction() || this.activeFormState !== 'normal') return false;
+    const key = `${this.slotMapKey()}:aeldrune-class-kit-v1`;
+    let alreadyMigrated = false;
+    try {
+      alreadyMigrated = this.deps.storage.getItem(key) === '1';
+    } catch {
+      // Storage can be unavailable in private browsing modes. The fresh
+      // in-memory controller can still seed its kit for this session.
+    }
+    if (alreadyMigrated || !stored) return false;
+    const needsRepair = removedIneligibleAbility || parsed.every((action) => action === null);
+    if (needsRepair) {
+      // Commit the marker only after saveActions() has persisted the rebuilt
+      // class kit. If that write fails, the next session must retry instead of
+      // treating a still-empty legacy bar as an intentional player choice.
+      this.pendingAeldruneClassKitMigrationKey = key;
+      return true;
+    }
+    try {
+      // A valid non-empty bar needs no reconstruction, so it is safe to mark
+      // immediately and preserve any future empty layout as intentional.
+      this.deps.storage.setItem(key, '1');
+    } catch {
+      // Storage can be unavailable in private browsing modes.
+    }
+    return false;
   }
 
   private shouldAutoPlaceOnForm(id: string, form: HotbarForm): boolean {
@@ -477,6 +536,11 @@ export class ActionBarController {
   }
 
   private isAbilityPlacementAllowed(id: string): boolean {
+    // Legacy MIR4 passive ids can remain in an old saved layout after a class
+    // is homologated against the official active-skill catalog. They are not
+    // host-provided castable actions and must stay rejected even after their
+    // obsolete AbilityDef has been removed.
+    if (id.startsWith('mir4_passive_')) return false;
     const ability = this.abilityDef(id);
     // Direct setter compatibility for host-provided known ids that are not in the
     // static client table; every real AbilityDef still follows the passive rule.
@@ -597,7 +661,9 @@ export class ActionBarController {
       (id) => this.isStoredAbilityEligible(id),
       (id) => this.keepsStoredItemId(id),
     );
-    if (stored && storedHotbarHasIneligibleAbility(raw, (id) => this.isStoredAbilityEligible(id))) {
+    const removedIneligibleAbility =
+      stored && storedHotbarHasIneligibleAbility(raw, (id) => this.isStoredAbilityEligible(id));
+    if (removedIneligibleAbility) {
       try {
         this.deps.storage.setItem(this.slotMapKey(), JSON.stringify(parsed));
       } catch {
@@ -630,7 +696,8 @@ export class ActionBarController {
       this.knownAbilityIdsAtLastSync = null;
       return;
     }
-    this.loadedFromStorage = stored;
+    this.loadedFromStorage =
+      stored && !this.migrateAeldruneClassKitBar(stored, parsed, removedIneligibleAbility);
     this.actionState = parsed;
     this.knownAbilityIdsAtLastSync = null;
   }

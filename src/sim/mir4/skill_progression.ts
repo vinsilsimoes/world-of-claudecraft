@@ -1,10 +1,13 @@
 // Product progression rules layered over the source-extracted MIR4 skill
-// catalogue. The source rows preserve their original initial-deck admission
-// and rank-2 experiment; Aeldrune deliberately replaces those two rules with
-// a paced 1/10/20/30/40 active-skill curve and fifteen authored ranks.
+// catalogue. Skill admission follows each official client row's class-level
+// requirement; Aeldrune retains its fifteen authored upgrade ranks.
 
 export const MIR4_SKILL_MAX_LEVEL = 15;
-export const MIR4_ULTIMATE_UNLOCK_LEVEL = 50;
+export const MIR4_ULTIMATE_UNLOCK_LEVEL = 1;
+
+export type Mir4SkillUnlock =
+  | { readonly kind: 'initial-deck' }
+  | { readonly kind: 'level'; readonly level: number };
 
 export type Mir4KnowledgeTomeKey =
   | 'knowledgeTomeCommon'
@@ -17,10 +20,9 @@ export interface Mir4KnowledgeTomeCost {
   readonly count: 1;
 }
 
-/** Slot 1 is the starting action; every following catalogue slot waits ten levels. */
-export function mir4SkillUnlockLevel(slot: number): number {
-  const normalized = Math.max(1, Math.floor(slot));
-  return normalized === 1 ? 1 : (normalized - 1) * 10;
+/** Resolve the class-level requirement preserved on an official MIR4 skill row. */
+export function mir4SkillUnlockLevel(skill: { readonly unlock: Mir4SkillUnlock }): number {
+  return skill.unlock.kind === 'initial-deck' ? 1 : Math.max(1, Math.floor(skill.unlock.level));
 }
 
 /** The tome consumed while leaving `currentLevel`; rank 15 is already complete. */

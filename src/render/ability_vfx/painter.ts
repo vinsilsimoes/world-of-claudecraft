@@ -144,6 +144,7 @@ export interface AbilityVfxSpellfxEvent {
   ability?: string;
   attackAnimation?: 'ranged-shot';
   attackAnimationStarted?: true;
+  impactDelayMs?: number;
 }
 
 // Structural slice of the point-anchored SimEvent member ('spellfxAt').
@@ -504,6 +505,12 @@ export class AbilityVfx {
     const spec = abilityVfxSpec(ev.ability);
     if (!spec) return false;
     const full = abilityVfxFullSpec(ev.ability);
+    const authoritativeImpactDelay =
+      ev.impactDelayMs === undefined ? undefined : Math.max(0, ev.impactDelayMs / 1000);
+    const visualWindupDelay = (resolvedFull: AbilityVfxFullSpec | undefined): number =>
+      authoritativeImpactDelay === undefined
+        ? this.windupDelayFor(ev.ability as string, resolvedFull, ev.sourceId)
+        : 0;
     // Beam-archetype channels (mind rays, drains) never fly a projectile:
     // every tick's cast-fx event feeds the channel tracker, which draws the
     // crescendoing cord and lands the full impact stack once, on the last tick.
@@ -541,8 +548,7 @@ export class AbilityVfx {
     this.spawned = 0;
     // Spin specs whirl the rig (Bladestorm); the one-shot is cheap, so it
     // survives every degrade tier.
-    if (plan.whirl && !ev.attackAnimationStarted)
-      this.deps.triggerAttack(ev.sourceId, ev.ability);
+    if (plan.whirl && !ev.attackAnimationStarted) this.deps.triggerAttack(ev.sourceId, ev.ability);
     switch (ev.fx) {
       case 'projectile':
       case 'heavyBolt': {
@@ -654,20 +660,30 @@ export class AbilityVfx {
             ev.targetId,
             plan.color,
             tier,
-            this.windupDelayFor(ev.ability, full, ev.sourceId),
+            visualWindupDelay(full),
+            authoritativeImpactDelay,
           );
         break;
       }
       case 'nova': {
         if (tier < 2 && full) {
-          const delay = this.windupDelayFor(ev.ability, full, ev.sourceId);
+          const delay = visualWindupDelay(full);
           // a staged release carries the boom itself: firing the pooled nova
           // now would double the read half a windup early
-          if (delay <= 0) {
+          if (delay <= 0 && authoritativeImpactDelay === undefined) {
             this.deps.vfx.nova(ev.targetId, ev.school, plan.color);
             this.spawned++;
           }
-          fx.sequenceInstant(ev.ability, full, ev.sourceId, ev.targetId, plan.color, tier, delay);
+          fx.sequenceInstant(
+            ev.ability,
+            full,
+            ev.sourceId,
+            ev.targetId,
+            plan.color,
+            tier,
+            delay,
+            authoritativeImpactDelay,
+          );
         } else {
           this.deps.vfx.nova(ev.targetId, ev.school, plan.color);
           this.spawned++;
@@ -691,7 +707,8 @@ export class AbilityVfx {
             ev.targetId,
             plan.color,
             tier,
-            this.windupDelayFor(ev.ability, full, ev.sourceId),
+            visualWindupDelay(full),
+            authoritativeImpactDelay,
           );
         break;
       case 'selfCast': {
@@ -757,7 +774,8 @@ export class AbilityVfx {
             seqTarget,
             plan.color,
             tier,
-            this.windupDelayFor(ev.ability, full, ev.sourceId),
+            visualWindupDelay(full),
+            authoritativeImpactDelay,
           );
         } else {
           this.deps.vfx.tick(seqTarget, ev.school, plan.color);

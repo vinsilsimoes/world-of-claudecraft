@@ -348,6 +348,7 @@ describe('mir4 auto battle', () => {
     const before = { ...p.pos };
 
     updateMir4AutoBattle(sim.ctx);
+    resolveScheduledAction(sim);
 
     expect(p.pos.x).toBe(before.x);
     expect(p.pos.z).toBe(before.z);
@@ -593,7 +594,7 @@ describe('mir4 auto battle', () => {
     expect({ x: p.pos.x, z: p.pos.z }).toEqual({ x: before.x, z: before.z });
   });
 
-  it('keeps a full Ultimate gauge untouched below level 50', () => {
+  it('uses the level-one MIR4 Ultimate when its gauge is full', () => {
     const sim = makeSim(8901);
     const p = sim.player;
     spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'test_locked_ultimate_target');
@@ -602,9 +603,9 @@ describe('mir4 auto battle', () => {
 
     updateMir4AutoBattle(sim.ctx);
 
-    expect(p.cooldowns.has('mir4_ult')).toBe(false);
-    expect(p.mir4UltGauge).toBe(100);
-    expect(p.cooldowns.has('1102') || p.cooldowns.has('mir4_basic')).toBe(true);
+    expect(p.cooldowns.has('mir4_ult')).toBe(true);
+    expect(p.mir4UltGauge).toBe(0);
+    expect(p.cooldowns.has('mir4_basic')).toBe(false);
   });
 
   it.each([

@@ -4835,7 +4835,7 @@ export const ja_JP: EnTranslations = {
         "title": "Classes",
         "lead": "Aeldrune currently has five combat classes. Each class has its own weapon, range profile, damage channel, appearance and skill kit.",
         "skillUnlocks": "Skill progression",
-        "skillUnlocksBody": "Each class has twelve regular skills. A character starts with one and unlocks another every ten levels through level 110; the class Ultimate unlocks at level 50. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
+        "skillUnlocksBody": "Every class follows its original MIR4 class-level requirements: four regular skills at level 1, then one at levels 5, 8, 16, 24, 32, 40, 48 and 56. The class Ultimate is available from level 1 and requires a full Ultimate gauge. Newly unlocked skills enter the first free action-bar slot automatically. Regular skills advance from rank 1 to 15 with Common, Rare, Epic and Legendary Knowledge Tomes.",
         "weapon": "Weapon",
         "damage": "Damage",
         "range": "Range",
@@ -10172,8 +10172,8 @@ export const ja_JP: EnTranslations = {
   "entities": {
     "abilities": {
       "mir4_skill_1101": {
-        "name": "Rampant",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage. Increases your damage by 12% for 15 sec."
+        "name": "Berserk",
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage. Increases your damage by 12% for 15 sec."
       },
       "mir4_skill_1102": {
         "name": "虚空撃",
@@ -10181,7 +10181,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_1103": {
         "name": "Barbaric Charge",
-        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards of you take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
       },
       "mir4_skill_1104": {
         "name": "裂傷撃",
@@ -10189,7 +10189,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_1201": {
         "name": "Iron Shackle",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards take 100% damage and are pulled toward you."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 10 yards of a point 5 yards in front of you take 100% damage and are pulled toward you."
       },
       "mir4_skill_1301": {
         "name": "Riposte",
@@ -10197,7 +10197,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_1302": {
         "name": "Lion's Roar",
-        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards take 100% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies within 7 yards of you take 100% damage."
       },
       "mir4_skill_1304": {
         "name": "体当たり",
@@ -10209,23 +10209,23 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_1501": {
         "name": "疾風撃",
-        "description": "敵1体に作用し、対象を3.2秒間35%減速させます。"
+        "description": "敵1体に{damage}ダメージを与えます。7.75ヤード以内の他の敵最大4体に65%のダメージを与え、命中した各敵を3.2秒間35%減速させます。"
       },
       "mir4_skill_1502": {
         "name": "Unbreakable Stance",
-        "description": "Deals {damage} damage to up to 8 nearby enemies and increases your Dodge by 60 for 20 sec."
+        "description": "Deals {damage} damage to up to 8 nearby enemies. At rank 8, increases your Dodge by 30; at rank 10, by 60 for 20 sec."
       },
       "mir4_skill_1601": {
         "name": "Crescent Strike",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 85% damage."
+        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies in a 9-yard-long, 5-yard-wide frontal strip take 85% damage."
       },
       "mir4_skill_2101": {
-        "name": "プリズム光線",
-        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.4秒間凍結します。"
+        "name": "フレイムオーブ",
+        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与えます。命中した各敵を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。"
       },
       "mir4_skill_2111": {
-        "name": "残り火の槍",
-        "description": "敵1体に{damage}ダメージを与えます。対象を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。"
+        "name": "フロストオーブ",
+        "description": "敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中した各敵を3.2秒間35%減速させます。"
       },
       "mir4_skill_2501": {
         "name": "召喚核",
@@ -10280,8 +10280,8 @@ export const ja_JP: EnTranslations = {
         "description": "敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に60%のダメージを与え、対象を4.2秒間35%減速させます。"
       },
       "mir4_skill_3104": {
-        "name": "トーテム 1010",
-        "description": "敵1体に作用し、対象を1.4秒間スタンさせます。"
+        "name": "刃の雨",
+        "description": "4回の攻撃で{damage}の複合ダメージを与えます。7.75ヤード以内の他の敵最大4体に60%のダメージを与えます。ランク8では、命中した各敵を40%の確率で4秒間沈黙させます。"
       },
       "mir4_skill_3503": {
         "name": "翡翠の蓮",
@@ -10333,7 +10333,7 @@ export const ja_JP: EnTranslations = {
       },
       "mir4_skill_4107": {
         "name": "閃光矢",
-        "description": "敵1体に作用し、3.2秒間、対象が与えるダメージを45%減少させます。"
+        "description": "敵1体に{damage}ダメージを与えます。6.75ヤード以内の他の敵最大3体に60%のダメージを与え、5秒間、与えるダメージを45%減少させます。"
       },
       "mir4_skill_4108": {
         "name": "Heavenly Bow",
@@ -10380,8 +10380,8 @@ export const ja_JP: EnTranslations = {
         "description": "敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に70%のダメージを与え、対象を0.9秒間スタンさせます。"
       },
       "mir4_skill_5401": {
-        "name": "荒れ狂う嵐",
-        "description": "敵1体に作用し、対象を1秒間ノックダウンします。"
+        "name": "薙ぎ払いの嵐",
+        "description": "敵に{damage}の複合ダメージを与え、5秒間、敵が与えるダメージを30%減少させます。"
       },
       "mir4_skill_5102": {
         "name": "Dragon Tail",

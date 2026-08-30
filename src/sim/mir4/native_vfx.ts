@@ -1,6 +1,6 @@
-// Presentation adapter for MIR4 skills. Mechanics and ids remain MIR4, while
-// every rendered particle, rig gesture and sound palette is selected from an
-// existing Aeldrune ability cue. No source-project asset is used.
+// Presentation adapter for MIR4 skills. Homologated classes keep their own
+// Aeldrune action ids, while classes still awaiting that pass temporarily use
+// an existing runtime cue. No source-project asset is used.
 
 import type { Mir4SkillDef } from '../content/mir4';
 import type { SimEvent } from '../types';
@@ -14,18 +14,18 @@ export interface Mir4NativeVfxCue {
 }
 
 const MIR4_NATIVE_VFX: Readonly<Record<number, Mir4NativeVfxCue>> = {
-  1101: { ability: 'thunder_clap', school: 'physical', fx: 'nova' },
-  1102: { ability: 'storm_bolt', school: 'physical', fx: 'projectile' },
-  1103: { ability: 'charge', school: 'physical', fx: 'projectile' },
-  1104: { ability: 'mortal_strike', school: 'physical', fx: 'selfCast' },
-  1201: { ability: 'thunder_clap', school: 'physical', fx: 'nova' },
-  1301: { ability: 'mortal_strike', school: 'physical', fx: 'selfCast' },
-  1302: { ability: 'thunder_clap', school: 'physical', fx: 'nova' },
-  1304: { ability: 'charge', school: 'physical', fx: 'projectile' },
-  1401: { ability: 'thunder_clap', school: 'physical', fx: 'nova' },
-  1501: { ability: 'whirlwind', school: 'physical', fx: 'nova' },
-  1502: { ability: 'thunder_clap', school: 'physical', fx: 'nova' },
-  1601: { ability: 'mortal_strike', school: 'physical', fx: 'selfCast' },
+  1101: { ability: 'mir4_skill_1101', school: 'physical', fx: 'nova' },
+  1102: { ability: 'mir4_skill_1102', school: 'physical', fx: 'selfCast' },
+  1103: { ability: 'mir4_skill_1103', school: 'physical', fx: 'nova' },
+  1104: { ability: 'mir4_skill_1104', school: 'physical', fx: 'selfCast' },
+  1201: { ability: 'mir4_skill_1201', school: 'physical', fx: 'nova' },
+  1301: { ability: 'mir4_skill_1301', school: 'physical', fx: 'selfCast' },
+  1302: { ability: 'mir4_skill_1302', school: 'physical', fx: 'shout' },
+  1304: { ability: 'mir4_skill_1304', school: 'physical', fx: 'selfCast' },
+  1401: { ability: 'mir4_skill_1401', school: 'physical', fx: 'nova' },
+  1501: { ability: 'mir4_skill_1501', school: 'physical', fx: 'nova' },
+  1502: { ability: 'mir4_skill_1502', school: 'physical', fx: 'selfCast' },
+  1601: { ability: 'mir4_skill_1601', school: 'physical', fx: 'selfCast' },
   2101: { ability: 'fireball', school: 'fire', fx: 'projectile' },
   2103: { ability: 'immolate', school: 'fire', fx: 'projectile' },
   2111: { ability: 'frostbolt', school: 'frost', fx: 'projectile' },

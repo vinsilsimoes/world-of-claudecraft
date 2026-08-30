@@ -75,7 +75,7 @@ describe('MIR4 status contribution ledger', () => {
 
     expect(mir4StatusTotalsFromContributions(result.contributions)).toEqual(result.values);
     expect(new Set(result.contributions.map((entry) => entry.sourceKind))).toEqual(
-      new Set(MIR4_STATUS_SOURCE_KINDS),
+      new Set(MIR4_STATUS_SOURCE_KINDS.filter((sourceKind) => sourceKind !== 'passive')),
     );
     expect(
       Object.fromEntries(
@@ -136,10 +136,10 @@ describe('MIR4 status contribution ledger', () => {
         [20, 14],
         [40, 5],
       ],
-      passive: [[1, 704]],
+      passive: [],
     });
     expect([...result.values]).toEqual([
-      [1, 9_514],
+      [1, 8_810],
       [6, 810],
       [19, 710],
       [20, 243],
@@ -178,23 +178,12 @@ describe('MIR4 status contribution ledger', () => {
     );
   });
 
-  it('records passives as the applied difference instead of duplicating their base', () => {
+  it('does not apply the legacy five-passive package to the MIR4 Warrior', () => {
     const result = aggregateMir4CharacterStatuses({ classId: 1, level: 20 });
     const passive = mir4StatusContributionsBySource(result.contributions, 'passive');
-    const beforePassive = mir4StatusTotalsFromContributions(
-      result.contributions.filter((entry) => entry.sourceKind !== 'passive'),
-    );
     const rates = aggregateMir4PassiveBonuses(1, 20);
 
-    expect(passive.length).toBeGreaterThan(0);
-    for (const contribution of passive) {
-      expect(contribution.value).toBe(
-        Math.floor(
-          ((beforePassive.get(contribution.statusId) ?? 0) *
-            (rates.get(contribution.statusId) ?? 0)) /
-            10_000,
-        ),
-      );
-    }
+    expect(passive).toEqual([]);
+    expect([...rates]).toEqual([]);
   });
 });

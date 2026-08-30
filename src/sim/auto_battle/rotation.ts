@@ -44,7 +44,10 @@ function isActorCenteredOffense(skill: Mir4SkillDef): boolean {
   return !skill.requiresTarget && (skill.effect?.areaRadiusPx ?? 0) > 0 && !isSelfUtility(skill);
 }
 
-function partyPulseSpec(skill: Mir4SkillDef): { radiusYards: number; maxTargets: number } {
+function partyPulseSpec(skill: Mir4SkillDef): {
+  radiusYards: number;
+  maxTargets: number;
+} {
   return {
     radiusYards: (skill.effect?.partyRadiusPx ?? 0) / 16,
     maxTargets: skill.effect?.maxPartyTargets ?? 1,
@@ -122,8 +125,7 @@ export function pickMir4AutoBattleSkill(
   // still fall through to its independent basic attack for this tick.
   if (p.gcdRemaining > 0 || mir4Silenced(p)) return null;
   const kit = mir4SkillsForClass((p.mir4?.classId ?? 1) as 1 | 2 | 3 | 4 | 5).filter(
-    (skill) =>
-      p.level >= mir4SkillUnlockLevel(skill.slot) && !disabledSkillIds?.includes(skill.skillId),
+    (skill) => p.level >= mir4SkillUnlockLevel(skill) && !disabledSkillIds?.includes(skill.skillId),
   );
   const hpPercent = (p.hp / p.maxHp) * 100;
   const targetHpPercent = (target.hp / target.maxHp) * 100;
@@ -173,8 +175,8 @@ export function pickMir4AutoBattleSkill(
 
   // Role thresholds optimize the rotation; they must not silently disable a
   // skill the player explicitly left on. This matters most for the Arbalist's
-  // level-one Burst: it is tagged as AoE, but is the class's only unlocked
-  // skill until level 10. Against a lone target, use any remaining ready
+  // level-one Burst: it is tagged as AoE, but a lone target must not make the
+  // enabled action unusable. Against one target, use any remaining ready
   // offensive skill before falling back to the basic attack.
   for (const skill of order) {
     if (!skillReady(ctx, p, skill) || isSelfUtility(skill) || repeatsActiveEffect(target, skill)) {
@@ -233,7 +235,16 @@ function orderKit<T extends { skillId: number }>(
   if (classId !== 1) return [...kit];
   const rank = targetControlled
     ? { 1104: 0, 1401: 1, 1102: 2, 1301: 3, 1304: 4 }
-    : { 1102: 0, 1301: 1, 1302: 2, 1101: 3, 1103: 4, 1304: 5, 1104: 6, 1401: 7 };
+    : {
+        1102: 0,
+        1301: 1,
+        1302: 2,
+        1101: 3,
+        1103: 4,
+        1304: 5,
+        1104: 6,
+        1401: 7,
+      };
   return [...kit].sort(
     (a, b) =>
       (rank[a.skillId as keyof typeof rank] ?? 99) - (rank[b.skillId as keyof typeof rank] ?? 99),

@@ -3,7 +3,7 @@ import { mir4SkillsForClass } from '../../src/sim/content/mir4';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { mir4ActionAbilities, mir4ActionId } from '../../src/sim/mir4/action_abilities';
-import { castMir4Skill } from '../../src/sim/mir4/combat';
+import { castMir4Skill, updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import { mir4DefenseMultiplier } from '../../src/sim/mir4/effects';
 import { Sim } from '../../src/sim/sim';
 import { dist2d, type Entity } from '../../src/sim/types';
@@ -43,6 +43,11 @@ function spawnTarget(sim: Sim, dx: number, dz: number, suffix: string): Entity {
   return target;
 }
 
+function resolveSkill(sim: Sim): void {
+  sim.time += 5;
+  updateMir4PendingImpacts(sim.ctx);
+}
+
 describe('the complete MIR4 Taoist kit', () => {
   it('contains the twelve official regular skills in Aeldrune unlock order', () => {
     expect(
@@ -70,7 +75,7 @@ describe('the complete MIR4 Taoist kit', () => {
 
     expect(actions).toHaveLength(12);
     expect(actions.map((ability) => ability.def.learnLevel)).toEqual([
-      1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110,
+      1, 1, 1, 1, 5, 8, 16, 24, 32, 40, 48, 56,
     ]);
     expect(actions.find((ability) => ability.def.id === mir4ActionId(3101))?.def.name).toBe(
       'Sunbeam Sword',
@@ -85,12 +90,16 @@ describe('the complete MIR4 Taoist kit', () => {
     const wave = makeTaoist(15_001);
     const waveTarget = spawnTarget(wave, 4, 0, 'moonlight_wave');
     expect(castMir4Skill(wave.ctx, wave.playerId, 3506, waveTarget.id)).toEqual({ ok: true });
+    resolveSkill(wave);
     expect(waveTarget.hp).toBeLessThan(waveTarget.maxHp);
     expect(waveTarget.mir4Effects?.active.some((effect) => effect.kind === 'slow')).toBe(true);
 
     const orb = makeTaoist(15_002);
     const orbTarget = spawnTarget(orb, 6, 0, 'moonlight_orb');
-    expect(castMir4Skill(orb.ctx, orb.playerId, 3301, orbTarget.id)).toEqual({ ok: true });
+    expect(castMir4Skill(orb.ctx, orb.playerId, 3301, orbTarget.id)).toEqual({
+      ok: true,
+    });
+    resolveSkill(orb);
     expect(orbTarget.hp).toBeLessThan(orbTarget.maxHp);
     expect(orbTarget.mir4Effects?.active.some((effect) => effect.kind === 'root')).toBe(true);
   });
@@ -100,7 +109,10 @@ describe('the complete MIR4 Taoist kit', () => {
     const target = spawnTarget(sim, 6, 0, 'tai_chi');
     const distanceBefore = dist2d(sim.player.pos, target.pos);
 
-    expect(castMir4Skill(sim.ctx, sim.playerId, 3201, target.id)).toEqual({ ok: true });
+    expect(castMir4Skill(sim.ctx, sim.playerId, 3201, target.id)).toEqual({
+      ok: true,
+    });
+    resolveSkill(sim);
 
     expect(dist2d(sim.player.pos, target.pos)).toBeLessThan(distanceBefore);
     expect(target.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(true);
@@ -112,6 +124,7 @@ describe('the complete MIR4 Taoist kit', () => {
     expect(castMir4Skill(rankOne.ctx, rankOne.playerId, 3103, firstTarget.id)).toEqual({
       ok: true,
     });
+    resolveSkill(rankOne);
     expect(Boolean(firstTarget.mir4Effects?.active.some((effect) => effect.kind === 'stun'))).toBe(
       false,
     );
@@ -124,6 +137,7 @@ describe('the complete MIR4 Taoist kit', () => {
     expect(castMir4Skill(rankFive.ctx, rankFive.playerId, 3103, secondTarget.id)).toEqual({
       ok: true,
     });
+    resolveSkill(rankFive);
     expect(secondTarget.mir4Effects?.active.some((effect) => effect.kind === 'stun')).toBe(true);
   });
 
@@ -131,7 +145,10 @@ describe('the complete MIR4 Taoist kit', () => {
     const sim = makeTaoist(15_006);
     const target = spawnTarget(sim, 6, 0, 'blasting_charm');
 
-    expect(castMir4Skill(sim.ctx, sim.playerId, 3505, target.id)).toEqual({ ok: true });
+    expect(castMir4Skill(sim.ctx, sim.playerId, 3505, target.id)).toEqual({
+      ok: true,
+    });
+    resolveSkill(sim);
 
     expect(target.mir4Effects?.active.some((effect) => effect.kind === 'blind')).toBe(true);
     expect(target.mir4Effects?.active.some((effect) => effect.kind === 'defense-break')).toBe(true);
@@ -148,12 +165,17 @@ describe('the complete MIR4 Taoist kit', () => {
     const greater = makeTaoist(15_008);
     greater.player.hp = Math.floor(greater.player.maxHp / 2);
     const hpBeforeGreater = greater.player.hp;
-    expect(castMir4Skill(greater.ctx, greater.playerId, 3504)).toEqual({ ok: true });
+    expect(castMir4Skill(greater.ctx, greater.playerId, 3504)).toEqual({
+      ok: true,
+    });
     expect(greater.player.hp - hpBeforeGreater).toBeGreaterThan(regularHeal);
 
     const guardian = makeTaoist(15_009);
     const enemy = spawnTarget(guardian, 3, 0, 'guardian_circle');
-    expect(castMir4Skill(guardian.ctx, guardian.playerId, 3501)).toEqual({ ok: true });
+    expect(castMir4Skill(guardian.ctx, guardian.playerId, 3501)).toEqual({
+      ok: true,
+    });
+    resolveSkill(guardian);
     expect(enemy.hp).toBeLessThan(enemy.maxHp);
     expect(mir4DefenseMultiplier(guardian.player)).toBeGreaterThan(1);
   });

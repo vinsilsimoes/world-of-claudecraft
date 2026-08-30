@@ -588,6 +588,7 @@ export class AbilityVfxFx implements SequencerHost {
     colorHex: number,
     tier: number,
     windupDelay = 0,
+    impactDelay?: number,
   ): void {
     if (this.disposed) return;
     this.sequencer.start(
@@ -600,6 +601,8 @@ export class AbilityVfxFx implements SequencerHost {
       tier,
       false,
       windupDelay,
+      undefined,
+      impactDelay,
     );
     if (wantsScreenFx(spec, tier)) {
       // fire with the sequence's compressed impact; self-centered archetypes
@@ -608,7 +611,14 @@ export class AbilityVfxFx implements SequencerHost {
         spec.self === true || spec.archetype === 'nova' || spec.archetype === 'shout'
           ? casterId
           : targetId;
-      this.scheduleScreenFx(windupDelay + 0.15, anchorId, 0, 0, 0, screenFxStrengthOf(spec));
+      this.scheduleScreenFx(
+        impactDelay ?? windupDelay + 0.15,
+        anchorId,
+        0,
+        0,
+        0,
+        screenFxStrengthOf(spec),
+      );
     }
   }
 

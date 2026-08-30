@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { pickMir4AutoBattleSkill } from '../../src/sim/auto_battle/rotation';
 import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
+import { mir4SkillsForClass } from '../../src/sim/content/mir4/skills_runtime';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
@@ -178,7 +179,7 @@ describe('the rotation cascade', () => {
         player.cooldowns.set('1302', 10);
         player.cooldowns.set('1101', 10);
       }),
-    ).toBe(1103);
+    ).toBe(1304);
   });
 
   it('filters candidates outside the Auto Battle anchor before tracing line of sight', () => {
@@ -346,6 +347,9 @@ describe('the rotation cascade', () => {
     sim.addEntity(w);
     sim.setMir4AutoBattleMode('battle');
     sim.players.get(sim.playerId)!.autoBattle!.acquireRadiusYards = 6;
+    sim.players.get(sim.playerId)!.mir4DisabledAutoSkills = mir4SkillsForClass(1)
+      .map((skill) => skill.skillId)
+      .filter((skillId) => ![1102, 1302, 1301].includes(skillId));
     // Collect the cast order from the damage events' ability names (the
     // cooldown map races: early 25s cooldowns expire before sampling).
     const names = ['Corte do Vazio', 'Rugido de Leão', 'Riposta'];
