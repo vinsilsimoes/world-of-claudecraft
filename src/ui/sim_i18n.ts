@@ -86,6 +86,7 @@ const baseEnTable = {
   'log.guildBankWithdrawItem': 'You withdraw {item} from the guild bank.',
   'error.specLevel': 'You may choose a specialization at level {level}.',
   'error.equipLevel': 'You must be level {level} to equip that.',
+  'error.potionLevel': 'You must be level {level} to use that potion.',
   'error.mountLevel': 'You must be level {level} to ride that mount.',
   // Ranked Arena's minimum-level queue gate (src/sim/social/arena.ts
   // arenaQueueJoin, 1v1/2v2 only): the joining player's own level, and a
@@ -771,6 +772,7 @@ const BASE_DICT: Record<SupportedLanguage, Partial<Record<BaseSimMessageKey, str
     'log.bagsMigrated': 'Your belongings have been packed into new bags.',
     'error.specLevel': 'You may choose a specialization at level {level}.',
     'error.equipLevel': 'You must be level {level} to equip that.',
+    'error.potionLevel': 'You must be level {level} to use that potion.',
     'error.mountLevel': 'You must be level {level} to ride that mount.',
     'error.noMountYet': "You don't have a mount yet.",
     'error.mountBuyLevel': 'You must be level 20 to buy a mount.',
@@ -5944,6 +5946,7 @@ const BASE_DICT: Record<SupportedLanguage, Partial<Record<BaseSimMessageKey, str
     'log.bagsMigrated': 'Seus pertences foram guardados em bolsas novas.',
     'error.specLevel': 'Você pode escolher uma especialização no nível {level}.',
     'error.equipLevel': 'Você precisa ser nível {level} para equipar isso.',
+    'error.potionLevel': 'Você precisa ser nível {level} para usar essa poção.',
     'error.mountLevel': 'Você precisa ser nível {level} para montar essa montaria.',
     'error.noMountYet': 'Você ainda não tem uma montaria.',
     'error.mountBuyLevel': 'Você precisa ser nível 20 para comprar uma montaria.',
@@ -11028,6 +11031,10 @@ const RULES: Rule[] = [
   {
     re: /^You must be level (\d+) to equip that\.$/,
     build: (m) => tSim('error.equipLevel', { level: m[1] }),
+  },
+  {
+    re: /^You must be level (\d+) to use that potion\.$/,
+    build: (m) => tSim('error.potionLevel', { level: m[1] }),
   },
   {
     re: /^You must be level (\d+) to ride that mount\.$/,
