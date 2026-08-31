@@ -268,7 +268,7 @@ import {
   ZONE_ENVIRONMENT_RESPONSE,
 } from './environment_transition_core';
 import { EvilEyeMarkers } from './evil_eye_markers';
-import { advanceSelfFacing, releaseSelfFacing, wrapAngle } from './facing_smooth';
+import { SelfFacingSmoother, wrapAngle } from './facing_smooth';
 import {
   buildFarTerrain,
   FAR_VISTA_ENTRY_MAX_WAIT_MS,
@@ -1514,16 +1514,7 @@ export class Renderer {
   }
 
   private lastSelfId: number | null = null;
-  // Last yaw applied to the local player while the camera was driving its facing
-  // (mouselook / mouse-camera). Null when the override is disengaged, so the next
-  // engage re-seeds from the live interpolated facing instead of snapping. See
-  // facing_smooth.ts for why the camera-driven yaw must be rate-limited.
-  private selfFacingOverride: number | null = null;
-  // Camera yaw applied on the previous camera-driven frame. advanceSelfFacing
-  // subtracts it to tell the camera's ongoing rotation (applied 1:1) apart from
-  // the residual engage gap (rate-limited), so a fast flick never lags. Null
-  // while disengaged so the next engage re-seeds cleanly.
-  private selfFacingLastTarget: number | null = null;
+  private selfFacing = new SelfFacingSmoother();
   private cameraLookAt = new THREE.Vector3();
   // floating /say-/yell bubbles, keyed by speaker entity id
   private chatBubbles = new Map<number, { el: HTMLDivElement; until: number }>();
@@ -10423,6 +10414,7 @@ export class Renderer {
     // create burst or shader link, and only the terminal draw is skipped.
     present = true,
     smoothSelfFallback = false,
+    allowFacingReleaseHold = false,
   ): void {
     if (this.shutdownStarted) return;
     const totalStart = performance.now();
@@ -10493,8 +10485,7 @@ export class Renderer {
     if (this.lastSelfId !== p.id) {
       this.lastSelfId = p.id;
       this.selfRenderPositionReady = false;
-      this.selfFacingOverride = null;
-      this.selfFacingLastTarget = null;
+      this.selfFacing.reset();
       // Never leak a decaying predictor-handoff offset into the new character.
       this.selfMotionOffset.set(0, 0, 0);
     }
@@ -10769,26 +10760,17 @@ export class Renderer {
       const z = isSelf ? selfPos.z : e.prevPos.z + (e.pos.z - e.prevPos.z) * ea;
       v.group.position.set(x, y, z);
       let facing = e.prevFacing + wrapAngle(e.facing - e.prevFacing) * facingAlpha(ea);
-      if (id === p.id && renderFacingOverride !== null) {
-        // Follow the camera-driven heading, easing in the one-time engage gap
-        // (up to 180deg when engaging after an orbit) under the rate limiter
-        // while applying the camera's ongoing rotation 1:1. Seed the model and
-        // the last-target from the current values on first engage so the whole
-        // seed gap is treated as residual and a fast flick never trails behind.
-        const prevModel = this.selfFacingOverride ?? facing;
-        const lastTarget = this.selfFacingLastTarget ?? renderFacingOverride;
-        facing = advanceSelfFacing(prevModel, renderFacingOverride, lastTarget, dt);
-        this.selfFacingOverride = facing;
-        this.selfFacingLastTarget = renderFacingOverride;
-      } else if (id === p.id && this.selfFacingOverride !== null) {
-        // Disengage frame: route the return to the interpolated sim facing
-        // through the SAME rate limiter so releasing mouselook mid-flick (before
-        // the model caught up to the camera) rotates back smoothly instead of
-        // snapping. Hold the override until it has converged onto the sim facing.
-        const r = releaseSelfFacing(this.selfFacingOverride, facing, dt);
-        facing = r.facing;
-        this.selfFacingOverride = r.done ? null : r.facing;
-        this.selfFacingLastTarget = r.lastTarget;
+      if (isSelf) {
+        if (selfAuthoritativeDiscontinuity) this.selfFacing.reset();
+        facing = this.selfFacing.step(
+          v.group.rotation.y,
+          facing,
+          renderFacingOverride,
+          dt,
+          sim.cfg.gameProfile === 'mir4-gameplay-port' ? 'travel' : 'camera',
+          selfMotion?.echoMs ?? 0,
+          allowFacingReleaseHold && !p.autoAttack && p.castingAbility === null,
+        );
       }
       v.group.rotation.y = facing;
 

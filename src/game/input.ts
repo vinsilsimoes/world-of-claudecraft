@@ -6,6 +6,7 @@ import { sanitizeMoveFacing, sanitizeMoveInput } from '../sim/move_input';
 import type { MoveInput } from '../sim/types';
 import { detectBrowserEngine } from './browser_env';
 import { cursorForHover, type HoverCursorKind } from './cursors';
+import { JumpInput } from './jump_input';
 import { comboCode, isModifierCode, type Keybinds, makeCombo } from './keybinds';
 import { bindableMouseCodeForButton, isReservedMouseButton } from './mouse_binds';
 import {
@@ -35,13 +36,6 @@ const TOUCH_LOOK_PITCH_RATE = 2.2;
 // turned the camera. This multiplier only scales that drag path, not mouselook
 // or the camera joystick, so desktop and the joystick are unaffected.
 const TOUCH_DRAG_SENS_MULT = 2.2;
-const TOUCH_JUMP_LATCH_MS = 220;
-// A keyboard jump press is latched the same way a touch tap is: a fast spacebar
-// tap can be pressed and released entirely between two 20Hz input samples (or
-// sim-tick gaps), so reading the raw key-held state silently drops it. Holding
-// the value above one full input/tick window (50ms) guarantees a grounded tick
-// observes the jump. Held jumps are unaffected (the key stays physically down).
-const KEY_JUMP_LATCH_MS = 150;
 const CAMERA_DRAG_START_DISTANCE = 18;
 const CAMERA_DRAG_START_MS = 140;
 
@@ -283,7 +277,7 @@ export class Input {
     strafeLeft: false,
     strafeRight: false,
   };
-  private touchJumpUntil = 0;
+  private readonly jumpInput = new JumpInput();
   // Swim-down held by an on-screen/controller control (the keyboard path is the
   // 'dive' held action). Not latched like the jump tap: descending is a hold.
   private touchDive = false;
@@ -297,7 +291,6 @@ export class Input {
   // A left-drag orbit is camera-only sightseeing and must never steer the
   // body up or down through the water (the WoW rule).
   private swimAimPitch = 0.32;
-  private keyJumpUntil = 0;
   private touchLookActive = false;
   // True while the gamepad's right stick is deflected past its deadzone, set
   // each poll by GamepadManager (mirrors touchLookActive for the touch camera
@@ -555,6 +548,8 @@ export class Input {
     if (this.suspendMovement === on) return;
     this.suspendMovement = on;
     if (!on) return;
+    const hadHeldInput = this.keys.size > 0 || this.jumpInput.read(performance.now(), false).jump;
+    this.jumpInput.clear();
     // The held-open emote wheel itself counts as a modal (hud.isModalOpen()),
     // so when its keys are down this suspension almost always IS the wheel. The
     // stale-input clear below must not run then: it would close the wheel one
@@ -566,9 +561,7 @@ export class Input {
     // also skips the clear, which just restores the pre-clear behavior of held
     // movement resuming when the menu closes.)
     if (this.emoteWheelHeldCodes.size > 0) return;
-    const hadHeldInput = this.keys.size > 0 || this.keyJumpUntil > 0;
     this.keys.clear();
-    this.keyJumpUntil = 0;
     // Suspending input drops any charging Vale Cup sport move (held Shoot etc.).
     this.releaseHeldSlots();
     if (hadHeldInput) this.noteIntent('move');
@@ -583,8 +576,7 @@ export class Input {
   resetForClientTransition(): void {
     const emoteWheelWasOpen = this.emoteWheelHeldCodes.size > 0;
     this.keys.clear();
-    this.keyJumpUntil = 0;
-    this.touchJumpUntil = 0;
+    this.jumpInput.clear();
     this.autorun = false;
     this.clearClickMove();
     this.touchMove = { forward: false, back: false, strafeLeft: false, strafeRight: false };
@@ -655,11 +647,9 @@ export class Input {
     if (changed) this.noteIntent('move');
   }
 
-  // A touch jump is momentary, but readMoveInput() is also used by camera/HUD
-  // helpers between sim ticks. Latch the tap briefly so those reads cannot eat
-  // the jump before the grounded movement tick sees it.
+  // Touch callbacks are physical press edges; intermediate movement reads must not consume them.
   triggerTouchJump(): void {
-    this.touchJumpUntil = Math.max(this.touchJumpUntil, performance.now() + TOUCH_JUMP_LATCH_MS);
+    if (!this.suspendMovement) this.jumpInput.pressTap(performance.now());
   }
 
   /** Touch/controller swim-down, held for as long as the control is pressed. */
@@ -746,7 +736,7 @@ export class Input {
   // Latch a gamepad jump-button tap the same way touch jumps latch, so reads
   // between sim ticks don't swallow it before the grounded tick sees it.
   triggerGamepadJump(): void {
-    this.touchJumpUntil = Math.max(this.touchJumpUntil, performance.now() + TOUCH_JUMP_LATCH_MS);
+    if (!this.suspendMovement) this.jumpInput.pressTap(performance.now());
   }
 
   // Apply the right-stick camera deltas (already in radians, computed by the
@@ -895,7 +885,10 @@ export class Input {
     // -lock exit is different: the window still has focus and keyup will fire
     // normally, so clearing keys here would cancel a walk the instant a camera
     // drag ends (every right/left-drag exits pointer lock on release).
-    if (reason !== 'pointerlock') this.keys.clear();
+    if (reason !== 'pointerlock') {
+      this.keys.clear();
+      this.jumpInput.clear();
+    }
     if (reason !== 'pointerlock' && this.emoteWheelHeldCodes.size > 0) {
       this.emoteWheelHeldCodes.clear();
       this.cb.onEmoteWheel(false);
@@ -1034,10 +1027,8 @@ export class Input {
     } else if (held !== null) {
       this.keys.add(e.code);
       if (held === 'forward' || held === 'back') this.autorun = false;
-      // Latch a jump press (e.repeat is filtered above, so this is the real
-      // edge) so a fast tap survives until a grounded movement tick samples it.
-      if (held === 'jump')
-        this.keyJumpUntil = Math.max(this.keyJumpUntil, performance.now() + KEY_JUMP_LATCH_MS);
+      // Preserve quick physical presses until a movement tick samples them.
+      if (held === 'jump') this.jumpInput.pressKey(e.code, performance.now());
       this.noteMovementIntent();
     }
     const edge = combo ? this.keybinds.edgeActionForCombo(combo) : null;
@@ -1080,6 +1071,7 @@ export class Input {
   // that was charging. Returns true when the emote wheel closed, the one case
   // the caller cancels the event's default for.
   private releaseBoundCode(code: string): boolean {
+    this.jumpInput.releaseKey(code);
     if (this.keys.delete(code)) this.noteIntent('move');
     let closedEmoteWheel = false;
     if (this.emoteWheelHeldCodes.delete(code) && this.emoteWheelHeldCodes.size === 0) {
@@ -1323,8 +1315,7 @@ export class Input {
     } else if (held !== null) {
       this.keys.add(code);
       if (held === 'forward' || held === 'back') this.autorun = false;
-      if (held === 'jump')
-        this.keyJumpUntil = Math.max(this.keyJumpUntil, performance.now() + KEY_JUMP_LATCH_MS);
+      if (held === 'jump') this.jumpInput.pressKey(code, performance.now());
       this.noteMovementIntent();
     }
     const edge = this.keybinds.edgeActionForCombo(combo);
@@ -1537,11 +1528,20 @@ export class Input {
         strafeLeft: false,
         strafeRight: false,
         jump: false,
+        jumpPress: undefined,
+        jumpPressBase: undefined,
         dive: false,
         surface: false,
       };
     }
-    if (this.controllerMoveInput) return { ...this.controllerMoveInput };
+    if (this.controllerMoveInput)
+      return {
+        ...this.controllerMoveInput,
+        jumpPress: this.controllerMoveInput.jump ? this.controllerMoveInput.jumpPress : undefined,
+        jumpPressBase: this.controllerMoveInput.jump
+          ? this.controllerMoveInput.jumpPressBase
+          : undefined,
+      };
     const held = (id: string) => this.heldAction(id);
     const bothButtons = this.leftDown && this.rightDown;
     const forward =
@@ -1552,10 +1552,10 @@ export class Input {
       this.gamepadMove.forward;
     const back = held('back') || this.touchMove.back || this.gamepadMove.back;
     // Jump is not a WASD key, so it keeps working in Attack Move mode.
-    const jump =
-      this.keybinds.codesForAction('jump').some((c) => this.keys.has(comboCode(c))) ||
-      performance.now() <= this.touchJumpUntil ||
-      performance.now() <= this.keyJumpUntil;
+    const jump = this.jumpInput.read(
+      performance.now(),
+      this.keybinds.codesForAction('jump').some((c) => this.keys.has(comboCode(c))),
+    );
     // Swim down / up, from the CAMERA as well as the keys: steer the view down
     // (right-drag) while swimming forward and you dive, tilt it back up and
     // you rise. The camera bands only act while a MOVE key is held and only
@@ -1569,7 +1569,7 @@ export class Input {
       return {
         forward,
         back,
-        jump,
+        ...jump,
         dive,
         surface,
         swimSteer,
@@ -1594,7 +1594,7 @@ export class Input {
     return {
       forward,
       back,
-      jump,
+      ...jump,
       dive,
       surface,
       swimSteer,

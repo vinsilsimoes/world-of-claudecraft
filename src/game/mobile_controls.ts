@@ -663,13 +663,12 @@ export class MobileControls {
       let suppressNextClick = false;
       button.addEventListener('pointerdown', (e) => {
         suppressNextClick = true;
-        globalThis.setTimeout(() => {
-          suppressNextClick = false;
-        }, 700);
         run(e);
       });
       button.addEventListener('click', (e) => {
-        if (suppressNextClick) {
+        // A release click belongs to its press even after a long hold. Keyboard
+        // activation (detail 0) has no pointerdown and must remain independent.
+        if (suppressNextClick && e.detail !== 0) {
           suppressNextClick = false;
           e.preventDefault();
           return;

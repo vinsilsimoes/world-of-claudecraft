@@ -49,6 +49,7 @@
 import { moverHeight, resolveMovement } from '../sim/colliders';
 import { hasValkyrsCallingFlightAura } from '../sim/combat/paladin_valkyrs_calling_state';
 import { mir4MovementMultiplierFromShared } from '../sim/mir4/effects';
+import { resetPlayerJump } from '../sim/player_jump';
 import { moveSpeedMult, type PlayerMotionDeps, stepPlayerMotion } from '../sim/player_motion';
 import { DT, type Entity, type MoveInput, RUN_SPEED, type SimEvent } from '../sim/types';
 
@@ -226,6 +227,8 @@ export class SelfMotionPredictor {
   private readonly deps: PlayerMotionDeps;
   private actor: Entity | null = null;
   private lastSelfId = -1;
+  private jumpInputPress: number | undefined;
+  private jumpInputHeld = false;
   private lastDead = false;
   private lastGhost = false;
   private acc = 0;
@@ -341,6 +344,8 @@ export class SelfMotionPredictor {
     // ordinary grounded input over it.
     if (!frame.enabled || hasValkyrsCallingFlightAura(self)) {
       this.reset();
+      this.jumpInputPress = frame.moveInput.jumpPress ?? this.jumpInputPress;
+      this.jumpInputHeld = frame.moveInput.jump;
       return null;
     }
     const dt = clamp(frame.frameDt, 0, MAX_FRAME_DT);
@@ -358,6 +363,7 @@ export class SelfMotionPredictor {
     // teleports; otherwise keep the persistent scratch actor.
     const flipped =
       self.id !== this.lastSelfId || self.dead !== this.lastDead || self.ghost !== this.lastGhost;
+    const cancelJump = authoritativeDiscontinuity || (flipped && this.lastSelfId !== -1);
     this.lastSelfId = self.id;
     this.lastDead = self.dead;
     this.lastGhost = self.ghost;
@@ -381,6 +387,11 @@ export class SelfMotionPredictor {
         vz: 0,
         onGround: true,
         jumping: false,
+        jumpCount: 0,
+        jumpLaunchSpeed: 0,
+        jumpQueued: false,
+        jumpInputHeld: this.jumpInputHeld,
+        jumpInputPress: this.jumpInputPress,
         fallStartY: ay,
         swimStroke: 0,
         swimDiving: false,
@@ -397,6 +408,7 @@ export class SelfMotionPredictor {
       this.histCount = 0;
       this.histHead = 0;
     }
+    if (cancelJump && self.mir4) resetPlayerJump(actor, frame.moveInput);
     if (authoritativeDiscontinuity) {
       // Do not integrate even one held-input step on the recovery frame. The
       // event's destination is the authoritative visual truth for this frame,
@@ -436,6 +448,8 @@ export class SelfMotionPredictor {
     inp.strafeLeft = frame.moveInput.strafeLeft;
     inp.strafeRight = frame.moveInput.strafeRight;
     inp.jump = frame.moveInput.jump;
+    inp.jumpPress = frame.moveInput.jumpPress;
+    inp.jumpPressBase = frame.moveInput.jumpPressBase;
     // The vertical half of swimming is held intent too, and predicting it is
     // what makes a camera-steered dive answer the mouse instead of the round
     // trip: without these the depth column only ever moved on the server's
@@ -465,6 +479,8 @@ export class SelfMotionPredictor {
       stepPlayerMotion(this.deps, actor, inp);
       this.acc -= DT;
     }
+    this.jumpInputPress = actor.jumpInputPress;
+    this.jumpInputHeld = actor.jumpInputHeld ?? false;
     const frac = this.acc / DT;
 
     const runSpeed = RUN_SPEED * moveSpeedMult(actor, 0);

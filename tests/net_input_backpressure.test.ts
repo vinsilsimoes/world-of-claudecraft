@@ -36,7 +36,7 @@ function sentInput(sent: string[], index = 0) {
   return JSON.parse(sent[index]) as {
     t: 'input';
     seq: number;
-    mi: { f: number; b: number; tl: number; tr: number; j: number };
+    mi: { f: number; b: number; tl: number; tr: number; j: number; jp?: number; jb?: number };
   };
 }
 
@@ -60,6 +60,34 @@ describe('ClientWorld input send backpressure gate', () => {
       expect(client.flushInput(1_000)).toBe(true);
     });
     expect(sent).toHaveLength(1);
+  });
+
+  it('flushes the second press while the jump flag stays true', () => {
+    const { client, sent } = makeClient(0);
+    withWebSocketStub(() => {
+      Object.assign(client.moveInput, { jump: true, jumpPress: 1, jumpPressBase: 0 });
+      expect(client.flushInput(1_000)).toBe(true);
+      client.moveInput.jumpPress = 2;
+      expect(client.flushInput(1_020)).toBe(true);
+    });
+    expect(sent.map((_, index) => sentInput(sent, index).mi.jp)).toEqual([1, 2]);
+  });
+
+  it('preserves the newest revision and cancellation baseline through a congested release', () => {
+    const { client, ws, sent } = makeClient(INPUT_SEND_BACKPRESSURE_LIMIT_BYTES + 1);
+    withWebSocketStub(() => {
+      Object.assign(client.moveInput, { jump: true, jumpPress: 3, jumpPressBase: 1 });
+      expect(client.flushInput(1_000)).toBe(false);
+      Object.assign(client.moveInput, {
+        jump: false,
+        jumpPress: undefined,
+        jumpPressBase: undefined,
+      });
+      expect(client.flushInput(1_100)).toBe(false);
+      ws.bufferedAmount = 0;
+      expect(client.flushInput(2_000)).toBe(true);
+    });
+    expect(sentInput(sent).mi).toMatchObject({ j: 1, jp: 3, jb: 1 });
   });
 
   it('sheds the send once the local unflushed buffer is backed up past the limit', () => {

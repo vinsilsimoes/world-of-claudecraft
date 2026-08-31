@@ -19,7 +19,6 @@ import {
   readBrowserEnv,
 } from './game/browser_env';
 import { hideBrowserSupportNotice, initBrowserSupportNotice } from './game/browser_support_notice';
-import { isCameraDrivenFacingActive } from './game/camera_driven_facing';
 import {
   cameraFollowShouldSettle,
   isRespawnFacingResyncEdge,
@@ -143,7 +142,7 @@ import {
 } from './game/mobile_controls';
 import { applyMobileHudLayout } from './game/mobile_hud_layout_applier';
 import { watchMobileMoreState } from './game/mobile_more_diagnostics';
-import { mouselookReleaseFacing } from './game/mouselook_release';
+import { MovementFacingController } from './game/movement_facing';
 import { diagonalMovementVisualFacing } from './game/movement_visual';
 import { music } from './game/music';
 import { tryNearbyInteraction } from './game/nearby_interaction';
@@ -2911,7 +2910,7 @@ async function startGame(
     resetInput: () => {
       input.resetForClientTransition();
       pendingReleaseFacing = null;
-      prevCameraDrivenFacing = false;
+      cameraMovement.reset();
       Object.assign(kbTurn, newKeyboardTurnState());
       hud.cancelGroundAim();
       mobileControls.syncAutorun(false);
@@ -3965,9 +3964,8 @@ async function startGame(
   let prevPlayerGhost = world.player.ghost;
   // Tracks camera-driven facing (classic right-mouse mouselook, or Mouse Camera
   // mode while a movement key is held) across frames so its falling edge can
-  // commit the final camera yaw to the player facing (see mouselook_release.ts
-  // and camera_driven_facing.ts).
-  let prevCameraDrivenFacing = false;
+  // commit the final input heading, including Aeldrune's backward travel yaw.
+  const cameraMovement = new MovementFacingController(world.cfg.gameProfile);
   // The release yaw, latched until a sim tick actually commits it. Offline a tick
   // runs on only ~2/3 of frames (60Hz frames, 20Hz ticks), so committing only on
   // the release frame would drop the one-shot when release lands on a zero-tick
@@ -4017,7 +4015,7 @@ async function startGame(
       mouselook: input.isMouselookActive(),
       moving: cameraFollowShouldSettle(mi, clickMoving),
       clickMoving,
-      cameraDriven: input.isMouseCameraMode() && cameraMoveActive(),
+      cameraDriven: cameraMovement.holdsCameraYaw,
       orbiting: input.leftDown && input.isCameraDragActive(),
     });
     input.camYaw = next.camYaw;
@@ -4048,8 +4046,8 @@ async function startGame(
     latencyMs = 0,
   ): { mi: ReturnType<typeof input.readMoveInput>; facing: number | null } {
     attackMoveTick();
-    const mi = input.readMoveInput();
-    let facing: number | null = mouselook ? input.camYaw : null;
+    const mi = cameraMovement.applyTo(input.readMoveInput());
+    let facing: number | null = !cameraMovement.travelFacing && mouselook ? input.camYaw : null;
     // A teleport (door, portal, spirit release) invalidates any pending
     // click-to-move: the destination is across the transition, and chasing it
     // walks the player straight back into the trigger.
@@ -4262,25 +4260,6 @@ async function startGame(
     return true;
   });
 
-  function renderFacingOverride(): number | null {
-    // A ghost (dead && ghost) is not movement-frozen and keeps camera-driven
-    // facing; only a corpse-bound dead player loses it, so pass movementFrozen().
-    return isCameraDrivenFacingActive(
-      input.isMouseCameraMode(),
-      cameraMoveActive(),
-      input.isMouselookActive(),
-      movementFrozen(),
-    )
-      ? input.camYaw
-      : null;
-  }
-
-  function cameraMoveActive(): boolean {
-    if (!input.isMouseCameraMode()) return false;
-    const mi = input.readMoveInput();
-    return !!(mi.forward || mi.back || mi.strafeLeft || mi.strafeRight) && !movementFrozen();
-  }
-
   // Feed the frame meter every frame (so stats stay warm even when hidden) and,
   // when the overlay is on, repaint at the meter's throttle (~4 Hz). Sample
   // assembly + the DOM paint only happen on a repaint tick, never per frame.
@@ -4311,7 +4290,9 @@ async function startGame(
     mi: ReturnType<typeof input.readMoveInput>,
     baseFacing: number,
   ): number | null {
-    return !movementFrozen() ? diagonalMovementVisualFacing(mi, baseFacing) : null;
+    return !movementFrozen() && !cameraMovement.travelFacing
+      ? diagonalMovementVisualFacing(mi, baseFacing)
+      : null;
   }
 
   const perfNetworkStats = {
@@ -4406,25 +4387,20 @@ async function startGame(
 
     const mouselook = intro === null && input.isMouselookActive() && !movementFrozen();
     const controllerFacing = input.controllerFacingOverride();
-    const renderFacing = renderFacingOverride();
-    // On the frame the camera lets go of the player's heading (classic mouselook
-    // release, OR a Mouse Camera mode move key release), latch the final camera yaw
-    // so the facing ends exactly where the camera ended; otherwise the last slice of
-    // the turn is dropped and the character lags the camera. The render/controller
-    // overrides take precedence and reclaim the heading, clearing any stale latch.
-    const cameraDrivenFacing = isCameraDrivenFacingActive(
-      input.isMouseCameraMode(),
-      cameraMoveActive(),
-      input.isMouselookActive(),
-      movementFrozen(),
-    );
-    const edgeReleaseFacing = mouselookReleaseFacing(
-      prevCameraDrivenFacing,
-      cameraDrivenFacing,
+    const facingBlocked =
+      movementFrozen() || (cameraMovement.travelFacing && isStunned(world.player));
+    const renderFacing = cameraMovement.update(
+      input.readMoveInput(),
       input.camYaw,
+      input.isMouseCameraMode(),
+      input.isMouselookActive(),
+      facingBlocked,
+      controllerFacing,
     );
-    prevCameraDrivenFacing = cameraDrivenFacing;
-    if (renderFacing !== null || controllerFacing !== null) {
+    // Release commits the last input heading once. For Aeldrune S this is the
+    // travel bearing, never the camera yaw, even if the camera orbits afterward.
+    const edgeReleaseFacing = cameraMovement.releaseFacing;
+    if (facingBlocked || renderFacing !== null || controllerFacing !== null) {
       pendingReleaseFacing = null;
     } else if (edgeReleaseFacing !== null) {
       pendingReleaseFacing = edgeReleaseFacing;
@@ -4791,6 +4767,10 @@ async function startGame(
         selfAuthoritativeDiscontinuity,
         drawWorld,
         selfFallbackSmoothingEnabled(onlineSelfAlphaLead, automationOwnsMotion),
+        cameraMovement.travelFacing &&
+          !facingBlocked &&
+          !automationOwnsMotion &&
+          net.spectating === null,
       );
     } finally {
       perf.finishTrace(

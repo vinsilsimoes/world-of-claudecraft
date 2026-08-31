@@ -4334,6 +4334,12 @@ export interface Entity extends ClientMirroredEntityFields {
   // True while airborne from a deliberate jump (not from walking off a ledge).
   // Lets a jump clear fences for the whole arc, independent of slope.
   jumping: boolean;
+  /** Transient Aeldrune jump budget and consumed input; never saved as progression. */
+  jumpCount?: 0 | 1 | 2;
+  jumpLaunchSpeed?: number;
+  jumpInputHeld?: boolean;
+  jumpInputPress?: number;
+  jumpQueued?: boolean;
   fallStartY: number;
   // Seconds of held underwater travel. Ramps the dive speed from its slow
   // opening pace to the cruise across one stroke (see player_motion.ts
@@ -6852,6 +6858,10 @@ export interface MoveInput {
   strafeLeft: boolean;
   strafeRight: boolean;
   jump: boolean;
+  /** Physical press revision (uint16), stable across reads of a held jump. */
+  jumpPress?: number;
+  /** Last canceled press revision; excludes taps cleared by menus/transitions. */
+  jumpPressBase?: number;
   /** Swim DOWN. Only ever read while swimming, where it is the mirror of
    *  `surface` below: together they are the vertical stick that lets a player
    *  leave the surface and travel underwater. Ignored on land. Set by the dive
@@ -7229,6 +7239,8 @@ export function emptyMoveInput(): MoveInput {
     strafeLeft: false,
     strafeRight: false,
     jump: false,
+    jumpPress: undefined,
+    jumpPressBase: undefined,
     dive: false,
     surface: false,
   };

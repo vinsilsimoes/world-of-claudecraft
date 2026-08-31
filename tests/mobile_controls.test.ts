@@ -1460,6 +1460,56 @@ describe('MobileControls pointer lifecycle', () => {
     expect(jumps).toBe(1);
   });
 
+  it('does not count a long-held touch release click as another jump', () => {
+    vi.useFakeTimers();
+    try {
+      const { jumpButton } = installMobileControlDom();
+      const input = {
+        setTouchMove: () => {},
+        clearTouchMove: () => {},
+        setTouchLook: () => {},
+        setTouchLookVector: () => {},
+      } as unknown as Input;
+      const onJump = vi.fn();
+      const controls = new MobileControls(input, { ...mobileCallbacks(), onJump });
+      controls.start();
+      jumpButton.dispatchEvent(
+        pointerEvent('pointerdown', { pointerId: 30, pointerType: 'touch' }),
+      );
+      vi.advanceTimersByTime(1200);
+      jumpButton.dispatchEvent(pointerEvent('pointerup', { pointerId: 30, pointerType: 'touch' }));
+      jumpButton.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+      expect(onJump).toHaveBeenCalledTimes(1);
+      jumpButton.dispatchEvent(
+        pointerEvent('pointerdown', { pointerId: 31, pointerType: 'touch' }),
+      );
+      jumpButton.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+      expect(onJump).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('allows a keyboard activation after a touch that did not synthesize a click', () => {
+    const { jumpButton } = installMobileControlDom();
+    const input = {
+      setTouchMove: () => {},
+      clearTouchMove: () => {},
+      setTouchLook: () => {},
+      setTouchLookVector: () => {},
+    } as unknown as Input;
+    const onJump = vi.fn();
+    new MobileControls(input, { ...mobileCallbacks(), onJump }).start();
+    jumpButton.dispatchEvent(pointerEvent('pointerdown', { pointerId: 30, pointerType: 'touch' }));
+    jumpButton.dispatchEvent(
+      pointerEvent('pointercancel', { pointerId: 30, pointerType: 'touch' }),
+    );
+    const keyboardClick = new Event('click', { bubbles: true, cancelable: true });
+    Object.defineProperty(keyboardClick, 'detail', { value: 0 });
+    jumpButton.dispatchEvent(keyboardClick);
+    expect(onJump).toHaveBeenCalledTimes(2);
+  });
+
   it('rotates the camera from a single-finger swipe on the game canvas', () => {
     const { canvas } = installMobileControlDom();
     const deltas: Array<{ dx: number; dy: number }> = [];

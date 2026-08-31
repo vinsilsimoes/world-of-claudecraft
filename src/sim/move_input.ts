@@ -39,6 +39,12 @@ export function sanitizeMoveInput(raw: unknown): MoveInput {
     input[field as MoveField] = isMoveFlag(raw[field]) || isMoveFlag(raw[compact]);
   }
   input.swimSteer = sanitizeSwimSteer(raw);
+  const press = raw.jumpPress ?? raw.jp;
+  if (typeof press === 'number' && Number.isInteger(press) && press >= 0 && press <= 65535)
+    input.jumpPress = press;
+  const base = raw.jumpPressBase ?? raw.jb;
+  if (typeof base === 'number' && Number.isInteger(base) && base >= 0 && base <= 65535)
+    input.jumpPressBase = base;
   return input;
 }
 

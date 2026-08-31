@@ -185,6 +185,11 @@ import {
 import { decodeGuildBankLogFrame, GUILD_BANK_LOG_TTL_MS } from './guild_bank_log_wire';
 import { INPUT_SEND_TIMER_INTERVAL_MS, inputFlushGateOpen } from './input_send_cadence';
 import { Mir4ClientWorldBase, type Mir4CommandPayload } from './mir4_client_facet';
+import {
+  encodeMovementInput,
+  movementInputSignature,
+  type PendingTransientInput,
+} from './movement_packet';
 import { createNativeAttestationProof } from './native_attestation';
 import { createNetPipelineStats, type NetPipelineStats } from './net_pipeline_stats';
 import { optimisticQuestState } from './quest_state_optimistic';
@@ -206,11 +211,6 @@ import {
 type LooseJson = any;
 type InputSendMode = 'periodic' | 'changed' | 'forced-neutral';
 
-interface PendingTransientInput {
-  jump: boolean;
-  turnLeft: boolean;
-  turnRight: boolean;
-}
 interface ClientWireAura {
   id: string;
   name: string;
@@ -2302,25 +2302,7 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
   // -----------------------------------------------------------------------
 
   private inputSignature(): string {
-    const mi = this.moveInput;
-    const facing =
-      this.mouselookFacing === null ? '' : Math.round(this.mouselookFacing * 10000).toString();
-    return [
-      mi.forward ? 1 : 0,
-      mi.back ? 1 : 0,
-      mi.turnLeft ? 1 : 0,
-      mi.turnRight ? 1 : 0,
-      mi.strafeLeft ? 1 : 0,
-      mi.strafeRight ? 1 : 0,
-      mi.jump ? 1 : 0,
-      mi.dive ? 1 : 0,
-      mi.surface ? 1 : 0,
-      // Quantised upstream (input.ts SWIM_STEER_STEPS) precisely so that it can
-      // sit in the change-detection signature without a mouse-move resending
-      // the frame every time the camera twitches.
-      mi.swimSteer ?? 1,
-      facing,
-    ].join(',');
+    return movementInputSignature(this.moveInput, this.mouselookFacing);
   }
 
   private pendingTransientInputState(): PendingTransientInput {
@@ -2331,6 +2313,8 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
   private retainTransientInput(): void {
     const pending = this.pendingTransientInputState();
     pending.jump ||= this.moveInput.jump;
+    if (this.moveInput.jump) pending.jumpPress = this.moveInput.jumpPress;
+    if (this.moveInput.jump) pending.jumpPressBase = this.moveInput.jumpPressBase;
     pending.turnLeft ||= this.moveInput.turnLeft;
     pending.turnRight ||= this.moveInput.turnRight;
   }
@@ -2372,37 +2356,11 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
     const msg: Record<string, unknown> = {
       t: 'input',
       seq: ++this.inputSeq,
-      mi: {
-        f: mi.forward ? 1 : 0,
-        b: mi.back ? 1 : 0,
-        tl:
-          mi.turnLeft ||
-          (includePendingTransientInput && this.pendingTransientInput?.turnLeft === true)
-            ? 1
-            : 0,
-        tr:
-          mi.turnRight ||
-          (includePendingTransientInput && this.pendingTransientInput?.turnRight === true)
-            ? 1
-            : 0,
-        sl: mi.strafeLeft ? 1 : 0,
-        sr: mi.strafeRight ? 1 : 0,
-        j:
-          mi.jump || (includePendingTransientInput && this.pendingTransientInput?.jump === true)
-            ? 1
-            : 0,
-        dv: mi.dive ? 1 : 0,
-        sf: mi.surface ? 1 : 0,
-      },
+      mi: encodeMovementInput(
+        mi,
+        includePendingTransientInput ? this.pendingTransientInput : undefined,
+      ),
     };
-    // The camera steer rides along only when it actually GRADES something.
-    // Absent means full rate on the far side (swimSteerRate), which is both the
-    // old behaviour and what every land frame wants — so walking around sends
-    // exactly the bytes it always did, and the field appears only while a
-    // swimmer is easing the view into a dive or a climb.
-    if (mi.swimSteer !== undefined && mi.swimSteer !== 1) {
-      (msg.mi as Record<string, number>).ss = mi.swimSteer;
-    }
     if (this.mouselookFacing !== null) msg.facing = this.mouselookFacing;
     this.ws.send(JSON.stringify(msg));
     // WebSocket.send accepted the real frame. Pending edges are transport-local

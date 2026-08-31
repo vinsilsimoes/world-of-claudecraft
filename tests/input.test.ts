@@ -1343,6 +1343,136 @@ describe('touch jump', () => {
   });
 });
 
+describe('Input physical jump presses', () => {
+  it.each(['expired latch', 'suspension', 'controller'])(
+    'clears an old press revision when %s input is assigned into reused movement',
+    (neutralSource) => {
+      const { input, windowListeners } = makeInput();
+      const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
+      windowListeners.get('keydown')!({
+        code: 'Space',
+        repeat: false,
+        preventDefault: vi.fn(),
+      });
+      const held = input.readMoveInput();
+      expect(held.jumpPress).toBe(1);
+      expect(held.jumpPressBase).toBe(0);
+      windowListeners.get('keyup')!({ code: 'Space' });
+      if (neutralSource === 'suspension') input.setSuspendMovement(true);
+      else if (neutralSource === 'controller') input.setControllerMoveInput({ jump: false });
+      else now.mockReturnValue(1200);
+      Object.assign(held, input.readMoveInput());
+      expect(held.jump).toBe(false);
+      expect(held.jumpPress).toBeUndefined();
+      expect(held.jumpPressBase).toBeUndefined();
+      // A later click-to-move fence hop uses the legacy boolean, not the old manual token.
+      held.jump = true;
+      expect(held.jumpPress).toBeUndefined();
+      expect(held.jumpPressBase).toBeUndefined();
+    },
+  );
+
+  it('detects two quick Space taps without requiring a neutral movement read', () => {
+    const { input, windowListeners } = makeInput();
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    const down = { code: 'Space', repeat: false, preventDefault: vi.fn() };
+    windowListeners.get('keydown')!(down);
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 1 });
+    windowListeners.get('keyup')!({ code: 'Space' });
+    now.mockReturnValue(1020);
+    windowListeners.get('keydown')!(down);
+    windowListeners.get('keyup')!({ code: 'Space' });
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 2, jumpPressBase: 0 });
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 2, jumpPressBase: 0 });
+    now.mockReturnValue(1171);
+    expect(input.readMoveInput().jump).toBe(false);
+    expect(input.readMoveInput().jumpPress).toBeUndefined();
+  });
+
+  it('does not count OS repeats or duplicate keydown as additional physical presses', () => {
+    const { input, windowListeners } = makeInput();
+    const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
+    const down = { code: 'Space', repeat: false, preventDefault: vi.fn() };
+    windowListeners.get('keydown')!(down);
+    now.mockReturnValue(2000);
+    windowListeners.get('keydown')!({ ...down, repeat: true });
+    windowListeners.get('keydown')!(down);
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 1 });
+    windowListeners.get('keyup')!({ code: 'Space' });
+    expect(input.readMoveInput().jump).toBe(false);
+  });
+
+  it('counts a remapped mouse press once and its quick repress as the next revision', () => {
+    const kb = new Keybinds();
+    expect(kb.bind('jump', 0, 'Mouse4')).toBe(true);
+    const { input, windowListeners } = makeInput();
+    vi.spyOn(performance, 'now').mockReturnValue(1000);
+    const down = { button: 3, preventDefault: vi.fn() };
+    windowListeners.get('mousedown')!(down);
+    windowListeners.get('mousedown')!(down);
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 1 });
+    windowListeners.get('mouseup')!(down);
+    windowListeners.get('mousedown')!(down);
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 2 });
+  });
+
+  it.each(['triggerTouchJump', 'triggerGamepadJump'] as const)(
+    '%s advances only for callbacks, never movement reads',
+    (trigger) => {
+      const { input } = makeInput();
+      const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
+      input[trigger]();
+      expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 1 });
+      expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 1 });
+      now.mockReturnValue(1020);
+      input[trigger]();
+      expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 2 });
+      now.mockReturnValue(1241);
+      expect(input.readMoveInput().jump).toBe(false);
+      expect(input.readMoveInput().jumpPress).toBeUndefined();
+    },
+  );
+
+  it.each(['suspend', 'transition', 'blur'])(
+    'clears stale key presses on %s without resetting the revision',
+    (reset) => {
+      const { input, windowListeners } = makeInput();
+      vi.spyOn(performance, 'now').mockReturnValue(1000);
+      const down = { code: 'Space', repeat: false, preventDefault: vi.fn() };
+      windowListeners.get('keydown')!(down);
+      expect(input.readMoveInput().jumpPress).toBe(1);
+      if (reset === 'transition') input.resetForClientTransition();
+      else if (reset === 'suspend') input.setSuspendMovement(true);
+      else windowListeners.get('blur')!({});
+      expect(input.readMoveInput().jump).toBe(false);
+      expect(input.readMoveInput().jumpPress).toBeUndefined();
+      input.setSuspendMovement(false);
+      expect(input.readMoveInput().jump).toBe(false);
+      windowListeners.get('keydown')!({ ...down, repeat: true });
+      expect(input.readMoveInput().jumpPress).toBeUndefined();
+      windowListeners.get('keyup')!({ code: 'Space' });
+      windowListeners.get('keydown')!(down);
+      expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 2, jumpPressBase: 1 });
+    },
+  );
+
+  it('drops touch and gamepad taps during a modal without delaying them until resume', () => {
+    const { input } = makeInput();
+    vi.spyOn(performance, 'now').mockReturnValue(1000);
+    input.triggerTouchJump();
+    input.triggerGamepadJump();
+    expect(input.readMoveInput().jumpPress).toBe(2);
+    input.setSuspendMovement(true);
+    input.triggerTouchJump();
+    input.triggerGamepadJump();
+    input.setSuspendMovement(false);
+    expect(input.readMoveInput().jump).toBe(false);
+    expect(input.readMoveInput().jumpPress).toBeUndefined();
+    input.triggerTouchJump();
+    expect(input.readMoveInput()).toMatchObject({ jump: true, jumpPress: 3, jumpPressBase: 2 });
+  });
+});
+
 describe('Input emote wheel hold', () => {
   it('opens on the held binding and closes when the key is released', () => {
     const { windowListeners, cb } = makeInput();

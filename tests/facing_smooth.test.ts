@@ -5,11 +5,85 @@ import {
   releaseSelfFacing,
   SELF_FACING_CONVERGE_EPS,
   SELF_TURN_MAX_RATE,
+  SelfFacingSmoother,
   stepSelfFacing,
   wrapAngle,
 } from '../src/render/facing_smooth';
 
 const FRAME_60 = 1 / 60;
+
+describe('SelfFacingSmoother renderer adapter', () => {
+  it('seeds an idle S turn from the last displayed yaw even after an offline tick', () => {
+    const visual = new SelfFacingSmoother();
+    // The tick has already copied the new -PI input into prevFacing and facing.
+    // The actual previous rendered mesh is still looking forward.
+    expect(visual.step(0, -Math.PI, -Math.PI, FRAME_60, 'travel')).toBeCloseTo(-1 / 6);
+  });
+
+  it('ends a release hold after a bounded grace if the server refused the input', () => {
+    const visual = new SelfFacingSmoother();
+    let shown = visual.step(0, 0, -Math.PI, FRAME_60, 'travel', 200, true);
+    for (let frame = 0; frame < 100; frame++) {
+      shown = visual.step(shown, 0, null, FRAME_60, 'travel', 200, true);
+    }
+    expect(shown).toBe(0);
+  });
+
+  it('scales the hold with echo but caps it even on an unresponsive link', () => {
+    const visual = new SelfFacingSmoother();
+    let shown = visual.step(0, 0, -Math.PI, FRAME_60, 'travel', 10000, true);
+    for (let frame = 0; frame < 50; frame++) {
+      shown = visual.step(shown, 0, null, FRAME_60, 'travel', 10000, true);
+    }
+    expect(shown).toBe(-Math.PI);
+    for (let frame = 0; frame < 50; frame++) {
+      shown = visual.step(shown, 0, null, FRAME_60, 'travel', 10000, true);
+    }
+    expect(shown).toBe(0);
+  });
+
+  it('waits longer for a 400 ms echo than for a 200 ms echo', () => {
+    const shortEcho = new SelfFacingSmoother();
+    const longEcho = new SelfFacingSmoother();
+    let shortYaw = shortEcho.step(0, 0, -Math.PI, FRAME_60, 'travel', 200, true);
+    let longYaw = longEcho.step(0, 0, -Math.PI, FRAME_60, 'travel', 400, true);
+    for (let frame = 0; frame < 30; frame++) {
+      shortYaw = shortEcho.step(shortYaw, 0, null, FRAME_60, 'travel', 200, true);
+      longYaw = longEcho.step(longYaw, 0, null, FRAME_60, 'travel', 400, true);
+    }
+    // At 500 ms the 420 ms grace has ended, but the 720 ms grace has not.
+    expect(shortYaw).toBeGreaterThan(-2.5);
+    expect(longYaw).toBe(-Math.PI);
+  });
+
+  it('yields immediately when combat, automation or blocked input disables the hold', () => {
+    const visual = new SelfFacingSmoother();
+    const shown = visual.step(0, 0, -Math.PI, FRAME_60, 'travel', 200, true);
+    expect(visual.step(shown, 0, null, FRAME_60, 'travel', 200, false)).toBe(0);
+    // A cleared hold must not reappear when control returns to the player.
+    expect(visual.step(0, 0, null, FRAME_60, 'travel', 200, true)).toBe(0);
+  });
+
+  it('accepts a new direction immediately during release and resets on character change', () => {
+    const visual = new SelfFacingSmoother();
+    let shown = visual.step(0, 0, -Math.PI, FRAME_60, 'travel', 200, true);
+    shown = visual.step(shown, 0, null, FRAME_60, 'travel', 200, true);
+    expect(visual.step(shown, 0, 0, FRAME_60, 'travel', 200, true)).toBeGreaterThan(shown);
+    visual.reset();
+    expect(visual.step(2, 2, null, FRAME_60, 'travel', 200, true)).toBe(2);
+  });
+
+  it('preserves classic seed, flick and release behavior without an echo hold', () => {
+    const visual = new SelfFacingSmoother();
+    let shown = visual.step(0.6, 0, 1, FRAME_60, 'camera', 200, true);
+    expect(shown).toBe(advanceSelfFacing(0, 1, 1, FRAME_60));
+    let expected = advanceSelfFacing(shown, 1.8, 1, FRAME_60);
+    shown = visual.step(shown, 0, 1.8, FRAME_60, 'camera', 200, true);
+    expect(shown).toBe(expected);
+    expected = releaseSelfFacing(shown, 0, FRAME_60).facing;
+    expect(visual.step(shown, 0, null, FRAME_60, 'camera', 200, true)).toBe(expected);
+  });
+});
 
 describe('wrapAngle as a shortest-signed-angle helper', () => {
   it('normalizes a delta into (-PI, PI], including across the wrap boundary', () => {
@@ -89,6 +163,16 @@ describe('stepSelfFacing', () => {
 });
 
 describe('advanceSelfFacing', () => {
+  it('smoothly turns a travel-facing character when W switches directly to S', () => {
+    const next = advanceSelfFacing(0, Math.PI, 0, FRAME_60, 'travel');
+    expect(next).toBeCloseTo(SELF_TURN_MAX_RATE * FRAME_60);
+    let model = next;
+    for (let frame = 0; frame < 30; frame++) {
+      model = advanceSelfFacing(model, Math.PI, Math.PI, FRAME_60, 'travel');
+    }
+    expect(model).toBeCloseTo(Math.PI);
+  });
+
   it('stays glued to a fast flick instead of trailing behind the camera (issue #1778)', () => {
     // Reproduces the bug: a brief but fast right-mouse flick rotates the camera
     // faster than SELF_TURN_MAX_RATE. A plain velocity cap makes the model fall

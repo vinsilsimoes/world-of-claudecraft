@@ -74,7 +74,11 @@ export function advanceSelfFacing(
   target: number,
   lastTarget: number,
   frameDt: number,
+  mode: 'camera' | 'travel' = 'camera',
 ): number {
+  // Travel input can switch W to S without releasing the override. That is a
+  // body turn, not a mouse flick: smooth the entire change, not just its residual.
+  if (mode === 'travel') return stepSelfFacing(prevModel, target, frameDt);
   const dt = Math.min(Math.max(0, frameDt), MAX_FRAME_DT);
   const residual = wrapAngle(prevModel - lastTarget);
   const decayed = approachAngle(residual, 0, SELF_TURN_MAX_RATE * dt);
@@ -100,4 +104,53 @@ export function releaseSelfFacing(
   // target immediately so that re-engaging after an orbit is treated as a fresh,
   // rate-limited engage gap instead of one large continuous camera delta.
   return { facing: done ? simFacing : next, done, lastTarget: null };
+}
+
+/** Renderer-owned yaw only. Neither this state nor release corrections are
+ * sent to the simulation. Classic mouselook keeps its camera-delta behavior. */
+export class SelfFacingSmoother {
+  private facing: number | null = null;
+  private lastTarget: number | null = null;
+  private releaseMs = 0;
+
+  reset(): void {
+    this.facing = null;
+    this.lastTarget = null;
+    this.releaseMs = 0;
+  }
+
+  step(
+    displayedFacing: number,
+    simFacing: number,
+    target: number | null,
+    frameDt: number,
+    mode: 'camera' | 'travel',
+    echoMs = 0,
+    allowReleaseHold = false,
+  ): number {
+    if (target !== null) {
+      // A same-frame offline tick can already have overwritten BOTH sim facing
+      // samples. Only the last drawn yaw can seed a smooth first S press.
+      const seed = this.facing ?? (mode === 'travel' ? displayedFacing : simFacing);
+      this.facing = advanceSelfFacing(seed, target, this.lastTarget ?? target, frameDt, mode);
+      this.lastTarget = target;
+      this.releaseMs = 0;
+      return this.facing;
+    }
+    if (this.facing === null) return simFacing;
+    if (mode === 'travel' && allowReleaseHold && this.lastTarget !== null) {
+      this.releaseMs += Math.min(0.25, Math.max(0, frameDt)) * 1000;
+      const graceMs = Math.min(1000, Math.max(350, echoMs * 1.5 + 120));
+      // Wait for the final input echo rather than unwinding a short S tap
+      // toward a stale snapshot. The 0.02 band covers wire yaw quantization.
+      if (this.releaseMs < graceMs && Math.abs(wrapAngle(simFacing - this.lastTarget)) > 0.02) {
+        this.facing = stepSelfFacing(this.facing, this.lastTarget, frameDt);
+        return this.facing;
+      }
+    }
+    const released = releaseSelfFacing(this.facing, simFacing, frameDt);
+    this.facing = released.done ? null : released.facing;
+    this.lastTarget = null;
+    return released.facing;
+  }
 }

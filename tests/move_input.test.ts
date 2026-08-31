@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Input } from '../src/game/input';
+import { JumpInput } from '../src/game/jump_input';
 import { Keybinds } from '../src/game/keybinds';
 import { ClientWorld } from '../src/net/online';
 import { normalizeMoveFacing, parseMoveInputFrame, sanitizeMoveInput } from '../src/sim/move_input';
@@ -75,6 +76,7 @@ describe('agent movement channel', () => {
   it('lets controller movement win over held keyboard state without mutating the stored intent', () => {
     const input: any = Object.create(Input.prototype);
     input.keys = new Set<string>();
+    input.jumpInput = new JumpInput();
     input.leftDown = false;
     input.rightDown = false;
     input.autorun = false;

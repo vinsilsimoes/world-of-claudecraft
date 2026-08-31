@@ -32,6 +32,7 @@ import {
   MAX_STEP_HEIGHT,
   moveCharacter,
 } from './physics';
+import { consumePlayerJump, resetPlayerJump } from './player_jump';
 import { isSubmergedAt, rideSteepnessAt, shoreStepOut, stepWaterLevel } from './ride_height';
 import { GHOST_RUN_MULT } from './spirit';
 import {
@@ -626,6 +627,7 @@ function verticalPass(
   const waterHere = waterLevelAt(p.pos.x, p.pos.z, deps.seed);
   const deepWater = ground < waterHere - SWIM_DEPTH;
   if (deepWater && p.pos.y <= waterHere - 0.75 + 0.05) {
+    if (p.mir4) resetPlayerJump(p, inp);
     swimVerticalPass(p, inp, wishX, wishZ, wishSpeed, mountLocked, ground, waterHere);
     return;
   }
@@ -642,10 +644,19 @@ function verticalPass(
     p.vy <= 0 &&
     p.vy > -GRAVITY * COYOTE_TIME &&
     terrainSteepnessAt(p.pos.x, p.pos.z, deps.seed) <= MAX_CLIMB_SLOPE;
-  if (inp.jump && (p.onGround || coyote) && !isRooted(p) && !steepGround && !mountLocked) {
-    p.vy = JUMP_VELOCITY * jumpMult(p);
-    p.vx = wishX * wishSpeed;
-    p.vz = wishZ * wishSpeed;
+  const launch = consumePlayerJump(
+    p,
+    inp,
+    p.onGround || coyote,
+    !isRooted(p) && !steepGround && !mountLocked,
+    JUMP_VELOCITY * jumpMult(p),
+  );
+  if (launch > 0) {
+    p.vy = launch;
+    if (p.onGround || coyote) {
+      p.vx = wishX * wishSpeed;
+      p.vz = wishZ * wishSpeed;
+    }
     p.onGround = false;
     p.jumping = true;
     p.fallStartY = p.pos.y;
