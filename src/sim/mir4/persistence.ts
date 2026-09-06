@@ -27,6 +27,8 @@ import { MIR4_EMPTY_MATERIALS, mir4CanonicalAffixStatusId } from './equipment';
 import { type Mir4MountState, sanitizeMir4MountState } from './mounts';
 import type { Mir4NarrativeDialogueState } from './narrative_dialogue';
 import type { Mir4QuestProgress } from './quest';
+import type { Mir4SkillActionState } from './skill_action_scheduler';
+import type { Mir4SkillActivationState } from './skill_activation';
 import type { Mir4SkillEvolutionResources } from './skill_evolution';
 import { MIR4_SKILL_MAX_LEVEL } from './skill_progression';
 import { type Mir4SpiritState, sanitizeMir4SpiritState } from './spirits';
@@ -66,6 +68,12 @@ export interface Mir4PersistenceMeta extends Mir4PersistedPlayerState {
   /** Session-only ordinary Attack contract. Auto Battle is persisted
    * separately; a reconnect never resumes an old selected target. */
   mir4TargetCombat?: Mir4TargetCombatState;
+  /** Session-only one-shot manual skill approach. A reconnect never resumes it. */
+  mir4SkillActivation?: Mir4SkillActivationState;
+  /** Session-only movement-owner tail for an action's commit tick. */
+  mir4SkillActivationClaimedThroughTick?: number;
+  /** Session-only committed native action recovery and authored motion. */
+  mir4SkillAction?: Mir4SkillActionState;
 }
 
 const MATERIAL_KEYS = Object.keys(MIR4_EMPTY_MATERIALS) as (keyof Mir4Materials)[];

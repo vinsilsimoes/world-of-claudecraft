@@ -39,6 +39,7 @@
 import { shouldFireConsumeTickSfx } from '../consume_sfx';
 import { pctValue, recalcPlayerStats } from '../entity';
 import { manaRegenPer2s } from '../mana_regen';
+import { applyMir4NativeCloakingAftereffect } from '../mir4/native_skill_cloaking';
 import { CHEATER_MARK_AURA_ID } from '../moderation';
 import { isPersistentEngineAura } from '../persistent_aura';
 import type { PlayerMeta } from '../sim';
@@ -430,6 +431,7 @@ export function updateAuras(ctx: SimContext, e: Entity): void {
       ctx.applyNonPlayerStatAura(e, a, -1);
       ctx.emit({ type: 'aura', targetId: e.id, name: a.name, gained: false });
       applyGreaterInvisibilityAftereffect(ctx, e, a);
+      applyMir4NativeCloakingAftereffect(ctx, e, a);
       // A HoT that ran its FULL duration (this natural-expiry path, never a
       // dispel/overwrite) reports to the caster's talent procs. No rng.
       if (a.kind === 'hot') {

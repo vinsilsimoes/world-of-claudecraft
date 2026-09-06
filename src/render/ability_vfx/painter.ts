@@ -25,6 +25,7 @@ import { abilityVfxFullSpec, abilityVfxSpec } from '../ability_vfx_registry';
 import { isVisuallyDead } from '../anim_state';
 import type { AbilityAudioKind, AbilityAudioOpts } from '../audio_sink';
 import { attackAbilityId } from '../characters/weapon_attack_style_core';
+import { mir4NativeSkillPresentationOwnsAbilityVfx } from '../mir4_native_skill_presentation_core';
 import { type AbilityVfxFx, asOrbitStyle, type ParticleBurstKind } from './fx';
 
 interface VfxPoint {
@@ -195,7 +196,7 @@ export interface AbilityVfxEntityState {
   hp?: number;
   kind?: string;
   templateId?: string;
-  mir4Shield?: { remaining: number; magnitude: number };
+  mir4Shield?: { remaining: number };
   // On-next-swing queue (heroic-strike style ability id while armed). Present
   // on every offline entity; the online mirror carries it for the local
   // player (the self wire's `queued`), others stay null - which is where the
@@ -502,6 +503,10 @@ export class AbilityVfx {
   // its generic school-colored arm), false to fall through unchanged.
   handleSpellfx(ev: AbilityVfxSpellfxEvent): boolean {
     if (!ev.ability || !CAST_FX.has(ev.fx)) return false;
+    // A compiler-approved native presentation owns its complete timeline. It
+    // claims the legacy cast cue without drawing so the generic ceremony does
+    // not add an extra ring/impact sequence over the native contacts.
+    if (mir4NativeSkillPresentationOwnsAbilityVfx(ev.ability)) return true;
     const spec = abilityVfxSpec(ev.ability);
     if (!spec) return false;
     const full = abilityVfxFullSpec(ev.ability);
@@ -1087,6 +1092,10 @@ export class AbilityVfx {
       return;
     }
     const abilityId = attackAbilityId(ev.ability);
+    // The native timeline draws independently of hit/miss. The renderer's
+    // ordinary melee spark still reports a landed contact; only the generic
+    // authored full-sequence replay is suppressed here.
+    if (mir4NativeSkillPresentationOwnsAbilityVfx(abilityId)) return;
     const spec = abilityId ? abilityVfxSpec(abilityId) : undefined;
     if (!spec || !abilityId) return;
     const full = abilityVfxFullSpec(abilityId);

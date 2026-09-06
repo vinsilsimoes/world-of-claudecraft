@@ -30,6 +30,14 @@ interface VfxProbe {
   head: number;
   drawBuffer: THREE.InterleavedBuffer;
   spriteRadiusSq: Float32Array;
+  projectiles: Array<{
+    pos: THREE.Vector3;
+    targetId: number;
+    speed: number;
+    ttl: number;
+    scale?: number;
+    nativeStyle?: 'ice-ball' | 'fire-ball';
+  }>;
   onContextRestored(): void;
   spawn(
     x: number,
@@ -117,6 +125,67 @@ describe('pooled VFX cloud', () => {
 
     expect(() => vfx.update(0.1)).not.toThrow();
     expect(impact).toHaveBeenCalledOnce();
+  });
+
+  it('launches a native homing projectile with authored anchor, speed, and lifetime', () => {
+    installCanvasStub();
+    const anchor = vi.fn(
+      (_id: number, heightFraction: number) =>
+        new THREE.Vector3(3, heightFraction * 10, 5),
+    );
+    const vfx = new Vfx(new THREE.Scene(), anchor);
+    const probe = vfx as unknown as VfxProbe;
+
+    vfx.mir4NativeHomingProjectile(7, 9, 'frost', {
+      sourceHeightFraction: 0.86,
+      scale: 1,
+      speedYardsPerSecond: 40,
+      lifetimeSeconds: 2,
+      effectId: 2040032,
+    });
+
+    expect(anchor).toHaveBeenCalledWith(7, 0.86);
+    expect(probe.projectiles).toHaveLength(1);
+    expect(probe.projectiles[0]).toMatchObject({
+      targetId: 9,
+      speed: 40,
+      ttl: 2,
+      scale: 1,
+      nativeStyle: 'ice-ball',
+    });
+    expect(probe.projectiles[0].pos.toArray()).toEqual([3, 8.6, 5]);
+    vfx.update(0.01);
+    expect([...probe.size].some((size) => size >= 1.4)).toBe(true);
+  });
+
+  it('keeps the reviewed native Flame Orb readable at LOW tier', () => {
+    installCanvasStub();
+    const anchor = vi.fn(
+      (_id: number, heightFraction: number) =>
+        new THREE.Vector3(3, heightFraction * 10, 5),
+    );
+    const vfx = new Vfx(new THREE.Scene(), anchor);
+    const probe = vfx as unknown as VfxProbe;
+
+    vfx.mir4NativeHomingProjectile(7, 9, 'fire', {
+      sourceHeightFraction: 0.62,
+      scale: 1,
+      speedYardsPerSecond: 40,
+      lifetimeSeconds: 2,
+      effectId: 2040003,
+    });
+
+    expect(anchor).toHaveBeenCalledWith(7, 0.62);
+    expect(probe.projectiles[0]).toMatchObject({
+      targetId: 9,
+      speed: 40,
+      ttl: 2,
+      scale: 1,
+      nativeStyle: 'fire-ball',
+    });
+    expect(probe.projectiles[0].pos.toArray()).toEqual([3, 6.2, 5]);
+    vfx.update(0.01);
+    expect([...probe.size].some((size) => size >= 1.5)).toBe(true);
   });
 
   it('submits and uploads only the live ascending prefix with conservative culling', () => {

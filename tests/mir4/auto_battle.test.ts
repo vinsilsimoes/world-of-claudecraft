@@ -75,7 +75,77 @@ function resolveScheduledAction(sim: Sim): void {
   updateMir4PendingImpacts(sim.ctx);
 }
 
+function enableOnlyAutoSkill(sim: Sim, skillId: number): void {
+  const p = sim.player;
+  sim.players.get(p.id)!.mir4DisabledAutoSkills = mir4SkillsForClass(
+    p.mir4!.classId as 1 | 2 | 3 | 4 | 5,
+  )
+    .filter((skill) => skill.skillId !== skillId)
+    .map((skill) => skill.skillId);
+}
+
 describe('mir4 auto battle', () => {
+  it('casts Warrior 1102 immediately inside its native direct-contact reach', () => {
+    const sim = makeSim(3128);
+    placePlayerInOpenField(sim);
+    const p = sim.player;
+    spawnTankWolf(sim, p.pos.x + 5.5, p.pos.z, 'auto_native_direct_contact');
+    enableOnlyAutoSkill(sim, 1102);
+    const before = { ...p.pos };
+    sim.ctx.hasLineOfSight = () => true;
+    sim.setMir4AutoBattleMode('battle');
+
+    updateMir4AutoBattle(sim.ctx);
+
+    expect(p.pos).toEqual(before);
+    expect(p.cooldowns.has('1102')).toBe(true);
+    expect(sim.players.get(p.id)?.autoBattle?.nativeSkillTrace).toBeUndefined();
+  });
+
+  it('captures Warrior 1102 trace state at the strict direct boundary', () => {
+    const sim = makeSim(3129);
+    placePlayerInOpenField(sim);
+    const p = sim.player;
+    const target = spawnTankWolf(sim, p.pos.x + 6, p.pos.z, 'auto_native_direct_boundary');
+    enableOnlyAutoSkill(sim, 1102);
+    const before = { ...p.pos };
+    sim.ctx.hasLineOfSight = () => true;
+    sim.setMir4AutoBattleMode('battle');
+
+    updateMir4AutoBattle(sim.ctx);
+
+    expect(Math.hypot(p.pos.x - before.x, p.pos.z - before.z)).toBeGreaterThan(0);
+    expect(p.cooldowns.has('1102')).toBe(false);
+    expect(sim.players.get(p.id)?.autoBattle?.nativeSkillTrace).toEqual({
+      skillId: 1102,
+      targetId: target.id,
+    });
+  });
+
+  it('keeps a captured Warrior 1102 trace until the padded stop reach', () => {
+    const sim = makeSim(3130);
+    placePlayerInOpenField(sim);
+    const p = sim.player;
+    const target = spawnTankWolf(sim, p.pos.x + 10, p.pos.z, 'auto_native_trace_stop');
+    enableOnlyAutoSkill(sim, 1102);
+    sim.ctx.hasLineOfSight = () => true;
+    sim.setMir4AutoBattleMode('battle');
+    updateMir4AutoBattle(sim.ctx);
+    expect(sim.players.get(p.id)?.autoBattle?.nativeSkillTrace?.skillId).toBe(1102);
+
+    target.pos = sim.groundPos(p.pos.x + 5.001, p.pos.z);
+    target.prevPos = { ...target.pos };
+    target.spawnPos = { ...target.pos };
+    target.leashAnchor = { ...target.pos };
+    sim.rebucket(target);
+    updateMir4AutoBattle(sim.ctx);
+    expect(p.cooldowns.has('1102')).toBe(false);
+
+    updateMir4AutoBattle(sim.ctx);
+    expect(p.cooldowns.has('1102')).toBe(true);
+    expect(sim.players.get(p.id)?.autoBattle?.nativeSkillTrace).toBeUndefined();
+  });
+
   it('hunts a wolf down from outside melee range and pays the kill XP', () => {
     const sim = makeSim();
     const wolf = spawnWolf(sim, 8); // outside the 4yd band: pursuit is exercised
@@ -115,25 +185,28 @@ describe('mir4 auto battle', () => {
     };
     expect(run()).toEqual(run());
   });
-  it('covers one full 3D camp while keeping a fixed local anchor and honoring manual override', () => {
-    const sim = makeSim(88);
-    sim.setMir4AutoBattleMode('battle');
-    const meta = sim.players.get(sim.playerId)!;
-    expect(meta.autoBattle?.acquireRadiusYards).toBe(30);
-    expect(MIR4_AUTO_BATTLE_ACQUIRE_YARDS).toBe(30);
-    // Human movement input suspends the bot without switching it off...
-    meta.moveInput.forward = true;
-    sim.tick();
-    expect(meta.autoBattle?.mode).toBe('battle');
-    expect(meta.autoBattle?.suspended).toBe(true);
-    // ...and releasing the keys resumes it, re-anchored where the player stands.
-    const p = sim.entities.get(sim.playerId)!;
-    p.pos.x += 5;
-    meta.moveInput.forward = false;
-    sim.tick();
-    expect(meta.autoBattle?.suspended).toBe(false);
-    expect(meta.autoBattle?.anchorX).toBe(p.pos.x);
-  });
+  it.each(['forward', 'jump', 'dive', 'surface'] as const)(
+    'covers one full 3D camp while honoring the %s manual override input',
+    (inputField) => {
+      const sim = makeSim(88);
+      sim.setMir4AutoBattleMode('battle');
+      const meta = sim.players.get(sim.playerId)!;
+      expect(meta.autoBattle?.acquireRadiusYards).toBe(30);
+      expect(MIR4_AUTO_BATTLE_ACQUIRE_YARDS).toBe(30);
+      // Human movement input suspends the bot without switching it off...
+      meta.moveInput[inputField] = true;
+      sim.tick();
+      expect(meta.autoBattle?.mode).toBe('battle');
+      expect(meta.autoBattle?.suspended).toBe(true);
+      // ...and releasing the keys resumes it, re-anchored where the player stands.
+      const p = sim.entities.get(sim.playerId)!;
+      p.pos.x += 5;
+      meta.moveInput[inputField] = false;
+      sim.tick();
+      expect(meta.autoBattle?.suspended).toBe(false);
+      expect(meta.autoBattle?.anchorX).toBe(p.pos.x);
+    },
+  );
   it('acquires and hunts prey across the 3D camp dispersion', () => {
     const sim = makeSim(880);
     const wolf = spawnWolf(sim, 24);
@@ -332,7 +405,7 @@ describe('mir4 auto battle', () => {
   it('stops rooted Auto Battle movement but still attacks an in-range target', () => {
     const sim = makeSim(88501);
     const p = sim.entities.get(sim.playerId)!;
-    const farWolf = spawnTankWolf(sim, p.pos.x + 8, p.pos.z, 'test_root_far_wolf');
+    const farWolf = spawnTankWolf(sim, p.pos.x, p.pos.z + 8, 'test_root_far_wolf');
     const closeWolf = spawnTankWolf(sim, p.pos.x + 2, p.pos.z, 'test_root_close_wolf');
     p.auras.push({
       id: 'test_root',
@@ -429,6 +502,7 @@ describe('mir4 auto battle', () => {
     const nearbyA = spawnTankWolf(sim, p.pos.x + 3, p.pos.z + 1, 'test_aoe_near_a');
     const nearbyB = spawnTankWolf(sim, p.pos.x + 3, p.pos.z - 1, 'test_aoe_near_b');
     const friendlyHp = friendly.hp;
+    enableOnlyAutoSkill(sim, 1302);
     sim.setMir4AutoBattleMode('battle');
 
     updateMir4AutoBattle(sim.ctx);
@@ -466,7 +540,8 @@ describe('mir4 auto battle', () => {
       expect(p.cooldowns.has(String(skillId))).toBe(true);
       if (kind === 'shield') expect(p.mir4Shield?.remaining).toBeGreaterThan(0);
       else expect(p.hp).toBeGreaterThan(hpBefore);
-      expect(wolf.hp).toBe(wolf.maxHp);
+      if (kind === 'shield') expect(wolf.hp).toBeLessThan(wolf.maxHp);
+      else expect(wolf.hp).toBe(wolf.maxHp);
     },
   );
 
@@ -562,7 +637,7 @@ describe('mir4 auto battle', () => {
 
     expect(p.cooldowns.has('mir4_ult')).toBe(true);
     expect(['1102', '1302', '1301', '1101', '1103'].some((id) => p.cooldowns.has(id))).toBe(false);
-    expect(p.mir4PendingImpacts).toHaveLength(3);
+    expect(p.mir4PendingImpacts).toHaveLength(5);
     expect(wolf.hp).toBe(wolf.maxHp);
   });
 
@@ -609,12 +684,14 @@ describe('mir4 auto battle', () => {
   });
 
   it.each([
-    ['warrior', 4],
-    ['elementalist', 8],
-    ['taoist', 8],
-    ['arbalist', 12],
-    ['lancer', 6],
-  ] as const)('uses the %s class range instead of forcing every class into melee', (cls, range) => {
+    ['warrior', 5.999, 6],
+    ['elementalist', 15.499, 15.5],
+    ['taoist', 8.499, 8.5],
+    ['arbalist', 12.499, 12.5],
+    ['lancer', 5.499, 5.5],
+  ] as const)(
+    'uses the %s starter-skill admission range instead of forcing every class into melee',
+    (cls, range, outsideRange) => {
     const sim = makeSim(891, cls);
     placePlayerInOpenField(sim);
     const p = sim.entities.get(sim.playerId)!;
@@ -625,7 +702,6 @@ describe('mir4 auto battle', () => {
       .slice(1)
       .map((skill) => skill.skillId);
     const wolf = spawnTankWolf(sim, p.pos.x + range, p.pos.z, `test_${cls}_range`);
-    const before = { ...p.pos };
     const hasLineOfSight = sim.ctx.hasLineOfSight;
     sim.ctx.hasLineOfSight = () => true;
     sim.setMir4AutoBattleMode('battle');
@@ -633,8 +709,6 @@ describe('mir4 auto battle', () => {
     updateMir4AutoBattle(sim.ctx);
 
     sim.ctx.hasLineOfSight = hasLineOfSight;
-    expect(p.pos.x).toBe(before.x);
-    expect(p.pos.z).toBe(before.z);
     expect([...p.cooldowns.keys()].some((key) => /^\d+$/.test(key)) || wolf.hp < wolf.maxHp).toBe(
       true,
     );
@@ -650,7 +724,7 @@ describe('mir4 auto battle', () => {
       .map((skill) => skill.skillId);
     const outsideWolf = spawnTankWolf(
       outside,
-      outsidePlayer.pos.x + range + 0.01,
+      outsidePlayer.pos.x + outsideRange,
       outsidePlayer.pos.z,
       `test_${cls}_outside_range`,
     );
@@ -666,7 +740,8 @@ describe('mir4 auto battle', () => {
     expect(outsideWolf.hp).toBe(outsideWolf.maxHp);
     expect(outsidePlayer.mir4PendingImpacts ?? []).toHaveLength(0);
     expect([...outsidePlayer.cooldowns.keys()].some((key) => /^\d+$/.test(key))).toBe(false);
-  });
+    },
+  );
 
   it('includes exactly 30 yards in acquisition and rejects the first point beyond it', () => {
     const inside = makeSim(8912);

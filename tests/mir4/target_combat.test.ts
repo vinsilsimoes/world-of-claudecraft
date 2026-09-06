@@ -150,7 +150,7 @@ describe('MIR4 focused target combat', () => {
     sim.startAutoAttack();
     sim.tick();
 
-    expect(sim.player.cooldowns.has('1102')).toBe(true);
+    expect(sim.player.cooldowns.has('1304')).toBe(true);
     expect(sim.player.targetId).toBe(selected.id);
     expect(sim.mir4AutoBattleActive()).toBe(false);
   });
@@ -166,7 +166,7 @@ describe('MIR4 focused target combat', () => {
 
     expect(sim.player.mir4UltGauge).toBe(100);
     expect(sim.player.cooldowns.has('mir4_ult')).toBe(false);
-    expect(sim.player.cooldowns.has('1102')).toBe(true);
+    expect(sim.player.cooldowns.has('1304')).toBe(true);
   });
 
   it('uses only the basic attack when every known skill automatic toggle is off', () => {
@@ -255,7 +255,7 @@ describe('MIR4 focused target combat', () => {
     sim.tick();
 
     expect(sim.player.cooldowns.has('1102')).toBe(false);
-    expect(sim.player.cooldowns.has('1302')).toBe(true);
+    expect(sim.player.cooldowns.has('1304')).toBe(true);
   });
 
   it('keeps a disabled automatic skill available for a manual cast', () => {

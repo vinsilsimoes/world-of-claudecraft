@@ -49,6 +49,7 @@ import {
 import { isLitanyModuleId, litanyModuleGeometry } from '../delve_litany_layout';
 import { DUNGEON_WALL_HW, DUNGEON_WALL_X } from '../dungeon_layout';
 import { createGroundObject, createMob, recalcPlayerStats } from '../entity';
+import { interruptMir4SkillMovementOnDisplacement } from '../mir4/displacement';
 import { restorePetFromDelveStash, stowPetForDelve } from '../pet/pet_commands';
 import { cancelProfessionSessionOnDisplacement } from '../professions/session_teardown';
 import { delveExitDropZ } from '../prop_layout';
@@ -407,6 +408,7 @@ export function enterDelve(ctx: SimContext, delveId: string, tierId: string, pid
   const p = r.e;
   // A live gather/fishing session never survives a delve teleport.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = pos;
   p.prevPos = { ...pos };
   ctx.rebucket(p);
@@ -443,6 +445,7 @@ export function leaveDelve(ctx: SimContext, pid?: number): void {
   restorePetFromDelveStash(ctx, r.meta.entityId);
   const p = r.e;
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = ctx.groundPos(delve.doorPos.x, delveExitDropZ(delve.doorPos.z, delve.id));
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);
@@ -665,6 +668,7 @@ export function ejectToDelveDoor(
   const p = r.e;
   // A live free eject (nobody died) still displaces: end any session first.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.dead = false;
   const door = ctx.groundPos(delve.doorPos.x, delveExitDropZ(delve.doorPos.z, delve.id));
   p.pos = delveMemberSpawnPos(ctx, door, slotIndex);
@@ -1091,6 +1095,7 @@ export function advanceDelveModule(ctx: SimContext, run: DelveRun): void {
     const p = ctx.entities.get(pid);
     if (!p || p.dead) return;
     cancelProfessionSessionOnDisplacement(ctx, p);
+    interruptMir4SkillMovementOnDisplacement(ctx, p);
     const pos = delveMemberSpawnPos(ctx, entry, i);
     p.pos = pos;
     p.prevPos = { ...pos };

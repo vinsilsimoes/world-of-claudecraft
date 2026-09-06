@@ -8,6 +8,7 @@ import { dist2d } from '../types';
 
 export interface Mir4PartyPulseSpec {
   readonly radiusYards: number;
+  readonly heightYards?: number;
   readonly maxTargets: number;
 }
 
@@ -35,7 +36,48 @@ export function mir4PartyPulseTargets(
     const target = ctx.entities.get(pid);
     if (!target || target.dead || target.kind !== 'player') continue;
     if (dist2d(source.pos, target.pos) > spec.radiusYards) continue;
+    if (
+      spec.heightYards !== undefined &&
+      Math.abs(target.pos.y - source.pos.y) > Math.max(0, spec.heightYards)
+    ) {
+      continue;
+    }
     if (target.id !== source.id && !ctx.hasLineOfSight(source, target)) continue;
+    targets.push(target);
+    if (targets.length >= Math.max(1, Math.floor(spec.maxTargets))) break;
+  }
+  return targets;
+}
+
+/**
+ * Returns dead party members in the same deterministic five-player envelope.
+ * The caster is never a resurrection target. Raid support stays inside the
+ * caster's subgroup and uses the same range, height and sight rules as living
+ * support contacts.
+ */
+export function mir4DeadPartyTargets(
+  ctx: Pick<SimContext, 'entities' | 'hasLineOfSight' | 'partyOf'>,
+  source: Entity,
+  spec: Mir4PartyPulseSpec,
+): Entity[] {
+  const party = ctx.partyOf(source.id);
+  if (!party) return [];
+  const sourceGroup = party.raid ? (party.raidGroups.get(source.id) ?? 1) : null;
+  const targets: Entity[] = [];
+  for (const pid of party.members) {
+    if (pid === source.id) continue;
+    if (sourceGroup !== null && (party.raidGroups.get(pid) ?? 1) !== sourceGroup) continue;
+    const target = ctx.entities.get(pid);
+    if (!target?.dead || target.kind !== 'player') continue;
+    const targetPos = target.corpsePos ?? target.pos;
+    if (dist2d(source.pos, targetPos) > spec.radiusYards) continue;
+    if (
+      spec.heightYards !== undefined &&
+      Math.abs(targetPos.y - source.pos.y) > Math.max(0, spec.heightYards)
+    ) {
+      continue;
+    }
+    if (!ctx.hasLineOfSight(source, { ...target, pos: targetPos })) continue;
     targets.push(target);
     if (targets.length >= Math.max(1, Math.floor(spec.maxTargets))) break;
   }

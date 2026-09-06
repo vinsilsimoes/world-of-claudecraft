@@ -144,6 +144,41 @@ describe('dev commands', () => {
     expect(mob.inCombat).toBe(false);
   });
 
+  it('enables and disables the transient infinite-resource test lock idempotently', () => {
+    const sim = devSim();
+    const player = sim.player;
+    player.resource = 0;
+
+    sim.chat('/dev resource infinite on');
+    expect(player.devInfiniteResource).toBe(true);
+    expect(player.resource).toBe(player.maxResource);
+
+    player.resource = 0;
+    sim.chat('/dev resource infinite on');
+    expect(player.devInfiniteResource).toBe(true);
+    expect(player.resource).toBe(player.maxResource);
+
+    sim.chat('/dev resource infinite off');
+    expect(player.devInfiniteResource).toBe(false);
+  });
+
+  it('isolates skill QA from repeated target combat without changing ordinary dev play', () => {
+    const sim = devSim();
+    sim.player.autoAttack = true;
+    sim.players.get(sim.playerId)!.mir4TargetCombat = {
+      targetId: 999,
+      owner: 'player',
+    };
+
+    sim.chat('/dev skillqa isolate on');
+    expect(sim.player.devSkillQaIsolation).toBe(true);
+    expect(sim.player.autoAttack).toBe(false);
+    expect(sim.players.get(sim.playerId)?.mir4TargetCombat).toBeUndefined();
+
+    sim.chat('/dev skillqa isolate off');
+    expect(sim.player.devSkillQaIsolation).toBe(false);
+  });
+
   it('revives through the normal resurrection teardown', () => {
     const sim = devSim();
     sim.chat('/dev kill');
@@ -184,9 +219,13 @@ describe('dev commands', () => {
 
     sim.chat('/dev spawn forest_wolf 4');
     sim.chat('/dev level 60');
+    sim.chat('/dev resource infinite on');
+    sim.chat('/dev skillqa isolate on');
 
     expect([...sim.entities.keys()]).toEqual(beforeIds);
     expect(sim.player.level).toBe(1);
+    expect(sim.player.devInfiniteResource).toBeUndefined();
+    expect(sim.player.devSkillQaIsolation).toBeUndefined();
     expect(devSpawns(sim)).toEqual([]);
   });
 

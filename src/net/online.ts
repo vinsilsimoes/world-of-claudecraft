@@ -43,6 +43,10 @@ import { activateWorldForGameProfile } from '../sim/game_profile_world';
 import { LEADERBOARD_PAGE_SIZE } from '../sim/leaderboard_page';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MarketQuery } from '../sim/market_query';
+import {
+  decayMir4NativeHitReactionState,
+  mirrorMir4NativeHitReactionEvent,
+} from '../sim/mir4/native_skill_hit_reaction';
 import { mir4ShellClassFor } from '../sim/mir4/stats';
 import { normalizeMoveFacing, sanitizeMoveInput } from '../sim/move_input';
 import { isPersistentEngineAura } from '../sim/persistent_aura';
@@ -2613,6 +2617,10 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
     }
     if (msg.t === 'events') {
       for (const ev of msg.list) {
+        if (ev.type === 'mir4HitReaction') {
+          const target = this.entities.get(ev.targetId);
+          if (target) mirrorMir4NativeHitReactionEvent(target, ev as never);
+        }
         this.applyLockpickEvent(ev as SimEvent);
         this.applyMountRaceEvent(ev as SimEvent);
         this.applyMountTrainEvent(ev as SimEvent);
@@ -2767,14 +2775,17 @@ export class ClientWorld extends Mir4ClientWorldBase implements IWorld {
       const elapsed = rawTime - previous;
       if (elapsed > 0) {
         for (const entity of this.entities.values()) {
-          if (entity.dead || entity.auras.length === 0) continue;
-          let retained = 0;
-          for (const aura of entity.auras) {
-            if (!isPersistentEngineAura(aura.id) && Number.isFinite(aura.remaining))
-              aura.remaining = Math.max(0, aura.remaining - elapsed);
-            if (aura.remaining > 0) entity.auras[retained++] = aura;
+          if (entity.dead) continue;
+          if (entity.auras.length > 0) {
+            let retained = 0;
+            for (const aura of entity.auras) {
+              if (!isPersistentEngineAura(aura.id) && Number.isFinite(aura.remaining))
+                aura.remaining = Math.max(0, aura.remaining - elapsed);
+              if (aura.remaining > 0) entity.auras[retained++] = aura;
+            }
+            entity.auras.length = retained;
           }
-          entity.auras.length = retained;
+          decayMir4NativeHitReactionState(entity, elapsed);
         }
       }
     } else if (previous !== undefined) {

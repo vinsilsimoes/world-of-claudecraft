@@ -26,6 +26,7 @@ export interface Mir4SnapshotState extends Mir4PersistedPlayerState {
   campaignMapIds?: readonly string[];
   ultimateGauge: number;
   mir4NarrativeDialogue?: Mir4NarrativeDialogueState;
+  mir4SkillActivation?: { phase: 'approach' | 'action' };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -42,12 +43,18 @@ export function decodeMir4Snapshot(value: unknown): Mir4SnapshotState | null {
     ? new Set(value.campaignMapIds.filter((entry): entry is string => typeof entry === 'string'))
     : null;
   const narrativeDialogue = sanitizeMir4NarrativeDialogue(value.mir4NarrativeDialogue);
+  const skillActivation =
+    isRecord(value.mir4SkillActivation) &&
+    (value.mir4SkillActivation.phase === 'approach' || value.mir4SkillActivation.phase === 'action')
+      ? ({ phase: value.mir4SkillActivation.phase } as const)
+      : null;
   // Omission authoritatively clears the transient. A present-but-malformed
   // addition invalidates the whole delta so it cannot erase a valid prior
   // dialogue (or partially mutate any other MIR4 state).
   if (Object.hasOwn(value, 'mir4NarrativeDialogue') && !narrativeDialogue) {
     return null;
   }
+  if (Object.hasOwn(value, 'mir4SkillActivation') && !skillActivation) return null;
   if (Object.hasOwn(value, 'mir4DisabledAutoSkills')) {
     if (!Array.isArray(value.mir4DisabledAutoSkills)) return null;
     const disabledAutoSkills = new Set(
@@ -82,6 +89,7 @@ export function decodeMir4Snapshot(value: unknown): Mir4SnapshotState | null {
     ),
     ...sanitizeMir4PlayerState(value, value.classId),
     ...(narrativeDialogue ? { mir4NarrativeDialogue: narrativeDialogue } : {}),
+    ...(skillActivation ? { mir4SkillActivation: skillActivation } : {}),
   };
 }
 

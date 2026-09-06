@@ -5,7 +5,6 @@
 import {
   MIR4_AUTHORIAL_SKILL_POLICIES,
   MIR4_CLASS_COMBAT_SPECS,
-  MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS,
   type Mir4ClassId,
   type Mir4SkillDef,
   mir4ClassById,
@@ -13,6 +12,7 @@ import {
   mir4SkillById,
   mir4SkillsForClass,
 } from '../content/mir4';
+import { PLAYER_BODY_RADIUS } from '../pathfind';
 import type { ResolvedAbility } from '../sim';
 import type { AbilityDef, Entity } from '../types';
 import { MIR4_BURN_TICK_SECONDS } from './effects';
@@ -23,11 +23,26 @@ import {
   mir4SkillManaCost,
   mir4SkillRankScaledInteger,
 } from './math';
+import { mir4NativeSkillActivationRanges } from './native_skill_activation_range';
+import { mir4NativeBlastingCharmPolicy } from './native_skill_blasting_charm';
+import { mir4NativeBurstShellPolicy } from './native_skill_burst_shell';
+import { mir4NativeExpulsionCirclePolicy } from './native_skill_expulsion_circle';
+import { mir4NativeGuardianCirclePolicy } from './native_skill_guardian_circle';
+import { mir4NativeHealPerPulse, mir4NativeHealPolicy } from './native_skill_heal';
+import { mir4NativeRuntimeMagicShieldPolicy } from './native_skill_magic_shield';
+import { mir4NativePiercingBladesPolicy } from './native_skill_piercing_blades';
+import { mir4NativeRuntimeSmiteDefenseDebuff } from './native_skill_smite_defense_debuff';
+import { mir4NativeSoaringSlashPolicy } from './native_skill_soaring_slash';
+import { mir4NativeTaiChiPolicy } from './native_skill_tai_chi';
+import { mir4NativeRuntimeUninterruptibleBuff } from './native_skill_uninterruptible';
+import { mir4NativeUltimateExecutionPlan } from './native_ultimate_runtime';
+import { mir4RuntimeSkillExecutionPlan } from './runtime_skill_execution';
 import {
   MIR4_SKILL_MAX_LEVEL,
   MIR4_ULTIMATE_UNLOCK_LEVEL,
   mir4SkillUnlockLevel,
 } from './skill_progression';
+import { mir4ApplyRate } from './status_values';
 
 const ACTION_PREFIX = 'mir4_skill_';
 const ULTIMATE_PREFIX = 'mir4_ultimate_';
@@ -150,7 +165,7 @@ function effectSentenceFor(
     case 'stun':
       return ` Stuns the target for ${seconds} sec.`;
     case 'knockdown':
-      return `${effect.chargeToTarget ? ' Charges to the target.' : ''}${effect.pullToActor ? ' Pulls nearby enemies toward you.' : ''} Knocks ${effect.areaRadiusPx ? 'each enemy hit' : 'the target'} down for ${seconds} sec.`;
+      return `${effect.chargeToTarget ? ' Charges to the target.' : ''}${effect.pullToActor ? ' Pulls nearby enemies toward you.' : ''} Knocks ${effect.areaRadiusPx || effect.areaShape ? 'each enemy hit' : 'the target'} down for ${seconds} sec.`;
     case 'dazed':
       return `${effect.pushFromActorYards ? ` Pushes each enemy hit ${effect.pushFromActorYards} yards away.` : ''} Dazes the target for ${seconds} sec.`;
     case 'root':
@@ -175,16 +190,14 @@ function effectSentenceFor(
       const victim = effect.areaRadiusPx ? 'each enemy hit' : 'the target';
       return ` Burns ${victim} for {burnPerTick} base damage every ${MIR4_BURN_TICK_SECONDS} sec (${ticks} ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied.`;
     }
-    case 'magic-shield':
-      return `Reduces damage taken by ${percent(mir4SkillRankScaledInteger(Math.round((effect.magnitude ?? 0) * 10_000), rank) / 10_000)} for ${seconds} sec.`;
+    case 'magic-shield': {
+      const shield = mir4NativeRuntimeMagicShieldPolicy(rank);
+      if (!shield) return '';
+      return ` Creates a Magic Shield for ${shield.durationMs / 1_000} sec, reducing all damage taken by ${shield.damageReductionBasisPoints / 100}%. It disappears after preventing ${shield.absorptionLimit} damage or taking ${shield.hitLimit} hits. Bash Damage Reduction is increased by ${shield.bashDamageReductionBasisPoints / 100}%.`;
+    }
     case 'heal-pulse': {
-      const basisPoints = Number(effect.healMaxHpBasisPoints ?? 0);
-      const amount = mir4SkillRankScaledInteger(basisPoints, rank) / 100;
-      const partyTargets = Math.max(1, Number(effect.maxPartyTargets ?? 1));
-      const radius = Number(effect.partyRadiusPx ?? 0) / 16;
-      return partyTargets > 1
-        ? `Restores ${amount}% of maximum health to you and up to ${partyTargets - 1} party members within ${radius} yards.`
-        : `Restores ${amount}% of maximum health.`;
+      if (skill.skillId !== 3503) return '';
+      return 'Restores {healPerPulse} health per second for 5 sec ({healTotal} total) to you and up to 4 party members within 30 yards. Healing increases with Spell Power. You are immune to control effects for 2 sec. At rank 5, immediately restores 10% of your maximum health and 15% to party members. At rank 8, those amounts become 25% and 35%; Heal can be cast while Silenced, removes Silence, cleanses Debilitation from you and has a 50% chance to cleanse it from party members, and grants 10% Boss Damage Reduction for 30 sec. At rank 10, the immediate amounts become 40% and 50%, the party cleanse is guaranteed and also removes Stun, and Boss Damage Reduction becomes 20% for 60 sec.';
     }
     case 'pull':
       return ' Pulls each enemy hit toward you.';
@@ -217,13 +230,22 @@ function effectSentence(skill: Mir4SkillDef, rank = 1): string {
     .join('');
 }
 
+function nativeRuntimeEffectSentence(skill: Mir4SkillDef, rank: number): string {
+  if (skill.skillId !== 1501) return '';
+  const sourceImmunity = mir4NativeRuntimeUninterruptibleBuff(skill.skillId);
+  const defenseDebuff = mir4NativeRuntimeSmiteDefenseDebuff(skill.skillId, 150101, rank);
+  if (!sourceImmunity || !defenseDebuff) return '';
+  return ` You are immune to control effects for ${sourceImmunity.durationMs / 1_000} sec. Each contact reduces the Physical Defense of enemies hit by ${percent(defenseDebuff.magnitude)} for ${defenseDebuff.durationMs / 1_000} sec.`;
+}
+
 function secondaryAreaSentence(effect: NonNullable<Mir4SkillDef['effect']>): string {
   const targets = effect.maxSecondaryTargets ?? 0;
   const damagePercent = (effect.secondaryDamageBasisPoints ?? 0) / 100;
   if (effect.areaShape === 'frontal-strip') {
     const length = Number(effect.areaLengthPx ?? 0) / 16;
     const width = Number(effect.areaWidthPx ?? 0) / 16;
-    return ` Up to ${targets} other enemies in a ${length}-yard-long, ${width}-yard-wide frontal strip take ${damagePercent}% damage.`;
+    const article = length === 8 ? 'an' : 'a';
+    return ` Up to ${targets} other enemies in ${article} ${length}-yard-long, ${width}-yard-wide frontal strip take ${damagePercent}% damage.`;
   }
   const radius = Number(effect.areaRadiusPx ?? 0) / 16;
   if (effect.areaOrigin === 'actor') {
@@ -237,7 +259,232 @@ function secondaryAreaSentence(effect: NonNullable<Mir4SkillDef['effect']>): str
 }
 
 function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
+  if (skill.skillId === 1103) {
+    return `Charge to the target and strike up to 10 enemies within 6 yards of you twice for $d total damage. The first hit pushes them to the impact point. The final hit knocks them down for 3 sec. ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 2503) {
+    return `Strike up to 8 enemies in three expanding circles around you for $d total Spell damage, knocking them back.${effectSentence(skill, rank)} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 3103) {
+    const policy = mir4NativePiercingBladesPolicy(rank);
+    const skillLevel = policy?.skillLevel ?? 1;
+    const bashBonus = skillLevel >= 10 ? 100 : skillLevel >= 8 ? 80 : skillLevel >= 5 ? 65 : 50;
+    let text =
+      `Deals $d total Physical damage over 5 hits to up to 8 enemies in a frontal 12-by-5-yard area. ` +
+      `The first attack sequence knocks enemies back; the final sequence causes a brief hit reaction. ` +
+      `Targets affected by Quell, Chaos, or Chill are Bashed for ${bashBonus}% bonus damage.`;
+    if (policy?.stun) {
+      text +=
+        ` The first three hits Stun monsters for ${policy.stun.durationMs / 1_000} sec and have a ` +
+        `${policy.stun.playerChanceBasisPoints / 100}% base chance to Stun players. ` +
+        `Learning this rank grants ${policy.bossDamageBasisPoints / 100}% Boss ATK DMG.`;
+    }
+    if (policy?.skillDamageReductionLoss) {
+      text +=
+        ` The first three hits reduce Skill DMG Reduction by ` +
+        `${policy.skillDamageReductionLoss.monsterBasisPoints / 100}% against monsters or ` +
+        `${policy.skillDamageReductionLoss.playerBasisPoints / 100}% against players for ` +
+        `${policy.skillDamageReductionLoss.durationMs / 1_000} sec.`;
+    }
+    if (policy && policy.bashDebilitationDurationMs > 0) {
+      text +=
+        ` When one of those hits Bashes, it also applies Chaos and Chill for ` +
+        `${policy.bashDebilitationDurationMs / 1_000} sec, reducing PHYS ATK and Skill DMG Reduction by 25%.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 3203) {
+    const policy = mir4NativeSoaringSlashPolicy(rank);
+    if (!policy) return MIR4_COOLDOWN_TOOLTIP_DISCLOSURE;
+    let text =
+      `Deals $d total hybrid damage over 9 hits to up to 8 enemies in a frontal 12-by-4-yard area. ` +
+      `Each hit applies Confuse and Chill for 5 sec and knocks enemies back. ` +
+      `A target affected by either debilitation is Bashed for ` +
+      `${policy.bashBonusBasisPoints / 100}% bonus damage.`;
+    if (policy.refreshDebilitationDurationMs > 0) {
+      text +=
+        ` The first hit of the second wave refreshes Confuse and Chill to ` +
+        `${policy.refreshDebilitationDurationMs / 1_000} sec.`;
+    }
+    if (policy.damagedArmor) {
+      text +=
+        ` Critical hits apply unremovable Damaged Armor, reducing Physical and Magic Defense by ` +
+        `${policy.damagedArmor.defenseLoss} for ${policy.damagedArmor.durationMs / 1_000} sec.`;
+    }
+    if (policy.bothDebilitationsSkillDamageBasisPoints > 0) {
+      text +=
+        ` Targets suffering both Confuse and Chill take ` +
+        `${policy.bothDebilitationsSkillDamageBasisPoints / 100}% additional Skill damage from this skill.`;
+    }
+    if (policy.criticalEvasionLoss) {
+      text +=
+        ` Targets suffering both Confuse and Quell also lose ${policy.criticalEvasionLoss.amount} ` +
+        `Critical Evasion for ${policy.criticalEvasionLoss.durationMs / 1_000} sec.`;
+    }
+    if (policy.partySkillDamageReductionBasisPoints > 0) {
+      text +=
+        ` Learning this rank grants your party ` +
+        `${policy.partySkillDamageReductionBasisPoints / 100}% Skill Damage Reduction.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 3501) {
+    const policy = mir4NativeGuardianCirclePolicy(rank);
+    if (!policy) return MIR4_COOLDOWN_TOOLTIP_DISCLOSURE;
+    let text =
+      `Deals $d Spell damage to up to ${policy.damageTargetCap} enemies within ` +
+      `${policy.damageRadiusYards} yards of you. You and up to ${policy.partyTargetCap - 1} ` +
+      `party members within ${policy.partyRadiusYards} yards gain ` +
+      `${policy.basePhysicalDefense} Physical Defense and ` +
+      `${policy.baseBashDamageReductionBasisPoints / 100}% Bash Damage Reduction for ` +
+      `${policy.baseDurationMs / 1_000} sec.`;
+    if (policy.milestone) {
+      text +=
+        ` Each affected member also gains ${policy.milestone.physicalDefense} Physical Defense, ` +
+        `${policy.milestone.monsterDamageReductionBasisPoints / 100}% Monster Damage Reduction, ` +
+        `${policy.milestone.bashDamageReductionBasisPoints / 100}% Bash Damage Reduction` +
+        (policy.milestone.criticalDamageReductionBasisPoints > 0
+          ? `, and ${policy.milestone.criticalDamageReductionBasisPoints / 100}% Critical Damage Reduction`
+          : '') +
+        ` for ${policy.milestone.durationMs / 1_000} sec.`;
+    }
+    if (policy.usableWhileStunned) {
+      text +=
+        ' Can be cast while Stunned and removes removable Stun from each affected member.' +
+        ` Stun Resistance increases by ${policy.partyStunResistanceBasisPoints / 100}% for party members` +
+        (policy.casterStunResistanceBasisPoints === policy.partyStunResistanceBasisPoints
+          ? ''
+          : ` and ${policy.casterStunResistanceBasisPoints / 100}% for you`) +
+        ` for ${policy.stunResistanceDurationMs / 1_000} sec. MP Potion Recovery increases by ` +
+        `${policy.mpPotionRecoveryBasisPoints / 100}% for ` +
+        `${policy.mpPotionRecoveryDurationMs / 1_000} sec.`;
+    }
+    if (policy.lowestHealthAllDamageReductionBasisPoints > 0) {
+      text +=
+        ` The affected member with the lowest health percentage gains ` +
+        `${policy.lowestHealthAllDamageReductionBasisPoints / 100}% All Damage Reduction for ` +
+        `${policy.lowestHealthAllDamageReductionDurationMs / 1_000} sec.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 3404) {
+    const policy = mir4NativeExpulsionCirclePolicy(rank);
+    if (!policy) return MIR4_COOLDOWN_TOOLTIP_DISCLOSURE;
+    let text =
+      `You and up to ${policy.partyTargetCap - 1} party members within ` +
+      `${policy.partyRadiusYards} yards gain ${policy.baseSpellDefense} Spell Defense for ` +
+      `${policy.baseDurationMs / 1_000} sec.`;
+    if (policy.milestone) {
+      text +=
+        ` Each affected member also gains ${policy.milestone.spellDefense} Spell Defense and ` +
+        `${policy.milestone.skillDamageReductionPercentagePoints}% Skill Damage Reduction for ` +
+        `${policy.milestone.durationMs / 1_000} sec, plus ` +
+        `${policy.milestone.bossDamageReductionBasisPoints / 100}% Boss Damage Reduction for ` +
+        `${policy.milestone.bossDurationMs / 1_000} sec.`;
+    }
+    if (policy.usableWhileSilenced) {
+      text +=
+        ' Can be cast while Silenced and removes removable Silence and Debilitation effects from each affected member.';
+      if (
+        policy.casterDebilitationResistanceBasisPoints === policy.casterSilenceResistanceBasisPoints
+      ) {
+        text += ` You gain ${policy.casterDebilitationResistanceBasisPoints / 100}% Debilitation and Silence Resistance`;
+      } else {
+        text +=
+          ` You gain ${policy.casterDebilitationResistanceBasisPoints / 100}% Debilitation Resistance and ` +
+          `${policy.casterSilenceResistanceBasisPoints / 100}% Silence Resistance`;
+      }
+      if (
+        policy.partyDebilitationResistanceBasisPoints === policy.partySilenceResistanceBasisPoints
+      ) {
+        text += `, while other party members gain ${policy.partyDebilitationResistanceBasisPoints / 100}%`;
+      } else {
+        text +=
+          `, while other party members gain ${policy.partyDebilitationResistanceBasisPoints / 100}% Debilitation Resistance and ` +
+          `${policy.partySilenceResistanceBasisPoints / 100}% Silence Resistance`;
+      }
+      text += ` for ${policy.resistanceDurationMs / 1_000} sec.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 3505) {
+    const policy = mir4NativeBlastingCharmPolicy(rank);
+    if (!policy) return MIR4_COOLDOWN_TOOLTIP_DISCLOSURE;
+    let text =
+      `Launches a homing talisman at the target, then deals $d Spell damage to up to 5 enemies ` +
+      `within 6 yards of it. Enemies hit suffer Darkness, reducing Silence Resistance by ` +
+      `${Math.abs(policy.darkness.silenceResistanceBasisPoints) / 100}% for ` +
+      `${policy.darkness.durationMs / 1_000} sec, and lose ` +
+      `${Math.abs(policy.physicalDefense.flat)} Physical Defense for ` +
+      `${policy.physicalDefense.durationMs / 1_000} sec.`;
+    if (policy.monsterAllDamageReductionBasisPoints !== 0) {
+      text +=
+        ` Monsters lose ${Math.abs(policy.monsterAllDamageReductionBasisPoints) / 100}% All Damage Reduction, ` +
+        `while players lose ${Math.abs(policy.characterMonsterDamageReductionBasisPoints) / 100}% Monster Damage Reduction` +
+        (policy.characterPvpDamageReductionBasisPoints !== 0
+          ? ` and ${Math.abs(policy.characterPvpDamageReductionBasisPoints) / 100}% PvP Damage Reduction`
+          : '') +
+        ` for ${policy.contextualReductionDurationMs / 1_000} sec.`;
+    }
+    if (policy.controlResistance) {
+      text +=
+        ` Enemies hit also lose ${Math.abs(policy.controlResistance.stunBasisPoints) / 100}% Stun Resistance and ` +
+        `${Math.abs(policy.controlResistance.debilitationBasisPoints) / 100}% Debilitation and Silence Resistance ` +
+        `for ${policy.controlResistance.durationMs / 1_000} sec.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 4103) {
+    const policy = mir4NativeBurstShellPolicy(rank);
+    if (!policy) return MIR4_COOLDOWN_TOOLTIP_DISCLOSURE;
+    let text =
+      `Fires an explosive shell at the selected target, creating a device for 3 sec that deals ` +
+      `$d total Physical damage over 5 explosions to up to 5 enemies within 8 yards. ` +
+      `Grants 1 Focus. Enemies hit lose ${Math.abs(policy.defense.physicalDefenseFlat)} ` +
+      `Physical and Spell Defense for ${policy.defense.durationMs / 1_000} sec.`;
+    if (policy.burn && policy.damageAmplification) {
+      text +=
+        ` They also burn for ${policy.burn.physicalAttackBasisPoints / 100}% of your Physical Attack ` +
+        `each second for ${policy.burn.durationMs / 1_000} sec and take ` +
+        `${Math.abs(policy.damageAmplification.resolvedDamageReductionBasisPoints) / 100}% more damage, ` +
+        `while this skill deals ${policy.monsterDamageBoostBasisPoints / 100}% more damage to monsters.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
+  if (skill.skillId === 3201) {
+    const policy = mir4NativeTaiChiPolicy(rank);
+    if (!policy) return MIR4_COOLDOWN_TOOLTIP_DISCLOSURE;
+    let text =
+      `Deals $d total hybrid damage over 6 contacts to up to ${policy.partyTargetCap} enemies around you. ` +
+      `The first, third, and fifth contacts pull enemies inward; the final contact knocks monsters down with a ` +
+      `${policy.monsterKnockdownChanceBasisPoints / 100}% base chance and players with a ` +
+      `${policy.playerKnockdownChanceBasisPoints / 100}% base chance, then moves them outward. ` +
+      `You are immune to Knockdown and Stun while casting.`;
+    if (policy.permanentEvasion > 0) {
+      text +=
+        ` On use, gain ${policy.permanentEvasion} Evasion for 30 sec and an additional ` +
+        `${policy.burstEvasion} Evasion for 5 sec. Enemies hit lose ` +
+        `${policy.monsterSkillDamageAmplificationBasisPoints / 100}% Skill Damage Reduction if they are monsters or ` +
+        `${policy.playerSkillDamageAmplificationBasisPoints / 100}% if they are players for 30 sec. ` +
+        `You and up to ${policy.partyTargetCap - 1} party members within ${policy.partyRadiusYards} yards gain ` +
+        `${policy.partySkillHealingBasisPoints / 100}% Skill Healing for 8 sec.`;
+    }
+    if (policy.brokenWeapon) {
+      text +=
+        ` A target with both Damaged Weapon and Damaged Armor has a ` +
+        `${policy.brokenWeapon.chanceBasisPoints / 100}% chance to suffer Broken Weapon, reducing Physical Attack, ` +
+        `Spell Attack, Accuracy, and Evasion by ${policy.brokenWeapon.amount} for ` +
+        `${policy.brokenWeapon.durationMs / 1_000} sec; Broken Weapon cannot be removed.`;
+    }
+    if (policy.accuracyLoss) {
+      text +=
+        ` Enemies hit also lose ${policy.accuracyLoss.amount} Accuracy for ` +
+        `${policy.accuracyLoss.durationMs / 1_000} sec.`;
+    }
+    return `${text} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  }
   const utility = effectSentence(skill, rank);
+  const nativeUtility = nativeRuntimeEffectSentence(skill, rank);
   const effects = [skill.effect, ...(skill.additionalEffects ?? [])].filter(
     (effect): effect is NonNullable<Mir4SkillDef['effect']> => effect !== null,
   );
@@ -251,23 +498,57 @@ function descriptionFor(skill: Mir4SkillDef, rank = 1): string {
   const damage =
     skill.damage !== null ||
     (skill.provenance === 'authorial-v1' && MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId]);
-  let text = damage ? 'Deals $d damage to an enemy.' : 'Affects an enemy.';
+  let text =
+    skill.skillId === 1501
+      ? 'Strike enemies around you 9 times for $d total damage.'
+      : damage
+        ? 'Deals $d damage to an enemy.'
+        : 'Affects an enemy.';
   const area = skill.effect;
   if (
     damage &&
-    area?.areaRadiusPx !== undefined &&
+    (area?.areaRadiusPx !== undefined || area?.areaShape === 'frontal-strip') &&
     area.maxSecondaryTargets !== undefined &&
     area.secondaryDamageBasisPoints !== undefined
   ) {
     text += secondaryAreaSentence(area);
   }
-  return `${text + utility} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
+  return `${text + utility + nativeUtility} ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`;
 }
 
 export interface Mir4BurnTooltipDamage {
   readonly perTick: number;
   readonly ticks: number;
   readonly total: number;
+}
+
+export interface Mir4HealTooltipHealing {
+  readonly perPulse: number;
+  readonly pulses: number;
+  readonly total: number;
+}
+
+/** Live amount produced by each native Heal pulse for the current character. */
+export function mir4ActionHealTooltipHealing(
+  abilityId: string,
+  rank: number,
+  spellPower: number,
+  spellAttackBonus = 0,
+  skillHealingBasisPoints = 0,
+): Mir4HealTooltipHealing | null {
+  if (mir4SkillIdFromAction(abilityId) !== 3503) return null;
+  const policy = mir4NativeHealPolicy(rank);
+  if (!policy) return null;
+  const effectiveSpellAttack = Math.max(0, spellPower + spellAttackBonus);
+  const perPulse = mir4ApplyRate(
+    mir4NativeHealPerPulse(effectiveSpellAttack, rank),
+    skillHealingBasisPoints,
+  );
+  return {
+    perPulse,
+    pulses: policy.pulseCount,
+    total: perPulse * policy.pulseCount,
+  };
 }
 
 /**
@@ -333,6 +614,10 @@ function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): 
     skill.damage === null &&
     effects.length > 0 &&
     effects.every((effect) => effect.subject === 'actor' || effect.subject === 'party');
+  const nativeActivation = mir4NativeSkillActivationRanges(skill.skillId, {
+    targetBodyRadiusYards: PLAYER_BODY_RADIUS,
+    skillDistanceBonusNative: 0,
+  });
   return {
     id: mir4ActionId(skill.skillId),
     name: ENGLISH_NAMES[skill.skillId] ?? skill.displayName,
@@ -340,7 +625,9 @@ function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): 
     cost,
     castTime: 0,
     cooldown: skill.cooldownMs / 1000,
-    range: selfUtility ? 0 : (skill.castRangePx ?? range * 16) / 16,
+    range: selfUtility
+      ? 0
+      : (nativeActivation?.directContactRangeYards ?? (skill.castRangePx ?? range * 16) / 16),
     school: skill.classId === 2 || skill.classId === 3 ? 'arcane' : 'physical',
     requiresTarget: skill.requiresTarget && !selfUtility,
     learnLevel: mir4SkillUnlockLevel(skill),
@@ -355,24 +642,27 @@ function actionDef(skill: Mir4SkillDef, range: number, cost: number, rank = 1): 
 
 function ultimateActionDef(classId: Mir4ClassId): AbilityDef {
   const spec = MIR4_CLASS_COMBAT_SPECS[classId].ultimate;
-  const impacts = spec.impactOffsetMs.length;
+  const nativePlan = mir4NativeUltimateExecutionPlan(classId);
+  const nativeActivation = nativePlan
+    ? mir4NativeSkillActivationRanges(nativePlan.skillId, {
+        targetBodyRadiusYards: PLAYER_BODY_RADIUS,
+        skillDistanceBonusNative: 0,
+      })
+    : null;
+  const impacts = nativePlan?.contacts.length ?? spec.impactOffsetMs.length;
   return {
     id: mir4UltimateActionId(classId),
     name: ULTIMATE_ENGLISH_NAMES[classId],
     class: 'warrior',
     cost: 0,
     castTime: 0,
-    cooldown: spec.cooldownMs / 1000,
-    range: spec.rangePx / 16,
+    cooldown: (nativePlan?.cooldownMs ?? spec.cooldownMs) / 1000,
+    range: nativeActivation?.directContactRangeYards ?? spec.rangePx / 16,
     school: spec.channel === 'magic' ? 'arcane' : 'physical',
     requiresTarget: true,
     learnLevel: MIR4_ULTIMATE_UNLOCK_LEVEL,
     effects: [{ type: 'directDamage', min: 0, max: 0 }],
-    description: `Deals $d damage over ${impacts} impacts.${
-      classId === 1
-        ? ` Restores ${MIR4_WARRIOR_DRAGON_FLAME_HEAL_BPS / 100}% of your maximum health.`
-        : ''
-    } Requires a full Ultimate gauge. ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`,
+    description: `Deals $d damage over ${impacts} impacts. Requires a full Ultimate gauge. ${MIR4_COOLDOWN_TOOLTIP_DISCLOSURE}`,
   };
 }
 
@@ -459,6 +749,27 @@ export function mir4ActionRawDamage(
 ): number | null {
   const ultimateClassId = mir4ClassIdFromUltimateAction(abilityId);
   if (ultimateClassId !== null) {
+    const nativePlan = mir4NativeUltimateExecutionPlan(ultimateClassId);
+    if (nativePlan) {
+      return nativePlan.contacts.reduce((total, contact) => {
+        const components = contact.damageComponents ?? [
+          { channel: nativePlan.channel, coefficient: contact.coefficient },
+        ];
+        return (
+          total +
+          components.reduce((contactTotal, component) => {
+            const power = component.channel === 'magic' ? spellPower : attackPower;
+            return (
+              contactTotal +
+              mir4SkillDamageAfterBoost(
+                mir4CoefficientDamage(power, component.coefficient),
+                skillDamageBps,
+              )
+            );
+          }, 0)
+        );
+      }, 0);
+    }
     const spec = MIR4_CLASS_COMBAT_SPECS[ultimateClassId].ultimate;
     const power = spec.channel === 'magic' ? spellPower : attackPower;
     return (
@@ -480,6 +791,61 @@ export function mir4ActionRawDamage(
       mir4AuthorialSkillRankDamage(Math.max(1, physical + magic), rank),
       skillDamageBps,
     );
+  }
+  const nativePlan = mir4RuntimeSkillExecutionPlan(skillId);
+  if (nativePlan) {
+    if (skillId === 2303) {
+      const firstContact = nativePlan.rows[0]?.contacts[0];
+      if (!firstContact) return null;
+      const coefficient =
+        firstContact.damage.coefficient +
+        (Math.max(1, rank) - 1) * firstContact.damage.levelUpCoefficient;
+      return mir4SkillDamageAfterBoost(
+        mir4CoefficientDamage(spellPower, coefficient),
+        skillDamageBps,
+      );
+    }
+    const directTotal = nativePlan.rows.reduce(
+      (total, row) =>
+        total +
+        row.contacts.reduce((rowTotal, contact) => {
+          if (contact.damage.coefficient === 0 && contact.damage.levelUpCoefficient === 0) {
+            return rowTotal;
+          }
+          const coefficient =
+            contact.damage.coefficient +
+            (Math.max(1, rank) - 1) * contact.damage.levelUpCoefficient;
+          const power = contact.damage.damageType === 2 ? spellPower : attackPower;
+          const contactDamage = mir4SkillDamageAfterBoost(
+            mir4CoefficientDamage(power, coefficient),
+            skillDamageBps,
+          );
+          return (
+            rowTotal +
+            (contact.damage.allocationMode === 'row-total-impact-vector'
+              ? Math.floor(contactDamage / contact.damage.componentImpactCount)
+              : contactDamage)
+          );
+        }, 0),
+      0,
+    );
+    const totemTotal =
+      nativePlan.totem?.contacts.reduce((total, contact) => {
+        const components = contact.damageComponents ?? [contact];
+        return (
+          total +
+          components.reduce((contactTotal, component) => {
+            const coefficient =
+              component.coefficient + (Math.max(1, rank) - 1) * component.levelUpCoefficient;
+            const power = component.damageType === 2 ? spellPower : attackPower;
+            return (
+              contactTotal +
+              mir4SkillDamageAfterBoost(mir4CoefficientDamage(power, coefficient), skillDamageBps)
+            );
+          }, 0)
+        );
+      }, 0) ?? 0;
+    return directTotal + totemTotal;
   }
   if (!skill?.damage) return null;
   let total = 0;

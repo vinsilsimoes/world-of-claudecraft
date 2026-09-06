@@ -4,6 +4,7 @@ import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
 import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
+import { mir4NativeHealPerPulse } from '../../src/sim/mir4/native_skill_heal';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, Mir4ClassKey } from '../../src/sim/types';
 import { PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
@@ -57,12 +58,17 @@ describe('magic-channel kits (damageType 2 rides spellPower)', () => {
     expect(sim.mir4CastSkill(2101, wolf.id)).toEqual({ ok: true });
     resolveContacts(sim);
     expect(hp - wolf.hp).toBe(93);
-    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'burn')).toBe(true);
+    expect(
+      wolf.mir4Effects?.active.some(
+        (effect) =>
+          effect.effectId === 'mir4_native_buff_30010' && effect.kind === 'spell-attack-reduction',
+      ),
+    ).toBe(true);
   });
 });
 
 describe('ported hybrid and authorial skills', () => {
-  it('lancer 5201 hybrid: floor(50*12000/10000) + floor(50*16000/10000) = 140', () => {
+  it('lancer 5201 distributes its 120% physical + 160% magic totals across six contacts', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('lancer');
     const wolf = spawnWolf(sim);
@@ -71,10 +77,10 @@ describe('ported hybrid and authorial skills', () => {
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(5201, wolf.id)).toEqual({ ok: true });
     resolveContacts(sim);
-    expect(hp - wolf.hp).toBe(140);
-    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'slow')).toBe(true);
+    expect(hp - wolf.hp).toBe(137);
+    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'slow')).toBe(false);
   });
-  it('Sorcerer 2301: magic 20000 on MA 50 = 100 + daze', () => {
+  it('Sorcerer 2301: the four-contact Totem applies native Chill instead of legacy daze', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('elementalist', 92);
     sim.player.level = 30;
@@ -82,13 +88,22 @@ describe('ported hybrid and authorial skills', () => {
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(2301, wolf.id)).toEqual({ ok: true });
     resolveContacts(sim);
-    expect(hp - wolf.hp).toBe(100);
-    expect(wolf.mir4Effects?.active.some((f) => f.kind === 'dazed')).toBe(true);
+    expect(hp - wolf.hp).toBeGreaterThan(0);
+    expect(
+      wolf.mir4Effects?.active.some(
+        (effect) =>
+          effect.effectId === 'mir4_native_buff_20020' &&
+          effect.kind === 'native-status-boost' &&
+          effect.nativeStatusId === 45 &&
+          effect.magnitude === -25,
+      ),
+    ).toBe(true);
+    expect(wolf.mir4Effects?.active.some((effect) => effect.kind === 'dazed')).toBe(false);
   });
 });
 
 describe('self utilities', () => {
-  it('2503 shields the caster for 10s at 0.22 and refuses while up', () => {
+  it('2503 applies the native 25s rank-1 shield and refuses while up', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeClassSim('elementalist', 93);
     const p = sim.entities.get(sim.playerId)!;
@@ -97,9 +112,13 @@ describe('self utilities', () => {
     p.gcdRemaining = 0;
     expect(sim.mir4CastSkill(2503)).toEqual({ ok: true }); // no target needed
     resolveContacts(sim);
-    expect(p.mir4Shield).toMatchObject({ magnitude: 0.22 });
-    for (let i = 0; i < 200; i++) sim.tick();
-    expect(p.mir4Shield).toBeUndefined(); // 10s elapsed
+    expect(p.mir4Shield).toMatchObject({
+      damageReductionBasisPoints: 2_400,
+      absorptionRemaining: 2_000,
+      hitsRemaining: 20,
+    });
+    for (let i = 0; i < 500; i++) sim.tick();
+    expect(p.mir4Shield).toBeUndefined(); // 25s elapsed
   });
   it('uses the PvP cooldown cap for a self utility while a hostile player is selected', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -141,20 +160,19 @@ describe('self utilities', () => {
     expect(p.cooldowns.get('2101')).toBeCloseTo(7.2, 10);
     expect(p.targetId).toBe(enemy.id);
   });
-  it('3503 heals 18% of max HP and refuses at full health', () => {
+  it('3503 remains manually castable at full health and applies five Spell ATK-based pulses', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
-    const sim = makeClassSim('taoist', 94);
+    const fullHealthSim = makeClassSim('taoist', 94);
+    fullHealthSim.player.level = 40;
+    expect(fullHealthSim.mir4CastSkill(3503)).toEqual({ ok: true });
+
+    const sim = makeClassSim('taoist', 95);
     const p = sim.entities.get(sim.playerId)!;
     p.level = 40;
-    p.cooldowns.clear();
-    p.gcdRemaining = 0;
-    expect(sim.mir4CastSkill(3503)).toEqual({ ok: false, reason: 'utility-not-ready' });
     p.hp = 1000;
-    p.cooldowns.clear();
-    p.gcdRemaining = 0;
     expect(sim.mir4CastSkill(3503)).toEqual({ ok: true });
     resolveContacts(sim);
-    expect(p.hp).toBe(1000 + Math.floor(4000 * 0.18)); // +720
+    expect(p.hp).toBe(1000 + mir4NativeHealPerPulse(p.spellPower, 1) * 5);
   });
 
   it('3503 can be cast at full health to restore an injured nearby party member', () => {
@@ -175,7 +193,7 @@ describe('self utilities', () => {
     resolveContacts(sim);
 
     expect(taoist.hp).toBe(taoist.maxHp);
-    expect(ally.hp).toBe(1_000 + Math.floor(4_000 * 0.18));
+    expect(ally.hp).toBe(1_000 + mir4NativeHealPerPulse(taoist.spellPower, 1) * 5);
   });
 
   it('rank 15 improves shield and healing while Piercing Blades keeps its official stun', () => {
@@ -186,7 +204,11 @@ describe('self utilities', () => {
     shieldSim.players.get(shieldSim.playerId)!.mir4SkillLevels = { 2503: 15 };
     expect(shieldSim.mir4CastSkill(2503)).toEqual({ ok: true });
     resolveContacts(shieldSim);
-    expect(shieldSim.player.mir4Shield?.magnitude).toBe(0.2816);
+    expect(shieldSim.player.mir4Shield).toMatchObject({
+      damageReductionBasisPoints: 8_000,
+      absorptionRemaining: 100_000,
+      bashDamageReductionBasisPoints: 5_700,
+    });
 
     const healSim = makeClassSim('taoist', 942);
     healSim.player.level = 40;
@@ -194,7 +216,9 @@ describe('self utilities', () => {
     healSim.player.hp = 1000;
     expect(healSim.mir4CastSkill(3503)).toEqual({ ok: true });
     resolveContacts(healSim);
-    expect(healSim.player.hp).toBe(1000 + Math.floor(4000 * 0.2304));
+    expect(healSim.player.hp).toBe(
+      1000 + Math.floor(4000 * 0.4) + mir4NativeHealPerPulse(healSim.player.spellPower, 15) * 5,
+    );
 
     const piercingSim = makeClassSim('taoist', 943);
     piercingSim.player.level = 50;
@@ -205,7 +229,7 @@ describe('self utilities', () => {
     expect(piercingSim.mir4CastSkill(3103, wolf.id)).toEqual({ ok: true });
     resolveContacts(piercingSim);
     expect(wolf.mir4Effects?.active).toContainEqual(
-      expect.objectContaining({ kind: 'stun', duration: 2 }),
+      expect.objectContaining({ kind: 'stun', duration: 5 }),
     );
   });
 });

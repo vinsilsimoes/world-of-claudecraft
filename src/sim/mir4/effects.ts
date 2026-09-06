@@ -13,6 +13,11 @@ import { isVeilboundMarchActive } from '../combat/paladin_veilbound_state';
 import type { SimContext } from '../sim_context';
 import type { Aura, Entity, Mir4ActiveEffect, Mir4EffectKind, Mir4TargetEffects } from '../types';
 import { CAST_COMPLETE_EPS, DT } from '../types';
+import { mir4NativeControlImmune } from './native_control_immunity';
+import { mir4NativeCloakingStatusBonus } from './native_skill_cloaking';
+import { mir4FrozenBlockActive } from './native_skill_frozen_block_state';
+import { mir4HitReacting } from './native_skill_hit_reaction';
+import { mir4NativeWindWallPartySpellAttack } from './native_skill_wind_wall_policy';
 
 /** The source's CONTROL_IMMUNITY_TAIL: 750ms after a hard control expires. */
 export const MIR4_CONTROL_IMMUNITY_TAIL_SECONDS = 0.75;
@@ -32,9 +37,36 @@ export const MIR4_BURN_TICK_SECONDS = 1;
 const HARD_CC: ReadonlySet<Mir4EffectKind> = new Set(['stun', 'knockdown', 'dazed', 'freeze']);
 const CC_IMMUNE_EFFECTS: ReadonlySet<Mir4EffectKind> = new Set([...HARD_CC, 'root']);
 
+export function mir4EffectIsHarmful(kind: Mir4EffectKind, magnitude = 0): boolean {
+  return (
+    kind === 'stun' ||
+    kind === 'knockdown' ||
+    kind === 'dazed' ||
+    kind === 'root' ||
+    kind === 'freeze' ||
+    kind === 'slow' ||
+    kind === 'silence' ||
+    kind === 'blind' ||
+    kind === 'physical-attack-flat-reduction' ||
+    kind === 'physical-attack-reduction' ||
+    kind === 'spell-attack-reduction' ||
+    kind === 'physical-defense-reduction' ||
+    kind === 'defense-break' ||
+    kind === 'damage-amplification' ||
+    kind === 'invincibility-blocked' ||
+    kind === 'shield-blocked' ||
+    kind === 'evade-disabled' ||
+    kind === 'burn' ||
+    (kind === 'native-status-boost' && magnitude < 0)
+  );
+}
+
 export type Mir4EffectAdmission =
   | { ok: true }
-  | { ok: false; code: 'MIR4_CC_TARGET_INVALID' | 'MIR4_CC_ALREADY_ACTIVE' | 'MIR4_CC_IMMUNE' };
+  | {
+      ok: false;
+      code: 'MIR4_CC_TARGET_INVALID' | 'MIR4_CC_ALREADY_ACTIVE' | 'MIR4_CC_IMMUNE';
+    };
 
 function bagOf(e: Entity): Mir4TargetEffects {
   if (!e.mir4Effects) e.mir4Effects = { active: [], controlImmuneUntil: 0 };
@@ -43,7 +75,7 @@ function bagOf(e: Entity): Mir4TargetEffects {
 
 /** Authored burn magnitude is the fraction of the source's current Spell Power per tick. */
 export function mir4BurnDamagePerTick(source: Entity, magnitude: number): number {
-  return Math.max(1, Math.floor(Math.max(0, source.spellPower) * Math.max(0, magnitude)));
+  return Math.max(1, Math.floor(mir4EffectiveSpellPower(source) * Math.max(0, magnitude)));
 }
 
 function pruneHardControlHistory(bag: Mir4TargetEffects, now: number): void {
@@ -68,13 +100,33 @@ export function mir4EffectAdmits(
   effectId: string,
   kind: Mir4EffectKind,
   now: number,
+  magnitude = 0,
 ): Mir4EffectAdmission {
   if (target.dead) return { ok: false, code: 'MIR4_CC_TARGET_INVALID' };
   const bag = target.mir4Effects;
   if (bag?.active.some((f) => f.effectId === effectId && f.remaining > CAST_COMPLETE_EPS)) {
     return { ok: false, code: 'MIR4_CC_ALREADY_ACTIVE' };
   }
-  if (target.ccImmune && CC_IMMUNE_EFFECTS.has(kind)) {
+  if (mir4FrozenBlockActive(target) && mir4EffectIsHarmful(kind, magnitude)) {
+    return { ok: false, code: 'MIR4_CC_IMMUNE' };
+  }
+  if (mir4NativeControlImmune(target) && CC_IMMUNE_EFFECTS.has(kind)) {
+    return { ok: false, code: 'MIR4_CC_IMMUNE' };
+  }
+  if (
+    (kind === 'stun' || kind === 'knockdown') &&
+    bag?.active.some(
+      (effect) => effect.kind === 'knockdown-stun-immunity' && effect.remaining > CAST_COMPLETE_EPS,
+    )
+  ) {
+    return { ok: false, code: 'MIR4_CC_IMMUNE' };
+  }
+  if (
+    kind === 'invincible' &&
+    bag?.active.some(
+      (effect) => effect.kind === 'invincibility-blocked' && effect.remaining > CAST_COMPLETE_EPS,
+    )
+  ) {
     return { ok: false, code: 'MIR4_CC_IMMUNE' };
   }
   if (HARD_CC.has(kind) && bag !== undefined && bag.controlImmuneUntil > now) {
@@ -97,12 +149,21 @@ export function applyMir4Effect(
     kind: Mir4EffectKind;
     durationSeconds: number;
     magnitude?: number;
+    nativeStatusId?: number;
+    nativeStacks?: number;
+    unremovable?: boolean;
     name: string;
     sourceId: number;
   },
 ): Mir4EffectAdmission {
   if (spec.durationSeconds <= 0) return { ok: false, code: 'MIR4_CC_TARGET_INVALID' };
-  const admission = mir4EffectAdmits(target, spec.effectId, spec.kind, ctx.time);
+  const admission = mir4EffectAdmits(
+    target,
+    spec.effectId,
+    spec.kind,
+    ctx.time,
+    spec.magnitude ?? 0,
+  );
   if (!admission.ok) return admission;
 
   let durationSeconds = spec.durationSeconds;
@@ -179,13 +240,19 @@ export function applyMir4Effect(
     duration: durationSeconds,
     magnitude: spec.magnitude ?? 0,
     sourceId: spec.sourceId,
+    nativeStatusId: spec.nativeStatusId,
+    nativeStacks: spec.nativeStacks,
+    unremovable: spec.unremovable,
   };
   bag.active.push(entry);
   if (HARD_CC.has(spec.kind)) {
     const until = ctx.time + durationSeconds + hardControlTailSeconds;
     bag.controlImmuneUntil = Math.max(bag.controlImmuneUntil, until);
     if (!bag.controlImmunityByEffectId) bag.controlImmunityByEffectId = {};
-    bag.controlImmunityByEffectId[spec.effectId] = { sourceId: spec.sourceId, until };
+    bag.controlImmunityByEffectId[spec.effectId] = {
+      sourceId: spec.sourceId,
+      until,
+    };
   }
 
   if (spec.kind === 'burn') {
@@ -303,19 +370,29 @@ function attributeLegacyActiveControlImmunity(bag: Mir4TargetEffects, now: numbe
   reconcileMir4ControlImmunity(bag, now);
 }
 
-/** Compatibility read-out. Aeldrune has no generic damage-taken addend yet. */
+/** Additive damage amplification admitted by exact native target debuffs. */
 export function mir4DamageTakenAddend(target: Entity): number {
-  void target;
-  return 0;
+  let addend = 0;
+  for (const effect of target.mir4Effects?.active ?? []) {
+    if (effect.remaining <= CAST_COMPLETE_EPS || effect.kind !== 'damage-amplification') continue;
+    addend += effect.magnitude;
+  }
+  return Math.max(0, addend);
 }
 
 /** Defense Break reduces actual Physical and Magic Defense, never all damage taken. */
-export function mir4DefenseMultiplier(target: Entity): number {
+export function mir4DefenseMultiplier(
+  target: Entity,
+  channel: 'physical' | 'magic' = 'physical',
+): number {
   let multiplier = 1;
   for (const effect of target.mir4Effects?.active ?? []) {
     if (effect.remaining <= CAST_COMPLETE_EPS) continue;
     if (effect.kind === 'defense-break') multiplier *= 1 - effect.magnitude;
     if (effect.kind === 'defense-boost') multiplier *= 1 + effect.magnitude;
+    if (effect.kind === 'physical-defense-reduction' && channel === 'physical') {
+      multiplier *= 1 - effect.magnitude;
+    }
   }
   return Math.max(0.2, Math.min(2, multiplier));
 }
@@ -328,6 +405,86 @@ export function mir4DodgeBonus(target: Entity): number {
     if (effect.kind === 'dodge-boost') bonus += effect.magnitude;
   }
   return bonus;
+}
+
+/** Native special-effect 4045: the target cannot evade while the debuff is active. */
+export function mir4EvadeDisabled(target: Entity): boolean {
+  return (target.mir4Effects?.active ?? []).some(
+    (effect) => effect.kind === 'evade-disabled' && effect.remaining > CAST_COMPLETE_EPS,
+  );
+}
+
+/**
+ * Sum temporary numeric MIR4 STATUS contributions by their native ID.
+ * Callers apply the source-to-runtime unit conversion at the policy boundary,
+ * so this generic primitive works for both flat and basis-point lanes.
+ */
+export function mir4NativeStatusBonus(target: Entity, nativeStatusId: number): number {
+  if (!Number.isSafeInteger(nativeStatusId) || nativeStatusId <= 0) return 0;
+  let bonus = 0;
+  for (const effect of target.mir4Effects?.active ?? []) {
+    if (
+      effect.remaining <= CAST_COMPLETE_EPS ||
+      effect.kind !== 'native-status-boost' ||
+      effect.nativeStatusId !== nativeStatusId
+    ) {
+      continue;
+    }
+    bonus += effect.magnitude;
+  }
+  return bonus + mir4NativeCloakingStatusBonus(target, nativeStatusId);
+}
+
+/** Base Spell Power plus temporary native STATUS 22 (flat Spell ATK). */
+export function mir4EffectiveSpellPower(
+  source: Entity,
+  ctx?: Pick<SimContext, 'entities' | 'partyOf' | 'players'>,
+): number {
+  return Math.max(
+    0,
+    source.spellPower +
+      mir4NativeStatusBonus(source, 22) +
+      (ctx ? mir4NativeWindWallPartySpellAttack(ctx, source) : 0),
+  );
+}
+
+/** Native STATUS 45 uses percentage points; combat consumes basis points. */
+export function mir4SkillDamageReductionBonusBps(target: Entity): number {
+  return Math.trunc(mir4NativeStatusBonus(target, 45) * 100);
+}
+
+/** Native BUFF special-effect 4003: damage cannot affect this entity. */
+export function mir4Invincible(target: Entity): boolean {
+  return (target.mir4Effects?.active ?? []).some(
+    (effect) => effect.kind === 'invincible' && effect.remaining > CAST_COMPLETE_EPS,
+  );
+}
+
+/** Native special-effect 4043: new Invincible effects cannot be admitted. */
+export function mir4InvincibilityBlocked(target: Entity): boolean {
+  return (target.mir4Effects?.active ?? []).some(
+    (effect) => effect.kind === 'invincibility-blocked' && effect.remaining > CAST_COMPLETE_EPS,
+  );
+}
+
+/** Temporary native all-damage reduction, represented in basis points. */
+export function mir4AllDamageReductionBonusBps(target: Entity): number {
+  let bonus = 0;
+  for (const effect of target.mir4Effects?.active ?? []) {
+    if (effect.remaining <= CAST_COMPLETE_EPS) continue;
+    if (effect.kind === 'all-damage-reduction') bonus += effect.magnitude;
+  }
+  return Math.max(0, Math.trunc(bonus));
+}
+
+/** Temporary native boss-damage reduction, represented in basis points. */
+export function mir4BossDamageReductionBonusBps(target: Entity): number {
+  let bonus = 0;
+  for (const effect of target.mir4Effects?.active ?? []) {
+    if (effect.remaining <= CAST_COMPLETE_EPS) continue;
+    if (effect.kind === 'boss-damage-reduction') bonus += effect.magnitude;
+  }
+  return Math.max(0, Math.trunc(bonus));
 }
 
 /** Hard-controlled (movement/attack frozen) right now. */
@@ -355,20 +512,39 @@ export function mir4Silenced(target: Entity): boolean {
   );
 }
 
-/** The victim's outgoing attack multiplier (blind); 1 when clean. */
-export function mir4AttackMultiplier(target: Entity): number {
+/** The victim's outgoing attack multiplier; Daze changes physical output only. */
+export function mir4AttackMultiplier(
+  target: Entity,
+  channel: 'physical' | 'magic' = 'physical',
+): number {
   let mult = 1;
   for (const f of target.mir4Effects?.active ?? []) {
     if (f.remaining <= CAST_COMPLETE_EPS) continue;
     if (f.kind === 'blind') mult *= 1 - f.magnitude;
     if (f.kind === 'damage-boost') mult *= 1 + f.magnitude;
+    if (f.kind === 'physical-attack-reduction' && channel === 'physical') {
+      mult *= 1 - f.magnitude;
+    }
+    if (f.kind === 'spell-attack-reduction' && channel === 'magic') {
+      mult *= 1 - f.magnitude;
+    }
   }
   return Math.max(0, mult);
 }
 
+/** Native calculated-holder ID 111 contributions applied as flat PHYS ATK. */
+export function mir4PhysicalAttackFlatReduction(target: Entity): number {
+  let reduction = 0;
+  for (const effect of target.mir4Effects?.active ?? []) {
+    if (effect.remaining <= CAST_COMPLETE_EPS) continue;
+    if (effect.kind === 'physical-attack-flat-reduction') reduction += effect.magnitude;
+  }
+  return Math.max(0, reduction);
+}
+
 /** Movement multiplier: hard control = 0, else the slow product. */
 export function mir4MovementMultiplier(target: Entity): number {
-  if (mir4HardControlled(target) || mir4Rooted(target)) return 0;
+  if (mir4HardControlled(target) || mir4Rooted(target) || mir4HitReacting(target)) return 0;
   let mult = 1;
   for (const f of target.mir4Effects?.active ?? []) {
     if (f.remaining <= CAST_COMPLETE_EPS) continue;
@@ -383,7 +559,7 @@ export function mir4MovementMultiplier(target: Entity): number {
  * classic slow and speed modifier already folded into the shared multiplier.
  */
 export function mir4MovementMultiplierFromShared(target: Entity, sharedMultiplier: number): number {
-  if (mir4HardControlled(target) || mir4Rooted(target)) return 0;
+  if (mir4HardControlled(target) || mir4Rooted(target) || mir4HitReacting(target)) return 0;
   if (
     isVeilboundMarchActive(target) ||
     target.auras.some((aura) => aura.kind === 'slow_immunity')
@@ -393,7 +569,11 @@ export function mir4MovementMultiplierFromShared(target: Entity, sharedMultiplie
   const mir4Slows = (target.mir4Effects?.active ?? []).filter(
     (effect) => effect.kind === 'slow' && effect.remaining > CAST_COMPLETE_EPS,
   );
-  if (mir4Slows.length === 0) return sharedMultiplier;
+  const withNativeAddMoveSpeed = (multiplier: number): number => {
+    const nativeDeltaYardsPerSecond = mir4NativeStatusBonus(target, 76) / 100;
+    return Math.max(0, multiplier + nativeDeltaYardsPerSecond / Math.max(0.01, target.moveSpeed));
+  };
+  if (mir4Slows.length === 0) return withNativeAddMoveSpeed(sharedMultiplier);
 
   const mir4SlowIds = new Set(mir4Slows.map((effect) => effect.effectId));
   let strongestSharedSlow = 1;
@@ -406,9 +586,9 @@ export function mir4MovementMultiplierFromShared(target: Entity, sharedMultiplie
     }
   }
   const mir4Product = mir4MovementMultiplier(target);
-  return (
+  return withNativeAddMoveSpeed(
     sharedMultiplier *
-    ((strongestNonMir4Slow * mir4Product) / Math.max(Number.EPSILON, strongestSharedSlow))
+      ((strongestNonMir4Slow * mir4Product) / Math.max(Number.EPSILON, strongestSharedSlow)),
   );
 }
 
@@ -534,6 +714,7 @@ export function mir4EffectKindOf(effect: string): Mir4EffectKind | null {
     case 'damage-boost':
     case 'defense-boost':
     case 'dodge-boost':
+    case 'evade-disabled':
     case 'burn':
       return effect;
     default:

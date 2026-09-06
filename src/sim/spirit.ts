@@ -48,6 +48,7 @@ import {
 import { createNpc } from './entity';
 import { releaseSpiritInDelve } from './entity_roster';
 import { scriptedInstanceReturnAt } from './instances/scripted_return';
+import { interruptMir4SkillMovementOnDisplacement } from './mir4/displacement';
 import { restorePetOnOwnerRevive } from './pet/pet_owner_revive';
 import { cancelProfessionSessionOnDisplacement } from './professions/session_teardown';
 import {
@@ -432,6 +433,7 @@ export function moveToGraveyardForUnstuck(ctx: SimContext, pid?: number): void {
   // professions doctrine), keeping this path safe if a session state ever
   // stops riding castingAbility.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   // Resolve the graveyard before the move takes the player out of its instance band.
   const gy = ghostGraveyard(
     ctx,
@@ -656,6 +658,7 @@ function reviveAt(
   // revivePlayerAt teleports even a LIVE target (wasDead only gates the
   // respawn event), so a running gather/fishing session must end here too.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = ctx.groundPos(pos.x, pos.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);

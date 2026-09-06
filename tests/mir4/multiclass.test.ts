@@ -63,23 +63,37 @@ describe('D1: hosting the mir4 roster', () => {
     expect(p.spellPower).toBe(50);
     p.level = 10;
     const wolf = spawnWolf(sim);
+    wolf.maxHp = 1_000;
+    wolf.hp = wolf.maxHp;
     wolf.swingTimer = 999;
     const hp = wolf.hp;
     expect(sim.mir4CastSkill(3101, wolf.id)).toEqual({ ok: true });
-    for (const impact of p.mir4PendingImpacts ?? []) impact.dueAt = sim.ctx.time;
+    expect(
+      (p.mir4PendingImpacts ?? []).filter(
+        (impact) => impact.skillId === 3101 && !impact.effectOnly,
+      ),
+    ).toHaveLength(7);
+    for (const impact of p.mir4PendingImpacts ?? []) {
+      impact.dueAt = sim.ctx.time;
+      impact.forceHit = true;
+      impact.forceCritical = false;
+    }
     updateMir4PendingImpacts(sim.ctx);
-    expect(hp - wolf.hp).toBe(97); // the row-total-impact-vector split
+    expect(hp - wolf.hp).toBe(133); // four native row totals split across seven contacts
     expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: false, reason: 'wrong-class' });
-    while (p.gcdRemaining > 0) sim.tick();
+    while (p.gcdRemaining > 0 || sim.players.get(sim.playerId)?.mir4SkillAction) sim.tick();
     // The taoist basic (4600): floor(50*4600/10000) = 23 at its offset.
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: true });
-    expect(wolf.hp).toBe(hp - 97); // scheduled, lands after the offset
+    expect(wolf.hp).toBe(hp - 133); // scheduled, lands after the offset
     for (let t = 0; t < 9; t++) sim.tick();
     expect(
-      wolf.mir4Effects?.active.some((f) => f.kind === 'defense-break' && f.magnitude === 0.1),
+      wolf.mir4Effects?.active.some(
+        (effect) =>
+          effect.effectId === 'mir4_native_buff_30010' && effect.kind === 'spell-attack-reduction',
+      ),
     ).toBe(true);
-    expect(wolf.dead).toBe(true);
-    expect(wolf.hp).toBe(0); // the +10% basic overkills the final 23 HP
+    expect(wolf.dead).toBe(false);
+    expect(wolf.hp).toBeLessThan(hp - 133); // the Taoist basic lands after its native offset
   });
 
   it('the arbalist and lancer derive their rows and basics', () => {

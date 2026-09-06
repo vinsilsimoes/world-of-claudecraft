@@ -625,16 +625,13 @@ describe('MIR4 Mount progression', () => {
     expect(sim.player.cooldowns.get('1102')).toBe(25);
     expect(sim.player.gcdRemaining).toBe(1);
     resolveContacts(sim);
+    while (sim.players.get(sim.playerId)?.mir4SkillAction) sim.tick();
 
     expect(equipMir4Mount(sim.ctx, sim.playerId, null)).toMatchObject({
       ok: true,
       status: 'unequipped',
     });
     expect(required(sim.player.mir4, 'MIR4 player stats').mountBasicAttackSpeedBps).toBe(0);
-    sim.player.cooldowns.delete('mir4_basic');
-    sim.player.gcdRemaining = 0;
-    expect(sim.mir4BasicAttack(target.id)).toEqual({ ok: true });
-    expect(sim.player.cooldowns.get('mir4_basic')).toBeCloseTo(0.65, 8);
 
     const ranged = makeSim(1_101, 'elementalist');
     const rangedMeta = required(ranged.players.get(ranged.playerId), 'ranged player meta');

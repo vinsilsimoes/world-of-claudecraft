@@ -12,6 +12,13 @@
 import { advanceMir4AutomationRoute, type Mir4AutomationRouteState } from '../auto_quest/route';
 import { castMir4Skill, mir4BasicAttack, mir4Ultimate } from '../mir4/combat';
 import { mir4Silenced } from '../mir4/effects';
+import { mir4ManualMovementActive } from '../mir4/manual_input';
+import {
+  mir4NativeDirectAdmissionWithinRange,
+  mir4NativeTargetHeightAdmitted,
+  mir4NativeTraceCommitWithinRange,
+} from '../mir4/native_skill_activation_range';
+import { mir4SkillActivationOwnsMotion } from '../mir4/skill_activation';
 import { MIR4_ULTIMATE_UNLOCK_LEVEL } from '../mir4/skill_progression';
 import { markMir4WireDirty } from '../mir4/wire_revision';
 import { findReachablePlayerPath } from '../pathfind';
@@ -25,7 +32,12 @@ import {
   normalizeMir4AutoPotionThreshold,
   resolveMir4AutoPotionThresholds,
 } from './potion_thresholds';
-import { mir4AutoBattleActionRange, pickMir4AutoBattleSkill } from './rotation';
+import {
+  mir4AutoBattleActionInDirectRange,
+  mir4AutoBattleActionRange,
+  mir4AutoBattleNativeSkillActivationRanges,
+  pickMir4AutoBattleSkill,
+} from './rotation';
 import {
   blockMir4AutoBattleTarget,
   type Mir4AutoBattleTargetMemory,
@@ -58,6 +70,8 @@ export interface Mir4AutoBattleState extends Mir4AutoBattleTargetMemory {
   suspended: boolean;
   /** Session-only collision-aware route. Persistence projects only authoritative settings. */
   route?: Mir4AutomationRouteState;
+  /** Captured native skill/target pair after direct admission enters Trace FSM. */
+  nativeSkillTrace?: { skillId: number; targetId: number };
 }
 
 export function setMir4AutoBattleMode(
@@ -87,6 +101,7 @@ export function setMir4AutoBattleMode(
   } else if (meta.autoBattle) {
     if (meta.autoBattle.mode === 'off') return;
     meta.autoBattle.mode = 'off';
+    meta.autoBattle.nativeSkillTrace = undefined;
     markMir4WireDirty(meta);
   }
 }
@@ -112,14 +127,16 @@ export function setMir4AutoPotionThreshold(
   markMir4WireDirty(meta);
 }
 
-function livingHostileMobAt(
+function livingAutoBattleTargetAt(
   ctx: SimContext,
   attacker: Entity,
   id: number | null | undefined,
+  qaDuelOpponentId?: number,
 ): Entity | null {
   if (id === null || id === undefined) return null;
   const e = ctx.entities.get(id);
-  return e && e.kind === 'mob' && !e.dead && ctx.isHostileTo(attacker, e) ? e : null;
+  const admittedKind = e?.kind === 'mob' || (e?.kind === 'player' && e.id === qaDuelOpponentId);
+  return e && admittedKind && !e.dead && ctx.isHostileTo(attacker, e) ? e : null;
 }
 
 function faceTowards(p: Entity, x: number, z: number): void {
@@ -132,10 +149,12 @@ function acquireTarget(
   st: Mir4AutoBattleState,
   anchorX = st.anchorX,
   anchorZ = st.anchorZ,
+  qaDuelOpponentId?: number,
 ): Entity | null {
   const candidates: { entity: Entity; distance: number }[] = [];
   for (const e of ctx.entities.values()) {
-    if (e.kind !== 'mob' || e.dead || !ctx.isHostileTo(p, e)) continue;
+    const admittedKind = e.kind === 'mob' || (e.kind === 'player' && e.id === qaDuelOpponentId);
+    if (!admittedKind || e.dead || !ctx.isHostileTo(p, e)) continue;
     if (mir4AutoBattleTargetBlocked(st, e.id, ctx.time)) continue;
     const d = dist2d({ x: anchorX, y: 0, z: anchorZ } as Entity['pos'], e.pos);
     const fromPlayer = dist2d(p.pos, e.pos);
@@ -156,7 +175,7 @@ function acquireTarget(
       area,
       meta?.mir4DisabledAutoSkills,
     );
-    return candidate.distance <= mir4AutoBattleActionRange(p, pick);
+    return mir4AutoBattleActionInDirectRange(p, pick, candidate.distance);
   };
   const hasReachablePath = (entity: Entity): boolean =>
     findReachablePlayerPath(
@@ -216,9 +235,13 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
   for (const meta of ctx.players.values()) {
     const st = meta.autoBattle;
     if (st?.mode !== 'battle') continue;
+    if (mir4SkillActivationOwnsMotion(meta, ctx.tickCount)) continue;
     pruneMir4AutoBattleTargetBlocks(st, ctx.time);
     const p = ctx.entities.get(meta.entityId);
-    if (!p || p.dead) continue;
+    if (!p || p.dead) {
+      st.nativeSkillTrace = undefined;
+      continue;
+    }
 
     // Ordinary Attack owns exactly one selected target. Auto Battle remains
     // enabled but cannot acquire, move or cast until that focused contract
@@ -229,15 +252,8 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     // player is steering). The moment the hands leave the keys it RESUMES,
     // re-anchored where the player stands. Bot locomotion uses moveToward,
     // never moveInput, so only a human hand sets these flags.
-    const inp = meta.moveInput;
-    if (
-      inp.forward ||
-      inp.back ||
-      inp.strafeLeft ||
-      inp.strafeRight ||
-      inp.turnLeft ||
-      inp.turnRight
-    ) {
+    if (mir4ManualMovementActive(meta.moveInput)) {
+      st.nativeSkillTrace = undefined;
       if (!st.suspended) {
         st.suspended = true;
         markMir4WireDirty(meta);
@@ -251,6 +267,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       st.route = undefined;
       st.pursuit = undefined;
       st.blockedUntilByTargetId = undefined;
+      st.nativeSkillTrace = undefined;
       markMir4WireDirty(meta);
     }
 
@@ -266,7 +283,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     const journeyActive = meta.mir4AutoQuest !== undefined && !meta.mir4AutoQuest.suspended;
     const effectiveAnchorX = journeyActive ? p.pos.x : st.anchorX;
     const effectiveAnchorZ = journeyActive ? p.pos.z : st.anchorZ;
-    let target = livingHostileMobAt(ctx, p, p.targetId);
+    let target = livingAutoBattleTargetAt(ctx, p, p.targetId, meta.mir4DuelQa?.opponentId);
     if (
       target &&
       (mir4AutoBattleTargetBlocked(st, target.id, ctx.time) ||
@@ -276,11 +293,19 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       target = null; // outside the anchor: drop it, exactly like the source
     }
     if (!target) {
-      target = acquireTarget(ctx, p, st, effectiveAnchorX, effectiveAnchorZ);
+      target = acquireTarget(
+        ctx,
+        p,
+        st,
+        effectiveAnchorX,
+        effectiveAnchorZ,
+        meta.mir4DuelQa?.opponentId,
+      );
       p.targetId = target ? target.id : null;
     }
 
     if (!target) {
+      st.nativeSkillTrace = undefined;
       if (journeyActive) continue;
       st.pursuit = undefined;
       // No prey: walk home and stand guard. moveToward (the shared mob/pet
@@ -301,7 +326,23 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       anchorZ: effectiveAnchorZ,
       acquireRadiusYards: st.acquireRadiusYards,
     };
-    const pick = pickMir4AutoBattleSkill(ctx, p, target, area, meta.mir4DisabledAutoSkills);
+    if (st.nativeSkillTrace && st.nativeSkillTrace.targetId !== target.id) {
+      st.nativeSkillTrace = undefined;
+    }
+    let pick = pickMir4AutoBattleSkill(ctx, p, target, area, meta.mir4DisabledAutoSkills);
+    if (
+      st.nativeSkillTrace &&
+      st.nativeSkillTrace.targetId === target.id &&
+      !meta.mir4DisabledAutoSkills?.includes(st.nativeSkillTrace.skillId)
+    ) {
+      pick = {
+        skillId: st.nativeSkillTrace.skillId,
+        selfUtility: false,
+        actorCentered: false,
+      };
+    } else if (st.nativeSkillTrace) {
+      st.nativeSkillTrace = undefined;
+    }
     if (pick?.selfUtility) {
       const result = castMir4Skill(ctx, p.id, pick.skillId, target.id);
       if (result.ok) continue;
@@ -315,10 +356,38 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       !p.cooldowns.has('mir4_ult');
     const needsTargetLineOfSight = ultimateReady || pick?.actorCentered !== true;
     const actorCenteredReady = pick?.actorCentered === true && !ultimateReady;
-    const needsPursuit =
-      !actorCenteredReady &&
-      (dist2d(p.pos, target.pos) > rangeYards ||
-        (needsTargetLineOfSight && !ctx.hasLineOfSight(p, target)));
+    const distanceYards = dist2d(p.pos, target.pos);
+    const nativeActivation = ultimateReady ? null : mir4AutoBattleNativeSkillActivationRanges(pick);
+    let nativeTraceActive =
+      nativeActivation !== null &&
+      st.nativeSkillTrace?.skillId === pick?.skillId &&
+      st.nativeSkillTrace?.targetId === target.id;
+    const nativeHeightAdmitted =
+      nativeActivation === null ||
+      mir4NativeTargetHeightAdmitted(target.pos.y - p.pos.y, nativeActivation);
+    const nativeSightAdmitted =
+      nativeActivation === null || !nativeActivation.blockingCheck || ctx.hasLineOfSight(p, target);
+    if (
+      nativeActivation &&
+      !nativeTraceActive &&
+      (!mir4NativeDirectAdmissionWithinRange(distanceYards, nativeActivation) ||
+        !nativeHeightAdmitted ||
+        !nativeSightAdmitted)
+    ) {
+      st.nativeSkillTrace = { skillId: nativeActivation.skillId, targetId: target.id };
+      nativeTraceActive = true;
+    }
+    const nativeRangeAdmitted =
+      nativeActivation === null
+        ? null
+        : nativeTraceActive
+          ? mir4NativeTraceCommitWithinRange(distanceYards, nativeActivation)
+          : mir4NativeDirectAdmissionWithinRange(distanceYards, nativeActivation);
+    const needsPursuit = nativeActivation
+      ? !actorCenteredReady &&
+        (!nativeRangeAdmitted || !nativeHeightAdmitted || !nativeSightAdmitted)
+      : !actorCenteredReady &&
+        (distanceYards > rangeYards || (needsTargetLineOfSight && !ctx.hasLineOfSight(p, target)));
     if (needsPursuit) {
       // Auto Journey is the sole locomotion owner while active. Auto Battle
       // may attack an enemy already in range, but it must never add a second
@@ -338,6 +407,7 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
       if (observed.stalled) {
         blockMir4AutoBattleTarget(st, target.id, ctx.time);
         st.route = undefined;
+        st.nativeSkillTrace = undefined;
         p.targetId = null;
         continue;
       }
@@ -356,7 +426,10 @@ export function updateMir4AutoBattle(ctx: SimContext): void {
     }
     if (pick && !pick.selfUtility) {
       const result = castMir4Skill(ctx, p.id, pick.skillId, target.id);
-      if (result.ok) continue;
+      if (result.ok) {
+        st.nativeSkillTrace = undefined;
+        continue;
+      }
     }
     mir4BasicAttack(ctx, p.id, target.id);
   }

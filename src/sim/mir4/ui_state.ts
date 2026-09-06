@@ -24,6 +24,8 @@ export interface Mir4PlayerUiState extends Mir4PersistedPlayerState {
   ultimateGauge: number;
   /** Session-only authoritative story gate for Auto Mission. */
   mir4NarrativeDialogue?: Mir4NarrativeDialogueState;
+  /** Compact self-only marker for server-owned approach or committed action motion. */
+  mir4SkillActivation?: { phase: 'approach' | 'action' };
 }
 
 export function projectMir4PlayerUiState(
@@ -46,5 +48,10 @@ export function projectMir4PlayerUiState(
     ...(meta.mir4NarrativeDialogue
       ? { mir4NarrativeDialogue: { ...meta.mir4NarrativeDialogue } }
       : {}),
+    ...(meta.mir4SkillAction && !meta.mir4SkillAction.motionInterrupted
+      ? { mir4SkillActivation: { phase: 'action' as const } }
+      : meta.mir4SkillActivation
+        ? { mir4SkillActivation: { phase: 'approach' as const } }
+        : {}),
   };
 }

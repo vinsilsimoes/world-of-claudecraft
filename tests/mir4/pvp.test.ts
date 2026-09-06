@@ -151,7 +151,7 @@ describe('MIR4 PvP through the shared duel rules', () => {
 
       expect(
         target.mir4Effects?.active.some(
-          (effect) => effect.effectId === 'mir4_4106_stun' && effect.kind === 'stun',
+          (effect) => effect.effectId === 'mir4_native_buff_40524' && effect.kind === 'stun',
         ) ?? false,
       ).toBe(expectedStun);
       expect(next).toHaveBeenCalledTimes(3);
@@ -169,8 +169,15 @@ describe('MIR4 PvP through the shared duel rules', () => {
 
     expect(sim.duelFor(arbalist)).toBeNull();
     expect(target.hp).toBe(1);
-    expect(target.mir4Effects?.active ?? []).toHaveLength(0);
-    expect(target.auras.some((aura) => aura.id === 'mir4_4106_stun')).toBe(false);
+    expect(
+      target.mir4Effects?.active.some(
+        (effect) =>
+          effect.kind === 'stun' ||
+          effect.effectId === 'mir4_native_buff_40010_31' ||
+          effect.effectId === 'mir4_native_buff_40510_33',
+      ) ?? false,
+    ).toBe(false);
+    expect(target.auras.some((aura) => aura.id === 'mir4_native_buff_40524')).toBe(false);
     expect(next).toHaveBeenCalledTimes(2);
   });
 
@@ -180,10 +187,10 @@ describe('MIR4 PvP through the shared duel rules', () => {
     vi.spyOn(sim.rng, 'next').mockImplementation(() => queuedDraws.shift() ?? 0.5);
     expect(castMir4Skill(sim.ctx, arbalist, 4106, warrior)).toEqual({ ok: true });
     resolveContacts(sim, arbalist);
-    expect(target.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_4106_stun')).toBe(
-      true,
-    );
-    expect(target.auras.some((aura) => aura.id === 'mir4_4106_stun')).toBe(true);
+    expect(
+      target.mir4Effects?.active.some((effect) => effect.effectId === 'mir4_native_buff_40524'),
+    ).toBe(true);
+    expect(target.auras.some((aura) => aura.id === 'mir4_native_buff_40524')).toBe(true);
     expect(
       applyMir4Effect(sim.ctx, target, {
         effectId: 'external_slow',
@@ -200,7 +207,7 @@ describe('MIR4 PvP through the shared duel rules', () => {
 
     expect(sim.duelFor(arbalist)).toBeNull();
     expect(target.mir4Effects?.active.map((effect) => effect.effectId)).toEqual(['external_slow']);
-    expect(target.auras.some((aura) => aura.id === 'mir4_4106_stun')).toBe(false);
+    expect(target.auras.some((aura) => aura.id === 'mir4_native_buff_40524')).toBe(false);
     expect(
       applyMir4Effect(sim.ctx, target, {
         effectId: 'external_stun',
@@ -231,9 +238,9 @@ describe('MIR4 PvP through the shared duel rules', () => {
     const bag = target.mir4Effects;
     if (!bag) throw new Error('legacy MIR4 effect bag missing');
     expect(bag.controlImmuneUntil).toBeGreaterThan(sim.time);
-    bag.active = bag.active.filter((effect) => effect.effectId !== 'mir4_4106_stun');
+    bag.active = bag.active.filter((effect) => effect.effectId !== 'mir4_native_buff_40524');
     bag.controlImmunityByEffectId = undefined;
-    target.auras = target.auras.filter((aura) => aura.id !== 'mir4_4106_stun');
+    target.auras = target.auras.filter((aura) => aura.id !== 'mir4_native_buff_40524');
 
     target.pos.x = 100;
     sim.tick();

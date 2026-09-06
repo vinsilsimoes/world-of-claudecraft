@@ -31,6 +31,10 @@ export interface AbilityScaling {
   attackPower: number;
   /** MIR4-only STATUS 44 boost; ignored by classic abilities. */
   mir4SkillDamageBps?: number;
+  /** Temporary native STATUS 22 flat Spell ATK, separate from the sheet value. */
+  mir4SpellAttackBonus?: number;
+  /** Native STATUS 148 Skill HP Recovery on the 10,000-point rate scale. */
+  mir4SkillHealingBps?: number;
 }
 
 /** Flat bonus this character adds to ONE displayed hit of `eff` (or, for a DoT, to

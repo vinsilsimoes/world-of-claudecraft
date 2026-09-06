@@ -12,6 +12,7 @@ import type { OverheadEmoteId } from '../../world_api';
 import { recordBuildSpan, timeBuildSpan } from '../build_spans';
 import { GFX } from '../gfx';
 import { cloneMaterialWithHooks } from '../material_clone_hooks';
+import { mir4DownReactionLiftY } from '../mir4_down_reaction_core';
 import {
   createWeaponVfx,
   DEFAULT_TUNING,
@@ -629,6 +630,11 @@ export class CharacterVisual {
   // the distinction (skin_attack.ts rangedSkinAiming); a stale true is harmless
   // because every read gates on currentIsOneShot first.
   private currentOneShotIsAttack = false;
+  private mir4DownReactionAction: THREE.AnimationAction | null = null;
+  private mir4DownReactionElapsed = 0;
+  private mir4DownReactionRemaining = 0;
+  private mir4DownReactionMoveDuration = 0;
+  private mir4DownReactionHeight = 0;
   /** The ability driving the cast base state, mirrored from AnimState so the
    *  aim pin can tell a drawn shot from a pet utility cast. */
   private castingAbility: string | null = null;
@@ -927,6 +933,7 @@ export class CharacterVisual {
       this.syncFarVisibility();
     }
     this.hitCooldown = Math.max(0, this.hitCooldown - dt);
+    this.advanceMir4DownReaction(dt);
     this.updateMetamorphWings(dt, s, reducedMotion);
     if (this.holdCooldown > 0) this.holdCooldown = Math.max(0, this.holdCooldown - dt);
     // Deferred sheathe swap: lands at the gesture's windup peak (see
@@ -1065,7 +1072,12 @@ export class CharacterVisual {
     this.poseWrap.position.y =
       this.swimBlend * (swimRise + Math.sin(this.swimBobTime * 2 + this.bobPhase) * 0.08) +
       // Compress at the start of the pull, back to neutral as the body rises.
-      CLIMB_BODY_DUCK * climb * (1 - env01(this.climbPhase, 0.1, 0.55));
+      CLIMB_BODY_DUCK * climb * (1 - env01(this.climbPhase, 0.1, 0.55)) +
+      mir4DownReactionLiftY(
+        this.mir4DownReactionElapsed,
+        this.mir4DownReactionMoveDuration,
+        this.mir4DownReactionHeight,
+      );
 
     // distant corpses show the static idle far mesh, tip it over
     if (this.farMesh?.visible) {
@@ -1161,6 +1173,7 @@ export class CharacterVisual {
    */
   advanceOffscreen(dt: number): void {
     this.hitCooldown = Math.max(0, this.hitCooldown - dt);
+    this.advanceMir4DownReaction(dt);
     if (this.holdCooldown > 0) this.holdCooldown = Math.max(0, this.holdCooldown - dt);
     const stowTick = tickStow(this.stow, dt);
     if (stowTick !== 'none') {
@@ -1513,6 +1526,54 @@ export class CharacterVisual {
     if (!clips || clips.length === 0) return;
     this.hitCooldown = HIT_REACT_COOLDOWN;
     this.playOneShot(clips[Math.floor(Math.random() * clips.length)], 1.2);
+  }
+
+  /** Native MIR4 crowd type 1. Unlike the generic cosmetic flinch, this is an
+   * authoritative 200ms action-state transition and may restart per contact. */
+  playMir4HitReaction(
+    stance: 'hit-01' | 'hit-02' | 'stun-01' | 'down-02' | 'down-03',
+    durationMs: number,
+    moveDurationMs?: number,
+    heightYards?: number,
+  ): void {
+    if (this.deadLock || durationMs <= 0) return;
+    const downReaction = stance === 'down-02' || stance === 'down-03';
+    const clip = downReaction ? this.def.clips.death : this.def.clips.hit?.[0];
+    if (!clip) return;
+    this.currentIsOneShot = false;
+    this.currentOneShotIsEmote = false;
+    this.hitCooldown = 0;
+    if (downReaction) {
+      const action = this.action(clip);
+      if (!action) return;
+      this.mir4DownReactionAction = action;
+      this.mir4DownReactionElapsed = 0;
+      this.mir4DownReactionRemaining = durationMs / 1_000;
+      this.mir4DownReactionMoveDuration =
+        Math.min(durationMs, moveDurationMs ?? durationMs) / 1_000;
+      this.mir4DownReactionHeight = Math.max(0, heightYards ?? 0);
+      this.playTimedOneShot(clip, this.def.deathTimeScale ?? 1.15, moveDurationMs ?? durationMs);
+      return;
+    }
+    this.playTimedOneShot(clip, 1.2, durationMs);
+  }
+
+  private advanceMir4DownReaction(dt: number): void {
+    if (this.mir4DownReactionRemaining <= 0) return;
+    this.mir4DownReactionElapsed += dt;
+    this.mir4DownReactionRemaining = Math.max(0, this.mir4DownReactionRemaining - dt);
+    if (
+      this.mir4DownReactionRemaining === 0 &&
+      this.current === this.mir4DownReactionAction &&
+      this.currentIsOneShot &&
+      !this.deadLock
+    ) {
+      this.currentIsOneShot = false;
+      this.currentOneShotIsEmote = false;
+      this.fadeTo(this.baseAction(), 0.18, false);
+      this.mir4DownReactionAction = null;
+      this.mir4DownReactionHeight = 0;
+    }
   }
 
   /** Contact-frame hitstop: hold THIS rig's animation at `scale` speed for
@@ -3363,6 +3424,7 @@ export class CharacterVisual {
     if (a === this.templarsVerdictAction) this.stopTemplarsVerdictFx();
     if (a === this.bastionSweepAction) this.stopBastionSweepFx();
     if (this.deadLock) return; // death clip clamps on its last frame
+    if (a === this.mir4DownReactionAction && this.mir4DownReactionRemaining > 0) return;
     if (this.baseState === 'sit' && a === this.action(this.def.clips.sitDown)) {
       this.fadeTo(this.action(this.def.clips.sitIdle) ?? a, 0.25, false);
       return;
@@ -3398,6 +3460,9 @@ export class CharacterVisual {
     this.stopTemplarsVerdictFx();
     this.stopBastionSweepFx();
     this.deadLock = true;
+    this.mir4DownReactionAction = null;
+    this.mir4DownReactionRemaining = 0;
+    this.mir4DownReactionHeight = 0;
     this.currentIsOneShot = false;
     this.currentOneShotIsEmote = false;
     this.applyCorpseMeshSwap(true);
@@ -3451,6 +3516,9 @@ export class CharacterVisual {
 
   private revive(): void {
     this.deadLock = false;
+    this.mir4DownReactionAction = null;
+    this.mir4DownReactionRemaining = 0;
+    this.mir4DownReactionHeight = 0;
     this.baseState = 'idle';
     this.applyCorpseMeshSwap(false);
     // Release the one-shot latch: a `finished` that never arrived (the rig was

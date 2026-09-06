@@ -51,12 +51,22 @@ export function mir4ControlChanceFromStatuses(
   attacker: Mir4StatusRecord | undefined,
   defender: Mir4StatusRecord | undefined,
   targetKind: Mir4TargetKind,
+  temporaryResistanceBps = 0,
 ): number {
   const ids = CONTROL_STATUS_IDS[family];
   const contextIds = targetKind === 'player' ? ids.pvp : ids.monster;
   const success = contextualControlValue(attacker, ids.general, contextIds, 0);
-  const resistance = contextualControlValue(defender, ids.general, contextIds, 1);
-  const chance = mir4StunChanceBps(baseBps, success, resistance);
+  const resistance =
+    contextualControlValue(defender, ids.general, contextIds, 1) +
+    Math.trunc(temporaryResistanceBps);
+  // The shared chance helper accepts non-negative lanes. Native debuffs such
+  // as Blasting Charm expose signed resistance, so transpose each negative
+  // lane to the opposite side while preserving base + success - resistance.
+  const chance = mir4StunChanceBps(
+    baseBps,
+    Math.max(0, success) + Math.max(0, -resistance),
+    Math.max(0, resistance) + Math.max(0, -success),
+  );
   return targetKind === 'player' ? Math.min(9_500, chance) : chance;
 }
 
@@ -66,13 +76,19 @@ export function mir4ControlDurationMs(
   attacker: Mir4StatusRecord | undefined,
   defender?: Mir4StatusRecord,
   targetKind: Mir4TargetKind = 'monster',
+  temporaryResistanceBps = 0,
+  temporaryDurationBoostBps = 0,
 ): number {
   const statusId =
     family === 'stun' ? 153 : family === 'debilitation' ? 154 : family === 'silence' ? 155 : 0;
-  const boost = statusId === 0 ? 0 : mir4StatusRecordValue(attacker, statusId);
+  const boost =
+    (statusId === 0 ? 0 : mir4StatusRecordValue(attacker, statusId)) +
+    Math.trunc(temporaryDurationBoostBps);
   const ids = CONTROL_STATUS_IDS[family];
   const contextIds = targetKind === 'player' ? ids.pvp : ids.monster;
-  const resistance = contextualControlValue(defender, ids.general, contextIds, 1);
+  const resistance =
+    contextualControlValue(defender, ids.general, contextIds, 1) +
+    Math.trunc(temporaryResistanceBps);
   const maximumMultiplierBps = targetKind === 'player' ? 12_500 : 15_000;
   const durationMultiplierBps = Math.max(
     3_500,

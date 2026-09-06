@@ -13,6 +13,9 @@
 // plus-manifest-source contract test pattern (tests/anim_pipeline_batch1.test.ts).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { MeshoptDecoder } from 'meshoptimizer';
 import { describe, expect, it, vi } from 'vitest';
 import type { AbilityVfxDeps } from '../src/render/ability_vfx/painter';
 import { AbilityVfx } from '../src/render/ability_vfx/painter';
@@ -34,7 +37,10 @@ function meshCountOf(glbPath: string): number {
   return (doc.meshes ?? []).length;
 }
 
-const MANIFEST_SRC = readFileSync(join(ROOT, 'src/render/characters/manifest.ts'), 'utf8');
+const MANIFEST_SRC = readFileSync(
+  join(ROOT, 'src/render/characters/manifest.ts'),
+  'utf8',
+);
 
 function manifestBlock(startAnchor: string, endAnchor: string): string {
   const start = MANIFEST_SRC.indexOf(startAnchor);
@@ -45,7 +51,16 @@ function manifestBlock(startAnchor: string, endAnchor: string): string {
 }
 
 describe('warrior bespoke movement clip (issue #2889 warrior/kobold batch)', () => {
-  const WARRIOR_NEW_CLIPS = ['Warrior_Heroic_Leap'];
+  const WARRIOR_NEW_CLIPS = [
+    'Warrior_Heroic_Leap',
+    'Warrior_Mir4_AirSlash',
+    'Warrior_Mir4_UnbreakableStance',
+  ];
+  const WARRIOR_NATIVE_CUTTER_CLIP = 'Warrior_Mir4_Cutter_Native';
+  const WARRIOR_NATIVE_RIPOSTE_CLIP = 'Warrior_Mir4_Riposte_Native';
+  const WARRIOR_NATIVE_IRON_SHACKLE_CLIP = 'Warrior_Mir4_Iron_Shackle_Native';
+  const WARRIOR_NATIVE_OVERDRIVE_CLIP = 'Warrior_Mir4_OverDrive_Native';
+  const WARRIOR_NATIVE_DRAGON_FLAME_CLIP = 'Warrior_Mir4_DragonFlame_Native';
 
   it('ships the new clip in a mesh-free donor GLB', () => {
     const glbPath = 'public/models/chars/players/warrior_ability_anims.glb';
@@ -53,11 +68,239 @@ describe('warrior bespoke movement clip (issue #2889 warrior/kobold batch)', () 
     expect(meshCountOf(glbPath)).toBe(0);
   });
 
+  it('pins the Air Slash body clip to the native 1.5s action and all three contacts', async () => {
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const doc = await io.read(
+      join(ROOT, 'public/models/chars/players/warrior_ability_anims.glb'),
+    );
+    const airSlash = doc
+      .getRoot()
+      .listAnimations()
+      .find((animation) => animation.getName() === 'Warrior_Mir4_AirSlash');
+    expect(airSlash).toBeDefined();
+    const timeline = airSlash?.listSamplers()[0]?.getInput()?.getArray();
+    expect(timeline?.at(-1)).toBeCloseTo(1.5, 4);
+    for (const contact of [0.52, 0.699, 0.9]) {
+      expect(
+        Array.from(timeline ?? []).some(
+          (time) => Math.abs(time - contact) < 0.0001,
+        ),
+        `missing native Air Slash contact ${contact}s`,
+      ).toBe(true);
+    }
+  });
+
+  it('ships Splitting Slash as the decoded 47-frame native Cutter action', async () => {
+    const glbPath = 'public/models/chars/players/warrior_cutter_native.glb';
+    expect(clipNamesOf(glbPath)).toEqual([WARRIOR_NATIVE_CUTTER_CLIP]);
+    expect(meshCountOf(glbPath)).toBe(0);
+
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const doc = await io.read(join(ROOT, glbPath));
+    const cutter = doc.getRoot().listAnimations()[0];
+    expect(cutter?.getName()).toBe(WARRIOR_NATIVE_CUTTER_CLIP);
+    expect(cutter?.listChannels()).toHaveLength(24);
+    const rotationChannel = cutter
+      ?.listChannels()
+      .find((channel) => channel.getTargetPath() === 'rotation');
+    const timeline = rotationChannel?.getSampler()?.getInput()?.getArray();
+    const rotations = rotationChannel?.getSampler()?.getOutput()?.getArray();
+    expect(timeline).toHaveLength(47);
+    expect(timeline?.at(-1)).toBeCloseTo(1.5386906, 6);
+    expect(rotations).toHaveLength(47 * 4);
+    for (let index = 0; index < (rotations?.length ?? 0); index += 4) {
+      const length = Math.hypot(
+        rotations?.[index] ?? 0,
+        rotations?.[index + 1] ?? 0,
+        rotations?.[index + 2] ?? 0,
+        rotations?.[index + 3] ?? 0,
+      );
+      expect(length).toBeCloseTo(1, 5);
+    }
+  });
+
+  it('pins Unbreakable Stance to the extracted 36-frame native action duration', async () => {
+    const glbPath = 'public/models/chars/players/warrior_ability_anims.glb';
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const doc = await io.read(join(ROOT, glbPath));
+    const clip = doc
+      .getRoot()
+      .listAnimations()
+      .find(
+        (animation) => animation.getName() === 'Warrior_Mir4_UnbreakableStance',
+      );
+    expect(clip, 'missing Unbreakable Stance body clip').toBeDefined();
+    const duration = Math.max(
+      0,
+      ...(clip?.listSamplers().flatMap((sampler) => {
+        const input = sampler.getInput()?.getArray();
+        return input ? Array.from(input) : [];
+      }) ?? []),
+    );
+    expect(duration).toBeCloseTo(1.1666666, 5);
+    expect(clip?.listChannels().length).toBeGreaterThan(0);
+  });
+
+  it('ships Riposte as the decoded native ready-and-counter action', async () => {
+    const glbPath = 'public/models/chars/players/warrior_riposte_native.glb';
+    expect(clipNamesOf(glbPath)).toEqual([WARRIOR_NATIVE_RIPOSTE_CLIP]);
+    expect(meshCountOf(glbPath)).toBe(0);
+
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const doc = await io.read(join(ROOT, glbPath));
+    const riposte = doc.getRoot().listAnimations()[0];
+    expect(riposte?.getName()).toBe(WARRIOR_NATIVE_RIPOSTE_CLIP);
+    expect(riposte?.listChannels()).toHaveLength(24);
+    const rightArm = riposte
+      ?.listChannels()
+      .find(
+        (channel) =>
+          channel.getTargetNode()?.getName() === 'upperarm.r' &&
+          channel.getTargetPath() === 'rotation',
+      );
+    const timeline = rightArm?.getSampler()?.getInput()?.getArray();
+    const rotations = rightArm?.getSampler()?.getOutput()?.getArray();
+    expect(timeline).toHaveLength(66);
+    expect(timeline?.[29]).toBeCloseTo(0.95923078, 6);
+    expect(timeline?.[30]).toBeCloseTo(0.99230772, 6);
+    expect(timeline?.at(-1)).toBeCloseTo(2.15, 6);
+    expect(Array.from(rotations?.slice(43 * 4, 44 * 4) ?? [])).toEqual([
+      expect.closeTo(-0.8627175, 6),
+      expect.closeTo(0.12279128, 6),
+      expect.closeTo(0.43864113, 6),
+      expect.closeTo(-0.21962422, 6),
+    ]);
+    for (let index = 0; index < (rotations?.length ?? 0); index += 4) {
+      const length = Math.hypot(
+        rotations?.[index] ?? 0,
+        rotations?.[index + 1] ?? 0,
+        rotations?.[index + 2] ?? 0,
+        rotations?.[index + 3] ?? 0,
+      );
+      expect(length).toBeCloseTo(1, 5);
+    }
+  });
+
+  it('ships Iron Shackle as the decoded native 86-frame action', async () => {
+    const glbPath =
+      'public/models/chars/players/warrior_iron_shackle_native.glb';
+    expect(clipNamesOf(glbPath)).toEqual([WARRIOR_NATIVE_IRON_SHACKLE_CLIP]);
+    expect(meshCountOf(glbPath)).toBe(0);
+
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const doc = await io.read(join(ROOT, glbPath));
+    const ironShackle = doc.getRoot().listAnimations()[0];
+    expect(ironShackle?.getName()).toBe(WARRIOR_NATIVE_IRON_SHACKLE_CLIP);
+    expect(ironShackle?.listChannels()).toHaveLength(24);
+    const rightArm = ironShackle
+      ?.listChannels()
+      .find(
+        (channel) =>
+          channel.getTargetNode()?.getName() === 'upperarm.r' &&
+          channel.getTargetPath() === 'rotation',
+      );
+    const timeline = rightArm?.getSampler()?.getInput()?.getArray();
+    const rotations = rightArm?.getSampler()?.getOutput()?.getArray();
+    expect(timeline).toHaveLength(86);
+    expect(timeline?.at(-1)).toBeCloseTo(2.83333325, 6);
+    expect(Array.from(rotations?.slice(43 * 4, 44 * 4) ?? [])).toEqual([
+      expect.closeTo(-0.84833783, 6),
+      expect.closeTo(0.20637979, 6),
+      expect.closeTo(0.47645274, 6),
+      expect.closeTo(-0.1035525, 6),
+    ]);
+  });
+
+  it('ships Berserk as the decoded native 42-frame OverDrive action', async () => {
+    const glbPath = 'public/models/chars/players/warrior_overdrive_native.glb';
+    expect(clipNamesOf(glbPath)).toEqual([WARRIOR_NATIVE_OVERDRIVE_CLIP]);
+    expect(meshCountOf(glbPath)).toBe(0);
+
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const clip = (await io.read(join(ROOT, glbPath)))
+      .getRoot()
+      .listAnimations()[0];
+    expect(clip?.listChannels()).toHaveLength(24);
+    const timeline = clip
+      ?.listChannels()[0]
+      ?.getSampler()
+      ?.getInput()
+      ?.getArray();
+    expect(timeline).toHaveLength(42);
+    expect(timeline?.at(-1)).toBeCloseTo(1.3666667, 6);
+  });
+
+  it('ships Dragon Flame as the decoded native 104-frame Special action', async () => {
+    const glbPath =
+      'public/models/chars/players/warrior_dragon_flame_native.glb';
+    expect(clipNamesOf(glbPath)).toEqual([WARRIOR_NATIVE_DRAGON_FLAME_CLIP]);
+    expect(meshCountOf(glbPath)).toBe(0);
+
+    await MeshoptDecoder.ready;
+    const io = new NodeIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+    const clip = (await io.read(join(ROOT, glbPath)))
+      .getRoot()
+      .listAnimations()[0];
+    expect(clip?.listChannels()).toHaveLength(24);
+    const timeline = clip
+      ?.listChannels()[0]
+      ?.getSampler()
+      ?.getInput()
+      ?.getArray();
+    expect(timeline).toHaveLength(104);
+    expect(timeline?.at(-1)).toBeCloseTo(3.4333334, 6);
+  });
+
   it('wires the donor GLB into animUrls and keeps every pre-existing attackByAbility entry', () => {
-    const block = manifestBlock('player_warrior: swims({', 'player_paladin: swims({');
+    const block = manifestBlock(
+      'player_warrior: swims({',
+      'player_paladin: swims({',
+    );
     expect(block).toContain('warrior_ability_anims.glb');
+    expect(block).toContain('warrior_cutter_native.glb');
+    expect(block).toContain('warrior_riposte_native.glb');
+    expect(block).toContain('warrior_iron_shackle_native.glb');
+    expect(block).toContain('warrior_overdrive_native.glb');
+    expect(block).toContain('warrior_dragon_flame_native.glb');
+    expect(block).toContain(
+      "mir4_skill_1502: 'Warrior_Mir4_UnbreakableStance'",
+    );
     expect(block).toContain('attackByAbility');
     for (const clip of WARRIOR_NEW_CLIPS) expect(block).toContain(`'${clip}'`);
+    expect(block).toContain("mir4_skill_1102: 'Warrior_Mir4_AirSlash'");
+    expect(block).toContain(`mir4_skill_1104: '${WARRIOR_NATIVE_CUTTER_CLIP}'`);
+    expect(block).toContain(
+      `mir4_skill_1301: '${WARRIOR_NATIVE_RIPOSTE_CLIP}'`,
+    );
+    expect(block).toContain(
+      `mir4_skill_1201: '${WARRIOR_NATIVE_IRON_SHACKLE_CLIP}'`,
+    );
+    expect(block).toContain(
+      `mir4_skill_1101: '${WARRIOR_NATIVE_OVERDRIVE_CLIP}'`,
+    );
+    expect(block).toContain(
+      `mir4_ultimate_1: '${WARRIOR_NATIVE_DRAGON_FLAME_CLIP}'`,
+    );
     // Pre-existing entries from earlier PRs must survive this change untouched.
     const preExisting = [
       'mortal_strike',
@@ -83,7 +326,10 @@ describe('warrior bespoke movement clip (issue #2889 warrior/kobold batch)', () 
   });
 
   it('every mapped ability id is a real warrior ability, and every referenced clip is a shipped or pre-existing donor', () => {
-    const warriorBlock = manifestBlock('player_warrior: swims({', 'player_paladin: swims({');
+    const warriorBlock = manifestBlock(
+      'player_warrior: swims({',
+      'player_paladin: swims({',
+    );
     const abilityStart = warriorBlock.indexOf('attackByAbility: {');
     expect(abilityStart).toBeGreaterThanOrEqual(0);
     const abilityEnd = warriorBlock.indexOf('\n      },', abilityStart);
@@ -103,6 +349,7 @@ describe('warrior bespoke movement clip (issue #2889 warrior/kobold batch)', () 
       'Block',
       'Punch_A',
       'Cheer',
+      WARRIOR_NATIVE_CUTTER_CLIP,
       // this batch's new bake
       ...WARRIOR_NEW_CLIPS,
     ]);
@@ -140,9 +387,10 @@ describe('warrior bespoke movement clip (issue #2889 warrior/kobold batch)', () 
       'rallying_cry',
       'intimidating_shout',
     ]) {
-      expect(map[deadId], `${deadId} must stay unmapped (never reaches attackByAbility)`).toBe(
-        undefined,
-      );
+      expect(
+        map[deadId],
+        `${deadId} must stay unmapped (never reaches attackByAbility)`,
+      ).toBe(undefined);
     }
   });
 });

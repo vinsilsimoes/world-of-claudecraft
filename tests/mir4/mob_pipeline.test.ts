@@ -53,15 +53,21 @@ describe('the mob->player pipeline', () => {
     sim.mobSwing(wolf, p);
     expect(hp - p.hp).toBe(240); // live level-1 tutorial pressure, unmitigated
   });
-  it('the magic shield shaves 22% off what lands', () => {
+  it('the native rank-1 magic shield shaves 24% off what lands', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(122);
     const p = sim.entities.get(sim.playerId)!;
     const wolf = spawnWolf(sim);
-    p.mir4Shield = { remaining: 10, magnitude: 0.22 };
+    p.mir4Shield = {
+      remaining: 25,
+      damageReductionBasisPoints: 2_400,
+      bashDamageReductionBasisPoints: 1_500,
+      absorptionRemaining: 2_000,
+      hitsRemaining: 20,
+    };
     const hp = p.hp;
     sim.mobSwing(wolf, p);
-    expect(hp - p.hp).toBe(Math.floor(240 * (1 - 0.22))); // 187
+    expect(hp - p.hp).toBe(Math.floor(240 * (1 - 0.24))); // 182
   });
   it('blind on the mob cuts its outgoing attack by the magnitude', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);

@@ -19,6 +19,7 @@ import {
 } from '../auto_quest/core';
 import type { SimContext } from '../sim_context';
 import { claimMir4Achievement, type Mir4AchievementClaimResult } from './achievements';
+import { mir4ActionId } from './action_abilities';
 import { type Mir4LayerKind, mir4ResolveLayer, mir4RollLayer } from './affixes';
 import { mir4CampaignProfessionAction } from './arc_professions';
 import { acknowledgeMir4ArcTutorial } from './arc_receipts';
@@ -53,6 +54,11 @@ import { MIR4_MOUNT_PENDING_LIMIT } from './mounts';
 import { skipMir4NarrativeDialogue } from './narrative_dialogue';
 import { mir4QuestTrackerEntries, mir4TalkOrInspect } from './quest';
 import type { Mir4QuestTrackerEntry } from './quest_tracker';
+import {
+  cancelMir4SkillActivation,
+  type Mir4SkillActivationResult,
+  requestMir4SkillActivation,
+} from './skill_activation';
 import { type Mir4SkillUpgradeResult, upgradeMir4Skill } from './skill_evolution';
 import { type Mir4SolitudeTrainingResult, trainMir4Solitude } from './solitude_training_commands';
 import { isMir4SpiritTicketId, MIR4_SPIRIT_PENDING_LIMIT } from './spirits';
@@ -72,6 +78,12 @@ interface Mir4SimFacadeHost {
 
 export interface Mir4SimFacade {
   castMir4Skill(skillId: number, pid?: number, targetId?: number): Mir4CastResult;
+  requestMir4SkillActivation(
+    abilityId: string,
+    pid?: number,
+    targetId?: number,
+  ): Mir4SkillActivationResult;
+  cancelMir4SkillActivation(pid?: number): void;
   mir4BasicAttack(targetId?: number, pid?: number): Mir4CastResult;
   setMir4AutoBattleMode(mode: 'off' | 'battle', pid?: number): void;
   mir4TalkOrInspect(pid?: number): string;
@@ -162,6 +174,12 @@ export const mir4SimFacade = defineMir4SimFacade({
   castMir4Skill(this: Mir4SimFacadeHost, skillId, pid = this.playerId, targetId) {
     return castMir4Skill(this.ctx, pid, skillId, targetId);
   },
+  requestMir4SkillActivation(this: Mir4SimFacadeHost, abilityId, pid = this.playerId, targetId) {
+    return requestMir4SkillActivation(this.ctx, abilityId, pid, targetId);
+  },
+  cancelMir4SkillActivation(this: Mir4SimFacadeHost, pid = this.playerId) {
+    cancelMir4SkillActivation(this.ctx, pid);
+  },
   mir4BasicAttack(this: Mir4SimFacadeHost, targetId, pid = this.playerId) {
     return mir4BasicAttack(this.ctx, pid, targetId);
   },
@@ -229,7 +247,7 @@ export const mir4SimFacade = defineMir4SimFacade({
     skipMir4NarrativeDialogue(this.ctx, pid, dialogueId);
   },
   mir4CastSkill(this: Mir4SimFacadeHost, skillId, targetId, pid = this.playerId) {
-    return castMir4Skill(this.ctx, pid, skillId, targetId);
+    return requestMir4SkillActivation(this.ctx, mir4ActionId(skillId), pid, targetId);
   },
   mir4UpgradeSkill(this: Mir4SimFacadeHost, skillId, expectedCurrentLevel, pid = this.playerId) {
     return upgradeMir4Skill(this.ctx, pid, skillId, expectedCurrentLevel);

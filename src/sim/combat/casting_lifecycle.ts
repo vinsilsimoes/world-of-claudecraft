@@ -844,7 +844,7 @@ export function castAbility(
   const r = ctx.resolve(pid);
   if (!r) return;
   const { meta, e: p } = r;
-  if (castMir4Action(ctx, abilityId, p.id)) {
+  if (castMir4Action(ctx, abilityId, p.id, castTargetId ?? undefined)) {
     meta.lastActiveTick = ctx.tickCount;
     return;
   }

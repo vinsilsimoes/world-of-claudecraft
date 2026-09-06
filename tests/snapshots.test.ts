@@ -91,14 +91,26 @@ describe('runtime MIR4 entity presentation over the entity wire', () => {
       40,
       { x: 4, y: 0, z: 8 },
     );
-    mob.mir4Shield = { remaining: 6, magnitude: 0.22 };
+    mob.mir4Shield = {
+      remaining: 6,
+      damageReductionBasisPoints: 2_200,
+      bashDamageReductionBasisPoints: 0,
+      absorptionRemaining: 100,
+      hitsRemaining: 5,
+    };
     const wire = wireEntity(mob);
     const client = bareClient(999);
 
     (client as any).applySnapshot({ t: 'snap', ents: [wire] });
 
     const mirrored = client.entities.get(mob.id)! as Entity;
-    expect(mirrored.mir4Shield).toEqual({ remaining: 6, magnitude: 0.22 });
+    expect(mirrored.mir4Shield).toEqual({
+      remaining: 6,
+      damageReductionBasisPoints: 2_200,
+      bashDamageReductionBasisPoints: 0,
+      absorptionRemaining: Number.MAX_SAFE_INTEGER,
+      hitsRemaining: Number.MAX_SAFE_INTEGER,
+    });
     expect((mirrored as any).mobFamily).toBe('undead');
     expect((mirrored as any).mobElite).toBe(true);
     expect((mirrored as any).mobBoss).toBe(true);
@@ -1929,6 +1941,23 @@ describe('online movement input lifetime', () => {
     for (let i = 0; i < Math.ceil(0.35 / DT); i++) server.sim.tick();
     (server as any).clearStaleInputs();
     expect(meta.moveInput.turnLeft).toBe(false);
+  });
+
+  it.each([
+    ['dive', { f: 0, b: 0, tl: 0, tr: 0, sl: 0, sr: 0, j: 0, dv: 1, sf: 0 }],
+    ['surface', { f: 0, b: 0, tl: 0, tr: 0, sl: 0, sr: 0, j: 0, dv: 0, sf: 1 }],
+  ] as const)('clears stale %s-only input frames', (field, mi) => {
+    const server = new GameServer();
+    const fc = fakeWs();
+    const session = joinServer(server, fc, 1, `Swimmer ${field}`);
+    server.handleMessage(session, JSON.stringify({ t: 'input', seq: 1, mi }));
+    const meta = server.sim.meta(session.pid)!;
+    expect(meta.moveInput[field]).toBe(true);
+
+    for (let i = 0; i < Math.ceil(0.8 / DT); i++) server.sim.tick();
+    (server as any).clearStaleInputs();
+
+    expect(meta.moveInput[field]).toBe(false);
   });
 });
 

@@ -4,7 +4,7 @@ import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { mir4ActionAbilities, mir4ActionId } from '../../src/sim/mir4/action_abilities';
 import { castMir4Skill, updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
-import { mir4AttackMultiplier, mir4DefenseMultiplier } from '../../src/sim/mir4/effects';
+import { mir4NativeStatusBonus } from '../../src/sim/mir4/effects';
 import { Sim } from '../../src/sim/sim';
 import { dist2d, type Entity, type Mir4ClassKey } from '../../src/sim/types';
 import { EMPTY_TEST_WORLD } from '../sim_shared';
@@ -43,18 +43,13 @@ function spawnTarget(sim: Sim, dx: number, suffix: string): Entity {
   return target;
 }
 
-function resolveSkill(sim: Sim): void {
-  sim.time += 5;
-  updateMir4PendingImpacts(sim.ctx);
-}
-
 describe('the complete MIR4 Arbalist kit', () => {
   it('contains the twelve official regular skills and names', () => {
     expect(mir4SkillsForClass(4).map((skill) => [skill.skillId, skill.displayName])).toEqual([
       [4101, 'Tiro Rápido'],
       [4106, 'Vendaval de Golpe de Dor'],
       [4102, 'Seta da Ilusão'],
-      [4103, 'Escudo Explosivo'],
+      [4103, 'Projétil Explosivo'],
       [4107, 'Seta do Clarão'],
       [4108, 'Arco Celestial'],
       [4111, 'Olho da Mente'],
@@ -76,23 +71,24 @@ describe('the complete MIR4 Arbalist kit', () => {
     );
   });
 
-  it('controls at range and turns Cloaking into a short defensive burst', () => {
+  it('controls at range and applies Cloaking only at its native contact', () => {
     const painstrike = makeClass('arbalist', 16_001);
     const target = spawnTarget(painstrike, 10, 'painstrike');
     expect(castMir4Skill(painstrike.ctx, painstrike.playerId, 4106, target.id)).toEqual({
       ok: true,
     });
-    resolveSkill(painstrike);
+    for (let tick = 0; tick < 20; tick += 1) painstrike.tick();
     expect(target.mir4Effects?.active.some((effect) => effect.kind === 'stun')).toBe(true);
 
     const cloaking = makeClass('arbalist', 16_002);
     expect(castMir4Skill(cloaking.ctx, cloaking.playerId, 4112)).toEqual({
       ok: true,
     });
-    expect(mir4AttackMultiplier(cloaking.player)).toBeCloseTo(1.2, 8);
-    expect(
-      cloaking.player.mir4Effects?.active.some((effect) => effect.kind === 'dodge-boost'),
-    ).toBe(true);
+    expect(cloaking.player.stealthed).toBe(false);
+    cloaking.time += 0.08;
+    updateMir4PendingImpacts(cloaking.ctx);
+    expect(cloaking.player.stealthed).toBe(true);
+    expect(mir4NativeStatusBonus(cloaking.player, 47)).toBe(0);
   });
 });
 
@@ -121,25 +117,44 @@ describe('the complete MIR4 Lancer kit', () => {
     ]);
   });
 
-  it('protects with Wind Wall, heals with Absorption, and charges with Blitz Strike', () => {
+  it('protects with Wind Wall, heals on Absorption contact, and charges with Blitz Strike', () => {
     const wall = makeClass('lancer', 16_003);
     const wallTarget = spawnTarget(wall, 3, 'wind_wall');
     expect(castMir4Skill(wall.ctx, wall.playerId, 5403, wallTarget.id)).toEqual({ ok: true });
-    expect(mir4DefenseMultiplier(wall.player)).toBeCloseTo(1.2, 8);
+    expect(mir4NativeStatusBonus(wall.player, 47)).toBe(0);
+    wall.time += 0.02;
+    updateMir4PendingImpacts(wall.ctx);
+    expect(mir4NativeStatusBonus(wall.player, 47)).toBe(2_000);
 
     const absorb = makeClass('lancer', 16_004);
     absorb.player.hp = Math.floor(absorb.player.maxHp / 2);
     const absorbTarget = spawnTarget(absorb, 4, 'absorption');
     const hpBefore = absorb.player.hp;
     expect(castMir4Skill(absorb.ctx, absorb.playerId, 5304, absorbTarget.id)).toEqual({ ok: true });
+    expect(absorb.player.hp).toBe(hpBefore);
+    const absorptionContact = absorb.player.mir4PendingImpacts?.find(
+      (impact) => impact.skillId === 5304 && impact.attackId === 530401,
+    );
+    expect(absorptionContact).toBeDefined();
+    if (absorptionContact) {
+      absorptionContact.forceHit = true;
+      absorptionContact.forceCritical = false;
+      absorb.time = absorptionContact.dueAt;
+      updateMir4PendingImpacts(absorb.ctx);
+    }
     expect(absorb.player.hp).toBeGreaterThan(hpBefore);
 
     const blitz = makeClass('lancer', 16_005);
-    const blitzTarget = spawnTarget(blitz, 15, 'blitz');
+    const blitzTarget = spawnTarget(blitz, 10, 'blitz');
     blitz.ctx.hasLineOfSight = () => true;
     const before = dist2d(blitz.player.pos, blitzTarget.pos);
     expect(castMir4Skill(blitz.ctx, blitz.playerId, 5202, blitzTarget.id)).toEqual({ ok: true });
-    resolveSkill(blitz);
+    for (const impact of blitz.player.mir4PendingImpacts ?? []) {
+      if (impact.skillId !== 5202) continue;
+      impact.forceHit = true;
+      impact.forceCritical = false;
+    }
+    for (let tick = 0; tick < 12; tick += 1) blitz.tick();
     expect(dist2d(blitz.player.pos, blitzTarget.pos)).toBeLessThan(before);
     expect(blitzTarget.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(
       true,

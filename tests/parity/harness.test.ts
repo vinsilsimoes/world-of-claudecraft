@@ -182,6 +182,8 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
       'lastActiveTick',
       'lastWhisperFrom',
       'marketQuery',
+      'mir4SkillActivation',
+      'mir4SkillActivationClaimedThroughTick',
       'mir4TargetCombat',
       'moveInput',
       'name',
@@ -212,7 +214,13 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
       'castConsumedEmpower', // set only while a cast that consumed an empower resolves
       'castRadiantResonance', // set only while Dawn's Embrace has reserved the proc
     ]);
-    const optionalMeta = new Set(['characterId', 'lastWhisperFrom', 'mir4TargetCombat']);
+    const optionalMeta = new Set([
+      'characterId',
+      'lastWhisperFrom',
+      'mir4TargetCombat',
+      'mir4SkillActivation',
+      'mir4SkillActivationClaimedThroughTick',
+    ]);
     for (const k of ENTITY_EXCLUDE) {
       if (!optionalEntity.has(k)) expect(k in entity, `Entity.${k} missing (renamed?)`).toBe(true);
     }

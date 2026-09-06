@@ -273,7 +273,16 @@ interface Projectile {
   // Visual heft multiplier (Pyroblast's heavyBolt = 2): scales the comet core,
   // trail and impact flash; mechanics and speed are untouched.
   scale?: number;
+  nativeStyle?: 'ice-ball' | 'fire-ball' | 'dark-burst';
   onImpact?: (position: THREE.Vector3) => void;
+}
+
+export interface Mir4NativeHomingProjectileOptions {
+  readonly sourceHeightFraction: number;
+  readonly scale: number;
+  readonly speedYardsPerSecond: number;
+  readonly lifetimeSeconds: number;
+  readonly effectId: number;
 }
 
 interface BubbleBeam {
@@ -747,6 +756,33 @@ export class Vfx {
     this.projectileFrom(from, targetId, school, scale, 26, undefined, color);
   }
 
+  mir4NativeHomingProjectile(
+    sourceId: number,
+    targetId: number,
+    school: string,
+    options: Mir4NativeHomingProjectileOptions,
+  ): void {
+    const from = this.anchor(sourceId, options.sourceHeightFraction);
+    if (!from) return;
+    this.projectileFrom(
+      from,
+      targetId,
+      school,
+      options.scale,
+      options.speedYardsPerSecond,
+      undefined,
+      undefined,
+      options.lifetimeSeconds,
+      options.effectId === 2040032
+        ? 'ice-ball'
+        : options.effectId === 2040003
+          ? 'fire-ball'
+          : options.effectId === 2040034
+            ? 'dark-burst'
+            : undefined,
+    );
+  }
+
   private projectileFrom(
     from: THREE.Vector3,
     targetId: number,
@@ -755,6 +791,8 @@ export class Vfx {
     speed = 26,
     onImpact?: (position: THREE.Vector3) => void,
     color?: number,
+    lifetimeSeconds = 3,
+    nativeStyle?: Projectile['nativeStyle'],
   ): void {
     if (this.disposed) return;
     const colors = projectileSchoolColors(school, color);
@@ -766,10 +804,11 @@ export class Vfx {
       coreColor: colors.core,
       trailColor: colors.trail,
       speed,
-      ttl: 3,
+      ttl: lifetimeSeconds,
       coreSprite: sprites.core,
       trailSprite: sprites.trail,
       scale,
+      nativeStyle,
       onImpact,
     });
   }
@@ -2218,6 +2257,139 @@ export class Vfx {
             SPR.sparkle,
           );
         }
+      } else if (pr.nativeStyle === 'ice-ball') {
+        // The cooked Frost Orb particle is a three-layer ice ball. Keep the
+        // native effect id as the admission gate, then reconstruct those three
+        // readable layers with the existing atlas so LOW graphics does not
+        // collapse the projectile into a single white pixel.
+        const scale = pr.scale ?? 1;
+        this.spawn(
+          pr.pos.x,
+          pr.pos.y,
+          pr.pos.z,
+          0,
+          0,
+          0,
+          pr.trailColor,
+          1.65 * scale,
+          0.16,
+          0,
+          SPR.glowSoft,
+        );
+        this.spawn(
+          pr.pos.x,
+          pr.pos.y,
+          pr.pos.z,
+          0,
+          0,
+          0,
+          pr.coreColor,
+          1.05 * scale,
+          0.14,
+          0,
+          SPR.glowCore,
+        );
+        this.spawn(
+          pr.pos.x + (Math.random() - 0.5) * 0.18,
+          pr.pos.y + (Math.random() - 0.5) * 0.18,
+          pr.pos.z + (Math.random() - 0.5) * 0.18,
+          (Math.random() - 0.5) * 0.45,
+          0.18,
+          (Math.random() - 0.5) * 0.45,
+          pr.color,
+          0.42 * scale,
+          0.42,
+          0.5,
+          SPR.sparkBurst,
+        );
+      } else if (pr.nativeStyle === 'fire-ball') {
+        // The cooked Flame Orb uses three stacked fire particles. Rebuild the
+        // same readable hierarchy from the shared atlas: hot core, broad flame
+        // envelope, and a short-lived ember shed from the moving projectile.
+        const scale = pr.scale ?? 1;
+        this.spawn(
+          pr.pos.x,
+          pr.pos.y,
+          pr.pos.z,
+          0,
+          0,
+          0,
+          pr.trailColor,
+          1.85 * scale,
+          0.16,
+          0,
+          SPR.glowSoft,
+        );
+        this.spawn(
+          pr.pos.x,
+          pr.pos.y,
+          pr.pos.z,
+          0,
+          0,
+          0,
+          pr.coreColor,
+          1.15 * scale,
+          0.14,
+          0,
+          SPR.glowCore,
+        );
+        this.spawn(
+          pr.pos.x + (Math.random() - 0.5) * 0.24,
+          pr.pos.y + (Math.random() - 0.5) * 0.2,
+          pr.pos.z + (Math.random() - 0.5) * 0.24,
+          (Math.random() - 0.5) * 0.7,
+          0.28,
+          (Math.random() - 0.5) * 0.7,
+          pr.color,
+          0.5 * scale,
+          0.38,
+          0.8,
+          SPR.sparkBurst,
+        );
+      } else if (pr.nativeStyle === 'dark-burst') {
+        // The cooked DarkBurst graph binds a cast layer and a shot layer.
+        // Reconstruct the flying talisman as a narrow magenta core wrapped by
+        // a broader shadow aura, with short pink motes shed from its wake.
+        const scale = pr.scale ?? 1;
+        this.spawn(
+          pr.pos.x,
+          pr.pos.y,
+          pr.pos.z,
+          0,
+          0,
+          0,
+          pr.trailColor,
+          1.7 * scale,
+          0.15,
+          0,
+          SPR.glowSoft,
+        );
+        this.spawn(
+          pr.pos.x,
+          pr.pos.y,
+          pr.pos.z,
+          0,
+          0,
+          0,
+          pr.coreColor,
+          0.9 * scale,
+          0.13,
+          0,
+          SPR.glowCore,
+        );
+        this.spawn(
+          pr.pos.x + (Math.random() - 0.5) * 0.2,
+          pr.pos.y + (Math.random() - 0.5) * 0.28,
+          pr.pos.z + (Math.random() - 0.5) * 0.2,
+          (Math.random() - 0.5) * 0.45,
+          0.12,
+          (Math.random() - 0.5) * 0.45,
+          pr.color,
+          0.38 * scale,
+          0.32,
+          0.35,
+          SPR.sparkle,
+        );
       } else {
         // bright HDR core (blooms into a comet) + sparkling trail
         this.spawn(

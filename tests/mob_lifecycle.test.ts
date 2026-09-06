@@ -147,7 +147,13 @@ describe('mob_lifecycle module: respawnMob + despawnSummonedAdds', () => {
     const mob = spawn(sim, 'forest_wolf', 5, 40, 40);
     mob.dead = true;
     mob.hp = 0;
-    mob.mir4Shield = { remaining: 10, magnitude: 0.5 };
+    mob.mir4Shield = {
+      remaining: 10,
+      damageReductionBasisPoints: 5_000,
+      bashDamageReductionBasisPoints: 0,
+      absorptionRemaining: 100,
+      hitsRemaining: 5,
+    };
     mob.mir4Effects = {
       active: [
         {

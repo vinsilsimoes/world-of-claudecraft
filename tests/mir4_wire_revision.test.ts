@@ -26,6 +26,7 @@ const PERSISTED_FIELDS = [
 const DIRECT_WRITER_MODULES = [
   'auto_battle/core.ts',
   'auto_quest/core.ts',
+  'dev/mir4_duel_qa.ts',
   'dev/mir4_mount_playtest.ts',
   'dev/mir4_spirit_playtest.ts',
   'mir4/achievements.ts',
@@ -37,6 +38,8 @@ const DIRECT_WRITER_MODULES = [
   'mir4/crafting.ts',
   'mir4/energy.ts',
   'mir4/equipment.ts',
+  'mir4/equipment_crafting.ts',
+  'mir4/equipment_loot.ts',
   'mir4/mount_commands.ts',
   'mir4/persistence.ts',
   'mir4/quest.ts',
@@ -44,6 +47,7 @@ const DIRECT_WRITER_MODULES = [
   'mir4/skill_materials.ts',
   'mir4/solitude_training_commands.ts',
   'mir4/spirit_commands.ts',
+  'mir4/starter_vendor.ts',
   'mir4/training_commands.ts',
   'mir4/training_resources.ts',
 ];

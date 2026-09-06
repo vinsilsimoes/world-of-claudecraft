@@ -37,6 +37,7 @@ import {
 import { abilitiesKnownAt, DUNGEON_X_THRESHOLD, MOBS } from '../data';
 import * as deedsMod from '../deeds';
 import { createMob, createNpc, recalcPlayerStats } from '../entity';
+import { interruptMir4SkillMovementOnDisplacement } from '../mir4/displacement';
 import { restorePetFromDelveStash, stowPetForDelve } from '../pet/pet_commands';
 import { cancelProfessionSessionOnDisplacement } from '../professions/session_teardown';
 import type { ArenaReturnPools, PlayerMeta } from '../sim';
@@ -793,6 +794,7 @@ function placeCupFighter(
   // and the goal reset do not, and a fighter can legally start a gather
   // cast on the herb node inside the pitch during the celebrate window.
   cancelProfessionSessionOnDisplacement(ctx, e);
+  interruptMir4SkillMovementOnDisplacement(ctx, e);
   e.pos = ctx.groundPos(spot.x, spot.z);
   e.prevPos = { ...e.pos };
   e.facing = spot.facing;
@@ -1914,6 +1916,7 @@ function policePitch(ctx: SimContext, match: VcMatch): void {
     // other non-spell cast still can: crafting, salvage, enchanting and tool
     // recharge all start wherever the player is standing.
     cancelProfessionSessionOnDisplacement(ctx, e);
+    interruptMir4SkillMovementOnDisplacement(ctx, e);
     e.pos = ctx.groundPos(nlx + ox, nlz + oz);
     e.prevPos = { ...e.pos }; // hard teleport: no interpolated streak across the boards
     ctx.rebucket(e);

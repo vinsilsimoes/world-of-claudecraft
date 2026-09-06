@@ -29,6 +29,7 @@ import {
   takeCombatExit,
 } from '../instance_exit_memory';
 import type { LootTier } from '../lockpick';
+import { interruptMir4SkillMovementOnDisplacement } from '../mir4/displacement';
 import { RIFT_MECHANIC_SPACING_SEC } from '../mob/mechanic_spacing';
 import { retargetMob } from '../mob/targeting';
 import { cancelProfessionSessionOnDisplacement } from '../professions/session_teardown';
@@ -36,6 +37,7 @@ import type { SimContext } from '../sim_context';
 import { DT, dist2d, type Entity, type Vec3 } from '../types';
 import { isInWaterBody } from '../world';
 import { riftFx } from './fx';
+import { riftPlayerLiftAt } from './player_lift';
 import { closeNaturalRiftPortal, RIFT_MIN_LEVEL, RIFT_TIER_INFO } from './portals';
 import { addRiftClearGearLoot, addRiftProgressionLoot } from './progression';
 import { claimRiftFirstClear, markRiftEventActive } from './race';
@@ -829,6 +831,7 @@ export function enterRift(
   // A live gather/fishing session never survives the rift door (the same
   // every-teleport rule dungeons.ts enterDungeon carries; R28 family).
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = ctx.groundPos(origin.x + floor.entry.x, origin.z + floor.entry.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);
@@ -913,6 +916,7 @@ export function descendRift(ctx: SimContext, pid?: number): void {
     // Same every-teleport teardown as the entry above: a descender can be
     // mid-cast at the moment the floor advances under the whole party.
     cancelProfessionSessionOnDisplacement(ctx, e);
+    interruptMir4SkillMovementOnDisplacement(ctx, e);
     e.pos = { ...entryPos };
     e.prevPos = { ...e.pos };
     ctx.rebucket(e);
@@ -981,6 +985,7 @@ function forceExitRiftPlayer(
   p.riftReentryGraceUntil = ctx.time + 3;
   // The exit is a teleport like the entry: the same one-helper teardown.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = ctx.groundPos(dest.x, dest.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);
@@ -1262,6 +1267,7 @@ export function updateRiftTriggers(ctx: SimContext, p: Entity): void {
       const lx = p.pos.x - origin.x;
       const lz = p.pos.z - origin.z;
       if (Math.abs(lx - g.x) < g.hw && lz > g.z - g.hd - PLAYER_BODY_R) {
+        interruptMir4SkillMovementOnDisplacement(ctx, p);
         p.pos = ctx.groundPos(p.pos.x, origin.z + g.z - g.hd - PLAYER_BODY_R - 0.05);
         p.prevPos = { ...p.pos };
         ctx.rebucket(p);
@@ -1703,6 +1709,7 @@ function tickRiftRollers(
         undefined,
         ctx.riftCollisionToken,
       );
+      interruptMir4SkillMovementOnDisplacement(ctx, p);
       p.pos = ctx.groundPos(dest.x, dest.z);
       p.prevPos = { ...p.pos };
       ctx.rebucket(p);
@@ -1746,12 +1753,7 @@ export function advanceRiftRollers(ctx: SimContext): void {
  * kernel runs, so jumps/gravity integrate against the flat floor; updateRiftTriggers
  * re-applies it after. Both read the same pure height field, so they cancel. */
 export function riftPlayerLift(ctx: SimContext, p: Entity): number {
-  if (!isRiftPos(p.pos.x)) return 0;
-  const inst = riftInstanceAtPos(ctx, p.pos);
-  if (!inst) return 0;
-  const origin = riftInstanceOrigin(inst.slot, inst.floorIndex);
-  const floor = floorForInstance(inst);
-  return riftLiftAt(floor, p.pos.x - origin.x, p.pos.z - origin.z);
+  return riftPlayerLiftAt(ctx, p.pos.x, p.pos.z);
 }
 
 /** Stand every rift MOB and OBJECT on the raised sanctum tier each tick (an absolute

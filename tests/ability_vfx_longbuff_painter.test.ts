@@ -195,7 +195,13 @@ describe('everything else keeps its held read', () => {
 
     painter.syncEntity({
       ...ent([]),
-      mir4Shield: { remaining: 6, magnitude: 0.22 },
+      mir4Shield: {
+        remaining: 6,
+        damageReductionBasisPoints: 2_200,
+        bashDamageReductionBasisPoints: 0,
+        absorptionRemaining: 100,
+        hitsRemaining: 5,
+      },
     } as AbilityVfxEntityState);
 
     expect(fx.holdShell).toHaveBeenCalledWith(7, expect.any(Number), true);

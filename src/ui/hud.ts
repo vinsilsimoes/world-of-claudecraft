@@ -85,6 +85,7 @@ import { MIR4_GAME_PROFILE } from '../sim/game_profile';
 import { isItemLevelEligible, itemLevel, itemScore } from '../sim/item_level';
 import { requiredLevelFor } from '../sim/item_level_req';
 import type { Ante, PickAction } from '../sim/lockpick';
+import { mir4NativeStatusBonus } from '../sim/mir4/effects';
 import { petCanForceTaunt } from '../sim/pet/pet_taunt_gate';
 import {
   computeRespecCost,
@@ -910,6 +911,9 @@ export interface HudFeatures {
   dailyRewardsEnabled: boolean;
   devCommandsEnabled?: boolean;
   constrainedMemory?: boolean;
+  /** Development capture route: keep delayed ability syncs from polluting the
+   * one-skill action bar under visual homologation. */
+  actionBarAbilityIdAllowlist?: readonly string[];
 }
 
 export interface BugReportPayload {
@@ -2156,7 +2160,14 @@ export class Hud {
       playerName: this.sim.player.name,
       playerLevel: () => this.sim.player.level,
       talentSpec: () => this.sim.talentSpec,
-      knownAbilityIds: () => this.sim.known.map((known) => known.def.id),
+      knownAbilityIds: () =>
+        this.sim.known
+          .filter(
+            (known) =>
+              !this.features.actionBarAbilityIdAllowlist ||
+              this.features.actionBarAbilityIdAllowlist.includes(known.def.id),
+          )
+          .map((known) => known.def.id),
       hasAura: (kind) => this.sim.player.auras.some((aura) => aura.kind === kind),
       isInSportMatch: () => {
         const match = this.sim.cupInfo?.match;
@@ -5575,6 +5586,8 @@ export class Hud {
           rangedPower: p.rangedPower,
           attackPower: p.attackPower,
           mir4SkillDamageBps: p.mir4?.skillDamageBps,
+          mir4SpellAttackBonus: mir4NativeStatusBonus(p, 22),
+          mir4SkillHealingBps: p.mir4?.statusValues[148],
         };
         return abilityDisplayDescription(res, abilityEffectText(res, scaling), scaling, a);
       },
@@ -6623,6 +6636,8 @@ export class Hud {
       rangedPower: p.rangedPower,
       attackPower: p.attackPower,
       mir4SkillDamageBps: p.mir4?.skillDamageBps,
+      mir4SpellAttackBonus: mir4NativeStatusBonus(p, 22),
+      mir4SkillHealingBps: p.mir4?.statusValues[148],
     };
     const damageText = abilityEffectText(res, scaling);
     let html = `<div class="tt-title">${esc(abilityDisplayName(a))}</div>`;

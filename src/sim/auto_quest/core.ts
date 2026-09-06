@@ -43,8 +43,10 @@ import {
   mir4CampaignMapIdsForWorld,
   mir4WorldHasFullCampaign,
 } from '../mir4/campaign_availability';
+import { mir4ManualMovementActive } from '../mir4/manual_input';
 import { beginMir4NarrativeDialogue } from '../mir4/narrative_dialogue';
 import { mir4TalkOrInspect } from '../mir4/quest';
+import { mir4SkillActivationOwnsMotion } from '../mir4/skill_activation';
 import { startMir4TargetCombat, stopMir4TargetCombat } from '../mir4/target_combat';
 import { mir4ArcPortalsForWorld, mir4PortalRouteGoal } from '../mir4/travel';
 import { markMir4WireDirty } from '../mir4/wire_revision';
@@ -331,6 +333,7 @@ export function updateMir4AutoQuest(ctx: SimContext): void {
   for (const meta of ctx.players.values()) {
     const st = meta.mir4AutoQuest;
     if (!st || st.phase === 'done') continue;
+    if (mir4SkillActivationOwnsMotion(meta, ctx.tickCount)) continue;
     const p = ctx.entities.get(meta.entityId);
     if (!p || p.dead) continue;
 
@@ -363,15 +366,7 @@ export function updateMir4AutoQuest(ctx: SimContext): void {
       continue;
     }
 
-    const inp = meta.moveInput;
-    if (
-      inp.forward ||
-      inp.back ||
-      inp.strafeLeft ||
-      inp.strafeRight ||
-      inp.turnLeft ||
-      inp.turnRight
-    ) {
+    if (mir4ManualMovementActive(meta.moveInput)) {
       if (!st.suspended) {
         st.suspended = true;
         st.route = undefined;

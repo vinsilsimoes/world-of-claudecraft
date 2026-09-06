@@ -40,5 +40,7 @@ export function shouldDeliverCombatEventToViewer(
     return isViewerCombatParticipant(ev.sourceId, ev.targetId, viewerPid, viewerParty, ownerOf);
   if (ev.type === 'heal2')
     return isViewerCombatParticipant(ev.sourceId, ev.targetId, viewerPid, viewerParty, ownerOf);
+  if (ev.type === 'mir4HitReaction')
+    return isViewerCombatParticipant(ev.sourceId, ev.targetId, viewerPid, viewerParty, ownerOf);
   return true;
 }

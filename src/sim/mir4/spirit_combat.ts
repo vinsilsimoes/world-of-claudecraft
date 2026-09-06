@@ -41,6 +41,9 @@ export function resolveMir4PlayerDamageWithSpirit(
     buildBalance?: Mir4BuildDamageContext;
     forceHit?: boolean;
     forceCritical?: boolean;
+    hitChanceBpsOverride?: number;
+    criticalChanceBpsOverride?: number;
+    criticalMultiplierBpsOverride?: number;
   },
 ): Mir4SpiritDamageResult {
   const base = mir4ResolveDamage(input);

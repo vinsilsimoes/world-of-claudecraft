@@ -25,6 +25,7 @@ import {
   recordCombatExit,
   takeCombatExit,
 } from '../instance_exit_memory';
+import { interruptMir4SkillMovementOnDisplacement } from '../mir4/displacement';
 import { dungeonAdmissionKind } from '../mir4/dungeon_access_policy';
 import { retargetMob } from '../mob/targeting';
 import { cancelProfessionSessionOnDisplacement } from '../professions/session_teardown';
@@ -280,6 +281,7 @@ function placePlayerInClaim(
   const p = r.e;
   // A live gather/fishing session never survives an instance displacement.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = ctx.groundPos(origin.x + dungeon.entry.x, origin.z + dungeon.entry.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);
@@ -615,6 +617,7 @@ export function detachFromDungeon(ctx: SimContext, p: Entity): { x: number; z: n
   const inst = ctx.instances.find((i) => i.partyKey !== null && instanceClaimContains(i, p.pos));
   if (inst) scrubInstanceThreat(ctx, inst, p.id);
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   const scriptedReturn = inst?.scriptedReturnPositions.get(p.id);
   if (scriptedReturn) return { ...scriptedReturn };
   const drop = dungeon.leaveOffset ?? { x: 0, z: -DUNGEON_DOOR_RETURN_INSET };

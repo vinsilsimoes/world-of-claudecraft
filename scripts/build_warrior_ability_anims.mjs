@@ -1,4 +1,4 @@
-// Build the warrior's remaining bespoke movement clip (issue #2889).
+// Build the warrior's bespoke movement clips.
 // player_warrior in src/render/characters/manifest.ts already carries an
 // 18-entry attackByAbility block from earlier PRs; Heroic Leap is the real
 // remaining gap that both (a) has no matching donor pose in the existing
@@ -40,6 +40,15 @@
 //                       own impact beat) -> recover. Reads as a jump, not a
 //                       swing.
 //
+//   Warrior_Mir4_AirSlash repeats the rig's real horizontal sword-cut poses
+//                       on the three native MIR4 contact timestamps exposed by
+//                       skill 1102: 0.520s, 0.699s, and 0.900s. The exact
+//                       Pcw_Btl_Skl_AirSlash cooked animation package is not
+//                       present in this checkout, so the BODY silhouette is an
+//                       explicit compatible-rig approximation; the duration,
+//                       contact count, contact timestamps, movement, and hit
+//                       geometry remain native-data driven at runtime.
+//
 // Sampling note: knight.glb's stock KayKit clips (everything except the
 // earlier-PR-synthesized Punch_A/Shield_Bash/1H_Melee_Attack_Slice_Horizontal)
 // store rotation as normalized Int16 accessors. pose_blend.mjs's sampleChannel
@@ -49,8 +58,17 @@
 // time interval to stay off that edge.
 //
 // Usage: node scripts/build_warrior_ability_anims.mjs [--preview]
+//   Warrior_Mir4_UnbreakableStance uses the rig's defensive Block silhouette,
+//                       retimed to the extracted MIR4
+//                       Pcw_Btl_Skl_Berserker source: 36 frames / 1.1666666s,
+//                       with the committed stance at native contact 0.240s.
+//                       The cooked source uses an unsupported inline compression
+//                       variant, so this is an explicit compatible-rig pose
+//                       approximation with exact native timing.
+//
 // Output: public/models/chars/players/warrior_ability_anims.glb (0 meshes/
-// skins, 1 clip: Warrior_Heroic_Leap)
+// skins, 3 clips: Warrior_Heroic_Leap, Warrior_Mir4_AirSlash,
+// Warrior_Mir4_UnbreakableStance)
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dedup, prune } from '@gltf-transform/functions';
@@ -81,9 +99,22 @@ const root = doc.getRoot();
 const idleIdx = indexClip(root, 'Idle');
 const chopIdx = indexClip(root, '2H_Melee_Attack_Chop');
 const jumpIdx = indexClip(root, 'Jump_Idle');
+const horizontalSliceIdx = indexClip(root, '1H_Melee_Attack_Slice_Horizontal');
+const blockIdx = indexClip(root, 'Block');
 
-const allKeys = new Set([...idleIdx.keys(), ...chopIdx.keys(), ...jumpIdx.keys()]);
-const donorFor = (key) => idleIdx.get(key) ?? jumpIdx.get(key) ?? chopIdx.get(key);
+const allKeys = new Set([
+  ...idleIdx.keys(),
+  ...chopIdx.keys(),
+  ...jumpIdx.keys(),
+  ...horizontalSliceIdx.keys(),
+  ...blockIdx.keys(),
+]);
+const donorFor = (key) =>
+  idleIdx.get(key) ??
+  jumpIdx.get(key) ??
+  chopIdx.get(key) ??
+  horizontalSliceIdx.get(key) ??
+  blockIdx.get(key);
 
 // Donor poses (Idle 1.067s; 2H_Melee_Attack_Chop 1.633s, the same windup/
 // impact sample points build_mage_ability_anims.mjs's Cast_Nova borrows;
@@ -139,10 +170,87 @@ pushPoseRamp(timeline, {
   fallback: P_all,
 });
 
-const { animation } = bakeClip(doc, {
+const { animation: heroicLeapAnimation } = bakeClip(doc, {
   clipName: 'Warrior_Heroic_Leap',
   channelKeys: allKeys,
   timeline,
+  donorFor,
+});
+
+// The authored horizontal donor's semantic poses are documented in
+// scripts/_add_sweep_slice_anim.mjs. Sample strictly inside its key intervals
+// so this remains safe if its accessors are normalized in a later rebuild.
+const P_airSlashReady = samplePose(horizontalSliceIdx, 0.04);
+const P_airSlashChamber = samplePose(horizontalSliceIdx, 0.135);
+const P_airSlashContact = samplePose(horizontalSliceIdx, 0.315);
+const P_airSlashFollow = samplePose(horizontalSliceIdx, 0.495);
+const P_airSlashAll = mergePoses(
+  P_idle,
+  P_airSlashReady,
+  P_airSlashChamber,
+  P_airSlashContact,
+  P_airSlashFollow,
+);
+const airSlashTimeline = [[0, (key) => poseValue(P_idle, key, P_airSlashAll)]];
+
+const airSlashRamp = (fromTime, toTime, steps, fromPose, toPose, ease = easeOutCubic) =>
+  pushPoseRamp(airSlashTimeline, {
+    fromTime,
+    toTime,
+    steps,
+    ease,
+    fromPose,
+    toPose,
+    fallback: P_airSlashAll,
+  });
+
+airSlashRamp(0, 0.12, 2, P_idle, P_airSlashReady);
+airSlashRamp(0.12, 0.36, 4, P_airSlashReady, P_airSlashChamber);
+airSlashRamp(0.36, 0.52, 4, P_airSlashChamber, P_airSlashContact);
+airSlashRamp(0.52, 0.58, 2, P_airSlashContact, P_airSlashFollow);
+airSlashRamp(0.58, 0.64, 2, P_airSlashFollow, P_airSlashChamber);
+airSlashRamp(0.64, 0.699, 2, P_airSlashChamber, P_airSlashContact);
+airSlashRamp(0.699, 0.75, 2, P_airSlashContact, P_airSlashFollow);
+airSlashRamp(0.75, 0.82, 2, P_airSlashFollow, P_airSlashChamber);
+airSlashRamp(0.82, 0.9, 3, P_airSlashChamber, P_airSlashContact);
+airSlashRamp(0.9, 1.04, 3, P_airSlashContact, P_airSlashFollow);
+airSlashRamp(1.04, 1.3, 5, P_airSlashFollow, P_idle, easeInOutQuad);
+airSlashTimeline.push([1.5, (key) => poseValue(P_idle, key, P_airSlashAll)]);
+
+const { animation: airSlashAnimation } = bakeClip(doc, {
+  clipName: 'Warrior_Mir4_AirSlash',
+  channelKeys: allKeys,
+  timeline: airSlashTimeline,
+  donorFor,
+});
+
+const P_stanceReady = samplePose(blockIdx, 0.04);
+const P_stanceBrace = samplePose(blockIdx, 0.22);
+const P_stanceHold = samplePose(blockIdx, 0.48);
+const P_stanceAll = mergePoses(P_idle, P_stanceReady, P_stanceBrace, P_stanceHold);
+const unbreakableTimeline = [[0, (key) => poseValue(P_idle, key, P_stanceAll)]];
+const stanceRamp = (fromTime, toTime, steps, fromPose, toPose, ease = easeOutCubic) =>
+  pushPoseRamp(unbreakableTimeline, {
+    fromTime,
+    toTime,
+    steps,
+    ease,
+    fromPose,
+    toPose,
+    fallback: P_stanceAll,
+  });
+
+stanceRamp(0, 0.1, 3, P_idle, P_stanceReady);
+stanceRamp(0.1, 0.24, 4, P_stanceReady, P_stanceBrace);
+stanceRamp(0.24, 0.48, 4, P_stanceBrace, P_stanceHold, easeInOutQuad);
+unbreakableTimeline.push([0.78, (key) => poseValue(P_stanceHold, key, P_stanceAll)]);
+stanceRamp(0.78, 1.08, 5, P_stanceHold, P_idle, easeInOutQuad);
+unbreakableTimeline.push([1.1666666, (key) => poseValue(P_idle, key, P_stanceAll)]);
+
+const { animation: unbreakableStanceAnimation } = bakeClip(doc, {
+  clipName: 'Warrior_Mir4_UnbreakableStance',
+  channelKeys: allKeys,
+  timeline: unbreakableTimeline,
   donorFor,
 });
 
@@ -151,7 +259,7 @@ if (PREVIEW) {
   console.log(`wrote preview (mesh + skin + clip): ${PREVIEW_OUT}`);
 }
 
-stripToAnimationsOnly(doc, [animation]);
+stripToAnimationsOnly(doc, [heroicLeapAnimation, airSlashAnimation, unbreakableStanceAnimation]);
 await doc.transform(prune(), dedup());
 await io.write(OUT, doc);
 

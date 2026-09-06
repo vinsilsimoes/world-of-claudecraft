@@ -142,20 +142,36 @@ describe('player gesture release on cast fx (review #2961)', () => {
     },
   );
 
-  it('forwards a MIR4 authoritative contact delay to the signature impact sequence', () => {
+  it('claims Air Slash without replaying the generic signature sequence', () => {
     const { painter, fx } = makePainter(() => true);
-    painter.handleSpellfx({
+    expect(
+      painter.handleSpellfx({
+        sourceId: SOURCE_ID,
+        targetId: TARGET_ID,
+        school: 'physical',
+        fx: 'selfCast',
+        ability: 'mir4_skill_1102',
+        attackAnimationStarted: true,
+        impactDelayMs: 900,
+      }),
+    ).toBe(true);
+
+    expect(fx.sequenceInstant).not.toHaveBeenCalled();
+  });
+
+  it('does not replay a full generic sequence on each native Air Slash damage contact', () => {
+    const { painter, fx } = makePainter(() => true);
+    painter.onDamage({
       sourceId: SOURCE_ID,
       targetId: TARGET_ID,
       school: 'physical',
-      fx: 'selfCast',
       ability: 'mir4_skill_1102',
-      attackAnimationStarted: true,
-      impactDelayMs: 900,
+      kind: 'hit',
+      crit: false,
+      amount: 100,
     });
 
-    expect(fx.sequenceInstant).toHaveBeenCalledOnce();
-    expect(fx.sequenceInstant.mock.calls[0]?.slice(-2)).toEqual([0, 0.9]);
+    expect(fx.sequenceInstant).not.toHaveBeenCalled();
   });
 
   it('never plays the player gesture path for a mob (mobThrowFallback owns that read)', () => {

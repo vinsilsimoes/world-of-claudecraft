@@ -103,7 +103,29 @@ describe('the mir4 slice: creation and stats', () => {
 });
 
 describe('the mir4 slice: skill 1102 and the basic attack', () => {
-  it('1102 spends 36 MP, arms its cooldown + GCD, then deals 312 and stuns on contact', () => {
+  it('bypasses MP admission and spending only behind the dev infinite-resource lock', () => {
+    const qa = new Sim({
+      seed: 4_242,
+      playerClass: 'warrior',
+      gameProfile: 'mir4-gameplay-port',
+      devCommands: true,
+    });
+    const qaTarget = spawnWolf(qa);
+    qa.chat('/dev resource infinite on');
+    qa.player.resource = 0;
+    expect(qa.mir4CastSkill(1102, qaTarget.id)).toEqual({ ok: true });
+    expect(qa.player.resource).toBe(0);
+
+    const normal = makeSliceSim();
+    const normalTarget = spawnWolf(normal);
+    normal.player.resource = 0;
+    expect(normal.mir4CastSkill(1102, normalTarget.id)).toEqual({ ok: false, reason: 'no-mp' });
+
+    normal.player.devInfiniteResource = true;
+    expect(normal.mir4CastSkill(1102, normalTarget.id)).toEqual({ ok: false, reason: 'no-mp' });
+  });
+
+  it('1102 spends 36 MP, arms its cooldown + GCD, then deals 312 without hard control', () => {
     const sim = makeSliceSim();
     const wolf = spawnWolf(sim);
     wolf.maxHp = 1_000;
@@ -121,7 +143,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(false);
     expect(
       (p.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
-    ).toHaveLength(4);
+    ).toHaveLength(3);
     expect(castEvents).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -141,8 +163,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     // The source starter adds 75 PA and 10 bps skill damage to the level-1
     // table, producing the shipping 100 + 100 + 112 impacts.
     expect(wolf.hp).toBe(1_000 - 312);
-    expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(true);
-    expect(wolf.auras.find((a) => a.kind === 'stun')?.duration).toBe(0.9);
+    expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(false);
     const damageEvents = impactEvents.filter(
       (event): event is Extract<SimEvent, { type: 'damage' }> =>
         event.type === 'damage' && event.sourceId === p.id,
@@ -161,14 +182,14 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(false);
     expect(
       (sim.player.mir4PendingImpacts ?? []).filter((impact) => impact.attackKind === 'skill'),
-    ).toHaveLength(4);
+    ).toHaveLength(3);
 
     for (let tick = 0; tick < 19; tick++) sim.tick();
     expect(wolf.hp).toBe(688);
-    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(true);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(false);
     expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(0);
   });
-  it('applies a multi-hit effect when an earlier contact lands and the final one misses', () => {
+  it('does not invent hard control when an earlier contact lands and the final one misses', () => {
     const sim = makeSliceSim(4_243);
     const wolf = spawnWolf(sim);
     giveWolfContestedEvasion(sim, wolf);
@@ -193,10 +214,10 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     }
 
     expect(wolf.hp).toBe(800);
-    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(true);
+    expect(wolf.auras.some((aura) => aura.kind === 'stun')).toBe(false);
     expect(draws).toHaveBeenCalledTimes(6);
   });
-  it('applies no multi-hit effect when every damage contact misses', () => {
+  it('does not invent hard control when every damage contact misses', () => {
     const sim = makeSliceSim(4_246);
     const wolf = spawnWolf(sim);
     giveWolfContestedEvasion(sim, wolf);
@@ -306,7 +327,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
 
     sim.drainEvents();
     sim.setMir4AutoBattleMode('battle');
-    const resumedEvents = Array.from({ length: 20 }, () => sim.tick()).flat();
+    const resumedEvents = Array.from({ length: 26 }, () => sim.tick()).flat();
     expect(resumedEvents.some((event) => event.type === 'mir4AttackStart')).toBe(true);
   });
   it('rejects a manual action while an auto-battle skill is in its contact window', () => {
@@ -319,7 +340,8 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
 
     updateMir4AutoBattle(sim.ctx);
 
-    expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(4);
+    expect(sim.player.mir4PendingImpacts ?? []).toHaveLength(2);
+    expect(sim.players.get(sim.playerId)?.mir4SkillAction?.skillId).toBe(1304);
     expect(sim.mir4BasicAttack(wolf.id)).toEqual({ ok: false, reason: 'on-gcd' });
   });
   it('gates: range, wrong class, unknown skill, cooldown', () => {
@@ -347,14 +369,14 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({ ok: true });
     sim.player.level = 10;
     expect(sim.castMir4Skill(1302, sim.playerId, near.id)).toEqual({ ok: false, reason: 'on-gcd' });
-    ticks(sim, 25); // 1.25s: the final-contact lock is gone; cooldown remains
+    ticks(sim, 26); // 1.30s: the authored end-cut lock is gone; cooldown remains
     expect(sim.castMir4Skill(1102, sim.playerId, near.id)).toEqual({
       ok: false,
       reason: 'on-cooldown',
     });
     expect(sim.mir4BasicAttack(near.id)).toEqual({ ok: true });
   });
-  it('admits no skill, basic attack, or ultimate through blocked line of sight', () => {
+  it('queues a routed skill but spends nothing through blocked line of sight', () => {
     const sim = makeSliceSim(42421);
     const p = sim.player;
     p.pos = sim.groundPos(27, 0);
@@ -366,11 +388,8 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     const draws = vi.spyOn(sim.rng, 'next');
     const resourceBefore = p.resource;
 
-    expect(sim.mir4CastSkill(1102, covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
+    expect(sim.mir4CastSkill(1102, covered.id)).toEqual({ ok: true, queued: true });
     expect(sim.mir4BasicAttack(covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
-    p.level = 50;
-    expect(sim.mir4UltimateCast(covered.id)).toEqual({ ok: false, reason: 'out-of-range' });
-
     expect(covered.hp).toBe(covered.maxHp);
     expect(p.resource).toBe(resourceBefore);
     expect(p.mir4UltGauge).toBe(100);
@@ -379,6 +398,21 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
     expect(p.cooldowns.has('mir4_ult')).toBe(false);
     expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
     expect(draws).not.toHaveBeenCalled();
+  });
+  it('admits the Warrior ultimate through cover when native BlockingCheck is disabled', () => {
+    const sim = makeSliceSim(42423);
+    const p = sim.player;
+    p.pos = sim.groundPos(27, 0);
+    const covered = spawnWolf(sim, 3);
+    covered.maxHp = 5000;
+    covered.hp = covered.maxHp;
+    p.level = 50;
+    p.mir4UltGauge = 100;
+
+    expect(sim.ctx.hasLineOfSight(p, covered)).toBe(false);
+    expect(sim.mir4UltimateCast(covered.id)).toEqual({ ok: true });
+    expect(p.mir4UltGauge).toBe(0);
+    expect(p.cooldowns.has('mir4_ult')).toBe(true);
   });
   it('keeps the deterministic combat stream identical after a denied LoS attempt', () => {
     const run = (attemptThroughCover: boolean) => {
@@ -390,10 +424,7 @@ describe('the mir4 slice: skill 1102 and the basic attack', () => {
       wolf.hp = wolf.maxHp;
       if (attemptThroughCover) {
         expect(sim.ctx.hasLineOfSight(p, wolf)).toBe(false);
-        expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({
-          ok: false,
-          reason: 'out-of-range',
-        });
+        expect(sim.mir4CastSkill(1102, wolf.id)).toEqual({ ok: true, queued: true });
       }
       wolf.pos = sim.groundPos(27, 2);
       expect(sim.ctx.hasLineOfSight(p, wolf)).toBe(true);

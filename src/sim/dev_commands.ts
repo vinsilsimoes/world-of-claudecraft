@@ -8,6 +8,7 @@ import { grantMir4SpiritPlaytestKit } from './dev/mir4_spirit_playtest';
 import { applyDevKit } from './dev_kit';
 import { createGroundObject, createMob } from './entity';
 import { enterDungeon } from './instances/dungeons';
+import { interruptMir4SkillMovementOnDisplacement } from './mir4/displacement';
 import { mountItemId, mountOwned } from './mounts';
 import { MOUNT_TRAIN_MIN_LEVEL } from './mounts_training';
 import { isGatheringProfessionId, queueGatheringGrant } from './professions/gathering';
@@ -148,6 +149,7 @@ export function handleDevChat(
     const entity = ctx.entities.get(pid);
     if (entity) {
       cancelProfessionSessionOnDisplacement(ctx, entity);
+      interruptMir4SkillMovementOnDisplacement(ctx, entity);
       const pos = ctx.groundPos(Number(teleportMatch[1]), Number(teleportMatch[2]));
       entity.pos = pos;
       entity.prevPos = { ...pos };
@@ -267,6 +269,7 @@ export function handleDevChat(
       // Every teleport, the dev ones included, runs the one session teardown
       // (the same call /dev tp makes above).
       cancelProfessionSessionOnDisplacement(ctx, entity);
+      interruptMir4SkillMovementOnDisplacement(ctx, entity);
       const pos = ctx.groundPos(marla.pos.x + 2, marla.pos.z + 1);
       entity.pos = pos;
       entity.prevPos = { ...pos };
@@ -742,6 +745,40 @@ export function handleDevChat(
     emitDevLog(ctx, pid, '[dev] Resource restored.');
     return null;
   }
+  const infiniteResourceMatch =
+    /^\/(?:dev\s+resource|devresource)\s+infinite(?:\s+(on|off))?\s*$/i.exec(raw);
+  if (infiniteResourceMatch) {
+    const entity = ctx.entities.get(pid);
+    if (entity) {
+      const requested = infiniteResourceMatch[1]?.toLowerCase();
+      entity.devInfiniteResource =
+        requested === 'on' ? true : requested === 'off' ? false : !entity.devInfiniteResource;
+      if (entity.devInfiniteResource && !entity.dead) entity.resource = entity.maxResource;
+      emitDevLog(ctx, pid, `[dev] Infinite resource ${entity.devInfiniteResource ? 'ON' : 'OFF'}.`);
+    }
+    return null;
+  }
+  const skillQaIsolationMatch =
+    /^\/(?:dev\s+skillqa|devskillqa)\s+isolate(?:\s+(on|off))?\s*$/i.exec(raw);
+  if (skillQaIsolationMatch) {
+    const entity = ctx.entities.get(pid);
+    if (entity) {
+      const requested = skillQaIsolationMatch[1]?.toLowerCase();
+      entity.devSkillQaIsolation =
+        requested === 'on' ? true : requested === 'off' ? false : !entity.devSkillQaIsolation;
+      if (entity.devSkillQaIsolation) {
+        entity.autoAttack = false;
+        const meta = ctx.players.get(pid);
+        if (meta) meta.mir4TargetCombat = undefined;
+      }
+      emitDevLog(
+        ctx,
+        pid,
+        `[dev] Skill QA isolation ${entity.devSkillQaIsolation ? 'ON' : 'OFF'}.`,
+      );
+    }
+    return null;
+  }
   if (/^\/(?:dev\s+cooldowns|devcooldowns)\s*$/i.test(raw)) {
     const entity = ctx.entities.get(pid);
     if (entity) {
@@ -773,7 +810,7 @@ export function handleDevChat(
   if (/^\/dev(?:\s|$)/i.test(raw)) {
     ctx.error(
       pid,
-      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev spirits, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev dungeon, /dev raid, /dev kill',
+      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev spirits, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev heal, /dev hp <1-100>, /dev resource [infinite on|off], /dev skillqa isolate on|off, /dev cooldowns, /dev revive, /dev combatreset, /dev dungeon, /dev raid, /dev kill',
     );
     return null;
   }

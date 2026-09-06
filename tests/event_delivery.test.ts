@@ -14,6 +14,16 @@ const guardianHit: SimEvent = {
   kind: 'hit',
 };
 
+const nativeHitReaction: SimEvent = {
+  type: 'mir4HitReaction',
+  sourceId: 90,
+  targetId: 200,
+  skillId: 1102,
+  attackId: 110203,
+  durationMs: 200,
+  stance: 'hit-01',
+};
+
 // Ownership now resolves through the delivery-time lookup (the live entity
 // map on the server), not the event's sourceOwnerId field: the guardian
 // entity 90 belongs to player 10.
@@ -31,5 +41,15 @@ describe('combat event delivery', () => {
     expect(shouldDeliverCombatEventToViewer(guardianHit, 12, { members: [12] }, ownerOf)).toBe(
       false,
     );
+  });
+
+  it('delivers native hit reactions only to combat participants and their parties', () => {
+    expect(shouldDeliverCombatEventToViewer(nativeHitReaction, 10, null, ownerOf)).toBe(true);
+    expect(
+      shouldDeliverCombatEventToViewer(nativeHitReaction, 11, { members: [10, 11] }, ownerOf),
+    ).toBe(true);
+    expect(
+      shouldDeliverCombatEventToViewer(nativeHitReaction, 12, { members: [12] }, ownerOf),
+    ).toBe(false);
   });
 });

@@ -391,6 +391,19 @@ import { buildMailboxPillar } from './mailbox';
 import { collectObjectTextures } from './material_texture_slots';
 import { playMir4AttackStart } from './mir4_attack_presentation';
 import { hideExpiredMir4Body } from './mir4_corpse_presentation';
+import { playMir4HitReaction } from './mir4_hit_reaction_presentation';
+import {
+  playMir4NativePersistentSkillArea,
+  playMir4NativeSkillContact,
+} from './mir4_native_skill_contact_painter';
+import {
+  type Mir4NativeSkillFacingLock,
+  mir4NativeSkillFacingLock,
+  mir4NativeSkillFacingLockValue,
+  mir4NativeSkillSourceSocketHeightFraction,
+} from './mir4_native_skill_presentation_core';
+import { Mir4NativeSkillPresentationPainter } from './mir4_native_skill_presentation_painter';
+import { Mir4SkillGuidePainter } from './mir4_skill_guide_painter';
 import { buildMobNightGlow, type MobNightGlowView } from './mob_night_glow';
 import { buildMotes, type MotesView } from './motes';
 import { MountBeacon } from './mount_beacon';
@@ -1803,6 +1816,9 @@ export class Renderer {
   // see src/render/ability_vfx/).
   private abilityVfx: AbilityVfx;
   private abilityVfxFx: AbilityVfxFx;
+  private mir4NativeSkillPresentations!: Mir4NativeSkillPresentationPainter;
+  private readonly mir4NativeSkillFacingLocks = new Map<number, Mir4NativeSkillFacingLock>();
+  private mir4SkillGuides!: Mir4SkillGuidePainter;
   private needleOfFateVfx!: NeedleOfFateVfx;
   private sentenceVfx!: SentenceVfx;
   private lightPulses: LightPulses;
@@ -2971,6 +2987,7 @@ export class Renderer {
     };
     const vfxAnchor = createVfxAnchor(fillVfxPose);
     const offsetVfxAnchor = createOffsetVfxAnchor(fillVfxPose);
+    this.mir4SkillGuides = new Mir4SkillGuidePainter(this.scene);
     bd('scene-misc');
     this.vfx = new Vfx(this.scene, vfxAnchor, offsetVfxAnchor);
     this.vfx.setViewportScale(this.webgl.domElement.clientHeight * this.webgl.getPixelRatio(), 60);
@@ -2995,6 +3012,75 @@ export class Renderer {
     this.abilityVfxFx.setSpiritCompileGate(
       this.asyncCompileSupported ? (root: THREE.Object3D) => this.compileGate(root) : null,
     );
+    this.mir4NativeSkillPresentations = new Mir4NativeSkillPresentationPainter({
+      playPersistentArea: (event, area) =>
+        playMir4NativePersistentSkillArea(
+          {
+            slashStyled: (...args) => this.abilityVfxFx.slashStyled(...args),
+            burstAt: (...args) => this.abilityVfxFx.burstAt(...args),
+            ringAt: (...args) => this.abilityVfxFx.ringAt(...args),
+            decalXZ: (...args) => this.abilityVfxFx.decalXZ(...args),
+            pathRibbon: (...args) => this.abilityVfxFx.pathRibbon(...args),
+            beamRibbon: (...args) => this.abilityVfxFx.beamRibbon(...args),
+            impactRing: (...args) => this.abilityVfxFx.impactRing(...args),
+            groundYAt: (x, z) => this.abilityVfxFx.groundYAt(x, z),
+            playImpactAudio: (school, power, x, y, z) =>
+              this.audioSink?.abilityAudio?.('impact', school, power, x, y, z, {
+                lite: true,
+                abilityId: event.ability,
+              }),
+          },
+          event,
+          area,
+        ),
+      playProjectile: (event, projectile) => {
+        const sourceHeightFraction =
+          mir4NativeSkillSourceSocketHeightFraction(
+            projectile.sourceSocketName,
+          );
+        if (sourceHeightFraction === null) return;
+        this.vfx.mir4NativeHomingProjectile(
+          event.sourceId,
+          event.targetId,
+          event.profile === 'sorcerer-flame-orb'
+            ? 'fire'
+            : event.profile === 'taoist-blasting-charm'
+              ? 'shadow'
+              : event.profile === 'arbalist-seeking-bolt'
+                ? 'physical'
+                : 'frost',
+          {
+            sourceHeightFraction,
+            scale: projectile.effectScale,
+            speedYardsPerSecond: projectile.speedYardsPerSecond,
+            lifetimeSeconds: projectile.lifetimeMs / 1000,
+            effectId: projectile.effectId,
+          },
+        );
+      },
+      playContact: (event, contact, visual, contactIndex) =>
+        playMir4NativeSkillContact(
+          {
+            slashStyled: (...args) => this.abilityVfxFx.slashStyled(...args),
+            burstAt: (...args) => this.abilityVfxFx.burstAt(...args),
+            ringAt: (...args) => this.abilityVfxFx.ringAt(...args),
+            decalXZ: (...args) => this.abilityVfxFx.decalXZ(...args),
+            pathRibbon: (...args) => this.abilityVfxFx.pathRibbon(...args),
+            beamRibbon: (...args) => this.abilityVfxFx.beamRibbon(...args),
+            impactRing: (...args) => this.abilityVfxFx.impactRing(...args),
+            groundYAt: (x, z) => this.abilityVfxFx.groundYAt(x, z),
+            playImpactAudio: (school, power, x, y, z) =>
+              this.audioSink?.abilityAudio?.('impact', school, power, x, y, z, {
+                lite: true,
+                abilityId: event.ability,
+              }),
+          },
+          event,
+          contact,
+          visual,
+          contactIndex,
+        ),
+    });
     this.abilityVfx = new AbilityVfx({
       vfx: this.vfx,
       fx: this.abilityVfxFx,
@@ -3265,6 +3351,7 @@ export class Renderer {
     // batch or any renderer DOM surface added after the explicit maps above.
     bestEffort(() => this.nameplateLayer.replaceChildren());
     bestEffort(() => this.travelSpeedFx?.dispose());
+    bestEffort(() => this.mir4SkillGuides?.dispose());
     // Renderer-owned (not a module singleton): the graphics-rebuild teardown
     // comes through HERE (shutdown -> disposeRendererResources), so the blob
     // pool, texture and material release with the rest of the GPU state.
@@ -7449,7 +7536,27 @@ export class Renderer {
           this.attackTriggerCount++;
         break;
       }
+      case 'mir4HitReaction': {
+        const view = this.views.get(ev.targetId);
+        playMir4HitReaction(view ? this.activeVisual(view) : null, ev);
+        break;
+      }
+      case 'mir4SkillGuide': {
+        this.mir4SkillGuides.start(ev);
+        break;
+      }
+      case 'mir4SkillPresentation': {
+        const lock = mir4NativeSkillFacingLock(ev, this.time);
+        if (lock) {
+          this.mir4NativeSkillFacingLocks.set(ev.sourceId, lock);
+          const sourceView = this.views.get(ev.sourceId);
+          if (sourceView) sourceView.group.rotation.y = lock.facing;
+        }
+        this.mir4NativeSkillPresentations.start(ev);
+        break;
+      }
       case 'spellfx': {
+        if (ev.nativePresentationOwned) break;
         if (ev.fx === 'lichTransform') {
           if (!this.reducedMotion()) {
             this.vfx.lichTransform(ev.sourceId);
@@ -10760,7 +10867,15 @@ export class Renderer {
       const z = isSelf ? selfPos.z : e.prevPos.z + (e.pos.z - e.prevPos.z) * ea;
       v.group.position.set(x, y, z);
       let facing = e.prevFacing + wrapAngle(e.facing - e.prevFacing) * facingAlpha(ea);
-      if (isSelf) {
+      const facingLock = this.mir4NativeSkillFacingLocks.get(id);
+      const lockedFacing = mir4NativeSkillFacingLockValue(facingLock, this.time);
+      if (facingLock && lockedFacing === null) {
+        this.mir4NativeSkillFacingLocks.delete(id);
+        if (isSelf) this.selfFacing.reset();
+      }
+      if (lockedFacing !== null) {
+        facing = lockedFacing;
+      } else if (isSelf) {
         if (selfAuthoritativeDiscontinuity) this.selfFacing.reset();
         facing = this.selfFacing.step(
           v.group.rotation.y,
@@ -12087,6 +12202,25 @@ export class Renderer {
     this.updateAoeRings(dt);
     this.recklessSkulls.update(dt);
     this.fishingBobbers.update(dt, this.sim.entities, this.sim.cfg.seed);
+    this.mir4SkillGuides.update(dt, (sourceId, out) => {
+      const sourceView = this.views.get(sourceId);
+      if (!sourceView) return false;
+      out.x = sourceView.group.position.x;
+      out.y = sourceView.group.position.y;
+      out.z = sourceView.group.position.z;
+      out.facing = sourceView.group.rotation.y;
+      return true;
+    });
+    this.mir4NativeSkillPresentations.update(dt, (sourceId, out) => {
+      const sourceView = this.views.get(sourceId);
+      const source = this.sim.entities.get(sourceId);
+      if (!sourceView || !source) return false;
+      out.x = sourceView.group.position.x;
+      out.y = sourceView.group.position.y + sourceView.height * (source.scale ?? 1) * 0.55;
+      out.z = sourceView.group.position.z;
+      out.facing = sourceView.group.rotation.y;
+      return true;
+    });
     this.updateGroundAimReticle(dt);
     // dev-only Tab-target cone overlay: re-drape the front cone on the terrain
     // under the local player, oriented to the model's rendered facing.
@@ -12871,6 +13005,9 @@ export class Renderer {
     this.nameplatePainter.dispose();
     this.travelSpeedFx.dispose();
     this.travelPortalVfx.dispose();
+    this.mir4NativeSkillFacingLocks.clear();
+    this.mir4NativeSkillPresentations.clear();
+    this.mir4SkillGuides.dispose();
     this.blobShadows?.dispose();
   }
 

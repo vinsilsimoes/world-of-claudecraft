@@ -13,10 +13,12 @@ import {
 import { advanceMir4AutomationRoute, type Mir4AutomationRouteState } from '../auto_quest/route';
 import { MIR4_GAME_PROFILE } from '../game_profile';
 import type { SimContext } from '../sim_context';
-import type { Entity, MoveInput } from '../types';
+import type { Entity } from '../types';
 import { dist2d } from '../types';
 import { drawWeapon } from '../weapon_stow';
 import { castMir4Skill, mir4BasicAttack } from './combat';
+import { mir4ManualMovementActive } from './manual_input';
+import { mir4SkillActivationOwnsMotion } from './skill_activation';
 
 export interface Mir4TargetCombatState {
   /** Immutable identity captured when Attack was pressed. */
@@ -26,20 +28,6 @@ export interface Mir4TargetCombatState {
   owner: 'player' | 'journey' | 'retaliation';
   route?: Mir4AutomationRouteState;
   pursuit?: Mir4AutoBattlePursuitMemory;
-}
-
-function hasManualMovement(input: MoveInput): boolean {
-  return (
-    input.forward ||
-    input.back ||
-    input.strafeLeft ||
-    input.strafeRight ||
-    input.turnLeft ||
-    input.turnRight ||
-    input.jump ||
-    input.dive ||
-    input.surface
-  );
 }
 
 function livingSelectedHostile(ctx: SimContext, player: Entity, targetId: number): Entity | null {
@@ -62,6 +50,7 @@ export function startMir4TargetCombat(
   const meta = ctx.players.get(pid);
   const player = ctx.entities.get(pid);
   if (!meta || !player || player.dead || mir4AutomationActionBlocked(ctx, player)) return false;
+  if (ctx.devCommands && player.devSkillQaIsolation) return false;
 
   const selectedId = player.targetId;
   const selected = selectedId !== null ? ctx.entities.get(selectedId) : null;
@@ -162,6 +151,13 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
       meta.mir4TargetCombat = undefined;
       continue;
     }
+    // The homologation arena must stay one-shot even if a UI selection path
+    // races the command that cleared focused combat or arms it afterwards.
+    if (ctx.devCommands && player.devSkillQaIsolation) {
+      clearMir4TargetCombat(ctx, player);
+      continue;
+    }
+    if (mir4SkillActivationOwnsMotion(meta, ctx.tickCount)) continue;
     const retaliationTarget =
       state.owner === 'retaliation' ? ctx.entities.get(state.targetId) : undefined;
     const retaliationPlayer = retaliationTarget ? ctx.pvpController(retaliationTarget) : null;
@@ -181,7 +177,7 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
       clearMir4TargetCombat(ctx, player);
       continue;
     }
-    if (state.owner === 'retaliation' && hasManualMovement(meta.moveInput)) {
+    if (state.owner === 'retaliation' && mir4ManualMovementActive(meta.moveInput)) {
       clearMir4TargetCombat(ctx, player);
       continue;
     }
@@ -221,7 +217,7 @@ export function updateMir4TargetCombat(ctx: SimContext): void {
     // own locomotion. Those deliberate attacks stay armed and resume their
     // focused pursuit when the player releases the controls. Defensive
     // retaliation is cleared earlier instead of reaching this branch.
-    if (hasManualMovement(meta.moveInput)) continue;
+    if (mir4ManualMovementActive(meta.moveInput)) continue;
 
     // Root does not cancel a valid single-target contract. It only pauses
     // pursuit, and therefore must not age stall/route memory while speed is 0.

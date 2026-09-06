@@ -30,11 +30,14 @@ export function mir4ModifiedPotionAmount(
   baseAmount: number,
   kind: 'hp' | 'mp',
   statuses: Mir4StatusRecord | undefined,
+  temporarySpecificBoostBasisPoints = 0,
 ): number {
   const specificStatusId = kind === 'hp' ? 146 : 147;
   return mir4ApplyRate(
     baseAmount,
-    mir4StatusRecordValue(statuses, 94) + mir4StatusRecordValue(statuses, specificStatusId),
+    mir4StatusRecordValue(statuses, 94) +
+      mir4StatusRecordValue(statuses, specificStatusId) +
+      Math.trunc(temporarySpecificBoostBasisPoints),
     1,
   );
 }
@@ -43,9 +46,13 @@ export function mir4ModifiedSkillCooldownSeconds(
   baseSeconds: number,
   statuses: Mir4StatusRecord | undefined,
   context: Mir4BuildCombatContext = 'pve',
+  temporaryReductionBasisPoints = 0,
 ): number {
   const reduction = mir4BuildCapTempoAndDrain(
-    { cooldownReductionBps: mir4StatusRecordValue(statuses, 95) },
+    {
+      cooldownReductionBps:
+        mir4StatusRecordValue(statuses, 95) + Math.trunc(temporaryReductionBasisPoints),
+    },
     context,
   ).cooldownReductionBps;
   return (Math.max(0, baseSeconds) * (10_000 - reduction)) / 10_000;
@@ -107,8 +114,12 @@ export function mir4DrainOnDamage(
 export function mir4ModifiedSkillHealing(
   baseHealing: number,
   statuses: Mir4StatusRecord | undefined,
+  temporarySkillHealingBasisPoints = 0,
 ): number {
-  return mir4ApplyRate(baseHealing, mir4StatusRecordValue(statuses, 148));
+  return mir4ApplyRate(
+    baseHealing,
+    mir4StatusRecordValue(statuses, 148) + Math.trunc(temporarySkillHealingBasisPoints),
+  );
 }
 
 export function mir4ManaRecoveredFromHealing(

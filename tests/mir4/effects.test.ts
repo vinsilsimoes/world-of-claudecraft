@@ -4,6 +4,7 @@ import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { MIR4_SLICE_WORLD } from '../../src/sim/content/mir4/world';
 import { MOBS, setActiveWorldContent } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
+import { PLAYER_BODY_RADIUS } from '../../src/sim/pathfind';
 import { updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
 import {
   applyMir4Effect,
@@ -852,7 +853,7 @@ describe('the mir4 effect engine', () => {
 });
 
 describe('the warrior kit effect surface (phase 3.1)', () => {
-  it('1104 lands knockdown (1.2s hard control) with its exact damage', () => {
+  it('1104 lands its native 3s knockdown window with its exact damage', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(63);
     const wolf = spawnWolf(sim, 2, 0);
@@ -862,8 +863,25 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     // 21000 coefficient at PA 50: floor(50*21000/10000) = 105, one impact.
     expect(hpBefore - wolf.hp).toBe(105);
     const knockdown = wolf.mir4Effects?.active.find((f) => f.kind === 'knockdown');
-    expect(knockdown?.duration).toBe(1.2);
+    expect(knockdown?.duration).toBe(3);
     expect(wolf.auras.some((a) => a.kind === 'stun')).toBe(true);
+  });
+  it('keeps the native 1104 control window fixed at rank 15', () => {
+    setActiveWorldContent(MIR4_SLICE_WORLD);
+    const sim = makeSim(6300);
+    sim.players.get(sim.playerId)!.mir4SkillLevels = { 1104: 15 };
+    const wolf = spawnTankWolf(
+      sim,
+      sim.player.pos.x + 2,
+      sim.player.pos.z,
+      'native_1104_rank15_control',
+    );
+
+    expect(sim.mir4CastSkill(1104, wolf.id)).toEqual({ ok: true });
+    resolveContacts(sim);
+
+    const knockdown = wolf.mir4Effects?.active.find((effect) => effect.kind === 'knockdown');
+    expect(knockdown?.duration).toBe(3);
   });
   it('routes default-chance control skills through live anti-control stats', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -901,22 +919,21 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     expect(neutralDraws).toHaveBeenCalledTimes(2);
     expect(contestedDraws).toHaveBeenCalledTimes(neutralDraws.mock.calls.length + 1);
   });
-  it('1304 lands a 12% Physical and Magic Defense break', () => {
+  it('1304 charges into a three-second knock-down without applying the old Defense Break', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(64);
     const wolf = spawnWolf(sim, 2, 0);
-    sim.mir4CastSkill(1304, wolf.id); // 22000 coef: 110 damage + break 4.5s
-    resolveContacts(sim);
-    const brk = wolf.mir4Effects?.active.find((f) => f.kind === 'defense-break');
-    expect(brk?.duration).toBe(4.5);
-    expect(brk?.magnitude).toBe(0.12);
-    for (let i = 0; i < 20; i++) sim.tick(); // clear the 1s GCD
-    sim.mir4CastSkill(1102, wolf.id);
-    resolveContacts(sim);
-    expect(mir4DefenseMultiplier(wolf)).toBeCloseTo(0.88, 10);
-    expect(wolf.dead).toBe(true);
+    wolf.pos.y = sim.player.pos.y;
+    wolf.prevPos = { ...wolf.pos };
+    sim.player.facing = Math.PI / 2;
+    vi.spyOn(sim.rng, 'next').mockReturnValue(0);
+    expect(sim.mir4CastSkill(1304, wolf.id)).toEqual({ ok: true });
+    for (let tick = 0; tick < 11; tick += 1) sim.tick();
+    const knockdown = wolf.mir4Effects?.active.find((effect) => effect.kind === 'knockdown');
+    expect(knockdown?.duration).toBe(3);
+    expect(wolf.mir4Effects?.active.some((effect) => effect.kind === 'defense-break')).toBe(false);
   });
-  it('1401 hits the primary and AoE-cleaves up to 3 nearby wolves at 7000bps', () => {
+  it('1401 applies full native contact damage and 2.49s knock-down in its shifted circle', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(65);
     const primary = spawnWolf(sim, 2, 0);
@@ -926,7 +943,11 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     for (const wolf of [primary, near1, near2, far]) {
       wolf.maxHp = 5_000;
       wolf.hp = wolf.maxHp;
+      wolf.pos.y = sim.player.pos.y;
+      wolf.prevPos = { ...wolf.pos };
     }
+    sim.player.facing = Math.PI / 2;
+    vi.spyOn(sim.rng, 'next').mockReturnValue(0);
     const before = new Map<number, number>([
       [primary.id, primary.hp],
       [near1.id, near1.hp],
@@ -934,24 +955,27 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       [far.id, far.hp],
     ]);
     expect(sim.mir4CastSkill(1401, primary.id)).toEqual({ ok: true });
-    resolveContacts(sim);
-    // Primary: 25000 coef = 125 + knockdown 0.8s.
+    for (let tick = 0; tick < 13; tick += 1) sim.tick();
+    // Native attack 140102 deals the full 25000 coefficient to every admitted target.
     expect(before.get(primary.id)! - primary.hp).toBe(125);
     expect(
-      primary.mir4Effects?.active.some((f) => f.kind === 'knockdown' && f.duration === 0.8),
+      primary.mir4Effects?.active.some((f) => f.kind === 'knockdown' && f.duration === 2.49),
     ).toBe(true);
-    // Each secondary: floor(125 * 7000/10000) = 87.
-    expect(before.get(near1.id)! - near1.hp).toBe(87);
-    expect(before.get(near2.id)! - near2.hp).toBe(87);
+    expect(before.get(near1.id)! - near1.hp).toBe(125);
+    expect(before.get(near2.id)! - near2.hp).toBe(125);
     expect(far.hp).toBe(before.get(far.id));
   });
-  it('requires line of sight for admission and for every AoE secondary', () => {
+  it('requires line of sight for admission without erasing committed PvE area contacts', () => {
     const sim = makeClassSim(651, 'warrior');
     const p = sim.player;
     p.pos = sim.groundPos(27, 0);
     const primary = spawnTankWolf(sim, 27, 2, 'visible_primary');
     const visible = spawnTankWolf(sim, 27, -0.5, 'visible_secondary');
     const covered = spawnTankWolf(sim, 30, 0, 'covered_secondary');
+    for (const target of [primary, visible, covered]) {
+      target.pos.y = p.pos.y;
+      target.prevPos = { ...target.pos };
+    }
     const originalHasLineOfSight = sim.ctx.hasLineOfSight;
     sim.ctx.hasLineOfSight = (_attacker, target) => target.id !== covered.id;
     expect(sim.ctx.hasLineOfSight(p, primary)).toBe(true);
@@ -966,9 +990,9 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
     expect(primary.hp).toBeLessThan(primary.maxHp);
     expect(visible.hp).toBeLessThan(visible.maxHp);
     expect(visible.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(true);
-    expect(covered.hp).toBe(covered.maxHp);
-    expect(covered.mir4Effects?.active ?? []).toHaveLength(0);
-    expect(draws).toHaveBeenCalledTimes(4);
+    expect(covered.hp).toBeLessThan(covered.maxHp);
+    expect(covered.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(true);
+    expect(draws).toHaveBeenCalledTimes(6);
   });
   it('rejects distant AoE candidates before tracing their line of sight', () => {
     const sim = makeClassSim(6511, 'warrior');
@@ -986,7 +1010,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
 
     expect(checkedIds).not.toContain(distant.id);
   });
-  it.each([['elementalist', 2201, 'dazed', 7]] as const)(
+  it.each([['elementalist', 2201, 'hit-react', 7.5]] as const)(
     'casts the %s actor-centered AoE %i without a selected target',
     (cls, skillId, effectKind, radius) => {
       const sim = makeClassSim(652 + skillId, cls);
@@ -995,7 +1019,7 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       const secondary = spawnTankWolf(sim, p.pos.x + 3, p.pos.z + 1, `${skillId}_secondary`);
       const friendly = spawnTankWolf(sim, p.pos.x + 3, p.pos.z - 1, `${skillId}_friendly`);
       friendly.hostile = false;
-      const outside = spawnTankWolf(sim, p.pos.x + radius + 0.01, p.pos.z, `${skillId}_outside`);
+      const outside = spawnTankWolf(sim, p.pos.x + radius + 1, p.pos.z, `${skillId}_outside`);
       sim.ctx.hasLineOfSight = () => true;
 
       expect(sim.mir4CastSkill(skillId)).toEqual({ ok: true });
@@ -1012,29 +1036,44 @@ describe('the warrior kit effect surface (phase 3.1)', () => {
       expect(outside.mir4Effects?.active ?? []).toHaveLength(0);
     },
   );
-  it('refuses a distant lancer target before committing the targeted skill', () => {
+  it('queues approach to a distant lancer target without committing the targeted skill', () => {
     const sim = makeClassSim(5853, 'lancer');
     const p = sim.player;
     const distant = spawnTankWolf(sim, p.pos.x + 20, p.pos.z, '5201_distant_only');
     const resourceBefore = p.resource;
 
-    expect(sim.mir4CastSkill(5201, distant.id)).toEqual({ ok: false, reason: 'out-of-range' });
+    expect(sim.mir4CastSkill(5201, distant.id)).toEqual({ ok: true, queued: true });
+    expect(sim.ctx.players.get(p.id)?.mir4SkillActivation).toMatchObject({
+      phase: 'approach',
+      abilityId: 'mir4_skill_5201',
+      targetId: distant.id,
+    });
     expect(p.resource).toBe(resourceBefore);
     expect(p.cooldowns.has('5201')).toBe(false);
     expect(p.mir4PendingImpacts ?? []).toHaveLength(0);
   });
-  it.each([['elementalist', 2201, 'dazed', 7]] as const)(
+  it.each([['elementalist', 2201, 'hit-react', 7.5]] as const)(
     'includes the exact %s actor-area boundary for skill %i',
     (cls, skillId, effectKind, radius) => {
       const sim = makeClassSim(1652 + skillId, cls);
       const p = sim.player;
-      const edge = spawnTankWolf(sim, p.pos.x + radius, p.pos.z, `${skillId}_exact_edge`);
+      const edge = spawnTankWolf(
+        sim,
+        p.pos.x + radius + PLAYER_BODY_RADIUS,
+        p.pos.z,
+        `${skillId}_exact_edge`,
+      );
       const outside = spawnTankWolf(
         sim,
-        p.pos.x + radius + 0.01,
+        p.pos.x + radius + PLAYER_BODY_RADIUS + 0.001,
         p.pos.z,
         `${skillId}_beyond_edge`,
       );
+      edge.pos.y = p.pos.y;
+      edge.prevPos = { ...edge.pos };
+      outside.pos.y = p.pos.y;
+      outside.prevPos = { ...outside.pos };
+      vi.spyOn(sim.rng, 'next').mockReturnValue(0);
       sim.ctx.hasLineOfSight = () => true;
 
       expect(sim.mir4CastSkill(skillId)).toEqual({ ok: true });

@@ -13366,19 +13366,14 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1501.description':
     '敵1体に{damage}ダメージを与えます。7.75ヤード以内の他の敵最大4体に65%のダメージを与え、命中した各敵を3.2秒間35%減速させます。',
   'entities.abilities.mir4_skill_2101.name': 'フレイムオーブ',
-  'entities.abilities.mir4_skill_2101.description':
-    '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与えます。命中した各敵を炎上させ、1秒ごとに{burnPerTick}の基礎ダメージを与えます（4回、軽減前の合計{burnTotal}）。ダメージは炎上を付与した時点の魔法力に基づきます。',
   'entities.abilities.mir4_skill_2111.name': 'フロストオーブ',
   'entities.abilities.mir4_skill_2111.description':
     '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中した各敵を3.2秒間35%減速させます。',
   'entities.abilities.mir4_skill_2301.name': '懲罰の印',
-  'entities.abilities.mir4_skill_2301.description':
-    '敵1体に{damage}ダメージを与え、4秒間、対象が与えるダメージを50%減少させます。',
   'entities.abilities.mir4_skill_2501.name': '召喚核',
   'entities.abilities.mir4_skill_2501.description':
     '敵1体に{damage}ダメージを与えます。8ヤード以内の他の敵最大4体に60%のダメージを与え、対象を1.8秒間凍結します。',
   'entities.abilities.mir4_skill_2503.name': '魔法障壁',
-  'entities.abilities.mir4_skill_2503.description': '10秒間、受けるダメージを22%減少させます。',
   'entities.abilities.mir4_skill_3101.name': '印連撃',
   'entities.abilities.mir4_skill_3101.description':
     '敵1体に{damage}ダメージを与えます。6.5ヤード以内の他の敵最大3体に65%のダメージを与え、命中したすべての敵の物理防御と魔法防御を4秒間10%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
@@ -13389,10 +13384,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3301.description':
     '敵1体に{damage}ダメージを与えます。7.25ヤード以内の他の敵最大3体に60%のダメージを与え、対象を4.2秒間35%減速させます。',
   'entities.abilities.mir4_skill_3503.name': '翡翠の蓮',
-  'entities.abilities.mir4_skill_3503.description': '最大体力の18%を回復します。',
-  'entities.abilities.mir4_skill_3506.name': 'トーテムの印 I',
-  'entities.abilities.mir4_skill_3506.description':
-    '敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に60%のダメージを与え、対象を1.6秒間移動不能にします。',
+  'entities.abilities.mir4_skill_3503.description':
+    '自身と30ヤード以内のパーティメンバー最大4人の体力を毎秒{healPerPulse}、5秒間回復します（合計{healTotal}）。回復量は魔法攻撃力に応じて増加します。自身は2秒間、行動妨害効果を受けません。5段階では、自身の最大体力の10%、パーティメンバーは15%を即時回復します。8段階では即時回復量が25%と35%になり、沈黙中でも使用でき、沈黙を解除し、自身の弱体化を浄化してパーティメンバーの弱体化を50%の確率で浄化し、さらにボスダメージ軽減10%を30秒間付与します。10段階では即時回復量が40%と50%になり、パーティへの浄化が必ず成功して気絶も解除し、ボスダメージ軽減が20%、60秒間になります。',
   'entities.abilities.mir4_skill_4101.name': '炸裂 4101',
   'entities.abilities.mir4_skill_4101.description':
     '敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に65%のダメージを与え、3.5秒間、対象が与えるダメージを45%減少させます。',
@@ -13408,9 +13401,6 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     '敵1体に{damage}ダメージを与えます。6.75ヤード以内の他の敵最大3体に60%のダメージを与え、5秒間、与えるダメージを45%減少させます。',
   'entities.abilities.mir4_skill_5101.name': '突き 5101',
   'entities.abilities.mir4_skill_5101.description': '敵1体に{damage}ダメージを与え、対象を1秒間ノックダウンします。',
-  'entities.abilities.mir4_skill_5104.name': '薙ぎ払い 5104',
-  'entities.abilities.mir4_skill_5104.description':
-    '敵1体に{damage}ダメージを与え、4.5秒間、対象の物理防御と魔法防御を14%低下させます。複数の防御低下は乗算で重なりますが、防御は元の値の20%未満にはなりません。上に表示されるクールダウンは基本値です。スキルクールダウン短縮はPvEで最大40%、PvPで最大30%まで適用されます。',
   'entities.abilities.mir4_skill_5201.name': '強撃 5201',
   'entities.abilities.mir4_skill_5201.description':
     '敵1体に{damage}ダメージを与えます。7ヤード以内の他の敵最大3体に65%のダメージを与え、対象を1.1秒間スタンさせます。',

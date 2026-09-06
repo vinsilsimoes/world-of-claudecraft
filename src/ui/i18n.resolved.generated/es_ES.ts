@@ -10181,11 +10181,11 @@ export const es_ES: EnTranslations = {
       },
       "mir4_skill_1103": {
         "name": "Barbaric Charge",
-        "description": "Charges to the target and deals {damage} damage. Up to 7 other enemies within 7 yards of you take 100% damage. Pulls nearby enemies toward you and knocks each enemy hit down for 1.2 sec. Increases your Physical and Magic Defense by 12% for 6 sec."
+        "description": "Charge to the target and strike up to 10 enemies within 6 yards of you twice for {damage} total damage. The first hit pushes them to the impact point. The final hit knocks them down for 3 sec."
       },
       "mir4_skill_1104": {
         "name": "Splitting Slash",
-        "description": "Deals {damage} damage to an enemy. Knocks the target down for 1.2 sec."
+        "description": "Advance 3 yards and strike up to 8 enemies in a 7-yard-long, 5.5-yard-wide frontal strip for {damage} damage. Each enemy hit is knocked down for 3 sec."
       },
       "mir4_skill_1201": {
         "name": "Iron Shackle",
@@ -10201,7 +10201,7 @@ export const es_ES: EnTranslations = {
       },
       "mir4_skill_1304": {
         "name": "Body Check",
-        "description": "Deals {damage} damage to an enemy. Reduces the target's Physical and Magic Defense by 12% for 4.5 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
+        "description": "Deals {damage} damage to an enemy. Up to 7 other enemies in an 8-yard-long, 5-yard-wide frontal strip take 100% damage. Charges to the target. Knocks each enemy hit down for 3 sec."
       },
       "mir4_skill_1401": {
         "name": "Ground Smash",
@@ -10209,7 +10209,7 @@ export const es_ES: EnTranslations = {
       },
       "mir4_skill_1501": {
         "name": "Gale Slash",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.75 yards of you take 65% damage. Slows each enemy hit by 35% for 3.2 sec."
+        "description": "Strike enemies around you 9 times for {damage} total damage. You are immune to control effects for 2 sec. Each contact reduces the Physical Defense of enemies hit by 25% for 5 sec."
       },
       "mir4_skill_1502": {
         "name": "Unbreakable Stance",
@@ -10221,215 +10221,215 @@ export const es_ES: EnTranslations = {
       },
       "mir4_skill_2101": {
         "name": "Flame Orb",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (4 ticks, {burnTotal} total before mitigation). Damage is based on your Spell Power when the Burn is applied."
+        "description": "Launches a projectile at the selected enemy, dealing {damage} Spell damage on contact and Knocking it Back slightly."
       },
       "mir4_skill_2111": {
         "name": "Frost Orb",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Slows each enemy hit by 35% for 3.2 sec."
+        "description": "Launches a projectile at the selected enemy, dealing {damage} Spell damage on contact and causing a brief hit reaction."
       },
       "mir4_skill_2501": {
         "name": "Dark Vortex",
-        "description": "Deals {damage} damage to an enemy. Pulls up to 4 other enemies within 8 yards toward you and roots each enemy hit for 2.2 sec."
+        "description": "Creates a vortex at the selected enemy's location. Deals {damage} total Spell damage over 6 hits to up to 6 enemies. Four pulses alternately shift enemies toward and away from its center, and the final hit knocks them down."
       },
       "mir4_skill_2301": {
         "name": "Thunderstorm",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7 yards take 65% damage. Dazes each enemy hit for 1.2 sec."
+        "description": "Creates a lightning field at the selected enemy's location. After a brief warning, it deals {damage} total Spell damage over 4 rapid hits. Each hit refreshes Chill, reducing Skill DMG Reduction by 25% for {chillDuration} sec. The first 3 hits strike up to 10 enemies within 7 yards; the final hit strikes up to 8 enemies within 3.5 yards."
       },
       "mir4_skill_2503": {
         "name": "Magic Shield",
-        "description": "Reduces damage taken by 22% for 10 sec."
+        "description": "Strikes up to 8 enemies in three expanding circles around you for {damage} total Spell damage, knocking them back. Creates a Magic Shield for 25 sec, reducing all damage taken by 24%. It disappears after preventing 2000 damage or taking 20 hits. Bash Damage Reduction is increased by 15%."
       },
       "mir4_skill_2203": {
         "name": "Blizzard",
-        "description": "Deals {damage} damage over 7 impacts. Up to 7 other enemies within 9 yards take full damage. Freezes each enemy hit for 1.8 sec."
+        "description": "Creates a blizzard at the selected enemy's location for 6 sec. It deals {damage} total Spell damage over 7 impacts. Six field impacts can each strike up to 10 enemies within 7 yards; one direct impact strikes the selected enemy near the end of the cast."
       },
       "mir4_skill_2303": {
         "name": "Chain Lightning",
-        "description": "Deals {damage} damage to an enemy and chains at full damage to up to 6 other enemies within 12 yards."
+        "description": "Strikes up to 7 enemies one by one. The first target takes {damage} Spell damage; each jump reaches an unstruck enemy within 11 yards and deals less damage, down to 62.5% on the seventh target. Against Chilled enemies, Bash and its damage bonus are increased by 50%."
       },
       "mir4_skill_2201": {
         "name": "Flame Strike",
-        "description": "Deals {damage} damage over 3 impacts to nearby enemies. Pushes each enemy hit 5.5 yards away and dazes them for 0.9 sec."
+        "description": "Strikes up to 8 enemies within 7.5 yards around you for {damage} total Spell damage over 3 impacts. Each landed impact briefly interrupts the target."
       },
       "mir4_skill_2502": {
         "name": "Soul Devour",
-        "description": "Deals {damage} damage over 5 impacts. Up to 5 other enemies within 7 yards take full damage."
+        "description": "Launches darkness at the selected enemy and fixes its area at that position. Deals {damage} total Spell damage over 5 hits: one 4.5-yard target-centred hit and four expanding pulses with 3.5, 4.5, 6, and 7-yard radii. Each hit can strike up to 6 enemies."
       },
       "mir4_skill_2103": {
         "name": "Immolate",
-        "description": "Deals {damage} damage over 10 impacts. Up to 4 other enemies within 10 yards take 75% damage. Burns each enemy hit for {burnPerTick} base damage every 1 sec (6 ticks, {burnTotal} total before mitigation)."
+        "description": "Strikes the selected enemy 10 times for {damage} total Spell damage. The third contact applies Fire Flare for 5 sec, dealing {burnPerTick} Spell damage on each native periodic pulse. Against Quelled enemies, Bash and its damage bonus are increased by 50%."
       },
       "mir4_skill_2204": {
         "name": "Phoenix Embrace",
-        "description": "Increases your damage by 25% for 60 sec."
+        "description": "After 0.85 sec, increases the Spell ATK of you and up to 4 nearby party members within 7 yards by 25, plus 5 per skill level, for 60 sec. At skill level 5, also reduces your Skill Cooldowns by 25% for 16 sec. At level 8, this becomes 40%, raises your MP Potion Efficiency by 20% for 16 sec, and permanently raises your Skill Damage by 4%. At level 10, these bonuses become 60%, 30%, and 8%."
       },
       "mir4_skill_2202": {
         "name": "Frozen Block",
-        "description": "Deals {damage} damage over 3 impacts to nearby enemies and freezes them for 2 sec. Reduces damage taken by 100% for 4 sec."
+        "description": "Deals {damage} Spell damage over 3 impacts to up to 5 enemies within 7 yards. At the first impact, encases you in ice for 3 sec: you cannot move or act, ignore all damage, remove removable debuffs, and cannot receive new removable debuffs. Each impact briefly interrupts enemies it hits."
       },
       "mir4_skill_3506": {
         "name": "Moonlight Wave",
-        "description": "Deals {damage} damage over 5 impacts. Up to 3 other enemies within 7 yards take 60% damage. Slows each enemy hit by 25% for 8 sec."
+        "description": "Creates a lunar field at the selected enemy's location. It deals {damage} total Spell damage over 5 rapid impacts to up to 8 enemies within 6 yards. Each impact briefly interrupts enemies it hits."
       },
       "mir4_skill_3101": {
         "name": "Sunbeam Sword",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. Each enemy hit has its Physical and Magic Defense reduced by 10% for 4 sec. Defense Breaks stack multiplicatively, but Defense cannot fall below 20% of its original value."
+        "description": "Deals {damage} total Physical damage over 7 hits to up to 8 enemies in a frontal 8-by-5-yard area. The first and third attack sequences push enemies forward. The first hit applies Quell for 5 sec, plus 1 sec per skill rank after the first, reducing Spell ATK by 25%; later hits Bash Quelled targets for 50%/65%/80%/100% bonus damage at ranks 1/5/8/10. At ranks 5/8/10, MP potion recovery rises by 5%/10%/15%, and a Bash against a player has 50%/100%/100% chance to reduce Knockdown RES by 10% for 15 sec. At rank 8, a target with both Damaged Weapon and Damaged Armor has a 65% chance to suffer Broken Armor, reducing PHYS and Spell DEF by 50% for 300 sec; rank 10 guarantees it and raises the reduction to 80%."
       },
       "mir4_skill_3301": {
         "name": "Moonlight Orb",
-        "description": "Deals {damage} damage over 9 impacts. Up to 3 other enemies within 7.25 yards take 60% damage. Roots each enemy hit for 1.6 sec."
+        "description": "Creates a lunar orb at the selected enemy's location. It deals {damage} total Spell damage over 9 impacts to up to 6 enemies within 5.5 yards. Four field impacts pull enemies toward the orb; the other field impacts briefly interrupt them. The direct impact applies Quell for 8/10/12/15 sec at ranks 1/5/8/10, reducing Spell ATK by 25%. At ranks 5/8/10, it also reduces Skill DMG Reduction by 10% for 15 sec, 15% for 30 sec, or 20% for 30 sec; grants 4%/8%/12% Monster ATK DMG; grants the party 20/60/100 PHYS and Spell DEF; and has a 35%/70%/100% chance against monsters or 20%/40%/60% against players to remove one enhancement. At ranks 8/10, it also applies Chaos for 10 sec, reducing PHYS ATK by 25%, and has a 40%/60% chance to remove Magic Shield or Stealth. Rank 10 also reduces Critical Evasion by 300 for 10 sec."
       },
       "mir4_skill_3104": {
         "name": "Rain of Blades",
-        "description": "Deals {damage} hybrid damage over 4 impacts. Up to 4 other enemies within 7.75 yards take 60% damage. At rank 8, each enemy hit has a 40% chance to be Silenced for 4 sec."
+        "description": "Calls down blades at the selected enemy's location, dealing {damage} total hybrid damage over 3 impacts to up to 8 enemies within 6 yards. The direct impact Bashes Confused or Chilled enemies for 50%/65%/80%/100% bonus damage at ranks 1/5/8/10; from rank 8, all impacts cannot be evaded. At ranks 5/8/10, the direct impact adds one stack to existing Chaos or Chill and refreshes it to 10 sec; a critical hit applies unremovable Damaged Weapon, reducing PHYS and Spell ATK by 10/20/30 for 60/120/180 sec; and it has a 30%/40%/60% chance to reduce Evasion by 300/500/800 for 4/4/6 sec. At ranks 8/10, it also has a 40%/60% chance to Silence for 4/6 sec and reduces Bash DMG Reduction by 20%/50% for 10 sec. Learning ranks 5/8/10 grants you and your party 4%/8%/12% Skill DMG Reduction."
       },
       "mir4_skill_3503": {
         "name": "Heal",
-        "description": "Restores 18% of maximum health to you and up to 4 party members within 20 yards."
+        "description": "Restores {healPerPulse} health per second for 5 sec ({healTotal} total) to you and up to 4 party members within 30 yards. Healing increases with Spell Power. You are immune to control effects for 2 sec. At rank 5, immediately restores 10% of your maximum health and 15% to party members. At rank 8, those amounts become 25% and 35%; Heal can be cast while Silenced, removes Silence, cleanses Debilitation from you and has a 50% chance to cleanse it from party members, and grants 10% Boss Damage Reduction for 30 sec. At rank 10, the immediate amounts become 40% and 50%, the party cleanse is guaranteed and also removes Stun, and Boss Damage Reduction becomes 20% for 60 sec."
       },
       "mir4_skill_3103": {
         "name": "Piercing Blades",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.5 yards take 65% damage. From rank 5, Stuns monsters for 2 sec and has a 20% base chance to Stun players."
+        "description": "Deals {damage} total Physical damage over 5 hits to up to 8 enemies in a frontal 12-by-5-yard area. The first attack sequence knocks enemies back; the final sequence causes a brief hit reaction. Targets affected by Quell, Chaos, or Chill are Bashed for 50%/65%/80%/100% bonus damage at ranks 1/5/8/10. At ranks 5/8/10, the first three hits Stun monsters for 2/3/5 sec and have a 20%/40%/60% base chance to Stun players; learning those ranks also grants 10%/15%/20% Boss ATK DMG. At ranks 8/10, the first three hits reduce Skill DMG Reduction by 20%/30% against monsters or 15%/20% against players for 30 sec. When one of those hits Bashes, it also applies Chaos and Chill for 8/16 sec, reducing PHYS ATK and Skill DMG Reduction by 25%."
       },
       "mir4_skill_3501": {
         "name": "Guardian Circle",
-        "description": "Deals {damage} damage to nearby enemies and increases the party's Physical and Magic Defense by 25% for 60 sec."
+        "description": "Deals {damage} Spell damage to up to 5 enemies within 6 yards of you. You and up to 4 party members within 15 yards gain {guardianPhysicalDefense} Physical Defense and {guardianBashDamageReduction}% Bash Damage Reduction for 60 sec. At rank 5, each member also gains 50 Physical Defense, 10% Monster Damage Reduction, and 10% Bash Damage Reduction for 15 sec. At rank 8, that additional protection becomes 100 Physical Defense, 15% Monster Damage Reduction, 20% Bash Damage Reduction, and 15% Critical Damage Reduction for 20 sec. Guardian Circle can then be cast while Stunned and removes removable Stun from each affected member; each member also gains 20% Stun Resistance for 30 sec and 10% MP Potion Recovery for 20 sec. At rank 10, the additional protection becomes 150 Physical Defense, 20% Monster Damage Reduction, 40% Bash Damage Reduction, and 30% Critical Damage Reduction for 30 sec. Stun Resistance lasts 60 sec and becomes 50% for you while remaining 20% for other members; MP Potion Recovery becomes 15% for 30 sec. The affected member with the lowest health percentage also gains 30% All Damage Reduction for 15 sec."
       },
       "mir4_skill_3201": {
         "name": "Tai Chi",
-        "description": "Deals {damage} hybrid damage to nearby enemies, pulls them toward you and Knocks them Down for 1.5 sec. Base Knockdown chance is 100% against monsters and 10% against players."
+        "description": "Deals {damage} total hybrid damage over 6 contacts to up to 8 enemies around you. The first, third, and fifth contacts pull enemies inward; the final contact knocks enemies down and moves them outward. You are immune to Knockdown and Stun while casting. Base Knockdown chance is 100% against monsters and 10% against players. At ranks 5/8/10, gain 50 Evasion for 30 sec plus 250/500/750 Evasion for 5 sec; monsters lose 10%/15%/20% Skill Damage Reduction, players lose 5%/10%/15%, and party Skill Healing increases by 15%/30%/50% for 8 sec. Player Knockdown chance becomes 30%/60%/100%. At rank 8, targets with Damaged Weapon and Damaged Armor have a 65% chance to suffer unremovable Broken Weapon for 300 sec, reducing Physical Attack, Spell Attack, Accuracy, and Evasion by 50. At rank 10, Broken Weapon is guaranteed and reduces those stats by 80, and enemies also lose 300 Accuracy for 15 sec."
       },
       "mir4_skill_3505": {
         "name": "Blasting Charm",
-        "description": "Deals {damage} damage to an enemy, reduces its damage by 35% for 8 sec and reduces its Physical and Magic Defense by 12% for 15 sec."
+        "description": "Launches a homing talisman that explodes on the target, dealing {damage} Spell damage to up to 5 enemies within 6 yards. Enemies hit suffer Darkness for 8/10/12/15 sec and lose 50 Physical Defense for 15/20/30 sec at ranks 1/5/8/10. At rank 5, monsters lose 15% All Damage Reduction and players lose 15% Monster Damage Reduction. At rank 8, those losses become 20%; players also lose 15% PvP Damage Reduction, and enemies lose 10% Stun Resistance plus 15% Debilitation and Silence Resistance. At rank 10, the contextual damage-reduction losses become 30%, the PvP loss becomes 20%, the Stun Resistance loss becomes 20%, and the Debilitation and Silence Resistance losses become 30%."
       },
       "mir4_skill_3203": {
         "name": "Soaring Slash",
-        "description": "Deals {damage} hybrid damage over 6 impacts. Up to 3 other enemies within 7 yards take 70% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
+        "description": "Deals {damage} total hybrid damage over 9 hits to up to 8 enemies in a frontal 12-by-4-yard area. Each hit applies Confuse and Chill for 5 sec and knocks enemies back. A target affected by either debilitation is Bashed for 50%/65%/80%/100% bonus damage at ranks 1/5/8/10. At ranks 5/8/10, the first hit of the second wave refreshes Confuse and Chill to 10 sec; Critical hits apply unremovable Damaged Armor, reducing Physical and Magic Defense by 10/20/30 for 60/120/180 sec; and learning those ranks grants the party 4%/8%/12% Skill Damage Reduction. At ranks 8/10, targets suffering both Confuse and Chill take 50%/100% additional Skill damage from this skill. At rank 10, targets suffering both Confuse and Quell also lose 500 Critical Evasion for 10 sec."
       },
       "mir4_skill_3404": {
         "name": "Expulsion Circle",
-        "description": "Increases the party's Physical and Magic Defense by 25% for 60 sec."
+        "description": "You and up to 4 party members within 15 yards gain {expulsionSpellDefense} Spell Defense for 60 sec. At rank 5, each member also gains 50 Spell Defense and 6% Skill Damage Reduction for 15 sec, plus 10% Boss Damage Reduction for 20 sec. At rank 8, those bonuses become 100 Spell Defense and 12% Skill Damage Reduction for 20 sec, plus 15% Boss Damage Reduction for 30 sec. Expulsion Circle can then be cast while Silenced and removes removable Silence and Debilitation effects from the party; you gain 10% Debilitation and Silence Resistance and other party members gain 20% for 30 sec. At rank 10, the bonuses become 150 Spell Defense and 20% Skill Damage Reduction for 30 sec, plus 20% Boss Damage Reduction for 60 sec. You gain 50% Debilitation Resistance and 70% Silence Resistance; other party members gain 25% and 35%, respectively, for 60 sec."
       },
       "mir4_skill_3504": {
         "name": "Greater Heal",
-        "description": "Restores 45% of maximum health to you and up to 4 party members within 20 yards."
+        "description": "Restores 10% of maximum Health plus {greaterHealFlat} Health to you and up to 4 party members within 30 yards, and makes you immune to Crowd Control for 2 sec while casting. At rank 5, the maximum-Health healing increases by an additional 10% for you and 20% for party members, and each affected member has a 60% chance to have removable Stun cleared. At rank 8, those healing bonuses become 20% and 35%, Stun-clearing chance becomes 90%, and affected members are Invincible for 2 sec. Greater Heal can then be cast while Silenced or Stunned, resets hostile monsters targeting you, revives one dead party member with 20% Health, and fatal damage instead starts a 5 sec death delay; casting Greater Heal during that delay rescues you. Death delay has a 120 sec cooldown. At rank 10, the healing bonuses become 30% and 60%, removable Stun is always cleared, up to 4 dead party members revive with 50% Health, and death delay lasts 15 sec."
       },
       "mir4_skill_4101": {
         "name": "Quick Shot",
-        "description": "Deals {damage} damage over 6 rapid impacts. Up to 3 other enemies within 7 yards take 65% damage."
+        "description": "Fires 12 arrows in 6 rapid pairs, dealing {damage} total Physical damage in 6 damage resolutions to up to 5 enemies within 4 yards of the selected target. Every enemy receives full damage. Quick Shot grants 1 Focus for 30 sec, up to 10 stacks; at 3/6/9 Focus, Weakness Analysis grants 50/100/150 CRIT. Focus is removed when combat ends or you are Knocked Down, Stunned, or Blinded."
       },
       "mir4_skill_4106": {
         "name": "Painstrike Gale",
-        "description": "Deals {damage} damage to an enemy. Stuns monsters for 2 sec and has a 10% base chance to Stun players."
+        "description": "Rushes through the selected target, then retreats 8 yards, dealing {damage} Physical damage to up to 5 enemies in a 6-yard frontal line. Grants 1 Focus and Invincibility for 1 sec. Hit enemies are Marked, reducing CRIT EVA by 25, for 5/8/10/10 sec at ranks 1/5/8/10. Monsters are Stunned for 2 sec, increasing to 3 sec at rank 10. Players have a 10%/30%/50%/70% chance to be Stunned for 1/1/1/2 sec at ranks 1/5/8/10. At ranks 5/8/10, also reduces CRIT DMG Reduction by 100/200/400 for 5/5/8 sec. At ranks 8/10, also reduces CRIT EVA by a further 200/400 for 5/8 sec."
       },
       "mir4_skill_4102": {
         "name": "Illusion Arrow",
-        "description": "Deals {damage} damage over 5 impacts. Up to 3 other enemies within 6.625 yards take 65% damage and grants 60 Dodge for 4 sec."
+        "description": "Deals {damage} total Physical damage over 5 hits to up to 8 enemies within 10 yards around you. The second and fourth hits knock enemies slightly away. Grants 1 Focus, and you are immune to Knockdown and Stun while casting. At ranks 5/8/10, Evasion increases by 150/300/500 for 5 sec, critical hits gain 10%/20%/50% Skill ATK DMG, and damage against monsters increases by 15%/30%/50%."
       },
       "mir4_skill_4103": {
         "name": "Burst Shell",
-        "description": "Deals {damage} damage to an enemy. Up to 4 other enemies within 7.5 yards take 65% damage and have their Physical and Magic Defense reduced by 12% for 10 sec."
+        "description": "Fires an explosive shell at the selected target, creating a device for 3 sec that deals {damage} total Physical damage over 5 explosions to up to 5 enemies within 8 yards. Grants 1 Focus. Enemies hit lose 50/80/100/200 Physical and Spell Defense for 10 sec at ranks 1/5/8/10. At ranks 8/10, they also burn for 10%/20% of your Physical ATK each second for 10 sec and take 10%/25% more damage, while this skill deals 8%/12% more damage to monsters."
       },
       "mir4_skill_4107": {
         "name": "Flash Arrow",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 6.75 yards take 60% damage and have their damage reduced by 45% for 5 sec."
+        "description": "Fires a flash arrow at the selected target, dealing {damage} Physical damage to up to 5 enemies within 4.5 yards and creating a 6-yard flash field for 6 sec. The field releases 6 non-damaging pulses. Every direct hit or pulse reduces Accuracy by 50 plus 10 per skill rank for 1 sec. Grants 1 Focus. At ranks 1/5/8/10, the direct hit Marks enemies for 5/8/10/10 sec, reducing CRIT EVA by 25. At ranks 5/8/10, it also reduces Accuracy by 50/100/200 for 5 sec and CRIT by 100/200/400 for 8 sec. At ranks 8/10, it applies Darkness for 10 sec, stacking up to 3 times. Against enemies in Darkness, it has a 40-50%/60-70%/80-100% chance at ranks 5/8/10 to Blind for 2/3/5 sec, based on Darkness stacks."
       },
       "mir4_skill_4108": {
         "name": "Heavenly Bow",
-        "description": "Deals {damage} damage in an arrow rain. Up to 7 other enemies within 9 yards take 85% damage."
+        "description": "Calls down an arrow rain at the selected target, dealing {damage} total Physical damage over 8 hits to up to 8 enemies within 7 yards. Grants 1 Focus. Against Marked enemies, Bash increases all 8 hits by 50%/65%/80%/100% at ranks 1/5/8/10. At ranks 5/8/10, each direct Bash hit has a 5%/15%/40% chance to reset this skill's cooldown, with a 10 sec internal cooldown. At ranks 8/10, your damage against monsters increases by 8%/12%."
       },
       "mir4_skill_4111": {
         "name": "Mind's Eye",
-        "description": "Increases your damage by 15% for 30 sec."
+        "description": "Empowers you and up to 4 nearby party members within 15 yards, increasing Physical ATK by 10 at rank 1 plus 10 per additional skill rank for 30 sec, and grants 1 Focus. At rank 5, also grants 100 Accuracy and 50 CRIT for 10 sec. At rank 8, those bonuses become 160 Accuracy and 80 CRIT, dispels Blind, and increases MP Potion Efficiency by 20% for 10 sec; learning the rank also grants 10% Boss ATK DMG and 10% All DMG Reduction. At rank 10, the temporary bonuses become 240 Accuracy, 120 CRIT, and 30% MP Potion Efficiency for 15 sec; the persistent bonuses become 15% Boss ATK DMG and 20% All DMG Reduction."
       },
       "mir4_skill_4105": {
         "name": "Ice Cage",
-        "description": "Deals {damage} damage and slows enemies by 50% for 10 sec."
+        "description": "Creates an ice cage at the selected target, dealing {damage} total Physical damage over 8 hits to up to 6 enemies within 5 yards and granting 1 Focus. The direct hit applies Chill for 5/8/10/10 sec at ranks 1/5/8/10, stacking up to 3 times and reducing Skill DMG Reduction by 25% per stack. Monsters also lose 0.5/0.5/1/1.5 yd/s of movement speed for 10 sec and, at ranks 5/8/10, have a 50%/100%/100% chance to Freeze for 3/3/5 sec. At ranks 5/8/10, Frostbite has a 10-30%/40-60%/60-80% chance based on Chill stacks to reduce movement speed by another 1 yd/s for 5/5/8 sec. At ranks 8/10, Severe Cold has a 20-30%/50-60% chance based on Chill stacks to Freeze for 3/5 sec, and the direct hit has a 20%/50% chance to disable Evasion for 10 sec. Against enemies with 2 or 3 Darkness stacks, all 8 hits deal 35% or 40% more damage at rank 8, and 60% or 70% more at rank 10."
       },
       "mir4_skill_4109": {
         "name": "Obliterate Shell",
-        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+        "description": "Fires an annihilating shell in a 20-yard-long, 4-yard-wide frontal line, dealing {damage} total Physical damage over 2 hits to up to 8 enemies and granting 1 Focus. Against Marked enemies, Bash increases both hits by 50%/65%/80%/100% at ranks 1/5/8/10. The first hit Knocks Down monsters for 2.1 sec and has a 10%/30%/60%/100% base chance to Knock Down players at ranks 1/5/8/10. At ranks 5/8/10, both hits deal 30%/60%/90% more damage to bosses and 40%/80%/120% more damage to Stunned enemies."
       },
       "mir4_skill_4104": {
         "name": "Venom Mist Shell",
-        "description": "Deals {damage} damage in a poisonous area and reduces enemy damage by 40% for 5 sec."
+        "description": "Launches a curved poison shell at the selected target, dealing {damage} total Physical damage over 9 hits: one 6-yard impact followed by 8 pulses from a 4.5-yard poison field, with each hit affecting up to 6 enemies. Grants 1 Focus. At ranks 1/5/8/10, the direct hit Marks enemies and applies Darkness for 5/8/10/10 sec. Mark reduces CRIT EVA by 25, while each Darkness stack reduces Silence Resistance by 25%, stacking up to 3 times. At ranks 5/8/10, the direct hit reduces Skill Healing by 30%/40%/50% for 10/15/20 sec. At ranks 8/10, it has a 50%/90% chance to apply an additional Darkness stack and prevents new Invincible effects for 10/20 sec; this restriction cannot be removed. At rank 10, it also reduces HP Potion Recovery by 10% for 20 sec. Learning ranks 8/10 grants 10%/15% Boss Damage Reduction."
       },
       "mir4_skill_4110": {
         "name": "Seeking Bolt",
-        "description": "Deals {damage} damage to a single enemy from extreme range."
+        "description": "Fires a homing bolt at a selected target from up to 25 yards away, dealing {damage} Physical damage in 1 hit and granting 1 Focus. You are immune to Knockdown and Stun for 1.5 sec while casting. At ranks 5/8/10, a Critical Hit has a 20%/50%/100% chance to trigger Soul Destruction and attempt to Stun for 2/3/4 sec. At ranks 8/10, this skill cannot be evaded, reduces the target's Evasion by 200/300 for 5/10 sec, and learning the rank grants your party 20/50 Accuracy."
       },
       "mir4_skill_4112": {
         "name": "Cloaking",
-        "description": "Grants 150 Dodge and increases your damage by 20% for 2 sec."
+        "description": "Leaves a decoy at your starting position, surges 10 yards forward, and enters Cloaking for up to 2 sec. After 0.72 sec, the decoy deals 90% Physical ATK plus 2% per additional skill rank to up to 8 enemies within 3.5 yards and Knocks them Back 0.3 yards. Cloaking ends Auto-Battle and drops monster threat. When Cloaking ends, increases Skill ATK DMG by 20% for 2 sec. At rank 5, Cloaking lasts up to 3 sec, restores 10% Max HP, and the exit bonus becomes 30%. At rank 8, Cloaking lasts up to 4 sec, restores 20% Max HP, and the exit bonus becomes 50%; the skill can be used while Silenced, and Cloaking grants 25% All DMG Reduction, 20% Knockdown Resistance, and 1 yard per second of Move Speed. At rank 10, Cloaking lasts up to 5 sec, restores 30% Max HP, and the exit bonus becomes 80%; its defenses become 50% All DMG Reduction, 50% Knockdown Resistance, 50% Stun Resistance, and 3 yards per second of Move Speed."
       },
       "mir4_skill_5201": {
         "name": "Ravaging Blow",
-        "description": "Deals {damage} hybrid damage over 6 impacts and slows enemies by 25% for 5 sec."
+        "description": "Advances 2 yards, then strikes up to 8 enemies in a 5-yard-wide frontal path over 6 impacts, dealing {damage} total Physical and Spell damage. The path reaches 7 yards for the first 5 impacts and 7.5 yards for the final impact. The fourth impact Knocks enemies Back 1 yard."
       },
       "mir4_skill_5101": {
         "name": "Crescent Blade",
-        "description": "Deals {damage} damage and Knocks Down monsters for 1 sec; base chance against players is 10%."
+        "description": "Advances 2.5 yards, then crosses through the selected target to 1.8 yards beyond it. Strikes up to 8 enemies in a 160-degree frontal sector over 2 impacts, dealing {damage} total Physical damage. The second impact Knocks Down monsters for 3 sec. Its chance to Knock Down players is 10%/30%/60%/100% at ranks 1/5/8/10. If Knockdown fails at ranks 5/8/10, reduces the target's Knockdown Resistance by 10%/15%/20% for 10/15/20 sec. At ranks 8/10, deals 50%/100% more Skill damage to monsters; against targets with 2 or 3 Chill stacks, it deals 35%/40% or 60%/70% more damage. Learning ranks 8/10 also increases Bash damage by 15%/20%."
       },
       "mir4_skill_5104": {
         "name": "Nirvana Kick",
-        "description": "Deals {damage} damage and Knocks Down monsters for 1 sec; base chance against players is 10%."
+        "description": "Charges through the selected target to 1 yard beyond it in 0.35 sec, then turns back and strikes up to 8 enemies in a 4.5-yard-long, 5-yard-wide frontal path, dealing {damage} Physical damage. Knocks Down monsters for 3 sec; the chance against players is 10%/30%/60%/100% at ranks 1/5/8/10. If Knockdown fails at ranks 5/8/10, reduces the target's Knockdown Resistance by 10%/15%/20% for 10/15/20 sec. A target Knocked Down at those ranks Bleeds for 30%/50%/80% Physical ATK for 2 sec. Learning ranks 8/10 increases damage to monsters by 8%/12% and to bosses by 10%/15%."
       },
       "mir4_skill_5301": {
         "name": "Double Strike",
-        "description": "Deals {damage} damage to an enemy. Up to 3 other enemies within 7.25 yards take 70% damage."
+        "description": "Advances 3.5 yards, then crosses through the selected target to 1.2 yards beyond it. Strikes up to 8 enemies in a 7-yard-long, 5-yard-wide frontal path over 3 impacts, dealing {damage} total Physical damage. The first and third impacts Knock Back enemies by 2.5 and 2 yards; the third also lifts them 0.5 yards. Against Chilled targets, Bash increases damage by 50%/65%/80%/100% at ranks 1/5/8/10. At ranks 5/8/10, 1, 2 or 3 Chill stacks increase Skill damage by 20%/25%/30%, 50%/60%/70% or 90%/100%/110%. Learning ranks 8/10 also increases Bash damage by 10%/15%."
       },
       "mir4_skill_5401": {
         "name": "Sweeping Storm",
-        "description": "Deals {damage} hybrid damage and reduces enemy damage by 30% for 5 sec."
+        "description": "Spins the spear around you, striking up to 8 enemies over 6 contacts for {damage} total Physical and Spell damage. The second, fourth, and sixth contacts Knock Back enemies by 0.8 yards. You are immune to control effects for 1.5 sec while casting. The second contact applies 1 Darkness stack for 5/8/10/10 sec at ranks 1/5/8/10, up to 3 stacks; each stack reduces Silence Resistance by 2.5%. At ranks 8/10, it has independent 40%/70% and 20%/35% chances to apply 1 additional Darkness stack. It reduces monsters' Physical and Spell Attack by 100/150/200/300 for 5/10/15/20 sec at ranks 1/5/8/10. At ranks 5/8/10, it reduces players' Physical and Spell Attack by 100/150/200 for 10/15/20 sec. With 1, 2, or 3 Darkness stacks, it reduces Skill Cooldown Reduction by 30%/35%/40% for 10 sec at rank 5, 50%/55%/60% for 15 sec at rank 8, or 80%/90%/100% for 20 sec at rank 10."
       },
       "mir4_skill_5102": {
         "name": "Dragon Tail",
-        "description": "Deals {damage} damage to enemies swept by the spear."
+        "description": "Advances 6 yards while sweeping the spear, striking up to 8 enemies in a 160-degree frontal sector over 3 impacts for {damage} total Physical damage. The first two impacts each have a 10% chance to Knock Back enemies by 0.5 and 1.5 yards; the final impact has a 10% chance to make enemies flinch. Deals 30%/50%/70%/100% more Skill damage to monsters at ranks 1/5/8/10. At ranks 5/8/10, reduces targets' Skill Recovery by 10%/20%/30% for 10/15/20 sec and permanently increases Boss Damage Reduction by 5%/10%/15%. At ranks 8/10, also applies 1 Darkness stack for 10 sec, up to 3 stacks, and reduces MP Potion Recovery by 30% for 15/30 sec."
       },
       "mir4_skill_5103": {
         "name": "Ascending Dragon",
-        "description": "Deals {damage} hybrid damage and slows enemies by 30% for 5 sec."
+        "description": "Strikes up to 8 enemies in a 6-yard-radius circle centered 4 yards ahead over 3 contacts, dealing {damage} total Physical and Spell damage. The first and third contacts Knock Back enemies by 0.1 yards. The first damage contact applies 1 Chill stack for 5/8/10/10 sec at ranks 1/5/8/10, up to 3 stacks, reducing Skill DMG Reduction by 25% per stack. At ranks 5/8/10, monsters also lose 0.5/1/1.5 yd/s movement speed for 5 sec. Against Chilled targets, Severe Cold has a 30%/35%/40%, 40%/45%/50%, or 60%/65%/70% chance based on 1/2/3 Chill stacks to Freeze for 2/5/7 sec at ranks 5/8/10. Learning ranks 5/8/10 permanently increases damage to monsters by 4%/8%/12%."
       },
       "mir4_skill_5303": {
         "name": "Crushing Blow",
-        "description": "Deals {damage} damage and Knocks Down monsters for 1.4 sec; base chance against players is 10%."
+        "description": "Rushes through the selected target to 3 yards beyond it, then crosses back through it to 1 yard beyond the other side. Strikes up to 8 enemies in two 5-yard-radius areas over 4 impacts, dealing {damage} total Physical damage. Grants Invincible for 1 sec after casting. The first impact Knocks Back enemies by 0.9 yards; the final impact Knocks Down monsters at 100% chance and players at 10%/30%/60%/100% chance at ranks 1/5/8/10, moving them 3 yards and lifting them 1.5 yards. At ranks 5/8/10, failed Knockdown reduces Knockdown Resistance by 10%/15%/20% for 10/15/20 sec, Boss Skill damage increases by 25%/50%/100%, Skill damage increases by 10%/20%/30% for 15 sec, and Skill Cooldown Reduction increases by 20% for 15 sec or 30%/50% for 20 sec."
       },
       "mir4_skill_5403": {
         "name": "Wind Wall",
-        "description": "Deals {damage} hybrid damage and increases your Physical and Magic Defense by 20% for 5 sec."
+        "description": "Twirls the spear into a wall of wind, striking up to 8 enemies in front of you over 5 contacts for {damage} total Physical and Spell damage. You are immune to control effects for 1.5 sec while casting. Grants 20% All Damage Reduction for 5 sec and 15% +3% per rank Bash Damage Reduction for 15 sec. Grants 5%/15%/20%/30% Monster Damage Reduction for 8/8/12/15 sec at ranks 1/5/8/10 and 20%/30% Boss Damage Reduction for 12/15 sec at ranks 8/10. At ranks 5/8/10, party members gain 30%/50%/70% All Damage Reduction for 4/6/8 sec, 20%/35%/50% Boss Damage Reduction for 6 sec, and 20/60/100 Spell Attack while a qualifying Lancer remains in the party."
       },
       "mir4_skill_5205": {
         "name": "Piercing Spear",
-        "description": "Deals {damage} hybrid damage from long range and Knocks Down monsters for 1.6 sec; base chance against players is 10%."
+        "description": "Approaches the selected target, then hurls spear energy through up to 8 enemies in a 20-by-4-yard line for up to {damage} total Physical and Spell damage. Enemies near the far end receive the second hit; all others receive one hit. Each hit Knocks Down monsters at 100% chance and players at 10%/30%/60%/100% chance at ranks 1/5/8/10 for 3 sec, moving them 2.5 yards. At ranks 5/8/10, a failed Knockdown on the first hit reduces Knockdown Resistance by 10%/15%/20% for 10/15/20 sec. If the enemy has 1, 2, or 3 Darkness stacks, the first hit also has a 40%/45%/50%, 60%/65%/70%, or 80%/90%/100% chance to Blind for 2/4/5 sec at ranks 5/8/10."
       },
       "mir4_skill_5304": {
         "name": "Absorption",
-        "description": "Deals {damage} damage and restores 15% of your maximum health."
+        "description": "Approaches the selected target, then drains up to 8 enemies in an 8-yard-radius area around it, dealing {damage} Physical damage and restoring 100%/250%/500%/800% of damage dealt as HP at ranks 1/5/8/10. If an enemy hit is Chilled, you become Chilled for 5/10/15/30 sec. At ranks 5/8/10, enemies hit take 25%/50%/75% more damage for 5 sec. At ranks 8/10, removes Shield and prevents receiving Shield for 30 sec, with a 70%/100% chance each to remove Magic Shield and Cloaking. At rank 10, hitting an enemy with 1, 2, or 3 Darkness stacks has a 70%/85%/100% chance to deal 20% Spell Attack per sec for 5 sec. Learning ranks 8/10 restores 10%/30% HP when you defeat a character, once every 30 sec."
       },
       "mir4_skill_5202": {
         "name": "Blitz Strike",
-        "description": "Charges a distant enemy, deals {damage} damage and Knocks it Down."
+        "description": "Rushes through the selected target in 0.5 sec, then pierces up to 8 enemies in a 6.5-yard-long, 4-yard-wide frontal path, dealing {damage} Physical damage. Knocks Down monsters for 3 sec; the chance against players is 10%/30%/60%/100% at ranks 1/5/8/10. A successful Knockdown hurls the affected enemy 11 yards behind you. If Knockdown fails at ranks 5/8/10, reduces the target's Knockdown Resistance by 10%/15%/20% for 10/15/20 sec. A successful Knockdown at those ranks Bleeds for 20%/35%/50% Physical ATK for 2 sec and has a 20%/50%/70% chance plus Stun Success to Stun for an additional 2/3/4 sec. Learning ranks 5/8/10 increases Skill Damage Reduction by 3%/6%/10%."
       },
       "mir4_ultimate_1": {
         "name": "Dragon Flame",
-        "description": "Deals {damage} damage over 3 impacts. Restores 10% of your maximum health. Requires a full Ultimate gauge."
+        "description": "Deals {damage} Physical damage over 4 contacts. Grants Invincibility for 3 sec. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_2": {
         "name": "Dragon Tornado",
-        "description": "Deals {damage} damage over 4 impacts. Requires a full Ultimate gauge."
+        "description": "Creates a fixed 7-yard tornado that strikes up to 10 enemies at each of 10 contacts for {damage} total Spell damage. The first 5 contacts can Knock Back and the sixth can Knock Down, each with a 10% chance. Grants Invincibility for 3 sec. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_3": {
         "name": "Ray of Light",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "description": "Strikes up to 10 enemies in a 16-yard frontal path over 7 contacts for {damage} combined Physical and Spell damage. Grants Invincibility for 3 sec and Control Immunity for 5 sec. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_4": {
         "name": "Arrow Rain",
-        "description": "Deals {damage} damage over 3 impacts. Requires a full Ultimate gauge."
+        "description": "Fires 5 widening frontal waves, each striking up to 10 enemies for {damage} total Physical damage. The waves expand from 55 degrees and 21 yards to 120 degrees and 25 yards while you step 1 yard backward after each shot. The first and third waves Knock Back 0.4 and 0.2 yards. Grants Invincibility for 3 sec and 1 Focus. Requires a full Ultimate gauge."
       },
       "mir4_ultimate_5": {
         "name": "Dragon Spear",
-        "description": "Deals {damage} damage over 2 impacts. Requires a full Ultimate gauge."
+        "description": "Strikes up to 8 enemies in a 17-by-4.5-yard frontal path for {damage} total Physical and Spell damage. Knocks Down enemies for 3 sec, hurling them 4 yards and lifting them 1 yard. Grants Invincibility for 2 sec. Requires a full Ultimate gauge."
       },
       "mir4_passive_warrior_heavy_armor": {
         "name": "Heavy Armor",

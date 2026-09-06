@@ -364,6 +364,11 @@ export interface Mir4ResolveDamageInput {
   criticalRoll?: number;
   forceHit?: boolean;
   forceCritical?: boolean;
+  /** Explicit compatibility outcomes for source actors whose final native
+   * admission formula is unavailable. Values are still clamped defensively. */
+  hitChanceBpsOverride?: number;
+  criticalChanceBpsOverride?: number;
+  criticalMultiplierBpsOverride?: number;
   /** Opts the live Aeldrune runtime into level-scaled build contests. */
   buildBalance?: Mir4BuildDamageContext;
 }
@@ -406,10 +411,17 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
   const defenderLevel = input.buildBalance
     ? integer(input.buildBalance.defenderLevel, 1, 1, 1_000)
     : 1;
-  const hitChance = input.buildBalance
-    ? mir4BuildAccuracyVsEvasion(attacker.accuracy, defender.dodge, attackerLevel, defenderLevel)
-        .hitChanceBps
-    : mir4HitChanceBps(attacker.accuracy, defender.dodge);
+  const hitChance =
+    input.hitChanceBpsOverride === undefined
+      ? input.buildBalance
+        ? mir4BuildAccuracyVsEvasion(
+            attacker.accuracy,
+            defender.dodge,
+            attackerLevel,
+            defenderLevel,
+          ).hitChanceBps
+        : mir4HitChanceBps(attacker.accuracy, defender.dodge)
+      : integer(input.hitChanceBpsOverride, 0, 0, MIR4_BASIS_POINTS);
   const hitRoll =
     input.forceHit === true
       ? 0
@@ -417,14 +429,17 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
         ? MIR4_BASIS_POINTS - 1
         : integer(input.hitRoll ?? 0, 0, 0, MIR4_BASIS_POINTS - 1);
   const hit = rawDamage > 0 && hitRoll < hitChance;
-  const criticalChance = input.buildBalance
-    ? mir4BuildCriticalChance(
-        attacker.critical,
-        defender.avoidCritical,
-        attackerLevel,
-        defenderLevel,
-      ).chanceBps
-    : mir4CriticalChanceBps(attacker.critical, defender.avoidCritical);
+  const criticalChance =
+    input.criticalChanceBpsOverride === undefined
+      ? input.buildBalance
+        ? mir4BuildCriticalChance(
+            attacker.critical,
+            defender.avoidCritical,
+            attackerLevel,
+            defenderLevel,
+          ).chanceBps
+        : mir4CriticalChanceBps(attacker.critical, defender.avoidCritical)
+      : integer(input.criticalChanceBpsOverride, 0, 0, MIR4_BASIS_POINTS);
   const criticalRoll =
     input.forceCritical === true
       ? 0
@@ -435,15 +450,18 @@ export function mir4ResolveDamage(input: Mir4ResolveDamageInput): Mir4ResolvedDa
     hit &&
     (input.forceCritical === true ||
       (input.forceCritical !== false && criticalChance > 0 && criticalRoll < criticalChance));
-  const criticalMultiplier = input.buildBalance
-    ? mir4BuildCriticalMultiplier(
-        attacker.criticalOutcome,
-        defender.criticalDamageReduction,
-        attackerLevel,
-        buildContext,
-        defenderLevel,
-      ).multiplierBps
-    : mir4CriticalMultiplierBps(attacker.criticalOutcome, defender.criticalDamageReduction);
+  const criticalMultiplier =
+    input.criticalMultiplierBpsOverride === undefined
+      ? input.buildBalance
+        ? mir4BuildCriticalMultiplier(
+            attacker.criticalOutcome,
+            defender.criticalDamageReduction,
+            attackerLevel,
+            buildContext,
+            defenderLevel,
+          ).multiplierBps
+        : mir4CriticalMultiplierBps(attacker.criticalOutcome, defender.criticalDamageReduction)
+      : integer(input.criticalMultiplierBpsOverride, 15_000, 10_000, 50_000);
   const buildContextBucket = input.buildBalance
     ? mir4BuildContextualBucket(
         attacker,

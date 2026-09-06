@@ -35,10 +35,16 @@ import { MIR4_GAME_PROFILE } from '../game_profile';
 import { lockNormalDungeonResetOnBossKill, spawnBossExitPortal } from '../instances/dungeons';
 import { mir4CreditArcQuestKills } from '../mir4/arc_quest_runtime';
 import { grantMir4Xp } from '../mir4/combat';
+import { mir4Invincible } from '../mir4/effects';
 import { settleMir4KillLoot } from '../mir4/kill_loot';
 import { mir4MonsterRespawnSeconds } from '../mir4/monster_respawn';
+import { applyMir4NativeAbsorptionCharacterKill } from '../mir4/native_skill_absorption';
+import { tryBeginMir4GreaterHealDeathDelay } from '../mir4/native_skill_greater_heal';
+import { mitigateMir4NativeMagicShield } from '../mir4/native_skill_magic_shield_runtime';
 import { recalcMir4ProfilePlayerStats } from '../mir4/profile_player';
 import { mir4FragileGatherEntityIdFromCast } from '../mir4/quest_objective_cast';
+import { clearMir4SkillAction } from '../mir4/skill_action_scheduler';
+import { cancelMir4SkillActivation } from '../mir4/skill_activation';
 import { grantMir4KnowledgeFragment } from '../mir4/skill_materials';
 import { retaliateMir4TargetCombat } from '../mir4/target_combat';
 import { grantMir4TrainingCombatMaterial } from '../mir4/training_resources';
@@ -60,7 +66,7 @@ import {
 import { resolveRespawnSeconds } from '../respawn_policy';
 import { aurasSurvivingDeath } from '../resurrection';
 import type { PlayerMeta } from '../sim';
-import type { DamageResolution, SimContext } from '../sim_context';
+import type { DamageResolution, DamageThreatOptions, SimContext } from '../sim_context';
 import { vcupBothSeated } from '../social/vale_cup';
 import { addThreat, canDetectStealthedTarget, clearThreat } from '../threat';
 import type { DamageEventKind, Entity } from '../types';
@@ -182,7 +188,7 @@ export function dealDamage(
   ability: string | null,
   kind: DamageEventKind,
   noRage = false,
-  threatOpts?: { flat?: number; mult?: number },
+  threatOpts?: DamageThreatOptions,
   // Whether this is a DIRECT attack (auto-attack swing or a direct-hit spell) as
   // opposed to incidental damage (Lightning Shield/Thorns/spiked-hide reflect, DoT
   // ticks). Only direct damage may walk a mob's leash anchor; passive damage must
@@ -244,6 +250,7 @@ export function dealDamage(
     }
     return 0;
   }
+  if (mir4Invincible(target)) return 0;
   if (isValkyrsCallingAirborne(target)) return 0;
   // Ice Block (Cold Coffin): while encased in stasis the mage is FULLY immune to
   // damage (owner 2026-07-13), so nothing gets through until it is cancelled or
@@ -573,7 +580,12 @@ export function dealDamage(
         amount -= answer.soaked;
         totalAbsorbed += answer.soaked;
         target.auras.splice(target.auras.indexOf(armed), 1);
-        ctx.emit({ type: 'aura', targetId: target.id, name: armed.name, gained: false });
+        ctx.emit({
+          type: 'aura',
+          targetId: target.id,
+          name: armed.name,
+          gained: false,
+        });
         if (target.kind === 'player') grantAbilityDevotion(target, DEBT_OF_LIGHT_DEVOTION);
         if (answer.soaked > 0 && !source.dead) {
           debtReturn = { attacker: source, amount: answer.soaked };
@@ -598,7 +610,12 @@ export function dealDamage(
       if (a.id === UNLEASH_WEAPON_GUARD_ID) a.value = 0;
       if (a.value <= 0) {
         target.auras.splice(i, 1);
-        ctx.emit({ type: 'aura', targetId: target.id, name: a.name, gained: false });
+        ctx.emit({
+          type: 'aura',
+          targetId: target.id,
+          name: a.name,
+          gained: false,
+        });
         // Talent procs listening for a fully consumed shield (deterministic).
         const shielder = ctx.entities.get(a.sourceId);
         if (shielder && !shielder.dead && shielder.kind === 'player') {
@@ -609,10 +626,10 @@ export function dealDamage(
     }
   }
 
-  // The mir4 magic shield (2503) shaves what reaches health; classic sims
-  // never carry it. Applied here so EVERY incoming path benefits once.
+  // Native Magic Shield 2503 reduces every incoming path once and consumes
+  // both its absorbed-damage and hit-count budgets.
   if (!resolvedHpLoss && target.kind === 'player' && amount > 0 && target.mir4Shield) {
-    amount = Math.max(1, Math.floor(amount * (1 - target.mir4Shield.magnitude)));
+    amount = mitigateMir4NativeMagicShield(target, amount);
   }
   if (!resolvedHpLoss && target.kind === 'player' && amount > 0) {
     const meta = ctx.players.get(target.id);
@@ -685,7 +702,12 @@ export function dealDamage(
     if (wardIdx >= 0) {
       const ward = target.auras[wardIdx];
       target.auras.splice(wardIdx, 1);
-      ctx.emit({ type: 'aura', targetId: target.id, name: ward.name, gained: false });
+      ctx.emit({
+        type: 'aura',
+        targetId: target.id,
+        name: ward.name,
+        gained: false,
+      });
       amount = Math.max(0, target.hp);
       guardianWardRestore = Math.max(1, Math.round(target.maxHp * ward.value));
     }
@@ -954,7 +976,11 @@ export function dealDamage(
     ...attackAnimation,
   });
   if (guardianWardRestore > 0) {
-    ctx.emit({ type: 'heal', targetId: target.id, amount: guardianWardRestore });
+    ctx.emit({
+      type: 'heal',
+      targetId: target.id,
+      amount: guardianWardRestore,
+    });
   }
 
   // Chronomancy Temporal Echo (combat/chronomancy.ts): siphon a fraction of the
@@ -1017,7 +1043,12 @@ export function dealDamage(
       if (aura.kind !== 'heal_echo') continue;
       if (target.hp >= target.maxHp * (aura.value2 ?? 0)) continue;
       target.auras.splice(i, 1);
-      ctx.emit({ type: 'aura', targetId: target.id, name: aura.name, gained: false });
+      ctx.emit({
+        type: 'aura',
+        targetId: target.id,
+        name: aura.name,
+        gained: false,
+      });
       const healer = ctx.entities.get(aura.sourceId);
       if (healer && !healer.dead) {
         const healed = ctx.applyHeal(healer, target, aura.value, aura.name);
@@ -1038,7 +1069,7 @@ export function dealDamage(
   // taking or dealing real damage breaks stealth
   if (amount > 0) {
     ctx.breakStealth(target);
-    if (source && source.id !== target.id) {
+    if (source && source.id !== target.id && threatOpts?.preserveSourceStealth !== true) {
       ctx.breakStealth(source);
     }
   }
@@ -1261,7 +1292,7 @@ export function dealDamage(
       // Same non-takedown bottom-out safety for Protect Yumi: bench, never
       // the permanent death + graveyard flow.
       ctx.yumiPlayerDown(fmatch, target, null);
-    } else {
+    } else if (!tryBeginMir4GreaterHealDeathDelay(ctx, target, source, ability)) {
       handleDeath(ctx, target, source, ability);
     }
   }
@@ -1424,6 +1455,17 @@ export function handleDeath(
   killer: Entity | null,
   killerAbility?: string | null,
 ): void {
+  if (e.kind === 'player') {
+    delete e.mir4GreaterHealDeathDelayUntil;
+    delete e.mir4GreaterHealDeathDelayKillerId;
+    delete e.mir4GreaterHealDeathDelayKillerAbility;
+    // A lethal contact can land after the skill-action scheduler already ran
+    // for this tick. End the transient approach/action ownership here so a
+    // snapshot, revive, or teleport cannot carry absolute cast coordinates
+    // past death. Resource, cooldown and pending contacts remain committed.
+    cancelMir4SkillActivation(ctx, e.id);
+    clearMir4SkillAction(ctx, e.id);
+  }
   if (ctx.gameProfile === MIR4_GAME_PROFILE && e.kind === 'player' && killer) {
     const attacker = ctx.pvpController(killer);
     const attackerMeta = attacker ? ctx.players.get(attacker.id) : null;
@@ -1476,6 +1518,10 @@ export function handleDeath(
   stripPaladinDevotionsFromSource(ctx, e.id);
   e.dead = true;
   e.hp = 0;
+  if (ctx.gameProfile === MIR4_GAME_PROFILE && killer && killer.id !== e.id) {
+    const controller = ctx.pvpController(killer);
+    if (controller) applyMir4NativeAbsorptionCharacterKill(ctx, controller, e);
+  }
   ctx.clearNonPlayerStatAuras(e);
   // Death cannot shed persistent death penalties or encounter-owned unbreakable
   // control. The encounter script remains responsible for releasing its markers.
@@ -1733,7 +1779,12 @@ export function handleDeath(
       e.respawnTimer = Infinity;
       e.hostile = false;
       e.inCombat = false;
-      ctx.emit({ type: 'log', text: `${e.name} dies.`, color: '#f66', pid: e.ownerId });
+      ctx.emit({
+        type: 'log',
+        text: `${e.name} dies.`,
+        color: '#f66',
+        pid: e.ownerId,
+      });
       // a slain summoned demon lingers only briefly, then unravels (updateMob)
       if (MOBS[e.templateId]?.family === 'demon' || isTemporaryNecromancyUndead(e)) {
         e.corpseTimer = 3;

@@ -220,6 +220,8 @@ export const META_EXCLUDE: ReadonlySet<string> = new Set([
   'joinedAt', // session-only clock
   'lastActiveTick', // session-only
   'mir4TargetCombat', // session-only selected-target pursuit; never persisted or restored
+  'mir4SkillActivation', // session-only one-shot manual skill approach; never persisted or restored
+  'mir4SkillActivationClaimedThroughTick', // session-only commit-tick movement owner
   'craftThrottle', // inert since the Craft Cast System retired the shared throttle; session-only
   'away', // session-only presence
   'lastWhisperFrom', // session-only

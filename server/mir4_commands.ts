@@ -6,8 +6,10 @@
 // authority.
 
 import { MIR4_GAME_PROFILE } from '../src/sim/game_profile';
+import { mir4ActionId } from '../src/sim/mir4/action_abilities';
 import { MIR4_CRAFT_RECIPES } from '../src/sim/mir4/crafting';
 import { MIR4_EQUIPMENT_CRAFT_RECIPES } from '../src/sim/mir4/equipment_crafting';
+import { mir4CastErrorText } from '../src/sim/mir4/skill_activation';
 import type { Sim } from '../src/sim/sim';
 
 type Mir4WireMessage = Record<string, unknown> & { m?: unknown };
@@ -79,7 +81,8 @@ export function handleMir4Command(
       break;
     case 'cast':
       if (isItemId(msg.skill) && (msg.target === undefined || isItemId(msg.target))) {
-        sim.castMir4Skill(msg.skill, pid, msg.target);
+        const result = sim.requestMir4SkillActivation(mir4ActionId(msg.skill), pid, msg.target);
+        if (!result.ok) sim.ctx.error(pid, mir4CastErrorText(result.reason ?? 'unknown-skill'));
       }
       break;
     case 'upgradeSkill':

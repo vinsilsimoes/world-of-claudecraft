@@ -7,6 +7,7 @@ import {
   mir4SkillsForClass,
 } from '../../src/sim/content/mir4';
 import { mir4CoefficientDamage, mir4SkillManaCost } from '../../src/sim/mir4/math';
+import { mir4NativePainstrikeGalePolicy } from '../../src/sim/mir4/native_skill_painstrike_gale';
 
 // Pins are literal source-project values (F:\Dev\Survival-Game
 // server/mir4-combat-data.js, mir4-skill-execution-contract-v1.js,
@@ -47,16 +48,11 @@ describe('the mir4 skill catalog shape', () => {
     }
     expect(MIR4_SKILL_GLOBAL_COOLDOWN_MS).toBe(1000);
   });
-  it('active authorial skills retain their policies while replaced Taoist rows use native data', () => {
+  it('keeps the homologated Sorcerer rows on native catalog data without authorial catalog skills', () => {
     const authorial = MIR4_SKILLS.filter((s) => s.provenance === 'authorial-v1');
-    expect(authorial.map((s) => s.skillId).sort()).toEqual([2301, 2501]);
-    for (const skill of authorial) {
-      const policy = MIR4_AUTHORIAL_SKILL_POLICIES[skill.skillId];
-      expect(policy).toBeDefined();
-      if (!policy) continue;
-      expect(policy.nativeClaim).toBe(false);
-      expect(policy.autoBattleEligible).toBe(true);
-    }
+    expect(authorial).toEqual([]);
+    expect(mir4SkillById(2301)?.sourceRuntimeStatus).toBe('official-client-catalog');
+    expect(mir4SkillById(2501)?.sourceRuntimeStatus).toBe('official-client-catalog');
     expect(mir4SkillById(3301)?.sourceRuntimeStatus).toBe('official-client-catalog');
     expect(mir4SkillById(3506)?.sourceRuntimeStatus).toBe('official-client-catalog');
     expect(MIR4_AUTHORIAL_SKILL_POLICIES[4103]?.damage.levelOneDamage).toBe(115);
@@ -65,7 +61,7 @@ describe('the mir4 skill catalog shape', () => {
 });
 
 describe('pinned skills (warrior 1102, taoist 3101, arbalist 4106)', () => {
-  it('1102 Golpe de Vacuo: cost, cooldown, three-impact damage, 900ms stun', () => {
+  it('1102 Void Slash: cost, cooldown and three physical contacts without hard control', () => {
     const skill = mir4SkillById(1102);
     expect(skill).not.toBeNull();
     expect(skill?.classId).toBe(1);
@@ -76,8 +72,8 @@ describe('pinned skills (warrior 1102, taoist 3101, arbalist 4106)', () => {
     expect(
       mir4SkillManaCost(WARRIOR_LEVEL_1.manaCostStat, skill!.skillCost, skill!.skillCostType),
     ).toBe(36);
-    expect(skill?.roles).toEqual(['debuff', 'single-target']);
-    expect(skill?.effect).toMatchObject({ effect: 'stun', durationMs: 900 });
+    expect(skill?.roles).toEqual(['aoe']);
+    expect(skill?.effect).toBeNull();
     const components = skill?.damage?.components ?? [];
     expect(components.map((c) => c.coefficient)).toEqual([8000, 8000, 9000]);
     expect(skill?.damage?.allocationMode).toBe('per-impact');
@@ -86,21 +82,20 @@ describe('pinned skills (warrior 1102, taoist 3101, arbalist 4106)', () => {
       components.map((c) => mir4CoefficientDamage(WARRIOR_LEVEL_1.attackPower, c.coefficient)),
     ).toEqual([40, 40, 45]);
   });
-  it('3101 Sequencia de Selo: row-total-impact-vector splits per impact', () => {
+  it('3101 Sunbeam Sword: exact seven-contact frontal sequence', () => {
     const skill = mir4SkillById(3101);
     expect(skill?.classId).toBe(3);
     expect(skill?.cooldownMs).toBe(16_000);
+    expect(skill?.skillCost).toBe(1600);
+    expect(skill?.attackAnimationMs).toBe(1833);
     expect(skill?.hitCount).toBe(7);
+    expect(skill?.browserRangePx).toBe(112);
+    expect(skill?.impactOffsetsMs).toEqual([380, 550, 750, 950, 1150, 1350, 1550]);
     expect(skill?.damage?.allocationMode).toBe('row-total-impact-vector');
-    expect(skill?.minTargets).toBe(3);
-    expect(skill?.effect).toMatchObject({
-      effect: 'defense-break',
-      durationMs: 4000,
-      magnitude: 0.1,
-      areaRadiusPx: 104,
-      maxSecondaryTargets: 3,
-      secondaryDamageBasisPoints: 6500,
-    });
+    expect(skill?.minTargets).toBeNull();
+    expect(skill?.effect).toBeNull();
+    expect(skill?.roles).toEqual(['aoe', 'debuff']);
+    expect(skill?.sourceRuntimeStatus).toBe('official-client-catalog');
     // 4 components of coefficient 5000 at PA 50: 25 + floor(25/2)*2 * 3 = 97
     const total = (skill?.damage?.components ?? []).reduce((sum, c) => {
       const coefficientDamage = mir4CoefficientDamage(50, c.coefficient);
@@ -108,16 +103,17 @@ describe('pinned skills (warrior 1102, taoist 3101, arbalist 4106)', () => {
     }, 0);
     expect(total).toBe(97);
   });
-  it('4106 Investida: 2000ms stun, 100% PvE / 10% PvP, single 17000 component', () => {
+  it('4106 Painstrike Gale: dedicated rank effects and single 17000 component', () => {
     const skill = mir4SkillById(4106);
     expect(skill?.classId).toBe(4);
     expect(skill?.cooldownMs).toBe(20_000);
-    expect(skill?.roles).toEqual(['survival-utility', 'single-target']);
-    expect(skill?.effect).toMatchObject({
-      effect: 'stun',
-      durationMs: 2000,
-      pveChanceBasisPoints: 10_000,
-      pvpChanceBasisPoints: 1000,
+    expect(skill?.roles).toEqual(['aoe', 'mobility', 'control']);
+    expect(skill?.effect).toBeNull();
+    expect(mir4NativePainstrikeGalePolicy(1)?.contact).toMatchObject({
+      monsterStunDurationMs: 2_000,
+      monsterStunChanceBasisPoints: 10_000,
+      playerStunDurationMs: 1_000,
+      playerStunChanceBasisPoints: 1_000,
     });
     expect(skill?.damage?.components).toHaveLength(1);
     expect(mir4CoefficientDamage(50, skill!.damage!.components[0]!.coefficient)).toBe(85);

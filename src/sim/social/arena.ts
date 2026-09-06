@@ -25,6 +25,7 @@ import { ARENA_SLOT_COUNT, arenaOrigin, DUNGEON_X_THRESHOLD } from '../data';
 import * as deedsMod from '../deeds';
 import { arenaMapForSlot } from '../dungeon_layout';
 import { recalcPlayerStats } from '../entity';
+import { interruptMir4SkillMovementOnDisplacement } from '../mir4/displacement';
 import {
   type MatchPetSnapshot,
   refreshMatchPetSnapshot,
@@ -1043,6 +1044,7 @@ export function placeInArena(
   origin: { x: number; z: number },
   spawn: { x: number; z: number; facing: number },
 ): void {
+  interruptMir4SkillMovementOnDisplacement(ctx, e);
   e.pos = ctx.groundPos(origin.x + spawn.x, origin.z + spawn.z);
   e.prevPos = { ...e.pos };
   e.facing = spawn.facing;
@@ -1322,6 +1324,7 @@ export function returnFromArena(ctx: SimContext, match: ArenaMatch): void {
     // the one exception and rides back through the shared restore.
     const pools = match.preMatchPools?.get(pid);
     if (pools) restoreArenaReturnPools(ctx, e, pools);
+    interruptMir4SkillMovementOnDisplacement(ctx, e);
     e.pos = ctx.groundPos(ret.x, ret.z);
     e.prevPos = { ...e.pos };
     e.facing = ret.facing;

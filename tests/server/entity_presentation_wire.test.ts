@@ -74,14 +74,14 @@ describe('entity presentation wire encoder', () => {
     const active: Record<string, unknown> = {};
     appendEntityPresentationDynamic(
       active,
-      entity({ mir4Shield: { remaining: 3.456, magnitude: 0.2 } }),
+      entity({ mir4Shield: { remaining: 3.456, damageReductionBasisPoints: 2_000, bashDamageReductionBasisPoints: 0, absorptionRemaining: 100, hitsRemaining: 5 } }),
     );
     expect(active).toEqual({ msh: [3.46, 0.2] });
 
     const expired: Record<string, unknown> = {};
     appendEntityPresentationDynamic(
       expired,
-      entity({ mir4Shield: { remaining: 0, magnitude: 0.2 } }),
+      entity({ mir4Shield: { remaining: 0, damageReductionBasisPoints: 2_000, bashDamageReductionBasisPoints: 0, absorptionRemaining: 100, hitsRemaining: 5 } }),
     );
     expect(expired).toEqual({});
   });

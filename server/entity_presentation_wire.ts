@@ -98,6 +98,9 @@ export function appendEntityPresentationDynamic(
   entity: Entity,
 ): void {
   if (entity.mir4Shield && entity.mir4Shield.remaining > 0) {
-    out.msh = [Math.round(entity.mir4Shield.remaining * 100) / 100, entity.mir4Shield.magnitude];
+    out.msh = [
+      Math.round(entity.mir4Shield.remaining * 100) / 100,
+      entity.mir4Shield.damageReductionBasisPoints / 10_000,
+    ];
   }
 }

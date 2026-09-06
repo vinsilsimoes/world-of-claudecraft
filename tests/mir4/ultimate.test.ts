@@ -114,7 +114,7 @@ describe('the impact clock and gauge (runtime)', () => {
     );
     expect(damage).toMatchObject({ school: 'magic', attackAnimationStarted: true });
   });
-  it('applies an effect-only skill immediately while starting its authored animation', () => {
+  it('applies Magic Shield at its first native contact while starting its authored animation', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = new Sim({
       seed: 712,
@@ -146,7 +146,10 @@ describe('the impact clock and gauge (runtime)', () => {
         targetId: sim.playerId,
       }),
     );
-    expect(sim.player.mir4Shield?.remaining).toBe(10);
+    expect(sim.player.mir4Shield).toBeUndefined();
+    sim.time = 0.45;
+    updateMir4PendingImpacts(sim.ctx);
+    expect(sim.player.mir4Shield?.remaining).toBe(25);
   });
   it('the gauge caps at 100', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
@@ -180,13 +183,13 @@ describe('the impact clock and gauge (runtime)', () => {
     }
     expect(p.mir4UltGauge).toBe(100);
   });
-  it('the ultimate spends the gauge atomically and lands 150 x 3 = 450', () => {
+  it('Dragon Flame spends the gauge atomically and follows its native four-contact clock', () => {
     setActiveWorldContent(MIR4_SLICE_WORLD);
     const sim = makeSim(73);
     const p = sim.entities.get(sim.playerId)!;
-    // A fat test wolf so the 450 total never clamps at the kill.
+    // A durable target keeps all four native contacts observable.
     const base = MIR4_MOBS.mir4_forest_wolf;
-    const big = { ...base, id: 'test_big_wolf', hpBase: 600, hpPerLevel: 0 };
+    const big = { ...base, id: 'test_big_wolf', hpBase: 10_000, hpPerLevel: 0 };
     sim.mir4RuntimeMobTemplates.set(big.id, big);
     const p0 = sim.entities.get(sim.playerId)!;
     const wolf = createMob(sim.nextId++, big as never, 1, sim.groundPos(p0.pos.x + 2, p0.pos.z));
@@ -210,7 +213,7 @@ describe('the impact clock and gauge (runtime)', () => {
           ability: 'mir4_ultimate_1',
           action: 'ultimate',
           pose: 'weapon',
-          durationMs: 1_275,
+          durationMs: 3_433,
         },
         {
           type: 'spellfx',
@@ -219,23 +222,35 @@ describe('the impact clock and gauge (runtime)', () => {
           school: 'physical',
           fx: 'nova',
           ability: 'mir4_ultimate_1',
-          impactDelayMs: 1_020,
+          impactDelayMs: 2_560,
           attackAnimationStarted: true,
         },
       ]),
     );
     const startedAt = sim.time;
-    for (const [time, expectedDamage] of [
-      [0.519, 0],
-      [0.52, 150],
-      [0.759, 150],
-      [0.76, 300],
-      [1.019, 300],
-      [1.02, 450],
+    const pendingDamageContacts = (p.mir4PendingImpacts ?? []).filter(
+      (impact) => !impact.effectOnly,
+    );
+    expect(pendingDamageContacts.map((impact) => Math.round((impact.dueAt - startedAt) * 1_000))).toEqual([
+      780, 1_500, 1_720, 2_560,
+    ]);
+    expect(pendingDamageContacts.map((impact) => impact.rawDamage)).toEqual([187, 193, 193, 250]);
+    for (const [time, shouldHaveLanded] of [
+      [0.779, 0],
+      [0.78, 1],
+      [1.499, 1],
+      [1.5, 2],
+      [1.719, 2],
+      [1.72, 3],
+      [2.559, 3],
+      [2.56, 4],
     ] as const) {
       sim.time = startedAt + time;
       updateMir4PendingImpacts(sim.ctx);
-      expect(wolf.maxHp - wolf.hp).toBe(expectedDamage);
+      expect(
+        4 - (p.mir4PendingImpacts ?? []).filter((impact) => !impact.effectOnly).length,
+      ).toBe(shouldHaveLanded);
     }
+    expect(wolf.hp).toBeLessThan(wolf.maxHp);
   });
 });

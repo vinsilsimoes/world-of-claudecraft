@@ -1044,7 +1044,15 @@ export const VISUALS: Record<string, VisualDef> = {
     // the warrior's real kit in src/sim/content/classes.ts, not assumed) is
     // authored by pose-sample-and-blend (scripts/build_warrior_ability_anims.mjs)
     // instead of pointed at an unused clip.
-    animUrls: [`${PLAYERS}/knight_hit_variety_anims.glb`, `${PLAYERS}/warrior_ability_anims.glb`],
+    animUrls: [
+      `${PLAYERS}/knight_hit_variety_anims.glb`,
+      `${PLAYERS}/warrior_ability_anims.glb`,
+      `${PLAYERS}/warrior_cutter_native.glb`,
+      `${PLAYERS}/warrior_riposte_native.glb`,
+      `${PLAYERS}/warrior_iron_shackle_native.glb`,
+      `${PLAYERS}/warrior_overdrive_native.glb`,
+      `${PLAYERS}/warrior_dragon_flame_native.glb`,
+    ],
     height: HUMANOID_H,
     clips: {
       ...kaykit(['1H_Melee_Attack_Chop', '1H_Melee_Attack_Slice_Diagonal']),
@@ -1056,19 +1064,34 @@ export const VISUALS: Record<string, VisualDef> = {
         // Aeldrune Warrior skills keep their own ids all the way through the
         // renderer. The clip donors are native 3D rig actions, not classic
         // ability aliases, so changing one presentation cannot change another.
-        mir4_skill_1102: '1H_Melee_Attack_Slice_Diagonal',
+        // Air Slash owns three native contacts inside one 1.5s action. The
+        // dedicated compatible-rig clip keeps the body on those same beats;
+        // the render presentation event owns their native VFX footprints.
+        mir4_skill_1102: 'Warrior_Mir4_AirSlash',
         mir4_skill_1302: 'Cheer',
-        mir4_skill_1301: '1H_Melee_Attack_Slice_Horizontal',
-        mir4_skill_1101: 'Dualwield_Melee_Attack_Chop',
+        // Riposte is the native 31-frame CounterReady guard followed by the
+        // native 36-frame Counter action, retimed together to its 2.15s skill
+        // runtime. Damage still lands from the sim at the native 1.24s beat.
+        mir4_skill_1301: 'Warrior_Mir4_Riposte_Native',
+        // Berserk is the native 42-frame OverDrive action whose 1.366667s
+        // duration exactly matches the extracted skill timeline.
+        mir4_skill_1101: 'Warrior_Mir4_OverDrive_Native',
         mir4_skill_1103: '2H_Melee_Attack_Chop',
-        mir4_skill_1104: '2H_Melee_Attack_Chop',
+        // Cutter is decoded from the native MIR4 Pcw_Btl_Skl_Cutter sequence
+        // (47 frames / 1.5386906s) and retargeted onto this compatible rig.
+        mir4_skill_1104: 'Warrior_Mir4_Cutter_Native',
         mir4_skill_1501: '1H_Melee_Attack_Slice_Horizontal',
-        mir4_skill_1201: '1H_Melee_Attack_Slice_Horizontal',
+        // Iron Shackle is the decoded native 86-frame action, kept on its
+        // exact 2.833333s timeline so all three server contacts align.
+        mir4_skill_1201: 'Warrior_Mir4_Iron_Shackle_Native',
         mir4_skill_1601: '1H_Melee_Attack_Slice_Horizontal',
         mir4_skill_1304: 'Shield_Bash',
         mir4_skill_1401: '2H_Melee_Attack_Chop',
-        mir4_skill_1502: 'Block',
-        mir4_ultimate_1: '2H_Melee_Attack_Chop',
+        mir4_skill_1502: 'Warrior_Mir4_UnbreakableStance',
+        // Dragon Flame is the decoded native 104-frame Special action on its
+        // unmodified 3.4333334s timeline. The presentation event owns the
+        // four native damage beats independently of this body clip.
+        mir4_ultimate_1: 'Warrior_Mir4_DragonFlame_Native',
         mortal_strike: '2H_Melee_Attack_Chop',
         execute: '2H_Melee_Attack_Chop',
         slam: '2H_Melee_Attack_Chop',

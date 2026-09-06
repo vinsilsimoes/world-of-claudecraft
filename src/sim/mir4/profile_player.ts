@@ -48,6 +48,12 @@ export function restoreMir4ProfilePlayer(
   cls: PlayableClass,
 ): void {
   if (profile !== MIR4_GAME_PROFILE) return;
+  // One-shot input contracts never survive a full state restore. This also
+  // protects hosts that intentionally reuse a metadata object while replacing
+  // its durable character state.
+  meta.mir4SkillActivation = undefined;
+  meta.mir4SkillActivationClaimedThroughTick = undefined;
+  meta.mir4SkillAction = undefined;
   const restored = restoreMir4PlayerState(
     meta,
     state,

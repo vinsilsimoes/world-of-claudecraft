@@ -27,16 +27,22 @@ const MIR4_NATIVE_VFX: Readonly<Record<number, Mir4NativeVfxCue>> = {
   1502: { ability: 'mir4_skill_1502', school: 'physical', fx: 'selfCast' },
   1601: { ability: 'mir4_skill_1601', school: 'physical', fx: 'selfCast' },
   2101: { ability: 'fireball', school: 'fire', fx: 'projectile' },
-  2103: { ability: 'immolate', school: 'fire', fx: 'projectile' },
+  2103: { ability: 'mir4_skill_2103', school: 'fire', fx: 'projectile' },
   2111: { ability: 'frostbolt', school: 'frost', fx: 'projectile' },
   2201: { ability: 'flamestrike', school: 'fire', fx: 'nova' },
   2202: { ability: 'ice_block', school: 'frost', fx: 'nova' },
   2203: { ability: 'blizzard', school: 'frost', fx: 'nova' },
-  2204: { ability: 'combustion', school: 'fire', fx: 'selfCast' },
+  // The extracted client inventory does not contain Phoenix Embrace's cooked
+  // skill package. Keep this presentation as an explicit Aeldrune compatibility
+  // reconstruction, aligned with the recovered fire-buff effects 2050103/2050120,
+  // rather than borrowing WoC's unrelated Combustion gameplay/presentation id.
+  2204: { ability: 'mir4_skill_2204', school: 'fire', fx: 'selfCast' },
   2301: { ability: 'lightning_bolt', school: 'nature', fx: 'projectile' },
   2303: { ability: 'chain_lightning', school: 'nature', fx: 'projectile' },
   2501: { ability: 'shadow_bolt', school: 'shadow', fx: 'nova' },
-  2502: { ability: 'shadow_bolt', school: 'shadow', fx: 'projectile' },
+  // No Soul Devour cooked package is present in the extracted inventory. Use
+  // the dedicated Aeldrune cue instead of inheriting WoC Shadow Bolt behavior.
+  2502: { ability: 'mir4_skill_2502', school: 'shadow', fx: 'projectile' },
   2503: { ability: 'power_word_shield', school: 'holy', fx: 'selfCast' },
   3101: { ability: 'stormstrike', school: 'holy', fx: 'selfCast' },
   3103: { ability: 'chain_lightning', school: 'arcane', fx: 'projectile' },

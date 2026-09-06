@@ -31,6 +31,7 @@ import { applyGreaterInvisibilityAftereffect } from '../combat/greater_invisibil
 import { BG_SLOT_COUNT, battlegroundOrigin } from '../data';
 import { createGroundObject } from '../entity';
 import { detachFromDungeon } from '../instances/dungeons';
+import { interruptMir4SkillMovementOnDisplacement } from '../mir4/displacement';
 import { PLAYER_BODY_RADIUS } from '../pathfind';
 import { type MatchPetSnapshot, restoreMatchPet, snapshotMatchPet } from '../pet/pet_match_return';
 import { restorePetOnOwnerRevive } from '../pet/pet_owner_revive';
@@ -1137,6 +1138,7 @@ function placeInBg(
   const origin = battlegroundOrigin(match.slot);
   const spawns = BG_BASES[team].spawns;
   const sp = spawns[index % spawns.length];
+  interruptMir4SkillMovementOnDisplacement(ctx, e);
   e.pos = ctx.groundPos(origin.x + sp.x, origin.z + sp.z);
   e.prevPos = { ...e.pos };
   e.facing = team === 0 ? 0 : Math.PI; // face the field
@@ -1277,6 +1279,7 @@ function tickGraveyards(ctx: SimContext, match: BgMatch): void {
       const cx = Math.min(maxX, Math.max(minX, e.pos.x));
       const cz = Math.min(maxZ, Math.max(minZ, e.pos.z));
       if (cx !== e.pos.x || cz !== e.pos.z) {
+        interruptMir4SkillMovementOnDisplacement(ctx, e);
         e.pos = ctx.groundPos(cx, cz);
         e.prevPos = { ...e.pos };
         ctx.rebucket(e);
@@ -1856,6 +1859,7 @@ export function bgResolveDesertion(ctx: SimContext, pid: number): void {
     leaver.corpseInstanceId = null;
     const ret = match.returns.get(pid);
     if (ret) {
+      interruptMir4SkillMovementOnDisplacement(ctx, leaver);
       leaver.pos = ctx.groundPos(ret.x, ret.z);
       leaver.prevPos = { ...leaver.pos };
       leaver.facing = ret.facing;
@@ -2060,6 +2064,7 @@ function releaseBgFighters(ctx: SimContext, match: BgMatch): void {
       }
       const ret = match.returns.get(pid);
       if (ret) {
+        interruptMir4SkillMovementOnDisplacement(ctx, e);
         e.pos = ctx.groundPos(ret.x, ret.z);
         e.prevPos = { ...e.pos };
         e.facing = ret.facing;

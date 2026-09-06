@@ -4,7 +4,8 @@ import { MIR4_MOBS } from '../../src/sim/content/mir4/mobs';
 import { createMob } from '../../src/sim/entity';
 import { mir4ActionAbilities, mir4ActionId } from '../../src/sim/mir4/action_abilities';
 import { castMir4Skill, updateMir4PendingImpacts } from '../../src/sim/mir4/combat';
-import { mir4DefenseMultiplier } from '../../src/sim/mir4/effects';
+import { mir4NativeStatusBonus } from '../../src/sim/mir4/effects';
+import { mir4NativeGreaterHealAmount } from '../../src/sim/mir4/native_skill_greater_heal';
 import { Sim } from '../../src/sim/sim';
 import { dist2d, type Entity } from '../../src/sim/types';
 import { EMPTY_TEST_WORLD } from '../sim_shared';
@@ -86,13 +87,15 @@ describe('the complete MIR4 Taoist kit', () => {
     });
   });
 
-  it('uses Moonlight Wave and Moonlight Orb as damaging control spells', () => {
+  it('uses Moonlight Wave without an invented slow and Moonlight Orb without a fake root', () => {
     const wave = makeTaoist(15_001);
     const waveTarget = spawnTarget(wave, 4, 0, 'moonlight_wave');
     expect(castMir4Skill(wave.ctx, wave.playerId, 3506, waveTarget.id)).toEqual({ ok: true });
     resolveSkill(wave);
     expect(waveTarget.hp).toBeLessThan(waveTarget.maxHp);
-    expect(waveTarget.mir4Effects?.active.some((effect) => effect.kind === 'slow')).toBe(true);
+    expect(Boolean(waveTarget.mir4Effects?.active.some((effect) => effect.kind === 'slow'))).toBe(
+      false,
+    );
 
     const orb = makeTaoist(15_002);
     const orbTarget = spawnTarget(orb, 6, 0, 'moonlight_orb');
@@ -101,10 +104,12 @@ describe('the complete MIR4 Taoist kit', () => {
     });
     resolveSkill(orb);
     expect(orbTarget.hp).toBeLessThan(orbTarget.maxHp);
-    expect(orbTarget.mir4Effects?.active.some((effect) => effect.kind === 'root')).toBe(true);
+    expect(Boolean(orbTarget.mir4Effects?.active.some((effect) => effect.kind === 'root'))).toBe(
+      false,
+    );
   });
 
-  it('pulls and knocks down enemies with Tai Chi', () => {
+  it('pulls through Tai Chi intermediate contacts before the final outward knockdown', () => {
     const sim = makeTaoist(15_003);
     const target = spawnTarget(sim, 6, 0, 'tai_chi');
     const distanceBefore = dist2d(sim.player.pos, target.pos);
@@ -112,9 +117,11 @@ describe('the complete MIR4 Taoist kit', () => {
     expect(castMir4Skill(sim.ctx, sim.playerId, 3201, target.id)).toEqual({
       ok: true,
     });
-    resolveSkill(sim);
-
+    sim.time = 1;
+    updateMir4PendingImpacts(sim.ctx);
     expect(dist2d(sim.player.pos, target.pos)).toBeLessThan(distanceBefore);
+    sim.time = 1.34;
+    updateMir4PendingImpacts(sim.ctx);
     expect(target.mir4Effects?.active.some((effect) => effect.kind === 'knockdown')).toBe(true);
   });
 
@@ -141,7 +148,7 @@ describe('the complete MIR4 Taoist kit', () => {
     expect(secondTarget.mir4Effects?.active.some((effect) => effect.kind === 'stun')).toBe(true);
   });
 
-  it('applies both Darkness and Defense Break with Blasting Charm', () => {
+  it('applies the exact rank-1 Darkness and Physical Defense loss with Blasting Charm', () => {
     const sim = makeTaoist(15_006);
     const target = spawnTarget(sim, 6, 0, 'blasting_charm');
 
@@ -150,8 +157,10 @@ describe('the complete MIR4 Taoist kit', () => {
     });
     resolveSkill(sim);
 
-    expect(target.mir4Effects?.active.some((effect) => effect.kind === 'blind')).toBe(true);
-    expect(target.mir4Effects?.active.some((effect) => effect.kind === 'defense-break')).toBe(true);
+    expect(mir4NativeStatusBonus(target, 53)).toBe(-250);
+    expect(mir4NativeStatusBonus(target, 24)).toBe(-50);
+    expect(target.mir4Effects?.active.some((effect) => effect.kind === 'blind')).toBe(false);
+    expect(target.mir4Effects?.active.some((effect) => effect.kind === 'defense-break')).toBe(false);
   });
 
   it('heals with both recovery skills and protects with Guardian Circle', () => {
@@ -159,6 +168,8 @@ describe('the complete MIR4 Taoist kit', () => {
     heal.player.hp = Math.floor(heal.player.maxHp / 2);
     const hpBeforeHeal = heal.player.hp;
     expect(castMir4Skill(heal.ctx, heal.playerId, 3503)).toEqual({ ok: true });
+    heal.time += 6;
+    updateMir4PendingImpacts(heal.ctx);
     const regularHeal = heal.player.hp - hpBeforeHeal;
     expect(regularHeal).toBeGreaterThan(0);
 
@@ -168,7 +179,11 @@ describe('the complete MIR4 Taoist kit', () => {
     expect(castMir4Skill(greater.ctx, greater.playerId, 3504)).toEqual({
       ok: true,
     });
-    expect(greater.player.hp - hpBeforeGreater).toBeGreaterThan(regularHeal);
+    greater.time += 0.74;
+    updateMir4PendingImpacts(greater.ctx);
+    expect(greater.player.hp - hpBeforeGreater).toBe(
+      mir4NativeGreaterHealAmount(greater.player.maxHp, 1, true),
+    );
 
     const guardian = makeTaoist(15_009);
     const enemy = spawnTarget(guardian, 3, 0, 'guardian_circle');
@@ -177,6 +192,7 @@ describe('the complete MIR4 Taoist kit', () => {
     });
     resolveSkill(guardian);
     expect(enemy.hp).toBeLessThan(enemy.maxHp);
-    expect(mir4DefenseMultiplier(guardian.player)).toBeGreaterThan(1);
+    expect(mir4NativeStatusBonus(guardian.player, 24)).toBe(25);
+    expect(mir4NativeStatusBonus(guardian.player, 35)).toBe(1_000);
   });
 });

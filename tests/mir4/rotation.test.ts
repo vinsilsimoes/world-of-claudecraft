@@ -162,8 +162,8 @@ describe('the rotation cascade', () => {
     };
 
     expect(setup(1031, 'warrior', (_sim, player) => (player.hp = player.maxHp * 0.4))).toBe(1301);
-    expect(setup(1032, 'warrior', () => undefined, 2)).toBe(1302);
-    expect(setup(1033, 'warrior', () => undefined)).toBe(1102);
+    expect(setup(1032, 'warrior', () => undefined, 2)).toBe(1304);
+    expect(setup(1033, 'warrior', () => undefined)).toBe(1304);
     expect(
       setup(1034, 'arbalist', (_sim, player, target) => {
         target.hp = target.maxHp * 0.3;
@@ -188,6 +188,10 @@ describe('the rotation cascade', () => {
     sim.setPlayerLevel(40);
     teleport(sim, 1.5, -10.5);
     const player = sim.player;
+    sim.setPlayerLevel(56);
+    for (const skill of mir4SkillsForClass(1)) {
+      if (skill.skillId !== 1502) player.cooldowns.set(String(skill.skillId), 10);
+    }
     const target = createMob(
       sim.nextId++,
       {
@@ -245,6 +249,10 @@ describe('the rotation cascade', () => {
     sim.setPlayerLevel(40);
     teleport(sim, 1.5, -10.5);
     const player = sim.player;
+    sim.setPlayerLevel(56);
+    for (const skill of mir4SkillsForClass(1)) {
+      if (skill.skillId !== 1502) player.cooldowns.set(String(skill.skillId), 10);
+    }
     const target = createMob(
       sim.nextId++,
       {
@@ -352,7 +360,7 @@ describe('the rotation cascade', () => {
       .filter((skillId) => ![1102, 1302, 1301].includes(skillId));
     // Collect the cast order from the damage events' ability names (the
     // cooldown map races: early 25s cooldowns expire before sampling).
-    const names = ['Corte do Vazio', 'Rugido de Leão', 'Riposta'];
+    const names = ['Corte do Vazio', 'Riposta', 'Rugido de Leão'];
     const seen: string[] = [];
     for (let t = 0; t < 400 && seen.length < 3; t++) {
       pinWolf(sim, w);

@@ -23,7 +23,10 @@ export interface MobPresentationWire {
 
 export interface Mir4ShieldWire {
   remaining: number;
-  magnitude: number;
+  damageReductionBasisPoints: number;
+  bashDamageReductionBasisPoints: number;
+  absorptionRemaining: number;
+  hitsRemaining: number;
 }
 
 export interface Mir4EquipmentPresentationWire {
@@ -96,7 +99,15 @@ export function decodeMir4ShieldWire(value: unknown): Mir4ShieldWire | undefined
   ) {
     return undefined;
   }
-  return { remaining, magnitude };
+  return {
+    remaining,
+    damageReductionBasisPoints: Math.round(magnitude * 10_000),
+    // The compact presentation wire intentionally carries only what remote
+    // rendering needs. Remote mirrors never authoritatively resolve combat.
+    bashDamageReductionBasisPoints: 0,
+    absorptionRemaining: Number.MAX_SAFE_INTEGER,
+    hitsRemaining: Number.MAX_SAFE_INTEGER,
+  };
 }
 
 export function applyEntityPresentationIdentity(

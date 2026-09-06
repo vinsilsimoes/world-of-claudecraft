@@ -6,6 +6,7 @@ import { setActiveWorldContent } from '../../src/sim/data';
 import { mir4ResolveLayer, mir4RollLayer } from '../../src/sim/mir4/affixes';
 import { MIR4_EMPTY_MATERIALS } from '../../src/sim/mir4/equipment';
 import { MIR4_MOUNT_PENDING_LIMIT } from '../../src/sim/mir4/mounts';
+import { restoreMir4ProfilePlayer } from '../../src/sim/mir4/profile_player';
 import { sanitizeMir4PlayerState } from '../../src/sim/mir4/persistence';
 import { MIR4_SPIRIT_PENDING_LIMIT } from '../../src/sim/mir4/spirits';
 import { buildMir4WocCampaignWorld } from '../../src/sim/mir4/woc_comparison_world';
@@ -312,6 +313,26 @@ describe('MIR4 character persistence', () => {
     expect(restored.autoBattle).toBeUndefined();
     expect(restored.mir4AutoQuest).not.toHaveProperty('route');
     expect(restored.mir4AutoQuest).not.toHaveProperty('battleOwned');
+
+    restored.mir4SkillActivation = {
+      phase: 'approach',
+      abilityId: 'mir4_skill_1102',
+      targetId: 91,
+      selectionBound: true,
+      armedTick: target.tickCount,
+      instanceKey: target.ctx.instanceKeyFor(restoredPid),
+    };
+    restored.mir4SkillActivationClaimedThroughTick = target.tickCount + 1;
+    restoreMir4ProfilePlayer(
+      'mir4-gameplay-port',
+      target.ctx,
+      restored,
+      restoredPid,
+      saved,
+      'warrior',
+    );
+    expect(restored.mir4SkillActivation).toBeUndefined();
+    expect(restored.mir4SkillActivationClaimedThroughTick).toBeUndefined();
   });
 
   it('heals a legacy journey-owned Auto Battle state on its first tick and save', () => {

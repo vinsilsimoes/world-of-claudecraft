@@ -13140,19 +13140,14 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1501.description':
     '對一名敵人造成 {damage} 點傷害。7.75 碼內最多 4 名其他敵人受到 65% 傷害。使每個命中的敵人減速 35%，持續 3.2 秒。',
   'entities.abilities.mir4_skill_2101.name': '火焰球',
-  'entities.abilities.mir4_skill_2101.description':
-    '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。灼燒每個命中的敵人，每 1 秒造成 {burnPerTick} 點基礎傷害（共 4 次，減傷前總計 {burnTotal} 點）。傷害取決於施加灼燒時你的法術強度。',
   'entities.abilities.mir4_skill_2111.name': '冰霜球',
   'entities.abilities.mir4_skill_2111.description':
     '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使每個命中的敵人減速 35%，持續 3.2 秒。',
   'entities.abilities.mir4_skill_2301.name': '懲擊之印',
-  'entities.abilities.mir4_skill_2301.description':
-    '對一名敵人造成 {damage} 點傷害。使目標造成的傷害降低 50%，持續 4 秒。',
   'entities.abilities.mir4_skill_2501.name': '喚出核心',
   'entities.abilities.mir4_skill_2501.description':
     '對一名敵人造成 {damage} 點傷害。8 碼內最多 4 名其他敵人受到 60% 傷害。凍結目標 1.8 秒。',
   'entities.abilities.mir4_skill_2503.name': '魔法護盾',
-  'entities.abilities.mir4_skill_2503.description': '受到的傷害降低 22%，持續 10 秒。',
   'entities.abilities.mir4_skill_3101.name': '印記連擊',
   'entities.abilities.mir4_skill_3101.description':
     '對一名敵人造成 {damage} 點傷害。6.5 碼內最多 3 名其他敵人受到 65% 傷害。使每個命中的敵人的物理和魔法防禦降低 10%，持續 4 秒。多個破防效果以乘法方式疊加，但防禦不會低於原始值的 20%。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
@@ -13163,10 +13158,8 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3301.description':
     '對一名敵人造成 {damage} 點傷害。7.25 碼內最多 3 名其他敵人受到 60% 傷害。使目標減速 35%，持續 4.2 秒。',
   'entities.abilities.mir4_skill_3503.name': '玉蓮',
-  'entities.abilities.mir4_skill_3503.description': '恢復最大生命值的 18%。',
-  'entities.abilities.mir4_skill_3506.name': '圖騰之印 I',
-  'entities.abilities.mir4_skill_3506.description':
-    '對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 60% 傷害。定身目標 1.6 秒。',
+  'entities.abilities.mir4_skill_3503.description':
+    '每秒為自身和30碼內最多4名隊員恢復{healPerPulse}點生命值，持續5秒（共恢復{healTotal}點）。治療量隨法術強度提高。自身免疫控制效果2秒。5階時，立即為自身恢復10%最大生命值、為隊員恢復15%。8階時，立即恢復量提升至25%和35%；沉默狀態下也可施放，移除沉默，清除自身弱化並有50%機率清除隊員的弱化，同時獲得10%首領傷害減免，持續30秒。10階時，立即恢復量提升至40%和50%，必定清除隊員的弱化並同時移除暈眩，首領傷害減免提升至20%，持續60秒。',
   'entities.abilities.mir4_skill_4101.name': '爆發 4101',
   'entities.abilities.mir4_skill_4101.description':
     '對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 65% 傷害。使目標造成的傷害降低 45%，持續 3.5 秒。',
@@ -13182,9 +13175,6 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
     '對一名敵人造成 {damage} 點傷害。6.75 碼內最多 3 名其他敵人受到 60% 傷害，並使其造成的傷害降低 45%，持續 5 秒。',
   'entities.abilities.mir4_skill_5101.name': '突刺 5101',
   'entities.abilities.mir4_skill_5101.description': '對一名敵人造成 {damage} 點傷害。擊倒目標 1 秒。',
-  'entities.abilities.mir4_skill_5104.name': '橫掃 5104',
-  'entities.abilities.mir4_skill_5104.description':
-    '對一名敵人造成 {damage} 點傷害。使目標的物理和魔法防禦降低 14%，持續 4.5 秒。多個破防效果以乘法方式疊加，但防禦不會低於原始值的 20%。上方顯示的是基礎冷卻時間。技能冷卻縮減在 PvE 中最多可降低 40%，在 PvP 中最多可降低 30%。',
   'entities.abilities.mir4_skill_5201.name': '打擊 5201',
   'entities.abilities.mir4_skill_5201.description':
     '對一名敵人造成 {damage} 點傷害。7 碼內最多 3 名其他敵人受到 65% 傷害。使目標昏迷 1.1 秒。',

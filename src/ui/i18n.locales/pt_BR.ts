@@ -13459,58 +13459,53 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1501.description':
     'Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,75 jardas recebem 65% desse dano. Reduz a velocidade de cada inimigo atingido em 35% por 3,2 s.',
   'entities.abilities.mir4_skill_2101.name': 'Orbe Flamejante',
-  'entities.abilities.mir4_skill_2101.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Queima cada inimigo atingido, causando {burnPerTick} de dano base a cada 1 s (4 acertos, {burnTotal} no total antes da mitigação). O dano usa seu Poder Mágico no momento em que a Queimadura é aplicada.',
   'entities.abilities.mir4_skill_2111.name': 'Orbe Gélido',
   'entities.abilities.mir4_skill_2111.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Reduz a velocidade de cada inimigo atingido em 35% por 3,2 s.',
   'entities.abilities.mir4_skill_2301.name': 'Vórtice Sombrio',
-  'entities.abilities.mir4_skill_2301.description':
-    'Causa {damage} de dano a um inimigo. Reduz o dano causado pelo alvo em 50% por 4 s.',
   'entities.abilities.mir4_skill_2501.name': 'Nevasca',
   'entities.abilities.mir4_skill_2501.description':
     'Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 8 jardas recebem 60% desse dano. Congela o alvo por 1,8 s.',
   'entities.abilities.mir4_skill_2503.name': 'Escudo Mágico',
-  'entities.abilities.mir4_skill_2503.description': 'Reduz o dano recebido em 22% por 10 s.',
-  'entities.abilities.mir4_skill_3101.name': 'Onda do Luar',
+  'entities.abilities.mir4_skill_3101.name': 'Espada de Raio Solar',
   'entities.abilities.mir4_skill_3101.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,5 jardas recebem 65% desse dano. Cada inimigo atingido tem suas Defesas Física e Mágica reduzidas em 10% por 4 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
+    'Causa {damage} de Dano Físico total em 7 golpes contra até 8 inimigos numa área frontal de 8 por 5 jardas. A primeira e a terceira sequência empurram os inimigos para a frente. O primeiro golpe aplica Reprimir por 5 s, mais 1 s por grau após o primeiro, reduzindo o ATAQUE Mágico em 25%; os golpes seguintes aplicam Bash contra alvos Reprimidos com 50%/65%/80%/100% de dano adicional nos graus 1/5/8/10. Nos graus 5/8/10, a recuperação por poção de MP aumenta em 5%/10%/15%, e um Bash contra jogador tem 50%/100%/100% de chance de reduzir a Resistência a Derrubada em 10% por 15 s. No grau 8, um alvo com Arma Danificada e Armadura Danificada tem 65% de chance de sofrer Armadura Quebrada, reduzindo as Defesas Física e Mágica em 50% por 300 s; no grau 10, o efeito é garantido e a redução sobe para 80%.',
   'entities.abilities.mir4_skill_3104.name': 'Chuva de Lâminas',
   'entities.abilities.mir4_skill_3104.description':
     'Causa {damage} de dano híbrido em 4 impactos. Até 4 outros inimigos em 7,75 jardas recebem 60% desse dano. No grau 8, cada inimigo atingido tem 40% de chance de ser Silenciado por 4 s.',
-  'entities.abilities.mir4_skill_3301.name': 'Círculo de Expulsão',
+  'entities.abilities.mir4_skill_3301.name': 'Esfera Lunar',
   'entities.abilities.mir4_skill_3301.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 60% desse dano. Reduz a velocidade do alvo em 35% por 4,2 s.',
+    'Cria uma esfera lunar no local do inimigo selecionado. Ela causa {damage} de dano Mágico total em 9 impactos contra até 6 inimigos em um raio de 5,5 jardas. Quatro impactos do campo puxam os inimigos em direção à esfera; os demais impactos do campo os interrompem brevemente. O impacto direto aplica Supressão por 8/10/12/15 s nos graus 1/5/8/10, reduzindo o ATQ Mágico em 25%. Nos graus 5/8/10, também reduz a Redução de Dano de Habilidade em 10% por 15 s, 15% por 30 s ou 20% por 30 s; concede 4%/8%/12% de Dano contra Monstros; concede ao grupo 20/60/100 de DEF Física e Mágica; e tem 35%/70%/100% de chance contra monstros ou 20%/40%/60% contra jogadores de remover um aprimoramento. Nos graus 8/10, também aplica Caos por 10 s, reduzindo o ATQ Físico em 25%, e tem 40%/60% de chance de remover Escudo Mágico ou Furtividade. O grau 10 também reduz a Evasão Crítica em 300 por 10 s.',
   'entities.abilities.mir4_skill_3503.name': 'Cura',
   'entities.abilities.mir4_skill_3503.description':
-    'Restaura 18% da vida máxima de você e de até 4 membros do grupo em um raio de 20 jardas.',
-  'entities.abilities.mir4_skill_3506.name': 'Círculo Guardião',
+    'Restaura {healPerPulse} de vida por segundo durante 5 s ({healTotal} no total) para você e até 4 membros do grupo em um raio de 30 jardas. A cura aumenta com o Poder Mágico. Você fica imune a efeitos de controle por 2 s. No grau 5, restaura imediatamente 10% da sua vida máxima e 15% da vida máxima dos membros do grupo. No grau 8, esses valores passam a 25% e 35%; Cura pode ser usada sob Silêncio, remove Silêncio, purifica Debilitação de você e tem 50% de chance de purificá-la dos membros do grupo, além de conceder 10% de Redução de Dano de Chefe por 30 s. No grau 10, os valores imediatos passam a 40% e 50%, a purificação do grupo é garantida e também remove Atordoamento, e a Redução de Dano de Chefe passa a 20% por 60 s.',
+  'entities.abilities.mir4_skill_3506.name': 'Onda Lunar',
   'entities.abilities.mir4_skill_3506.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 60% desse dano. Enraíza o alvo por 1,6 s.',
-  'entities.abilities.mir4_skill_4101.name': 'Projétil Explosivo',
+    'Cria um campo lunar no local do inimigo selecionado. Ele causa {damage} de dano Mágico total em 5 impactos rápidos contra até 8 inimigos em um raio de 6 jardas. Cada impacto interrompe brevemente os inimigos atingidos.',
+  'entities.abilities.mir4_skill_4101.name': 'Tiro Rápido',
   'entities.abilities.mir4_skill_4101.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Reduz o dano causado pelo alvo em 45% por 3,5 s.',
-  'entities.abilities.mir4_skill_4102.name': 'Arco Celestial',
+    'Dispara 12 flechas em 6 pares rápidos, causando {damage} de dano Físico total em 6 resoluções de dano contra até 5 inimigos em um raio de 4 jardas do alvo selecionado. Todos os inimigos recebem o dano integral. Tiro Rápido concede 1 Foco por 30 s, acumulando até 10 vezes; com 3/6/9 acúmulos, Análise de Fraqueza concede 50/100/150 de CRÍT. O Foco é removido ao fim do combate ou quando você sofre Derrubada, Atordoamento ou Cegueira.',
+  'entities.abilities.mir4_skill_4102.name': 'Seta da Ilusão',
   'entities.abilities.mir4_skill_4102.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,625 jardas recebem 65% desse dano. Reduz a velocidade do alvo em 30% por 3,5 s.',
+    'Causa {damage} de dano Físico total em 5 golpes contra até 8 inimigos num raio de 10 jardas ao seu redor. O segundo e o quarto golpes afastam levemente os inimigos. Concede 1 Foco, e você fica imune a Derrubada e Atordoamento durante a execução. Nos graus 5/8/10, a Evasão aumenta em 150/300/500 por 5 s, golpes críticos recebem 10%/20%/50% de Dano de ATAQUE de Habilidade e o dano contra monstros aumenta em 15%/30%/50%.',
   'entities.abilities.mir4_skill_4103.name': 'Projétil Obliterador',
   'entities.abilities.mir4_skill_4103.description':
     'Causa {damage} de dano a um inimigo. Até 4 outros inimigos em 7,5 jardas recebem 55% desse dano. Reduz o dano causado pelo alvo em 60% por 5 s.',
-  'entities.abilities.mir4_skill_4106.name': 'Flecha Ilusória',
+  'entities.abilities.mir4_skill_4106.name': 'Vendaval de Golpe de Dor',
   'entities.abilities.mir4_skill_4106.description':
-    'Causa {damage} de dano a um inimigo. Atordoa o alvo por 2 s.',
+    'Atravessa o alvo selecionado numa investida e então recua 8 jardas, causando {damage} de dano Físico a até 5 inimigos numa linha frontal de 6 jardas. Concede 1 Foco e Invencibilidade por 1 s. Inimigos atingidos ficam Marcados, perdendo 25 de Evasão CRÍT, por 5/8/10/10 s nos graus 1/5/8/10. Monstros ficam Atordoados por 2 s, aumentando para 3 s no grau 10. Jogadores têm 10%/30%/50%/70% de chance de sofrer Atordoamento por 1/1/1/2 s nos graus 1/5/8/10. Nos graus 5/8/10, também reduz a Redução de Dano CRÍT em 100/200/400 por 5/5/8 s. Nos graus 8/10, também reduz a Evasão CRÍT em mais 200/400 por 5/8 s.',
   'entities.abilities.mir4_skill_4107.name': 'Seta do Clarão',
   'entities.abilities.mir4_skill_4107.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 6,75 jardas recebem 60% desse dano e têm o dano causado reduzido em 45% por 5 s.',
   'entities.abilities.mir4_skill_5101.name': 'Lâmina Crescente',
   'entities.abilities.mir4_skill_5101.description':
     'Causa {damage} de dano a um inimigo. Derruba o alvo por 1 s.',
-  'entities.abilities.mir4_skill_5104.name': 'Ataque Relâmpago',
+  'entities.abilities.mir4_skill_5104.name': 'Pontapé Nirvana',
   'entities.abilities.mir4_skill_5104.description':
-    'Causa {damage} de dano a um inimigo. Reduz as Defesas Física e Mágica do alvo em 14% por 4,5 s. Quebras de Defesa se acumulam multiplicativamente, mas a Defesa não pode cair abaixo de 20% do valor original. A recarga exibida acima é a recarga base. A Redução de Recarga de Habilidade pode reduzi-la em até 40% no PvE ou 30% no PvP.',
-  'entities.abilities.mir4_skill_5201.name': 'Chute do Nirvana',
+    'Atravessa o alvo selecionado até ficar 1 jarda além dele em 0,35 s; então se vira e atinge até 8 inimigos numa faixa frontal de 4,5 jardas de comprimento por 5 jardas de largura, causando {damage} de dano Físico. Derruba monstros por 3 s; contra jogadores, a chance é de 10%/30%/60%/100% nos graus 1/5/8/10. Se a Derrubada falhar nos graus 5/8/10, reduz a Resistência a Derrubada do alvo em 10%/15%/20% por 10/15/20 s. Um alvo Derrubado nesses graus Sangra com 30%/50%/80% do ATQ Físico por 2 s. Aprender os graus 8/10 aumenta o dano contra monstros em 8%/12% e contra chefes em 10%/15%.',
+  'entities.abilities.mir4_skill_5201.name': 'Ataque Devastador',
   'entities.abilities.mir4_skill_5201.description':
-    'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7 jardas recebem 65% desse dano. Atordoa o alvo por 1,1 s.',
+    'Avança 2 jardas e atinge até 8 inimigos em uma trajetória frontal de 5 jardas de largura ao longo de 6 impactos, causando {damage} de dano Físico e Mágico total. A trajetória alcança 7 jardas nos 5 primeiros impactos e 7,5 jardas no impacto final. O quarto impacto empurra os inimigos por 1 jarda.',
   'entities.abilities.mir4_skill_5301.name': 'Lança Perfurante',
   'entities.abilities.mir4_skill_5301.description':
     'Causa {damage} de dano a um inimigo. Até 3 outros inimigos em 7,25 jardas recebem 70% desse dano. Atordoa o alvo por 0,9 s.',
@@ -13525,10 +13520,10 @@ export const pt_BR: Partial<Record<TranslationKey, string>> = {
     'Causa {damage} de dano em 4 impactos. Requer o medidor de ultimate cheio.',
   'entities.abilities.mir4_ultimate_3.name': 'Raio de Luz',
   'entities.abilities.mir4_ultimate_3.description':
-    'Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio.',
+    'Atinge até 10 inimigos em uma trajetória frontal de 16 jardas ao longo de 7 contatos, causando {damage} de dano Físico e Mágico combinados. Concede Invencibilidade por 3 s e Imunidade a Controle por 5 s. Requer o medidor de ultimate cheio.',
   'entities.abilities.mir4_ultimate_4.name': 'Chuva de Flechas',
   'entities.abilities.mir4_ultimate_4.description':
-    'Causa {damage} de dano em 3 impactos. Requer o medidor de ultimate cheio.',
+    'Dispara 5 ondas frontais crescentes, cada uma atingindo até 10 inimigos e causando {damage} de dano Físico total. As ondas aumentam de 55 graus e 21 jardas para 120 graus e 25 jardas enquanto você recua 1 jarda após cada disparo. A primeira e a terceira ondas empurram 0,4 e 0,2 jarda. Concede Invencibilidade por 3 s e 1 Foco. Requer o medidor de ultimate cheio.',
   'entities.abilities.mir4_ultimate_5.name': 'Lança do Dragão',
   'entities.abilities.mir4_ultimate_5.description':
     'Causa {damage} de dano em 2 impactos. Requer o medidor de ultimate cheio.',

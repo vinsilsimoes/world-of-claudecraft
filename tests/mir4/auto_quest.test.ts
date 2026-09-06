@@ -75,22 +75,25 @@ describe('the mir4 auto-quest journey', () => {
     expect(sim.entities.get(sim.playerId)!.level).toBe(expected.level);
   });
 
-  it('suspends on manual input and resumes, like the auto battle', () => {
-    setActiveWorldContent(MIR4_SLICE_WORLD);
-    const sim = makeSim(22);
-    const meta = sim.players.get(sim.playerId)!;
-    teleport(sim, -30, 18);
-    sim.setMir4AutoQuest(true);
-    meta.moveInput.forward = true;
-    sim.tick();
-    expect(meta.mir4AutoQuest?.suspended).toBe(true);
-    const xWhileHeld = sim.entities.get(sim.playerId)!.pos.x;
-    sim.tick();
-    expect(sim.entities.get(sim.playerId)!.pos.x).toBe(xWhileHeld); // frozen
-    meta.moveInput.forward = false;
-    sim.tick();
-    expect(meta.mir4AutoQuest?.suspended).toBe(false);
-  });
+  it.each(['forward', 'jump', 'dive', 'surface'] as const)(
+    'suspends on %s input and resumes, like the auto battle',
+    (inputField) => {
+      setActiveWorldContent(MIR4_SLICE_WORLD);
+      const sim = makeSim(22);
+      const meta = sim.players.get(sim.playerId)!;
+      teleport(sim, -30, 18);
+      sim.setMir4AutoQuest(true);
+      meta.moveInput[inputField] = true;
+      sim.tick();
+      expect(meta.mir4AutoQuest?.suspended).toBe(true);
+      const xWhileHeld = sim.entities.get(sim.playerId)!.pos.x;
+      sim.tick();
+      expect(sim.entities.get(sim.playerId)!.pos.x).toBe(xWhileHeld); // frozen
+      meta.moveInput[inputField] = false;
+      sim.tick();
+      expect(meta.mir4AutoQuest?.suspended).toBe(false);
+    },
+  );
 
   it('resumes Journey and Battle with exactly one locomotion owner', () => {
     const world = { ...buildMir4ArcWorld(1), camps: [] };

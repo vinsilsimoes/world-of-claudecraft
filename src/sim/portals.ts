@@ -11,6 +11,7 @@
 import { DUNGEON_X_THRESHOLD, PORTALS } from './data';
 import { MIR4_GAME_PROFILE } from './game_profile';
 import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
+import { interruptMir4SkillMovementOnDisplacement } from './mir4/displacement';
 import {
   isMir4CampaignMapUnlocked,
   type Mir4PortalDirection,
@@ -34,6 +35,7 @@ function teleport(ctx: SimContext, p: Entity, to: PortalSide, text: string): voi
   // triggering makes a live cast here unlikely, but a click-entry mid-cast is
   // reachable and the rule is scoped to every teleport, not the likely ones.
   cancelProfessionSessionOnDisplacement(ctx, p);
+  interruptMir4SkillMovementOnDisplacement(ctx, p);
   p.pos = ctx.groundPos(to.landing.x, to.landing.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);

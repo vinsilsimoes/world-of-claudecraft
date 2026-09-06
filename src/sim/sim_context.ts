@@ -87,6 +87,13 @@ export interface DamageResolution {
   landedHpLoss: number;
 }
 
+export interface DamageThreatOptions {
+  flat?: number;
+  mult?: number;
+  /** An attributed proxy hit can preserve its owner's active stealth. */
+  preserveSourceStealth?: boolean;
+}
+
 /**
  * Boot-local authority for a released spirit's live instance. Entity and claim ids
  * are deliberately never persisted: they are meaningful only inside this Sim.
@@ -94,7 +101,12 @@ export interface DamageResolution {
  */
 export type GhostInstanceBinding =
   | { kind: 'dungeon'; claimId: number }
-  | { kind: 'rift'; instanceId: number; memberEntityId: number; floorIndex: number };
+  | {
+      kind: 'rift';
+      instanceId: number;
+      memberEntityId: number;
+      floorIndex: number;
+    };
 
 // Live primitive views onto the running Sim. These are GETTERS, not snapshots:
 // `time`/`tickCount` advance every tick, and the `rng`/`entities` identities are
@@ -438,7 +450,7 @@ export interface SimContextCallbacks {
     ability: string | null,
     kind: DamageEventKind,
     noRage?: boolean,
-    threatOpts?: { flat?: number; mult?: number },
+    threatOpts?: DamageThreatOptions,
     direct?: boolean,
     attackAnimationStarted?: boolean,
     // Amount is already fully source-modified (redirect shares); skip source-output mods.

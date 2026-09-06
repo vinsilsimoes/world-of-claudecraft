@@ -13375,19 +13375,14 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_1501.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7.75미터 안의 다른 적 최대 4명에게 65%의 피해를 주고, 적중한 각 적을 3.2초 동안 35% 느려지게 합니다.',
   'entities.abilities.mir4_skill_2101.name': '화염 구슬',
-  'entities.abilities.mir4_skill_2101.description':
-    '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 줍니다. 적중한 각 적을 불태워 1초마다 {burnPerTick}의 기본 피해를 줍니다(4회, 피해 감소 적용 전 총 {burnTotal}). 피해는 화상 적용 시점의 주문력을 기준으로 합니다.',
   'entities.abilities.mir4_skill_2111.name': '서리 구슬',
   'entities.abilities.mir4_skill_2111.description':
     '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고, 적중한 각 적을 3.2초 동안 35% 느려지게 합니다.',
   'entities.abilities.mir4_skill_2301.name': '징벌의 인장',
-  'entities.abilities.mir4_skill_2301.description':
-    '적 하나에게 {damage}의 피해를 주고 4초 동안 대상이 주는 피해를 50% 감소시킵니다.',
   'entities.abilities.mir4_skill_2501.name': '현현된 핵',
   'entities.abilities.mir4_skill_2501.description':
     '적 하나에게 {damage}의 피해를 줍니다. 8미터 안의 다른 적 최대 4명에게 60%의 피해를 주고 대상을 1.8초 동안 빙결시킵니다.',
   'entities.abilities.mir4_skill_2503.name': '마법 방패',
-  'entities.abilities.mir4_skill_2503.description': '10초 동안 받는 피해가 22% 감소합니다.',
   'entities.abilities.mir4_skill_3101.name': '인장 연계',
   'entities.abilities.mir4_skill_3101.description':
     '적 하나에게 {damage}의 피해를 줍니다. 6.5미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 적중한 모든 적의 물리 및 마법 방어력을 4초 동안 10% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
@@ -13398,10 +13393,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.abilities.mir4_skill_3301.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7.25미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 4.2초 동안 35% 느려지게 합니다.',
   'entities.abilities.mir4_skill_3503.name': '비취 연꽃',
-  'entities.abilities.mir4_skill_3503.description': '최대 생명력의 18%를 회복합니다.',
-  'entities.abilities.mir4_skill_3506.name': '토템 인장 I',
-  'entities.abilities.mir4_skill_3506.description':
-    '적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 60%의 피해를 주고 대상을 1.6초 동안 이동 불가 상태로 만듭니다.',
+  'entities.abilities.mir4_skill_3503.description':
+    '자신과 30야드 내 최대 4명의 파티원의 생명력을 5초 동안 매초 {healPerPulse}만큼 회복합니다(총 {healTotal}). 회복량은 마법 공격력에 따라 증가합니다. 자신은 2초 동안 제어 효과에 면역이 됩니다. 5단계에서는 자신의 최대 생명력 10%, 파티원은 15%를 즉시 회복합니다. 8단계에서는 즉시 회복량이 25%와 35%가 되며, 침묵 상태에서도 사용할 수 있고 침묵을 제거하며, 자신의 약화 효과를 정화하고 50% 확률로 파티원의 약화 효과도 정화하며, 30초 동안 보스 피해 감소 10%를 부여합니다. 10단계에서는 즉시 회복량이 40%와 50%가 되고 파티원 정화가 반드시 성공하며 기절도 제거하고, 보스 피해 감소가 60초 동안 20%로 증가합니다.',
   'entities.abilities.mir4_skill_4101.name': '폭발 4101',
   'entities.abilities.mir4_skill_4101.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 3.5초 동안 대상이 주는 피해를 45% 감소시킵니다.',
@@ -13417,9 +13410,6 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '적 하나에게 {damage}의 피해를 줍니다. 6.75미터 안의 다른 적 최대 3명에게 60%의 피해를 주고, 5초 동안 적이 주는 피해를 45% 감소시킵니다.',
   'entities.abilities.mir4_skill_5101.name': '찌르기 5101',
   'entities.abilities.mir4_skill_5101.description': '적 하나에게 {damage}의 피해를 주고 대상을 1초 동안 넘어뜨립니다.',
-  'entities.abilities.mir4_skill_5104.name': '휩쓸기 5104',
-  'entities.abilities.mir4_skill_5104.description':
-    '적 하나에게 {damage}의 피해를 주고 4.5초 동안 대상의 물리 및 마법 방어력을 14% 감소시킵니다. 여러 방어력 감소 효과는 곱연산으로 중첩되지만 방어력은 원래 값의 20% 미만으로 내려가지 않습니다. 위에 표시된 재사용 대기시간은 기본값입니다. 스킬 재사용 대기시간 감소는 PvE에서 최대 40%, PvP에서 최대 30%까지 적용됩니다.',
   'entities.abilities.mir4_skill_5201.name': '타격 5201',
   'entities.abilities.mir4_skill_5201.description':
     '적 하나에게 {damage}의 피해를 줍니다. 7미터 안의 다른 적 최대 3명에게 65%의 피해를 주고 대상을 1.1초 동안 기절시킵니다.',

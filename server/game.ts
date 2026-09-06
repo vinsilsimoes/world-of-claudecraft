@@ -56,6 +56,12 @@ import type { PickAction } from '../src/sim/lockpick';
 import { lootHasGoneFfa } from '../src/sim/loot/loot_ffa';
 import { type MarketQuery, sanitizeMarketQuery } from '../src/sim/market_query';
 import { mir4CampaignMapIdsForWorld } from '../src/sim/mir4/campaign_availability';
+import { interruptMir4SkillMovementOnDisplacement } from '../src/sim/mir4/displacement';
+import { interruptMir4SkillActionMotion } from '../src/sim/mir4/skill_action_scheduler';
+import {
+  cancelMir4SkillActivation,
+  mir4SkillActivationOwnsMotion,
+} from '../src/sim/mir4/skill_activation';
 import { parseMoveInputFrame } from '../src/sim/move_input';
 import {
   partyFrameAbsorb,
@@ -2249,6 +2255,7 @@ export class GameServer {
       const stowedPet = this.sim.stowPetForSpectate(moderator.pid);
       const limbo = this.sim.groundPos(SPECTATE_LIMBO_X, SPECTATE_LIMBO_Z);
       cancelProfessionSessionOnDisplacement(this.sim.ctx, moderatorEntity);
+      interruptMir4SkillMovementOnDisplacement(this.sim.ctx, moderatorEntity);
       moderatorEntity.pos = limbo;
       moderatorEntity.prevPos = { ...limbo };
       this.sim.grid.update(moderatorEntity);
@@ -2298,6 +2305,7 @@ export class GameServer {
     const moderatorEntity = this.sim.entities.get(moderator.pid);
     if (moderatorEntity) {
       cancelProfessionSessionOnDisplacement(this.sim.ctx, moderatorEntity);
+      interruptMir4SkillMovementOnDisplacement(this.sim.ctx, moderatorEntity);
       moderatorEntity.pos = { ...state.savedPos };
       moderatorEntity.prevPos = { ...state.savedPos };
       this.sim.grid.update(moderatorEntity);
@@ -2336,6 +2344,7 @@ export class GameServer {
     // displacement teardown runs here too: a jailed or moderated angler's
     // live session never travels with them.
     cancelProfessionSessionOnDisplacement(this.sim.ctx, entity);
+    interruptMir4SkillMovementOnDisplacement(this.sim.ctx, entity);
     const ground = this.sim.groundPos(pos.x, pos.z);
     entity.pos = ground;
     entity.prevPos = { ...ground };
@@ -2345,7 +2354,9 @@ export class GameServer {
     this.sim.grid.update(entity);
     this.sim.playerGrid.update(entity);
     const meta = this.sim.meta(session.pid);
-    if (meta) Object.assign(meta.moveInput, emptyMoveInput());
+    if (meta) {
+      Object.assign(meta.moveInput, emptyMoveInput());
+    }
   }
 
   private jailSpawnFor(session: ClientSession): { x: number; z: number } {
@@ -3453,7 +3464,9 @@ export class GameServer {
           mi.turnRight ||
           mi.strafeLeft ||
           mi.strafeRight ||
-          mi.jump
+          mi.jump ||
+          mi.dive ||
+          mi.surface
         )
       )
         continue;
@@ -4191,7 +4204,11 @@ export class GameServer {
     // Stop any held movement now; the sim keeps ticking this entity (it can
     // still be attacked, healed, or die while linkdead, like any player).
     const meta = this.sim.meta(session.pid);
-    if (meta) Object.assign(meta.moveInput, emptyMoveInput());
+    if (meta) {
+      Object.assign(meta.moveInput, emptyMoveInput());
+      cancelMir4SkillActivation(this.sim.ctx, session.pid);
+      interruptMir4SkillActionMotion(this.sim.ctx, session.pid);
+    }
     // Safety flush so a process crash during the grace window loses nothing.
     void this.saveCharacter(session, { withMarket: opts.withMarket ?? true }).catch((err) =>
       console.error(`linkdead save failed for ${session.name}:`, err),
@@ -6565,7 +6582,12 @@ export class GameServer {
       // own turnLeft/turnRight (player_motion.ts), but mouselook facing streams in on
       // this out-of-band channel and must be rejected here, the authoritative side,
       // not trusted to a client that could simply keep sending it.
-      if (frame.facing !== null && (!e.dead || e.ghost) && !isStunned(e)) {
+      if (
+        frame.facing !== null &&
+        (!e.dead || e.ghost) &&
+        !isStunned(e) &&
+        !mir4SkillActivationOwnsMotion(meta, this.sim.tickCount)
+      ) {
         e.facing = frame.facing;
       }
       this.botDetector.observeInput(session.botTrackingContext, frame, receivedAtMs);
@@ -8257,6 +8279,7 @@ export class GameServer {
           const e = sim.entities.get(pid);
           if (e) {
             cancelProfessionSessionOnDisplacement(sim.ctx, e);
+            interruptMir4SkillMovementOnDisplacement(sim.ctx, e);
             const p = sim.groundPos(msg.x, msg.z);
             e.pos = p;
             e.prevPos = { ...p };

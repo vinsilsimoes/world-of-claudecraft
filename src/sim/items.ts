@@ -57,7 +57,9 @@ import { meetsLevelRequirement, requiredLevelFor } from './item_level_req';
 import { isItemLocked } from './item_lock';
 import { creditMir4ArcTutorialReceipt } from './mir4/arc_receipts';
 import { MIR4_HP_POTION_COOLDOWN_SECONDS, MIR4_MP_POTION_COOLDOWN_SECONDS } from './mir4/combat';
+import { mir4NativeStatusBonus } from './mir4/effects';
 import { mir4MountVisualKey } from './mir4/mounts';
+import { mir4NativeSunbeamSwordMpPotionBonusBasisPoints } from './mir4/native_skill_sunbeam_sword';
 import { mir4ModifiedPotionAmount } from './mir4/status_effects';
 import { mountOwned, summonMountItem } from './mounts';
 import { learnRiding } from './mounts_training';
@@ -890,14 +892,25 @@ export function useItem(
         ? (p.maxHp * mir4Potion.restoreBps) / 10_000
         : (def.potionHp ?? 0) + p.maxHp * (def.potionHpPctMax ?? 0);
       const modifiedHeal = mir4HealingPotion
-        ? mir4ModifiedPotionAmount(baseHeal, 'hp', p.mir4?.statusValues)
+        ? mir4ModifiedPotionAmount(
+            baseHeal,
+            'hp',
+            p.mir4?.statusValues,
+            mir4NativeStatusBonus(p, 146),
+          )
         : baseHeal;
       potionHeal = Math.min(Math.round(modifiedHeal * ctx.healingTakenMult(p)), p.maxHp - p.hp);
       p.hp += potionHeal;
     }
     if (restoresMana) {
       const modifiedMana = mir4ManaPotion
-        ? mir4ModifiedPotionAmount(manaRestore, 'mp', p.mir4?.statusValues)
+        ? mir4ModifiedPotionAmount(
+            manaRestore,
+            'mp',
+            p.mir4?.statusValues,
+            mir4NativeStatusBonus(p, 147) +
+              mir4NativeSunbeamSwordMpPotionBonusBasisPoints(meta.mir4SkillLevels),
+          )
         : manaRestore;
       p.resource = Math.min(p.maxResource, p.resource + modifiedMana);
     }

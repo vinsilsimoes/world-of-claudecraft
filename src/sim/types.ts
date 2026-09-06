@@ -1505,6 +1505,7 @@ export interface Mir4PlayerCombatState {
 // owns the mir4 semantics (effectId dedup, magnitudes, the 750ms post-expiry
 // control immunity). Runtime-only; decayed per tick by src/sim/mir4/effects.ts.
 export type Mir4EffectKind =
+  | 'hit-react'
   | 'stun'
   | 'knockdown'
   | 'dazed'
@@ -1513,10 +1514,24 @@ export type Mir4EffectKind =
   | 'slow'
   | 'silence'
   | 'blind'
+  | 'control-immunity'
+  | 'knockdown-stun-immunity'
+  | 'all-damage-reduction'
+  | 'boss-damage-reduction'
+  | 'physical-attack-flat-reduction'
+  | 'physical-attack-reduction'
+  | 'spell-attack-reduction'
+  | 'physical-defense-reduction'
   | 'defense-break'
+  | 'damage-amplification'
   | 'damage-boost'
+  | 'invincible'
+  | 'invincibility-blocked'
+  | 'shield-blocked'
   | 'defense-boost'
   | 'dodge-boost'
+  | 'evade-disabled'
+  | 'native-status-boost'
   | 'burn';
 
 export interface Mir4ActiveEffect {
@@ -1526,6 +1541,12 @@ export interface Mir4ActiveEffect {
   duration: number;
   magnitude: number;
   sourceId: number;
+  /** Numeric MIR4 STATUS lane carried by a native-status-boost effect. */
+  nativeStatusId?: number;
+  /** Native overlap count retained when a skill explicitly increases a debuff stack. */
+  nativeStacks?: number;
+  /** Native effect cannot be removed by dispels before its timer expires. */
+  unremovable?: boolean;
   /** Runtime-only periodic contact state used by MIR4 burn. */
   tickRemaining?: number;
   ticksRemaining?: number;
@@ -1564,9 +1585,47 @@ export interface Mir4PendingImpact {
   gaugeGain: number;
   spiritProcEligible?: boolean;
   skillId?: number;
+  /** Exact SKILL_ATTACK row that authored this contact, when one exists. */
+  attackId?: number;
+  /** Zero-based impact position inside the authored SKILL_ATTACK row. */
+  sourceImpactIndex?: number;
   skillLevel?: number;
   applySkillEffect?: boolean;
   effectOnly?: boolean;
+  /** Native zero-damage setup row that executes its target-side behavior. */
+  nativeSetup?:
+    | 'berserk-source-buff'
+    | 'native-ultimate-source-buff'
+    | 'riposte-taunt'
+    | 'magic-shield-source-buff'
+    | 'frozen-block-source-buff'
+    | 'phoenix-embrace-source-buff'
+    | 'taoist-heal-control-immunity'
+    | 'taoist-heal-rank-effects'
+    | 'taoist-heal-pulse'
+    | 'taoist-greater-heal-control-immunity'
+    | 'taoist-greater-heal-protection'
+    | 'taoist-greater-heal-living'
+    | 'taoist-greater-heal-revive'
+    | 'taoist-guardian-circle-stun-removal'
+    | 'taoist-guardian-circle-party-buffs'
+    | 'taoist-guardian-circle-lowest-health-buff'
+    | 'taoist-expulsion-circle-party-buffs'
+    | 'taoist-tai-chi-control-immunity'
+    | 'taoist-tai-chi-source-rank-effects'
+    | 'taoist-tai-chi-party-recovery'
+    | 'arbalist-focus'
+    | 'arbalist-seeking-bolt-immunity'
+    | 'arbalist-illusion-arrow-source-buffs'
+    | 'arbalist-painstrike-source-buffs'
+    | 'arbalist-minds-eye-party-buffs'
+    | 'arbalist-cloaking'
+    | 'unbreakable-stance-always'
+    | 'unbreakable-stance-stunned'
+    | 'lancer-crushing-blow-invincibility'
+    | 'lancer-crushing-blow-rank-buffs'
+    | 'lancer-wind-wall-source-buffs'
+    | 'lancer-wind-wall-party-buffs';
   /** Stable per-cast/per-target key. All contacts in the same action share
    * landed/proc state so the first landed hit, not merely hit zero, owns the
    * one-shot spirit attempt and damage-gated effect. */
@@ -1580,6 +1639,52 @@ export interface Mir4PendingImpact {
   periodic?: boolean;
   /** The authoritative action-start cue already began the attack one-shot. */
   attackAnimationStarted?: true;
+  /** Shared by physical and magic components authored as one native contact. */
+  nativeContactKey?: string;
+  /** Fixed world-space origin owned by a reviewed persistent Totem contact. */
+  nativeTotem?: {
+    totemId: number;
+    origin: { x: number; y: number; z: number };
+    expiresAt: number;
+    /** The native Totem owns these fields. Their missing final native formula
+     * is replaced by an explicit, hashable Aeldrune compatibility bridge. */
+    combatResolution: {
+      accuracy: number;
+      critical: number;
+      criticalOutcome: number;
+      hitChanceBps: number;
+      criticalChanceBps: number;
+      criticalMultiplierBps: number;
+      policyId: 'mir4-authorial.totem-native-fields-to-bounded-outcomes-v1';
+      nativeClaim: false;
+    };
+  };
+  /** Exact SKILL_ATTACK combat-side fields carried by a durable Totem row. */
+  nativeTotemCombat?: {
+    attackRagePoint: number;
+    hitRagePoint: number;
+    aggroRate: number;
+  };
+}
+
+/** One precomputed native BUFF IndexType=2 entry. Native stores these values
+ * when the buff lands, then replays them on the affected actor's shared
+ * one-second periodic clock. Runtime-only; never persisted or sent on wire. */
+export interface Mir4NativePeriodicDamageEntry {
+  buffIndex: number;
+  channel: 'physical' | 'magic';
+  rawDamage: number;
+}
+
+/** Active native periodic-damage buff attached to its affected entity. */
+export interface Mir4NativePeriodicDamageState {
+  buffId: number;
+  sourceId: number;
+  skillId: number;
+  attackId: number;
+  skillLevel: number;
+  expiresAt: number;
+  entries: Mir4NativePeriodicDamageEntry[];
 }
 
 // A mechanic-applied refreshing fire DoT (the dragonkin brood's burns): the
@@ -2003,7 +2108,13 @@ export interface MobTemplate {
   // Periodic self-shield: the mob wraps itself in a damage-absorbing barrier
   // every `every` seconds, soaking up to `amount` damage for `duration` seconds.
   // Reuses the existing `absorb` aura (soaked first in dealDamage) - no new combat math.
-  stoneskin?: { amount: number; every: number; duration: number; name: string; school?: string };
+  stoneskin?: {
+    amount: number;
+    every: number;
+    duration: number;
+    name: string;
+    school?: string;
+  };
   // Boss/elite mechanic ("Banshee's Wail"): a periodic, telegraphed scream that
   // terrifies every nearby player into fleeing for `duration`s. Unlike the
   // on-hit `dread`, this is a timed AoE - the room-clearing analogue of `stomp`,
@@ -2196,7 +2307,12 @@ export interface MobTemplate {
   // Melee mechanic: a landed swing has `chance` to land a concussive blow that
   // STUNS the victim for `duration`s (can't move, cast, or act). The single-target
   // cousin of War Stomp's AoE slam - rides the existing `stun` aura, no new kind.
-  concuss?: { chance: number; duration: number; name: string; school?: Aura['school'] };
+  concuss?: {
+    chance: number;
+    duration: number;
+    name: string;
+    school?: Aura['school'];
+  };
   // Melee mechanic: a landed swing has `chance` to crack the victim's guard with
   // an Expose debuff that raises the physical damage they take by `dmgIncrease`
   // (e.g. 0.15 = +15%) for `duration` seconds. Stacks multiplicatively with armor.
@@ -2359,7 +2475,13 @@ export interface MobTemplate {
   // armor (agi*2), dodge and crit - so a single drain shreds both the victim's
   // physical mitigation and their avoidance at once. Rides a `buff_agi` aura with a
   // NEGATIVE value (recalcPlayerStats folds it through), so there is no new stat math.
-  wither?: { chance: number; agi: number; duration: number; name: string; school?: Aura['school'] };
+  wither?: {
+    chance: number;
+    agi: number;
+    duration: number;
+    name: string;
+    school?: Aura['school'];
+  };
   // Combat mechanic: a landed melee hit has `chance` to terrify the victim - a
   // fear that sends the struck player fleeing for `duration`s. Rides the existing
   // `fear_incap` incapacitate aura the player-cast Fear uses, so `updateFearMovement`
@@ -2374,7 +2496,12 @@ export interface MobTemplate {
   // victim into a harmless critter. Reuses the exact `polymorph` aura the mage's
   // Polymorph applies - `isStunned` locks out all actions and the aura breaks the
   // instant the victim takes damage - so no new aura kind, gating, or UI.
-  polymorphHex?: { chance: number; duration: number; name: string; school?: Aura['school'] };
+  polymorphHex?: {
+    chance: number;
+    duration: number;
+    name: string;
+    school?: Aura['school'];
+  };
   // On-hit curse: a landed melee swing has `chance` to lay a curse of frailty on
   // the victim, raising all damage they take by `amp` (e.g. 0.15 = +15%) from
   // every source for `duration`s. Introduces the `vulnerability` aura kind, read
@@ -2495,7 +2622,13 @@ export interface MobTemplate {
   // On-hit "draining curse": a landed swing has `chance` to inflate every
   // ability the victim uses by `pct` (e.g. 0.4 = +40% resource cost) for
   // `duration` seconds - taxes mana/rage/energy alike, not a stat drain.
-  costTax?: { chance: number; pct: number; duration: number; name: string; school?: string };
+  costTax?: {
+    chance: number;
+    pct: number;
+    duration: number;
+    name: string;
+    school?: string;
+  };
   // On-hit chill: a landed melee swing has `chance` to slow the victim's
   // movement to `mult` of normal for `duration` seconds (frost school). Reuses
   // the standard `slow` aura, so it rides the same movement path as Frostbolt.
@@ -2857,7 +2990,13 @@ export type AbilityEffect =
   // pctOfMax: when set, the heal total is this fraction of the TARGET's max
   // health at cast time instead of the flat total, so the heal scales with
   // gear and any future pool retune (Savage Mending is the first user).
-  | { type: 'hot'; total: number; duration: number; interval: number; pctOfMax?: number } // renew, rejuvenation
+  | {
+      type: 'hot';
+      total: number;
+      duration: number;
+      interval: number;
+      pctOfMax?: number;
+    } // renew, rejuvenation
   | {
       type: 'absorb';
       amount: number;
@@ -2920,7 +3059,12 @@ export type AbilityEffect =
   // survival arm. Below the health fraction, the spent bank raises an absorb
   // of absorbPctMaxHp and refunds rage instead of striking; above it the strike
   // alone carries the payoff. Deterministic, druid-only.
-  | { type: 'druidMarrowbreakGuard'; belowFrac: number; absorbPctMaxHp: number; rage: number }
+  | {
+      type: 'druidMarrowbreakGuard';
+      belowFrac: number;
+      absorbPctMaxHp: number;
+      rage: number;
+    }
   // Groveheart Overbloom (combat/druid_engines.ts): harvest every HoT the
   // caster owns for harvestPct of its remaining healing, then replant a
   // Wildbloom on the cast target (or on every harvested ally with the
@@ -3195,7 +3339,12 @@ export type AbilityEffect =
       maxSecondary: number;
     }
   | { type: 'afflictionPossession'; duration: number; doom: number }
-  | { type: 'afflictionJudgment'; duration: number; doom: number; refund: number }
+  | {
+      type: 'afflictionJudgment';
+      duration: number;
+      doom: number;
+      refund: number;
+    }
   | {
       type: 'afflictionLitany';
       duration: number;
@@ -4374,9 +4523,18 @@ export interface Entity extends ClientMirroredEntityFields {
   // mir4 ultimate gauge (0..100) and the pending authored-offset impacts.
   mir4UltGauge?: number;
   mir4PendingImpacts?: Mir4PendingImpact[];
-  // mir4 magic-shield self utility (2503): the 0.22 magnitude cuts incoming
-  // damage; runtime-only, decayed with the effects phase.
-  mir4Shield?: { remaining: number; magnitude: number };
+  /** Target-owned native periodic clock and active IndexType=2 buffs. */
+  mir4NativePeriodicLastPulseAt?: number;
+  mir4NativePeriodicDamage?: Mir4NativePeriodicDamageState[];
+  // Native MIR4 Magic Shield (2503): timed all-damage reduction with absorbed
+  // damage, hit-count, and Bash-reduction budgets.
+  mir4Shield?: {
+    remaining: number;
+    damageReductionBasisPoints: number;
+    bashDamageReductionBasisPoints: number;
+    absorptionRemaining: number;
+    hitsRemaining: number;
+  };
   overheadEmoteId: OverheadEmoteId | null;
   overheadEmoteUntil: number;
   overheadEmoteSeq: number;
@@ -4576,6 +4734,10 @@ export interface Entity extends ClientMirroredEntityFields {
   channelTicksLeft: number;
   gcdRemaining: number;
   cooldowns: Map<string, number>;
+  /** Rank-8/10 Greater Heal passive: fatal damage is pending until this sim time. */
+  mir4GreaterHealDeathDelayUntil?: number;
+  mir4GreaterHealDeathDelayKillerId?: number | null;
+  mir4GreaterHealDeathDelayKillerAbility?: string | null;
   queuedOnSwing: string | null; // heroic strike
   queuedOnSwingFree?: boolean; // next_cast_free consumed at queue time
   queuedOnSwingCostMultiplier?: number; // next_cast_cheap consumed at queue time
@@ -4807,6 +4969,14 @@ export interface Entity extends ClientMirroredEntityFields {
   // [dev] /dev god cheat state, kept OFF the production gm flag so it never touches a
   // real game master (who could otherwise deal 100x or have their invuln toggled).
   devGod?: boolean;
+  /** Dev-only resource-cost bypass used by isolated skill homologation. The
+   *  authoritative cast path also requires SimContext.devCommands, so this
+   *  transient flag cannot affect a production realm even if set accidentally. */
+  devInfiniteResource?: boolean;
+  /** Dev-only skill-capture isolation. It prevents the ordinary Attack-on-
+   *  Ability convenience from arming repeated target combat in the dedicated
+   *  homologation arena. It is transient and requires devCommands at use. */
+  devSkillQaIsolation?: boolean;
   /** Profiler-only invulnerability. The dev-gated server command sets this
    *  idempotently so combat presentation remains active without /dev god's
    *  outgoing damage multiplier. Server-private and never persisted. */
@@ -5286,7 +5456,12 @@ export type UnstuckCancelReason =
 export type UnstuckEvent =
   | { type: 'unstuck'; phase: 'started'; seconds: number }
   | { type: 'unstuck'; phase: 'countdown'; seconds: number }
-  | { type: 'unstuck'; phase: 'blocked'; reason: UnstuckBlockedReason; seconds?: number }
+  | {
+      type: 'unstuck';
+      phase: 'blocked';
+      reason: UnstuckBlockedReason;
+      seconds?: number;
+    }
   | {
       type: 'unstuck';
       phase: 'cancelled';
@@ -5563,7 +5738,12 @@ export type SimEvent = { pid?: number } & (
   | { type: 'bank' }
   // Interacting with a town noticeboard. Structured and personal: the client
   // owns localized feedback, and online routing sends it only to the reader.
-  | { type: 'noticeboard'; noticeboardId: string; state: 'empty'; contractQuestId?: string }
+  | {
+      type: 'noticeboard';
+      noticeboardId: string;
+      state: 'empty';
+      contractQuestId?: string;
+    }
   | {
       // A world object (a torched murloc hut, q_deepfen_purge) bursts into flames.
       // The renderer plays a fire burst at (x, z). Visual-only.
@@ -5593,7 +5773,11 @@ export type SimEvent = { pid?: number } & (
   // like deedBroadcast so the one client event switch stays exhaustively
   // typed. Carries the earner's name and the page id only, never page text:
   // the client composes the line from reliquary_i18n plus its own chrome key.
-  | { type: 'reliquaryIlluminationBroadcast'; characterName: string; pageId: string }
+  | {
+      type: 'reliquaryIlluminationBroadcast';
+      characterName: string;
+      pageId: string;
+    }
   // say/yell are delivered only to players in range and carry the speaker's
   // entity id so the client can hang a chat bubble over their head; whisper
   // goes to the target (and echoes to the sender with `to` set); general is
@@ -5934,6 +6118,243 @@ export type SimEvent = { pid?: number } & (
       durationMs: number;
     }
   | {
+      /** Exact native MIR4 crowd type 1: a brief action/motion reaction, not stun. */
+      type: 'mir4HitReaction';
+      sourceId: number;
+      targetId: number;
+      skillId: number;
+      attackId: number;
+      durationMs: number;
+      stance: 'hit-01' | 'hit-02' | 'stun-01';
+      /** Present only for Hit01 reactions that also author displacement. */
+      moveDurationMs?: number;
+      heightYards?: number;
+    }
+  | {
+      /** Exact native MIR4 crowd type 6 with the recovered Down02 trajectory. */
+      type: 'mir4HitReaction';
+      sourceId: number;
+      targetId: number;
+      skillId: number;
+      attackId: number;
+      /** Admitted hard-control duration after live duration modifiers and DR. */
+      durationMs: number;
+      stance: 'down-02';
+      moveDurationMs: number;
+      heightYards: number;
+    }
+  | {
+      /** Exact native MIR4 crowd type 6 with the recovered Down03 trajectory. */
+      type: 'mir4HitReaction';
+      sourceId: number;
+      targetId: number;
+      skillId: number;
+      attackId: number;
+      /** Admitted hard-control duration after live duration modifiers and DR. */
+      durationMs: number;
+      stance: 'down-03';
+      moveDurationMs: number;
+      heightYards: number;
+    }
+  | {
+      type: 'mir4SkillGuide';
+      sourceId: number;
+      skillId: number;
+      attackId: number;
+      shape: 'direct';
+      applyTo: 'self';
+      lengthYards: number;
+      widthYards: number;
+      aliveMs: number;
+      scalingMs: number;
+      materialScalarCurve: 'inside-linear-grow-then-hold';
+      materialAssetPath: string;
+      colors: {
+        primary: [number, number, number];
+        secondary: [number, number, number];
+        emissive: [number, number, number];
+      };
+    }
+  | {
+      type: 'mir4SkillGuide';
+      sourceId: number;
+      skillId: number;
+      attackId: number;
+      shape: 'circle';
+      applyTo: 'self';
+      radiusYards: number;
+      aliveMs: number;
+      scalingMs: number;
+      materialScalarCurve: 'inside-linear-grow-then-hold';
+      materialAssetPath: string;
+      colors: {
+        primary: [number, number, number];
+        secondary: [number, number, number];
+        emissive: [number, number, number];
+      };
+    }
+  | {
+      type: 'mir4SkillGuide';
+      sourceId: number;
+      skillId: number;
+      attackId: number;
+      shape: 'sector';
+      applyTo: 'self';
+      angleDegrees: number;
+      radiusYards: number;
+      forwardOffsetYards: number;
+      aliveMs: number;
+      scalingMs: number;
+      materialScalarCurve: 'inside-linear-grow-then-hold';
+      materialAssetPath: string;
+      colors: {
+        primary: [number, number, number];
+        secondary: [number, number, number];
+        emissive: [number, number, number];
+      };
+    }
+  | {
+      /** Compiler-approved native skill presentation timeline. */
+      type: 'mir4SkillPresentation';
+      sourceId: number;
+      targetId: number;
+      /** Authoritative target-facing captured after the successful skill commit. */
+      sourceFacing: number;
+      skillId: number;
+      ability: string;
+      profile:
+        | 'warrior-overdrive'
+        | 'warrior-air-slash'
+        | 'warrior-iron-shackle'
+        | 'warrior-dragon-flame'
+        | 'sorcerer-flame-orb'
+        | 'sorcerer-frost-orb'
+        | 'sorcerer-thunderstorm'
+        | 'sorcerer-dark-vortex'
+        | 'sorcerer-dragon-tornado'
+        | 'taoist-light-ray'
+        | 'sorcerer-blizzard'
+        | 'sorcerer-magic-shield'
+        | 'sorcerer-chain-lightning'
+        | 'sorcerer-flame-strike'
+        | 'sorcerer-frozen-block'
+        | 'taoist-rain-of-blades'
+        | 'taoist-tai-chi'
+        | 'taoist-moonlight-orb'
+        | 'taoist-moonlight-wave'
+        | 'taoist-blasting-charm'
+        | 'taoist-expulsion-circle'
+        | 'taoist-guardian-circle'
+        | 'taoist-heal'
+        | 'taoist-greater-heal'
+        | 'taoist-piercing-blades'
+        | 'taoist-soaring-slash'
+        | 'taoist-sunbeam-sword'
+        | 'arbalist-quick-shot'
+        | 'arbalist-illusion-arrow'
+        | 'arbalist-burst-shell'
+        | 'arbalist-venom-mist-shell'
+        | 'arbalist-ice-cage'
+        | 'arbalist-flash-arrow'
+        | 'arbalist-heavenly-bow'
+        | 'arbalist-seeking-bolt'
+        | 'arbalist-obliterate-shell'
+        | 'arbalist-minds-eye'
+        | 'arbalist-cloaking'
+        | 'arbalist-painstrike-gale'
+        | 'arbalist-arrow-rain'
+        | 'lancer-crescent-blade'
+        | 'lancer-dragon-tail'
+        | 'lancer-ascending-dragon'
+        | 'lancer-nirvana-kick'
+        | 'lancer-double-strike'
+        | 'lancer-crushing-blow'
+        | 'lancer-sweeping-storm'
+        | 'lancer-wind-wall'
+        | 'lancer-ravaging-blow'
+        | 'lancer-blitz-strike'
+        | 'lancer-dragon-spear'
+        | 'lancer-absorption'
+        | 'lancer-piercing-spear';
+      durationMs: number;
+      endCutMs: number;
+      animationAssetPath: string;
+      vfxAssetPaths: string[];
+      soundAssetPaths: string[];
+      cameraCurveAssetPaths: string[];
+      cameraShakeAssetPaths: string[];
+      /** Fixed world-space area owned by a persistent native summon/totem. */
+      persistentArea?: {
+        spawnOffsetMs: number;
+        expiresOffsetMs: number;
+        shape: 'fixed-circle';
+        x: number;
+        y: number;
+        z: number;
+        radiusYards: number;
+        heightYards: number;
+      };
+      projectiles?: Array<{
+        attackId: number;
+        launchOffsetMs: number;
+        movement: 'target-homing' | 'target-curve';
+        speedYardsPerSecond: number;
+        lifetimeMs: number;
+        sourceSocketName: string;
+        effectId: number;
+        effectScale: number;
+      }>;
+      contacts: Array<
+        {
+          attackId: number;
+          offsetMs: number;
+          damageCoefficient: number;
+        } & (
+          | {
+              shape: 'direct';
+              /** Optional inner edge for native line volumes that only hit at range. */
+              minReachYards?: number;
+              reachYards: number;
+              widthYards: number;
+            }
+          | {
+              shape: 'circle';
+              centerOffsetYards: number;
+              radiusYards: number;
+              heightYards: number;
+            }
+          | {
+              shape: 'sector';
+              /** Native sector origin offset along the captured facing. */
+              centerOffsetYards?: number;
+              radiusYards: number;
+              angleDegrees: number;
+              heightYards: number;
+            }
+          | {
+              shape: 'target-circle';
+              radiusYards: number;
+              heightYards: number;
+            }
+          | {
+              shape: 'fixed-circle';
+              x: number;
+              y: number;
+              z: number;
+              radiusYards: number;
+              heightYards: number;
+            }
+          | {
+              shape: 'chain';
+              fromEntityId: number;
+              toEntityId: number;
+              jumpRadiusYards: number;
+              heightYards: number;
+            }
+        )
+      >;
+    }
+  | {
       type: 'spellfx';
       sourceId: number;
       targetId: number;
@@ -6046,6 +6467,9 @@ export type SimEvent = { pid?: number } & (
       // Delay from cast start to the signature impact recovered from the
       // authoritative action timeline. Presentation only.
       impactDelayMs?: number;
+      // A compiler-approved native presentation event owns this cue. The
+      // renderer must not add the generic compatibility effect a second time.
+      nativePresentationOwned?: true;
       // True for a wand auto-attack projectile, so combat_sfx.ts can pick the
       // dedicated wand_<school> cue instead of the real-spell proj_<school>
       // one: a passive auto-attack must not sound identical to an actual cast.

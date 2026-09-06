@@ -2,12 +2,21 @@ import type { MoveInput } from '../sim/types';
 
 export type Mir4AutomationMovementInput = Pick<
   MoveInput,
-  'forward' | 'back' | 'strafeLeft' | 'strafeRight' | 'turnLeft' | 'turnRight'
+  | 'forward'
+  | 'back'
+  | 'strafeLeft'
+  | 'strafeRight'
+  | 'turnLeft'
+  | 'turnRight'
+  | 'jump'
+  | 'dive'
+  | 'surface'
 >;
 
 export interface Mir4AutomationSuspensionState {
   autoBattle?: { suspended?: boolean };
   mir4AutoQuest?: { suspended?: boolean };
+  mir4SkillActivation?: { phase?: 'approach' | 'action' };
 }
 
 export interface Mir4AutomationWorld {
@@ -24,16 +33,20 @@ export function mir4AutomationOwnsMotion(
   autoQuestActive: boolean,
   input: Mir4AutomationMovementInput,
   automationSuspended = false,
+  manualSkillApproachActive = false,
 ): boolean {
   return (
-    (autoBattleActive || autoQuestActive) &&
-    !automationSuspended &&
+    (((autoBattleActive || autoQuestActive) && !automationSuspended) ||
+      manualSkillApproachActive) &&
     !input.forward &&
     !input.back &&
     !input.strafeLeft &&
     !input.strafeRight &&
     !input.turnLeft &&
-    !input.turnRight
+    !input.turnRight &&
+    !input.jump &&
+    !input.dive &&
+    !input.surface
   );
 }
 
@@ -47,6 +60,8 @@ export function mir4WorldAutomationOwnsMotion(
     world.mir4AutoQuestActive(),
     input,
     state?.autoBattle?.suspended === true || state?.mir4AutoQuest?.suspended === true,
+    state?.mir4SkillActivation?.phase === 'approach' ||
+      state?.mir4SkillActivation?.phase === 'action',
   );
 }
 

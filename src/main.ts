@@ -125,12 +125,19 @@ import {
   resetLoadProfile,
   summarizeLoadProfile,
 } from './game/load_profiler';
+import { mir4DuelQaBootRequest } from './game/mir4_duel_qa_boot';
 import {
   mir4WorldAutomationOwnsMotion,
   selfAlphaLeadForMotionOwner,
   selfFallbackSmoothingEnabled,
   selfMotionPredictionAllowedFor,
 } from './game/mir4_motion_ownership';
+import {
+  mir4SkillQaBootRequest,
+  mir4SkillQaSelectedActionBarLayout,
+  mir4SkillQaSelectedActionId,
+  provisionMir4SkillQa,
+} from './game/mir4_skill_qa_boot';
 import { handleMir4ToolShortcut } from './game/mir4_tool_shortcuts';
 import {
   interfaceModeFromSetting,
@@ -319,6 +326,7 @@ import { pathCrossesFence } from './sim/colliders';
 import { isStunned } from './sim/combat/cc';
 import { ABILITIES, CLASSES } from './sim/content/classes';
 import { HEROIC_VENDOR_STOCK } from './sim/content/heroic_vendor';
+import { MIR4_SKILL_QA_WORLD } from './sim/content/mir4';
 import { MECH_CHROMAS } from './sim/content/skins';
 import { rowTreeFor } from './sim/content/talents';
 import {
@@ -332,8 +340,9 @@ import {
   ZONES,
 } from './sim/data';
 import { canEquipItem } from './sim/equipment_rules';
-import type { GameProfile } from './sim/game_profile';
+import { type GameProfile, MIR4_GAME_PROFILE } from './sim/game_profile';
 import { MARKET_HOUSE_STOCK } from './sim/market';
+import { mir4HitReacting } from './sim/mir4/native_skill_hit_reaction';
 import { bagOwnedMounts } from './sim/mounts';
 import { findPlayerPath, resolvePlayerDestination } from './sim/pathfind';
 import { isSubmerged } from './sim/player_motion';
@@ -413,6 +422,7 @@ import {
 import { gatherEffectPrompt, gatherToolNoNodeKey } from './ui/gathering_view';
 import { loadHighscoresInto } from './ui/highscore_board';
 import { type ClaudiumHooks, Hud } from './ui/hud';
+import { applyActionBarLayout } from './ui/hud/action_bar/action_bar_layout_sync';
 import { resolveActionBarVisibility } from './ui/hud/action_bar/action_bar_visibility_core';
 import { autosizeChatInput } from './ui/hud/chat/chat_input_autosize';
 import { wireSkinPicker } from './ui/hud/cosmetics/skin_picker';
@@ -1535,11 +1545,26 @@ async function startGame(
     // One-time software-rendering notice (WARP/SwiftShader): the Renderer
     // constructor ran initGfxTier, so the adapter verdict is resolved by now.
     initSoftwareRenderNotice(DESKTOP_APP);
+    const mir4SkillQaActionId = mir4SkillQaSelectedActionId(mir4SkillQa);
+    const mir4SkillQaLayout = mir4SkillQaSelectedActionBarLayout(mir4SkillQa);
+    if (mir4SkillQaLayout && mir4SkillQa) {
+      applyActionBarLayout(
+        localStorage,
+        // MIR4 roster keys run through the classic Warrior shell inside Sim;
+        // ActionBarController keys storage by that runtime shell, not by the
+        // external MIR4 identity. Writing the roster key here left the QA
+        // layout unread and silently loaded the whole class bar instead.
+        world.cfg.playerClass,
+        mir4SkillQa.playerName,
+        mir4SkillQaLayout,
+      );
+    }
     loadPhaseStart('hud-ctor');
     hud = new Hud(world, renderer, keybinds, {
       dailyRewardsEnabled: NATIVE_APP ? await walletCapabilityReady : true,
       devCommandsEnabled: import.meta.env.DEV,
       constrainedMemory: GFX.constrainedMemory,
+      actionBarAbilityIdAllowlist: mir4SkillQaActionId ? [mir4SkillQaActionId] : undefined,
     });
     setThornhollowPrewarmHooks({
       startPreview: () => battlegroundAssetPrewarm.startPreview(),
@@ -3763,7 +3788,10 @@ async function startGame(
   // The player can't move toward a click-to-move destination while rooted/stunned
   // surface that on the marker so the freeze reads as crowd control, not a bug.
   function playerImmobilized(): boolean {
-    return world.player.auras.some((a) => IMMOBILE_AURA_KINDS.has(a.kind));
+    return (
+      mir4HitReacting(world.player) ||
+      world.player.auras.some((a) => IMMOBILE_AURA_KINDS.has(a.kind))
+    );
   }
   // A released spirit (ghost) moves, turns, and drives the camera like the living; only
   // a corpse that has not yet released its spirit is frozen. Combat stays gated by
@@ -5225,6 +5253,8 @@ async function startOffline(
       ),
   );
   provisionDiagnosticsCollectionTickets(sim, startupParams, import.meta.env.DEV);
+  provisionMir4SkillQa(sim, startupParams, import.meta.env.DEV);
+  if (mir4DuelQaBootRequest(startupParams, import.meta.env.DEV)) sim.startMir4DuelQa();
   sim.setPlayerSkin(sim.playerId, skin);
   // Offline has no account and no character row, so the local draft IS this
   // character's authored look and the creator's toggle IS its helm choice.
@@ -11485,6 +11515,8 @@ function fadeOutHomepageMusic(durationMs = 1600): void {
 // malformed/absent request falls through to the normal home flow.
 const editorPlaytest = takeEditorPlaytestRequest();
 const startupParams = new URLSearchParams(location.search);
+const mir4SkillQa = mir4SkillQaBootRequest(startupParams, import.meta.env.DEV);
+const mir4DuelQa = mir4DuelQaBootRequest(startupParams, import.meta.env.DEV);
 const diagnosticsAutoOffline =
   import.meta.env.DEV &&
   startupParams.get('diagnostics') === '1' &&
@@ -11498,6 +11530,26 @@ if (editorPlaytest) {
     editorPlaytest.content,
     editorPlaytest.seed,
     editorPlaytest.gameProfile,
+  );
+} else if (mir4DuelQa) {
+  startSitePresence('home');
+  void startOffline(
+    mir4DuelQa.playerClass,
+    mir4DuelQa.playerName,
+    0,
+    MIR4_SKILL_QA_WORLD,
+    undefined,
+    MIR4_GAME_PROFILE,
+  );
+} else if (mir4SkillQa) {
+  startSitePresence('home');
+  void startOffline(
+    mir4SkillQa.playerClass,
+    mir4SkillQa.playerName,
+    0,
+    MIR4_SKILL_QA_WORLD,
+    undefined,
+    MIR4_GAME_PROFILE,
   );
 } else if (diagnosticsAutoOffline) {
   startSitePresence('home');

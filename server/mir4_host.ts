@@ -54,6 +54,11 @@ export class Mir4SelfWireCache {
       ultimateGauge: gauge,
       ...this.serialize(meta, mir4.classId as Mir4ClassId),
       ...(meta.mir4NarrativeDialogue ? { mir4NarrativeDialogue: meta.mir4NarrativeDialogue } : {}),
+      ...(meta.mir4SkillAction && !meta.mir4SkillAction.motionInterrupted
+        ? { mir4SkillActivation: { phase: 'action' } }
+        : meta.mir4SkillActivation
+          ? { mir4SkillActivation: { phase: 'approach' } }
+          : {}),
     });
     this.cache.set(meta, {
       classId: mir4.classId,

@@ -8,7 +8,16 @@
 // injector) go through abilityDisplayDescription, and the field CHOICE is a pure
 // core (abilityDescriptionField) a vitest drives directly.
 
-import { mir4ActionBurnTooltipDamage, mir4SkillIdFromAction } from '../sim/mir4/action_abilities';
+import {
+  mir4ActionBurnTooltipDamage,
+  mir4ActionHealTooltipHealing,
+  mir4SkillIdFromAction,
+} from '../sim/mir4/action_abilities';
+import { mir4NativePeriodicDamagePlan } from '../sim/mir4/native_periodic_damage';
+import { mir4NativeRuntimeChillDebuff } from '../sim/mir4/native_skill_chill_debuff';
+import { mir4NativeExpulsionCirclePolicy } from '../sim/mir4/native_skill_expulsion_circle';
+import { mir4NativeGreaterHealPolicy } from '../sim/mir4/native_skill_greater_heal';
+import { mir4NativeGuardianCirclePolicy } from '../sim/mir4/native_skill_guardian_circle';
 import type { ResolvedAbility } from '../sim/sim';
 import {
   type AbilityEffect,
@@ -208,7 +217,28 @@ export function abilityDisplayDescription(
   const buff = auraOverride ? auraBuffDisplayValue(auraOverride) : abilityBuffValue(res);
   const duration = abilityDurationValue(res);
   const hourglass = abilityTemporalHourglassValues(res);
+  const mir4SkillId = mir4SkillIdFromAction(res.def.id);
   const mir4Burn = scaling ? mir4ActionBurnTooltipDamage(res.def.id, scaling.spellPower) : null;
+  const mir4Heal = scaling
+    ? mir4ActionHealTooltipHealing(
+        res.def.id,
+        res.rank,
+        scaling.spellPower,
+        scaling.mir4SpellAttackBonus,
+        scaling.mir4SkillHealingBps,
+      )
+    : null;
+  const immolatePeriodic =
+    scaling && mir4SkillId === 2103
+      ? mir4NativePeriodicDamagePlan(20_012, res.rank, scaling.spellPower)
+      : null;
+  const immolatePeriodicDamage =
+    immolatePeriodic?.entries.reduce((total, entry) => total + entry.rawDamage, 0) ?? null;
+  const chill =
+    mir4SkillId === 2301 ? mir4NativeRuntimeChillDebuff(mir4SkillId, 230113, res.rank) : null;
+  const guardianCircle = mir4SkillId === 3501 ? mir4NativeGuardianCirclePolicy(res.rank) : null;
+  const greaterHeal = mir4SkillId === 3504 ? mir4NativeGreaterHealPolicy(res.rank) : null;
+  const expulsionCircle = mir4SkillId === 3404 ? mir4NativeExpulsionCirclePolicy(res.rank) : null;
   // {rage} splices the RESOLVED gainResource total, so a talent that raises the
   // granted amount (Blood Offering on Blood Toll) shows in the tooltip.
   const rageGained = res.effects.reduce(
@@ -229,8 +259,25 @@ export function abilityDisplayDescription(
     hostilePveDuration: hourglass === null ? '' : formatAbilityNumber(hourglass.hostilePveDuration),
     hostilePvpDuration: hourglass === null ? '' : formatAbilityNumber(hourglass.hostilePvpDuration),
     groundDuration: hourglass === null ? '' : formatAbilityNumber(hourglass.groundDuration),
-    burnPerTick: mir4Burn === null ? '' : formatAbilityNumber(mir4Burn.perTick),
+    burnPerTick:
+      immolatePeriodicDamage === null
+        ? mir4Burn === null
+          ? ''
+          : formatAbilityNumber(mir4Burn.perTick)
+        : formatAbilityNumber(immolatePeriodicDamage),
     burnTotal: mir4Burn === null ? '' : formatAbilityNumber(mir4Burn.total),
+    healPerPulse: mir4Heal === null ? '' : formatAbilityNumber(mir4Heal.perPulse),
+    healTotal: mir4Heal === null ? '' : formatAbilityNumber(mir4Heal.total),
+    chillDuration: chill === null ? '' : formatAbilityNumber(chill.durationMs / 1_000),
+    guardianPhysicalDefense:
+      guardianCircle === null ? '' : formatAbilityNumber(guardianCircle.basePhysicalDefense),
+    guardianBashDamageReduction:
+      guardianCircle === null
+        ? ''
+        : formatAbilityNumber(guardianCircle.baseBashDamageReductionBasisPoints / 100),
+    expulsionSpellDefense:
+      expulsionCircle === null ? '' : formatAbilityNumber(expulsionCircle.baseSpellDefense),
+    greaterHealFlat: greaterHeal === null ? '' : formatAbilityNumber(greaterHeal.flatHealing),
     rage: rageText,
   };
   // Cheap Trick retires Gut Punch's stealth requirement. When the RESOLVED ability
